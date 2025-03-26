@@ -1,0 +1,35 @@
+{
+    "music": 
+    {
+    },
+    "music_volume": 0.5,
+    "categories": {
+        "effects": {
+            "sounds": {
+            },
+            "volume": 0.8
+        },
+        "ui": {
+            "sounds": {
+                "add_coal": "sounds/Pick1A.wav",
+                "produce_candy": "sounds/FIREWORKS_Rocket_Launch_Crop_RR5_mono.wav",
+                "exp_meter_go_up": "sounds/FOLEY_Unscrew_Bottle_Cap_mono.wav",
+                "bwoosh": "sounds/MAGIC_SPELL_Flame_02_mono.wav",
+                "coal_burn_steam_engine": "sounds/TOY_Steam_Train_01_loop_mono.wav",
+                "coal_stone_appear": "sounds/BUTTON_Plastic_Light_Switch_Off_mono.wav",
+                "coal_pick_up": "sounds/WHOOSH_Fast_Air_mono.wav",
+                "place_coal_in_bin": "sounds/STORAGE_CASE_Open_Latch_02_mono.wav",
+                "level_up": "sounds/MUSIC_EFFECT_Platform_Positive_03c_Fast_stereo.wav",
+                "buy_new_elf": "sounds/BuyElf.wav",
+                "autoclicker_unlocked": "sounds/NewAutoclicker5.wav",
+                "uiHover": "sounds/Hover.wav"
+            },
+            "volume": 0.5
+        },
+        "music": {
+            "sounds": {
+            },
+            "volume": 0.5
+        }
+    }
+}

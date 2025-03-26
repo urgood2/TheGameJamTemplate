@@ -1,0 +1,25 @@
+Building for Web
+
+If you get errors about sol2, use this; https://github.com/ThePhD/sol2/commit/d805d027e0a0a7222e936926139f06e23828ce9f#diff-6ed9c3214abb954282e4aa199723b4fbbb89c19ac8cc296534b817fae46e818dR2195
+
+Desktop builds are great for testing locally but they're not the best when it comes to distributing your game. Few people will want to download a random exe files from a stranger and willingly run it on their PCs. The best way to distribute is as a web build that can be played directly from within your browser.
+
+TODO: clean this up
+
+    install emscripten (the C to "webassembly" compiler):
+        you can also install this by following the official instructions https://emscripten.org/docs/getting_started/downloads.html
+            There's also an option to install it through scoop but when I tried it it didn't work for me 😞
+        use the emsdk manager (installed with emscripten in the step above) to install the latest compiler (might take a while): emsdk install latest
+        activate the emscripten tools:
+            emsdk activate latest
+            . .\emsdk_env.ps1 (assuming you're in a powershell terminal)
+    build (from the root of the project)
+        Create build folder for html: mkdir -p build-emc
+        Copy images and other assets to build output dir: Copy-Item -Recurse .\assets\ .\build-emc\
+        cd build-emc
+        Write the actual make config using the emscripten tool: emcmake cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3" -DCMAKE_EXECUTABLE_SUFFIX=".html"
+        Make the webassembly and html page: emmake make
+    Open in the browser and play!
+        Start up a server in the build-emc folder to server the html page. This is necessary so that the browser cna find all the assets and other files (if you open the html directly then the browser won't be able to load other files from the file system)
+            If you have python3 installed then you can do python -m http.server
+        Open game in browser! http://localhost:8000/raylib-cpp-cmake-template.html

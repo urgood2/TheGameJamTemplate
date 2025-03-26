@@ -1,0 +1,60 @@
+{
+    "ninepatches": [
+        {
+            "id": "tutorial_window",
+            "texture": "graphics/cp437ui.png",
+            "source_rect": {
+                "x": 0,
+                "y": 0,
+                "width": 96,
+                "height": 96
+            },
+            "left": 32,
+            "top": 32,
+            "right": 32,
+            "bottom": 32
+        },
+		{	
+			"id": "ui_indicator",
+			"texture": "graphics/cp437ui.png",
+			"source_rect": {
+                "x": 96,
+                "y": 0,
+                "width": 96,
+                "height": 96
+            },
+            "left": 32,
+            "top": 32,
+            "right": 32,
+            "bottom": 32
+		},
+        {	
+			"id": "concentric_circle_indicator",
+			"texture": "graphics/cp437ui.png",
+			"source_rect": {
+                "x": 192,
+                "y": 0,
+                "width": 96,
+                "height": 96
+            },
+            "left": 16,
+            "top": 16,
+            "right": 16,
+            "bottom": 16
+		},
+        {	
+			"id": "button_border",
+			"texture": "graphics/cp437ui.png",
+			"source_rect": {
+                "x": 288,
+                "y": 0,
+                "width": 32,
+                "height": 32
+            },
+            "left": 14,
+            "top": 14,
+            "right": 14,
+            "bottom": 14
+		}
+    ]
+}

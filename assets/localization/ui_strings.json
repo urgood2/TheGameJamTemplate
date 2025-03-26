@@ -1,0 +1,19 @@
+{
+	"menubar.button.farm": "Farm",
+	"menubar.button.farm.plant": "Plant",
+	"menubar.button.farm.harvest": "Harvest",
+	"menubar.button.harvest.make_mulch": "Make Mulch",
+	"menubar.button.debug": "Debug",
+	"menubar.button.debug.generate_eat_task": "Generate eat task",
+	"menubar.button.dig": "Dig",
+	"menubar.button.dig.mine_wall": "Mine Wall",
+	"menubar.button.build": "Build",
+	"menubar.button.build.training_dummy": "Training Dummy",
+	"topmenu.year": "Year {0}",
+	
+	"toast.harvestTutorial": "Click and drag the mouse over some plants to harvest.",
+	"toast.levelup": "{0} has gained muscle in the {1}!",
+	"toast.levelup_profession": "{0} has become more experienced in {1}!"
+	
+	
+}

@@ -1,0 +1,44 @@
+{
+    "seed": 3048337,
+    "world_data" : {
+        "width": 10,
+        "height": 10,
+        
+        "num_humans": 8
+    },
+    "render_data": {
+        "screen": {
+            "width": 1100,
+            "height": 900
+        },
+        "game_world_viewport": {
+            "width": 1100,
+            "height": 700
+        },
+        "use_line_of_sight": false
+    },
+    "sprites" : {
+        "sprites_json": "graphics/cp437_20x20_sprites.json",
+        "sprite_mappings_json": "graphics/cp437_mappings.json"
+    },
+    "global_tick_settings": {
+        "ai_tick_rate_seconds": 0.8,
+        "task_system_tick_rate_seconds": 0.8,
+        "goal_planning_state_tick_length": 2
+    },
+    "logging": {
+        "log_to_file": false,
+        "log_file_path": "logs/game_log.txt", 
+        "__comment": "currently disabled feature"
+    },
+    "game_language": "en",
+    "__comment": "language options (case sensitive): ko, en",
+    
+    "fonts": {
+        "ko": "fonts/ko/Galmuri11-Bold.ttf",
+        "en": "fonts/en/Danger on the Motorway.otf",
+        
+        "default_size": 30
+
+    }
+}

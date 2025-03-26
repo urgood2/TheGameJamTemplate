@@ -1,0 +1,43 @@
+{
+    "flash": {
+        "vertex": "flash_vertex.vs",
+        "fragment": "flash_fragment.fs",
+
+        "web": {
+            "vertex": "flash_vertex_web.vs",
+            "fragment": "flash_fragment_web.fs"
+        }
+    },
+    "screen_tone_transition": {
+        "vertex": "screen_tone_transition_vertex.vs",
+        "fragment": "screen_tone_transition_fragment.fs"
+    },
+    "balatro_background": {
+        "vertex": "balatro_background_vertex.vs",
+        "fragment": "balatro_background_fragment_v3.fs"
+    },
+    "crt": {
+        "vertex": "crt_vertex.vs",
+        "fragment": "crt_fragment.fs"
+    },
+    "shockwave": {
+        "vertex": "shockwave_vertex.vs",
+        "fragment": "shockwave_fragment.fs"
+    },
+    "glitch": {
+        "vertex": "glitch_vertex.vs",
+        "fragment": "glitch_fragment.fs"
+    },
+    "wind": {
+        "vertex": "wind_vertex.vs",
+        "fragment": "wind_fragment.fs"
+    },
+    "3d_skew": {
+        "vertex": "3d_skew_vertex.vs",
+        "fragment": "3d_skew_fragment.fs"
+    },
+    "squish": {
+        "vertex": "squish_vertex.vs",
+        "fragment": "squish_fragment.fs"
+    }
+}

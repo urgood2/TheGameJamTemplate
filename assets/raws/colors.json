@@ -1,0 +1,1502 @@
+[
+    {
+        "__comment": "there are no lowercase and uppercase distinction in the color names",
+        "a": 255,
+        "auto_generated_uuid": "snow",
+        "b": 250,
+        "family": "Whites/Pastels",
+        "g": 250,
+        "name": "SNOW",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "2_snow",
+        "b": 233,
+        "family": "Whites/Pastels",
+        "g": 233,
+        "name": "SNOW 2",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "3_snow",
+        "b": 201,
+        "family": "Whites/Pastels",
+        "g": 201,
+        "name": "SNOW 3",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "4_snow",
+        "b": 137,
+        "family": "Whites/Pastels",
+        "g": 137,
+        "name": "SNOW 4",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "ghost_white",
+        "b": 255,
+        "family": "Whites/Pastels",
+        "g": 248,
+        "name": "GHOST WHITE",
+        "r": 248
+    },
+    {
+        "auto_generated_uuid": "smoke_white",
+        "b": 245,
+        "family": "Whites/Pastels",
+        "g": 245,
+        "name": "WHITE SMOKE",
+        "r": 245
+    },
+    {
+        "auto_generated_uuid": "gainsboro",
+        "b": 22,
+        "family": "Whites/Pastels",
+        "g": 220,
+        "name": "GAINSBORO",
+        "r": 220
+    },
+    {
+        "auto_generated_uuid": "floral_white",
+        "b": 240,
+        "family": "Whites/Pastels",
+        "g": 250,
+        "name": "FLORAL WHITE",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "lace_old",
+        "b": 230,
+        "family": "Whites/Pastels",
+        "g": 245,
+        "name": "OLD LACE",
+        "r": 253
+    },
+    {
+        "auto_generated_uuid": "linen",
+        "b": 230,
+        "family": "Whites/Pastels",
+        "g": 240,
+        "name": "LINEN",
+        "r": 240
+    },
+    {
+        "auto_generated_uuid": "antique_white",
+        "b": 215,
+        "family": "Whites/Pastels",
+        "g": 235,
+        "name": "ANTIQUE WHITE",
+        "r": 250
+    },
+    {
+        "auto_generated_uuid": "2_antique_white",
+        "b": 204,
+        "family": "Whites/Pastels",
+        "g": 223,
+        "name": "ANTIQUE WHITE 2",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "3_antique_white",
+        "b": 176,
+        "family": "Whites/Pastels",
+        "g": 192,
+        "name": "ANTIQUE WHITE 3",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "4_antique_white",
+        "b": 120,
+        "family": "Whites/Pastels",
+        "g": 131,
+        "name": "ANTIQUE WHITE 4",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "papaya_whip",
+        "b": 213,
+        "family": "Whites/Pastels",
+        "g": 239,
+        "name": "PAPAYA WHIP",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "almond_blanched",
+        "b": 205,
+        "family": "Whites/Pastels",
+        "g": 235,
+        "name": "BLANCHED ALMOND",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "bisque",
+        "b": 196,
+        "family": "Whites/Pastels",
+        "g": 228,
+        "name": "BISQUE",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "2_bisque",
+        "b": 183,
+        "family": "Whites/Pastels",
+        "g": 213,
+        "name": "BISQUE 2",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "3_bisque",
+        "b": 158,
+        "family": "Whites/Pastels",
+        "g": 183,
+        "name": "BISQUE 3",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "4_bisque",
+        "b": 107,
+        "family": "Whites/Pastels",
+        "g": 125,
+        "name": "BISQUE 4",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "peach_puff",
+        "b": 185,
+        "family": "Whites/Pastels",
+        "g": 218,
+        "name": "PEACH PUFF",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "2_peach_puff",
+        "b": 173,
+        "family": "Whites/Pastels",
+        "g": 203,
+        "name": "PEACH PUFF 2",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "3_peach_puff",
+        "b": 149,
+        "family": "Whites/Pastels",
+        "g": 175,
+        "name": "PEACH PUFF 3",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "4_peach_puff",
+        "b": 101,
+        "family": "Whites/Pastels",
+        "g": 119,
+        "name": "PEACH PUFF 4",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "navajo_white",
+        "b": 173,
+        "family": "Whites/Pastels",
+        "g": 222,
+        "name": "NAVAJO WHITE",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "moccasin",
+        "b": 181,
+        "family": "Whites/Pastels",
+        "g": 228,
+        "name": "MOCCASIN",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "cornsilk",
+        "b": 220,
+        "family": "Whites/Pastels",
+        "g": 248,
+        "name": "CORNSILK",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "2_cornsilk",
+        "b": 205,
+        "family": "Whites/Pastels",
+        "g": 232,
+        "name": "CORNSILK 2",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "3_cornsilk",
+        "b": 177,
+        "family": "Whites/Pastels",
+        "g": 200,
+        "name": "CORNSILK 3",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "4_cornsilk",
+        "b": 120,
+        "family": "Whites/Pastels",
+        "g": 136,
+        "name": "CORNSILK 4",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "ivory",
+        "b": 240,
+        "family": "Whites/Pastels",
+        "g": 255,
+        "name": "IVORY",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "2_ivory",
+        "b": 224,
+        "family": "Whites/Pastels",
+        "g": 238,
+        "name": "IVORY 2",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "3_ivory",
+        "b": 193,
+        "family": "Whites/Pastels",
+        "g": 205,
+        "name": "IVORY 3",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "4_ivory",
+        "b": 131,
+        "family": "Whites/Pastels",
+        "g": 139,
+        "name": "IVORY 4",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "chiffon_lemon",
+        "b": 205,
+        "family": "Whites/Pastels",
+        "g": 250,
+        "name": "LEMON CHIFFON",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "seashell",
+        "b": 238,
+        "family": "Whites/Pastels",
+        "g": 245,
+        "name": "SEASHELL",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "2_seashell",
+        "b": 222,
+        "family": "Whites/Pastels",
+        "g": 229,
+        "name": "SEASHELL 2",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "3_seashell",
+        "b": 191,
+        "family": "Whites/Pastels",
+        "g": 197,
+        "name": "SEASHELL 3",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "4_seashell",
+        "b": 130,
+        "family": "Whites/Pastels",
+        "g": 134,
+        "name": "SEASHELL 4",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "honeydew",
+        "b": 240,
+        "family": "Whites/Pastels",
+        "g": 255,
+        "name": "HONEYDEW",
+        "r": 240
+    },
+    {
+        "auto_generated_uuid": "2_honeydew",
+        "b": 224,
+        "family": "Whites/Pastels",
+        "g": 238,
+        "name": "HONEYDEW 2",
+        "r": 244
+    },
+    {
+        "auto_generated_uuid": "3_honeydew",
+        "b": 193,
+        "family": "Whites/Pastels",
+        "g": 205,
+        "name": "HONEYDEW 3",
+        "r": 193
+    },
+    {
+        "auto_generated_uuid": "4_honeydew",
+        "b": 131,
+        "family": "Whites/Pastels",
+        "g": 139,
+        "name": "HONEYDEW 4",
+        "r": 131
+    },
+    {
+        "auto_generated_uuid": "cream_mint",
+        "b": 250,
+        "family": "Whites/Pastels",
+        "g": 255,
+        "name": "MINT CREAM",
+        "r": 245
+    },
+    {
+        "auto_generated_uuid": "azure",
+        "b": 255,
+        "family": "Whites/Pastels",
+        "g": 255,
+        "name": "AZURE",
+        "r": 240
+    },
+    {
+        "auto_generated_uuid": "alice_blue",
+        "b": 255,
+        "family": "Whites/Pastels",
+        "g": 248,
+        "name": "ALICE BLUE",
+        "r": 240
+    },
+    {
+        "auto_generated_uuid": "lavender",
+        "b": 250,
+        "family": "Whites/Pastels",
+        "g": 230,
+        "name": "LAVENDER",
+        "r": 230
+    },
+    {
+        "auto_generated_uuid": "blush_lavender",
+        "b": 245,
+        "family": "Whites/Pastels",
+        "g": 240,
+        "name": "LAVENDER BLUSH",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "misty_rose",
+        "b": 225,
+        "family": "Whites/Pastels",
+        "g": 228,
+        "name": "MISTY ROSE",
+        "r": 255
+    },
+    {
+        "a": 255,
+        "auto_generated_uuid": "white",
+        "b": 255,
+        "family": "Whites/Pastels",
+        "g": 255,
+        "name": "WHITE",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "black",
+        "b": 0,
+        "family": "Grays",
+        "g": 0,
+        "name": "BLACK",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "dark_gray_slate",
+        "b": 79,
+        "family": "Grays",
+        "g": 79,
+        "name": "DARK SLATE GRAY",
+        "r": 49
+    },
+    {
+        "a": 255,
+        "auto_generated_uuid": "dim_gray",
+        "b": 105,
+        "family": "Grays",
+        "g": 105,
+        "name": "DIM GRAY",
+        "r": 105
+    },
+    {
+        "auto_generated_uuid": "gray_slate",
+        "b": 144,
+        "family": "Grays",
+        "g": 138,
+        "name": "SLATE GRAY",
+        "r": 112
+    },
+    {
+        "auto_generated_uuid": "gray_light_slate",
+        "b": 153,
+        "family": "Grays",
+        "g": 136,
+        "name": "LIGHT SLATE GRAY",
+        "r": 119
+    },
+    {
+        "auto_generated_uuid": "gray",
+        "b": 190,
+        "family": "Grays",
+        "g": 190,
+        "name": "GRAY",
+        "r": 190
+    },
+    {
+        "auto_generated_uuid": "gray_light",
+        "b": 211,
+        "family": "Grays",
+        "g": 211,
+        "name": "LIGHT GRAY",
+        "r": 211
+    },
+    {
+        "auto_generated_uuid": "blue_midnight",
+        "b": 112,
+        "family": "Blues",
+        "g": 25,
+        "name": "MIDNIGHT BLUE",
+        "r": 25
+    },
+    {
+        "auto_generated_uuid": "navy",
+        "b": 128,
+        "family": "Blues",
+        "g": 0,
+        "name": "NAVY",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "blue_cornflower",
+        "b": 237,
+        "family": "Blues",
+        "g": 149,
+        "name": "CORNFLOWER BLUE",
+        "r": 100
+    },
+    {
+        "auto_generated_uuid": "blue_dark_slate",
+        "b": 139,
+        "family": "Blues",
+        "g": 61,
+        "name": "DARK SLATE BLUE",
+        "r": 72
+    },
+    {
+        "auto_generated_uuid": "blue_slate",
+        "b": 205,
+        "family": "Blues",
+        "g": 90,
+        "name": "SLATE BLUE",
+        "r": 106
+    },
+    {
+        "auto_generated_uuid": "blue_medium_slate",
+        "b": 238,
+        "family": "Blues",
+        "g": 104,
+        "name": "MEDIUM SLATE BLUE",
+        "r": 123
+    },
+    {
+        "auto_generated_uuid": "blue_light_slate",
+        "b": 255,
+        "family": "Blues",
+        "g": 112,
+        "name": "LIGHT SLATE BLUE",
+        "r": 132
+    },
+    {
+        "auto_generated_uuid": "blue_medium",
+        "b": 205,
+        "family": "Blues",
+        "g": 0,
+        "name": "MEDIUM BLUE",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "blue_royal",
+        "b": 225,
+        "family": "Blues",
+        "g": 105,
+        "name": "ROYAL BLUE",
+        "r": 65
+    },
+    {
+        "auto_generated_uuid": "blue",
+        "b": 255,
+        "family": "Blues",
+        "g": 0,
+        "name": "BLUE",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "blue_dodger",
+        "b": 255,
+        "family": "Blues",
+        "g": 144,
+        "name": "DODGER BLUE",
+        "r": 30
+    },
+    {
+        "auto_generated_uuid": "blue_deep_sky",
+        "b": 255,
+        "family": "Blues",
+        "g": 191,
+        "name": "DEEP SKY BLUE",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "blue_sky",
+        "b": 250,
+        "family": "Blues",
+        "g": 206,
+        "name": "SKY BLUE",
+        "r": 135
+    },
+    {
+        "auto_generated_uuid": "blue_light_sky",
+        "b": 250,
+        "family": "Blues",
+        "g": 206,
+        "name": "LIGHT SKY BLUE",
+        "r": 135
+    },
+    {
+        "auto_generated_uuid": "blue_steel",
+        "b": 180,
+        "family": "Blues",
+        "g": 130,
+        "name": "STEEL BLUE",
+        "r": 70
+    },
+    {
+        "auto_generated_uuid": "blue_light_steel",
+        "b": 222,
+        "family": "Blues",
+        "g": 196,
+        "name": "LIGHT STEEL BLUE",
+        "r": 176
+    },
+    {
+        "auto_generated_uuid": "blue_light",
+        "b": 230,
+        "family": "Blues",
+        "g": 216,
+        "name": "LIGHT BLUE",
+        "r": 173
+    },
+    {
+        "auto_generated_uuid": "blue_powder",
+        "b": 230,
+        "family": "Blues",
+        "g": 224,
+        "name": "POWDER BLUE",
+        "r": 176
+    },
+    {
+        "auto_generated_uuid": "pale_turquoise",
+        "b": 238,
+        "family": "Blues",
+        "g": 238,
+        "name": "PALE TURQUOISE",
+        "r": 175
+    },
+    {
+        "auto_generated_uuid": "dark_turquoise",
+        "b": 209,
+        "family": "Blues",
+        "g": 206,
+        "name": "DARK TURQUOISE",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "medium_turquoise",
+        "b": 204,
+        "family": "Blues",
+        "g": 209,
+        "name": "MEDIUM TURQUOISE",
+        "r": 72
+    },
+    {
+        "auto_generated_uuid": "turquoise",
+        "b": 208,
+        "family": "Blues",
+        "g": 224,
+        "name": "TURQUOISE",
+        "r": 64
+    },
+    {
+        "auto_generated_uuid": "cyan",
+        "b": 255,
+        "family": "Blues",
+        "g": 255,
+        "name": "CYAN",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "cyan_light",
+        "b": 255,
+        "family": "Blues",
+        "g": 255,
+        "name": "LIGHT CYAN",
+        "r": 224
+    },
+    {
+        "auto_generated_uuid": "blue_cadet",
+        "b": 160,
+        "family": "Blues",
+        "g": 158,
+        "name": "CADET BLUE",
+        "r": 95
+    },
+    {
+        "auto_generated_uuid": "aquamarine_medium",
+        "b": 170,
+        "family": "Greens",
+        "g": 205,
+        "name": "MEDIUM AQUAMARINE",
+        "r": 102
+    },
+    {
+        "auto_generated_uuid": "aquamarine",
+        "b": 212,
+        "family": "Greens",
+        "g": 255,
+        "name": "AQUAMARINE",
+        "r": 127
+    },
+    {
+        "auto_generated_uuid": "dark_green",
+        "b": 0,
+        "family": "Greens",
+        "g": 100,
+        "name": "DARK GREEN",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "dark_green_olive",
+        "b": 47,
+        "family": "Greens",
+        "g": 107,
+        "name": "DARK OLIVE GREEN",
+        "r": 85
+    },
+    {
+        "auto_generated_uuid": "dark_green_sea",
+        "b": 143,
+        "family": "Greens",
+        "g": 188,
+        "name": "DARK SEA GREEN",
+        "r": 143
+    },
+    {
+        "auto_generated_uuid": "green_sea",
+        "b": 87,
+        "family": "Greens",
+        "g": 139,
+        "name": "SEA GREEN",
+        "r": 46
+    },
+    {
+        "auto_generated_uuid": "green_medium_sea",
+        "b": 113,
+        "family": "Greens",
+        "g": 179,
+        "name": "MEDIUM SEA GREEN",
+        "r": 60
+    },
+    {
+        "auto_generated_uuid": "green_light_sea",
+        "b": 170,
+        "family": "Greens",
+        "g": 178,
+        "name": "LIGHT SEA GREEN",
+        "r": 32
+    },
+    {
+        "auto_generated_uuid": "green_pale",
+        "b": 152,
+        "family": "Greens",
+        "g": 251,
+        "name": "PALE GREEN",
+        "r": 152
+    },
+    {
+        "auto_generated_uuid": "green_spring",
+        "b": 127,
+        "family": "Greens",
+        "g": 255,
+        "name": "SPRING GREEN",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "green_lawn",
+        "b": 0,
+        "family": "Greens",
+        "g": 252,
+        "name": "LAWN GREEN",
+        "r": 124
+    },
+    {
+        "auto_generated_uuid": "chartreuse",
+        "b": 0,
+        "family": "Greens",
+        "g": 255,
+        "name": "CHARTREUSE",
+        "r": 127
+    },
+    {
+        "auto_generated_uuid": "green_medium_spring",
+        "b": 154,
+        "family": "Greens",
+        "g": 250,
+        "name": "MEDIUM SPRING GREEN",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "green_yellow",
+        "b": 47,
+        "family": "Greens",
+        "g": 255,
+        "name": "GREEN YELLOW",
+        "r": 173
+    },
+    {
+        "auto_generated_uuid": "green_lime",
+        "b": 50,
+        "family": "Greens",
+        "g": 205,
+        "name": "LIME GREEN",
+        "r": 50
+    },
+    {
+        "auto_generated_uuid": "green_yellow",
+        "b": 50,
+        "family": "Greens",
+        "g": 205,
+        "name": "YELLOW GREEN",
+        "r": 154
+    },
+    {
+        "auto_generated_uuid": "forest_green",
+        "b": 34,
+        "family": "Greens",
+        "g": 139,
+        "name": "FOREST GREEN",
+        "r": 34
+    },
+    {
+        "auto_generated_uuid": "drab_olive",
+        "b": 35,
+        "family": "Greens",
+        "g": 142,
+        "name": "OLIVE DRAB",
+        "r": 107
+    },
+    {
+        "auto_generated_uuid": "dark_khaki",
+        "b": 107,
+        "family": "Greens",
+        "g": 183,
+        "name": "DARK KHAKI",
+        "r": 189
+    },
+    {
+        "auto_generated_uuid": "khaki",
+        "b": 140,
+        "family": "Greens",
+        "g": 230,
+        "name": "KHAKI",
+        "r": 240
+    },
+    {
+        "auto_generated_uuid": "green_light",
+        "b": 144,
+        "family": "Greens",
+        "g": 238,
+        "name": "LIGHT GREEN",
+        "r": 144
+    },
+    {
+        "auto_generated_uuid": "goldenrod_pale",
+        "b": 170,
+        "family": "Yellow",
+        "g": 232,
+        "name": "PALE GOLDENROD",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "goldenrod_light_yellow",
+        "b": 210,
+        "family": "Yellow",
+        "g": 250,
+        "name": "LIGHT GOLDENROD YELLOW",
+        "r": 250
+    },
+    {
+        "auto_generated_uuid": "light_yellow",
+        "b": 224,
+        "family": "Yellow",
+        "g": 255,
+        "name": "LIGHT YELLOW",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "yellow",
+        "b": 0,
+        "family": "Yellow",
+        "g": 255,
+        "name": "YELLOW",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "gold",
+        "b": 0,
+        "family": "Yellow",
+        "g": 215,
+        "name": "GOLD",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "goldenrod_light",
+        "b": 130,
+        "family": "Yellow",
+        "g": 221,
+        "name": "LIGHT GOLDENROD",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "goldenrod",
+        "b": 32,
+        "family": "Yellow",
+        "g": 165,
+        "name": "GOLDENROD",
+        "r": 218
+    },
+    {
+        "auto_generated_uuid": "dark_goldenrod",
+        "b": 11,
+        "family": "Yellow",
+        "g": 134,
+        "name": "DARK GOLDENROD",
+        "r": 184
+    },
+    {
+        "auto_generated_uuid": "brown_rosy",
+        "b": 143,
+        "family": "Browns",
+        "g": 143,
+        "name": "ROSY BROWN",
+        "r": 188
+    },
+    {
+        "auto_generated_uuid": "indian_red",
+        "b": 92,
+        "family": "Browns",
+        "g": 92,
+        "name": "INDIAN RED",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "brown_saddle",
+        "b": 19,
+        "family": "Browns",
+        "g": 69,
+        "name": "SADDLE BROWN",
+        "r": 139
+    },
+    {
+        "auto_generated_uuid": "sienna",
+        "b": 45,
+        "family": "Browns",
+        "g": 82,
+        "name": "SIENNA",
+        "r": 160
+    },
+    {
+        "auto_generated_uuid": "peru",
+        "b": 63,
+        "family": "Browns",
+        "g": 133,
+        "name": "PERU",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "burlywood",
+        "b": 135,
+        "family": "Browns",
+        "g": 184,
+        "name": "BURLYWOOD",
+        "r": 222
+    },
+    {
+        "auto_generated_uuid": "beige",
+        "b": 220,
+        "family": "Browns",
+        "g": 245,
+        "name": "BEIGE",
+        "r": 245
+    },
+    {
+        "auto_generated_uuid": "wheat",
+        "b": 179,
+        "family": "Browns",
+        "g": 222,
+        "name": "WHEAT",
+        "r": 245
+    },
+    {
+        "auto_generated_uuid": "brown_sandy",
+        "b": 96,
+        "family": "Browns",
+        "g": 164,
+        "name": "SANDY BROWN",
+        "r": 244
+    },
+    {
+        "auto_generated_uuid": "tan",
+        "b": 140,
+        "family": "Browns",
+        "g": 180,
+        "name": "TAN",
+        "r": 210
+    },
+    {
+        "auto_generated_uuid": "chocolate",
+        "b": 30,
+        "family": "Browns",
+        "g": 105,
+        "name": "CHOCOLATE",
+        "r": 210
+    },
+    {
+        "auto_generated_uuid": "firebrick",
+        "b": 34,
+        "family": "Browns",
+        "g": 34,
+        "name": "FIREBRICK",
+        "r": 178
+    },
+    {
+        "auto_generated_uuid": "brown",
+        "b": 42,
+        "family": "Browns",
+        "g": 42,
+        "name": "BROWN",
+        "r": 165
+    },
+    {
+        "auto_generated_uuid": "dark_salmon",
+        "b": 122,
+        "family": "Oranges",
+        "g": 150,
+        "name": "DARK SALMON",
+        "r": 233
+    },
+    {
+        "auto_generated_uuid": "salmon",
+        "b": 114,
+        "family": "Oranges",
+        "g": 128,
+        "name": "SALMON",
+        "r": 250
+    },
+    {
+        "auto_generated_uuid": "light_salmon",
+        "b": 122,
+        "family": "Oranges",
+        "g": 160,
+        "name": "LIGHT SALMON",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "orange",
+        "b": 0,
+        "family": "Oranges",
+        "g": 165,
+        "name": "ORANGE",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "dark_orange",
+        "b": 0,
+        "family": "Oranges",
+        "g": 140,
+        "name": "DARK ORANGE",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "coral",
+        "b": 80,
+        "family": "Oranges",
+        "g": 127,
+        "name": "CORAL",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "coral_light",
+        "b": 128,
+        "family": "Oranges",
+        "g": 128,
+        "name": "LIGHT CORAL",
+        "r": 240
+    },
+    {
+        "auto_generated_uuid": "tomato",
+        "b": 71,
+        "family": "Oranges",
+        "g": 99,
+        "name": "TOMATO",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "orange_red",
+        "b": 0,
+        "family": "Oranges",
+        "g": 69,
+        "name": "ORANGE RED",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "red",
+        "b": 0,
+        "family": "Oranges",
+        "g": 0,
+        "name": "RED",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "hot_pink",
+        "b": 180,
+        "family": "Pinks/Violets",
+        "g": 105,
+        "name": "HOT PINK",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "deep_pink",
+        "b": 147,
+        "family": "Pinks/Violets",
+        "g": 20,
+        "name": "DEEP PINK",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "pink",
+        "b": 203,
+        "family": "Pinks/Violets",
+        "g": 192,
+        "name": "PINK",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "light_pink",
+        "b": 193,
+        "family": "Pinks/Violets",
+        "g": 182,
+        "name": "LIGHT PINK",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "pale_red_violet",
+        "b": 147,
+        "family": "Pinks/Violets",
+        "g": 112,
+        "name": "PALE VIOLET RED",
+        "r": 219
+    },
+    {
+        "auto_generated_uuid": "maroon",
+        "b": 96,
+        "family": "Pinks/Violets",
+        "g": 48,
+        "name": "MAROON",
+        "r": 176
+    },
+    {
+        "auto_generated_uuid": "medium_red_violet",
+        "b": 133,
+        "family": "Pinks/Violets",
+        "g": 21,
+        "name": "MEDIUM VIOLET RED",
+        "r": 199
+    },
+    {
+        "auto_generated_uuid": "red_violet",
+        "b": 144,
+        "family": "Pinks/Violets",
+        "g": 32,
+        "name": "VIOLET RED",
+        "r": 208
+    },
+    {
+        "auto_generated_uuid": "violet",
+        "b": 238,
+        "family": "Pinks/Violets",
+        "g": 130,
+        "name": "VIOLET",
+        "r": 238
+    },
+    {
+        "auto_generated_uuid": "plum",
+        "b": 221,
+        "family": "Pinks/Violets",
+        "g": 160,
+        "name": "PLUM",
+        "r": 221
+    },
+    {
+        "auto_generated_uuid": "orchid",
+        "b": 214,
+        "family": "Pinks/Violets",
+        "g": 112,
+        "name": "ORCHID",
+        "r": 218
+    },
+    {
+        "auto_generated_uuid": "medium_orchid",
+        "b": 211,
+        "family": "Pinks/Violets",
+        "g": 85,
+        "name": "MEDIUM ORCHID",
+        "r": 186
+    },
+    {
+        "auto_generated_uuid": "dark_orchid",
+        "b": 204,
+        "family": "Pinks/Violets",
+        "g": 50,
+        "name": "DARK ORCHID",
+        "r": 153
+    },
+    {
+        "auto_generated_uuid": "dark_violet",
+        "b": 211,
+        "family": "Pinks/Violets",
+        "g": 0,
+        "name": "DARK VIOLET",
+        "r": 148
+    },
+    {
+        "auto_generated_uuid": "blue_violet",
+        "b": 226,
+        "family": "Pinks/Violets",
+        "g": 43,
+        "name": "BLUE VIOLET",
+        "r": 138
+    },
+    {
+        "auto_generated_uuid": "purple",
+        "b": 240,
+        "family": "Pinks/Violets",
+        "g": 32,
+        "name": "PURPLE",
+        "r": 160
+    },
+    {
+        "auto_generated_uuid": "medium_purple",
+        "b": 219,
+        "family": "Pinks/Violets",
+        "g": 112,
+        "name": "MEDIUM PURPLE",
+        "r": 147
+    },
+    {
+        "auto_generated_uuid": "thistle",
+        "b": 216,
+        "family": "Pinks/Violets",
+        "g": 191,
+        "name": "THISTLE",
+        "r": 216
+    },
+    {
+        "auto_generated_uuid": "green",
+        "b": 0,
+        "family": "Greens",
+        "g": 255,
+        "name": "GREEN",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "deep_palette_resurrect_twilight",
+        "b": 47,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 34,
+        "name": "RESURRECT_PALETTE_DEEP_TWILIGHT",
+        "r": 46
+    },
+    {
+        "auto_generated_uuid": "dark_palette_plum_resurrect",
+        "b": 70,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 53,
+        "name": "RESURRECT_PALETTE_DARK_PLUM",
+        "r": 62
+    },
+    {
+        "auto_generated_uuid": "dusky_mauve_palette_resurrect",
+        "b": 101,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 85,
+        "name": "RESURRECT_PALETTE_DUSKY_MAUVE",
+        "r": 98
+    },
+    {
+        "auto_generated_uuid": "muted_palette_resurrect_rosewood",
+        "b": 108,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 108,
+        "name": "RESURRECT_PALETTE_MUTED_ROSEWOOD",
+        "r": 150
+    },
+    {
+        "auto_generated_uuid": "beige_palette_parchment_resurrect",
+        "b": 122,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 148,
+        "name": "RESURRECT_PALETTE_PARCHMENT_BEIGE",
+        "r": 171
+    },
+    {
+        "auto_generated_uuid": "lavender_palette_resurrect_shadowed",
+        "b": 98,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 79,
+        "name": "RESURRECT_PALETTE_SHADOWED_LAVENDER",
+        "r": 105
+    },
+    {
+        "auto_generated_uuid": "foggy_palette_purple_resurrect",
+        "b": 138,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 112,
+        "name": "RESURRECT_PALETTE_FOGGY_PURPLE",
+        "r": 127
+    },
+    {
+        "auto_generated_uuid": "palette_resurrect_seafoam_steel",
+        "b": 178,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 171,
+        "name": "RESURRECT_PALETTE_SEAFOAM_STEEL",
+        "r": 155
+    },
+    {
+        "auto_generated_uuid": "frosted_jade_palette_resurrect",
+        "b": 208,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 220,
+        "name": "RESURRECT_PALETTE_FROSTED_JADE",
+        "r": 199
+    },
+    {
+        "auto_generated_uuid": "palette_pure_resurrect_white",
+        "b": 255,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 255,
+        "name": "RESURRECT_PALETTE_PURE_WHITE",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "palette_red_resurrect_wine",
+        "b": 39,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 39,
+        "name": "RESURRECT_PALETTE_WINE_RED",
+        "r": 110
+    },
+    {
+        "auto_generated_uuid": "crimson_flame_palette_resurrect",
+        "b": 49,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 56,
+        "name": "RESURRECT_PALETTE_CRIMSON_FLAME",
+        "r": 179
+    },
+    {
+        "auto_generated_uuid": "fiery_orange_palette_resurrect",
+        "b": 54,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 79,
+        "name": "RESURRECT_PALETTE_FIERY_ORANGE",
+        "r": 234
+    },
+    {
+        "auto_generated_uuid": "amber_burnished_palette_resurrect",
+        "b": 74,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 125,
+        "name": "RESURRECT_PALETTE_BURNISHED_AMBER",
+        "r": 245
+    },
+    {
+        "auto_generated_uuid": "crimson_deep_palette_resurrect",
+        "b": 52,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 35,
+        "name": "RESURRECT_PALETTE_DEEP_CRIMSON",
+        "r": 174
+    },
+    {
+        "auto_generated_uuid": "cherry_palette_resurrect_vivid",
+        "b": 59,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 59,
+        "name": "RESURRECT_PALETTE_VIVID_CHERRY",
+        "r": 232
+    },
+    {
+        "auto_generated_uuid": "burning_ember_palette_resurrect",
+        "b": 29,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 107,
+        "name": "RESURRECT_PALETTE_BURNING_EMBER",
+        "r": 251
+    },
+    {
+        "auto_generated_uuid": "golden_palette_resurrect_sunset",
+        "b": 23,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 150,
+        "name": "RESURRECT_PALETTE_GOLDEN_SUNSET",
+        "r": 247
+    },
+    {
+        "auto_generated_uuid": "gold_honey_palette_resurrect",
+        "b": 43,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 194,
+        "name": "RESURRECT_PALETTE_HONEY_GOLD",
+        "r": 249
+    },
+    {
+        "auto_generated_uuid": "palette_raspberry_resurrect_wine",
+        "b": 69,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 48,
+        "name": "RESURRECT_PALETTE_RASPBERRY_WINE",
+        "r": 122
+    },
+    {
+        "auto_generated_uuid": "brick_palette_red_resurrect",
+        "b": 57,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 69,
+        "name": "RESURRECT_PALETTE_BRICK_RED",
+        "r": 158
+    },
+    {
+        "auto_generated_uuid": "copper_glow_palette_resurrect",
+        "b": 61,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 104,
+        "name": "RESURRECT_PALETTE_COPPER_GLOW",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "autumn_orange_palette_resurrect",
+        "b": 78,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 144,
+        "name": "RESURRECT_PALETTE_AUTUMN_ORANGE",
+        "r": 230
+    },
+    {
+        "auto_generated_uuid": "goldenrod_palette_resurrect",
+        "b": 84,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 185,
+        "name": "RESURRECT_PALETTE_GOLDENROD",
+        "r": 251
+    },
+    {
+        "auto_generated_uuid": "dark_olive_palette_resurrect",
+        "b": 36,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 62,
+        "name": "RESURRECT_PALETTE_DARK_OLIVE",
+        "r": 76
+    },
+    {
+        "auto_generated_uuid": "green_mossy_palette_resurrect",
+        "b": 51,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 102,
+        "name": "RESURRECT_PALETTE_MOSSY_GREEN",
+        "r": 103
+    },
+    {
+        "auto_generated_uuid": "gras_lemon_palette_resurrect",
+        "b": 71,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 169,
+        "name": "RESURRECT_PALETTE_LEMON_GRASS",
+        "r": 162
+    },
+    {
+        "auto_generated_uuid": "green_palette_resurrect_spring",
+        "b": 75,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 224,
+        "name": "RESURRECT_PALETTE_SPRING_GREEN",
+        "r": 213
+    },
+    {
+        "auto_generated_uuid": "palette_resurrect_sunshine_yellow",
+        "b": 134,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 255,
+        "name": "RESURRECT_PALETTE_SUNSHINE_YELLOW",
+        "r": 251
+    },
+    {
+        "auto_generated_uuid": "forest_jade_palette_resurrect",
+        "b": 76,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 90,
+        "name": "RESURRECT_PALETTE_FOREST_JADE",
+        "r": 22
+    },
+    {
+        "auto_generated_uuid": "green_palette_resurrect_sea",
+        "b": 99,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 144,
+        "name": "RESURRECT_PALETTE_SEA_GREEN",
+        "r": 35
+    },
+    {
+        "auto_generated_uuid": "fresh_mint_palette_resurrect",
+        "b": 115,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 188,
+        "name": "RESURRECT_PALETTE_FRESH_MINT",
+        "r": 30
+    },
+    {
+        "auto_generated_uuid": "lime_palette_resurrect_sprite",
+        "b": 105,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 219,
+        "name": "RESURRECT_PALETTE_LIME_SPRITE",
+        "r": 145
+    },
+    {
+        "auto_generated_uuid": "green_leafy_palette_resurrect",
+        "b": 108,
+        "family": "https://lospec.com/palette-list/resurrect-64",
+        "g": 223,
+        "name": "RESURRECT_PALETTE_LEAFY_GREEN",
+        "r": 205
+    }
+]

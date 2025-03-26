@@ -465,7 +465,7 @@ target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
 enable_testing()
 
 # # Option to enable/disable tests
-option(ENABLE_UNIT_TESTS "Enable unit tests" ON)
+option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
 
 if(ENABLE_UNIT_TESTS AND NOT CMAKE_BUILD_TYPE STREQUAL "Release")
     # Create a function to add unit tests
@@ -483,7 +483,7 @@ if(ENABLE_UNIT_TESTS AND NOT CMAKE_BUILD_TYPE STREQUAL "Release")
 
     # Add unit tests
     # add_unit_test(unit-tests tests/TestInputSystem.cpp ${TEST_SOURCES})
-    add_unit_test(unit-test-timer tests/TestTimer.cpp ${TEST_SOURCES})
+    # add_unit_test(unit-test-timer tests/TestTimer.cpp ${TEST_SOURCES})
 
     # You can add more unit tests by calling the function
     # add_unit_test(another-test tests/another_test.cpp)

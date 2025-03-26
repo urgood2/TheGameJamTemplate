@@ -245,7 +245,6 @@ namespace game
         auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
         childTransform.setActualX(200);
         childTransform.setActualY(200);
-        // TODO: how to make something act like it was actually tacked on to the parent? probably add a flag to allow special case handling for this (like a badge attached to a card, moves uniformly with the card)
         transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{});
         auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
         childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
@@ -265,15 +264,6 @@ namespace game
         transform::AssignRole(&globals::registry, childEntity3, transform::InheritedProperties::Type::RoleInheritor, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{50.f, 50.f});
         auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
         childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
-
-        //TODO: how to queue events with this timer?
-        timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f){
-            SPDLOG_DEBUG("Injecting dynamic motion");
-            transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
-
-        // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
-        //     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
-        // });
 
         timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
 

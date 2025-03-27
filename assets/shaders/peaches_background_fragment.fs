@@ -23,6 +23,7 @@ uniform vec3 colorTint = vec3(1.0, 1.0, 1.0);
 uniform float pixel_size;     // Set to > 1.0 to enable pixelation (e.g., 4.0, 8.0)
 uniform float pixel_enable;   // 1.0 = on, 0.0 = off
 uniform vec2 blob_offset;  // (x, y) offset in UV space
+uniform float movement_randomness; // 0.0 = none, 1.0+ = lots
 
 // === New uniforms ===
 uniform float hue_shift = 0.0;
@@ -78,10 +79,19 @@ void main() {
     for (int i = 0; i < 64; i++) {
         if (i >= blobCount) break;
         float fi = float(i);
+        
+        float tcos = cos(iTime * float(i - blobCount / 2) * 0.3);
+
+        // Existing position
         float ty = fract(sin(fi * 13.123) * 43758.5453);
         float tx = (fi + 0.5) / blob_count + shape_amplitude * cos(iTime + fi);
-        float tcos = cos(iTime * float(i - blobCount / 2) * 0.3);
-        vec2 pos1 = vec2(tx, ty) + blob_offset;
+
+        // Add pseudo-random wobble per blob
+        float r1 = sin(dot(vec2(fi, 0.0), vec2(12.9898, 78.233))) * 43758.5453;
+        float r2 = cos(dot(vec2(fi, 1.0), vec2(12.9898, 78.233))) * 43758.5453;
+        vec2 random_offset = vec2(sin(iTime + r1), cos(iTime + r2)) * 0.01 * movement_randomness;
+
+        vec2 pos1 = vec2(tx, ty) + blob_offset + random_offset;
         vec2 pos2 = pos1 + vec2(0.01);
 
         float tin1 = ting(fi * tcos, uv, pos1);

@@ -681,6 +681,8 @@ namespace game
         globalShaderUniforms.set("peaches_background", "pixel_size", 6.0f);       // Bigger = chunkier pixels
         globalShaderUniforms.set("peaches_background", "pixel_enable", 1.0f);     // Turn on
         globalShaderUniforms.set("peaches_background", "blob_offset", Vector2{ 0.0f, -0.1f }); // Moves all blobs upward
+        globalShaderUniforms.set("peaches_background", "movement_randomness", 16.2f); // Tweak live
+
 
 
 

@@ -9701,6 +9701,18 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/eng_synonyms.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\eng_synonyms.json"
     ],
+    "fade_fragment_shader_slide": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\slide_fade_fragment.fs"
+    ],
+    "fade_fragment_shader_zoom": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_zoom_fragment.fs"
+    ],
+    "fade_shader_slide_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\slide_fade_vertex.vs"
+    ],
+    "fade_shader_vertex_zoom": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_zoom_vertex.vs"
+    ],
     "fiery_orange_palette_resurrect": [
         "RESURRECT_PALETTE_FIERY_ORANGE"
     ],

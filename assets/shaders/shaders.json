@@ -43,5 +43,13 @@
     "peaches_background": {
         "vertex": "peaches_background_vertex.vs",
         "fragment": "peaches_background_fragment.fs"
+    },
+    "fade_zoom": {
+        "vertex": "fade_zoom_vertex.vs",
+        "fragment": "fade_zoom_fragment.fs"
+    },
+    "slide_fade": {
+        "vertex": "slide_fade_vertex.vs",
+        "fragment": "slide_fade_fragment.fs"
     }
 }

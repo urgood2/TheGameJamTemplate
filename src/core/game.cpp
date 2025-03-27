@@ -19,7 +19,6 @@
 
 #include "../systems/movable/my_own_movable_impl.hpp"
 #include "../systems/shaders/shader_system.hpp"
-#include "../systems/event_queue/new_event_system.hpp"
 #include "../systems/event/event_system.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/text/textVer2.hpp"
@@ -683,34 +682,16 @@ namespace game
         globalShaderUniforms.set("peaches_background", "blob_offset", Vector2{ 0.0f, -0.1f }); // Moves all blobs upward
         globalShaderUniforms.set("peaches_background", "movement_randomness", 16.2f); // Tweak live
 
+        // fade_zoom transition
+        globalShaderUniforms.set("fade_zoom", "progress", 0.0f);          // Animate from 0 to 1
+        globalShaderUniforms.set("fade_zoom", "zoom_strength", 0.2f);    // Optional zoom
+        globalShaderUniforms.set("fade_zoom", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // black
 
+        // slide_fade transition
+        globalShaderUniforms.set("slide_fade", "progress", 0.0f);                     // Animate from 0.0 to 1.0
+        globalShaderUniforms.set("slide_fade", "slide_direction", Vector2{1.0f, 0.0f}); // Slide to the right
+        globalShaderUniforms.set("slide_fade", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // Fade through black
 
-
-
-
-        // globalShaderUniforms.set("peaches_background", "blob_count", 24.0f);
-        // globalShaderUniforms.set("peaches_background", "blob_spacing", 0.045f);
-        // globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.035f);
-        // globalShaderUniforms.set("peaches_background", "distortion_strength", 4.0f);
-        // globalShaderUniforms.set("peaches_background", "cl_shift", 0.3f);
-        // globalShaderUniforms.set("peaches_background", "radial_falloff", 0.8f);
-        // globalShaderUniforms.set("peaches_background", "wave_strength", 4.8f);
-        // globalShaderUniforms.set("peaches_background", "highlight_gain", 1.5f);
-        // globalShaderUniforms.set("peaches_background", "noise_strength", 0.16f);
-        // globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.05f);
-        // globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.85f);
-
-        // globalShaderUniforms.set("peaches_background", "blob_count", 6.0f);
-        // globalShaderUniforms.set("peaches_background", "blob_spacing", 0.15f);
-        // globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.015f);
-        // globalShaderUniforms.set("peaches_background", "distortion_strength", 1.5f);
-        // globalShaderUniforms.set("peaches_background", "cl_shift", 0.1f);
-        // globalShaderUniforms.set("peaches_background", "radial_falloff", 0.2f);
-        // globalShaderUniforms.set("peaches_background", "wave_strength", 2.0f);
-        // globalShaderUniforms.set("peaches_background", "highlight_gain", 1.1f);
-        // globalShaderUniforms.set("peaches_background", "noise_strength", 0.05f);
-        // globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.2f);
-        // globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.6f);
 
 }
 
@@ -805,6 +786,10 @@ namespace game
         shaders::TryApplyUniforms(squish, globalShaderUniforms, "squish");
         auto peaches = shaders::getShader("peaches_background");
         shaders::TryApplyUniforms(peaches, globalShaderUniforms, "peaches_background");
+        auto slide_fade = shaders::getShader("slide_fade");
+        shaders::TryApplyUniforms(slide_fade, globalShaderUniforms, "slide_fade");
+        auto fade_zoom = shaders::getShader("fade_zoom");
+        shaders::TryApplyUniforms(fade_zoom, globalShaderUniforms, "fade_zoom");
 
         // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
         
@@ -827,7 +812,7 @@ namespace game
         // clear screen
         ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
+        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, slide_fade); // render the final output layer main canvas to the screen
 
         rlImGuiBegin();  // Required: starts ImGui frame
 

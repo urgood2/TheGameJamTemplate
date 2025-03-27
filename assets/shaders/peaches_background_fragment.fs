@@ -19,6 +19,7 @@ uniform float cl_shift = 0.2;                  // Center luminance shift for sin
 uniform float distortion_strength = 0.2;       // Affects atan() -> smoothstep response
 uniform float edge_softness_min = 0.1;         // Min threshold for smoothstep in ting
 uniform float edge_softness_max = 0.7;         // Max threshold for smoothstep in ting
+uniform vec3 colorTint = vec3(1.0, 1.0, 1.0);  // Color tint
 
 out vec4 finalColor;
 
@@ -68,5 +69,7 @@ void main() {
     cl += rand(uv * resolution + iTime) * noise_strength;
     cl -= v * radial_falloff;
 
-    finalColor = vec4(cl * 1.44, (cl + dl) / 2.3, cl * 0.9, 1.0);
+    vec3 baseColor = vec3(cl * 1.44, (cl + dl) / 2.3, cl * 0.9);
+    baseColor *= colorTint; // <- Apply tint
+    finalColor = vec4(baseColor, 1.0);
 }

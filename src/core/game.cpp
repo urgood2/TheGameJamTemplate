@@ -649,17 +649,19 @@ namespace game
         shaders::registerUniformUpdate("peaches_background", [](Shader& shader) {
             globalShaderUniforms.set("peaches_background", "iTime", (float)GetTime());
         });
-        globalShaderUniforms.set("peaches_background", "blob_count", 10.0f);
-        globalShaderUniforms.set("peaches_background", "blob_spacing", 0.08f);
-        globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.025f);
-        globalShaderUniforms.set("peaches_background", "distortion_strength", 2.5f);
+        globalShaderUniforms.set("peaches_background", "blob_count", 9.58f);
+        globalShaderUniforms.set("peaches_background", "blob_spacing", 0.29f);
+        globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.135f); // animate shape amplitude and color Tint
+        globalShaderUniforms.set("peaches_background", "distortion_strength", 1.28f);
+        globalShaderUniforms.set("peaches_background", "noise_strength", 0.13f);
         globalShaderUniforms.set("peaches_background", "cl_shift", 0.15f);
-        globalShaderUniforms.set("peaches_background", "radial_falloff", 0.3f);
-        globalShaderUniforms.set("peaches_background", "wave_strength", 3.5f);
-        globalShaderUniforms.set("peaches_background", "highlight_gain", 1.3f);
-        globalShaderUniforms.set("peaches_background", "noise_strength", 0.07f);
-        globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.1f);
-        globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.5f); 
+        globalShaderUniforms.set("peaches_background", "radial_falloff", -0.9f);
+        globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.33f);
+        globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.67f);
+        globalShaderUniforms.set("peaches_background", "highlight_gain", -2.04f);
+        globalShaderUniforms.set("peaches_background", "wave_strength", 2.5f);
+        globalShaderUniforms.set("peaches_background", "colorTint", Vector3{0.3f, 0.4f, 0.9f});
+
 
 
         // globalShaderUniforms.set("peaches_background", "blob_count", 24.0f);

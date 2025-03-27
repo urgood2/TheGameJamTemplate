@@ -9701,6 +9701,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/eng_synonyms.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\eng_synonyms.json"
     ],
+    "fade_fragment_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_fragment.fs"
+    ],
     "fade_fragment_shader_slide": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\slide_fade_fragment.fs"
     ],
@@ -9709,6 +9712,9 @@
     ],
     "fade_shader_slide_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\slide_fade_vertex.vs"
+    ],
+    "fade_shader_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_vertex.vs"
     ],
     "fade_shader_vertex_zoom": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_zoom_vertex.vs"
@@ -9772,6 +9778,12 @@
     ],
     "foggy_palette_purple_resurrect": [
         "RESURRECT_PALETTE_FOGGY_PURPLE"
+    ],
+    "foil_fragment_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\foil_fragment.fs"
+    ],
+    "foil_shader_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\foil_vertex.vs"
     ],
     "font_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko",

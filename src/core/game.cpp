@@ -692,6 +692,23 @@ namespace game
         globalShaderUniforms.set("fade", "slide_direction", Vector2{1.0f, 0.0f}); // Slide to the right
         globalShaderUniforms.set("fade", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // Fade through black
 
+        // foil
+        // Time-related
+        globalShaderUniforms.set("foil", "time", (float)GetTime()); // or animated time
+        // Dissolve factor (0.0 to 1.0)
+        globalShaderUniforms.set("foil", "dissolve", 0.0f); // animate this for dissolve effect
+        // Foil animation vector (e.g. shimmer intensity/direction)
+        globalShaderUniforms.set("foil", "foil", Vector2{1.0f, 1.0f}); // tweak for animation patterns
+        // Texture region and layout
+        globalShaderUniforms.set("foil", "texture_details", Vector4{ 0.0f, 0.0f, 128.0f, 128.0f }); // x,y offset + width,height
+        globalShaderUniforms.set("foil", "image_details", Vector2{128.0f, 128.0f}); // full image dimensions
+        // Color burn blend colors (used during dissolve)
+        globalShaderUniforms.set("foil", "burn_colour_1", Vector4{1.0f, 0.3f, 0.0f, 1.0f}); // hot orange
+        globalShaderUniforms.set("foil", "burn_colour_2", Vector4{1.0f, 1.0f, 0.2f, 1.0f}); // yellow glow
+        // Shadow mode (if true, output darkened tones)
+        globalShaderUniforms.set("foil", "shadow", 0.0f);
+
+
 
 }
 
@@ -787,9 +804,11 @@ namespace game
         auto peaches = shaders::getShader("peaches_background");
         shaders::TryApplyUniforms(peaches, globalShaderUniforms, "peaches_background");
         auto fade = shaders::getShader("fade");
-        shaders::TryApplyUniforms(slide_fade, globalShaderUniforms, "fade");
+        shaders::TryApplyUniforms(fade, globalShaderUniforms, "fade");
         auto fade_zoom = shaders::getShader("fade_zoom");
         shaders::TryApplyUniforms(fade_zoom, globalShaderUniforms, "fade_zoom");
+        auto foil = shaders::getShader("foil");
+        shaders::TryApplyUniforms(foil, globalShaderUniforms, "foil");
 
         // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
         
@@ -797,7 +816,7 @@ namespace game
         
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, balatro); // render the background layer main canvas to the screen
         // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
-        layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
+        // layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
         
         layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 
@@ -812,7 +831,7 @@ namespace game
         // clear screen
         ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, fade); // render the final output layer main canvas to the screen
+        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, foil); // render the final output layer main canvas to the screen
 
         rlImGuiBegin();  // Required: starts ImGui frame
 

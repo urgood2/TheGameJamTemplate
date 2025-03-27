@@ -688,9 +688,9 @@ namespace game
         globalShaderUniforms.set("fade_zoom", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // black
 
         // slide_fade transition
-        globalShaderUniforms.set("slide_fade", "progress", 0.0f);                     // Animate from 0.0 to 1.0
-        globalShaderUniforms.set("slide_fade", "slide_direction", Vector2{1.0f, 0.0f}); // Slide to the right
-        globalShaderUniforms.set("slide_fade", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // Fade through black
+        globalShaderUniforms.set("fade", "progress", 0.0f);                     // Animate from 0.0 to 1.0
+        globalShaderUniforms.set("fade", "slide_direction", Vector2{1.0f, 0.0f}); // Slide to the right
+        globalShaderUniforms.set("fade", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // Fade through black
 
 
 }
@@ -786,8 +786,8 @@ namespace game
         shaders::TryApplyUniforms(squish, globalShaderUniforms, "squish");
         auto peaches = shaders::getShader("peaches_background");
         shaders::TryApplyUniforms(peaches, globalShaderUniforms, "peaches_background");
-        auto slide_fade = shaders::getShader("slide_fade");
-        shaders::TryApplyUniforms(slide_fade, globalShaderUniforms, "slide_fade");
+        auto fade = shaders::getShader("fade");
+        shaders::TryApplyUniforms(slide_fade, globalShaderUniforms, "fade");
         auto fade_zoom = shaders::getShader("fade_zoom");
         shaders::TryApplyUniforms(fade_zoom, globalShaderUniforms, "fade_zoom");
 
@@ -812,7 +812,7 @@ namespace game
         // clear screen
         ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, slide_fade); // render the final output layer main canvas to the screen
+        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, fade); // render the final output layer main canvas to the screen
 
         rlImGuiBegin();  // Required: starts ImGui frame
 

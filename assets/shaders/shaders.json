@@ -48,8 +48,8 @@
         "vertex": "fade_zoom_vertex.vs",
         "fragment": "fade_zoom_fragment.fs"
     },
-    "slide_fade": {
-        "vertex": "slide_fade_vertex.vs",
-        "fragment": "slide_fade_fragment.fs"
+    "fade": {
+        "vertex": "fade_vertex.vs",
+        "fragment": "fade_fragment.fs"
     }
 }

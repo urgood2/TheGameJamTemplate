@@ -649,21 +649,28 @@ namespace game
         shaders::registerUniformUpdate("peaches_background", [](Shader& shader) {
             globalShaderUniforms.set("peaches_background", "iTime", (float)GetTime());
         });
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{ (float)GetScreenWidth(), (float)GetScreenHeight() });
+        // === Blob settings ===
         globalShaderUniforms.set("peaches_background", "blob_count", 9.58f);
         globalShaderUniforms.set("peaches_background", "blob_spacing", 0.29f);
-        globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.135f); // animate shape amplitude and color Tint
+        globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.135f); // <- animated
+        // === Noise + distortion ===
         globalShaderUniforms.set("peaches_background", "distortion_strength", 1.28f);
         globalShaderUniforms.set("peaches_background", "noise_strength", 0.13f);
-        globalShaderUniforms.set("peaches_background", "cl_shift", 0.15f);
-        globalShaderUniforms.set("peaches_background", "radial_falloff", -0.9f);
+        globalShaderUniforms.set("peaches_background", "noise_blend_value", -0.53f);
+        globalShaderUniforms.set("peaches_background", "time_noise_weight", -1.64f);
+        globalShaderUniforms.set("peaches_background", "stripe_noise_weight", -0.57f);
+        // === Edge behavior ===
         globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.33f);
         globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.67f);
-        globalShaderUniforms.set("peaches_background", "highlight_gain", -2.04f);
+        // === Visual shaping ===
+        globalShaderUniforms.set("peaches_background", "cl_shift", 0.15f);
+        globalShaderUniforms.set("peaches_background", "radial_falloff", -0.9f);
         globalShaderUniforms.set("peaches_background", "wave_strength", 2.5f);
-        globalShaderUniforms.set("peaches_background", "colorTint", Vector3{0.3f, 0.4f, 0.9f});
-        globalShaderUniforms.set("peaches_background", "noise_blend_value", 0.0f);       // 0 = rand, 1 = valueNoise
-        globalShaderUniforms.set("peaches_background", "time_noise_weight", 0.2f);       // Animated flicker
-        globalShaderUniforms.set("peaches_background", "stripe_noise_weight", 0.1f);     // Adds horizontal wave bands
+        globalShaderUniforms.set("peaches_background", "highlight_gain", -2.04f);
+        // === Color ===
+        globalShaderUniforms.set("peaches_background", "colorTint", Vector3{ 0.3f, 0.4f, 0.9f }); // <- animated
+
 
 
 

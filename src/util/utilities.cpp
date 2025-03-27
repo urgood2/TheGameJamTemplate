@@ -54,6 +54,29 @@ using std::string;
 using json = nlohmann::json;
 
 namespace util {
+
+    Texture2D GeneratePaletteTexture(const std::vector<Color>& colors)
+    {
+        int width = colors.size();
+        int height = 1;
+
+        // Create blank image (1 row, width columns)
+        Image img = GenImageColor(width, height, BLANK);
+
+        // Draw each color into the image
+        for (int i = 0; i < width; ++i) {
+            ImageDrawPixel(&img, i, 0, colors[i]);
+        }
+
+        // Load as texture and cleanup
+        Texture2D tex = LoadTextureFromImage(img);
+        UnloadImage(img);
+
+        // Optional: crisp sampling (for distinct palette steps)
+        SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+
+        return tex;
+    }
     
     std::string getAssetPathUUIDVersion(const std::string path_uuid_or_raw_identifier) { // path below the assets folder {
         auto path = uuid::lookup(path_uuid_or_raw_identifier);

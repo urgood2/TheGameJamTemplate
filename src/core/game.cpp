@@ -633,7 +633,60 @@ namespace game
             globalShaderUniforms.set("squish", "squish_x", (float) sin(GetTime() * 0.5f) * 0.1f);
             globalShaderUniforms.set("squish", "squish_Y", (float) cos(GetTime() * 0.2f) * 0.1f);
         });   
-    }
+
+
+        // peaches background
+        std::vector<Color> myPalette = {
+            WHITE,
+            BLUE, 
+            GREEN,
+            RED,
+            YELLOW,
+            PURPLE
+        };
+
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{ (float)GetScreenWidth(), (float)GetScreenHeight() });
+        shaders::registerUniformUpdate("peaches_background", [](Shader& shader) {
+            globalShaderUniforms.set("peaches_background", "iTime", (float)GetTime());
+        });
+        globalShaderUniforms.set("peaches_background", "blob_count", 10.0f);
+        globalShaderUniforms.set("peaches_background", "blob_spacing", 0.08f);
+        globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.025f);
+        globalShaderUniforms.set("peaches_background", "distortion_strength", 2.5f);
+        globalShaderUniforms.set("peaches_background", "cl_shift", 0.15f);
+        globalShaderUniforms.set("peaches_background", "radial_falloff", 0.3f);
+        globalShaderUniforms.set("peaches_background", "wave_strength", 3.5f);
+        globalShaderUniforms.set("peaches_background", "highlight_gain", 1.3f);
+        globalShaderUniforms.set("peaches_background", "noise_strength", 0.07f);
+        globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.1f);
+        globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.5f); 
+
+
+        // globalShaderUniforms.set("peaches_background", "blob_count", 24.0f);
+        // globalShaderUniforms.set("peaches_background", "blob_spacing", 0.045f);
+        // globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.035f);
+        // globalShaderUniforms.set("peaches_background", "distortion_strength", 4.0f);
+        // globalShaderUniforms.set("peaches_background", "cl_shift", 0.3f);
+        // globalShaderUniforms.set("peaches_background", "radial_falloff", 0.8f);
+        // globalShaderUniforms.set("peaches_background", "wave_strength", 4.8f);
+        // globalShaderUniforms.set("peaches_background", "highlight_gain", 1.5f);
+        // globalShaderUniforms.set("peaches_background", "noise_strength", 0.16f);
+        // globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.05f);
+        // globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.85f);
+
+        // globalShaderUniforms.set("peaches_background", "blob_count", 6.0f);
+        // globalShaderUniforms.set("peaches_background", "blob_spacing", 0.15f);
+        // globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.015f);
+        // globalShaderUniforms.set("peaches_background", "distortion_strength", 1.5f);
+        // globalShaderUniforms.set("peaches_background", "cl_shift", 0.1f);
+        // globalShaderUniforms.set("peaches_background", "radial_falloff", 0.2f);
+        // globalShaderUniforms.set("peaches_background", "wave_strength", 2.0f);
+        // globalShaderUniforms.set("peaches_background", "highlight_gain", 1.1f);
+        // globalShaderUniforms.set("peaches_background", "noise_strength", 0.05f);
+        // globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.2f);
+        // globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.6f);
+
+}
 
     auto update(float delta) -> void
     {
@@ -724,6 +777,8 @@ namespace game
         shaders::TryApplyUniforms(skew, globalShaderUniforms, "3d_skew");
         auto squish = shaders::getShader("squish");
         shaders::TryApplyUniforms(squish, globalShaderUniforms, "squish");
+        auto peaches = shaders::getShader("peaches_background");
+        shaders::TryApplyUniforms(peaches, globalShaderUniforms, "peaches_background");
 
         // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
         
@@ -731,7 +786,7 @@ namespace game
         
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, balatro); // render the background layer main canvas to the screen
         // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
-        layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, balatro); // render the background layer main canvas to the screen
+        layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
         
         layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 

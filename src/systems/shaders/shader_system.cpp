@@ -39,20 +39,19 @@ namespace shaders {
 
     void ApplyUniformsToShader(Shader shader, const ShaderUniformSet& set) {
         for (const auto& [name, value] : set.uniforms) {
+            int loc = GetShaderLocation(shader, name.c_str());
             std::visit([&](auto&& val) {
                 using T = std::decay_t<decltype(val)>;
-    
                 if constexpr (std::is_same_v<T, float>) {
-                    layer::SendUniformFloat(shader, name, val);
+                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_FLOAT);
                 } else if constexpr (std::is_same_v<T, Vector2>) {
-                    layer::SendUniformVector2(shader, name, val);
+                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC2);
                 } else if constexpr (std::is_same_v<T, Vector3>) {
-                    layer::SendUniformVector3(shader, name, val);
+                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC3);
                 } else if constexpr (std::is_same_v<T, Vector4>) {
-                    layer::SendUniformVector4(shader, name, val);
-                } else {
-                    // If you add new types later, you'll catch missing handler here
-                    static_assert(always_false<T>::value, "Unsupported ShaderUniformValue type");
+                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC4);
+                } else if constexpr (std::is_same_v<T, Texture2D>) {
+                    SetShaderValueTexture(shader, loc, val);
                 }
             }, value);
         }

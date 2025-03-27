@@ -106,22 +106,17 @@ namespace util {
 	extern auto rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect, ImVec4 tintColor) -> void;
     extern auto drawColorCodedTextUnformatted(const std::string& text) -> void;
     extern std::string getAssetPathUUIDVersion(const std::string path_uuid_or_raw_identifier);
-	extern auto generatePerlinNoiseElevationMap(vector< vector<double> > &elevation, int worldWidth, int worldHeight, json noiseSteps, double octaveInputOffsetIncrement, double elevationFloorCutoff, double randomOffsetForSeed) -> void;
 	extern auto raylibColorToImVec(const Color &c) -> ImVec4;
 	extern auto getRandomSynonymFor(const string &word) -> string;
-	extern auto hasNeighborTile(int i, int j, const string &tileID) -> bool;
 	extern auto toUnsignedChar(string value) -> unsigned char;
 	extern auto getTileCoordsAtMousePos() -> Vector2;
 	extern auto isTileWithinBounds(const Vector2 &tileLoc) -> bool;
-	extern auto getMuscleRankName(int muscleRank) -> string;
-	extern auto getPainRankName(int painRank) -> string;
 	extern auto getDistance(float x1, float y1, float x2, float y2) -> float;
 	extern float easeOutExpo(float x);
+    extern Texture2D GeneratePaletteTexture(const std::vector<Color>& colors);
 
 	// text processing
 	extern auto processText(const std::string& input) -> TextLogEntry;
-	extern auto getLevelCurveRank(int exp, std::string descriptorCategory, std::string levelCurveType) -> int;
-    extern auto getLevelDescriptor(int levelNumber, std::string descriptorCategory) -> string;
 
 	// test methods
 	extern auto convertCP437TextToJSON() -> void;

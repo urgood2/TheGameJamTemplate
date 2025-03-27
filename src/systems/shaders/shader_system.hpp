@@ -16,7 +16,8 @@ using ShaderUniformValue = std::variant<
         float,
         Vector2,
         Vector3,
-        Vector4
+        Vector4,
+        Texture2D
     >;
 // #include "third_party/rlImGui/imgui.h"
 // #include "third_party/rlImGui/imgui_internal.h"
@@ -160,7 +161,10 @@ namespace shaders {
                                     SPDLOG_INFO("  {}: Vector3 = ({}, {}, {})", uniformName, value.x, value.y, value.z);
                                 } else if constexpr (std::is_same_v<T, Vector4>) {
                                     SPDLOG_INFO("  {}: Vector4 = ({}, {}, {}, {})", uniformName, value.x, value.y, value.z, value.w);
-                                } else {
+                                } else if constexpr (std::is_same_v<T, Texture2D>) {
+                                    ImGui::Text("%s (Texture ID: %d, %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
+                                }
+                                else {
                                     SPDLOG_WARN("  {}: Unknown uniform type", uniformName);
                                 }
                             }, uniformValue);
@@ -172,7 +176,7 @@ namespace shaders {
                     // Live-edit uniforms
                     for (auto& [uniformName, uniformValue] : uniformSet.uniforms) {
                         ImGui::PushID(uniformName.c_str());
-    
+                    
                         std::visit([&](auto& value) {
                             using T = std::decay_t<decltype(value)>;
                             if constexpr (std::is_same_v<T, float>) {
@@ -182,13 +186,16 @@ namespace shaders {
                             } else if constexpr (std::is_same_v<T, Vector3>) {
                                 ImGui::DragFloat3(uniformName.c_str(), &value.x, 0.01f);
                             } else if constexpr (std::is_same_v<T, Vector4>) {
-                                // Use color picker for Vector4
                                 ImGui::ColorEdit4(uniformName.c_str(), &value.x);
+                            } else if constexpr (std::is_same_v<T, Texture2D>) {
+                                ImGui::Text("%s: Texture2D (id: %d, size: %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
+                                // Optional preview
+                                // ImGui::Image((ImTextureID)(intptr_t)value.id, ImVec2(64, 64));
                             } else {
                                 static_assert(always_false<T>::value, "Unsupported uniform type");
                             }
                         }, uniformValue);
-    
+                    
                         ImGui::PopID();
                     }
     

@@ -39,5 +39,9 @@
     "squish": {
         "vertex": "squish_vertex.vs",
         "fragment": "squish_fragment.fs"
+    },
+    "peaches_background": {
+        "vertex": "peaches_background_vertex.vs",
+        "fragment": "peaches_background_fragment.fs"
     }
 }

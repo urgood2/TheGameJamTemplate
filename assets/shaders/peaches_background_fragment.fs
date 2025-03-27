@@ -20,6 +20,9 @@ uniform float distortion_strength = 0.2;       // Affects atan() -> smoothstep r
 uniform float edge_softness_min = 0.1;         // Min threshold for smoothstep in ting
 uniform float edge_softness_max = 0.7;         // Max threshold for smoothstep in ting
 uniform vec3 colorTint = vec3(1.0, 1.0, 1.0);  // Color tint
+uniform float noise_blend_value = 0.0;          // Blend between rand and valueNoise
+uniform float time_noise_weight = 0.0;          // Weight for animated timeNoise
+uniform float stripe_noise_weight = 0.0;        // Weight for stripeNoise
 
 out vec4 finalColor;
 
@@ -31,6 +34,27 @@ float ting(float i, vec2 uv, vec2 loc)
 {
     float d = distance(uv, loc);
     return smoothstep(edge_softness_max, edge_softness_min, d);
+}
+
+float valueNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f*f*(3.0-2.0*f); // smoothstep interpolation
+
+    float a = rand(i);
+    float b = rand(i + vec2(1.0, 0.0));
+    float c = rand(i + vec2(0.0, 1.0));
+    float d = rand(i + vec2(1.0, 1.0));
+
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float timeNoise(vec2 p, float t) {
+    return rand(p + vec2(t * 0.1, t * 0.05));
+}
+
+float stripeNoise(vec2 uv, float frequency, float t) {
+    return 0.5 + 0.5 * sin(uv.y * frequency + t);
 }
 
 void main() {
@@ -66,7 +90,9 @@ void main() {
 
     float j = sin(5.0 * smoothstep(0.3, 1.2, dl));
     cl = max(cl, j * highlight_gain);
-    cl += rand(uv * resolution + iTime) * noise_strength;
+
+    
+    // cl += rand(uv * resolution + iTime) * noise_strength;
     cl -= v * radial_falloff;
 
     vec3 baseColor = vec3(cl * 1.44, (cl + dl) / 2.3, cl * 0.9);

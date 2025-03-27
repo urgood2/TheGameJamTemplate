@@ -661,6 +661,10 @@ namespace game
         globalShaderUniforms.set("peaches_background", "highlight_gain", -2.04f);
         globalShaderUniforms.set("peaches_background", "wave_strength", 2.5f);
         globalShaderUniforms.set("peaches_background", "colorTint", Vector3{0.3f, 0.4f, 0.9f});
+        globalShaderUniforms.set("peaches_background", "noise_blend_value", 0.0f);       // 0 = rand, 1 = valueNoise
+        globalShaderUniforms.set("peaches_background", "time_noise_weight", 0.2f);       // Animated flicker
+        globalShaderUniforms.set("peaches_background", "stripe_noise_weight", 0.1f);     // Adds horizontal wave bands
+
 
 
 

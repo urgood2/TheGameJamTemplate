@@ -22,6 +22,7 @@ uniform float edge_softness_max = 0.7;
 uniform vec3 colorTint = vec3(1.0, 1.0, 1.0);
 uniform float pixel_size;     // Set to > 1.0 to enable pixelation (e.g., 4.0, 8.0)
 uniform float pixel_enable;   // 1.0 = on, 0.0 = off
+uniform vec2 blob_offset;  // (x, y) offset in UV space
 
 // === New uniforms ===
 uniform float hue_shift = 0.0;
@@ -80,7 +81,7 @@ void main() {
         float ty = fract(sin(fi * 13.123) * 43758.5453);
         float tx = (fi + 0.5) / blob_count + shape_amplitude * cos(iTime + fi);
         float tcos = cos(iTime * float(i - blobCount / 2) * 0.3);
-        vec2 pos1 = vec2(tx, ty);
+        vec2 pos1 = vec2(tx, ty) + blob_offset;
         vec2 pos2 = pos1 + vec2(0.01);
 
         float tin1 = ting(fi * tcos, uv, pos1);

@@ -650,26 +650,36 @@ namespace game
             globalShaderUniforms.set("peaches_background", "iTime", (float)GetTime());
         });
         globalShaderUniforms.set("peaches_background", "resolution", Vector2{ (float)GetScreenWidth(), (float)GetScreenHeight() });
-        // === Blob settings ===
-        globalShaderUniforms.set("peaches_background", "blob_count", 9.58f);
-        globalShaderUniforms.set("peaches_background", "blob_spacing", 0.29f);
-        globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.135f); // <- animated
-        // === Noise + distortion ===
-        globalShaderUniforms.set("peaches_background", "distortion_strength", 1.28f);
-        globalShaderUniforms.set("peaches_background", "noise_strength", 0.13f);
-        globalShaderUniforms.set("peaches_background", "noise_blend_value", -0.53f);
-        globalShaderUniforms.set("peaches_background", "time_noise_weight", -1.64f);
-        globalShaderUniforms.set("peaches_background", "stripe_noise_weight", -0.57f);
-        // === Edge behavior ===
-        globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.33f);
-        globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.67f);
-        // === Visual shaping ===
-        globalShaderUniforms.set("peaches_background", "cl_shift", 0.15f);
-        globalShaderUniforms.set("peaches_background", "radial_falloff", -0.9f);
-        globalShaderUniforms.set("peaches_background", "wave_strength", 2.5f);
-        globalShaderUniforms.set("peaches_background", "highlight_gain", -2.04f);
-        // === Color ===
-        globalShaderUniforms.set("peaches_background", "colorTint", Vector3{ 0.3f, 0.4f, 0.9f }); // <- animated
+
+
+        // === Peaches Background Shader Uniforms ===
+        globalShaderUniforms.set("peaches_background", "iTime", static_cast<float>(GetTime()));  // Real-time updated
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{1440.0f, 900.0f});  // Your screen size
+
+        // === Blob Settings ===
+        globalShaderUniforms.set("peaches_background", "blob_count", 5.02f);
+        globalShaderUniforms.set("peaches_background", "blob_spacing", -0.89f);
+        globalShaderUniforms.set("peaches_background", "shape_amplitude", 0.205f);
+
+        // === Visual Distortion and Intensity ===
+        globalShaderUniforms.set("peaches_background", "distortion_strength", 4.12f);
+        globalShaderUniforms.set("peaches_background", "noise_strength", 0.14f);
+        globalShaderUniforms.set("peaches_background", "radial_falloff", -0.03f);
+        globalShaderUniforms.set("peaches_background", "wave_strength", 1.55f);
+        globalShaderUniforms.set("peaches_background", "highlight_gain", 3.8f);
+        globalShaderUniforms.set("peaches_background", "cl_shift", -0.11f);
+
+        // === Edge Softness ===
+        globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.16f);
+        globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.68f);
+
+        // === Color Configuration ===
+        globalShaderUniforms.set("peaches_background", "colorTint", Vector3{0.33f, 0.57f, 0.31f});
+        globalShaderUniforms.set("peaches_background", "blob_color_blend", 0.42f);
+        globalShaderUniforms.set("peaches_background", "hue_shift", 0.8f);
+
+        globalShaderUniforms.set("peaches_background", "pixel_size", 6.0f);       // Bigger = chunkier pixels
+        globalShaderUniforms.set("peaches_background", "pixel_enable", 1.0f);     // Turn on
 
 
 

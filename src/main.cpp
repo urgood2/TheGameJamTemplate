@@ -335,6 +335,8 @@ int main(void)
     globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
     auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
     gameMapNode.debug.debugText = "Map Container";
+
+    game::init();
     
     input::Init(globals::inputState);
     

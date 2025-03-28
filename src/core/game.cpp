@@ -214,10 +214,6 @@ namespace game
     //asteroidManager = new AsteroidManager();
 
     // massive container the size of the screen
-    globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
-    auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
-    gameMapNode.debug.debugText = "Map Container";
-
     transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
     auto &node = globals::registry.get<transform::GameObject>(transformEntity);
     node.debug.debugText = "Parent";

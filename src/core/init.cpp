@@ -488,7 +488,6 @@ namespace init {
         }
 
         SPDLOG_DEBUG("Loading + worldgen finished.");
-        game::init();
         globals::currentGameState = GameState::MAIN_MENU;
     }
 

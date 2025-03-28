@@ -188,7 +188,7 @@ namespace game
         
         // load font
         // globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
-        globals::fontData.font = globals::font;
+        globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
         globals::fontData.fontScale = 1.0f;
 
         // create layer the size of the screen, with a main canvas the same size
@@ -205,273 +205,296 @@ namespace game
         globals::camera2D.rotation = 0;
         globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 
-        // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-        player = globals::registry.create();
-        auto &anim = factory::emplaceAnimationQueue(globals::registry, player);
-        anim.defaultAnimation = init::getAnimationObject("idle_animation");
-
-        // massive container the size of the screen
-        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
-        auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
-        gameMapNode.debug.debugText = "Map Container";
-
-        transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
-        auto &node = globals::registry.get<transform::GameObject>(transformEntity);
-        node.debug.debugText = "Parent";
-        node.state.dragEnabled = true;
-        //TODO: clicking + dragging doesn't work when hover is not enabled.
-        node.state.hoverEnabled = true;
-        node.state.collisionEnabled = true;
-        node.state.clickEnabled = true;
-        auto &transform = globals::registry.get<transform::Transform>(transformEntity);
-        transform.setActualX(100);
-        transform.setActualY(100);
-        // transform.setActualR(45.f);
-        transform::debugMode = true; // enable debug drawing of transforms
-
-        //Testing ui
-        auto &uiConfig = globals::registry.emplace<ui::UIConfig>(transformEntity);
-        uiConfig.color = RED;
-        uiConfig.outlineThickness = 4.0f;
-        uiConfig.outlineColor = YELLOW;
-        uiConfig.shadowColor = Fade(BLACK, 0.4f);
-        uiConfig.shadow = true;
-        uiConfig.emboss = 5.f;
-
-        childEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
-        auto &childNode = globals::registry.get<transform::GameObject>(childEntity);
-        childNode.debug.debugText = "Fixture 1";
-        auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
-        childTransform.setActualX(200);
-        childTransform.setActualY(200);
-        transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{});
-        auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
-        childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
-
-        childEntity2 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 40, 20);
-        auto &childNode2 = globals::registry.get<transform::GameObject>(childEntity2);
-        childNode2.debug.debugText = "Fixture 2";
-        auto &childTransform2 = globals::registry.get<transform::Transform>(childEntity2);
-        transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{});
-        auto &childRole2 = globals::registry.get<transform::InheritedProperties>(childEntity2);
-        childRole2.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER;
-
-        childEntity3 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 40);
-        auto &childNode3 = globals::registry.get<transform::GameObject>(childEntity3);
-        childNode3.debug.debugText = "Not fixture";
-        auto &childTransform3 = globals::registry.get<transform::Transform>(childEntity3);
-        transform::AssignRole(&globals::registry, childEntity3, transform::InheritedProperties::Type::RoleInheritor, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{50.f, 50.f});
-        auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
-        childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
-
-        timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
-
-            particle::Particle particle{
-                .velocity = Vector2{Random::get<float>(-200, 200), Random::get<float>(-200, 200)},
-                .rotation = Random::get<float>(0, 360),
-                .rotationSpeed = Random::get<float>(-180, 180),
-                .scale = Random::get<float>(1, 10),
-                .lifespan = Random::get<float>(1, 3),
-                .color = random_utils::random_element<Color>({RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, BROWN, WHITE, BLACK})
-            };
-
-            //TODO: way to programatically modify frame times for animation
-
-            particle::CreateParticle(globals::registry, 
-                GetMousePosition(), 
-                Vector2{10, 10}, 
-                particle, 
-                particle::ParticleAnimationConfig{.loop = true, .animationName ="sword_anim"});
-
-        });
         
-        auto &testConfig = globals::registry.emplace<ui::Tooltip>(transformEntity);
-        testConfig.title = "Test Tooltip";
-        
-        reflection::registerMetaForComponent<ui::Tooltip>([](auto meta) {
-            meta.type("Tooltip"_hs)  // Ensure type name matches the lookup string
-                .template data<&ui::Tooltip::title>("title"_hs)
-                .template data<&ui::Tooltip::text>("text"_hs);
-        });
+    // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
+    player = globals::registry.create();
+    auto &anim = factory::emplaceAnimationQueue(globals::registry, player);
+    anim.defaultAnimation = init::getAnimationObject("idle_animation");
 
-        auto type = entt::resolve("Tooltip"_hs);
-        auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
-        
-        
-        ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::TEXT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(WHITE)
-                    .addText("Hello, world!")
-                    .addShadow(true)
-                    .addRefEntity(transformEntity)
-                    .addRefComponent("Tooltip")
-                    .addRefValue("title")
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build()
-            )
-            .build();
-        ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GRAY)
-                    // .addOutlineThickness(2.0f)
-                    .addHover(true)
-                    .addButtonCallback([](){
-                        SPDLOG_DEBUG("Button callback triggered");
-                    })
-                    .addOutlineColor(BLUE)
-                    // .addShadow(true)
-                    .addEmboss(4.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build()
-            )
-            .addChild(uiTextEntry)
-            .build();
+    //asteroidManager = new AsteroidManager();
 
-        ui::UIElementTemplateNode uiColumnDef = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(YELLOW)
-                    .addEmboss(2.f)
-                    .addOutlineColor(BLUE)
-                    // .addOutlineThickness(5.0f)
-                    // .addMinWidth(500.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build()
-            )
-            .addChild(getRandomRectDef())
-            .addChild(getRandomRectDef())
-            .addChild(uiTextEntry)
-            .build();
-        
-        ui::UIElementTemplateNode uiRowDef = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::VERTICAL_CONTAINER) 
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(RED)
-                    .addEmboss(2.f)
-                    
-                    .addHover(true)
-                    .addButtonCallback([](){
-                        SPDLOG_DEBUG("Button callback triggered");
-                    })
-                    // .addMinHeight(500.f)
-                    // .addOutlineThickness(5.0f)
-                    // .addButtonCallback("testCallback")
-                    // .addOnePress(true)
-                    // .addFocusArgs((ui::FocusArgs{.funnel_to = entt::entity{entt::null}}))
-                    .addOutlineColor(BLUE)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
-                    .build()
-            )
-            .addChild(uiColumnDef)
-            .addChild(getRandomRectDef())
-            .build();
-        ui::UIElementTemplateNode uiTestRootDef = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::ROOT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    // .addMaxWidth(700.f)
-                    .addColor(BLUE)
-                    .addShadow(true)
-                    // .addHover(true)
-                    // .addButtonCallback("testCallback")
-                    .addAlign(
-                        transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER
-                    )
-                    .build()
-            )       
-            // .addChild(uiColumnDef)
-            .addChild(uiRowDef)
-            .addChild(uiTextEntryContainer)
-            .addChild(getRandomRectDef())
-            
-            .build();
-        
-        uiBox = ui::box::Initialize(
-            globals::registry, 
-            {.w = 200, .h = 200}, 
-            uiTestRootDef, 
+    // massive container the size of the screen
+    globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
+    auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
+    gameMapNode.debug.debugText = "Map Container";
+
+    transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
+    auto &node = globals::registry.get<transform::GameObject>(transformEntity);
+    node.debug.debugText = "Parent";
+    node.state.dragEnabled = true;
+    //TODO: clicking + dragging doesn't work when hover is not enabled.
+    node.state.hoverEnabled = true;
+    node.state.collisionEnabled = true;
+    node.state.clickEnabled = true;
+    auto &transform = globals::registry.get<transform::Transform>(transformEntity);
+    transform.setActualX(100);
+    transform.setActualY(100);
+    // transform.setActualR(45.f);
+    transform::debugMode = true; // enable debug drawing of transforms
+
+    //Testing ui
+    auto &uiConfig = globals::registry.emplace<ui::UIConfig>(transformEntity);
+    uiConfig.color = RED;
+    uiConfig.outlineThickness = 4.0f;
+    uiConfig.outlineColor = YELLOW;
+    uiConfig.shadowColor = Fade(BLACK, 0.4f);
+    uiConfig.shadow = true;
+    uiConfig.emboss = 5.f;
+
+    childEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
+    auto &childNode = globals::registry.get<transform::GameObject>(childEntity);
+    childNode.debug.debugText = "Fixture 1";
+    auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
+    childTransform.setActualX(200);
+    childTransform.setActualY(200);
+    // TODO: how to make something act like it was actually tacked on to the parent? probably add a flag to allow special case handling for this (like a badge attached to a card, moves uniformly with the card)
+    transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{});
+    auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
+    childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
+
+    childEntity2 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 40, 20);
+    auto &childNode2 = globals::registry.get<transform::GameObject>(childEntity2);
+    childNode2.debug.debugText = "Fixture 2";
+    auto &childTransform2 = globals::registry.get<transform::Transform>(childEntity2);
+    transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{});
+    auto &childRole2 = globals::registry.get<transform::InheritedProperties>(childEntity2);
+    childRole2.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER;
+
+    childEntity3 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 40);
+    auto &childNode3 = globals::registry.get<transform::GameObject>(childEntity3);
+    childNode3.debug.debugText = "Not fixture";
+    auto &childTransform3 = globals::registry.get<transform::Transform>(childEntity3);
+    transform::AssignRole(&globals::registry, childEntity3, transform::InheritedProperties::Type::RoleInheritor, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{50.f, 50.f});
+    auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
+    childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
+
+    //TODO: how to queue events with this timer?
+    timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f){
+        SPDLOG_DEBUG("Injecting dynamic motion");
+        transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
+
+    // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
+    //     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+    // });
+
+    timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
+
+        particle::Particle particle{
+            .velocity = Vector2{Random::get<float>(-200, 200), Random::get<float>(-200, 200)},
+            .rotation = Random::get<float>(0, 360),
+            .rotationSpeed = Random::get<float>(-180, 180),
+            .scale = Random::get<float>(1, 10),
+            .lifespan = Random::get<float>(1, 3),
+            .color = random_utils::random_element<Color>({RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, BROWN, WHITE, BLACK})
+        };
+
+        //TODO: way to programatically modify frame times for animation
+
+        particle::CreateParticle(globals::registry, 
+            GetMousePosition(), 
+            Vector2{10, 10}, 
+            particle, 
+            particle::ParticleAnimationConfig{.loop = true, .animationName ="sword_anim"});
+
+    });
+    timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f){
+        SPDLOG_DEBUG("Realigning ui");
+
+        // ui::box::Recalculate(globals::registry, uiBox);
+    });
+    
+    auto &testConfig = globals::registry.emplace<ui::Tooltip>(transformEntity);
+    testConfig.title = "Test Tooltip";
+    
+    reflection::registerMetaForComponent<ui::Tooltip>([](auto meta) {
+        meta.type("Tooltip"_hs)  // Ensure type name matches the lookup string
+            .template data<&ui::Tooltip::title>("title"_hs)
+            .template data<&ui::Tooltip::text>("text"_hs);
+    });
+
+    auto type = entt::resolve("Tooltip"_hs);
+    auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
+    
+    
+    ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
+        .addType(ui::UITypeEnum::TEXT)
+        .addConfig(
             ui::UIConfig::Builder::create()
-                .addRole(transform::InheritedProperties::Builder()
-                    .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
-                    .addMaster(transformEntity)
-                    .addLocationBond(transform::InheritedProperties::Sync::Strong)
-                    .addRotationBond(transform::InheritedProperties::Sync::Strong)
-                    .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_TOP)
-                    .build()
+                .addColor(WHITE)
+                .addText("Hello, world!")
+                .addShadow(true)
+                .addRefEntity(transformEntity)
+                .addRefComponent("Tooltip")
+                .addRefValue("title")
+                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                .build()
+        )
+        .build();
+    ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
+        .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        .addConfig(
+            ui::UIConfig::Builder::create()
+                .addColor(GRAY)
+                // .addOutlineThickness(2.0f)
+                .addHover(true)
+                .addButtonCallback([](){
+                    SPDLOG_DEBUG("Button callback triggered");
+                })
+                .addOutlineColor(BLUE)
+                // .addShadow(true)
+                .addEmboss(4.f)
+                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                .build()
+        )
+        .addChild(uiTextEntry)
+        .build();
+
+    ui::UIElementTemplateNode uiColumnDef = ui::UIElementTemplateNode::Builder::create()
+        .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+        .addConfig(
+            ui::UIConfig::Builder::create()
+                .addColor(YELLOW)
+                .addEmboss(2.f)
+                .addOutlineColor(BLUE)
+                // .addOutlineThickness(5.0f)
+                // .addMinWidth(500.f)
+                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                .build()
+        )
+        .addChild(getRandomRectDef())
+        .addChild(getRandomRectDef())
+        .addChild(uiTextEntry)
+        .build();
+    
+    ui::UIElementTemplateNode uiRowDef = ui::UIElementTemplateNode::Builder::create()
+        .addType(ui::UITypeEnum::VERTICAL_CONTAINER) 
+        .addConfig(
+            ui::UIConfig::Builder::create()
+                .addColor(RED)
+                .addEmboss(2.f)
+                
+                .addHover(true)
+                .addButtonCallback([](){
+                    SPDLOG_DEBUG("Button callback triggered");
+                })
+                // .addMinHeight(500.f)
+                // .addOutlineThickness(5.0f)
+                // .addButtonCallback("testCallback")
+                // .addOnePress(true)
+                // .addFocusArgs((ui::FocusArgs{.funnel_to = entt::entity{entt::null}}))
+                .addOutlineColor(BLUE)
+                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
+                .build()
+        )
+        .addChild(uiColumnDef)
+        .addChild(getRandomRectDef())
+        .build();
+    ui::UIElementTemplateNode uiTestRootDef = ui::UIElementTemplateNode::Builder::create()
+        .addType(ui::UITypeEnum::ROOT)
+        .addConfig(
+            ui::UIConfig::Builder::create()
+                // .addMaxWidth(700.f)
+                .addColor(BLUE)
+                .addShadow(true)
+                // .addHover(true)
+                // .addButtonCallback("testCallback")
+                .addAlign(
+                    transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER
                 )
                 .build()
-        );
+        )       
+        // .addChild(uiColumnDef)
+        .addChild(uiRowDef)
+        .addChild(uiTextEntryContainer)
+        .addChild(getRandomRectDef())
         
-        //LATER: figure out button UIE more precisely
-        //LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently
+        .build();
+    
+     uiBox = ui::box::Initialize(
+        globals::registry, 
+        {.w = 200, .h = 200}, 
+        uiTestRootDef, 
+        ui::UIConfig::Builder::create()
+            .addRole(transform::InheritedProperties::Builder()
+                .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
+                .addMaster(transformEntity)
+                .addLocationBond(transform::InheritedProperties::Sync::Strong)
+                .addRotationBond(transform::InheritedProperties::Sync::Strong)
+                .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_TOP)
+                .build()
+            )
+            .build()
+    );
+    
+    //LATER: figure out button UIE more precisely
+    //LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently
+    
+    //TODO: hover is currently required for clicking to work
+    //TODO: elements should not be clikable by default, they seem to be
+    //TODO: need to reflect rotation + scale in ui elements (optionally)
+    //TODO: arguments to test
+    /*
+        button:
         
-        //TODO: hover is currently required for clicking to work
-        //TODO: elements should not be clikable by default, they seem to be
-        //TODO: need to reflect rotation + scale in ui elements (optionally)
-        //TODO: arguments to test
-        /*
-            button:
-            
-            choice = args.choice,
-            chosen = args.chosen,
-            focus_args = args.focus_args,
-            func = args.func, -> just an update function
-            
-            slider:
-            
-            focus_args = {type = 'slider'}
-            refresh_movement = true
-            collideable = true
-            
-            toggle:
-            
-            button_dist = 0.2
-            focus_args = {funnel_to = true}
-            
-            
-        */
-        //LATER: bottom outline is sometimes jagged
-        // LATER: use VBO & IBOS for rendering
-        //LATER: ninepatch?
+        choice = args.choice,
+        chosen = args.chosen,
+        focus_args = args.focus_args,
+        func = args.func, -> just an update function
+        
+        slider:
+        
+        focus_args = {type = 'slider'}
+        refresh_movement = true
+        collideable = true
+        
+        toggle:
+        
+        button_dist = 0.2
+        focus_args = {funnel_to = true}
+        
+        
+    */
+    //LATER: bottom outline is sometimes jagged
+    // LATER: use VBO & IBOS for rendering
+    //LATER: ninepatch?
 
-        // needed for correct disposal of transform components
-        transform::registerDestroyListeners(globals::registry);
-        
-        //TODO: hover scale amount should be customizable
-        //TODO: h_popup and d_popup and alert
-        //TODO: how to recenter text after it changes (refresh entire layout? or just center the text?)
-        //TODO: is textDrawable used at all?
-        //TODO: how to use button delay
-        //TODO: various ui elements (buttons, sliders, etc.)
-        //TODO: testing interactivity (click, drag, hover)
-        //TODO: drag should probalby be replaced with custom function if ui is not meant to be moved (anything other than root)
-        //TODO: popups for hover and drag
-        //TODO: controller focus interactivity
-        //TODO: apply, stop hover and release for ui elements
-        
-        SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+    // needed for correct disposal of transform components
+    transform::registerDestroyListeners(globals::registry);
+    
+    //TODO: hover scale amount should be customizable
+    //TODO: h_popup and d_popup and alert
+    //TODO: how to recenter text after it changes (refresh entire layout? or just center the text?)
+    //TODO: is textDrawable used at all?
+    //TODO: how to use button delay
+    //TODO: various ui elements (buttons, sliders, etc.)
+    //TODO: testing interactivity (click, drag, hover)
+    //TODO: drag should probalby be replaced with custom function if ui is not meant to be moved (anything other than root)
+    //TODO: popups for hover and drag
+    //TODO: controller focus interactivity
+    //TODO: apply, stop hover and release for ui elements
+    
+    SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
 
-        
+        SetUpShaderUniforms();
+    }
+
+    void SetUpShaderUniforms()
+    {
+
         // pre-load shader values for later use
 
         // screen transition
         globalShaderUniforms.set("screen_tone_transition", "in_out", 0.f);
         globalShaderUniforms.set("screen_tone_transition", "position", 0.0f);
         globalShaderUniforms.set("screen_tone_transition", "size", Vector2{32.f, 32.f});
-        globalShaderUniforms.set("screen_tone_transition", "screen_pixel_size", Vector2{1.0f / GetScreenWidth(), 1.0f/ GetScreenHeight()});
+        globalShaderUniforms.set("screen_tone_transition", "screen_pixel_size", Vector2{1.0f / GetScreenWidth(), 1.0f / GetScreenHeight()});
         globalShaderUniforms.set("screen_tone_transition", "in_color", Vector4{0.0f, 0.0f, 0.0f, 1.0f});
         globalShaderUniforms.set("screen_tone_transition", "out_color", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
 
         // background shader
 
         /*
-        
+
             iTime	float	0.0 → ∞	Elapsed time in seconds. Drives animation. Use GetTime() or delta accumulation.
             texelSize	vec2	1.0 / screenSize	Inverse of resolution. E.g., vec2(1.0/1280.0, 1.0/720.0).
             polar_coordinates	bool	0 or 1	Whether to enable polar swirl distortion. 1 = ON.
@@ -502,7 +525,7 @@ namespace game
         globalShaderUniforms.set("balatro_background", "colour_1", Vector4{0.020128006f, 0.0139369555f, 0.049019635f, 1.0f});
         globalShaderUniforms.set("balatro_background", "colour_2", Vector4{0.029411793f, 1.0f, 0.0f, 1.0f});
         globalShaderUniforms.set("balatro_background", "colour_3", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
-        shaders::registerUniformUpdate("balatro_background", [](Shader &shader){ // update iTime every frame
+        shaders::registerUniformUpdate("balatro_background", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("balatro_background", "iTime", static_cast<float>(GetTime()));
 
             /*
@@ -538,7 +561,7 @@ namespace game
             roll_speed	float	-8.0 – 8.0	Speed/direction of the rolling line. Positive = down, negative = up.
         */
         globalShaderUniforms.set("crt", "resolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
-        shaders::registerUniformUpdate("crt", [](Shader &shader){ // update iTime every frame
+        shaders::registerUniformUpdate("crt", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("crt", "iTime", static_cast<float>(GetTime()));
         });
         globalShaderUniforms.set("crt", "roll_speed", 1.0f);
@@ -556,10 +579,9 @@ namespace game
         globalShaderUniforms.set("crt", "vignette_intensity", 0.11f);
         globalShaderUniforms.set("crt", "iTime", 113.47279f);
         globalShaderUniforms.set("crt", "aberation_amount", 0.93f);
-        
 
         // shockwave
-        globalShaderUniforms.set("shockwave", "resolution", Vector2{ (float)GetScreenWidth(), (float)GetScreenHeight() });
+        globalShaderUniforms.set("shockwave", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
         globalShaderUniforms.set("shockwave", "strength", 0.18f);
         globalShaderUniforms.set("shockwave", "center", Vector2{0.5f, 0.5f});
         globalShaderUniforms.set("shockwave", "radius", 1.93f);
@@ -569,7 +591,7 @@ namespace game
 
         // glitch
         globalShaderUniforms.set("glitch", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
-        shaders::registerUniformUpdate("glitch", [](Shader &shader){ // update iTime every frame
+        shaders::registerUniformUpdate("glitch", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("glitch", "iTime", static_cast<float>(GetTime()));
         });
         globalShaderUniforms.set("glitch", "shake_power", 0.03f);
@@ -579,7 +601,7 @@ namespace game
         globalShaderUniforms.set("glitch", "shake_color_rate", 0.01f);
 
         // wind
-        shaders::registerUniformUpdate("wind", [](Shader &shader){ // update iTime every frame
+        shaders::registerUniformUpdate("wind", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("wind", "iTime", static_cast<float>(GetTime()));
         });
         globalShaderUniforms.set("wind", "speed", 1.0f);
@@ -593,33 +615,33 @@ namespace game
         globalShaderUniforms.set("wind", "offset", 1.0f); // vary per object
 
         // pseudo 3d skew
-        shaders::registerUniformUpdate("3d_skew", [](Shader &shader) {
+        shaders::registerUniformUpdate("3d_skew", [](Shader &shader)
+                                       {
             globalShaderUniforms.set("3d_skew", "iTime", static_cast<float>(GetTime()));
             globalShaderUniforms.set("3d_skew", "mouse_screen_pos", GetMousePosition());
             globalShaderUniforms.set("3d_skew", "resolution", Vector2{
                 static_cast<float>(GetScreenWidth()),
                 static_cast<float>(GetScreenHeight())
-            });
-        });    
+            }); });
         // --- Projection parameters (from your log) ---
-        globalShaderUniforms.set("3d_skew", "fov", -0.39f);              // From runtime dump
-        globalShaderUniforms.set("3d_skew", "x_rot", 0.0f);              // No X tilt
-        globalShaderUniforms.set("3d_skew", "y_rot", 0.0f);              // No Y orbit
-        globalShaderUniforms.set("3d_skew", "inset", 0.0f);              // No edge compression    
+        globalShaderUniforms.set("3d_skew", "fov", -0.39f); // From runtime dump
+        globalShaderUniforms.set("3d_skew", "x_rot", 0.0f); // No X tilt
+        globalShaderUniforms.set("3d_skew", "y_rot", 0.0f); // No Y orbit
+        globalShaderUniforms.set("3d_skew", "inset", 0.0f); // No edge compression
         // --- Interaction dynamics ---
-        globalShaderUniforms.set("3d_skew", "hovering", 0.07f);          // From your log
-        globalShaderUniforms.set("3d_skew", "rand_trans_power", 0.09f);  // From your log
-        globalShaderUniforms.set("3d_skew", "rand_seed", 3.1415f);       // Per-object offset
-        globalShaderUniforms.set("3d_skew", "rotation", 0.0f);           // No UV twist
-        globalShaderUniforms.set("3d_skew", "cull_back", 0.0f);          // Disable backface culling    
+        globalShaderUniforms.set("3d_skew", "hovering", 0.07f);         // From your log
+        globalShaderUniforms.set("3d_skew", "rand_trans_power", 0.09f); // From your log
+        globalShaderUniforms.set("3d_skew", "rand_seed", 3.1415f);      // Per-object offset
+        globalShaderUniforms.set("3d_skew", "rotation", 0.0f);          // No UV twist
+        globalShaderUniforms.set("3d_skew", "cull_back", 0.0f);         // Disable backface culling
         // --- Geometry settings ---
         float drawWidth = static_cast<float>(GetScreenWidth());
         float drawHeight = static_cast<float>(GetScreenHeight());
         globalShaderUniforms.set("3d_skew", "regionRate", Vector2{
-            drawWidth / drawWidth, // = 1.0
-            drawHeight / drawHeight // = 1.0
-        });
-        globalShaderUniforms.set("3d_skew", "pivot", Vector2{ 0.0f, 0.0f }); // Al
+                                                              drawWidth / drawWidth,  // = 1.0
+                                                              drawHeight / drawHeight // = 1.0
+                                                          });
+        globalShaderUniforms.set("3d_skew", "pivot", Vector2{0.0f, 0.0f}); // Al
 
         // squish
         globalShaderUniforms.set("squish", "up_left", Vector2{0.0f, 0.0f});
@@ -627,33 +649,29 @@ namespace game
         globalShaderUniforms.set("squish", "down_right", Vector2{1.0f, 1.0f});
         globalShaderUniforms.set("squish", "down_left", Vector2{0.0f, 1.0f});
         globalShaderUniforms.set("squish", "plane_size", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
-        shaders::registerUniformUpdate("squish", [](Shader &shader) {
+        shaders::registerUniformUpdate("squish", [](Shader &shader)
+                                       {
             // occilate x and y
             globalShaderUniforms.set("squish", "squish_x", (float) sin(GetTime() * 0.5f) * 0.1f);
-            globalShaderUniforms.set("squish", "squish_Y", (float) cos(GetTime() * 0.2f) * 0.1f);
-        });   
-
+            globalShaderUniforms.set("squish", "squish_Y", (float) cos(GetTime() * 0.2f) * 0.1f); });
 
         // peaches background
         std::vector<Color> myPalette = {
             WHITE,
-            BLUE, 
+            BLUE,
             GREEN,
             RED,
             YELLOW,
-            PURPLE
-        };
+            PURPLE};
 
-        globalShaderUniforms.set("peaches_background", "resolution", Vector2{ (float)GetScreenWidth(), (float)GetScreenHeight() });
-        shaders::registerUniformUpdate("peaches_background", [](Shader& shader) {
-            globalShaderUniforms.set("peaches_background", "iTime", (float)GetTime());
-        });
-        globalShaderUniforms.set("peaches_background", "resolution", Vector2{ (float)GetScreenWidth(), (float)GetScreenHeight() });
-
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        shaders::registerUniformUpdate("peaches_background", [](Shader &shader)
+                                       { globalShaderUniforms.set("peaches_background", "iTime", (float)GetTime()); });
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
 
         // === Peaches Background Shader Uniforms ===
-        globalShaderUniforms.set("peaches_background", "iTime", static_cast<float>(GetTime()));  // Real-time updated
-        globalShaderUniforms.set("peaches_background", "resolution", Vector2{1440.0f, 900.0f});  // Your screen size
+        globalShaderUniforms.set("peaches_background", "iTime", static_cast<float>(GetTime())); // Real-time updated
+        globalShaderUniforms.set("peaches_background", "resolution", Vector2{1440.0f, 900.0f}); // Your screen size
 
         // === Blob Settings ===
         globalShaderUniforms.set("peaches_background", "blob_count", 5.02f);
@@ -677,19 +695,19 @@ namespace game
         globalShaderUniforms.set("peaches_background", "blob_color_blend", 0.42f);
         globalShaderUniforms.set("peaches_background", "hue_shift", 0.8f);
 
-        globalShaderUniforms.set("peaches_background", "pixel_size", 6.0f);       // Bigger = chunkier pixels
-        globalShaderUniforms.set("peaches_background", "pixel_enable", 1.0f);     // Turn on
-        globalShaderUniforms.set("peaches_background", "blob_offset", Vector2{ 0.0f, -0.1f }); // Moves all blobs upward
-        globalShaderUniforms.set("peaches_background", "movement_randomness", 16.2f); // Tweak live
+        globalShaderUniforms.set("peaches_background", "pixel_size", 6.0f);                  // Bigger = chunkier pixels
+        globalShaderUniforms.set("peaches_background", "pixel_enable", 1.0f);                // Turn on
+        globalShaderUniforms.set("peaches_background", "blob_offset", Vector2{0.0f, -0.1f}); // Moves all blobs upward
+        globalShaderUniforms.set("peaches_background", "movement_randomness", 16.2f);        // Tweak live
 
         // fade_zoom transition
-        globalShaderUniforms.set("fade_zoom", "progress", 0.0f);          // Animate from 0 to 1
-        globalShaderUniforms.set("fade_zoom", "zoom_strength", 0.2f);    // Optional zoom
+        globalShaderUniforms.set("fade_zoom", "progress", 0.0f);                        // Animate from 0 to 1
+        globalShaderUniforms.set("fade_zoom", "zoom_strength", 0.2f);                   // Optional zoom
         globalShaderUniforms.set("fade_zoom", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // black
 
         // slide_fade transition
-        globalShaderUniforms.set("fade", "progress", 0.0f);                     // Animate from 0.0 to 1.0
-        globalShaderUniforms.set("fade", "slide_direction", Vector2{1.0f, 0.0f}); // Slide to the right
+        globalShaderUniforms.set("fade", "progress", 0.0f);                        // Animate from 0.0 to 1.0
+        globalShaderUniforms.set("fade", "slide_direction", Vector2{1.0f, 0.0f});  // Slide to the right
         globalShaderUniforms.set("fade", "fade_color", Vector3{0.0f, 0.0f, 0.0f}); // Fade through black
 
         // foil
@@ -700,8 +718,8 @@ namespace game
         // Foil animation vector (e.g. shimmer intensity/direction)
         globalShaderUniforms.set("foil", "foil", Vector2{1.0f, 1.0f}); // tweak for animation patterns
         // Texture region and layout
-        globalShaderUniforms.set("foil", "texture_details", Vector4{ 0.0f, 0.0f, 128.0f, 128.0f }); // x,y offset + width,height
-        globalShaderUniforms.set("foil", "image_details", Vector2{128.0f, 128.0f}); // full image dimensions
+        globalShaderUniforms.set("foil", "texture_details", Vector4{0.0f, 0.0f, 128.0f, 128.0f}); // x,y offset + width,height
+        globalShaderUniforms.set("foil", "image_details", Vector2{128.0f, 128.0f});               // full image dimensions
         // Color burn blend colors (used during dissolve)
         globalShaderUniforms.set("foil", "burn_colour_1", Vector4{1.0f, 0.3f, 0.0f, 1.0f}); // hot orange
         globalShaderUniforms.set("foil", "burn_colour_2", Vector4{1.0f, 1.0f, 0.2f, 1.0f}); // yellow glow
@@ -709,92 +727,86 @@ namespace game
         globalShaderUniforms.set("foil", "shadow", 0.0f);
 
         // Time and dissolve progression
-        globalShaderUniforms.set("holo", "time", 0.0f);             // Should be updated every frame
-        globalShaderUniforms.set("holo", "dissolve", 0.0f);         // 0.0 (off) to 1.0 (full dissolve)
+        globalShaderUniforms.set("holo", "time", 0.0f);     // Should be updated every frame
+        globalShaderUniforms.set("holo", "dissolve", 0.0f); // 0.0 (off) to 1.0 (full dissolve)
 
         // Texture layout
-        globalShaderUniforms.set("holo", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
-        globalShaderUniforms.set("holo", "image_details", Vector2{ 64.0f, 64.0f }); // actual size in pixels
+        globalShaderUniforms.set("holo", "texture_details", Vector4{0.0f, 0.0f, 64.0f, 64.0f}); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("holo", "image_details", Vector2{64.0f, 64.0f});               // actual size in pixels
 
         // Shine and interference control
-        globalShaderUniforms.set("holo", "holo", Vector2{ 1.2f, 0.8f }); // x = shine intensity, y = interference scroll
+        globalShaderUniforms.set("holo", "holo", Vector2{1.2f, 0.8f}); // x = shine intensity, y = interference scroll
 
         // Colors
-        globalShaderUniforms.set("holo", "burn_colour_1", ColorNormalize(BLUE));    // Edge glow color A
-        globalShaderUniforms.set("holo", "burn_colour_2", ColorNormalize(PURPLE));  // Edge glow color B
+        globalShaderUniforms.set("holo", "burn_colour_1", ColorNormalize(BLUE));   // Edge glow color A
+        globalShaderUniforms.set("holo", "burn_colour_2", ColorNormalize(PURPLE)); // Edge glow color B
         globalShaderUniforms.set("holo", "shadow", 0.0f);                          // Set true to enable shadow pass
 
         // Mouse hover distortion
-        globalShaderUniforms.set("holo", "mouse_screen_pos", Vector2{ 0.0f, 0.0f }); // In screen pixels
-        globalShaderUniforms.set("holo", "hovering", 0.0f);                          // 0.0 = off, 1.0 = on
-        globalShaderUniforms.set("holo", "screen_scale", 1.0f);                      // Scale of UI in pixels
+        globalShaderUniforms.set("holo", "mouse_screen_pos", Vector2{0.0f, 0.0f}); // In screen pixels
+        globalShaderUniforms.set("holo", "hovering", 0.0f);                        // 0.0 = off, 1.0 = on
+        globalShaderUniforms.set("holo", "screen_scale", 1.0f);                    // Scale of UI in pixels
 
         // Time update
-        shaders::registerUniformUpdate("holo", [](Shader& shader) {
-            globalShaderUniforms.set("holo", "time", (float)GetTime());
-        });
+        shaders::registerUniformUpdate("holo", [](Shader &shader)
+                                       { globalShaderUniforms.set("holo", "time", (float)GetTime()); });
 
         // Texture details
-        globalShaderUniforms.set("polychrome", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
-        globalShaderUniforms.set("polychrome", "image_details", Vector2{ 64.0f, 64.0f }); // actual size in pixels
+        globalShaderUniforms.set("polychrome", "texture_details", Vector4{0.0f, 0.0f, 64.0f, 64.0f}); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("polychrome", "image_details", Vector2{64.0f, 64.0f});               // actual size in pixels
 
         // Animation + effect tuning
         globalShaderUniforms.set("polychrome", "time", (float)GetTime());
-        globalShaderUniforms.set("polychrome", "dissolve", 0.0f); // 0.0 to 1.0
-        globalShaderUniforms.set("polychrome", "polychrome", Vector2{ 0.1, 0.1 }); // tweak for effect, hue_modulation, animation speed
+        globalShaderUniforms.set("polychrome", "dissolve", 0.0f);                // 0.0 to 1.0
+        globalShaderUniforms.set("polychrome", "polychrome", Vector2{0.1, 0.1}); // tweak for effect, hue_modulation, animation speed
 
         // Visual options
         globalShaderUniforms.set("polychrome", "shadow", 0.0f);
-        globalShaderUniforms.set("polychrome", "burn_colour_1", Vector4{  1.0f,  1.0f, 0,  1.0f }); // glowing edge
-        globalShaderUniforms.set("polychrome", "burn_colour_2", Vector4{ 1.0f,  1.0f,  1.0f,  1.0f }); // highlight outer burn
+        globalShaderUniforms.set("polychrome", "burn_colour_1", Vector4{1.0f, 1.0f, 0, 1.0f});    // glowing edge
+        globalShaderUniforms.set("polychrome", "burn_colour_2", Vector4{1.0f, 1.0f, 1.0f, 1.0f}); // highlight outer burn
 
-        globalShaderUniforms.set("negative_shine", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
-        globalShaderUniforms.set("negative_shine", "image_details", Vector2{ 64.0f, 64.0f });              // actual size in pixels
+        globalShaderUniforms.set("negative_shine", "texture_details", Vector4{0.0f, 0.0f, 64.0f, 64.0f}); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("negative_shine", "image_details", Vector2{64.0f, 64.0f});               // actual size in pixels
 
         // Shine animation control
-        globalShaderUniforms.set("negative_shine", "negative_shine", Vector2{ 1.0f, 1.0f });               // x = phase offset, y = amplitude
+        globalShaderUniforms.set("negative_shine", "negative_shine", Vector2{1.0f, 1.0f}); // x = phase offset, y = amplitude
 
         // Burn edge colors
-        globalShaderUniforms.set("negative_shine", "burn_colour_1", ColorNormalize(SKYBLUE));             // Primary edge highlight
-        globalShaderUniforms.set("negative_shine", "burn_colour_2", ColorNormalize(PINK));                // Secondary edge highlight
-        globalShaderUniforms.set("negative_shine", "shadow", 0.0f);                                       // 0.0 = normal, 1.0 = shadow mode
+        globalShaderUniforms.set("negative_shine", "burn_colour_1", ColorNormalize(SKYBLUE)); // Primary edge highlight
+        globalShaderUniforms.set("negative_shine", "burn_colour_2", ColorNormalize(PINK));    // Secondary edge highlight
+        globalShaderUniforms.set("negative_shine", "shadow", 0.0f);                           // 0.0 = normal, 1.0 = shadow mode
 
         // Mouse interaction (if used in vertex distortion)
-        globalShaderUniforms.set("negative_shine", "mouse_screen_pos", Vector2{ 0.0f, 0.0f });
+        globalShaderUniforms.set("negative_shine", "mouse_screen_pos", Vector2{0.0f, 0.0f});
         globalShaderUniforms.set("negative_shine", "hovering", 0.0f);
         globalShaderUniforms.set("negative_shine", "screen_scale", 1.0f);
 
         // Time uniform updater
-        shaders::registerUniformUpdate("negative_shine", [](Shader& shader) {
-            globalShaderUniforms.set("negative_shine", "time", (float)GetTime());
-        });
+        shaders::registerUniformUpdate("negative_shine", [](Shader &shader)
+                                       { globalShaderUniforms.set("negative_shine", "time", (float)GetTime()); });
 
         // Texture layout details
-        globalShaderUniforms.set("negative", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
-        globalShaderUniforms.set("negative", "image_details", Vector2{ 64.0f, 64.0f });               // actual size in pixels
+        globalShaderUniforms.set("negative", "texture_details", Vector4{0.0f, 0.0f, 64.0f, 64.0f}); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("negative", "image_details", Vector2{64.0f, 64.0f});               // actual size in pixels
 
         // Negative effect control
-        globalShaderUniforms.set("negative", "negative", Vector2{ 1.0f, 1.0f }); // x = hue inversion offset, y = brightness inversion toggle (non-zero enables)
+        globalShaderUniforms.set("negative", "negative", Vector2{1.0f, 1.0f}); // x = hue inversion offset, y = brightness inversion toggle (non-zero enables)
 
         // Dissolve and timing
-        globalShaderUniforms.set("negative", "dissolve", 1.0f); // 0.0 = off, 1.0 = fully dissolved
-        shaders::registerUniformUpdate("negative", [](Shader& shader) {
-            globalShaderUniforms.set("negative", "time", (float)GetTime());
-        });
+        globalShaderUniforms.set("negative", "dissolve", 0.0f); // 0.0 = off, 1.0 = fully dissolved
+        shaders::registerUniformUpdate("negative", [](Shader &shader)
+                                       { globalShaderUniforms.set("negative", "time", (float)GetTime()); });
 
         // Edge burn colors
-        globalShaderUniforms.set("negative", "burn_colour_1", ColorNormalize(RED));     // Primary burn color
-        globalShaderUniforms.set("negative", "burn_colour_2", ColorNormalize(ORANGE));  // Secondary burn color
-        globalShaderUniforms.set("negative", "shadow", 0.0f);                            // 1.0 = enable black mask shadow mode
+        globalShaderUniforms.set("negative", "burn_colour_1", ColorNormalize(RED));    // Primary burn color
+        globalShaderUniforms.set("negative", "burn_colour_2", ColorNormalize(ORANGE)); // Secondary burn color
+        globalShaderUniforms.set("negative", "shadow", 0.0f);                          // 1.0 = enable black mask shadow mode
 
         // UI hover distortion (optional)
-        globalShaderUniforms.set("negative", "mouse_screen_pos", Vector2{ 0.0f, 0.0f });
-        globalShaderUniforms.set("negative", "hovering", 0.0f);                          // 0.0 = no hover effect, 1.0 = active
-        globalShaderUniforms.set("negative", "screen_scale", 1.0f);                      // UI scale factor
-
-
-
-}
+        globalShaderUniforms.set("negative", "mouse_screen_pos", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("negative", "hovering", 0.0f);     // 0.0 = no hover effect, 1.0 = active
+        globalShaderUniforms.set("negative", "screen_scale", 1.0f); // UI scale factor
+    }
 
     auto update(float delta) -> void
     {
@@ -822,6 +834,8 @@ namespace game
         {
             ui::element::Update(globals::registry, e, delta);
         }
+
+        // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
 
     }
 
@@ -871,44 +885,44 @@ namespace game
         layer::Push(&globals::camera2D);
 
         
-        auto balatro = shaders::getShader("balatro_background");
-        shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
+        // auto balatro = shaders::getShader("balatro_background");
+        // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
         auto crt = shaders::getShader("crt");
         shaders::TryApplyUniforms(crt, globalShaderUniforms, "crt");
-        auto shockwave = shaders::getShader("shockwave");
-        shaders::TryApplyUniforms(shockwave, globalShaderUniforms, "shockwave");
-        auto glitch = shaders::getShader("glitch");
-        shaders::TryApplyUniforms(glitch, globalShaderUniforms, "glitch");
-        auto wind = shaders::getShader("wind");
-        shaders::TryApplyUniforms(wind, globalShaderUniforms, "wind");
-        auto skew = shaders::getShader("3d_skew");
-        shaders::TryApplyUniforms(skew, globalShaderUniforms, "3d_skew");
-        auto squish = shaders::getShader("squish");
-        shaders::TryApplyUniforms(squish, globalShaderUniforms, "squish");
+        // auto shockwave = shaders::getShader("shockwave");
+        // shaders::TryApplyUniforms(shockwave, globalShaderUniforms, "shockwave");
+        // auto glitch = shaders::getShader("glitch");
+        // shaders::TryApplyUniforms(glitch, globalShaderUniforms, "glitch");
+        // auto wind = shaders::getShader("wind");
+        // shaders::TryApplyUniforms(wind, globalShaderUniforms, "wind");
+        // auto skew = shaders::getShader("3d_skew");
+        // shaders::TryApplyUniforms(skew, globalShaderUniforms, "3d_skew");
+        // auto squish = shaders::getShader("squish");
+        // shaders::TryApplyUniforms(squish, globalShaderUniforms, "squish");
         auto peaches = shaders::getShader("peaches_background");
         shaders::TryApplyUniforms(peaches, globalShaderUniforms, "peaches_background");
-        auto fade = shaders::getShader("fade");
-        shaders::TryApplyUniforms(fade, globalShaderUniforms, "fade");
-        auto fade_zoom = shaders::getShader("fade_zoom");
-        shaders::TryApplyUniforms(fade_zoom, globalShaderUniforms, "fade_zoom");
-        auto foil = shaders::getShader("foil");
-        shaders::TryApplyUniforms(foil, globalShaderUniforms, "foil");
-        auto holo = shaders::getShader("holo");
-        shaders::TryApplyUniforms(holo, globalShaderUniforms, "holo");
-        auto polychrome = shaders::getShader("polychrome");
-        shaders::TryApplyUniforms(polychrome, globalShaderUniforms, "polychrome");
-        auto negative_shine = shaders::getShader("negative_shine");
-        shaders::TryApplyUniforms(negative_shine, globalShaderUniforms, "negative_shine");
-        auto negative = shaders::getShader("negative");
-        shaders::TryApplyUniforms(negative, globalShaderUniforms, "negative");
+        // auto fade = shaders::getShader("fade");
+        // shaders::TryApplyUniforms(fade, globalShaderUniforms, "fade");
+        // auto fade_zoom = shaders::getShader("fade_zoom");
+        // shaders::TryApplyUniforms(fade_zoom, globalShaderUniforms, "fade_zoom");
+        // auto foil = shaders::getShader("foil");
+        // shaders::TryApplyUniforms(foil, globalShaderUniforms, "foil");
+        // auto holo = shaders::getShader("holo");
+        // shaders::TryApplyUniforms(holo, globalShaderUniforms, "holo");
+        // auto polychrome = shaders::getShader("polychrome");
+        // shaders::TryApplyUniforms(polychrome, globalShaderUniforms, "polychrome");
+        // auto negative_shine = shaders::getShader("negative_shine");
+        // shaders::TryApplyUniforms(negative_shine, globalShaderUniforms, "negative_shine");
+        // auto negative = shaders::getShader("negative");
+        // shaders::TryApplyUniforms(negative, globalShaderUniforms, "negative");
 
         // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
         
 
         
-        // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, balatro); // render the background layer main canvas to the screen
+        // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
         // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
-        // layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
+        layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
         
         layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 
@@ -923,7 +937,7 @@ namespace game
         // clear screen
         ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, negative); // render the final output layer main canvas to the screen
+        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
 
         rlImGuiBegin();  // Required: starts ImGui frame
 

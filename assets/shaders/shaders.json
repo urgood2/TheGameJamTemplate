@@ -55,5 +55,13 @@
     "foil": {
         "vertex": "foil_vertex.vs",
         "fragment": "foil_fragment.fs"
+    },
+    "holo": {
+        "vertex": "holo_vertex.vs",
+        "fragment": "holo_fragment.fs"
+    },
+    "polychrome": {
+        "vertex": "polychrome_vertex.vs",
+        "fragment": "polychrome_fragment.fs"
     }
 }

@@ -9809,6 +9809,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glitch_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\glitch_fragment.fs"
     ],
+    "fragment_holo_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_fragment.fs"
+    ],
+    "fragment_polychrome_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\polychrome_fragment.fs"
+    ],
     "fragment_screen_shader_tone_transition": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/screen_tone_transition_fragment.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\screen_tone_transition_fragment.fs",
@@ -10000,6 +10006,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\movable_gui.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/movable_gui.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\movable_gui.vs"
+    ],
+    "holo_shader_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_vertex.vs"
     ],
     "honeydew": [
         "HONEYDEW"
@@ -10195,6 +10204,9 @@
     ],
     "plum": [
         "PLUM"
+    ],
+    "polychrome_shader_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\polychrome_vertex.vs"
     ],
     "powerup_pro_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/powerup-pro.png",

@@ -708,6 +708,48 @@ namespace game
         // Shadow mode (if true, output darkened tones)
         globalShaderUniforms.set("foil", "shadow", 0.0f);
 
+        // Time and dissolve progression
+        globalShaderUniforms.set("holo", "time", 0.0f);             // Should be updated every frame
+        globalShaderUniforms.set("holo", "dissolve", 0.0f);         // 0.0 (off) to 1.0 (full dissolve)
+
+        // Texture layout
+        globalShaderUniforms.set("holo", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("holo", "image_details", Vector2{ 64.0f, 64.0f }); // actual size in pixels
+
+        // Shine and interference control
+        globalShaderUniforms.set("holo", "holo", Vector2{ 1.2f, 0.8f }); // x = shine intensity, y = interference scroll
+
+        // Colors
+        globalShaderUniforms.set("holo", "burn_colour_1", ColorNormalize(BLUE));    // Edge glow color A
+        globalShaderUniforms.set("holo", "burn_colour_2", ColorNormalize(PURPLE));  // Edge glow color B
+        globalShaderUniforms.set("holo", "shadow", 0.0f);                          // Set true to enable shadow pass
+
+        // Mouse hover distortion
+        globalShaderUniforms.set("holo", "mouse_screen_pos", Vector2{ 0.0f, 0.0f }); // In screen pixels
+        globalShaderUniforms.set("holo", "hovering", 0.0f);                          // 0.0 = off, 1.0 = on
+        globalShaderUniforms.set("holo", "screen_scale", 1.0f);                      // Scale of UI in pixels
+
+        // Time update
+        shaders::registerUniformUpdate("holo", [](Shader& shader) {
+            globalShaderUniforms.set("holo", "time", (float)GetTime());
+        });
+
+        // Texture details
+        globalShaderUniforms.set("polychrome", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("polychrome", "image_details", Vector2{ 64.0f, 64.0f }); // actual size in pixels
+
+        // Animation + effect tuning
+        globalShaderUniforms.set("polychrome", "time", (float)GetTime());
+        globalShaderUniforms.set("polychrome", "dissolve", 0.0f); // 0.0 to 1.0
+        globalShaderUniforms.set("polychrome", "polychrome", Vector2{ 0.1, 0.1 }); // tweak for effect, hue_modulation, animation speed
+
+        // Visual options
+        globalShaderUniforms.set("polychrome", "shadow", 0.0f);
+        globalShaderUniforms.set("polychrome", "burn_colour_1", Vector4{  1.0f,  1.0f, 0,  1.0f }); // glowing edge
+        globalShaderUniforms.set("polychrome", "burn_colour_2", Vector4{ 1.0f,  1.0f,  1.0f,  1.0f }); // highlight outer burn
+
+
+
 
 
 }
@@ -809,6 +851,10 @@ namespace game
         shaders::TryApplyUniforms(fade_zoom, globalShaderUniforms, "fade_zoom");
         auto foil = shaders::getShader("foil");
         shaders::TryApplyUniforms(foil, globalShaderUniforms, "foil");
+        auto holo = shaders::getShader("holo");
+        shaders::TryApplyUniforms(holo, globalShaderUniforms, "holo");
+        auto polychrome = shaders::getShader("polychrome");
+        shaders::TryApplyUniforms(polychrome, globalShaderUniforms, "polychrome");
 
         // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
         
@@ -831,7 +877,7 @@ namespace game
         // clear screen
         ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, foil); // render the final output layer main canvas to the screen
+        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, polychrome); // render the final output layer main canvas to the screen
 
         rlImGuiBegin();  // Required: starts ImGui frame
 

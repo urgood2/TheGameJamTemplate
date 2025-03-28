@@ -9812,6 +9812,12 @@
     "fragment_holo_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_fragment.fs"
     ],
+    "fragment_negative_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\negative_fragment.fs"
+    ],
+    "fragment_negative_shader_shine": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\negative_shine_fragment.fs"
+    ],
     "fragment_polychrome_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\polychrome_fragment.fs"
     ],
@@ -10132,6 +10138,12 @@
     ],
     "navy": [
         "NAVY"
+    ],
+    "negative_shader_shine_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\negative_shine_vertex.vs"
+    ],
+    "negative_shader_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\negative_vertex.vs"
     ],
     "newautoclicker5_sound": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/NewAutoclicker5.wav",

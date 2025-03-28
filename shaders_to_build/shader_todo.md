@@ -1,3 +1,1 @@
 - isolate vertex expansion (vertex shader) and fragment uv restriction (for sprite sheets) into own functions for reuse
-- A few more bland transitions that are classy and unintrusive
-- Choose a random bakcground with configurable multiple colors, movement direction, movement speed, and other configurable parameters which can later be tweened dynamically. Be sure to add pixelation, taken from balatro shader 

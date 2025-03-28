@@ -63,5 +63,13 @@
     "polychrome": {
         "vertex": "polychrome_vertex.vs",
         "fragment": "polychrome_fragment.fs"
+    },
+    "negative_shine": {
+        "vertex": "negative_shine_vertex.vs",
+        "fragment": "negative_shine_fragment.fs"
+    },
+    "negative": {
+        "vertex": "negative_vertex.vs",
+        "fragment": "negative_fragment.fs"
     }
 }

@@ -748,7 +748,49 @@ namespace game
         globalShaderUniforms.set("polychrome", "burn_colour_1", Vector4{  1.0f,  1.0f, 0,  1.0f }); // glowing edge
         globalShaderUniforms.set("polychrome", "burn_colour_2", Vector4{ 1.0f,  1.0f,  1.0f,  1.0f }); // highlight outer burn
 
+        globalShaderUniforms.set("negative_shine", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("negative_shine", "image_details", Vector2{ 64.0f, 64.0f });              // actual size in pixels
 
+        // Shine animation control
+        globalShaderUniforms.set("negative_shine", "negative_shine", Vector2{ 1.0f, 1.0f });               // x = phase offset, y = amplitude
+
+        // Burn edge colors
+        globalShaderUniforms.set("negative_shine", "burn_colour_1", ColorNormalize(SKYBLUE));             // Primary edge highlight
+        globalShaderUniforms.set("negative_shine", "burn_colour_2", ColorNormalize(PINK));                // Secondary edge highlight
+        globalShaderUniforms.set("negative_shine", "shadow", 0.0f);                                       // 0.0 = normal, 1.0 = shadow mode
+
+        // Mouse interaction (if used in vertex distortion)
+        globalShaderUniforms.set("negative_shine", "mouse_screen_pos", Vector2{ 0.0f, 0.0f });
+        globalShaderUniforms.set("negative_shine", "hovering", 0.0f);
+        globalShaderUniforms.set("negative_shine", "screen_scale", 1.0f);
+
+        // Time uniform updater
+        shaders::registerUniformUpdate("negative_shine", [](Shader& shader) {
+            globalShaderUniforms.set("negative_shine", "time", (float)GetTime());
+        });
+
+        // Texture layout details
+        globalShaderUniforms.set("negative", "texture_details", Vector4{ 0.0f, 0.0f, 64.0f, 64.0f }); // offsetX, offsetY, texWidth, texHeight
+        globalShaderUniforms.set("negative", "image_details", Vector2{ 64.0f, 64.0f });               // actual size in pixels
+
+        // Negative effect control
+        globalShaderUniforms.set("negative", "negative", Vector2{ 1.0f, 1.0f }); // x = hue inversion offset, y = brightness inversion toggle (non-zero enables)
+
+        // Dissolve and timing
+        globalShaderUniforms.set("negative", "dissolve", 1.0f); // 0.0 = off, 1.0 = fully dissolved
+        shaders::registerUniformUpdate("negative", [](Shader& shader) {
+            globalShaderUniforms.set("negative", "time", (float)GetTime());
+        });
+
+        // Edge burn colors
+        globalShaderUniforms.set("negative", "burn_colour_1", ColorNormalize(RED));     // Primary burn color
+        globalShaderUniforms.set("negative", "burn_colour_2", ColorNormalize(ORANGE));  // Secondary burn color
+        globalShaderUniforms.set("negative", "shadow", 0.0f);                            // 1.0 = enable black mask shadow mode
+
+        // UI hover distortion (optional)
+        globalShaderUniforms.set("negative", "mouse_screen_pos", Vector2{ 0.0f, 0.0f });
+        globalShaderUniforms.set("negative", "hovering", 0.0f);                          // 0.0 = no hover effect, 1.0 = active
+        globalShaderUniforms.set("negative", "screen_scale", 1.0f);                      // UI scale factor
 
 
 
@@ -855,6 +897,10 @@ namespace game
         shaders::TryApplyUniforms(holo, globalShaderUniforms, "holo");
         auto polychrome = shaders::getShader("polychrome");
         shaders::TryApplyUniforms(polychrome, globalShaderUniforms, "polychrome");
+        auto negative_shine = shaders::getShader("negative_shine");
+        shaders::TryApplyUniforms(negative_shine, globalShaderUniforms, "negative_shine");
+        auto negative = shaders::getShader("negative");
+        shaders::TryApplyUniforms(negative, globalShaderUniforms, "negative");
 
         // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
         
@@ -877,7 +923,7 @@ namespace game
         // clear screen
         ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, polychrome); // render the final output layer main canvas to the screen
+        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, negative); // render the final output layer main canvas to the screen
 
         rlImGuiBegin();  // Required: starts ImGui frame
 

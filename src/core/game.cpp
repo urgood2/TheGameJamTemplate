@@ -445,13 +445,14 @@ namespace game
         
         
     */
-    //LATER: bottom outline is sometimes jagged
+    //LATER: bottom outline is sometimes jagged when buttons are scaled down
     // LATER: use VBO & IBOS for rendering
     //LATER: ninepatch?
 
     // needed for correct disposal of transform components
     transform::registerDestroyListeners(globals::registry);
     
+    //TODO: integrate new text system with ui (as object)
     //TODO: hover scale amount should be customizable
     //TODO: h_popup and d_popup and alert
     //TODO: how to recenter text after it changes (refresh entire layout? or just center the text?)

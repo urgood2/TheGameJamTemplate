@@ -102,7 +102,6 @@ auto mainGameStateGameLoop(float dt) -> void
         game::update(dt);
         // updatedGame = true;
         // if (game::isPaused == false)
-            updateSystems(dt);
     // }
 }
 
@@ -261,7 +260,9 @@ void RunGameLoop()
             mainLoop.frame++; // increment frame counter
         }
         if (updatesPerformed == 0) {
-            MainLoopFixedUpdateAbstraction(0.001f); // fallback
+
+            SPDLOG_DEBUG("No updates performed this frame, frame time: {}", GetFrameTime());
+            MainLoopFixedUpdateAbstraction(GetFrameTime()); // fallback
         }
 
         // Update the UPS (updates per second) counter
@@ -274,30 +275,7 @@ void RunGameLoop()
         }
 
 #ifndef __EMSCRIPTEN__
-        // Render frame with FPS capping for non-web platforms
-        if (mainLoop.framerate > 0)
-        {
-            float targetFrameTime = 1.0f / mainLoop.framerate;
-            float frameStartTime = GetTime();
-
             MainLoopRenderAbstraction(deltaTime);
-
-            float frameEndTime = GetTime();
-            float frameDuration = frameEndTime - frameStartTime;
-
-            if (frameDuration < targetFrameTime)
-            {
-                float sleepTime = targetFrameTime - frameDuration;
-                if (sleepTime > 0)
-                {
-                    WaitTime(sleepTime);
-                }
-            }
-        }
-        else
-        {
-            MainLoopRenderAbstraction(deltaTime);
-        }
 #else
         // Let the browser handle FPS rendering for web builds
         MainLoopRenderAbstraction(deltaTime);

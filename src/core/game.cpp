@@ -458,7 +458,7 @@ namespace game
     //TODO: how to recenter text after it changes (refresh entire layout? or just center the text?)
     //TODO: is textDrawable used at all?
     //TODO: how to use button delay
-    //TODO: various ui elements (buttons, sliders, etc.)
+    //TODO: various ui elements (buttons, slider, toggle, radio button behavior, switch button with pips for selection, check box)
     //TODO: testing interactivity (click, drag, hover)
     //TODO: drag should probalby be replaced with custom function if ui is not meant to be moved (anything other than root)
     //TODO: popups for hover and drag

@@ -285,4 +285,70 @@ namespace shaders {
         shaderFileModificationTimes.clear();
     }
 
+    void ShowShaderEditorUI(ShaderUniformComponent& component) {
+        if (!ImGui::Begin("Shader Editor")) return;
+    
+        if (ImGui::BeginTabBar("Shaders")) {
+            for (auto& [shaderName, uniformSet] : component.shaderUniforms) {
+                if (ImGui::BeginTabItem(shaderName.c_str())) {
+                    // "Log Uniforms" button
+                    if (ImGui::Button("Log Uniforms")) {
+                        SPDLOG_INFO("Uniforms for shader '{}':", shaderName);
+                        for (const auto& [uniformName, uniformValue] : uniformSet.uniforms) {
+                            std::visit([&](const auto& value) {
+                                using T = std::decay_t<decltype(value)>;
+                                if constexpr (std::is_same_v<T, float>) {
+                                    SPDLOG_INFO("  {}: float = {}", uniformName, value);
+                                } else if constexpr (std::is_same_v<T, Vector2>) {
+                                    SPDLOG_INFO("  {}: Vector2 = ({}, {})", uniformName, value.x, value.y);
+                                } else if constexpr (std::is_same_v<T, Vector3>) {
+                                    SPDLOG_INFO("  {}: Vector3 = ({}, {}, {})", uniformName, value.x, value.y, value.z);
+                                } else if constexpr (std::is_same_v<T, Vector4>) {
+                                    SPDLOG_INFO("  {}: Vector4 = ({}, {}, {}, {})", uniformName, value.x, value.y, value.z, value.w);
+                                } else if constexpr (std::is_same_v<T, Texture2D>) {
+                                    ImGui::Text("%s (Texture ID: %d, %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
+                                }
+                                else {
+                                    SPDLOG_WARN("  {}: Unknown uniform type", uniformName);
+                                }
+                            }, uniformValue);
+                        }
+                    }
+    
+                    ImGui::Separator();
+    
+                    // Live-edit uniforms
+                    for (auto& [uniformName, uniformValue] : uniformSet.uniforms) {
+                        ImGui::PushID(uniformName.c_str());
+                    
+                        std::visit([&](auto& value) {
+                            using T = std::decay_t<decltype(value)>;
+                            if constexpr (std::is_same_v<T, float>) {
+                                ImGui::DragFloat(uniformName.c_str(), &value, 0.01f);
+                            } else if constexpr (std::is_same_v<T, Vector2>) {
+                                ImGui::DragFloat2(uniformName.c_str(), &value.x, 0.01f);
+                            } else if constexpr (std::is_same_v<T, Vector3>) {
+                                ImGui::DragFloat3(uniformName.c_str(), &value.x, 0.01f);
+                            } else if constexpr (std::is_same_v<T, Vector4>) {
+                                ImGui::ColorEdit4(uniformName.c_str(), &value.x);
+                            } else if constexpr (std::is_same_v<T, Texture2D>) {
+                                ImGui::Text("%s: Texture2D (id: %d, size: %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
+                                // Optional preview
+                                // ImGui::Image((ImTextureID)(intptr_t)value.id, ImVec2(64, 64));
+                            } else {
+                                static_assert(always_false<T>::value, "Unsupported uniform type");
+                            }
+                        }, uniformValue);
+                    
+                        ImGui::PopID();
+                    }
+    
+                    ImGui::EndTabItem();
+                }
+            }
+            ImGui::EndTabBar();
+        }
+    
+        ImGui::End();
+    }
 } // namespace shaders

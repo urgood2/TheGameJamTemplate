@@ -7,6 +7,7 @@
 
 #include "../systems/anim_system.hpp"
 #include "systems/input/input_function_data.hpp"
+#include "systems/shaders/shader_system.hpp"
 
 
 #include <iostream>
@@ -28,6 +29,8 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 
 namespace globals {
+
+    shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
 
     std::map<std::string, Rectangle> spriteDrawFrames; 
 

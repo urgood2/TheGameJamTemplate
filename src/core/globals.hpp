@@ -28,6 +28,7 @@
 
 #include "../systems/anim_system.hpp"
 #include "../systems/layer/layer.hpp"
+#include "../systems/shaders/shader_system.hpp"
 
 #include "third_party/rlImGui/imgui.h" // raylib imGUI binding
 
@@ -78,6 +79,8 @@ namespace input
 
 namespace globals
 {
+
+    extern shaders::ShaderUniformComponent globalShaderUniforms; // keep track of shader uniforms;
 
     extern GameState currentGameState;
 

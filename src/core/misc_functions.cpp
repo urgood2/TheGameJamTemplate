@@ -214,15 +214,15 @@ namespace game
         globalShaderUniforms.set("peaches_background", "radial_falloff", -0.03f);
         globalShaderUniforms.set("peaches_background", "wave_strength", 1.55f);
         globalShaderUniforms.set("peaches_background", "highlight_gain", 3.8f);
-        globalShaderUniforms.set("peaches_background", "cl_shift", -0.11f);
+        globalShaderUniforms.set("peaches_background", "cl_shift", 0.1f);
 
         // === Edge Softness ===
-        globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.16f);
+        globalShaderUniforms.set("peaches_background", "edge_softness_min", 0.32f);
         globalShaderUniforms.set("peaches_background", "edge_softness_max", 0.68f);
 
         // === Color Configuration ===
         globalShaderUniforms.set("peaches_background", "colorTint", Vector3{0.33f, 0.57f, 0.31f});
-        globalShaderUniforms.set("peaches_background", "blob_color_blend", 0.42f);
+        globalShaderUniforms.set("peaches_background", "blob_color_blend", 0.69f);
         globalShaderUniforms.set("peaches_background", "hue_shift", 0.8f);
 
         globalShaderUniforms.set("peaches_background", "pixel_size", 6.0f);                  // Bigger = chunkier pixels

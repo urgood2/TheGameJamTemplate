@@ -1016,9 +1016,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
             // child inherits parent's rotation
             transform.setVisualRotation(parentRotationAngle);
+            transform.setActualRotation(parentRotationAngle);
 
             transform.setVisualX(absoluteX);
             transform.setVisualY(absoluteY);
+            transform.setActualX(absoluteX);
+            transform.setActualY(absoluteY);
         }
 
         else if (role.role_type == InheritedProperties::Type::RoleRoot)

@@ -104,6 +104,8 @@
         "coroutine": "cpp",
         "csetjmp": "cpp",
         "shared_mutex": "cpp",
-        "syncstream": "cpp"
+        "syncstream": "cpp",
+        "barrier": "cpp",
+        "latch": "cpp"
     }
 }

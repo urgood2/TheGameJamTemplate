@@ -244,7 +244,7 @@ namespace game
     childTransform.setActualX(200);
     childTransform.setActualY(200);
     // TODO: how to make something act like it was actually tacked on to the parent? probably add a flag to allow special case handling for this (like a badge attached to a card, moves uniformly with the card)
-    transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{});
+    transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
     auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
     childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
 
@@ -252,7 +252,7 @@ namespace game
     auto &childNode2 = globals::registry.get<transform::GameObject>(childEntity2);
     childNode2.debug.debugText = "Fixture 2";
     auto &childTransform2 = globals::registry.get<transform::Transform>(childEntity2);
-    transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{});
+    transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
     auto &childRole2 = globals::registry.get<transform::InheritedProperties>(childEntity2);
     childRole2.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER;
 
@@ -292,11 +292,6 @@ namespace game
             particle, 
             particle::ParticleAnimationConfig{.loop = true, .animationName ="sword_anim"});
 
-    });
-    timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f){
-        SPDLOG_DEBUG("Realigning ui");
-
-        // ui::box::Recalculate(globals::registry, uiBox);
     });
     
     auto &testConfig = globals::registry.emplace<ui::Tooltip>(transformEntity);
@@ -933,7 +928,7 @@ namespace game
         // clear screen
         ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
+        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the final output layer main canvas to the screen
 
         rlImGuiBegin();  // Required: starts ImGui frame
 

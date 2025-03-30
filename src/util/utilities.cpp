@@ -426,7 +426,7 @@ namespace util {
     // color name from colors.json
     // Note that this method is not case sensitive - all names are converted to uppercase
     Color getColor(std::string colorName_or_uuid) {
-    return globals::colorsMap[uuid::lookup(colorName_or_uuid)];
+    return globals::colorsMap[uuid::add(colorName_or_uuid)];
 }
 
     auto toUnsignedChar(string value) -> unsigned char {

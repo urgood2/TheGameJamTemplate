@@ -196,7 +196,6 @@ namespace game
         sprites = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         ui_layer = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         finalOutput = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
-        layer::AddCanvasToLayer(sprites, "flash"); // create a separate canvas for the flash effect
 
         // set camera to fill the screen
         globals::camera2D = {0};
@@ -210,8 +209,6 @@ namespace game
     player = globals::registry.create();
     auto &anim = factory::emplaceAnimationQueue(globals::registry, player);
     anim.defaultAnimation = init::getAnimationObject("idle_animation");
-
-    //asteroidManager = new AsteroidManager();
 
     // massive container the size of the screen
     transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
@@ -468,6 +465,9 @@ namespace game
     //TODO: controller focus interactivity
     //TODO: apply, stop hover and release for ui elements
     
+    //TODO: not sure how hover enlargement works yet.
+    //REVIEW: to add jiggle on hover, just use node.methods->onHover with custom lamnda on the appropriate ui element's transform component.
+    
     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
 
         SetUpShaderUniforms();
@@ -544,7 +544,6 @@ namespace game
         util::Profiler drawProfiler("Draw Layers");
         layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr); // render the background layer commands to its main canvas
         layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr); // render the sprite layer commands to its main canvas
-        layer::DrawLayerCommandsToSpecificCanvas(sprites, "flash", nullptr); // render the sprite layer commands to its flash canvas
         layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr); // render the ui layer commands to its main canvas
         layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
 
@@ -614,7 +613,7 @@ namespace game
         // Display UPS and FPS
         const int fps = GetFPS(); // Get the current FPS
         DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
-
+        
         EndDrawing();
 
 

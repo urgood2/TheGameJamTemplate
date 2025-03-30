@@ -260,8 +260,8 @@ void RunGameLoop()
             mainLoop.frame++; // increment frame counter
         }
 
-        SPDLOG_DEBUG("mainloop.rate: {}, GetFrameTime(): {}, smoothedDeltaTime: {}, lag: {}, updatesPerformed: {}",
-                     mainLoop.rate, GetFrameTime(), deltaTime, mainLoop.lag, updatesPerformed);
+        // SPDLOG_DEBUG("mainloop.rate: {}, GetFrameTime(): {}, smoothedDeltaTime: {}, lag: {}, updatesPerformed: {}",
+                    //  mainLoop.rate, GetFrameTime(), deltaTime, mainLoop.lag, updatesPerformed);
         // if (updatesPerformed == 0) {
 
         //     SPDLOG_DEBUG("No updates performed this frame, frame time: {}", GetFrameTime());

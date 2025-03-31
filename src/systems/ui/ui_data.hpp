@@ -122,6 +122,7 @@ namespace ui
     // UIElement interprets config at a per-element level
     struct UIConfig
     {
+        
         // General Properties
         std::optional<std::string> id;           // Unique identifier, used to store in children vector
         std::optional<std::string> instanceType; // Instance type of the UI element

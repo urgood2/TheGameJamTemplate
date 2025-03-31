@@ -125,6 +125,51 @@ namespace ui
             uiBoxTransform.middleEntityForAlignment = uiElementEntity;
         }
     }
+    
+    // must be existing & initialized uibox (by calling initialize() )
+    void box::RenewAlignment(entt::registry &registry, entt::entity self)
+    {
+        
+        auto &definition = registry.get<UIElementTemplateNode>(self);
+        auto &config = registry.get<UIConfig>(self);
+
+        // Initialize transform component
+        auto &transform = registry.get<transform::Transform>(self);
+
+        // Setup Role component already done
+        
+        // Initialize node component (handles interaction state)
+        auto &node = registry.get<transform::GameObject>(self);
+        
+        // First, set parent-child relationships to create the tree structure
+        // BuildUIElementTree(registry, self, definition, entt::null);
+        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
+        // auto *uiBoxRole = registry.try_get<transform::InheritedProperties>(self);
+        // auto uiRoot = uiBox->uiRoot.value();
+        // // Set the midpoint for any future alignments to use
+        // transform.middleEntityForAlignment = uiRoot;
+        // auto &uiRootRole = registry.get<transform::InheritedProperties>(uiRoot);
+
+        // Calculate the correct and width/height and offset for each node
+        CalcTreeSizes(registry, uiRoot, {transform.getActualX(), transform.getActualY(), transform.getActualW(), transform.getActualH()}, true);
+
+        transform::AlignToMaster(&registry, self);
+
+        uiRootRole.offset = uiBoxRole->offset;
+
+        // start with root entity.
+        auto &uiElementComp = registry.get<UIElementComponent>(uiRoot);
+        // start with uibox's offset values so we align to that, w and h are unused.
+        ui::LocalTransform runningTransform{uiBoxRole->offset->x, uiBoxRole->offset->y, 0.f, 0.f};
+
+        placeUIElementsRecursively(registry, uiRoot, runningTransform, UITypeEnum::VERTICAL_CONTAINER, uiRoot);
+
+        handleAlignment(registry, uiRoot);
+
+        // LATER: LR clamp not implemented, not sure if necessary
+
+        ui::element::InitializeVisualTransform(registry, uiRoot);
+    }
 
     entt::entity box::Initialize(entt::registry &registry, const TransformConfig &transformData,
                                  UIElementTemplateNode definition, std::optional<UIConfig> config)

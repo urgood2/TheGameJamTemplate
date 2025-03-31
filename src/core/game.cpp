@@ -363,10 +363,12 @@ namespace game
             ui::UIConfig::Builder::create()
                 .addColor(RED)
                 .addEmboss(2.f)
-                
+                .addId("testRow")
                 .addHover(true)
                 .addButtonCallback([](){
                     SPDLOG_DEBUG("Button callback triggered");
+                    auto button = ui::box::GetUIEByID(globals::registry, uiBox, "testRow");
+                    SPDLOG_DEBUG("Button ID: {}", globals::registry.get<ui::UIConfig>(button.value()).id.value());
                 })
                 // .addMinHeight(500.f)
                 // .addOutlineThickness(5.0f)
@@ -416,6 +418,8 @@ namespace game
             )
             .build()
     );
+
+    
     
     //LATER: figure out button UIE more precisely
     //LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently

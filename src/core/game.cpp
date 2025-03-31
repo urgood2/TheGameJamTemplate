@@ -362,10 +362,16 @@ namespace game
                 .addEmboss(2.f)
                 .addId("testRow")
                 .addHover(true)
-                .addButtonCallback([](){
-                    SPDLOG_DEBUG("Button callback triggered");
-                    auto button = ui::box::GetUIEByID(globals::registry, uiBox, "testRow");
+                .addButtonCallback([testConfig](){
+                    SPDLOG_DEBUG("Button callback triggered, renewing box alignment");
+                    auto button = ui::box::GetUIEByID(globals::registry, uiBox, "testRow"); 
                     SPDLOG_DEBUG("Button ID: {}", globals::registry.get<ui::UIConfig>(button.value()).id.value());
+                    // set text tooltip to a random string
+                    auto &tooltip = globals::registry.get<ui::Tooltip>(transformEntity);
+                    tooltip.title = random_utils::random_element<std::string>(
+                        {"Hello", "World", "This is a test", "Testing 1, 2, 3", "Lorem ipsum dolor sit amet", "Random string"});
+
+                    ui::box::RenewAlignment(globals::registry, uiBox);
                 })
                 // .addMinHeight(500.f)
                 // .addOutlineThickness(5.0f)

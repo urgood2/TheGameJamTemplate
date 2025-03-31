@@ -140,6 +140,11 @@ namespace ui
         
         // Initialize node component (handles interaction state)
         auto &node = registry.get<transform::GameObject>(self);
+        auto &uiBox = registry.get<UIBoxComponent>(self);
+        auto &uiBoxRole = registry.get<transform::InheritedProperties>(self);
+        auto uiRoot = uiBox.uiRoot.value();
+        auto &uiRootRole = registry.get<transform::InheritedProperties>(uiRoot);
+        auto &uiRootConfig = registry.get<UIConfig>(uiRoot);
         
         // First, set parent-child relationships to create the tree structure
         // BuildUIElementTree(registry, self, definition, entt::null);
@@ -155,12 +160,12 @@ namespace ui
 
         transform::AlignToMaster(&registry, self);
 
-        uiRootRole.offset = uiBoxRole->offset;
+        uiRootRole.offset = uiBoxRole.offset;
 
         // start with root entity.
         auto &uiElementComp = registry.get<UIElementComponent>(uiRoot);
         // start with uibox's offset values so we align to that, w and h are unused.
-        ui::LocalTransform runningTransform{uiBoxRole->offset->x, uiBoxRole->offset->y, 0.f, 0.f};
+        ui::LocalTransform runningTransform{uiBoxRole.offset->x, uiBoxRole.offset->y, 0.f, 0.f};
 
         placeUIElementsRecursively(registry, uiRoot, runningTransform, UITypeEnum::VERTICAL_CONTAINER, uiRoot);
 
@@ -537,6 +542,20 @@ namespace ui
 
         auto &nodeComp = registry.get<transform::GameObject>(node);
         for (auto childEntry : nodeComp.children)
+        {
+            auto child = childEntry.second;
+            auto result = GetUIEByID(registry, child, id);
+            if (result)
+                return result;
+        }
+
+        // look in ui root's children
+        auto *uiBox = registry.try_get<UIBoxComponent>(node);
+        if (!uiBox)
+            return std::nullopt;
+        auto uiRoot = uiBox->uiRoot.value();
+        auto &uiRootComp = registry.get<transform::GameObject>(uiRoot);
+        for (auto childEntry : uiRootComp.children)
         {
             auto child = childEntry.second;
             auto result = GetUIEByID(registry, child, id);
@@ -1180,6 +1199,8 @@ namespace ui
             uiState.textDrawable = std::nullopt;
 
             float scaleFactor = uiConfig.scale.value_or(1.0f);
+
+            
 
             if (uiConfig.ref_component && uiConfig.ref_value)
             {

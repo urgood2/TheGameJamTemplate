@@ -400,10 +400,9 @@ namespace game
                 .build()
         )       
         // .addChild(uiColumnDef)
-        .addChild(getRandomRectDef())
-        
-        .addChild(uiTextEntryContainer)
         .addChild(uiRowDef)
+        .addChild(uiTextEntryContainer)
+        .addChild(getRandomRectDef())
         .build();
     
      uiBox = ui::box::Initialize(

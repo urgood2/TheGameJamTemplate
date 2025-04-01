@@ -14,138 +14,99 @@ namespace ui
         }
     }    
 
-    void box::BuildUIElementTree(entt::registry &registry, entt::entity uiBoxEntity, UIElementTemplateNode &uiElementDef, entt::entity uiElementParent)
+    void box::BuildUIElementTree(entt::registry &registry, entt::entity uiBoxEntity, UIElementTemplateNode &rootDef, entt::entity uiElementParent)
     {
+        struct StackEntry {
+            UIElementTemplateNode* def;
+            entt::entity parent;
+        };
 
-        // REVIEW: UIBOX is the root container, which contains ui elements. hierarchy is created through uielement's parent and children fields.
+        std::stack<StackEntry> stack;
+        std::unordered_map<UIElementTemplateNode*, entt::entity> nodeToEntity;
 
-        // Create new UIElement
-        entt::entity uiElementEntity = element::Initialize(registry, uiElementParent, uiBoxEntity, uiElementDef.type, uiElementDef.config);
-        auto *uiElementConfig = registry.try_get<UIConfig>(uiElementEntity);
+        stack.push({&rootDef, uiElementParent});
 
-        auto *parentConfig = registry.try_get<UIConfig>(uiElementParent);
+        while (!stack.empty()) {
+            auto [def, parent] = stack.top();
+            stack.pop();
 
-        SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(uiElementDef.type), static_cast<int>(uiElementEntity), static_cast<int>(uiElementParent));
+            // Create new UI element
+            entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def->type, def->config);
+            nodeToEntity[def] = entity;
+            auto* config = registry.try_get<UIConfig>(entity);
 
+            SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def->type), static_cast<int>(entity), static_cast<int>(parent));
 
-        // Set group if parent has one
-        if (registry.valid(uiElementParent) && parentConfig && parentConfig->group)
-        {
-            if (uiElementConfig)
-            {
-                uiElementConfig->group = parentConfig->group;
-            }
-            else
-            {
-                auto &uiElementConfig = registry.emplace<UIConfig>(uiElementEntity);
-                uiElementConfig.group = parentConfig->group;
-            }
-        }
+            auto* parentConfig = registry.try_get<UIConfig>(parent);
 
-        // Set button properties
-        if (registry.valid(uiElementParent) && parentConfig && parentConfig->buttonCallback)
-        {
-            if (uiElementConfig)
-            {
-                uiElementConfig->button_UIE = uiElementParent;
-            }
-            else
-            {
-                auto &uiElementConfig = registry.emplace<UIConfig>(uiElementEntity);
-                uiElementConfig.button_UIE = uiElementParent;
-            }
-        }
+            // Apply inherited config values
+            if (registry.valid(parent) && parentConfig) {
+                if (parentConfig->group) {
+                    if (config) config->group = parentConfig->group;
+                    else registry.emplace<UIConfig>(entity).group = parentConfig->group;
+                }
 
-        if (registry.valid(uiElementParent) && parentConfig && parentConfig->button_UIE)
-        {
-            if (uiElementConfig)
-            {
-                uiElementConfig->button_UIE = parentConfig->button_UIE;
-            }
-            else
-            {
-                auto &uiElementConfig = registry.emplace<UIConfig>(uiElementEntity);
-                uiElementConfig.buttonCallback = parentConfig->buttonCallback;
-            }
-        }
+                if (parentConfig->buttonCallback) {
+                    if (config) config->button_UIE = parent;
+                    else registry.emplace<UIConfig>(entity).button_UIE = parent;
+                }
 
-        // Disable clicking if it's an object that is also a button
-        if (uiElementDef.type == UITypeEnum::OBJECT && uiElementConfig->buttonCallback)
-        {
-            auto &nodeForUIElementObject = registry.get<transform::GameObject>(uiElementConfig->object.value());
-            nodeForUIElementObject.state.clickEnabled = false;
-        }
-
-        // if it's text, calculate starting size
-        if (uiElementDef.type == UITypeEnum::TEXT) {
-            auto scaleFactor = uiElementConfig->scale.value_or(1.0f);
-            float fontSize = globals::fontData.fontLoadedSize * scaleFactor * globals::fontData.fontScale;
-            auto [measuredWidth, measuredHeight] = MeasureTextEx(globals::fontData.font, uiElementConfig->text.value().c_str(), fontSize, globals::fontData.spacing);
-
-            // swap width and height if text is vertical
-            if (uiElementConfig->verticalText.value_or(false))
-            {
-                auto temp = measuredWidth;
-                measuredWidth = measuredHeight;
-                measuredHeight = temp;
-            }
-            
-            uiElementConfig->minWidth = measuredWidth;
-            uiElementConfig->minHeight = measuredHeight;
-        }
-
-        // If this node is a container, add children recursively
-        if ((uiElementDef.type == UITypeEnum::VERTICAL_CONTAINER || uiElementDef.type == UITypeEnum::HORIZONTAL_CONTAINER || uiElementDef.type == UITypeEnum::ROOT) && uiElementDef.children.size() > 0)
-        {
-            SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(uiElementEntity), magic_enum::enum_name<UITypeEnum>(uiElementDef.type));
-            int childIndex = 0;
-            for (auto& child : uiElementDef.children)
-            {
-                SPDLOG_DEBUG("  - Child {}: type = {}", childIndex, magic_enum::enum_name<UITypeEnum>(child.type));
-                BuildUIElementTree(registry, uiBoxEntity, child, uiElementEntity);
-                ++childIndex;
+                if (parentConfig->button_UIE) {
+                    if (config) config->button_UIE = parentConfig->button_UIE;
+                    else registry.emplace<UIConfig>(entity).buttonCallback = parentConfig->buttonCallback;
+                }
             }
 
-            SPDLOG_DEBUG("Finished adding children to entity {}. Final child list:", static_cast<int>(uiElementEntity));
-            LogChildrenOrder(registry, uiElementEntity); // Log final insertion order
-        
-        }
-
-        auto *selfUIBox = registry.try_get<UIBoxComponent>(uiBoxEntity);
-
-        // If there's no parent, this is the root UI element
-        if (!registry.valid(uiElementParent))
-        {
-            selfUIBox->uiRoot = uiElementEntity;
-            registry.get<transform::GameObject>(uiElementEntity).parent = uiBoxEntity;
-
-            // set the master of the uiroot to the uibox
-            // transform::AssignRole(&registry, uiElementEntity, transform::InheritedProperties::Type::RoleInheritor, uiBoxEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Weak, transform::InheritedProperties::Sync::Weak, transform::InheritedProperties::Sync::Weak);
-        }
-        else
-        {
-            auto &uiElementConfig = registry.get<UIConfig>(uiElementEntity);
-            // no id set, use integer, avoid conflicts
-            if (!uiElementConfig.id)
-            {
-                // NOTE: overlapping ids are normal since ids are created anew for each parent, starting from 0.
-                // Non-children do not have ids
-                uiElementConfig.id = std::to_string(registry.get<transform::GameObject>(uiElementParent).children.size());
-
-                AssertThat(registry.get<transform::GameObject>(uiElementParent).children.find(uiElementConfig.id.value()) == registry.get<transform::GameObject>(uiElementParent).children.end(), Is().EqualTo(true));
+            // If object + button
+            if (def->type == UITypeEnum::OBJECT && config && config->buttonCallback) {
+                auto& node = registry.get<transform::GameObject>(config->object.value());
+                node.state.clickEnabled = false;
             }
-            registry.get<transform::GameObject>(uiElementParent).children[uiElementConfig.id.value()] = uiElementEntity;
 
-        
-        }
+            // If text, pre-calculate text bounds
+            if (def->type == UITypeEnum::TEXT && config && config->text) {
+                float scale = config->scale.value_or(1.0f);
+                float fontSize = globals::fontData.fontLoadedSize * scale * globals::fontData.fontScale;
+                auto [w, h] = MeasureTextEx(globals::fontData.font, config->text->c_str(), fontSize, globals::fontData.spacing);
+                if (config->verticalText.value_or(false)) std::swap(w, h);
+                config->minWidth = w;
+                config->minHeight = h;
+            }
 
-        // If `mid` is set in config for this particular ui entity, use it for alignment to center the UIBOX
-        if (uiElementDef.config.mid)
-        {
-            auto &uiBoxTransform = registry.get<transform::Transform>(uiBoxEntity);
-            uiBoxTransform.middleEntityForAlignment = uiElementEntity;
+            // Handle root element
+            if (!registry.valid(parent)) {
+                auto* box = registry.try_get<UIBoxComponent>(uiBoxEntity);
+                box->uiRoot = entity;
+                registry.get<transform::GameObject>(entity).parent = uiBoxEntity;
+            } else {
+                auto& thisConfig = registry.get<UIConfig>(entity);
+                if (!thisConfig.id) {
+                    auto& parentGO = registry.get<transform::GameObject>(parent);
+                    int idx = static_cast<int>(parentGO.children.size());
+                    thisConfig.id = std::to_string(idx);
+                }
+                auto& parentGO = registry.get<transform::GameObject>(parent);
+                parentGO.children[thisConfig.id.value()] = entity;
+                SPDLOG_DEBUG("Inserted child into parent {}: ID = {}, Entity = {}", static_cast<int>(parent), thisConfig.id.value(), static_cast<int>(entity));
+            }
+
+            if (def->config.mid) {
+                auto& boxTransform = registry.get<transform::Transform>(uiBoxEntity);
+                boxTransform.middleEntityForAlignment = entity;
+            }
+
+            // Push children in reverse order so the first child is processed first
+            if (def->type == UITypeEnum::VERTICAL_CONTAINER || def->type == UITypeEnum::HORIZONTAL_CONTAINER || def->type == UITypeEnum::ROOT) {
+                SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def->type));
+                for (int i = static_cast<int>(def->children.size()) - 1; i >= 0; --i) {
+                    // Assign pre-id
+                    def->children[i].config.id = std::to_string(i); // or indexToAlphaID(i)
+                    stack.push({&def->children[i], entity});
+                }
+            }
         }
     }
+
     
     // must be existing & initialized uibox (by calling initialize() )
     void box::RenewAlignment(entt::registry &registry, entt::entity self)

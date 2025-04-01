@@ -12,6 +12,10 @@
 // default methods are called or not.
 namespace transform
 {
+    extern inline auto InitializeSystem() -> void {
+        // Initialize the transform system here if needed
+        transform::registerDestroyListeners(globals::registry);
+    }
 
     extern std::unordered_map<TransformMethod, std::any> transformFunctionsDefault, hooksToCallBeforeDefault, hooksToCallAfterDefault;
     

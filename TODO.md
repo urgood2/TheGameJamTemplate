@@ -58,7 +58,6 @@ LATER: (not needed immediately)
 
 ## 🧱 Transform System
 
-- [ ] Move `registerDestroyListeners` to `transform::init()`.
 - [ ] Add support for UI element and box alignment to rotation/scale when bound to transforms.
 
 ---

@@ -140,7 +140,7 @@ namespace game
             // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             .rawText = fmt::format("[HEY HEY HEY Welcome to the game](rainbow;bump)\n[Testing testing](rainbow;pulse)"),
-            .font = globals::translationFont,
+            .font = globals::font,
             .fontSize = 50.0f,
             .wrapWidth = 500.0f,
             .position = Vector2{400, 300},
@@ -495,6 +495,8 @@ namespace game
             
         particle::UpdateParticles(globals::registry, delta);
         shaders::updateAllShaderUniforms();
+
+        TextSystem::Functions::updateText(text, delta); // update text system
         
         // update ui components
         // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
@@ -621,6 +623,9 @@ namespace game
         // Display UPS and FPS
         const int fps = GetFPS(); // Get the current FPS
         DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
+
+        //TODO: move drawing to layer
+        TextSystem::Functions::renderText(text, true);
         
         EndDrawing();
 

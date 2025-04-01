@@ -94,6 +94,7 @@ namespace ui
                 AssertThat(parentGO.children.find(id) == parentGO.children.end(), Is().EqualTo(true)); // check for duplicate ids
                 
                 parentGO.children[thisConfig.id.value()] = entity;
+                parentGO.orderedChildren.push_back(entity);
                 SPDLOG_DEBUG("Inserted child into parent {}: ID = {}, Entity = {}", static_cast<int>(parent), thisConfig.id.value(), static_cast<int>(entity));
             }
 
@@ -313,9 +314,9 @@ namespace ui
                 continue;
 
             // Push children onto stack (DFS order)
-            for (auto childEntry : node->children)
+            for (auto childEntry : node->orderedChildren)
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 if (registry.valid(child))
                 {
                     auto &uiConfig = registry.get<UIConfig>(child);
@@ -392,9 +393,9 @@ namespace ui
             float sumOfAllChildHeights = 0;
             float maxChildWidth = 0;
             float maxChildHeight = 0;
-            for (auto childEntry : node.children)
+            for (auto childEntry : node.orderedChildren)
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 auto &childTransform = registry.get<transform::Transform>(child);
                 auto &childRole = registry.get<transform::InheritedProperties>(child);
                 auto &childUIConfig = registry.get<UIConfig>(child);
@@ -417,9 +418,9 @@ namespace ui
             float runningYOffset = 0;
 
             // for each child, adjust alignment
-            for (auto childEntry : node.children)
+            for (auto childEntry : node.orderedChildren)
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 auto &childTransform = registry.get<transform::Transform>(child);
                 auto &childRole = registry.get<transform::InheritedProperties>(child);
                 auto &childUIConfig = registry.get<UIConfig>(child);
@@ -532,9 +533,9 @@ namespace ui
             return node; // If ID matches, return this node
 
         auto &nodeComp = registry.get<transform::GameObject>(node);
-        for (auto childEntry : nodeComp.children)
+        for (auto childEntry : nodeComp.orderedChildren)
         {
-            auto child = childEntry.second;
+            auto child = childEntry;
             auto result = GetUIEByID(registry, child, id);
             if (result)
                 return result;
@@ -546,9 +547,9 @@ namespace ui
             return std::nullopt;
         auto uiRoot = uiBox->uiRoot.value();
         auto &uiRootComp = registry.get<transform::GameObject>(uiRoot);
-        for (auto childEntry : uiRootComp.children)
+        for (auto childEntry : uiRootComp.orderedChildren)
         {
-            auto child = childEntry.second;
+            auto child = childEntry;
             auto result = GetUIEByID(registry, child, id);
             if (result)
                 return result;
@@ -596,9 +597,9 @@ namespace ui
                 continue;
 
             // Push children onto stack (DFS order)
-            for (auto childEntry : node->children)
+            for (auto childEntry : node->orderedChildren)
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 if (registry.valid(child))
                 {
                     auto &uiConfig = registry.get<UIConfig>(child);
@@ -687,9 +688,9 @@ namespace ui
 
             // root children, add padding * 2 + root child heights (+emboss if they have any)
 
-            for (auto childEntry : node.children)
+            for (auto childEntry : node.orderedChildren)
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 auto &childConfig = registry.get<UIConfig>(child);
                 auto &childState = registry.get<UIState>(child);
                 auto &childTransform = registry.get<transform::Transform>(child);
@@ -883,9 +884,9 @@ namespace ui
         runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
         runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
         // for each child, do the same thing.
-        for (auto childEntry : node.children)
+        for (auto childEntry : node.orderedChildren)
         {
-            auto child = childEntry.second;
+            auto child = childEntry;
             if (!registry.valid(child))
                 continue;
             SPDLOG_DEBUG("Processing child entity {}", static_cast<int>(child));
@@ -1048,10 +1049,10 @@ namespace ui
         bool hasAtLeastOneChild = false;
         bool hasAtLeastOneContainerChild = false;
         // Anything that is not a row is treated as a column.
-        for (auto childEntry : node.children)
+        for (auto childEntry : node.orderedChildren)
         {
             hasAtLeastOneChild = true;
-            auto child = childEntry.second;
+            auto child = childEntry;
             if (!registry.valid(child))
                 continue;
             // ensure that it is a valid uielement
@@ -1337,9 +1338,9 @@ namespace ui
         AssertThat(node, Is().Not().EqualTo(nullptr));
 
         // Recursively traverse child nodes
-        for (auto childEntry : node->children)
+        for (auto childEntry : node->orderedChildren)
         {
-            auto child = childEntry.second;
+            auto child = childEntry;
             ingroup = GetGroup(registry, child, group);
         }
 
@@ -1386,6 +1387,7 @@ namespace ui
             util::RemoveAll(registry, child);
         }
         node.children.clear();
+        node.orderedChildren.clear();
 
         // Remove transform component
         transform::RemoveEntity(&registry, entity);

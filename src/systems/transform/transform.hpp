@@ -85,7 +85,11 @@ namespace transform
     {
         // The list of children (and a parent) for a treelike structure. This can be used for things like drawing, deterministice movement and parallax
         std::optional<entt::entity> parent;
-        std::map<std::string, entt::entity> children;
+
+        // For lookup by ID
+        std::map<std::string, entt::entity> children; //TODO: handle all children update code to include both children and orderedChildren, and use orderedChildren for ordered traversal (like in the UI system)
+        // For ordered traversal
+        std::vector<entt::entity> orderedChildren;
 
         bool ignoresPause = false; // set to true if the entity should move (transform updated) even when the game is paused (createdOnPause)
 

@@ -187,7 +187,7 @@ namespace transform
         auto &node = registry->get<GameObject>(e);
         if (node.state.visible) {
             //children
-            for (auto &[name, child] : node.children) {
+            for (auto child : node.orderedChildren) {
                 
                 if (registry->valid(child) == false) continue;
                 
@@ -1461,7 +1461,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         selfTransform.setActualY(dragCursorTransform.y - offset->y);
         // REVIEW: new_alignment?
         selfTransform.frameCalculation.alignmentChanged = true;
-        for (auto [key, child] : node.children)
+        for (auto child : node.orderedChildren)
         {
             handleDefaultTransformDrag(registry, child, offset);
         }
@@ -1540,6 +1540,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         // erase
         node.children.erase("d_popup");
+        // erase from vector as well
+        auto it = std::remove(node.orderedChildren.begin(), node.orderedChildren.end(), node.children["d_popup"]);
+        node.orderedChildren.erase(it, node.orderedChildren.end());
         
         // custom stop drag logic
         if (node.methods->onStopDrag) {
@@ -1638,10 +1641,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         if (node.children.size() == 0)
             return;
 
-        for (auto &childEntry : node.children)
+        for (auto childEntry : node.orderedChildren)
         {
-            auto &child = childEntry.second;
-            ConfigureContainerForEntity(registry, child, container);
+            ConfigureContainerForEntity(registry, childEntry, container);
         }
 
         node.container = container;

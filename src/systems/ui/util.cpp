@@ -159,6 +159,7 @@ namespace ui
                 RemoveAll(registry, child);
             }
             node->children.clear();
+            node->orderedChildren.clear();
         }
         registry.destroy(entity);
     }
@@ -278,10 +279,10 @@ namespace ui
     {
         auto &node = registry.get<transform::GameObject>(entity);
 
-        auto &child = node.children.begin()->second; // get first child, child is the slider, the entity is its parent
-        auto &childNode = registry.get<transform::GameObject>(child);
-        auto &childUIConfig = registry.get<ui::UIConfig>(child);
-        auto &childTransform = registry.get<transform::Transform>(child);
+        auto child = node.orderedChildren.begin(); // get first child, child is the slider, the entity is its parent
+        auto &childNode = registry.get<transform::GameObject>(*child);
+        auto &childUIConfig = registry.get<ui::UIConfig>(*child);
+        auto &childTransform = registry.get<transform::Transform>(*child);
 
         node.state.dragEnabled = true;
         childNode.state.dragEnabled = true;
@@ -290,7 +291,7 @@ namespace ui
         {
             // TODO: definition should contain "SliderComponent" as component name, "value" as the field
             //  child is a slider, should have a slider component
-            auto &sliderComponent = registry.get<ui::SliderComponent>(child);
+            auto &sliderComponent = registry.get<ui::SliderComponent>(*child);
 
             sliderComponent.value = std::clamp(sliderComponent.value.value() + percentage * (sliderComponent.max.value() - sliderComponent.min.value()), sliderComponent.min.value(), sliderComponent.max.value());
 

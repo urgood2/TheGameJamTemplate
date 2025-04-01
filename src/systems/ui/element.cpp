@@ -401,9 +401,9 @@ namespace ui
         }
 
         //  Recursively print child elements with increased indentation
-        for (auto childEntry : node->children)
+        for (auto childEntry : node->orderedChildren)
         {
-            auto child = childEntry.second;
+            auto child = childEntry;
             boxStr += DebugPrintTree(registry, child, indent + 1);
         }
 
@@ -434,9 +434,9 @@ namespace ui
         transform::UpdateParallaxCalculations(&registry, entity);
 
         // STEP 3: Recursively initialize all child elements
-        for (auto childEntry : node->children)
+        for (auto childEntry : node->orderedChildren)
         {
-            auto child = childEntry.second;
+            auto child = childEntry;
             InitializeVisualTransform(registry, child);
         }
 
@@ -547,9 +547,9 @@ namespace ui
         if (!node->state.visible)
             return;
 
-        for (auto childEntry : node->children)
+        for (auto childEntry : node->orderedChildren)
         {
-            auto child = childEntry.second;
+            auto child = childEntry;
             auto *childConfig = registry.try_get<UIConfig>(child);
             if (!childConfig)
                 continue;
@@ -666,9 +666,9 @@ namespace ui
             if (!node) continue;
 
             // Push children onto stack (this ensures DFS order)
-            for (auto childEntry : node->children) 
+            for (auto childEntry : node->orderedChildren) 
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 if (registry.valid(child)) 
                 {
                     stack.push({child});
@@ -723,9 +723,9 @@ namespace ui
             if (!node) continue;
 
             // Push children onto stack (this ensures DFS order)
-            for (auto childEntry : node->children) 
+            for (auto childEntry : node->orderedChildren) 
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 if (registry.valid(child)) 
                 {
                     stack.push({child, entry.x, entry.y});
@@ -775,9 +775,9 @@ namespace ui
             if (!node) continue;
 
             // Push children onto stack (DFS order)
-            for (auto childEntry : node->children) 
+            for (auto childEntry : node->orderedChildren) 
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 if (registry.valid(child)) 
                 {
                     stack.push({child, entry.uiBoxOffset, false});
@@ -805,9 +805,9 @@ namespace ui
             float uiBoxOffsetY = (uiBoxOffset.has_value() && isRoot) ? uiBoxOffset->y : 0;
 
             // Iterate over children
-            for (auto childEntry : node->children)
+            for (auto childEntry : node->orderedChildren)
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 auto *childConfig = registry.try_get<UIConfig>(child);
                 auto *childTransform = registry.try_get<transform::Transform>(child);
                 auto *childUIState = registry.try_get<UIState>(child);
@@ -1544,9 +1544,9 @@ namespace ui
         // Check if this element has tabbed navigation
         if (uiConfig && uiConfig->focusArgs && uiConfig->focusArgs->type == "tab")
         { // TODO: document focus arg type
-            for (auto childEntry : node->children)
+            for (auto childEntry : node->orderedChildren)
             {
-                auto child = childEntry.second;
+                auto child = childEntry;
                 auto *childNode = registry.try_get<transform::GameObject>(child);
                 auto *childConfig = registry.try_get<UIConfig>(child);
 
@@ -1597,6 +1597,7 @@ namespace ui
                 Remove(registry, child);
             }
             node->children.clear(); // Ensure child list is empty
+            node->orderedChildren.clear(); // Ensure ordered child list is empty
         }
 
         // Step 4: Remove entity from registry

@@ -2012,32 +2012,32 @@ namespace input {
         if (registry.valid(focused)) {
             auto& focusedNode = registry.get<transform::GameObject>(focused);
             auto& focusedNodeUIConfig = registry.get<ui::UIConfig>(focused);
-            auto childrenIterator = focusedNode.children.begin();
+            auto childrenIterator = focusedNode.orderedChildren.begin();
             if (focusedNodeUIConfig.focusArgs) {
                 
                 //REVIEW: check after doing ui whether 0 and 2 are correct index values
                 if (focusedNodeUIConfig.focusArgs->type.value() == "cycle" && inputType == "press") {
                     if ((externButton && button == GAMEPAD_BUTTON_LEFT_TRIGGER_1) || (!externButton && button == dpadLeft)) {
-                        auto &childNode = registry.get<transform::GameObject>(childrenIterator->second);
+                        auto &childNode = registry.get<transform::GameObject>(*childrenIterator);
                         // click(childrenIterator->second); //Click left option
-                        ui::element::Click(registry, childrenIterator->second);
+                        ui::element::Click(registry, *childrenIterator);
                         // childNode.methods->onClick(registry, childrenIterator->second);
                         ret = true;
                     }
                     if ((externButton && button == GAMEPAD_BUTTON_RIGHT_TRIGGER_1) || (!externButton && button == dpadRight)) {
                         childrenIterator++;
                         childrenIterator++; // need to access third element
-                        auto &childNode = registry.get<transform::GameObject>(childrenIterator->second);
+                        auto &childNode = registry.get<transform::GameObject>(*childrenIterator);
                         // click(childrenIterator->second); // Click right option
-                        ui::element::Click(registry, childrenIterator->second);
+                        ui::element::Click(registry, *childrenIterator);
                         // childNode.methods->onClick(registry, childrenIterator->second);
                         ret = true;
                     }
                 } 
                 if (focusedNodeUIConfig.focusArgs->type.value() == "tab" && inputType == "press") {
                     // Retrieve all possible tab choices within the same UI group
-                    auto firstChild = focusedNode.children.begin();
-                    auto firstChildofFirstChild = registry.get<transform::GameObject>(firstChild->second).children.begin();
+                    auto firstChild = focusedNode.orderedChildren.begin();
+                    auto firstChildofFirstChild = registry.get<transform::GameObject>(*firstChild).children.begin();
                     auto &firstChildofFirstChildUIConfig = registry.get<ui::UIConfig>(firstChildofFirstChild->second);
                     auto protoChoices = ui::box::GetGroup(registry, entt::null, firstChildofFirstChildUIConfig.group.value());
                     std::vector<entt::entity> choices;
@@ -2093,20 +2093,21 @@ namespace input {
                     if (button == dpadLeft) {
                         state.no_holdcap = true;
                         if (inputType == "hold" && state.gamepadHeldButtonDurations[button] > 0.2f) {
-                            ui::util::sliderDiscrete(registry, focusedNode.children[0], -dt * state.gamepadHeldButtonDurations[button] * 0.6f); 
+                            //TODO: change 
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], -dt * state.gamepadHeldButtonDurations[button] * 0.6f); 
                         }
                         if (inputType == "press") {
-                            ui::util::sliderDiscrete(registry, focusedNode.children[0], -0.01f);
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], -0.01f);
                         }
                         ret = true;
                     }
                     else if (button == dpadRight) {
                         state.no_holdcap = true;
                         if (inputType == "hold" && state.gamepadHeldButtonDurations[button] > 0.2f) {
-                            ui::util::sliderDiscrete(registry, focusedNode.children[0], dt * state.gamepadHeldButtonDurations[button] * 0.6f);
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], dt * state.gamepadHeldButtonDurations[button] * 0.6f);
                         }
                         if (inputType == "press") {
-                            ui::util::sliderDiscrete(registry, focusedNode.children[0], 0.01f);
+                            ui::util::sliderDiscrete(registry, focusedNode.orderedChildren[0], 0.01f);
                         }
                         ret = true;
                     }

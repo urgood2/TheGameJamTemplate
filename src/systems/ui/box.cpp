@@ -6,6 +6,14 @@ namespace ui
 
     // TODO: make sure all methods take into account that children can be uiboxes as well
 
+    void LogChildrenOrder(entt::registry& registry, entt::entity parent) {
+        auto& parentNode = registry.get<transform::GameObject>(parent);
+        SPDLOG_DEBUG("Children of entity {}:", static_cast<int>(parent));
+        for (const auto& [id, child] : parentNode.children) {
+            SPDLOG_DEBUG("  - ID: {}, Entity: {}", id, static_cast<int>(child));
+        }
+    }    
+
     void box::BuildUIElementTree(entt::registry &registry, entt::entity uiBoxEntity, UIElementTemplateNode &uiElementDef, entt::entity uiElementParent)
     {
 
@@ -16,6 +24,9 @@ namespace ui
         auto *uiElementConfig = registry.try_get<UIConfig>(uiElementEntity);
 
         auto *parentConfig = registry.try_get<UIConfig>(uiElementParent);
+
+        SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(uiElementDef.type), static_cast<int>(uiElementEntity), static_cast<int>(uiElementParent));
+
 
         // Set group if parent has one
         if (registry.valid(uiElementParent) && parentConfig && parentConfig->group)
@@ -86,10 +97,18 @@ namespace ui
         // If this node is a container, add children recursively
         if ((uiElementDef.type == UITypeEnum::VERTICAL_CONTAINER || uiElementDef.type == UITypeEnum::HORIZONTAL_CONTAINER || uiElementDef.type == UITypeEnum::ROOT) && uiElementDef.children.size() > 0)
         {
-            for (auto child : uiElementDef.children)
+            SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(uiElementEntity), magic_enum::enum_name<UITypeEnum>(uiElementDef.type));
+            int childIndex = 0;
+            for (auto& child : uiElementDef.children)
             {
+                SPDLOG_DEBUG("  - Child {}: type = {}", childIndex, magic_enum::enum_name<UITypeEnum>(child.type));
                 BuildUIElementTree(registry, uiBoxEntity, child, uiElementEntity);
+                ++childIndex;
             }
+
+            SPDLOG_DEBUG("Finished adding children to entity {}. Final child list:", static_cast<int>(uiElementEntity));
+            LogChildrenOrder(registry, uiElementEntity); // Log final insertion order
+        
         }
 
         auto *selfUIBox = registry.try_get<UIBoxComponent>(uiBoxEntity);
@@ -116,6 +135,8 @@ namespace ui
                 AssertThat(registry.get<transform::GameObject>(uiElementParent).children.find(uiElementConfig.id.value()) == registry.get<transform::GameObject>(uiElementParent).children.end(), Is().EqualTo(true));
             }
             registry.get<transform::GameObject>(uiElementParent).children[uiElementConfig.id.value()] = uiElementEntity;
+
+        
         }
 
         // If `mid` is set in config for this particular ui entity, use it for alignment to center the UIBOX
@@ -1570,7 +1591,7 @@ namespace ui
     void box::AddChild(entt::registry &registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent)
     {
         BuildUIElementTree(registry, uiBox, uiElementDef, parent);
-        Recalculate(registry, uiBox);
+        RenewAlignment(registry, uiBox);
     }
 
     void box::SetContainer(entt::registry &registry, entt::entity self, entt::entity container)

@@ -36,9 +36,8 @@ LATER: (not needed immediately)
 
 ### 🖼️ Visual / Layout
 
-- [ ] Fix UI recalc function (currently not working).
 - [ ] Add support for hover enlargement amount, shake-on-hover, and hover color change.
-- [ ] Add ability to scale button or UI box if the text changes in size.
+- [ ] Add ability to scale button or UI box if the text changes in size. (add option to instead change the scaling on the text object instead of enlarging)
 - [ ] Support rotation and scale for UI elements (optionally reflected visually).
 - [ ] Fix jagged bottom outlines when buttons are scaled down.
 - [ ] Fix button layout refresh so buttons realign when their text size updates.

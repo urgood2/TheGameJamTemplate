@@ -266,9 +266,9 @@ namespace game
         SPDLOG_DEBUG("Injecting dynamic motion");
         transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
 
-    // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
-    //     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
-    // });
+    timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
+        SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+    });
 
     timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
 
@@ -400,10 +400,10 @@ namespace game
                 .build()
         )       
         // .addChild(uiColumnDef)
-        .addChild(uiRowDef)
-        .addChild(uiTextEntryContainer)
         .addChild(getRandomRectDef())
         
+        .addChild(uiTextEntryContainer)
+        .addChild(uiRowDef)
         .build();
     
      uiBox = ui::box::Initialize(

@@ -135,12 +135,17 @@ namespace game
     // specific to a game project
     auto init() -> void
     {
+        
+        // load font
+        // globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
+        globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
+        globals::fontData.fontScale = 1.0f;
 
         text = {
             // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             .rawText = fmt::format("[HEY HEY HEY Welcome to the game](rainbow;bump)\n[Testing testing](rainbow;pulse)"),
-            .font = globals::font,
+            .font = globals::fontData.font,
             .fontSize = 50.0f,
             .wrapWidth = 500.0f,
             .position = Vector2{400, 300},
@@ -186,10 +191,6 @@ namespace game
         // reflection for user registered componenets
         ui::util::RegisterMeta();
         
-        // load font
-        // globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
-        globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
-        globals::fontData.fontScale = 1.0f;
 
         // create layer the size of the screen, with a main canvas the same size
         background = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());

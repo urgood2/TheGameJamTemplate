@@ -14,6 +14,7 @@ namespace ui
         }
     }    
 
+    // 
     void box::BuildUIElementTree(entt::registry &registry, entt::entity uiBoxEntity, UIElementTemplateNode &rootDef, entt::entity uiElementParent)
     {
         struct StackEntry {
@@ -82,10 +83,16 @@ namespace ui
                 auto& thisConfig = registry.get<UIConfig>(entity);
                 if (!thisConfig.id) {
                     auto& parentGO = registry.get<transform::GameObject>(parent);
+
                     int idx = static_cast<int>(parentGO.children.size());
                     thisConfig.id = std::to_string(idx);
+                    
                 }
                 auto& parentGO = registry.get<transform::GameObject>(parent);
+                const auto& id = thisConfig.id.value();
+
+                AssertThat(parentGO.children.find(id) == parentGO.children.end(), Is().EqualTo(true)); // check for duplicate ids
+                
                 parentGO.children[thisConfig.id.value()] = entity;
                 SPDLOG_DEBUG("Inserted child into parent {}: ID = {}, Entity = {}", static_cast<int>(parent), thisConfig.id.value(), static_cast<int>(entity));
             }
@@ -99,8 +106,10 @@ namespace ui
             if (def->type == UITypeEnum::VERTICAL_CONTAINER || def->type == UITypeEnum::HORIZONTAL_CONTAINER || def->type == UITypeEnum::ROOT) {
                 SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def->type));
                 for (int i = static_cast<int>(def->children.size()) - 1; i >= 0; --i) {
-                    // Assign pre-id
-                    def->children[i].config.id = std::to_string(i); // or indexToAlphaID(i)
+                    // Only assign an ID if one hasn't already been set
+                    if (!def->children[i].config.id.has_value()) {
+                        def->children[i].config.id = std::to_string(i); // or use indexToAlphaID(i)
+                    }
                     stack.push({&def->children[i], entity});
                 }
             }

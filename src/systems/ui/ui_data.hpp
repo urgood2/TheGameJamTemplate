@@ -124,7 +124,7 @@ namespace ui
     {
         
         // General Properties
-        std::optional<std::string> id;           // Unique identifier, used to store in children vector
+        std::optional<std::string> id;           // Unique identifier, used to store in children vector. If predefined in the definition stage, it will be maintained. Otherwise, children of an entity get a unique id starting at 0 and incrementing.
         std::optional<std::string> instanceType; // Instance type of the UI element
         std::optional<UITypeEnum> uiType;        // UI type category
         //TODO: check implementation done properly

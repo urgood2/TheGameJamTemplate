@@ -21,9 +21,6 @@ LATER: (not needed immediately)
 - [ ] Determine how to handle automatic layout refresh when text changes (recenter or scale?).
 
 ---
-
-## 🧩 UI System
-
 ### 🖱️ Interaction & Input
 
 - [ ] Fix clicking + dragging not working unless hover is enabled.
@@ -41,6 +38,11 @@ LATER: (not needed immediately)
 - [ ] Support rotation and scale for UI elements (optionally reflected visually).
 - [ ] Fix jagged bottom outlines when buttons are scaled down.
 - [ ] Fix button layout refresh so buttons realign when their text size updates.
+- [ ] Text doesn't go below a certain size when changed.
+- [ ] Dynamic text has a bit of extra spacing on the side.
+- [ ] A function to not have a predefined width or height 
+- [ ] Dynamic text needs shadows + transform integration (shadows from transform as well)
+- [ ] Incorporate animated sprites into ui system
 
 ### 🧪 UI Widgets & Behavior
 

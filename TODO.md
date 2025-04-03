@@ -17,8 +17,8 @@ LATER: (not needed immediately)
 
 ## 🧠 General Design / Architecture
 
-- [ ] Integrate the new text system with the UI system (as a UI object/component).
-- [ ] Determine how to handle automatic layout refresh when text changes (recenter or scale?).
+- [ ] Integrate the new text system with the UI system (as a UI object/component). Each character must also have a transform and be bound as a slave to the parent text entity.
+
 
 ---
 ### 🖱️ Interaction & Input
@@ -79,4 +79,5 @@ LATER: (not needed immediately)
 - [ ] "LATER: use VBO & IBOS for rendering"
 - [ ] "LATER: ninepatch?"
 - [ ] "LATER: Allow per-animation frame timing configuration in `particle::CreateParticle`.
+- [ ] Determine how to handle automatic layout refresh when text changes (recenter or scale?).
 

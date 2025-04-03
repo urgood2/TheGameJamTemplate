@@ -96,6 +96,7 @@ namespace game
     entt::entity cameraYSpringEntity;
 
     TextSystem::Text text;
+    entt::entity textEntity{entt::null};
     
     ui::UIElementTemplateNode getRandomRectDef()
     {
@@ -148,7 +149,6 @@ namespace game
             .font = globals::fontData.font,
             .fontSize = 50.0f,
             .wrapWidth = 500.0f,
-            .position = Vector2{400, 300},
             .alignment = TextSystem::Text::Alignment::LEFT,
             .wrapMode = TextSystem::Text::WrapMode::WORD};
 
@@ -157,21 +157,25 @@ namespace game
             spdlog::debug("Text effect finished.");
 
             // There is a brief flash of white when text changes. why?
+            
+            auto &text = globals::registry.get<TextSystem::Text>(textEntity);
 
             text.characters.clear();
             TextSystem::Functions::clearAllEffects(text);
             text.rawText = fmt::format("[some new text](rainbow;bump)");
             TextSystem::Functions::parseText(text);
-            TextSystem::Functions::applyGlobalEffects(text, "pop=0.4,0.1,in;"); // ;
-            TextSystem::Functions::updateText(text, 0.05f); // call update once to apply effects, prevent flashing
+            TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,in;"); // ;
+            TextSystem::Functions::updateText(textEntity, 0.05f); // call update once to apply effects, prevent flashing
         };
 
         // init custom text system
-        TextSystem::Functions::initEffects(text);
-        TextSystem::Functions::parseText(text);
+        // TextSystem::Functions::initEffects(text);
+        // TextSystem::Functions::parseText(text);
+        
+        textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
 
         // TextSystem::Functions::clearAllEffects(text);
-        TextSystem::Functions::applyGlobalEffects(text, "pop=0.4,0.1,out;spin=4,0.1;"); // ;
+        TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,out;spin=4,0.1;"); // ;
 
         // set camera to fill the screen
         globals::camera = {0};
@@ -497,7 +501,7 @@ namespace game
         particle::UpdateParticles(globals::registry, delta);
         shaders::updateAllShaderUniforms();
 
-        TextSystem::Functions::updateText(text, delta); // update text system
+        TextSystem::Functions::updateText(textEntity, delta); // update text system
         
         // update ui components
         // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
@@ -626,7 +630,7 @@ namespace game
         DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
 
         //TODO: move drawing to layer
-        TextSystem::Functions::renderText(text, true);
+        TextSystem::Functions::renderText(textEntity, true);
         
         EndDrawing();
 

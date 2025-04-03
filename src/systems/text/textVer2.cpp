@@ -11,6 +11,9 @@
 
 #include "rlgl.h"
 
+#include "util/common_headers.hpp"
+#include "systems/transform/transform_functions.hpp"
+
 #include "../../core/globals.hpp"
 
 namespace TextSystem
@@ -18,6 +21,23 @@ namespace TextSystem
 
     namespace Functions
     {
+        
+        // automatically runs parseText() on the given text configuration and returns a transform-enabled entity
+        auto createTextEntity(const Text &text, float x, float y) -> entt::entity
+        {
+            auto entity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 1, 1);
+            
+            auto &textComp = globals::registry.emplace<Text>(entity, text);
+            
+            initEffects(textComp);
+            parseText(textComp);
+            
+            // gotta reflect final width and height
+            auto &transform = globals::registry.get<transform::Transform>(entity);
+            auto [width, height] = calculateBoundingBox(textComp);
+            transform.setActualW(width);
+            transform.setActualH(height);
+        }
 
         // Exponential easing
         auto easeInExpo = [](float x)
@@ -699,10 +719,20 @@ namespace TextSystem
             };
         }
 
-        Character createCharacter(Text text, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
+        entt::entity createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
                                   float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
                                   float &currentLineWidth, std::vector<float> &lineWidths, int index, int &lineNumber)
         {
+            auto &text = globals::registry.get<Text>(textEntity);
+            
+            //TODO: change these locations to offsets
+            
+            auto characterEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, currentX, currentY, 1, 1);
+            
+            // make aligned to text entity at all times            
+            transform::AssignRole(&globals::registry, characterEntity, transform::InheritedProperties::Type::RoleInheritor, textEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong);
+            
+            
             int utf8Size = 0;
             const char *utf8Char = CodepointToUTF8(codepoint, &utf8Size);
             std::string characterString(utf8Char, utf8Size); // Create a string with the exact size
@@ -722,7 +752,7 @@ namespace TextSystem
 
             // Character character{
             //     codepoint, Vector2{currentX, currentY}, 0.0f, 1.0f, WHITE, Vector2{0, 0}, {}, {}, index, lineNumber};
-            Character character{};
+            auto &character = globals::registry.emplace<Character>(characterEntity);
             character.value = codepoint;
             character.position = Vector2{currentX, currentY};
             character.index = index;
@@ -740,11 +770,13 @@ namespace TextSystem
 
             currentX += text.spacing + charSize.x;         // Advance X position (include spacing)
             currentLineWidth += charSize.x + text.spacing; // Update line width
-            return character;
+            return characterEntity;
         }
 
-        void adjustAlignment(Text &text, const std::vector<float> &lineWidths)
+        void adjustAlignment(entt::entity textEntity, const std::vector<float> &lineWidths)
         {
+            auto &text = globals::registry.get<Text>(textEntity);
+            
             spdlog::debug("Adjusting alignment for text with alignment mode: {}", magic_enum::enum_name<Text::Alignment>(text.alignment));
 
             for (size_t line = 0; line < lineWidths.size(); ++line)
@@ -874,8 +906,10 @@ namespace TextSystem
             return parsedArguments;
         }
 
-        void parseText(Text &text)
+        void parseText(entt::entity textEntity)
         {
+            auto &text = globals::registry.get<Text>(textEntity);
+            
             spdlog::debug("Parsing text: {}", text.rawText);
 
             const char *rawText = text.rawText.c_str();
@@ -1145,7 +1179,7 @@ namespace TextSystem
             }
         }
 
-        void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, TextSystem::Text &text, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments)
+        void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments)
         {
             bool firstCharacter = true;
             while (*effectPos)
@@ -1261,9 +1295,9 @@ namespace TextSystem
             }
         }
 
-        void updateText(Text &text, float dt)
+        void updateText(entt::entity textEntity, float dt)
         {
-
+            auto &text = globals::registry.get<Text>(textEntity);
             // spdlog::debug("Updating text with delta time: {}", dt);
             for (auto &character : text.characters)
             {
@@ -1315,9 +1349,30 @@ namespace TextSystem
             // Construct a std::string from the UTF-8 character data
             return std::string(utf8Char, utf8Size);
         }
+        
+        Vector2 calculateBoundingBox (entt::entity textEntity) {
+            // Calculate the bounding box dimensions
+            float minX = std::numeric_limits<float>::max();
+            float minY = std::numeric_limits<float>::max();
+            float maxX = std::numeric_limits<float>::lowest();
+            float maxY = std::numeric_limits<float>::lowest();
 
-        void renderText(const Text &text, bool debug)
+            minX = text.position.x;
+            minY = text.position.y;
+            maxX = text.position.x + text.wrapWidth;
+            // get line height of last character
+            float lineHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+            maxY = text.position.y + (text.characters.back().lineNumber + 1) * (lineHeight);
+
+            float width = maxX - minX;
+            float height = maxY - minY;
+            
+            return {width, height};
+        }
+
+        void renderText(entt::entity textEntity, bool debug)
         {
+            auto &text = globals::registry.get<Text>(textEntity);
             for (const auto &character : text.characters)
             {
 
@@ -1379,24 +1434,14 @@ namespace TextSystem
             // Draw debug bounding box
             if (debug)
             {
+                
                 // Calculate the bounding box dimensions
-                float minX = std::numeric_limits<float>::max();
-                float minY = std::numeric_limits<float>::max();
-                float maxX = std::numeric_limits<float>::lowest();
-                float maxY = std::numeric_limits<float>::lowest();
-
-                minX = text.position.x;
-                minY = text.position.y;
-                maxX = text.position.x + text.wrapWidth;
-                // get line height of last character
-                float lineHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
-                maxY = text.position.y + (text.characters.back().lineNumber + 1) * (lineHeight);
-
-                float width = maxX - minX;
-                float height = maxY - minY;
+                auto [width, height] = calculateBoundingBox(text);
+                
+                //TODO: this does not take final scale into account
 
                 // Draw the bounding box
-                DrawRectangleLines(minX, minY, width, height, RED);
+                DrawRectangleLines(text.po, minY, width, height, RED);
 
                 // Draw text showing the dimensions
                 std::string dimensionsText = "Width: " + std::to_string(width) + ", Height: " + std::to_string(height);
@@ -1404,7 +1449,7 @@ namespace TextSystem
             }
         }
 
-        void clearAllEffects(Text &text)
+        void clearAllEffects(entt::entity textEntity)
         {
             for (auto &character : text.characters)
             {
@@ -1418,8 +1463,9 @@ namespace TextSystem
             }
         }
 
-        void applyGlobalEffects(Text &text, const std::string &effectString)
+        void applyGlobalEffects(entt::entity textEntity, const std::string &effectString)
         {
+            auto &text = globals::registry.get<Text>(textEntity);
             ParsedEffectArguments parsedArguments = splitEffects(effectString);
 
             for (auto &character : text.characters)

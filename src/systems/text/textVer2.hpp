@@ -9,6 +9,8 @@
 #include <set>
 #include <optional>
 
+#include "util/common_headers.hpp"
+
 //TODO: some error-checking to ensure that all tags are enclosed
 
 namespace TextSystem
@@ -59,6 +61,8 @@ namespace TextSystem
         
         bool pop_in_enabled = false; // New: Enable pop-in animation for individual characters
         
+        float width{}, height{}; // width and height of the text, updated every draw call
+        
         enum class Alignment
         {
             LEFT,
@@ -72,12 +76,11 @@ namespace TextSystem
             CHARACTER
         };
         std::string rawText;
-        std::vector<Character> characters;
+        std::vector<entt::entity> characters;
         std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
         Font font;
         float fontSize;
         float wrapWidth;
-        Vector2 position;
         Alignment alignment = Alignment::LEFT; // 0: Left, 1: Center, 2: Right
         WrapMode wrapMode = WrapMode::WORD;
         int spacing = 1;        // spacing amount used when rendering & calculating text
@@ -122,12 +125,6 @@ namespace TextSystem
             TextBuilder &setWrapWidth(float width)
             {
                 text_.wrapWidth = width;
-                return *this;
-            }
-
-            TextBuilder &setPosition(Vector2 pos)
-            {
-                text_.position = pos;
                 return *this;
             }
 
@@ -194,18 +191,22 @@ namespace TextSystem
         extern void adjustAlignment(Text &text, const std::vector<float> &lineWidths);
 
         extern ParsedEffectArguments splitEffects(const std::string &effects);
+        
+        extern auto createTextEntity(const Text &text, float x, float y) -> entt::entity;
+        
+        extern Vector2 calculateBoundingBox (Text &text);
 
         extern std::string CodepointToString(int codepoint);
 
         extern void parseText(Text &text);
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, TextSystem::Text &text, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
-        extern void updateText(Text &text, float dt);
+        extern void updateText(entt::entity textEntity, float dt);
 
-        extern void renderText(const Text &text, bool debug = false);
+        extern void renderText(entt::entity textEntity, bool debug = false);
 
         extern void clearAllEffects(Text &text);
 
-        extern void applyGlobalEffects(Text &text, const std::string &effectString);
+        extern void applyGlobalEffects(entt::entity textEntity, const std::string &effectString);
 
     } // namespace Functions
 

@@ -258,6 +258,8 @@ namespace transform
      * Remove an entity and its children from the registry.
      */
     auto RemoveEntity(entt::registry *registry, entt::entity e) -> void;
+
+    auto setJiggleOnHover(entt::registry *registry, entt::entity e, float jiggleAmount) -> void;
     
     
     

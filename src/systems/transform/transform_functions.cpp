@@ -118,15 +118,21 @@ namespace transform
         node.transformFunctions =  transformFunctionsDefault;
 
         // example hover customization
-        node.methods->onHover = [](entt::registry &registry, entt::entity e) {
-            transform::InjectDynamicMotion(&registry, e, 0.01f, 1.f);
-        };
+        setJiggleOnHover(registry, e, 0.1f);
 
         UpdateParallaxCalculations(registry, e);
 
        // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag
  
         return e;
+    }
+
+    auto setJiggleOnHover(entt::registry *registry, entt::entity e, float jiggleAmount) -> void
+    {
+        auto &node = registry->get<GameObject>(e);
+        node.methods->onHover = [jiggleAmount](entt::registry &registry, entt::entity e) {
+            transform::InjectDynamicMotion(&registry, e, jiggleAmount, 1.f);
+        };
     }
 
 

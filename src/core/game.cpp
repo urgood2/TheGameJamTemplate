@@ -426,9 +426,9 @@ namespace game
                 .build()
             )
             .build()
-    );
-
+        
     
+    );
     
     //LATER: figure out button UIE more precisely
     //LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently

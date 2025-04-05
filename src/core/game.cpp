@@ -159,14 +159,16 @@ namespace game
             // There is a brief flash of white when text changes. why?
             
             auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-
-            text.characters.clear();
-            TextSystem::Functions::clearAllEffects(text);
+            TextSystem::Functions::clearAllEffects(textEntity);
             text.rawText = fmt::format("[some new text](rainbow;bump)");
-            TextSystem::Functions::parseText(text);
+            TextSystem::Functions::parseText(textEntity);
             TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,in;"); // ;
             TextSystem::Functions::updateText(textEntity, 0.05f); // call update once to apply effects, prevent flashing
         };
+
+        //FIXME: there are two text entities which overlap
+        //FIXME: characters are not disposed of properly when text changes
+        //FIXME: text offset not working properly when text changes
 
         // init custom text system
         // TextSystem::Functions::initEffects(text);

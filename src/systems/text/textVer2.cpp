@@ -13,6 +13,7 @@
 
 #include "util/common_headers.hpp"
 #include "systems/transform/transform_functions.hpp"
+#include "systems/transform/transform.hpp"
 
 #include "../../core/globals.hpp"
 
@@ -26,17 +27,21 @@ namespace TextSystem
         auto createTextEntity(const Text &text, float x, float y) -> entt::entity
         {
             auto entity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 1, 1);
-            
+            auto &transform = globals::registry.get<transform::Transform>(entity);
+            auto &gameObject = globals::registry.get<transform::GameObject>(entity);
             auto &textComp = globals::registry.emplace<Text>(entity, text);
             
             initEffects(textComp);
-            parseText(textComp);
+            parseText(entity);
             
-            // gotta reflect final width and height
-            auto &transform = globals::registry.get<transform::Transform>(entity);
-            auto [width, height] = calculateBoundingBox(textComp);
-            transform.setActualW(width);
-            transform.setActualH(height);
+            
+
+            //TODO: testing
+            gameObject.state.dragEnabled = true;
+            gameObject.state.hoverEnabled = true;
+            gameObject.state.collisionEnabled = true;
+            gameObject.state.clickEnabled = true;
+            return entity;
         }
 
         // Exponential easing
@@ -753,8 +758,15 @@ namespace TextSystem
             // Character character{
             //     codepoint, Vector2{currentX, currentY}, 0.0f, 1.0f, WHITE, Vector2{0, 0}, {}, {}, index, lineNumber};
             auto &character = globals::registry.emplace<Character>(characterEntity);
+            auto &characterTransform = globals::registry.get<transform::Transform>(characterEntity);
+            auto &characterInheritedProperties = globals::registry.get<transform::InheritedProperties>(characterEntity);
+
             character.value = codepoint;
             character.position = Vector2{currentX, currentY};
+            characterInheritedProperties.offset->x = currentX- startPosition.x;
+            characterInheritedProperties.offset->y = currentY - startPosition.y;
+            characterTransform.setActualW(charSize.x);
+            characterTransform.setActualH(charSize.y);
             character.index = index;
             character.lineNumber = lineNumber;
             character.color = WHITE;
@@ -793,8 +805,9 @@ namespace TextSystem
                 if (text.alignment == Text::Alignment::CENTER)
                 { // Center alignment
                     spdlog::debug("Applying center alignment for line {}", line);
-                    for (auto &character : text.characters)
+                    for (auto &charEntity : text.characters)
                     {
+                        auto &character = globals::registry.get<Character>(charEntity);
                         if (character.lineNumber == line)
                         {
                             spdlog::debug("Before: Character '{}' at x={}", character.value, character.position.x);
@@ -806,8 +819,9 @@ namespace TextSystem
                 else if (text.alignment == Text::Alignment::RIGHT)
                 { // Right alignment
                     spdlog::debug("Applying right alignment for line {}", line);
-                    for (auto &character : text.characters)
+                    for (auto &charEntity : text.characters)
                     {
+                        auto &character = globals::registry.get<Character>(charEntity);
                         if (character.lineNumber == line)
                         {
                             spdlog::debug("Before: Character '{}' at x={}", character.value, character.position.x);
@@ -825,7 +839,8 @@ namespace TextSystem
 
                     for (size_t i = 0; i < text.characters.size(); ++i)
                     {
-                        const auto &character = text.characters[i];
+                        const auto &charEntity = text.characters[i];
+                        auto &character = globals::registry.get<Character>(charEntity);
                         if (character.lineNumber == line && character.value == ' ')
                         {
                             spacesCount++;
@@ -842,8 +857,10 @@ namespace TextSystem
 
                         float cumulativeShift = 0.0f;
 
-                        for (auto &character : text.characters)
+                        for (auto &charEntity : text.characters)
                         {
+                        
+                            auto &character = globals::registry.get<Character>(charEntity);
                             if (character.lineNumber == line)
                             {
                                 if (character.value == ' ')
@@ -861,7 +878,8 @@ namespace TextSystem
                         // Debug: Print all space positions for this line
                         for (size_t index : spaceIndices)
                         {
-                            const auto &spaceCharacter = text.characters[index];
+                            const auto &spaceCharacterEntity = text.characters[index];
+                            auto &spaceCharacter = globals::registry.get<Character>(spaceCharacterEntity);
                             spdlog::debug("Space character position: x={}, y={}, index={}", spaceCharacter.position.x, spaceCharacter.position.y, index);
                         }
                     }
@@ -906,9 +924,25 @@ namespace TextSystem
             return parsedArguments;
         }
 
-        void parseText(entt::entity textEntity)
+        auto deleteCharacters(entt::entity textEntity)
         {
             auto &text = globals::registry.get<Text>(textEntity);
+            for (auto &character : text.characters)
+            {
+                globals::registry.destroy(character);
+            }
+            text.characters.clear();
+        }
+
+        void parseText(entt::entity textEntity)
+        {
+            // if characters are not cleared, delete them
+            deleteCharacters(textEntity);
+
+            auto &text = globals::registry.get<Text>(textEntity);
+            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+
+            Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
             
             spdlog::debug("Parsing text: {}", text.rawText);
 
@@ -920,8 +954,8 @@ namespace TextSystem
 
             const char *currentPos = regexText.c_str(); // Pointer to current position in the string
 
-            float currentX = text.position.x;
-            float currentY = text.position.y;
+            float currentX = transform.getActualX();
+            float currentY = transform.getActualY();
 
             std::vector<float> lineWidths; // To store widths of all lines
             float currentLineWidth = 0.0f;
@@ -950,7 +984,7 @@ namespace TextSystem
                     if (codepoint == '\n') // Handle line breaks
                     {
                         lineWidths.push_back(currentLineWidth); // Save current line width
-                        currentX = text.position.x;             // Reset X position
+                        currentX = transform.getActualX();             // Reset X position
                         currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
                         currentLineWidth = 0.0f;
                         lineNumber++;
@@ -981,13 +1015,13 @@ namespace TextSystem
                         }
 
                         // Check if the next word will exceed the wrap width
-                        if ((currentX - text.position.x) + nextWordWidth > text.wrapWidth)
+                        if ((currentX - transform.getActualX()) + nextWordWidth > text.wrapWidth)
                         {
-                            spdlog::debug("Wrap would have exceeded width: currentX={}, wrapWidth={}, nextWordWidth={}, exceeds={}", currentX, text.wrapWidth, nextWordWidth, (currentX - text.position.x) + nextWordWidth);
+                            spdlog::debug("Wrap would have exceeded width: currentX={}, wrapWidth={}, nextWordWidth={}, exceeds={}", currentX, text.wrapWidth, nextWordWidth, (currentX - transform.getActualX()) + nextWordWidth);
 
                             // If the next word exceeds the wrap width, move to the next line
                             lineWidths.push_back(currentLineWidth);                           // Save current line width
-                            currentX = text.position.x;                                       // Reset X position
+                            currentX = transform.getActualX();                                       // Reset X position
                             currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Move to the next line
                             currentLineWidth = 0.0f;
                             lineNumber++;
@@ -997,7 +1031,7 @@ namespace TextSystem
                         }
                         else
                         {
-                            auto character = createCharacter(text, codepoint, text.position, text.font, text.fontSize,
+                            auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                              currentX, currentY, text.wrapWidth, text.alignment,
                                                              currentLineWidth, lineWidths, codepointIndex, lineNumber);
                             text.characters.push_back(character);
@@ -1005,7 +1039,7 @@ namespace TextSystem
                     }
                     else if (codepoint == ' ' && text.wrapMode == Text::WrapMode::CHARACTER) // Detect spaces
                     {
-                        if (currentX == text.position.x)
+                        if (currentX == transform.getActualX())
                         {
                             // Skip the space character at the beginning of the line
                             currentPos += codepointSize; // Advance pointer
@@ -1014,7 +1048,7 @@ namespace TextSystem
                         }
                         else
                         {
-                            auto character = createCharacter(text, codepoint, text.position, text.font, text.fontSize,
+                            auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                              currentX, currentY, text.wrapWidth, text.alignment,
                                                              currentLineWidth, lineWidths, codepointIndex, lineNumber);
                             text.characters.push_back(character);
@@ -1022,7 +1056,7 @@ namespace TextSystem
                     }
                     else
                     {
-                        auto character = createCharacter(text, codepoint, text.position, text.font, text.fontSize,
+                        auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                          currentX, currentY, text.wrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
@@ -1041,7 +1075,7 @@ namespace TextSystem
 
                 const char *effectPos = effectText.c_str();
 
-                handleEffectSegment(effectPos, lineWidths, currentLineWidth, currentX, text, currentY, lineNumber, codepointIndex, parsedArguments);
+                handleEffectSegment(effectPos, lineWidths, currentLineWidth, currentX, textEntity, currentY, lineNumber, codepointIndex, parsedArguments);
 
                 // Update regexText to process the suffix
                 regexText = match.suffix().str();
@@ -1065,7 +1099,7 @@ namespace TextSystem
                 if (codepoint == '\n') // Handle line breaks
                 {
                     lineWidths.push_back(currentLineWidth); // Save current line width
-                    currentX = text.position.x;             // Reset X position
+                    currentX = transform.getActualX();             // Reset X position
                     currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
                     currentLineWidth = 0.0f;
                     lineNumber++;
@@ -1096,11 +1130,11 @@ namespace TextSystem
                     }
 
                     // Check if the next word will exceed the wrap width
-                    if ((currentX - text.position.x) + nextWordWidth > text.wrapWidth)
+                    if ((currentX - transform.getActualX()) + nextWordWidth > text.wrapWidth)
                     {
                         // If the next word exceeds the wrap width, move to the next line
                         lineWidths.push_back(currentLineWidth);                           // Save current line width
-                        currentX = text.position.x;                                       // Reset X position
+                        currentX = transform.getActualX();                                       // Reset X position
                         currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Move to the next line
                         currentLineWidth = 0.0f;
                         lineNumber++;
@@ -1111,7 +1145,7 @@ namespace TextSystem
                     else
                     {
                         // FIXME: Ignore the space character if line changed
-                        auto character = createCharacter(text, codepoint, text.position, text.font, text.fontSize,
+                        auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                          currentX, currentY, text.wrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
@@ -1120,7 +1154,7 @@ namespace TextSystem
                 else if (codepoint == ' ' && text.wrapMode == Text::WrapMode::CHARACTER) // Detect spaces
                 {
                     // does adding the char take us over the wrap width?
-                    if ((currentX - text.position.x) + MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x > text.wrapWidth)
+                    if ((currentX - transform.getActualX()) + MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x > text.wrapWidth)
                     {
                         // if so skip this space character
 
@@ -1131,7 +1165,7 @@ namespace TextSystem
                     }
                     else
                     {
-                        auto character = createCharacter(text, codepoint, text.position, text.font, text.fontSize,
+                        auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                          currentX, currentY, text.wrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
@@ -1139,7 +1173,7 @@ namespace TextSystem
                 }
                 else
                 {
-                    auto character = createCharacter(text, codepoint, text.position, text.font, text.fontSize,
+                    auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                      currentX, currentY, text.wrapWidth, text.alignment,
                                                      currentLineWidth, lineWidths, codepointIndex, lineNumber);
                     text.characters.push_back(character);
@@ -1156,31 +1190,44 @@ namespace TextSystem
             }
 
             // Adjust alignment after parsing
-            adjustAlignment(text, lineWidths);
+            adjustAlignment(textEntity, lineWidths);
 
             // print all characters out for debugging
-            for (const auto &character : text.characters)
+            for (const auto &characterEntity : text.characters)
             {
+                auto &character = globals::registry.get<Character>(characterEntity);
                 int utf8Size = 0;
                 spdlog::debug("Character: '{}', x={}, y={}, line={}", CodepointToUTF8(character.value, &utf8Size), character.position.x, character.position.y, character.lineNumber);
             }
 
             auto ptr = std::make_shared<Text>(text);
             
-            for (auto &character : text.characters)
+            for (auto &characterEntity : text.characters)
             {
+                auto &character = globals::registry.get<Character>(characterEntity);
                 character.parentText = ptr;
             }
 
             // get last character
             if (!text.characters.empty())
             {
-                text.characters.back().isFinalCharacterInText = true;
+                auto lastCharacterEntity = text.characters.back();
+                auto &lastCharacter = globals::registry.get<Character>(lastCharacterEntity);
+                lastCharacter.isFinalCharacterInText = true;
             }
+        
+            // gotta reflect final width and height
+            auto [width, height] = calculateBoundingBox(textEntity);
+            transform.setActualW(width);
+            transform.setActualH(height);
         }
 
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments)
         {
+            auto &text = globals::registry.get<Text>(textEntity);
+            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
+
             bool firstCharacter = true;
             while (*effectPos)
             {
@@ -1209,10 +1256,10 @@ namespace TextSystem
                     //TODO: spacing seems off?
 
                     // just reposition in next line without skippin codepoint
-                    if ((currentX - text.position.x) + nextWordWidth > text.wrapWidth)
+                    if ((currentX - textPosition.x) + nextWordWidth > text.wrapWidth)
                     {
                         lineWidths.push_back(currentLineWidth);
-                        currentX = text.position.x;
+                        currentX = textPosition.x;
                         currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
                         currentLineWidth = 0.0f;
                         lineNumber++;
@@ -1222,7 +1269,7 @@ namespace TextSystem
                 if (codepoint == '\n') // Explicit line break in effect text
                 {
                     lineWidths.push_back(currentLineWidth);
-                    currentX = text.position.x;
+                    currentX = textPosition.x;
                     currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
                     currentLineWidth = 0.0f;
                     lineNumber++;
@@ -1247,10 +1294,10 @@ namespace TextSystem
 
                         //TODO: spacing seems off?
 
-                        if ((currentX - text.position.x) + nextWordWidth > text.wrapWidth)
+                        if ((currentX - textPosition.x) + nextWordWidth > text.wrapWidth)
                         {
                             lineWidths.push_back(currentLineWidth);
-                            currentX = text.position.x;
+                            currentX = textPosition.x;
                             currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
                             currentLineWidth = 0.0f;
                             lineNumber++;
@@ -1262,7 +1309,7 @@ namespace TextSystem
                     else if (text.wrapMode == Text::WrapMode::CHARACTER)
                     {
                         float spaceWidth = MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x;
-                        if ((currentX - text.position.x) + spaceWidth > text.wrapWidth)
+                        if ((currentX - textPosition.x) + spaceWidth > text.wrapWidth)
                         {
                             // Skip space at start of line
                             effectPos += codepointSize;
@@ -1273,9 +1320,10 @@ namespace TextSystem
                 }
 
                 // Create and store character
-                Character character = createCharacter(text, codepoint, text.position, text.font, text.fontSize,
+                auto characterEntity = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                       currentX, currentY, text.wrapWidth, text.alignment,
                                                       currentLineWidth, lineWidths, codepointIndex, lineNumber);
+                auto &character = globals::registry.get<Character>(characterEntity);
 
                 character.parsedEffectArguments = parsedArguments;
 
@@ -1287,7 +1335,7 @@ namespace TextSystem
                     }
                 }
 
-                text.characters.push_back(character);
+                text.characters.push_back(characterEntity);
                 effectPos += codepointSize;
                 codepointIndex++;
 
@@ -1299,8 +1347,9 @@ namespace TextSystem
         {
             auto &text = globals::registry.get<Text>(textEntity);
             // spdlog::debug("Updating text with delta time: {}", dt);
-            for (auto &character : text.characters)
+            for (auto &characterEntity : text.characters)
             {
+                auto &character = globals::registry.get<Character>(characterEntity);
                 // Apply Pop-in Animation
                 //TODO: deprecated, use pop effect instead
                 if (character.pop_in && character.pop_in < 1.0f)
@@ -1351,18 +1400,24 @@ namespace TextSystem
         }
         
         Vector2 calculateBoundingBox (entt::entity textEntity) {
+
+            auto &text = globals::registry.get<Text>(textEntity);
+            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+
             // Calculate the bounding box dimensions
             float minX = std::numeric_limits<float>::max();
             float minY = std::numeric_limits<float>::max();
             float maxX = std::numeric_limits<float>::lowest();
             float maxY = std::numeric_limits<float>::lowest();
 
-            minX = text.position.x;
-            minY = text.position.y;
-            maxX = text.position.x + text.wrapWidth;
+            minX = transform.getActualX();
+            minY = transform.getActualY();
+            maxX = transform.getActualX() + text.wrapWidth;
+
+            auto &lastChar = globals::registry.get<Character>(text.characters.back());
             // get line height of last character
             float lineHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
-            maxY = text.position.y + (text.characters.back().lineNumber + 1) * (lineHeight);
+            maxY = transform.getActualY() + (lastChar.lineNumber + 1) * (lineHeight);
 
             float width = maxX - minX;
             float height = maxY - minY;
@@ -1373,8 +1428,11 @@ namespace TextSystem
         void renderText(entt::entity textEntity, bool debug)
         {
             auto &text = globals::registry.get<Text>(textEntity);
-            for (const auto &character : text.characters)
+
+            for (const auto &characterEntity : text.characters)
             {
+                auto &character = globals::registry.get<Character>(characterEntity);
+                auto &transform = globals::registry.get<transform::Transform>(textEntity);
 
                 float popInScale = 1.0f;
                 if (character.pop_in)
@@ -1384,8 +1442,8 @@ namespace TextSystem
 
                 // Calculate character position with offset
                 Vector2 charPosition = {
-                    character.position.x + character.offset.x,
-                    character.position.y + character.offset.y};
+                    transform.getActualX() + character.position.x + character.offset.x,
+                    transform.getActualY() + character.position.y + character.offset.y}; //TODO: how to mesh with transform's position + offset system?
 
                 // add all optional offsets
                 for (const auto &[effectName, offset] : character.offsets)
@@ -1434,25 +1492,29 @@ namespace TextSystem
             // Draw debug bounding box
             if (debug)
             {
+                auto &transform = globals::registry.get<transform::Transform>(textEntity);
                 
                 // Calculate the bounding box dimensions
-                auto [width, height] = calculateBoundingBox(text);
+                auto [width, height] = calculateBoundingBox(textEntity);
                 
                 //TODO: this does not take final scale into account
 
                 // Draw the bounding box
-                DrawRectangleLines(text.po, minY, width, height, RED);
+                DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, RED);
 
                 // Draw text showing the dimensions
                 std::string dimensionsText = "Width: " + std::to_string(width) + ", Height: " + std::to_string(height);
-                DrawText(dimensionsText.c_str(), minX, minY - 20, 10, RED); // Position the text above the box
+                DrawText(dimensionsText.c_str(), transform.getVisualX(), transform.getVisualY() - 20, 10, RED); // Position the text above the box
             }
         }
 
         void clearAllEffects(entt::entity textEntity)
         {
-            for (auto &character : text.characters)
+            auto &text = globals::registry.get<Text>(textEntity);
+            for (auto &characterEntity : text.characters)
             {
+                auto &character = globals::registry.get<Character>(characterEntity);
+
                 character.effects.clear();
                 character.parsedEffectArguments.arguments.clear();
                 character.scaleModifiers.clear();
@@ -1461,6 +1523,7 @@ namespace TextSystem
                 character.scaleYModifier.reset();
                 character.overrideCodepoint.reset();
             }
+
         }
 
         void applyGlobalEffects(entt::entity textEntity, const std::string &effectString)
@@ -1468,8 +1531,9 @@ namespace TextSystem
             auto &text = globals::registry.get<Text>(textEntity);
             ParsedEffectArguments parsedArguments = splitEffects(effectString);
 
-            for (auto &character : text.characters)
+            for (auto &characterEntity : text.characters)
             {
+                auto &character = globals::registry.get<Character>(characterEntity);
                 character.parsedEffectArguments.arguments.insert(parsedArguments.arguments.begin(), parsedArguments.arguments.end());
 
                 for (const auto &[effectName, args] : parsedArguments.arguments)

@@ -184,27 +184,27 @@ namespace TextSystem
 
         extern void initEffects(Text &text);
 
-        extern Character createCharacter(Text text, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
-                                         float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
-                                         float &currentLineWidth, std::vector<float> &lineWidths, int index, int &lineNumber);
+        extern entt::entity createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
+            float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
+            float &currentLineWidth, std::vector<float> &lineWidths, int index, int &lineNumber);
 
-        extern void adjustAlignment(Text &text, const std::vector<float> &lineWidths);
+        extern void adjustAlignment(entt::entity textEntity, const std::vector<float> &lineWidths);
 
         extern ParsedEffectArguments splitEffects(const std::string &effects);
         
         extern auto createTextEntity(const Text &text, float x, float y) -> entt::entity;
         
-        extern Vector2 calculateBoundingBox (Text &text);
+        extern Vector2 calculateBoundingBox (entt::entity textEntity);
 
         extern std::string CodepointToString(int codepoint);
 
-        extern void parseText(Text &text);
-        void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, TextSystem::Text &text, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
+        extern void parseText(entt::entity textEntity);
+        void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
         extern void updateText(entt::entity textEntity, float dt);
 
         extern void renderText(entt::entity textEntity, bool debug = false);
 
-        extern void clearAllEffects(Text &text);
+        extern void clearAllEffects(entt::entity textEntity);
 
         extern void applyGlobalEffects(entt::entity textEntity, const std::string &effectString);
 

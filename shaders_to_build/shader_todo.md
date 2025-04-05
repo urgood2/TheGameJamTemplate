@@ -3,6 +3,7 @@
 
 
 More shaders to implement
+https://godotshaders.com/shader/procedural-cyclic-slash/
 https://godotshaders.com/shader/phantom-star-for-godot-4-2/
 https://godotshaders.com/shader/color-replacer-pixel-perfect-damage-shader/
 https://godotshaders.com/shader/wobbly-shader/

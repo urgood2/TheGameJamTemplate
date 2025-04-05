@@ -43,6 +43,7 @@ LATER: (not needed immediately)
 - [ ] A function to not have a predefined width or height 
 - [ ] Dynamic text needs shadows + transform integration (shadows from transform as well)
 - [ ] Incorporate animated sprites into ui system
+- [ ] Rendering for gui should inherit immediate parent's rotation, scale
 
 ### 🧪 UI Widgets & Behavior
 

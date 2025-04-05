@@ -1433,6 +1433,7 @@ namespace TextSystem
             {
                 auto &character = globals::registry.get<Character>(characterEntity);
                 auto &transform = globals::registry.get<transform::Transform>(textEntity);
+                auto &charTransform = globals::registry.get<transform::Transform>(characterEntity);
 
                 float popInScale = 1.0f;
                 if (character.pop_in)
@@ -1442,8 +1443,8 @@ namespace TextSystem
 
                 // Calculate character position with offset
                 Vector2 charPosition = {
-                    transform.getActualX() + character.position.x + character.offset.x,
-                    transform.getActualY() + character.position.y + character.offset.y}; //TODO: how to mesh with transform's position + offset system?
+                    charTransform.getVisualX() + character.offset.x,
+                    charTransform.getVisualY() + character.offset.y}; //TODO: how to mesh with transform's position + offset system?
 
                 // add all optional offsets
                 for (const auto &[effectName, offset] : character.offsets)
@@ -1500,11 +1501,11 @@ namespace TextSystem
                 //TODO: this does not take final scale into account
 
                 // Draw the bounding box
-                DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, RED);
+                DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
 
                 // Draw text showing the dimensions
                 std::string dimensionsText = "Width: " + std::to_string(width) + ", Height: " + std::to_string(height);
-                DrawText(dimensionsText.c_str(), transform.getVisualX(), transform.getVisualY() - 20, 10, RED); // Position the text above the box
+                DrawText(dimensionsText.c_str(), transform.getVisualX(), transform.getVisualY() - 20, 10, GRAY); // Position the text above the box
             }
         }
 

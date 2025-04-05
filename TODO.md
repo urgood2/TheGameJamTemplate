@@ -44,6 +44,7 @@ LATER: (not needed immediately)
 - [ ] Dynamic text needs shadows + transform integration (shadows from transform as well)
 - [ ] Incorporate animated sprites into ui system
 - [ ] Rendering for gui should inherit immediate parent's rotation, scale
+- [ ] Need to apply individual sprite atlas uv change to every shader that will be used with sprites.
 
 ### 🧪 UI Widgets & Behavior
 

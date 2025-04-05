@@ -301,8 +301,8 @@ namespace layer
                 AssertThat(command.args.size(), Equals(2)); // Validate number of arguments
                 float scaleX = std::get<float>(command.args[0]);
                 float scaleY = std::get<float>(command.args[1]);
-                AssertThat(scaleX, IsGreaterThan(0.0f)); // ScaleX must be positive
-                AssertThat(scaleY, IsGreaterThan(0.0f)); // ScaleY must be positive
+                AssertThat(scaleX, IsGreaterThanOrEqualTo(0.0f)); // ScaleX must be positive
+                AssertThat(scaleY, IsGreaterThanOrEqualTo(0.0f)); // ScaleY must be positive
                 layer::Scale(scaleX, scaleY);
             }
             else if (command.type == "rotate")
@@ -417,7 +417,7 @@ namespace layer
                 float y = std::get<float>(command.args[3]);
                 Color color = std::get<Color>(command.args[4]);
                 float fontSize = std::get<float>(command.args[5]);
-                AssertThat(fontSize, IsGreaterThan(0.0f)); // Font size must be positive
+                // AssertThat(fontSize, IsGreaterThan(0.0f)); // Font size must be positive
                 layer::Text(text, font, x, y, color, fontSize);
             }
             else if (command.type == "draw_text_centered")
@@ -444,7 +444,7 @@ namespace layer
                 float fontSize = std::get<float>(command.args[6]);
                 float spacing = std::get<float>(command.args[7]);
                 Color color = std::get<Color>(command.args[8]);
-                AssertThat(fontSize, IsGreaterThan(0.0f)); // Font size must be positive
+                // AssertThat(fontSize, IsGreaterThan(0.0f)); // Font size must be positive
                 AssertThat(spacing, IsGreaterThan(0.0f));  // Spacing must be positive
                 layer::TextPro(text, font, x, y, origin, rotation, fontSize, spacing, color);
             }

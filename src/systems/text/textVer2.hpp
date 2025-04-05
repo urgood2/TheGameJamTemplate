@@ -60,6 +60,8 @@ namespace TextSystem
         std::function<void()> onFinishedEffect; // callback for when an effect that keeps track of finished state has finished in the last character of a text. Note that it doesn't keep track of multiple such effects, and will respond tot he first one that finishes.
         
         bool pop_in_enabled = false; // New: Enable pop-in animation for individual characters
+
+        bool shadow_enabled = true; // New: Enable shadow effect for characters. Uses shadow data from transform components
         
         float width{}, height{}; // width and height of the text, updated every draw call
         
@@ -202,7 +204,7 @@ namespace TextSystem
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
         extern void updateText(entt::entity textEntity, float dt);
 
-        extern void renderText(entt::entity textEntity, bool debug = false);
+        extern void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug = false);
 
         extern void clearAllEffects(entt::entity textEntity);
 

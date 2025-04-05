@@ -547,6 +547,8 @@ namespace game
         {
             ui::box::Draw(ui_layer, globals::registry, e);
         }
+
+        TextSystem::Functions::renderText(textEntity, ui_layer, true);
         uiProfiler.Stop();
 
         particle::DrawParticles(globals::registry, ui_layer);
@@ -631,8 +633,6 @@ namespace game
         const int fps = GetFPS(); // Get the current FPS
         DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
 
-        //TODO: move drawing to layer
-        TextSystem::Functions::renderText(textEntity, true);
         
         EndDrawing();
 

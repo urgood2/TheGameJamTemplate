@@ -1425,7 +1425,7 @@ namespace TextSystem
             return {width, height};
         }
 
-        void renderText(entt::entity textEntity, bool debug)
+        void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug)
         {
             auto &text = globals::registry.get<Text>(textEntity);
 
@@ -1475,19 +1475,54 @@ namespace TextSystem
                 float finalScaleX = character.scaleXModifier.value_or(1.0f) * finalScale;
                 float finalScaleY = character.scaleYModifier.value_or(1.0f) * finalScale;
 
-                rlPushMatrix();
+                auto &characterObject = globals::registry.get<transform::GameObject>(characterEntity);
+
+                // rlPushMatrix();
+                layer::AddPushMatrix(layerPtr);
 
                 // apply scaling that is centered on the character
 
-                rlTranslatef(charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
-                rlScalef(finalScaleX, finalScaleY, 1);
-                rlRotatef(character.rotation, 0, 0, 1);
-                rlTranslatef(-charSize.x * 0.5f, -charSize.y * 0.5f, 0);
+                // rlTranslatef(charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
+                // rlScalef(finalScaleX, finalScaleY, 1);
+                // rlRotatef(character.rotation, 0, 0, 1);
+                // rlTranslatef(-charSize.x * 0.5f, -charSize.y * 0.5f, 0);
+
+                layer::AddTranslate(layerPtr, charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
+                layer::AddScale(layerPtr, finalScaleX, finalScaleY, 1);
+                layer::AddRotate(layerPtr, character.rotation);
+                layer::AddTranslate(layerPtr, -charSize.x * 0.5f, -charSize.y * 0.5f, 0);
+
+
+                // render shadow if enabled
+                // draw shadow based on shadow displacement
+                if (text.shadow_enabled && characterObject.shadowDisplacement)
+                {
+                    float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                    float heightFactor = 1.0f + characterObject.shadowHeight.value_or(0.f); // Increase effect based on height
+
+                    // Adjust displacement using shadow height
+                    float shadowOffsetX = characterObject.shadowDisplacement->x * baseExaggeration * heightFactor;
+                    float shadowOffsetY = characterObject.shadowDisplacement->y * baseExaggeration * heightFactor;
+
+                    // Translate to shadow position
+                    layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
+
+                    // Draw shadow 
+                    // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
+                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, charTransform.getVisualR(), text.fontSize * finalScale, text.spacing, Fade(BLACK, 0.7f));
+                    // layer::AddRectanglePro(layerPtr, 0, 0, Vector2{charTransform.getVisualW(), charTransform.getVisualH()}, Fade(BLACK, 0.7f));
+
+                    // Reset translation to original position
+                    layer::AddTranslate(layerPtr, shadowOffsetX, -shadowOffsetY);
+                }
 
                 // Render the character
-                DrawTextPro(text.font, utf8String.c_str(), Vector2{0, 0}, Vector2{0, 0}, 0.f, text.fontSize, text.spacing, character.color);
+                layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, charTransform.getVisualR(), text.fontSize * finalScale, text.spacing, character.color);
 
-                rlPopMatrix();
+                // DrawTextPro(text.font, utf8String.c_str(), Vector2{0, 0}, Vector2{0, 0}, 0.f, text.fontSize, text.spacing, character.color);
+
+                // rlPopMatrix();
+                layer::AddPopMatrix(layerPtr);
             }
 
             // Draw debug bounding box
@@ -1501,11 +1536,13 @@ namespace TextSystem
                 //TODO: this does not take final scale into account
 
                 // Draw the bounding box
-                DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
+                layer::AddRectangleLinesPro(layerPtr, transform.getVisualX(), transform.getVisualY(), {width, height}, 1.0f, GRAY);
+                // DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
 
                 // Draw text showing the dimensions
                 std::string dimensionsText = "Width: " + std::to_string(width) + ", Height: " + std::to_string(height);
-                DrawText(dimensionsText.c_str(), transform.getVisualX(), transform.getVisualY() - 20, 10, GRAY); // Position the text above the box
+                layer::AddText(layerPtr, dimensionsText.c_str(), GetFontDefault(), transform.getVisualX(), transform.getVisualY() - 20, GRAY, 10); // Position the text above the box
+                // DrawText(dimensionsText.c_str(), transform.getVisualX(), transform.getVisualY() - 20, 10, GRAY); 
             }
         }
 

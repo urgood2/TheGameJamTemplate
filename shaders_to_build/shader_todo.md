@@ -1,5 +1,4 @@
-- isolate vertex expansion (vertex shader) and fragment uv restriction (for sprite sheets) into own functions for reuse
-- automate web shader loading?
+- automate web shader loading somehow?
 
 
 More shaders to implement

@@ -70,8 +70,9 @@ namespace ui
                 float fontSize = globals::fontData.fontLoadedSize * scale * globals::fontData.fontScale;
                 auto [w, h] = MeasureTextEx(globals::fontData.font, config->text->c_str(), fontSize, globals::fontData.spacing);
                 if (config->verticalText.value_or(false)) std::swap(w, h);
-                config->minWidth = w;
-                config->minHeight = h;
+                //FIXME: testing, commenting out
+                // config->minWidth = w;
+                // config->minHeight = h;
             }
 
             // Handle root element

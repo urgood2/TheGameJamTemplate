@@ -624,6 +624,14 @@ namespace input {
             {
                 // SPDLOG_DEBUG("Showing cursor");
                 ShowCursor();
+
+                // clear focus of all nodes (to make sure no lingering focus graphics remain)
+                auto view = globals::registry.view<transform::GameObject, ui::UIConfig>();
+                for (auto entity : view)
+                {
+                    auto &node = view.get<transform::GameObject>(entity);
+                    node.state.isBeingFocused = false;
+                }
             }
             else
             {

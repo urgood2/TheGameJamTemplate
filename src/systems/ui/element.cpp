@@ -1370,20 +1370,20 @@ namespace ui
             }
         }
 
-        // highlighted button outline
-        if (node->state.isBeingFocused)
+        // highlighted button outline (only when mouse not active)
+        if (node->state.isBeingFocused && globals::inputState.hid.mouse_enabled == false && IsCursorHidden() == true)
         {
             state->focus_timer = state->focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
             float lw = 50.0f * std::pow(std::max(0.0f, (state->focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             Color c = Fade(WHITE, 0.2f * lw);
 
-            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 1.5f);
+            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f);
             //TODO: refactor this whole method later
 
             c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
 
-            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 1.5f);
+            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f);
             
         }
         else
@@ -1416,7 +1416,7 @@ namespace ui
         }
         
         //TODO: enable this back later
-        transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
+        // transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
 
         profiler.Stop();
     }

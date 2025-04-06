@@ -109,6 +109,7 @@ LATER: (not needed immediately)
 - [ ] rect shapes are made clickable by default in game.cpp. why do nested ones not click?
 - [ ] UIbox should align itself again if its size changes. right now it does not.
 - [ ] Impplement optional shader support for individual ui elements (or entire ui element trees)
+- [ ] outlines not rendering properly? check drawself (element)
 
 ## 🧭 Later later laters *(future consideration)*
 - [ ] Determine how to programmatically modify frame times for particle animations.

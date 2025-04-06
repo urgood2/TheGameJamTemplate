@@ -114,8 +114,7 @@ namespace game
                     .addWidth(Random::get<float>(20, 100))
                     .addHeight(Random::get<float>(20, 200))
                     .addMinWidth(200.f)
-                    // .addOutlineThickness(2.0f)
-                    // .addOutlineColor(BLUE)
+                    .addOutlineThickness(10.0f)
                     // .addShadowColor(Fade(BLACK, 0.4f))
                     .addShadow(true)
                     // .addEmboss(4.f)
@@ -546,10 +545,10 @@ namespace game
 
         util::Profiler transformProfiler("Transform Debug Draw");
         // do transform debug drawing
-        auto view = globals::registry.view<transform::Transform>(entt::exclude<ui::UIElementComponent, ui::UIBoxComponent>);
+        auto view = globals::registry.view<transform::Transform>();
         for (auto e : view)
         {
-            transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+            // transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
         }
         transformProfiler.Stop();
 

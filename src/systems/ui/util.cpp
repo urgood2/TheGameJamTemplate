@@ -535,7 +535,9 @@ namespace ui
             || (rectCache->innerVertices.empty() && rectCache->outerVertices.empty()) || std::abs(rectCache->w - visualW) > EPSILON || std::abs(rectCache->h - visualH) > EPSILON
             // || (node.shadowDisplacement.has_value() && (rectCache->shadowDisplacement != node.shadowDisplacement.value()))
             // || std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON
-            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value() > EPSILON)) || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON))
+            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value() > EPSILON)) 
+            || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON)
+            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON))
         {
             if (rectCache)
             {
@@ -549,7 +551,8 @@ namespace ui
             // TODO: this runs too often
             //  SPDLOG_DEBUG("Regenerating cache for rounded rectangle");
             //  regenerate cache
-            emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
+            float lineWidthToUse = lineWidthOverride.value_or(uiConfig->outlineThickness.value_or(1.0f));
+            emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, lineWidthToUse, type, progress.value_or(1.0f));
         }
 
         rectCache = registry.try_get<RoundedRectangleVerticesCache>(entity);

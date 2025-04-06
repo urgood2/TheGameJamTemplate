@@ -15,8 +15,6 @@ LATER: (not needed immediately)
 
 ---
 
-## Done today
-- [ ] Got basic hover/drag window logic in place, just needs to be implemented.
 
 ## 🧠 General Design / Architecture
 
@@ -32,18 +30,13 @@ LATER: (not needed immediately)
     - [ ] change funnel_to -> redirect_focus_to
     - [ ] change funnel_from -> claim_focus_from 
 
-### 🖼️ Visual / Layout
-
-- [ ] A function to not have a predefined width or height for dynamic text
-
 ### 🧪 UI Widgets & Behavior
 
 - [ ] Actually implement the ui now.
 
 - [ ] Implement more UI element types:
-  - [ ] Buttons (with choice, focus args, one-press, delay, etc.)
+  - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.
-    - [ ] Add support for button delay mechanics.
     - button delay disables button for X seconds after ui is created. (in ui element setValues)
     - in update, this value is updated so callback which is backed up will be restored
   - [x] Mutually exclusive button selections (think tabs)
@@ -100,10 +93,6 @@ LATER: (not needed immediately)
   - [x] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect
   - [x] Highlights (like card highligts) -> just a uibox that is an empty outline, attached to another uibox.
 
-
-## 🧼 Cleanup / Maintenance
-
-- [ ] Add centralized test args for button and UI interactions.
 
 ---
 

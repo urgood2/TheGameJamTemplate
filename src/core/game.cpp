@@ -373,7 +373,7 @@ namespace game
                                                          // .addOutlineThickness(5.0f)
                                                          // .addButtonCallback("testCallback")
                                                          // .addOnePress(true)
-                                                         // .addFocusArgs((ui::FocusArgs{.funnel_to = entt::entity{entt::null}}))
+                                                         // .addFocusArgs((ui::FocusArgs{.redirect_focus_to = entt::entity{entt::null}}))
                                                          .addOutlineColor(BLUE)
                                                          .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
                                                          .build())
@@ -458,7 +458,7 @@ namespace game
             toggle:
 
             button_dist = 0.2
-            focus_args = {funnel_to = true}
+            focus_args = {redirect_focus_to = true}
 
 
         */

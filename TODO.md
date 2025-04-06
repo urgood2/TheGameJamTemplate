@@ -89,9 +89,9 @@ LATER: (not needed immediately)
     - Supports keyboard/controller interaction and shoulder button overlays
   - [x] Checkboxes -> just a button with an image. The image is set to invisible whenbutton is pressed. Funnel_to and from are used for the container of the checkbox, etc.
   - [x] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
-  - [x] Pips (for controller button) -> just a root component with a button sprite + text describing that action, made a child to the parent ui box 
+  - [x] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
   - [x] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect
-  - [x] Highlights (like card highligts) -> just a uibox that is an empty outline, attached to another uibox.
+  - [x] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
 
 
 ---

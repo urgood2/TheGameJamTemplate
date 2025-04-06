@@ -1724,7 +1724,7 @@ namespace input {
                     return true;
                 }
                 if (uiConfig.focusArgs) {
-                    if (uiConfig.focusArgs->type == "none" || uiConfig.focusArgs->funnel_from) {
+                    if (uiConfig.focusArgs->type == "none" || uiConfig.focusArgs->claim_focus_from) {
                         return false;
                     } else {
                         return true;
@@ -1818,11 +1818,11 @@ namespace input {
                     state.focus_cursor_pos = {GetMousePosition().x - roomTransform.getActualX(), GetMousePosition().y - roomTransform.getActualY()};
 
                     // If a node is already focused, use its center point as the reference position.
-                    // If the node has a funnel_to target, use that instead.
+                    // If the node has a redirect_focus_to target, use that instead.
                     if (registry.valid(state.cursor_focused_target)) { 
                         auto& node = registry.get<transform::GameObject>(state.cursor_focused_target);
                         auto& uiConfig = registry.get<ui::UIConfig>(state.cursor_focused_target);
-                        auto funnelEntity = (uiConfig.focusArgs && uiConfig.focusArgs->funnel_to) ? uiConfig.focusArgs->funnel_to.value() : state.cursor_focused_target;
+                        auto funnelEntity = (uiConfig.focusArgs && uiConfig.focusArgs->redirect_focus_to) ? uiConfig.focusArgs->redirect_focus_to.value() : state.cursor_focused_target;
 
                         auto &funnelTransform = registry.get<transform::Transform>(funnelEntity);
 
@@ -1853,8 +1853,8 @@ namespace input {
                         auto& node = registry.get<transform::GameObject>(entity.node);
                         auto& uiConfig = registry.get<ui::UIConfig>(entity.node);
 
-                        auto& target_node = (uiConfig.focusArgs && uiConfig.focusArgs->funnel_to) 
-                                                ? uiConfig.focusArgs->funnel_to.value()
+                        auto& target_node = (uiConfig.focusArgs && uiConfig.focusArgs->redirect_focus_to) 
+                                                ? uiConfig.focusArgs->redirect_focus_to.value()
                                                 : entity.node;
                         auto &targetNodeTransform = registry.get<transform::Transform>(target_node);
 
@@ -1933,8 +1933,8 @@ namespace input {
         if (!temporaryListOfFocusedNodes.empty()) {
             auto& first_node = registry.get<transform::GameObject>(temporaryListOfFocusedNodes[0].node);
             auto& first_node_ui_config = registry.get<ui::UIConfig>(temporaryListOfFocusedNodes[0].node);
-            state.cursor_focused_target = (first_node_ui_config.focusArgs && first_node_ui_config.focusArgs->funnel_from) 
-                                    ? first_node_ui_config.focusArgs->funnel_from.value()
+            state.cursor_focused_target = (first_node_ui_config.focusArgs && first_node_ui_config.focusArgs->claim_focus_from) 
+                                    ? first_node_ui_config.focusArgs->claim_focus_from.value()
                                     : temporaryListOfFocusedNodes[0].node;
 
             if (state.cursor_focused_target != state.cursor_prev_focused_target) {

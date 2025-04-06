@@ -292,16 +292,16 @@ namespace ui
             {
                 input::SnapToNode(registry, globals::inputState, entity);
             }
-            if (uiConfig->focusArgs->funnel_to)
+            if (uiConfig->focusArgs->redirect_focus_to)
             {
                 entt::entity parent = node.parent.value();
                 while (registry.valid(parent))
                 {
                     auto *parentConfig = registry.try_get<UIConfig>(parent);
-                    if (parentConfig && parentConfig->focusArgs && parentConfig->focusArgs->funnel_from)
+                    if (parentConfig && parentConfig->focusArgs && parentConfig->focusArgs->claim_focus_from)
                     { // TODO: document funnel from and funnel to, make better names
-                        parentConfig->focusArgs->funnel_from = entity;
-                        uiConfig->focusArgs->funnel_to = parent;
+                        parentConfig->focusArgs->claim_focus_from = entity;
+                        uiConfig->focusArgs->redirect_focus_to = parent;
                         break;
                     }
                     auto *parentElement = registry.try_get<UIElementComponent>(parent);

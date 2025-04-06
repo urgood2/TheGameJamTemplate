@@ -96,8 +96,8 @@ namespace ui
         std::optional<bool> snap_to;             // Determines whether the UI element should be auto-focused when created.
         std::optional<bool> registered;          // Prevents duplicate registration of a UI element. Ensures the UI element is only registered once for input handling.
         std::optional<std::string> type;         // slider, tab, etc. for handling focus. Specifies what type of focus behavior this UI element should use. Could be used to group UI elements under specific focus management types.
-        std::optional<entt::entity> funnel_from; // Specifies that focus should be funneled from a specific UI element. These properties define a focus funnel system that determines how keyboard/gamepad navigation should be handled.
-        std::optional<entt::entity> funnel_to;   // Specifies that focus should be funneled toward a specific UI element. These properties define a focus funnel system that determines how keyboard/gamepad navigation should be handled.
+        std::optional<entt::entity> claim_focus_from; // Specifies that focus should be funneled from a specific UI element. These properties define a focus funnel system that determines how keyboard/gamepad navigation should be handled.
+        std::optional<entt::entity> redirect_focus_to;   // Specifies that focus should be funneled toward a specific UI element. These properties define a focus funnel system that determines how keyboard/gamepad navigation should be handled.
         std::optional<std::string> nav;          // type of focus navigation? ("wide": Focus is primarily horizontal, so check the y axis. "tall": Focus is primarily vertical, so check the x axis.) Clear to disable TODO: change to enum
         bool no_loop{false};                     // set to true to prevent looping focus
     };

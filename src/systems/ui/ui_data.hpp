@@ -140,8 +140,9 @@ namespace ui
         std::optional<float> scale{1.0f};                                                // UI scale, also applies to text (not sure if it does to size?)
         std::optional<float> textSpacing; // optional spacing parameter for text in UI elements
         std::optional<bool> focusWithObject;                                       // Ensures that when an associated object (e.g., an entity, card, or UI element) gains focus, the UI element also becomes focused. Typically used when a UI element represents an object in the game and should highlight/select the object when focused. Updates the object_focus_timer property.
-        std::optional<bool> refreshMovement;                                       // Signals that an object's movement needs to be recalculated, if this config is attached to an object in a UI element
+        std::optional<bool> refreshMovement;                                       // Signals that an object's movement needs to be recalculated, if this config is attached to an object in a UI element. Also makes it update every frame
         std::optional<bool> no_recalc, non_recalc;                                 // Prevents automatic recalculation of UI layout
+        bool noMovementWhenDragged = false; // Prevents movement of the UI element when it is being dragged. This is useful for UI elements that should not move when the user interacts with them (sliders)
 
         // Parent-Child Relationship
         std::optional<entt::entity> master; // alignment master for uibox. If not specified, parent is used, or if not that either, oneself is used.

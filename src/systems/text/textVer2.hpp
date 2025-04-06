@@ -62,6 +62,8 @@ namespace TextSystem
         bool pop_in_enabled = false; // New: Enable pop-in animation for individual characters
 
         bool shadow_enabled = true; // New: Enable shadow effect for characters. Uses shadow data from transform components
+
+        
         
         float width{}, height{}; // width and height of the text, updated every draw call
         
@@ -82,6 +84,7 @@ namespace TextSystem
         std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
         Font font;
         float fontSize;
+        bool wrapEnabled = true;          // if enabled, will disrespect provided wrap width and behave like there is no wrap width at all
         float wrapWidth;
         Alignment alignment = Alignment::LEFT; // 0: Left, 1: Center, 2: Right
         WrapMode wrapMode = WrapMode::WORD;

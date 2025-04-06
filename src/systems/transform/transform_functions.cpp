@@ -1462,6 +1462,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         // SPDLOG_DEBUG("Handling drag. Drag offset: ({}, {})", offset->x, offset->y);
 
+        // if it's ui and has a "drag but no drag move" feature enabled, don't move the transform
+        if (registry->any_of<ui::UIConfig>(e))
+        {
+            auto &uiConfig = registry->get<ui::UIConfig>(e);
+            if (uiConfig.noMovementWhenDragged)
+            {
+                return;
+            }
+        }
+
         auto &selfTransform = registry->get<Transform>(e);
         selfTransform.setActualX(dragCursorTransform.x - offset->x);
         selfTransform.setActualY(dragCursorTransform.y - offset->y);

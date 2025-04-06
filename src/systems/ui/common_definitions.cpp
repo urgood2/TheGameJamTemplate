@@ -10,9 +10,9 @@ namespace ui {
             .addConfig(
                 ui::UIConfig::Builder::create()
                     .addText(tooltip.title.value_or("Tooltip Title"))
-                    .addColor(WHITE)
+                    .addColor(BLACK)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .addScale(0.4f)
+                    // .addScale(0.4f)
                     .build())
             .build();
         ui::UIElementTemplateNode content = ui::UIElementTemplateNode::Builder::create()
@@ -20,9 +20,9 @@ namespace ui {
             .addConfig(
                 ui::UIConfig::Builder::create()
                     .addText(tooltip.text.value_or("Tooltip Content"))
-                    .addColor(WHITE)
+                    .addColor(RED)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .addScale(0.4f)
+                    // .addScale(0.4f)
                     .build())
             .build();
 
@@ -30,7 +30,7 @@ namespace ui {
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
                 ui::UIConfig::Builder::create()
-                    .addColor(WHITE)
+                    .addColor(GREEN)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .addChild(title)

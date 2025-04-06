@@ -38,13 +38,50 @@ LATER: (not needed immediately)
 
 ### 🧪 UI Widgets & Behavior
 
+- [ ] Actually implement the ui now.
+
 - [ ] Implement more UI element types:
   - [ ] Buttons (with choice, focus args, one-press, delay, etc.)
+    - one_press -> ensures button only pressed once per lifetime.
     - [ ] Add support for button delay mechanics.
-  - [ ] Sliders (`focus_args = {type = "slider"}`)
+    - button delay disables button for X seconds after ui is created. (in ui element setValues)
+    - in update, this value is updated so callback which is backed up will be restored
+  - [x] Mutually exclusive button selections (think tabs)
+    - Groups are propagated to children, meaning all the ones below have the same group
+    ```lua 
+    {n=G.UIT.C, config={group = "color_group"}, nodes={
+      {n=G.UIT.B, config={choice = true, chosen = true}}, -- red
+      {n=G.UIT.B, config={choice = true}},                -- blue
+      {n=G.UIT.B, config={choice = true}},                -- green
+    }}
+    ```
+    - UI element's click method will clear all the ones in the same group and clear their chosen flag, setting only the chosen flag on the clicked button
+    - Drawing function will respect chosen.
+    - Presumably, the click callback function handles the rest.
+  - [x] Sliders (`focus_args = {type = "slider"}`)
+    - use UIConfig.noMovementWhenDragged to disable dragging movement
+    - Just need to make a function that uses reflection to fetch whatever is being manipulated, based on the following
+      ```lua
+      function G.FUNCS.slider(e)
+        local c = e.children[1]
+        e.states.drag.can = true
+        c.states.drag.can = true
+        if G.CONTROLLER and G.CONTROLLER.dragging.target and
+        (G.CONTROLLER.dragging.target == e or
+        G.CONTROLLER.dragging.target == c) then
+          local rt = c.config.ref_table
+          rt.ref_table[rt.ref_value] = math.min(rt.max,math.max(rt.min, rt.min + (rt.max - rt.min)*(G.CURSOR.T.x - e.parent.T.x - G.ROOM.T.x)/e.T.w))
+          rt.text = string.format("%."..tostring(rt.decimal_places).."f", rt.ref_table[rt.ref_value])
+          c.T.w = (rt.ref_table[rt.ref_value] - rt.min)/(rt.max - rt.min)*rt.w
+          c.config.w = c.T.w
+          if rt.callback then G.FUNCS[rt.callback](rt) end
+        end
+      end
+      ```
+    - has a function that sets sliding to true, updates the stored value depending on mouse movement
     - focus_args = {type = 'slider'} is used to integrate with controller input logic (e.g., dpad left/right).
-    - The refresh_movement = true flag indicates this should refresh every frame 
-    - the slider methods runs when the slider component is being dragged (TODO: how to enable dragging in ui components without actually moving them?)
+    - The refresh_movement = true flag indicates this should refresh every frame (update should be called every frame)
+    - the slider methods runs when the slider component is being dragged
     - Updates the value in a reference table (ref_table[ref_value]) based on cursor position
     - Adjusts the width of the inner bar (c) to visually match the value
     - Updates the text label to show the new value

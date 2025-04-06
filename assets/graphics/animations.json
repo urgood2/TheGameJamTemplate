@@ -100,5 +100,16 @@
                 "bg_color": "NONE"
             }
         ]
+    },
+
+    "checkbox": {
+        "frames": [
+            {
+                "sprite_UUID": "1_10_4157_950_alpha_theroguelike",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
     }
 }

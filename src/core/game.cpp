@@ -22,6 +22,7 @@
 #include "../systems/event/event_system.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/text/textVer2.hpp"
+#include "../systems/ui/common_definitions.hpp"
 #include "rlgl.h"
 
 using std::pair;
@@ -141,9 +142,11 @@ namespace game
         text = {
             // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
+            
             .rawText = fmt::format("[HEY HEY HEY Welcome to the game](rainbow;bump)\n[Testing testing](rainbow;pulse)"),
             .font = globals::fontData.font,
             .fontSize = 50.0f,
+            .wrapEnabled = false,
             .wrapWidth = 500.0f,
             .alignment = TextSystem::Text::Alignment::LEFT,
             .wrapMode = TextSystem::Text::WrapMode::WORD};
@@ -268,8 +271,8 @@ namespace game
         SPDLOG_DEBUG("Injecting dynamic motion");
         transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
 
-        timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
-                                        { SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); });
+        // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
+        //                                 { SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); });
 
         timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
                                         {
@@ -486,7 +489,18 @@ namespace game
 
         SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
 
+        auto testUI = ui::createTooltipUIBoxDef(globals::registry, {std::string("Tooltip"), std::string("tooltip")});
+        auto textTooltipUIBOX = ui::box::Initialize(globals::registry, {.w = 200, .h = 200}, testUI, ui::UIConfig::Builder::create().build());
         SetUpShaderUniforms();
+
+        auto &tooltipTransform = globals::registry.get<transform::Transform>(textTooltipUIBOX);
+        auto &tooltipNode = globals::registry.get<transform::GameObject>(textTooltipUIBOX);
+        auto &tooltipUIConfig = globals::registry.get<ui::UIConfig>(textTooltipUIBOX);
+
+        tooltipNode.state.dragEnabled = true;
+        tooltipNode.state.collisionEnabled = true;
+        tooltipNode.state.clickEnabled = true;
+        tooltipUIConfig.noMovementWhenDragged = true;
     }
 
     auto update(float delta) -> void

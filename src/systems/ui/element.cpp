@@ -1441,7 +1441,7 @@ namespace ui
         if (uiConfig->buttonDelay)
         {
             if (uiConfig->buttonCallback)
-                uiConfig->buttonTemp;
+                uiConfig->buttonTemp = uiConfig->buttonCallback;
             uiConfig->buttonCallback = std::nullopt;
             uiConfig->buttonDelayProgress = (main_loop::mainLoop.realtimeTimer - uiConfig->buttonDelayStart.value()) / uiConfig->buttonDelay.value();
 

@@ -730,8 +730,6 @@ namespace TextSystem
         {
             auto &text = globals::registry.get<Text>(textEntity);
             
-            //TODO: change these locations to offsets
-            
             auto characterEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, currentX, currentY, 1, 1);
             
             // make aligned to text entity at all times            
@@ -942,6 +940,8 @@ namespace TextSystem
             auto &text = globals::registry.get<Text>(textEntity);
             auto &transform = globals::registry.get<transform::Transform>(textEntity);
 
+            float effectiveWrapWidth = text.wrapEnabled ? text.wrapWidth : std::numeric_limits<float>::max();
+
             Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
             
             spdlog::debug("Parsing text: {}", text.rawText);
@@ -1015,9 +1015,9 @@ namespace TextSystem
                         }
 
                         // Check if the next word will exceed the wrap width
-                        if ((currentX - transform.getActualX()) + nextWordWidth > text.wrapWidth)
+                        if ((currentX - transform.getActualX()) + nextWordWidth > effectiveWrapWidth)
                         {
-                            spdlog::debug("Wrap would have exceeded width: currentX={}, wrapWidth={}, nextWordWidth={}, exceeds={}", currentX, text.wrapWidth, nextWordWidth, (currentX - transform.getActualX()) + nextWordWidth);
+                            spdlog::debug("Wrap would have exceeded width: currentX={}, wrapWidth={}, nextWordWidth={}, exceeds={}", currentX, effectiveWrapWidth, nextWordWidth, (currentX - transform.getActualX()) + nextWordWidth);
 
                             // If the next word exceeds the wrap width, move to the next line
                             lineWidths.push_back(currentLineWidth);                           // Save current line width
@@ -1032,7 +1032,7 @@ namespace TextSystem
                         else
                         {
                             auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
-                                                             currentX, currentY, text.wrapWidth, text.alignment,
+                                                             currentX, currentY, effectiveWrapWidth, text.alignment,
                                                              currentLineWidth, lineWidths, codepointIndex, lineNumber);
                             text.characters.push_back(character);
                         }
@@ -1049,7 +1049,7 @@ namespace TextSystem
                         else
                         {
                             auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
-                                                             currentX, currentY, text.wrapWidth, text.alignment,
+                                                             currentX, currentY, effectiveWrapWidth, text.alignment,
                                                              currentLineWidth, lineWidths, codepointIndex, lineNumber);
                             text.characters.push_back(character);
                         }
@@ -1057,7 +1057,7 @@ namespace TextSystem
                     else
                     {
                         auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
-                                                         currentX, currentY, text.wrapWidth, text.alignment,
+                                                         currentX, currentY, effectiveWrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
                     }
@@ -1130,7 +1130,7 @@ namespace TextSystem
                     }
 
                     // Check if the next word will exceed the wrap width
-                    if ((currentX - transform.getActualX()) + nextWordWidth > text.wrapWidth)
+                    if ((currentX - transform.getActualX()) + nextWordWidth > effectiveWrapWidth)
                     {
                         // If the next word exceeds the wrap width, move to the next line
                         lineWidths.push_back(currentLineWidth);                           // Save current line width
@@ -1146,7 +1146,7 @@ namespace TextSystem
                     {
                         // FIXME: Ignore the space character if line changed
                         auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
-                                                         currentX, currentY, text.wrapWidth, text.alignment,
+                                                         currentX, currentY, effectiveWrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
                     }
@@ -1154,7 +1154,7 @@ namespace TextSystem
                 else if (codepoint == ' ' && text.wrapMode == Text::WrapMode::CHARACTER) // Detect spaces
                 {
                     // does adding the char take us over the wrap width?
-                    if ((currentX - transform.getActualX()) + MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x > text.wrapWidth)
+                    if ((currentX - transform.getActualX()) + MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x > effectiveWrapWidth)
                     {
                         // if so skip this space character
 
@@ -1166,7 +1166,7 @@ namespace TextSystem
                     else
                     {
                         auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
-                                                         currentX, currentY, text.wrapWidth, text.alignment,
+                                                         currentX, currentY, effectiveWrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
                     }
@@ -1174,7 +1174,7 @@ namespace TextSystem
                 else
                 {
                     auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
-                                                     currentX, currentY, text.wrapWidth, text.alignment,
+                                                     currentX, currentY, effectiveWrapWidth, text.alignment,
                                                      currentLineWidth, lineWidths, codepointIndex, lineNumber);
                     text.characters.push_back(character);
                 }
@@ -1228,6 +1228,8 @@ namespace TextSystem
             auto &transform = globals::registry.get<transform::Transform>(textEntity);
             Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
 
+            float effectiveWrapWidth = text.wrapEnabled ? text.wrapWidth : std::numeric_limits<float>::max();
+
             bool firstCharacter = true;
             while (*effectPos)
             {
@@ -1256,7 +1258,7 @@ namespace TextSystem
                     //TODO: spacing seems off?
 
                     // just reposition in next line without skippin codepoint
-                    if ((currentX - textPosition.x) + nextWordWidth > text.wrapWidth)
+                    if ((currentX - textPosition.x) + nextWordWidth > effectiveWrapWidth)
                     {
                         lineWidths.push_back(currentLineWidth);
                         currentX = textPosition.x;
@@ -1294,7 +1296,7 @@ namespace TextSystem
 
                         //TODO: spacing seems off?
 
-                        if ((currentX - textPosition.x) + nextWordWidth > text.wrapWidth)
+                        if ((currentX - textPosition.x) + nextWordWidth > effectiveWrapWidth)
                         {
                             lineWidths.push_back(currentLineWidth);
                             currentX = textPosition.x;
@@ -1309,7 +1311,7 @@ namespace TextSystem
                     else if (text.wrapMode == Text::WrapMode::CHARACTER)
                     {
                         float spaceWidth = MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x;
-                        if ((currentX - textPosition.x) + spaceWidth > text.wrapWidth)
+                        if ((currentX - textPosition.x) + spaceWidth > effectiveWrapWidth)
                         {
                             // Skip space at start of line
                             effectPos += codepointSize;
@@ -1321,7 +1323,7 @@ namespace TextSystem
 
                 // Create and store character
                 auto characterEntity = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
-                                                      currentX, currentY, text.wrapWidth, text.alignment,
+                                                      currentX, currentY, effectiveWrapWidth, text.alignment,
                                                       currentLineWidth, lineWidths, codepointIndex, lineNumber);
                 auto &character = globals::registry.get<Character>(characterEntity);
 
@@ -1410,9 +1412,23 @@ namespace TextSystem
             float maxX = std::numeric_limits<float>::lowest();
             float maxY = std::numeric_limits<float>::lowest();
 
-            minX = transform.getActualX();
-            minY = transform.getActualY();
-            maxX = transform.getActualX() + text.wrapWidth;
+            // go through every character and get the highest offset, add the character's width to it
+            for (auto &charEntity: text.characters) {
+                auto &character = globals::registry.get<Character>(charEntity);
+                auto &charTransform = globals::registry.get<transform::Transform>(charEntity);
+
+                // get the character's position and size
+                float charX = charTransform.getVisualX() + character.offset.x;
+                float charY = charTransform.getVisualY() + character.offset.y;
+                float charWidth = MeasureTextEx(text.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x;
+                float charHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Assuming height is same for all characters
+
+                // Update min and max values
+                minX = std::min(minX, charX);
+                minY = std::min(minY, charY);
+                maxX = std::max(maxX, charX + charWidth);
+                maxY = std::max(maxY, charY + charHeight);
+            }
 
             auto &lastChar = globals::registry.get<Character>(text.characters.back());
             // get line height of last character

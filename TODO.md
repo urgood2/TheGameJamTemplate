@@ -18,7 +18,7 @@ LATER: (not needed immediately)
 
 ## 🧠 General Design / Architecture
 
-- [ ] Integrate the new text system with the UI system (as a UI object/component). Also add animated sprites
+- [ ] Integrate the animated sprites with the UI system (as a UI object/component).
 
 ---
 ### 🖱️ Interaction & Input
@@ -87,7 +87,7 @@ LATER: (not needed immediately)
   - [x] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
   - [x] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect
   - [x] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
-- [ ] Utilize controller focus interactivity focus funneling
+- [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
 
@@ -104,6 +104,8 @@ LATER: (not needed immediately)
 - [ ] UIbox should align itself again if its size changes. right now it does not.
 - [ ] Impplement optional shader support for individual ui elements (or entire ui element trees)
 - [ ] outline interiors look too square
+- [ ] Dynamic text has a problem where center/right alignment breaks ui element placement. Keep it as left aligned and use the ui element alightment, and you should be fine
+- [ ] UI objects in ui elements might call renew alignment on ui box every time. need to check this.
 
 ## 🧭 Later later laters *(future consideration)*
 - [ ] Determine how to programmatically modify frame times for particle animations.

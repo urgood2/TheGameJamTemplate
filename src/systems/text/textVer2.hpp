@@ -28,7 +28,6 @@ namespace TextSystem
     {
         int value;        // Unicode codepoint value
         std::optional<int> overrideCodepoint; // override the character with a different codepoint
-        Vector2 position; // x, y
         float rotation;   // r
         float scale;      // sx, sy
         Vector2 size{}; // w, h
@@ -216,6 +215,8 @@ namespace TextSystem
         extern void clearAllEffects(entt::entity textEntity);
 
         extern void applyGlobalEffects(entt::entity textEntity, const std::string &effectString);
+
+        extern void debugPrintText(entt::entity textEntity);
 
     } // namespace Functions
 

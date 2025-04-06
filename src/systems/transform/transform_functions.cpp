@@ -357,11 +357,11 @@ namespace transform
         // debug break
         if (e == static_cast<entt::entity>(7))
         {
-            SPDLOG_DEBUG("Moving Text found in MoveWithMaster");
+            // SPDLOG_DEBUG("Moving Text found in MoveWithMaster");
 
             auto &text = registry->get<TextSystem::Text>(e);
 
-            SPDLOG_DEBUG("Text: {}", text.rawText);
+            // SPDLOG_DEBUG("Text: {}", text.rawText);
         }
         
         Vector2 tempRotatedOffset{};
@@ -381,12 +381,22 @@ namespace transform
 
 
         //REVIEW: getmaster allows multi-level master-slave trees.
+        //FIXME: the offset it returns isn't used at the moment. Using it breaks the system for some reason
         auto parentRetVal = GetMaster(registry, e);
         auto parent = parentRetVal.master.value();
-        auto &parentTransform = registry->get<Transform>(parent);
+        auto *parentTransform = registry->try_get<Transform>(parent);
         auto *parentRole = registry->try_get<InheritedProperties>(parent);
 
-        //TODO: handle cases where parent's master is itself, in which case we should ignore the offset.
+        // FIXME: hacky fix: if this is a ui element's object, we need to use the immediate master
+        
+        bool isUIElementObject = registry->any_of<TextSystem::Text>(e);
+
+        if (isUIElementObject) //FIXME: is this enough?
+        {
+            parentTransform = registry->try_get<Transform>(selfRole.master);
+            parentRole = registry->try_get<InheritedProperties>(selfRole.master);
+        }
+
         // auto emptyRole = InheritedProperties{};
         // if (parent == parentRole->master)
         // {
@@ -394,6 +404,9 @@ namespace transform
         //     // point to an empty role
         //     parentRole = &emptyRole;
         // }
+
+        //REVIEW: parentRole's offset is always zero. Why?
+        //REVIEW: actual immediate parent (selfRole.master) is never the same as GetMaster's master.
 
         UpdateDynamicMotion(registry, e, dt);
         
@@ -407,24 +420,24 @@ namespace transform
 
         if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
-            tempRotatedOffset.x = selfRole.offset->x + parentRole->offset->x + layeredDisplacement.x;
-            tempRotatedOffset.y = selfRole.offset->y + parentRole->offset->y + layeredDisplacement.y;
+            tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
+            tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y;
         }
         else
         {
-            if (parentTransform.getVisualR() < 0.0001f && parentTransform.getVisualR() > -0.0001f)
+            if (parentTransform->getVisualR() < 0.0001f && parentTransform->getVisualR() > -0.0001f)
             {
-                tempRotatedOffset.x = selfRole.offset->x + parentRole->offset->x + layeredDisplacement.x; //TODO: selfRole.offset not initialized
-                tempRotatedOffset.y = selfRole.offset->y + parentRole->offset->y + layeredDisplacement.y;
+                tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; //TODO: selfRole.offset not initialized
+                tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y;
             }
             else
             {
-                tempAngleCos = cos(parentTransform.getVisualR());
-                tempAngleSin = sin(parentTransform.getVisualR());
-                tempWidth = -selfTransform.getActualW() / 2 + parentTransform.getActualW() / 2;
-                tempHeight = -selfTransform.getActualH() / 2 + parentTransform.getActualH() / 2;
-                tempIntermediateOffsets.x = selfRole.offset->x + parentRole->offset->x + layeredDisplacement.x - tempWidth;
-                tempIntermediateOffsets.y = selfRole.offset->y + parentRole->offset->y + layeredDisplacement.y - tempHeight;
+                tempAngleCos = cos(parentTransform->getVisualR());
+                tempAngleSin = sin(parentTransform->getVisualR());
+                tempWidth = -selfTransform.getActualW() / 2 + parentTransform->getActualW() / 2;
+                tempHeight = -selfTransform.getActualH() / 2 + parentTransform->getActualH() / 2;
+                tempIntermediateOffsets.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x - tempWidth;
+                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y - tempHeight;
                 tempRotatedOffset.x = tempIntermediateOffsets.x * tempAngleCos - tempIntermediateOffsets.y * tempAngleSin + tempWidth;
                 tempRotatedOffset.y = tempIntermediateOffsets.x * tempAngleSin + tempIntermediateOffsets.y * tempAngleCos + tempHeight;
             }
@@ -432,8 +445,8 @@ namespace transform
     
     
         //TODO: these two lines cause issues. why?
-        selfTransform.getXSpring().targetValue = parentTransform.getXSpring().value + tempRotatedOffset.x;
-        selfTransform.getYSpring().targetValue = parentTransform.getYSpring().value + tempRotatedOffset.y;
+        selfTransform.getXSpring().targetValue = parentTransform->getXSpring().value + tempRotatedOffset.x;
+        selfTransform.getYSpring().targetValue = parentTransform->getYSpring().value + tempRotatedOffset.y;
         // SPDLOG_DEBUG("Moving with master set to targets: x: {}, y: {}", selfTransform.getXSpring().targetValue, selfTransform.getYSpring().targetValue);
 
         if (selfRole.location_bond == InheritedProperties::Sync::Strong)
@@ -457,7 +470,7 @@ namespace transform
             {
                 juiceFactor = 0;
             }
-            selfTransform.setVisualRotation(selfTransform.getActualRotation() + parentTransform.rotationOffset + (juiceFactor));
+            selfTransform.setVisualRotation(selfTransform.getActualRotation() + parentTransform->rotationOffset + (juiceFactor));
         }
         else if (selfRole.rotation_bond == InheritedProperties::Sync::Weak)
         {
@@ -475,7 +488,7 @@ namespace transform
             {
                 juiceFactor = 0;
             }
-            selfTransform.setVisualScale(selfTransform.getActualScale() * (parentTransform.getVisualScale() / parentTransform.getActualScale()) + juiceFactor);
+            selfTransform.setVisualScale(selfTransform.getActualScale() * (parentTransform->getVisualScale() / parentTransform->getActualScale()) + juiceFactor);
         }
         else if (selfRole.scale_bond == InheritedProperties::Sync::Weak)
         {
@@ -484,9 +497,9 @@ namespace transform
 
         if (selfRole.size_bond == InheritedProperties::Sync::Strong)
         {
-            selfTransform.setVisualX(selfTransform.getVisualX() + (0.5f * (1 - parentTransform.getVisualW() / parentTransform.getActualW()) * selfTransform.getActualW()));
-            selfTransform.setVisualW(selfTransform.getActualW() * (parentTransform.getVisualW() / parentTransform.getActualW()));
-            selfTransform.setVisualH(selfTransform.getActualH() * (parentTransform.getVisualH() / parentTransform.getActualH()));
+            selfTransform.setVisualX(selfTransform.getVisualX() + (0.5f * (1 - parentTransform->getVisualW() / parentTransform->getActualW()) * selfTransform.getActualW()));
+            selfTransform.setVisualW(selfTransform.getActualW() * (parentTransform->getVisualW() / parentTransform->getActualW()));
+            selfTransform.setVisualH(selfTransform.getActualH() * (parentTransform->getVisualH() / parentTransform->getActualH()));
         }
         else if (selfRole.size_bond == InheritedProperties::Sync::Weak)
         {

@@ -111,8 +111,8 @@ namespace game
                     // .addOnePress(true)
                     .addButtonCallback([]()
                                        { SPDLOG_DEBUG("Button callback triggered"); })
-                    .addWidth(Random::get<float>(20, 100))
-                    .addHeight(Random::get<float>(20, 200))
+                    .addWidth(Random::get<float>(20, 400))
+                    .addHeight(Random::get<float>(20, 400))
                     .addMinWidth(200.f)
                     .addOutlineThickness(5.0f)
                     // .addShadowColor(Fade(BLACK, 0.4f))
@@ -138,15 +138,17 @@ namespace game
         globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/Ac437_IBM_BIOS.ttf").c_str(), 40, 0, 250);
         globals::fontData.fontScale = 1.0f;
 
+        //REVIEW: text entries have to be duplicated before being assigned to ui templates.
+
         text = {
             // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
-            .rawText = fmt::format("[HEY HEY!](rainbow;bump)\n[Testing.](rainbow;pulse)"),
+            .rawText = fmt::format("[HEY HEY!](rainbow)"),
             .font = globals::fontData.font,
-            .fontSize = 50.0f,
+            .fontSize = 30.0f,
             .wrapEnabled = false,
-            .wrapWidth = 500.0f,
+            // .wrapWidth = 1200.0f,
             .alignment = TextSystem::Text::Alignment::LEFT,
             .wrapMode = TextSystem::Text::WrapMode::WORD};
 
@@ -271,7 +273,10 @@ namespace game
         transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
 
         timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
-                                        { SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); });
+                                        { 
+                                            SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); 
+                                            TextSystem::Functions::debugPrintText(textEntity);
+                                        });
 
         timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
                                         {
@@ -313,7 +318,7 @@ namespace game
                                                             .addRefEntity(transformEntity)
                                                             .addRefComponent("Tooltip")
                                                             .addRefValue("title")
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
                                                     .build();
         ui::UIElementTemplateNode uiDynamicTextEntry = ui::UIElementTemplateNode::Builder::create()
@@ -322,7 +327,7 @@ namespace game
                                                         ui::UIConfig::Builder::create()
                                                             .addColor(WHITE)
                                                             .addObject(textEntity)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
                                                     .build();
         ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
@@ -355,7 +360,7 @@ namespace game
                                                             .build())
                                                     .addChild(getRandomRectDef())
                                                     .addChild(getRandomRectDef())
-                                                    .addChild(uiTextEntry)
+                                                    .addChild(uiDynamicTextEntry)
                                                     .build();
 
         ui::UIElementTemplateNode uiRowDef = ui::UIElementTemplateNode::Builder::create()
@@ -401,9 +406,9 @@ namespace game
                                                                   transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                               .build())
                                                       // .addChild(uiColumnDef)
-                                                      .addChild(uiDynamicTextEntry)
-                                                    //   .addChild(getRandomRectDef())
-                                                    //   .addChild(uiRowDef)
+                                                    //   .addChild(uiDynamicTextEntry)
+                                                      .addChild(getRandomRectDef())
+                                                      .addChild(uiRowDef)
                                                       .build();
 
         uiBox = ui::box::Initialize(

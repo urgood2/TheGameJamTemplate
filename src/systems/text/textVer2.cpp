@@ -750,7 +750,6 @@ namespace TextSystem
             Character character{};
 
             character.value = codepoint;
-            character.position = Vector2{currentX, currentY};
             character.offset.x =currentX- startPosition.x;
             character.offset.y = currentY - startPosition.y;
             character.size.x = charSize.x;
@@ -797,9 +796,9 @@ namespace TextSystem
                     {
                         if (character.lineNumber == line)
                         {
-                            spdlog::debug("Before: Character '{}' at x={}", character.value, character.position.x);
-                            character.position.x += leftoverWidth / 2.0f;
-                            spdlog::debug("After: Character '{}' at x={}", character.value, character.position.x);
+                            spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
+                            character.offset.x += leftoverWidth / 2.0f;
+                            spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
                         }
                     }
                 }
@@ -810,9 +809,10 @@ namespace TextSystem
                     {
                         if (character.lineNumber == line)
                         {
-                            spdlog::debug("Before: Character '{}' at x={}", character.value, character.position.x);
-                            character.position.x += leftoverWidth;
-                            spdlog::debug("After: Character '{}' at x={}", character.value, character.position.x);
+                            auto currentLineWidth = lineWidths[line];
+                            spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
+                            character.offset.x = character.offset.x - currentLineWidth + text.wrapWidth;
+                            spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
                         }
                     }
                 }
@@ -849,13 +849,13 @@ namespace TextSystem
                             {
                                 if (character.value == ' ')
                                 {
-                                    spdlog::debug("Space character at x={} gets additional space: {}", character.position.x, addedSpacePerSpace);
+                                    spdlog::debug("Space character at x={} gets additional space: {}", character.offset.x, addedSpacePerSpace);
                                     cumulativeShift += addedSpacePerSpace;
                                 }
 
-                                spdlog::debug("Before: Character '{}' at x={}", character.value, character.position.x);
-                                character.position.x += cumulativeShift;
-                                spdlog::debug("After: Character '{}' at x={}", character.value, character.position.x);
+                                spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
+                                character.offset.x += cumulativeShift;
+                                spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
                             }
                         }
 
@@ -863,7 +863,7 @@ namespace TextSystem
                         for (size_t index : spaceIndices)
                         {
                             auto &spaceCharacter = text.characters[index];
-                            spdlog::debug("Space character position: x={}, y={}, index={}", spaceCharacter.position.x, spaceCharacter.position.y, index);
+                            spdlog::debug("Space character position: x={}, y={}, index={}", spaceCharacter.offset.x, spaceCharacter.offset.y, index);
                         }
                     }
                     else
@@ -1181,7 +1181,7 @@ namespace TextSystem
             for (const auto &character : text.characters)
             {
                 int utf8Size = 0;
-                spdlog::debug("Character: '{}', x={}, y={}, line={}", CodepointToUTF8(character.value, &utf8Size), character.position.x, character.position.y, character.lineNumber);
+                spdlog::debug("Character: '{}', x={}, y={}, line={}", CodepointToUTF8(character.value, &utf8Size), character.offset.x, character.offset.y, character.lineNumber);
             }
 
             auto ptr = std::make_shared<Text>(text);
@@ -1403,8 +1403,8 @@ namespace TextSystem
             for (auto &character: text.characters) {
 
                 // get the character's position and size
-                float charX = transform.getActualX() + character.position.x ;
-                float charY = transform.getActualY() +character.position.y ;
+                float charX = transform.getActualX() + character.offset.x ;
+                float charY = transform.getActualY() +character.offset.y ;
                 float charWidth = MeasureTextEx(text.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x;
                 float charHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Assuming height is same for all characters
 
@@ -1442,8 +1442,8 @@ namespace TextSystem
 
                 // Calculate character position with offset
                 Vector2 charPosition = {
-                    textTransform.getVisualX() + character.position.x,
-                    textTransform.getVisualY() + character.position.y}; //TODO: how to mesh with transform's position + offset system?
+                    textTransform.getVisualX() + character.offset.x,
+                    textTransform.getVisualY() + character.offset.y}; //TODO: how to mesh with transform's position + offset system?
 
                 // add all optional offsets
                 for (const auto &[effectName, offset] : character.offsets)
@@ -1499,7 +1499,7 @@ namespace TextSystem
 
                     // Adjust displacement using shadow height
                     float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor;
-                    float shadowOffsetY = character.shadowDisplacement.y * baseExaggeration * heightFactor;
+                    float shadowOffsetY = - character.shadowDisplacement.y * baseExaggeration * heightFactor; // make shadow stretch downward
 
                     // Translate to shadow position
                     layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
@@ -1533,7 +1533,7 @@ namespace TextSystem
                 //TODO: this does not take final scale into account
 
                 // Draw the bounding box
-                layer::AddRectangleLinesPro(layerPtr, transform.getVisualX(), transform.getVisualY(), {width, height}, 1.0f, GRAY);
+                layer::AddRectangleLinesPro(layerPtr, transform.getVisualX(), transform.getVisualY(), {width, height}, 5.0f, GRAY);
                 // DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
 
                 // Draw text showing the dimensions
@@ -1579,6 +1579,32 @@ namespace TextSystem
                     {
                         spdlog::warn("Effect '{}' not registered. Skipping.", effectName);
                     }
+                }
+            }
+        }
+
+        void debugPrintText(entt::entity textEntity)
+        {
+            auto &text = globals::registry.get<Text>(textEntity);
+            SPDLOG_DEBUG("Text Entity: {}", static_cast<int>(textEntity));
+            SPDLOG_DEBUG("\tText: {}", text.rawText);
+            SPDLOG_DEBUG("\tFont: {}", text.font.baseSize);
+            SPDLOG_DEBUG("\tFont Size: {}", text.fontSize);
+            // SPDLOG_DEBUG("Position: ({}, {})", text.position.x, text.position.y);
+            SPDLOG_DEBUG("\tAlignment: {}", magic_enum::enum_name<Text::Alignment>(text.alignment));
+            SPDLOG_DEBUG("\tWrap Width: {}", text.wrapWidth);
+            SPDLOG_DEBUG("\tWrap Mode: {}", static_cast<int>(text.wrapMode));
+            SPDLOG_DEBUG("\tSpacing: {}", text.spacing);
+            SPDLOG_DEBUG("\tShadow Enabled: {}", text.shadow_enabled);
+            SPDLOG_DEBUG("\tPop-in Enabled: {}", text.pop_in_enabled);
+            SPDLOG_DEBUG("\tCharacters: {}", text.characters.size());
+            for (const auto &character : text.characters)
+            {
+                int byteCount = 0;
+                SPDLOG_DEBUG("Character: '{}', Position (relative): ({}, {}), Line Number: {}, Effects: {}", CodepointToUTF8(character.value, &byteCount), character.offset.x, character.offset.y, character.lineNumber, character.effects.size());
+                for (const auto &[effectName, effectFunction] : character.effects)
+                {
+                    SPDLOG_DEBUG("\t\tEffect: {}", effectName);
                 }
             }
         }

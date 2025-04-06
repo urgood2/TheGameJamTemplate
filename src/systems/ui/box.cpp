@@ -1271,15 +1271,19 @@ namespace ui
         }
         else if (uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::RECT_SHAPE)
         {
-            auto object = uiConfig.object.value();
-            // // is it text?
-            if (globals::registry.any_of<TextSystem::Text>(object))
+            if (uiConfig.uiType == UITypeEnum::OBJECT)
             {
-                auto &text = globals::registry.get<TextSystem::Text>(object);
-                auto &textTransform = globals::registry.get<transform::Transform>(object);
-                calcCurrentNodeTransform.w = textTransform.getActualW();
-                calcCurrentNodeTransform.h = textTransform.getActualH();
+                auto object = uiConfig.object.value();
+                // // is it text?
+                if (globals::registry.any_of<TextSystem::Text>(object))
+                {
+                    auto &text = globals::registry.get<TextSystem::Text>(object);
+                    auto &textTransform = globals::registry.get<transform::Transform>(object);
+                    calcCurrentNodeTransform.w = textTransform.getActualW();
+                    calcCurrentNodeTransform.h = textTransform.getActualH();
+                }
             }
+            
 
             if (uiConfig.maxWidth && calcCurrentNodeTransform.w > uiConfig.maxWidth.value())
             {

@@ -724,17 +724,11 @@ namespace TextSystem
             };
         }
 
-        entt::entity createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
+        Character createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
                                   float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
                                   float &currentLineWidth, std::vector<float> &lineWidths, int index, int &lineNumber)
         {
             auto &text = globals::registry.get<Text>(textEntity);
-            
-            auto characterEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, currentX, currentY, 1, 1);
-            
-            // make aligned to text entity at all times            
-            transform::AssignRole(&globals::registry, characterEntity, transform::InheritedProperties::Type::RoleInheritor, textEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong);
-            
             
             int utf8Size = 0;
             const char *utf8Char = CodepointToUTF8(codepoint, &utf8Size);
@@ -753,18 +747,14 @@ namespace TextSystem
 
             spdlog::debug("Creating character: '{}' (codepoint: {}), x={}, y={}, line={}", characterString, codepoint, currentX, currentY, lineNumber);
 
-            // Character character{
-            //     codepoint, Vector2{currentX, currentY}, 0.0f, 1.0f, WHITE, Vector2{0, 0}, {}, {}, index, lineNumber};
-            auto &character = globals::registry.emplace<Character>(characterEntity);
-            auto &characterTransform = globals::registry.get<transform::Transform>(characterEntity);
-            auto &characterInheritedProperties = globals::registry.get<transform::InheritedProperties>(characterEntity);
+            Character character{};
 
             character.value = codepoint;
             character.position = Vector2{currentX, currentY};
-            characterInheritedProperties.offset->x = currentX- startPosition.x;
-            characterInheritedProperties.offset->y = currentY - startPosition.y;
-            characterTransform.setActualW(charSize.x);
-            characterTransform.setActualH(charSize.y);
+            character.offset.x =currentX- startPosition.x;
+            character.offset.y = currentY - startPosition.y;
+            character.size.x = charSize.x;
+            character.size.y = charSize.y;
             character.index = index;
             character.lineNumber = lineNumber;
             character.color = WHITE;
@@ -780,7 +770,7 @@ namespace TextSystem
 
             currentX += text.spacing + charSize.x;         // Advance X position (include spacing)
             currentLineWidth += charSize.x + text.spacing; // Update line width
-            return characterEntity;
+            return character;
         }
 
         void adjustAlignment(entt::entity textEntity, const std::vector<float> &lineWidths)
@@ -803,9 +793,8 @@ namespace TextSystem
                 if (text.alignment == Text::Alignment::CENTER)
                 { // Center alignment
                     spdlog::debug("Applying center alignment for line {}", line);
-                    for (auto &charEntity : text.characters)
+                    for (auto &character : text.characters)
                     {
-                        auto &character = globals::registry.get<Character>(charEntity);
                         if (character.lineNumber == line)
                         {
                             spdlog::debug("Before: Character '{}' at x={}", character.value, character.position.x);
@@ -817,9 +806,8 @@ namespace TextSystem
                 else if (text.alignment == Text::Alignment::RIGHT)
                 { // Right alignment
                     spdlog::debug("Applying right alignment for line {}", line);
-                    for (auto &charEntity : text.characters)
+                    for (auto &character : text.characters)
                     {
-                        auto &character = globals::registry.get<Character>(charEntity);
                         if (character.lineNumber == line)
                         {
                             spdlog::debug("Before: Character '{}' at x={}", character.value, character.position.x);
@@ -837,8 +825,7 @@ namespace TextSystem
 
                     for (size_t i = 0; i < text.characters.size(); ++i)
                     {
-                        const auto &charEntity = text.characters[i];
-                        auto &character = globals::registry.get<Character>(charEntity);
+                        const auto &character = text.characters[i];
                         if (character.lineNumber == line && character.value == ' ')
                         {
                             spacesCount++;
@@ -855,10 +842,9 @@ namespace TextSystem
 
                         float cumulativeShift = 0.0f;
 
-                        for (auto &charEntity : text.characters)
+                        for (auto &character : text.characters)
                         {
                         
-                            auto &character = globals::registry.get<Character>(charEntity);
                             if (character.lineNumber == line)
                             {
                                 if (character.value == ' ')
@@ -876,8 +862,7 @@ namespace TextSystem
                         // Debug: Print all space positions for this line
                         for (size_t index : spaceIndices)
                         {
-                            const auto &spaceCharacterEntity = text.characters[index];
-                            auto &spaceCharacter = globals::registry.get<Character>(spaceCharacterEntity);
+                            auto &spaceCharacter = text.characters[index];
                             spdlog::debug("Space character position: x={}, y={}, index={}", spaceCharacter.position.x, spaceCharacter.position.y, index);
                         }
                     }
@@ -925,10 +910,10 @@ namespace TextSystem
         auto deleteCharacters(entt::entity textEntity)
         {
             auto &text = globals::registry.get<Text>(textEntity);
-            for (auto &character : text.characters)
-            {
-                globals::registry.destroy(character);
-            }
+            // for (auto &character : text.characters)
+            // {
+            //     globals::registry.destroy(character);
+            // }
             text.characters.clear();
         }
 
@@ -1193,26 +1178,23 @@ namespace TextSystem
             adjustAlignment(textEntity, lineWidths);
 
             // print all characters out for debugging
-            for (const auto &characterEntity : text.characters)
+            for (const auto &character : text.characters)
             {
-                auto &character = globals::registry.get<Character>(characterEntity);
                 int utf8Size = 0;
                 spdlog::debug("Character: '{}', x={}, y={}, line={}", CodepointToUTF8(character.value, &utf8Size), character.position.x, character.position.y, character.lineNumber);
             }
 
             auto ptr = std::make_shared<Text>(text);
             
-            for (auto &characterEntity : text.characters)
+            for (auto &character : text.characters)
             {
-                auto &character = globals::registry.get<Character>(characterEntity);
                 character.parentText = ptr;
             }
 
             // get last character
             if (!text.characters.empty())
             {
-                auto lastCharacterEntity = text.characters.back();
-                auto &lastCharacter = globals::registry.get<Character>(lastCharacterEntity);
+                auto &lastCharacter = text.characters.back();
                 lastCharacter.isFinalCharacterInText = true;
             }
         
@@ -1322,10 +1304,9 @@ namespace TextSystem
                 }
 
                 // Create and store character
-                auto characterEntity = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
                                                       currentX, currentY, effectiveWrapWidth, text.alignment,
                                                       currentLineWidth, lineWidths, codepointIndex, lineNumber);
-                auto &character = globals::registry.get<Character>(characterEntity);
 
                 character.parsedEffectArguments = parsedArguments;
 
@@ -1337,7 +1318,7 @@ namespace TextSystem
                     }
                 }
 
-                text.characters.push_back(characterEntity);
+                text.characters.push_back(character);
                 effectPos += codepointSize;
                 codepointIndex++;
 
@@ -1347,11 +1328,17 @@ namespace TextSystem
 
         void updateText(entt::entity textEntity, float dt)
         {
+            
+            auto &gameWorldTransform = globals::registry.get<transform::Transform>(globals::gameWorldContainerEntity);
+            auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
+
             auto &text = globals::registry.get<Text>(textEntity);
             // spdlog::debug("Updating text with delta time: {}", dt);
-            for (auto &characterEntity : text.characters)
+            for (auto &character : text.characters)
             {
-                auto &character = globals::registry.get<Character>(characterEntity);
+                // update shadow
+                character.shadowDisplacement.x = ((textTransform.getActualX() + textTransform.getActualW() / 2) - (gameWorldTransform.getActualX() + gameWorldTransform.getActualW() / 2)) / (gameWorldTransform.getActualW() / 2) * 1.5f;
+
                 // Apply Pop-in Animation
                 //TODO: deprecated, use pop effect instead
                 if (character.pop_in && character.pop_in < 1.0f)
@@ -1413,13 +1400,11 @@ namespace TextSystem
             float maxY = std::numeric_limits<float>::lowest();
 
             // go through every character and get the highest offset, add the character's width to it
-            for (auto &charEntity: text.characters) {
-                auto &character = globals::registry.get<Character>(charEntity);
-                auto &charTransform = globals::registry.get<transform::Transform>(charEntity);
+            for (auto &character: text.characters) {
 
                 // get the character's position and size
-                float charX = charTransform.getVisualX() + character.offset.x;
-                float charY = charTransform.getVisualY() + character.offset.y;
+                float charX = transform.getActualX() + character.position.x ;
+                float charY = transform.getActualY() +character.position.y ;
                 float charWidth = MeasureTextEx(text.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x;
                 float charHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Assuming height is same for all characters
 
@@ -1430,10 +1415,10 @@ namespace TextSystem
                 maxY = std::max(maxY, charY + charHeight);
             }
 
-            auto &lastChar = globals::registry.get<Character>(text.characters.back());
-            // get line height of last character
-            float lineHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
-            maxY = transform.getActualY() + (lastChar.lineNumber + 1) * (lineHeight);
+            // auto &lastChar = text.characters.back();
+            // // get line height of last character
+            // float lineHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+            // maxY = transform.getActualY() + (lastChar.lineNumber + 1) * (lineHeight);
 
             float width = maxX - minX;
             float height = maxY - minY;
@@ -1444,12 +1429,10 @@ namespace TextSystem
         void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug)
         {
             auto &text = globals::registry.get<Text>(textEntity);
+            auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
 
-            for (const auto &characterEntity : text.characters)
+            for (const auto &character : text.characters)
             {
-                auto &character = globals::registry.get<Character>(characterEntity);
-                auto &transform = globals::registry.get<transform::Transform>(textEntity);
-                auto &charTransform = globals::registry.get<transform::Transform>(characterEntity);
 
                 float popInScale = 1.0f;
                 if (character.pop_in)
@@ -1459,8 +1442,8 @@ namespace TextSystem
 
                 // Calculate character position with offset
                 Vector2 charPosition = {
-                    charTransform.getVisualX() + character.offset.x,
-                    charTransform.getVisualY() + character.offset.y}; //TODO: how to mesh with transform's position + offset system?
+                    textTransform.getVisualX() + character.position.x,
+                    textTransform.getVisualY() + character.position.y}; //TODO: how to mesh with transform's position + offset system?
 
                 // add all optional offsets
                 for (const auto &[effectName, offset] : character.offsets)
@@ -1475,7 +1458,7 @@ namespace TextSystem
                 auto utf8String = CodepointToString(character.overrideCodepoint.value_or(character.value));
 
                 Vector2 charSize = MeasureTextEx(text.font, utf8String.c_str(), text.fontSize, 1.0f);
-                // sanity check
+                // sanity checkdd
                 if (charSize.x == 0)
                 {
                     spdlog::warn("Missing glyph for character: '{}'. Replacing with '?'.", utf8Char);
@@ -1490,8 +1473,6 @@ namespace TextSystem
                 }
                 float finalScaleX = character.scaleXModifier.value_or(1.0f) * finalScale;
                 float finalScaleY = character.scaleYModifier.value_or(1.0f) * finalScale;
-
-                auto &characterObject = globals::registry.get<transform::GameObject>(characterEntity);
 
                 // rlPushMatrix();
                 layer::AddPushMatrix(layerPtr);
@@ -1511,21 +1492,21 @@ namespace TextSystem
 
                 // render shadow if enabled
                 // draw shadow based on shadow displacement
-                if (text.shadow_enabled && characterObject.shadowDisplacement)
+                if (text.shadow_enabled)
                 {
                     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
-                    float heightFactor = 1.0f + characterObject.shadowHeight.value_or(0.f); // Increase effect based on height
+                    float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
                     // Adjust displacement using shadow height
-                    float shadowOffsetX = characterObject.shadowDisplacement->x * baseExaggeration * heightFactor;
-                    float shadowOffsetY = characterObject.shadowDisplacement->y * baseExaggeration * heightFactor;
+                    float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor;
+                    float shadowOffsetY = character.shadowDisplacement.y * baseExaggeration * heightFactor;
 
                     // Translate to shadow position
                     layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
 
                     // Draw shadow 
                     // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
-                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, charTransform.getVisualR(), text.fontSize * finalScale, text.spacing, Fade(BLACK, 0.7f));
+                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, character.rotation, text.fontSize * finalScale, text.spacing, Fade(BLACK, 0.7f));
                     // layer::AddRectanglePro(layerPtr, 0, 0, Vector2{charTransform.getVisualW(), charTransform.getVisualH()}, Fade(BLACK, 0.7f));
 
                     // Reset translation to original position
@@ -1533,7 +1514,7 @@ namespace TextSystem
                 }
 
                 // Render the character
-                layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, charTransform.getVisualR(), text.fontSize * finalScale, text.spacing, character.color);
+                layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, character.rotation, text.fontSize * finalScale, text.spacing, character.color);
 
                 // DrawTextPro(text.font, utf8String.c_str(), Vector2{0, 0}, Vector2{0, 0}, 0.f, text.fontSize, text.spacing, character.color);
 
@@ -1565,9 +1546,8 @@ namespace TextSystem
         void clearAllEffects(entt::entity textEntity)
         {
             auto &text = globals::registry.get<Text>(textEntity);
-            for (auto &characterEntity : text.characters)
+            for (auto &character : text.characters)
             {
-                auto &character = globals::registry.get<Character>(characterEntity);
 
                 character.effects.clear();
                 character.parsedEffectArguments.arguments.clear();
@@ -1585,9 +1565,8 @@ namespace TextSystem
             auto &text = globals::registry.get<Text>(textEntity);
             ParsedEffectArguments parsedArguments = splitEffects(effectString);
 
-            for (auto &characterEntity : text.characters)
+            for (auto &character : text.characters)
             {
-                auto &character = globals::registry.get<Character>(characterEntity);
                 character.parsedEffectArguments.arguments.insert(parsedArguments.arguments.begin(), parsedArguments.arguments.end());
 
                 for (const auto &[effectName, args] : parsedArguments.arguments)

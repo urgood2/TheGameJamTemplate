@@ -1,5 +1,7 @@
 #include "box.hpp"
 
+#include "systems/text/textVer2.hpp"
+
 namespace ui
 {
     // TODO: update function registry for methods that replace transform-provided methods
@@ -56,6 +58,7 @@ namespace ui
                     if (config) config->button_UIE = parentConfig->button_UIE;
                     else registry.emplace<UIConfig>(entity).buttonCallback = parentConfig->buttonCallback;
                 }
+
             }
 
             // If object + button
@@ -931,6 +934,11 @@ namespace ui
 
     void box::placeNonContainerUIE(transform::InheritedProperties &role, ui::LocalTransform &runningTransform, entt::entity uiElement, ui::UITypeEnum parentType, ui::UIState &uiState, ui::UIConfig &uiConfig)
     {
+        if (globals::registry.any_of<TextSystem::Text>(uiElement))
+        {
+            // debug
+            SPDLOG_DEBUG("Placing text entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
+        }
         // place at the given location, adding padding.
         // runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding);
         // runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding);
@@ -1247,6 +1255,16 @@ namespace ui
         }
         else if (uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::RECT_SHAPE)
         {
+
+            // // is it text?
+            // if (globals::registry.any_of<TextSystem::Text>(uiElement))
+            // {
+            //     auto &text = globals::registry.get<TextSystem::Text>(uiElement);
+            //     auto &textTransform = globals::registry.get<transform::Transform>(uiElement);
+            //     calcCurrentNodeTransform.w = textTransform.getActualW();
+            //     calcCurrentNodeTransform.h = textTransform.getActualH();
+            // }
+
             if (uiConfig.maxWidth && calcCurrentNodeTransform.w > uiConfig.maxWidth.value())
             {
                 calcCurrentNodeTransform.w = uiConfig.maxWidth.value();

@@ -31,6 +31,9 @@ namespace TextSystem
         Vector2 position; // x, y
         float rotation;   // r
         float scale;      // sx, sy
+        Vector2 size{}; // w, h
+        Vector2 shadowDisplacement{0, -1.5f}; // shadow offset
+        float shadowHeight = 0.2f;
         std::optional<float> scaleXModifier, scaleYModifier; // optionally modify x or y scale separately
         Color color;
         std::unordered_map<std::string, Vector2> offsets; // offsets used by various effects
@@ -44,6 +47,7 @@ namespace TextSystem
         bool firstFrame = true;                      // only true on first frame of being activated
         std::set<std::string> tags;                  // these can be accessed/set programatically for identifying specific characters later, idk if necessary but it seems like a good feature
 
+        //FIXME: pop-in is deprecated in favor of using the pop-in effect.
         std::optional<float> pop_in;       // New: Pop-in animation state (0 to 1)
         std::optional<float> pop_in_delay; // New: Delay for pop-in based on character index
 
@@ -80,7 +84,7 @@ namespace TextSystem
             CHARACTER
         };
         std::string rawText;
-        std::vector<entt::entity> characters;
+        std::vector<Character> characters;
         std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
         Font font;
         float fontSize;
@@ -189,7 +193,7 @@ namespace TextSystem
 
         extern void initEffects(Text &text);
 
-        extern entt::entity createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
+        extern Character createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
             float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
             float &currentLineWidth, std::vector<float> &lineWidths, int index, int &lineNumber);
 

@@ -1,6 +1,7 @@
 #include "element.hpp"
 
 #include "systems/reflection/reflection.hpp"
+#include "systems/text/textVer2.hpp"
 #include "core/globals.hpp"
 #include "util/utilities.hpp"
 
@@ -43,7 +44,7 @@ namespace ui
         {
             // TODO: does this mean objects attached to a ui element also need to have a ui element component? or can this be moved elsewhere?
             // TODO: think of a more logical place for parent variable (perhaps node?)
-            auto &objectUIElement = registry.get<UIElementComponent>(config->object.value());
+            // auto &objectUIElement = registry.get<UIElementComponent>(config->object.value());
             auto &objectUINode = registry.get<transform::GameObject>(config->object.value());
             objectUINode.parent = entity;
         }
@@ -388,6 +389,8 @@ namespace ui
                 // LATER: add these in later
                 if (registry.try_get<UIBoxComponent>(*uiConfig->object))
                     objectType = "UIBox";
+                else if (registry.try_get<TextSystem::Text>(*uiConfig->object)) 
+                    objectType = "Text";
                 // else if (registry.try_get<Particles>(*uiConfig->object)) objectType = "Particles";
                 // else if (registry.try_get<AnimatedSprite>(*uiConfig->object)) objectType = "AnimatedSprite";
             }
@@ -993,6 +996,11 @@ namespace ui
         auto *objectNode = registry.try_get<transform::GameObject>(config->object.value());
         auto *objectTransform = registry.try_get<transform::Transform>(config->object.value());
 
+        if (!objectConfig) {
+            SPDLOG_ERROR("Object {} does not exist or is missing components.", static_cast<int>(config->object.value()));
+            return;
+        }
+
         // Step 3: Refresh object movement state
         objectConfig->refreshMovement = true;
 
@@ -1053,7 +1061,7 @@ namespace ui
             }
             else
             {
-                ui::box::Recalculate(registry, entity);
+                ui::box::RenewAlignment(registry, entity);
             }
         }
     }

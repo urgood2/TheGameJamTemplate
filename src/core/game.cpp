@@ -114,7 +114,7 @@ namespace game
                     .addWidth(Random::get<float>(20, 100))
                     .addHeight(Random::get<float>(20, 200))
                     .addMinWidth(200.f)
-                    .addOutlineThickness(10.0f)
+                    .addOutlineThickness(5.0f)
                     // .addShadowColor(Fade(BLACK, 0.4f))
                     .addShadow(true)
                     // .addEmboss(4.f)
@@ -142,7 +142,7 @@ namespace game
             // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
-            .rawText = fmt::format("[HEY HEY HEY Welcome to the game](rainbow;bump)\n[Testing testing](rainbow;pulse)"),
+            .rawText = fmt::format("[HEY HEY!](rainbow;bump)\n[Testing.](rainbow;pulse)"),
             .font = globals::fontData.font,
             .fontSize = 50.0f,
             .wrapEnabled = false,
@@ -152,16 +152,16 @@ namespace game
 
         text.onFinishedEffect = []()
         {
-            spdlog::debug("Text effect finished.");
+            // spdlog::debug("Text effect finished.");
 
-            // There is a brief flash of white when text changes. why?
+            // // There is a brief flash of white when text changes. why?
 
-            auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-            TextSystem::Functions::clearAllEffects(textEntity);
-            text.rawText = fmt::format("[some new text](rainbow;bump)");
-            TextSystem::Functions::parseText(textEntity);
-            TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,in;"); // ;
-            TextSystem::Functions::updateText(textEntity, 0.05f);                     // call update once to apply effects, prevent flashing
+            // auto &text = globals::registry.get<TextSystem::Text>(textEntity);
+            // TextSystem::Functions::clearAllEffects(textEntity);
+            // text.rawText = fmt::format("[some new text](rainbow;bump)");
+            // TextSystem::Functions::parseText(textEntity);
+            // TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,in;"); // ;
+            // TextSystem::Functions::updateText(textEntity, 0.05f);                     // call update once to apply effects, prevent flashing
         };
 
         // FIXME: there are two text entities which overlap
@@ -175,7 +175,7 @@ namespace game
         textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
 
         // TextSystem::Functions::clearAllEffects(text);
-        TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,out;spin=4,0.1;"); // ;
+        // TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,out;spin=4,0.1;"); // ;
 
         // set camera to fill the screen
         globals::camera = {0};
@@ -316,6 +316,15 @@ namespace game
                                                             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
                                                     .build();
+        ui::UIElementTemplateNode uiDynamicTextEntry = ui::UIElementTemplateNode::Builder::create()
+                                                    .addType(ui::UITypeEnum::OBJECT)
+                                                    .addConfig(
+                                                        ui::UIConfig::Builder::create()
+                                                            .addColor(WHITE)
+                                                            .addObject(textEntity)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .build())
+                                                    .build();
         ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
                                                              .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
                                                              .addConfig(
@@ -392,7 +401,7 @@ namespace game
                                                                   transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                               .build())
                                                       // .addChild(uiColumnDef)
-                                                      .addChild(uiTextEntryContainer)
+                                                      .addChild(uiDynamicTextEntry)
                                                       .addChild(getRandomRectDef())
                                                       .addChild(uiRowDef)
                                                       .build();
@@ -548,7 +557,7 @@ namespace game
         auto view = globals::registry.view<transform::Transform>();
         for (auto e : view)
         {
-            // transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+            transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
         }
         transformProfiler.Stop();
 

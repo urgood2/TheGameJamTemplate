@@ -23,15 +23,7 @@ LATER: (not needed immediately)
 ---
 ### 🖱️ Interaction & Input
 
-- [ ] controller clicks do not work?
-- [ ] focus rects not disappearing when controller plugged in & mouse moves
 
-- [ ] Implement controller focus interactivity (e.g., gamepad navigation). 
-    - [ ] funnel_to: "When navigating focus, skip me and send it to this node instead."
-    - [ ] funnel_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
-    - They give you control over controller focus routing, especially in complex UI layouts where a wrapper/box shouldn't receive focus, but its child (or a specific element) should. (probably rename these)
-    - [ ] change funnel_to -> redirect_focus_to
-    - [ ] change funnel_from -> claim_focus_from 
 
 ### 🧪 UI Widgets & Behavior
 
@@ -95,7 +87,9 @@ LATER: (not needed immediately)
   - [x] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
   - [x] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect
   - [x] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
-
+- [ ] Utilize controller focus interactivity focus funneling
+    - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
+    - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
 
 ---
 

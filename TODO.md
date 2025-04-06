@@ -126,4 +126,5 @@ LATER: (not needed immediately)
 - [ ] shadows for sprites using the sprites themselves (grayed out version)
 - [ ] Fix jagged bottom outlines when buttons are scaled down.
 - [ ] Controller input does not work on the mac.
-- [ ] focus menu layers for controller not implemented/tested.
+- [ ] focus menu layers for controller not tested. It's simply used to save the previously focused node before opening something that will hog all the focus (onscreen keyboard for instance), which can then be restored after the thing is closed again. Mostly it's under_overlay that's used to mark buttons as being under overlay and mark them as not part of focusable list. Overlays are not implemented/tested and need to be debugged.
+- [ ] focus navigation selection box should be a rounded rect, not a straight out rect

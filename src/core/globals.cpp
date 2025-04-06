@@ -194,7 +194,7 @@ namespace globals {
     
     bool isGamePaused = false; // self-explanatory
 
-    bool screenWipe = false; // true when the screen is being wiped (transitioning between scenes)
+    bool screenWipe = false; // true when the screen is being wiped (transitioning between scenes). Set this to true during transitions to prevent input.
 
     entt::entity gameWorldContainerEntity;
 

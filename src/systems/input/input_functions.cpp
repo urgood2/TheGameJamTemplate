@@ -175,7 +175,7 @@ namespace input {
             auto &node = registry.get<transform::GameObject>(globals::cursor);
             node.state.visible = false;
         }
-        
+
         // set cursor position
         SetCurrentCursorPosition(registry, inputState);
         
@@ -1136,6 +1136,10 @@ namespace input {
                         !state.hid.mouse_enabled && !state.hid.axis_cursor_enabled)
                     {
                         // Do nothing
+                    }
+                    else {
+                        // Trigger left cursor press
+                        ProcessLeftMouseButtonPress(registry, state); // Trigger left cursor press
                     }
                     
                 }

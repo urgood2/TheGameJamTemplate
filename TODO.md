@@ -85,7 +85,7 @@ LATER: (not needed immediately)
   - [x] Checkboxes -> just a button with an image. The image is set to invisible whenbutton is pressed. Funnel_to and from are used for the container of the checkbox, etc.
   - [x] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
   - [x] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
-  - [x] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect
+  - [x] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
   - [x] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
 - [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
@@ -125,3 +125,4 @@ LATER: (not needed immediately)
 - [ ] Controller input does not work on the mac.
 - [ ] focus menu layers for controller not tested. It's simply used to save the previously focused node before opening something that will hog all the focus (onscreen keyboard for instance), which can then be restored after the thing is closed again. Mostly it's under_overlay that's used to mark buttons as being under overlay and mark them as not part of focusable list. Overlays are not implemented/tested and need to be debugged.
 - [ ] focus navigation selection box should be a rounded rect, not a straight out rect
+- [ ] probably make shadows stay in place vertically when shifting characters around in fancy text

@@ -9246,7 +9246,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites_atlas.png"
     ],
     "atla_remapping_shader_snippet_sprite_uv": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sprite_atlas_uv_remapping_snippet.md"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sprite_atlas_uv_remapping_snippet.md",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sprite_atlas_uv_remapping_snippet.md"
     ],
     "autumn_orange_palette_resurrect": [
         "RESURRECT_PALETTE_AUTUMN_ORANGE"
@@ -9395,7 +9396,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\FOLEY_Unscrew_Bottle_Cap_mono.wav"
     ],
     "bound_expansion_shader_snippet_sprite": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sprite_bound_expansion_snippet.md"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sprite_bound_expansion_snippet.md",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sprite_bound_expansion_snippet.md"
     ],
     "brick_palette_red_resurrect": [
         "RESURRECT_PALETTE_BRICK_RED"

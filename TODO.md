@@ -122,3 +122,4 @@ LATER: (not needed immediately)
 - [ ] make color coding function for ui boxes (to generate color-coded tooltips)
 - [ ] shadows for sprites using the sprites themselves (grayed out version)
 - [ ] Fix jagged bottom outlines when buttons are scaled down.
+- [ ] Controller input does not work on the mac.

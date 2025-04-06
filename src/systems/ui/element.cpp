@@ -578,6 +578,65 @@ namespace ui
         }
     }
 
+    auto createTooltipUIBox(entt::registry &registry, entt::entity parent, ui::Tooltip tooltip) -> UIElementTemplateNode {
+
+        ui::UIElementTemplateNode title = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::TEXT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addText(tooltip.title.value_or("Tooltip Title"))
+                    .addColor(WHITE)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .addScale(0.4f)
+                    .build())
+            .build();
+        ui::UIElementTemplateNode content = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::TEXT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addText(tooltip.text.value_or("Tooltip Content"))
+                    .addColor(WHITE)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .addScale(0.4f)
+                    .build())
+            .build();
+
+        ui::UIElementTemplateNode titleRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(title)
+            .build();
+
+        ui::UIElementTemplateNode contentRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(content)
+            .build();
+
+
+        ui::UIElementTemplateNode tooltipUIBoxDef = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::ROOT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    .addOutlineThickness(2.0f)
+                    .addOutlineColor(BLUE)
+                    .build())
+            .addChild(titleRow)
+            .addChild(contentRow)
+            .build();
+
+        return tooltipUIBoxDef;
+    }
+
     std::pair<float, float> element::SetWH(entt::registry &registry, entt::entity entity)
     {
         auto *uiElement = registry.try_get<UIElementComponent>(entity);

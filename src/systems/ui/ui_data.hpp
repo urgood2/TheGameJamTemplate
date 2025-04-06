@@ -194,9 +194,9 @@ namespace ui
 
         // Special UI Behaviors
         bool force_focus = false;                      // Forces the UI element to be focusable, even if it normally wouldn't be.
-        std::optional<bool> dynamicMotion;                     
+        std::optional<bool> dynamicMotion; // enables jiggle when it first appears.                
         std::optional<bool> choice; // Allows an element to act as part of a selectable group (radio button behavior)
-        std::optional<bool> chosen; // Indicates whether this choice has been selected.
+        std::optional<bool> chosen; // Indicates whether this choice has been selected. (displays indicator)
         std::optional<bool> one_press; // Ensures the button can only be pressed once (irreversible)
         std::optional<std::string> chosen_vert;        // Alters the drawing behavior of the "chosen triangle" to be vertical.
         bool draw_after = false;                       //Specifies that this element should be drawn after its children.

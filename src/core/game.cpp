@@ -58,9 +58,9 @@ using std::pair;
 #include "raymath.h"
 
 // make layers to draw to
-std::shared_ptr<layer::Layer> background; // background
-std::shared_ptr<layer::Layer> sprites;    // sprites
-std::shared_ptr<layer::Layer> ui_layer;         // ui
+std::shared_ptr<layer::Layer> background;  // background
+std::shared_ptr<layer::Layer> sprites;     // sprites
+std::shared_ptr<layer::Layer> ui_layer;    // ui
 std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
 
 // AsteroidManager *asteroidManager = nullptr;
@@ -74,10 +74,11 @@ entt::entity childEntity{entt::null};
 entt::entity childEntity2{entt::null};
 entt::entity childEntity3{entt::null};
 entt::entity uiBox{entt::null};
+entt::entity hoverPopupUIBox{entt::null};
+entt::entity dragPopupUIBox{entt::null};
+entt::entity alertUIBox{entt::null};
 
 float transitionShaderPositionVar = 0.f;
-
-
 
 namespace game
 {
@@ -97,7 +98,7 @@ namespace game
 
     TextSystem::Text text;
     entt::entity textEntity{entt::null};
-    
+
     ui::UIElementTemplateNode getRandomRectDef()
     {
         return ui::UIElementTemplateNode::Builder::create()
@@ -107,9 +108,8 @@ namespace game
                     .addColor(GREEN)
                     .addHover(true)
                     // .addOnePress(true)
-                    .addButtonCallback([](){
-                        SPDLOG_DEBUG("Button callback triggered");
-                    })
+                    .addButtonCallback([]()
+                                       { SPDLOG_DEBUG("Button callback triggered"); })
                     .addWidth(Random::get<float>(20, 100))
                     .addHeight(Random::get<float>(20, 200))
                     .addMinWidth(200.f)
@@ -124,19 +124,15 @@ namespace game
                     .build())
             .build();
 
-
-        
-        //TODO: templates for timer
-        //TODO: how to chain timer calls optionally in a queue
-
-
+        // TODO: templates for timer
+        // TODO: how to chain timer calls optionally in a queue
     }
-    
+
     // perform game-specific initialization here. This makes it easier to find all the initialization code
     // specific to a game project
     auto init() -> void
     {
-        
+
         // load font
         // globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
         globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/Ac437_IBM_BIOS.ttf").c_str(), 40, 0, 250);
@@ -157,23 +153,23 @@ namespace game
             spdlog::debug("Text effect finished.");
 
             // There is a brief flash of white when text changes. why?
-            
+
             auto &text = globals::registry.get<TextSystem::Text>(textEntity);
             TextSystem::Functions::clearAllEffects(textEntity);
             text.rawText = fmt::format("[some new text](rainbow;bump)");
             TextSystem::Functions::parseText(textEntity);
             TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,in;"); // ;
-            TextSystem::Functions::updateText(textEntity, 0.05f); // call update once to apply effects, prevent flashing
+            TextSystem::Functions::updateText(textEntity, 0.05f);                     // call update once to apply effects, prevent flashing
         };
 
-        //FIXME: there are two text entities which overlap
-        //FIXME: characters are not disposed of properly when text changes
-        //FIXME: text offset not working properly when text changes
+        // FIXME: there are two text entities which overlap
+        // FIXME: characters are not disposed of properly when text changes
+        // FIXME: text offset not working properly when text changes
 
         // init custom text system
         // TextSystem::Functions::initEffects(text);
         // TextSystem::Functions::parseText(text);
-        
+
         textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
 
         // TextSystem::Functions::clearAllEffects(text);
@@ -191,12 +187,11 @@ namespace game
         // rlTextureParameters(globals::spriteAtlas.id, RL_TEXTURE_WRAP_T, TEXTURE_WRAP_CLAMP);
 
         sound_system::SetCategoryVolume("ui", 0.8f);
-        
+
         // ImGui::GetIO().FontGlobalScale = 1.5f; // Adjust the scaling factor as needed
-    
+
         // reflection for user registered componenets
         ui::util::RegisterMeta();
-        
 
         // create layer the size of the screen, with a main canvas the same size
         background = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
@@ -211,165 +206,157 @@ namespace game
         globals::camera2D.rotation = 0;
         globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 
-        
-    // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-    player = globals::registry.create();
-    auto &anim = factory::emplaceAnimationQueue(globals::registry, player);
-    anim.defaultAnimation = init::getAnimationObject("idle_animation");
+        // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
+        player = globals::registry.create();
+        auto &anim = factory::emplaceAnimationQueue(globals::registry, player);
+        anim.defaultAnimation = init::getAnimationObject("idle_animation");
 
-    // massive container the size of the screen
-    transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
-    auto &node = globals::registry.get<transform::GameObject>(transformEntity);
-    node.debug.debugText = "Parent";
-    node.state.dragEnabled = true;
-    //TODO: clicking + dragging doesn't work when hover is not enabled.
-    node.state.hoverEnabled = true;
-    node.state.collisionEnabled = true;
-    node.state.clickEnabled = true;
-    auto &transform = globals::registry.get<transform::Transform>(transformEntity);
-    transform.setActualX(100);
-    transform.setActualY(100);
-    // transform.setActualR(45.f);
-    transform::debugMode = true; // enable debug drawing of transforms
+        // massive container the size of the screen
+        transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
+        auto &node = globals::registry.get<transform::GameObject>(transformEntity);
+        node.debug.debugText = "Parent";
+        node.state.dragEnabled = true;
+        // TODO: clicking + dragging doesn't work when hover is not enabled.
+        node.state.hoverEnabled = true;
+        node.state.collisionEnabled = true;
+        node.state.clickEnabled = true;
+        auto &transform = globals::registry.get<transform::Transform>(transformEntity);
+        transform.setActualX(100);
+        transform.setActualY(100);
+        // transform.setActualR(45.f);
+        transform::debugMode = true; // enable debug drawing of transforms
 
-    //Testing ui
-    auto &uiConfig = globals::registry.emplace<ui::UIConfig>(transformEntity);
-    uiConfig.color = RED;
-    uiConfig.outlineThickness = 4.0f;
-    uiConfig.outlineColor = YELLOW;
-    uiConfig.shadowColor = Fade(BLACK, 0.4f);
-    uiConfig.shadow = true;
-    uiConfig.emboss = 5.f;
+        // Testing ui
+        auto &uiConfig = globals::registry.emplace<ui::UIConfig>(transformEntity);
+        uiConfig.color = RED;
+        uiConfig.outlineThickness = 4.0f;
+        uiConfig.outlineColor = YELLOW;
+        uiConfig.shadowColor = Fade(BLACK, 0.4f);
+        uiConfig.shadow = true;
+        uiConfig.emboss = 5.f;
 
-    childEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
-    auto &childNode = globals::registry.get<transform::GameObject>(childEntity);
-    childNode.debug.debugText = "Fixture 1";
-    auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
-    childTransform.setActualX(200);
-    childTransform.setActualY(200);
-    // TODO: how to make something act like it was actually tacked on to the parent? probably add a flag to allow special case handling for this (like a badge attached to a card, moves uniformly with the card)
-    transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
-    auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
-    childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
+        childEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
+        auto &childNode = globals::registry.get<transform::GameObject>(childEntity);
+        childNode.debug.debugText = "Fixture 1";
+        auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
+        childTransform.setActualX(200);
+        childTransform.setActualY(200);
+        // TODO: how to make something act like it was actually tacked on to the parent? probably add a flag to allow special case handling for this (like a badge attached to a card, moves uniformly with the card)
+        transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
+        auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
+        childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
 
-    childEntity2 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 40, 20);
-    auto &childNode2 = globals::registry.get<transform::GameObject>(childEntity2);
-    childNode2.debug.debugText = "Fixture 2";
-    auto &childTransform2 = globals::registry.get<transform::Transform>(childEntity2);
-    transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
-    auto &childRole2 = globals::registry.get<transform::InheritedProperties>(childEntity2);
-    childRole2.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER;
+        childEntity2 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 40, 20);
+        auto &childNode2 = globals::registry.get<transform::GameObject>(childEntity2);
+        childNode2.debug.debugText = "Fixture 2";
+        auto &childTransform2 = globals::registry.get<transform::Transform>(childEntity2);
+        transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
+        auto &childRole2 = globals::registry.get<transform::InheritedProperties>(childEntity2);
+        childRole2.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER;
 
-    childEntity3 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 40);
-    auto &childNode3 = globals::registry.get<transform::GameObject>(childEntity3);
-    childNode3.debug.debugText = "Not fixture";
-    auto &childTransform3 = globals::registry.get<transform::Transform>(childEntity3);
-    transform::AssignRole(&globals::registry, childEntity3, transform::InheritedProperties::Type::RoleInheritor, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{50.f, 50.f});
-    auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
-    childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
+        childEntity3 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 40);
+        auto &childNode3 = globals::registry.get<transform::GameObject>(childEntity3);
+        childNode3.debug.debugText = "Not fixture";
+        auto &childTransform3 = globals::registry.get<transform::Transform>(childEntity3);
+        transform::AssignRole(&globals::registry, childEntity3, transform::InheritedProperties::Type::RoleInheritor, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{50.f, 50.f});
+        auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
+        childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
 
-    //TODO: how to queue events with this timer?
-    timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f){
+        // TODO: how to queue events with this timer?
+        timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f)
+                                        {
         SPDLOG_DEBUG("Injecting dynamic motion");
         transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
 
-    timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
-        SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
-    });
+        timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
+                                        { SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); });
 
-    timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f){
+        timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
+                                        {
+                                            particle::Particle particle{
+                                                .velocity = Vector2{Random::get<float>(-200, 200), Random::get<float>(-200, 200)},
+                                                .rotation = Random::get<float>(0, 360),
+                                                .rotationSpeed = Random::get<float>(-180, 180),
+                                                .scale = Random::get<float>(1, 10),
+                                                .lifespan = Random::get<float>(1, 3),
+                                                .color = random_utils::random_element<Color>({RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, BROWN, WHITE, BLACK})};
 
-        particle::Particle particle{
-            .velocity = Vector2{Random::get<float>(-200, 200), Random::get<float>(-200, 200)},
-            .rotation = Random::get<float>(0, 360),
-            .rotationSpeed = Random::get<float>(-180, 180),
-            .scale = Random::get<float>(1, 10),
-            .lifespan = Random::get<float>(1, 3),
-            .color = random_utils::random_element<Color>({RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, BROWN, WHITE, BLACK})
-        };
+                                            // TODO: way to programatically modify frame times for animation
 
-        //TODO: way to programatically modify frame times for animation
+                                            particle::CreateParticle(globals::registry,
+                                                                     GetMousePosition(),
+                                                                     Vector2{10, 10},
+                                                                     particle,
+                                                                     particle::ParticleAnimationConfig{.loop = true, .animationName = "sword_anim"});
+                                        });
 
-        particle::CreateParticle(globals::registry, 
-            GetMousePosition(), 
-            Vector2{10, 10}, 
-            particle, 
-            particle::ParticleAnimationConfig{.loop = true, .animationName ="sword_anim"});
+        auto &testConfig = globals::registry.emplace<ui::Tooltip>(transformEntity);
+        testConfig.title = "Test Tooltip";
 
-    });
-    
-    auto &testConfig = globals::registry.emplace<ui::Tooltip>(transformEntity);
-    testConfig.title = "Test Tooltip";
-    
-    reflection::registerMetaForComponent<ui::Tooltip>([](auto meta) {
-        meta.type("Tooltip"_hs)  // Ensure type name matches the lookup string
-            .template data<&ui::Tooltip::title>("title"_hs)
-            .template data<&ui::Tooltip::text>("text"_hs);
-    });
+        reflection::registerMetaForComponent<ui::Tooltip>([](auto meta)
+                                                          { meta.type("Tooltip"_hs) // Ensure type name matches the lookup string
+                                                                .template data<&ui::Tooltip::title>("title"_hs)
+                                                                .template data<&ui::Tooltip::text>("text"_hs); });
 
-    auto type = entt::resolve("Tooltip"_hs);
-    auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
-    
-    
-    ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
-        .addType(ui::UITypeEnum::TEXT)
-        .addConfig(
-            ui::UIConfig::Builder::create()
-                .addColor(WHITE)
-                .addText("Hello, world!")
-                .addShadow(true)
-                .addRefEntity(transformEntity)
-                .addRefComponent("Tooltip")
-                .addRefValue("title")
-                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                .build()
-        )
-        .build();
-    ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
-        .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-        .addConfig(
-            ui::UIConfig::Builder::create()
-                .addColor(GRAY)
-                // .addOutlineThickness(2.0f)
-                .addHover(true)
-                .addButtonCallback([](){
-                    SPDLOG_DEBUG("Button callback triggered");
-                })
-                .addOutlineColor(BLUE)
-                // .addShadow(true)
-                .addEmboss(4.f)
-                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                .build()
-        )
-        .addChild(uiTextEntry)
-        .build();
+        auto type = entt::resolve("Tooltip"_hs);
+        auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
 
-    ui::UIElementTemplateNode uiColumnDef = ui::UIElementTemplateNode::Builder::create()
-        .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
-        .addConfig(
-            ui::UIConfig::Builder::create()
-                .addColor(YELLOW)
-                .addEmboss(2.f)
-                .addOutlineColor(BLUE)
-                // .addOutlineThickness(5.0f)
-                // .addMinWidth(500.f)
-                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                .build()
-        )
-        .addChild(getRandomRectDef())
-        .addChild(getRandomRectDef())
-        .addChild(uiTextEntry)
-        .build();
-    
-    ui::UIElementTemplateNode uiRowDef = ui::UIElementTemplateNode::Builder::create()
-        .addType(ui::UITypeEnum::VERTICAL_CONTAINER) 
-        .addConfig(
-            ui::UIConfig::Builder::create()
-                .addColor(RED)
-                .addEmboss(2.f)
-                .addId("testRow")
-                .addHover(true)
-                .addButtonCallback([testConfig](){
+        ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
+                                                    .addType(ui::UITypeEnum::TEXT)
+                                                    .addConfig(
+                                                        ui::UIConfig::Builder::create()
+                                                            .addColor(WHITE)
+                                                            .addText("Hello, world!")
+                                                            .addShadow(true)
+                                                            .addRefEntity(transformEntity)
+                                                            .addRefComponent("Tooltip")
+                                                            .addRefValue("title")
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .build())
+                                                    .build();
+        ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
+                                                             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+                                                             .addConfig(
+                                                                 ui::UIConfig::Builder::create()
+                                                                     .addColor(GRAY)
+                                                                     // .addOutlineThickness(2.0f)
+                                                                     .addHover(true)
+                                                                     .addButtonCallback([]()
+                                                                                        { SPDLOG_DEBUG("Button callback triggered"); })
+                                                                     .addOutlineColor(BLUE)
+                                                                     // .addShadow(true)
+                                                                     .addEmboss(4.f)
+                                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                                     .build())
+                                                             .addChild(uiTextEntry)
+                                                             .build();
+
+        ui::UIElementTemplateNode uiColumnDef = ui::UIElementTemplateNode::Builder::create()
+                                                    .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+                                                    .addConfig(
+                                                        ui::UIConfig::Builder::create()
+                                                            .addColor(YELLOW)
+                                                            .addEmboss(2.f)
+                                                            .addOutlineColor(BLUE)
+                                                            // .addOutlineThickness(5.0f)
+                                                            // .addMinWidth(500.f)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .build())
+                                                    .addChild(getRandomRectDef())
+                                                    .addChild(getRandomRectDef())
+                                                    .addChild(uiTextEntry)
+                                                    .build();
+
+        ui::UIElementTemplateNode uiRowDef = ui::UIElementTemplateNode::Builder::create()
+                                                 .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+                                                 .addConfig(
+                                                     ui::UIConfig::Builder::create()
+                                                         .addColor(RED)
+                                                         .addEmboss(2.f)
+                                                         .addId("testRow")
+                                                         .addHover(true)
+                                                         .addButtonCallback([testConfig]()
+                                                                            {
                     SPDLOG_DEBUG("Button callback triggered, renewing box alignment");
                     auto button = ui::box::GetUIEByID(globals::registry, uiBox, "testRow"); 
                     SPDLOG_DEBUG("Button ID: {}", globals::registry.get<ui::UIConfig>(button.value()).id.value());
@@ -378,116 +365,129 @@ namespace game
                     tooltip.title = random_utils::random_element<std::string>(
                         {"Hello", "World", "This is a test", "Testing 1, 2, 3", "Lorem ipsum dolor sit amet", "Random string"});
 
-                    ui::box::RenewAlignment(globals::registry, uiBox);
-                })
-                // .addMinHeight(500.f)
-                // .addOutlineThickness(5.0f)
-                // .addButtonCallback("testCallback")
-                // .addOnePress(true)
-                // .addFocusArgs((ui::FocusArgs{.funnel_to = entt::entity{entt::null}}))
-                .addOutlineColor(BLUE)
-                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
-                .build()
-        )
-        .addChild(uiColumnDef)
-        .addChild(getRandomRectDef())
-        .build();
-    ui::UIElementTemplateNode uiTestRootDef = ui::UIElementTemplateNode::Builder::create()
-        .addType(ui::UITypeEnum::ROOT)
-        .addConfig(
-            ui::UIConfig::Builder::create()
-                // .addMaxWidth(700.f)
-                .addColor(BLUE)
-                .addShadow(true)
-                // .addHover(true)
-                // .addButtonCallback("testCallback")
-                .addAlign(
-                    transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER
-                )
-                .build()
-        )       
-        // .addChild(uiColumnDef)
-        .addChild(uiTextEntryContainer)
-        .addChild(getRandomRectDef())
-        .addChild(uiRowDef)
-        .build();
-    
-     uiBox = ui::box::Initialize(
-        globals::registry, 
-        {.w = 200, .h = 200}, 
-        uiTestRootDef, 
-        ui::UIConfig::Builder::create()
-            .addRole(transform::InheritedProperties::Builder()
-                .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
-                .addMaster(transformEntity)
-                .addLocationBond(transform::InheritedProperties::Sync::Strong)
-                .addRotationBond(transform::InheritedProperties::Sync::Strong)
-                .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_TOP)
-                .build()
-            )
-            .build()
-        
-    
-    );
-    
-    //LATER: figure out button UIE more precisely
-    //LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently
-    
-    //TODO: hover is currently required for clicking to work
-    //TODO: elements should not be clikable by default, they seem to be
-    //TODO: need to reflect rotation + scale in ui elements (optionally)
-    //TODO: arguments to test
-    /*
-        button:
-        
-        choice = args.choice,
-        chosen = args.chosen,
-        focus_args = args.focus_args,
-        func = args.func, -> just an update function
-        
-        slider:
-        
-        focus_args = {type = 'slider'}
-        refresh_movement = true
-        collideable = true
-        
-        toggle:
-        
-        button_dist = 0.2
-        focus_args = {funnel_to = true}
-        
-        
-    */
-    //LATER: bottom outline is sometimes jagged when buttons are scaled down
-    // LATER: use VBO & IBOS for rendering
-    //LATER: ninepatch?
+                    ui::box::RenewAlignment(globals::registry, uiBox); })
+                                                         // .addMinHeight(500.f)
+                                                         // .addOutlineThickness(5.0f)
+                                                         // .addButtonCallback("testCallback")
+                                                         // .addOnePress(true)
+                                                         // .addFocusArgs((ui::FocusArgs{.funnel_to = entt::entity{entt::null}}))
+                                                         .addOutlineColor(BLUE)
+                                                         .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
+                                                         .build())
+                                                 .addChild(uiColumnDef)
+                                                 .addChild(getRandomRectDef())
+                                                 .build();
+        ui::UIElementTemplateNode uiTestRootDef = ui::UIElementTemplateNode::Builder::create()
+                                                      .addType(ui::UITypeEnum::ROOT)
+                                                      .addConfig(
+                                                          ui::UIConfig::Builder::create()
+                                                              // .addMaxWidth(700.f)
+                                                              .addColor(BLUE)
+                                                              .addShadow(true)
+                                                              // .addHover(true)
+                                                              // .addButtonCallback("testCallback")
+                                                              .addAlign(
+                                                                  transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                              .build())
+                                                      // .addChild(uiColumnDef)
+                                                      .addChild(uiTextEntryContainer)
+                                                      .addChild(getRandomRectDef())
+                                                      .addChild(uiRowDef)
+                                                      .build();
 
-    // needed for correct disposal of transform components
-    //TODO: move this to transform system init
-    transform::registerDestroyListeners(globals::registry);
-    
-    //TODO: integrate new text system with ui (as object)
-    //TODO: hover enlargement amount, whether to shake on hover, color change on hover, automatically recalculate button size (maybe scale it if necessary) after text size changes, 
-    //TODO: ui recalc function needs to be fixed. Not working at the moment.
-    //TODO: hover scale amount should be customizable
-    //TODO: h_popup and d_popup and alert
-    //TODO: how to recenter text after it changes (refresh entire layout? or just center the text?)
-    //TODO: how to use button delay
-    //TODO: various ui elements (buttons, slider, toggle, radio button behavior, switch button with pips for selection, check box)
-    //TODO: testing interactivity (click, drag, hover)
-    //TODO: drag should probalby be replaced with custom function if ui is not meant to be moved (anything other than root)
-    //TODO: popups for hover and drag
-    //TODO: controller focus interactivity
-    //TODO: apply, stop hover and release for ui elements
-    
-    //TODO: not sure how hover enlargement works yet.
-    //REVIEW: to add jiggle on hover, just use node.methods->onHover with custom lamnda on the appropriate ui element's transform component.
-    
-    SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+        uiBox = ui::box::Initialize(
+            globals::registry,
+            {.w = 200, .h = 200},
+            uiTestRootDef,
+            ui::UIConfig::Builder::create()
+                .addRole(transform::InheritedProperties::Builder()
+                             .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
+                             .addMaster(transformEntity)
+                             .addLocationBond(transform::InheritedProperties::Sync::Strong)
+                             .addRotationBond(transform::InheritedProperties::Sync::Strong)
+                             .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_TOP)
+                             .build())
+                .build()
+
+        );
+
+        uiTextEntry.config.text = "This is a hover popup!";
+        uiTextEntry.config.color = RED;
+        uiTextEntry.config.ref_component.reset();
+        uiTextEntry.config.ref_entity.reset();
+        uiTextEntry.config.ref_value.reset();
+        
+        hoverPopupUIBox = ui::box::Initialize(
+            globals::registry,
+            {.w = 200, .h = 200},
+            uiTextEntry,
+            ui::UIConfig::Builder::create()
+                .addRole(transform::InheritedProperties::Builder()
+                             .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
+                             .addMaster(transformEntity)
+                             .addLocationBond(transform::InheritedProperties::Sync::Strong)
+                             .addRotationBond(transform::InheritedProperties::Sync::Strong)
+                             .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM)
+                             .build())
+                .build());
+
+        // LATER: figure out button UIE more precisely
+        // LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently
+
+        // TODO: hover is currently required for clicking to work
+        // TODO: elements should not be clikable by default, they seem to be
+        // TODO: need to reflect rotation + scale in ui elements (optionally)
+        // TODO: arguments to test
+        /*
+            button:
+
+            choice = args.choice,
+            chosen = args.chosen,
+            focus_args = args.focus_args,
+            func = args.func, -> just an update function
+
+            slider:
+
+            focus_args = {type = 'slider'}
+            refresh_movement = true
+            collideable = true
+
+            toggle:
+
+            button_dist = 0.2
+            focus_args = {funnel_to = true}
+
+
+        */
+        // LATER: bottom outline is sometimes jagged when buttons are scaled down
+        //  LATER: use VBO & IBOS for rendering
+        // LATER: ninepatch?
+
+        // needed for correct disposal of transform components
+        // TODO: move this to transform system init
+        transform::registerDestroyListeners(globals::registry);
+
+        // TODO: integrate new text system with ui (as object)
+        // TODO: hover enlargement amount, whether to shake on hover, color change on hover, automatically recalculate button size (maybe scale it if necessary) after text size changes,
+        // TODO: ui recalc function needs to be fixed. Not working at the moment.
+        // TODO: hover scale amount should be customizable
+        // TODO: h_popup and d_popup and alert
+        // TODO: how to recenter text after it changes (refresh entire layout? or just center the text?)
+        // TODO: how to use button delay
+        // TODO: various ui elements (buttons, slider, toggle, radio button behavior, switch button with pips for selection, check box)
+        // TODO: testing interactivity (click, drag, hover)
+        // TODO: drag should probalby be replaced with custom function if ui is not meant to be moved (anything other than root)
+        // TODO: popups for hover and drag
+        // TODO: controller focus interactivity
+        // TODO: apply, stop hover and release for ui elements
+
+        // TODO: not sure how hover enlargement works yet.
+        // REVIEW: to add jiggle on hover, just use node.methods->onHover with custom lamnda on the appropriate ui element's transform component.
+
+        SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
 
         SetUpShaderUniforms();
     }
-
 
     auto update(float delta) -> void
     {
@@ -499,19 +499,19 @@ namespace game
 
         if (game::isPaused)
             return;
-            
+
         particle::UpdateParticles(globals::registry, delta);
         shaders::updateAllShaderUniforms();
 
         TextSystem::Functions::updateText(textEntity, delta); // update text system
-        
+
         // update ui components
         // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
         // for (auto e : viewUI)
         // {
         //     ui::box::Move(globals::registry, e, f);
         // }
-        
+
         auto viewUIElement = globals::registry.view<ui::UIElementComponent>();
         for (auto e : viewUIElement)
         {
@@ -519,7 +519,6 @@ namespace game
         }
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
-
     }
 
     auto draw(float dt) -> void
@@ -552,7 +551,7 @@ namespace game
         uiProfiler.Stop();
 
         particle::DrawParticles(globals::registry, ui_layer);
-        
+
         // we will draw to the sprites layer main canvas, modify it with a shader, then draw it to the screen
         // The reason we do this every frame is to allow position changes to the entities to be reflected in the draw commands
         layer::AddDrawEntityWithAnimation(sprites, &globals::registry, player, 100 + sin(GetTime()) * 100, 100, globals::spriteAtlas, 0);
@@ -561,14 +560,13 @@ namespace game
         // renderer::ClearBackground(loading::getColor("brick_palette_red_resurrect"));
 
         util::Profiler drawProfiler("Draw Layers");
-        layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr); // render the background layer commands to its main canvas
-        layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr); // render the sprite layer commands to its main canvas
-        layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr); // render the ui layer commands to its main canvas
+        layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr);  // render the background layer commands to its main canvas
+        layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+        layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
         layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
 
         layer::Push(&globals::camera2D);
 
-        
         // auto balatro = shaders::getShader("balatro_background");
         // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
         auto crt = shaders::getShader("crt");
@@ -601,46 +599,41 @@ namespace game
         // shaders::TryApplyUniforms(negative, globalShaderUniforms, "negative");
 
         // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
-        
 
-        
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
         // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
         layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
-        
+
         layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 
         layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
 
-        // layer::DrawCanvasToCurrentRenderTargetWithTransform(ui_layer, "main", 0, 0, 0, 1, 1, WHITE); 
+        // layer::DrawCanvasToCurrentRenderTargetWithTransform(ui_layer, "main", 0, 0, 0, 1, 1, WHITE);
 
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(sprites, "flash", 0, 0, 0, 1, 1, WHITE);   // render the sprite layer flash canvas to the screen
 
         BeginDrawing();
-        
+
         // clear screen
         ClearBackground(BLACK);
 
         layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
 
-        rlImGuiBegin();  // Required: starts ImGui frame
+        rlImGuiBegin(); // Required: starts ImGui frame
 
         shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
 
         rlImGuiEnd(); // Required: renders ImGui on top of Raylib
-        
+
         // Display UPS and FPS
         const int fps = GetFPS(); // Get the current FPS
         DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
 
-        
         EndDrawing();
-
 
         layer::Pop();
 
         drawProfiler.Stop();
-        
 
         // BeginMode2D(globals::camera2D);
 

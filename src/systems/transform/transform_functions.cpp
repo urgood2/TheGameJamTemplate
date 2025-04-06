@@ -1500,7 +1500,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // drag pop-up (for controlller drag, for instance) 
         if (node.children.find("d_popup") != node.children.end()) return;
         
-        //TODO: generate and attach new UIbox for the pop-up, add as child
+        //TODO: generate and attach new UIbox for the pop-up, add as child, use dPopupConfig and the dPopup definition to create the uibox
+        //TODO: in ui element's hover method, call the creaate tooltip method to generate the definition
         
     }
     
@@ -1579,8 +1580,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         if (node.children.find("h_popup") != node.children.end()) return;
         
         // TODO: make a new UIbox for the pop-up, add as child
+
+        //TODO: generate and attach new UIbox for the pop-up, add as child, use hPopupConfig and the hPopup definition to create the uibox
+        //TODO: in ui element's hover method, call the creaate tooltip method to generate the definition
+
         
-        //TODO: use h_popup later
         
         // custom start hover logic
         if (node.methods->onHover) {

@@ -158,16 +158,31 @@ namespace ui
         if (uiConfig->onDemandTooltip || uiConfig->tooltip || uiConfig->detailedTooltip)
         {
             node.state.collisionEnabled = true;
-        }\
+        }
 
-        // Assign role within UI hierarchy
-        transform::AssignRole(&registry, entity, transform::InheritedProperties::Type::RoleInheritor,
-                           uiElement->uiBox,
-                           transform::InheritedProperties::Sync::Strong,
-                           transform::InheritedProperties::Sync::Strong,
-                           transform::InheritedProperties::Sync::Weak,
-                           transform::InheritedProperties::Sync::Weak,
-                           Vector2{transformReference.x, transformReference.y});
+        // check if it is a text object
+        //FIXME: not useful?
+        // if (uiElement->UIT == UITypeEnum::OBJECT)
+        // {
+        //     SPDLOG_DEBUG("Setting up text object with entity {}", static_cast<int>(entity));
+            
+        //     transform::AssignRole(&registry, uiConfig->object.value(), transform::InheritedProperties::Type::RoleInheritor,
+        //         uiElement->uiBox,
+        //         transform::InheritedProperties::Sync::Strong,
+        //         transform::InheritedProperties::Sync::Strong,
+        //         transform::InheritedProperties::Sync::Weak,
+        //         transform::InheritedProperties::Sync::Weak,
+        //         Vector2{transformReference.x, transformReference.y});
+        // } else {
+            transform::AssignRole(&registry, entity, transform::InheritedProperties::Type::RoleInheritor,
+                uiElement->uiBox,
+                transform::InheritedProperties::Sync::Strong,
+                transform::InheritedProperties::Sync::Strong,
+                transform::InheritedProperties::Sync::Weak,
+                transform::InheritedProperties::Sync::Weak,
+                Vector2{transformReference.x, transformReference.y});
+        // }
+
 
         // Assign to draw layers if applicable
         if (uiConfig->drawLayer)
@@ -384,13 +399,26 @@ namespace ui
             if (uiConfig->object)
             {
                 auto *objTransform = registry.try_get<transform::Transform>(*uiConfig->object);
+                auto *objectRole = registry.try_get<transform::InheritedProperties>(*uiConfig->object);
 
                 // Check object type based on class assumptions (this should be refined)
                 // LATER: add these in later
                 if (registry.try_get<UIBoxComponent>(*uiConfig->object))
                     objectType = "UIBox";
-                else if (registry.try_get<TextSystem::Text>(*uiConfig->object)) 
+                else if (registry.try_get<TextSystem::Text>(*uiConfig->object)) {
                     objectType = "Text";
+                    // print LOC, OFF, and OFF_ALN for text objects
+                    boxStr += fmt::format(" MText({})--[LOC({},{}) OFF({},{}) OFF_ALN({},{}) MSTR({})]",
+                        static_cast<int>(uiConfig->object.value()),
+                        static_cast<int>(objTransform->getActualX()),
+                        static_cast<int>(objTransform->getActualY()),
+                        static_cast<int>(objectRole->offset->x),
+                        static_cast<int>(objectRole->offset->y),
+                        static_cast<int>(objectRole->flags->extraAlignmentFinetuningOffset.x),
+                        static_cast<int>(objectRole->flags->extraAlignmentFinetuningOffset.y),
+                        static_cast<int>(objectRole->master));
+                }
+                    
                 // else if (registry.try_get<Particles>(*uiConfig->object)) objectType = "Particles";
                 // else if (registry.try_get<AnimatedSprite>(*uiConfig->object)) objectType = "AnimatedSprite";
             }
@@ -997,8 +1025,9 @@ namespace ui
         auto *objectTransform = registry.try_get<transform::Transform>(config->object.value());
 
         if (!objectConfig) {
-            SPDLOG_ERROR("Object {} does not exist or is missing components.", static_cast<int>(config->object.value()));
-            return;
+            //FIXME: just emplace once
+            objectConfig = &registry.emplace<UIConfig>(config->object.value());
+            // SPDLOG_ERROR("Object {} does not exist or is missing components.", static_cast<int>(config->object.value()));
         }
 
         // Step 3: Refresh object movement state
@@ -1029,6 +1058,7 @@ namespace ui
             // Assign role
             if (config->role)
             {
+                // this is probably not called usually
                 transform::AssignRole(&registry, config->object.value(), config->role->role_type, config->role->master, config->role->location_bond, config->role->size_bond, config->role->rotation_bond, config->role->scale_bond, config->role->offset);
             }
             else
@@ -1061,7 +1091,9 @@ namespace ui
             }
             else
             {
-                ui::box::RenewAlignment(registry, entity);
+                auto *uiElement = registry.try_get<UIElementComponent>(entity);
+
+                ui::box::RenewAlignment(registry, uiElement->uiBox);
             }
         }
     }

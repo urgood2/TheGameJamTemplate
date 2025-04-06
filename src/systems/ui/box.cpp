@@ -646,7 +646,11 @@ namespace ui
 
             // 1. non - containers - rect, text, and object, always bottom of tree.
             if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT)
-            {
+            { 
+                if (uiConfig.uiType == UITypeEnum::OBJECT) {
+                    // debug
+                    SPDLOG_DEBUG("Processing object entity {} (parent {})", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
+                }
                 auto dimensions = TreeCalcSubNonContainer(registry, entity, parentUINodeRect, forceRecalculateLayout, scale, calcCurrentNodeTransform);
                 SPDLOG_DEBUG("Calculated content size for entity {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
                 // Store content size for this child
@@ -938,11 +942,23 @@ namespace ui
         {
             // debug
             SPDLOG_DEBUG("Placing text entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
+
+            // also apply to text object TODO: apply later to other object ui entities
+            auto object = globals::registry.get<UIConfig>(uiElement).object.value();
+            auto &textRole = globals::registry.get<transform::InheritedProperties>(object);
+            auto &textTransform = globals::registry.get<transform::Transform>(object);
+
+            textRole.offset = {runningTransform.x, runningTransform.y};
+        }
+        else {
+            role.offset = {runningTransform.x, runningTransform.y};
+
+            
         }
         // place at the given location, adding padding.
         // runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding);
         // runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding);
-        role.offset = {runningTransform.x, runningTransform.y};
+        
 
         SPDLOG_DEBUG("Placing entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
@@ -1255,15 +1271,15 @@ namespace ui
         }
         else if (uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::RECT_SHAPE)
         {
-
+            auto object = uiConfig.object.value();
             // // is it text?
-            // if (globals::registry.any_of<TextSystem::Text>(uiElement))
-            // {
-            //     auto &text = globals::registry.get<TextSystem::Text>(uiElement);
-            //     auto &textTransform = globals::registry.get<transform::Transform>(uiElement);
-            //     calcCurrentNodeTransform.w = textTransform.getActualW();
-            //     calcCurrentNodeTransform.h = textTransform.getActualH();
-            // }
+            if (globals::registry.any_of<TextSystem::Text>(object))
+            {
+                auto &text = globals::registry.get<TextSystem::Text>(object);
+                auto &textTransform = globals::registry.get<transform::Transform>(object);
+                calcCurrentNodeTransform.w = textTransform.getActualW();
+                calcCurrentNodeTransform.h = textTransform.getActualH();
+            }
 
             if (uiConfig.maxWidth && calcCurrentNodeTransform.w > uiConfig.maxWidth.value())
             {
@@ -1505,7 +1521,7 @@ namespace ui
             }
         }
 
-        // transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
+        transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
     }
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)

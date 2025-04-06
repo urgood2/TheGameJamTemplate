@@ -402,8 +402,8 @@ namespace game
                                                               .build())
                                                       // .addChild(uiColumnDef)
                                                       .addChild(uiDynamicTextEntry)
-                                                      .addChild(getRandomRectDef())
-                                                      .addChild(uiRowDef)
+                                                    //   .addChild(getRandomRectDef())
+                                                    //   .addChild(uiRowDef)
                                                       .build();
 
         uiBox = ui::box::Initialize(
@@ -552,14 +552,7 @@ namespace game
         layer::AddClearBackground(background, util::getColor("brick_palette_red_resurrect"));
         layer::AddTextPro(background, "Title Scene", GetFontDefault(), 10, 30, {0, 0}, 0, 20, 1, util::getColor("WHITE"), 0);
 
-        util::Profiler transformProfiler("Transform Debug Draw");
-        // do transform debug drawing
-        auto view = globals::registry.view<transform::Transform>();
-        for (auto e : view)
-        {
-            transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
-        }
-        transformProfiler.Stop();
+
 
         util::Profiler uiProfiler("UI Draw");
         // debug draw ui elements (draw ui boxes, will auto-propogate to children)
@@ -568,6 +561,15 @@ namespace game
         {
             ui::box::Draw(ui_layer, globals::registry, e);
         }
+
+        util::Profiler transformProfiler("Transform Debug Draw");
+        // do transform debug drawing
+        auto view = globals::registry.view<transform::Transform>();
+        for (auto e : view)
+        {
+            transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+        }
+        transformProfiler.Stop();
 
         TextSystem::Functions::renderText(textEntity, ui_layer, true);
         uiProfiler.Stop();

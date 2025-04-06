@@ -195,7 +195,7 @@ namespace transform
         enum class Type
         {
             RoleRoot,      // has no master entity, is the root of the hierarchy
-            RoleInheritor, // has a master entity, inherits properties from it such as location, rotation, scale, etc.
+            RoleInheritor, // has a master entity, inherits properties from it such as location, rotation, scale, etc. REVIEW: it looks like inheritors can also have other inheritors that derive from it 
             // TODO: RoleCarbonCopy should probably have springs synced so there is no delay in copying properties
             RoleCarbonCopy,     // copies size, rotation, everything from the master entity, making it look identical
             PermanentAttachment // attaches to the master entity, essentially becoming part of it (think of a badge attached to a playing card or a health bar attached to a player). This ignores sync bonds, but respects alignment and offset.

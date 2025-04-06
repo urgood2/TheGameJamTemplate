@@ -7,6 +7,7 @@
 #include "systems/layer/layer.hpp"
 #include "systems/ui/util.hpp"
 #include "systems/ui/element.hpp"
+#include "systems/text/textVer2.hpp"
 #include "systems/ui/box.hpp"
 
 #include "core/globals.hpp"
@@ -354,9 +355,13 @@ namespace transform
     {
         
         // debug break
-        if (registry->any_of<ui::UIBoxComponent>(e))
+        if (e == static_cast<entt::entity>(7))
         {
-            // SPDLOG_DEBUG("UIBoxComponent found in MoveWithMaster");
+            SPDLOG_DEBUG("Moving Text found in MoveWithMaster");
+
+            auto &text = registry->get<TextSystem::Text>(e);
+
+            SPDLOG_DEBUG("Text: {}", text.rawText);
         }
         
         Vector2 tempRotatedOffset{};
@@ -374,6 +379,8 @@ namespace transform
             return; // no parent to move with
         }
 
+
+        //REVIEW: getmaster allows multi-level master-slave trees.
         auto parentRetVal = GetMaster(registry, e);
         auto parent = parentRetVal.master.value();
         auto &parentTransform = registry->get<Transform>(parent);
@@ -1173,7 +1180,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             if (registry->any_of<ui::UIConfig>(e))
             {
                 auto &uiConfig = registry->get<ui::UIConfig>(e);
-                debugText = fmt::format("{} {}", magic_enum::enum_name<ui::UITypeEnum>(uiConfig.uiType.value()), debugText);
+                debugText = fmt::format("{} {}", magic_enum::enum_name<ui::UITypeEnum>(uiConfig.uiType.value_or(ui::UITypeEnum::NONE)), debugText);
             }
             float textWidth = MeasureText(debugText.c_str(), 15 * scale);
             layer::AddText(layer, debugText, GetFontDefault(), transform.getVisualW() / 2 - textWidth / 2, transform.getVisualH() * 0.05f, WHITE, 15 * scale);

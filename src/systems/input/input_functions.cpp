@@ -1679,7 +1679,9 @@ namespace input {
 
 
     bool IsNodeFocusable(entt::registry &registry, InputState& state, entt::entity entity) {
-
+         
+    
+        //REVIEW: only focus on ui for now (may need to change later)
         if (!registry.any_of<ui::UIConfig>(entity)) {
             return false;
         }
@@ -1698,12 +1700,16 @@ namespace input {
         }
         
         // Check the primary conditions for focusability
-        if (!registry.valid(entity) && !node.state.isUnderOverlay &&
+        auto *uiElementComp = registry.try_get<ui::UIElementComponent>(entity);
+        bool finalCondition = (uiElementComp && registry.valid(uiElementComp->uiBox)) || registry.get<transform::GameObject>(entity).state.visible;
+
+        if (registry.valid(entity) && !node.state.isUnderOverlay &&
             ((node.state.hoverEnabled && !registry.valid(state.cursor_dragging_target)) || (state.cursor_dragging_target == entity)) &&
             ((node.ignoresPause && globals::isGamePaused) || (!node.ignoresPause && !globals::isGamePaused)) &&
-            node.state.visible && (registry.valid(registry.get<ui::UIElementComponent>(entity).uiBox) || registry.get<transform::GameObject>(entity).state.visible)) {
+            node.state.visible && finalCondition) {
 
             // If a screen keyboard is active
+            // If this node is a key in the active screen keyboard and it’s clickable → allow focus.
             if (state.screen_keyboard) {
                 auto uiBox = registry.try_get<ui::UIElementComponent>(entity)->uiBox;
                 auto &uiConfig = registry.get<ui::UIConfig>(entity);
@@ -1717,13 +1723,19 @@ namespace input {
                 // Your code here
 
                 // Check specific configuration flags
+
+                // Always allow focus no matter what.
                 if (uiConfig.force_focus) {
                     return true;
                 }
+                // If it’s a clickable button → allow focus.
                 if (uiConfig.buttonCallback) {
                     return true;
                 }
                 if (uiConfig.focusArgs) {
+                    // type == "none" → explicitly disables focus.
+                    // claim_focus_from → another disqualifier.
+                    // otherwise it’s focusable.
                     if (uiConfig.focusArgs->type == "none" || uiConfig.focusArgs->claim_focus_from) {
                         return false;
                     } else {
@@ -1765,6 +1777,11 @@ namespace input {
             }
         }
 
+        // Debugging. 
+        if (dir && dir.value() == "D") { // debug downward dir
+            SPDLOG_DEBUG("Cursor focused target is {} need to move focus", static_cast<int>(state.cursor_focused_target));
+        }
+
         if (!dir && registry.valid(state.cursor_focused_target)) {
             auto& node = registry.get<transform::GameObject>(state.cursor_focused_target);
             node.state.focusEnabled = true;
@@ -1787,17 +1804,23 @@ namespace input {
         }
         else {
             auto view = registry.view<transform::Transform, transform::GameObject>();
+            int sizeDebug = view.size_hint();
             for (auto moveable_entity : view) {
                 auto& node = registry.get<transform::GameObject>(moveable_entity);
                 node.state.focusEnabled = false;
                 node.state.isBeingFocused = false;
 
                 if (IsNodeFocusable(registry, state, moveable_entity)) {
+                    // SPDLOG_DEBUG("Focusable node found: {}", static_cast<int>(moveable_entity));
                     node.state.focusEnabled = true;
                     FocusEntry entry = {.node = moveable_entity};
                     temporaryListOfPotentiallyFocusableNodes.push_back(entry);
                 }
             }
+        }
+
+        if (dir && dir.value() == "D") { // debug downward dir
+            SPDLOG_DEBUG("Temporary list of potentially focusable nodes size: {}", temporaryListOfPotentiallyFocusableNodes.size());
         }
 
         if (temporaryListOfPotentiallyFocusableNodes.empty() == false) {
@@ -1814,8 +1837,9 @@ namespace input {
                     //LATER: custom focus manipulation logic here for game entities
                 }
                 else {
-                    auto roomTransform = registry.get<transform::Transform>(globals::gameWorldContainerEntity);
-                    state.focus_cursor_pos = {GetMousePosition().x - roomTransform.getActualX(), GetMousePosition().y - roomTransform.getActualY()};
+                    auto &roomTransform = registry.get<transform::Transform>(globals::gameWorldContainerEntity);
+                    auto &cursorTransform = registry.get<transform::Transform>(globals::cursor);
+                    state.focus_cursor_pos = {cursorTransform.getActualX() - roomTransform.getActualX(), cursorTransform.getActualY() - roomTransform.getActualY()};
 
                     // If a node is already focused, use its center point as the reference position.
                     // If the node has a redirect_focus_to target, use that instead.
@@ -1857,12 +1881,31 @@ namespace input {
                                                 ? uiConfig.focusArgs->redirect_focus_to.value()
                                                 : entity.node;
                         auto &targetNodeTransform = registry.get<transform::Transform>(target_node);
+                        auto &targetNodeRole = registry.get<transform::InheritedProperties>(target_node); 
+
+                        Vector2 targetNodePos = {
+                            (targetNodeTransform.getActualX()),
+                            (targetNodeTransform.getActualY())
+                        };
+
+                        // debug
+                        if (targetNodePos.y < 0) {
+                            SPDLOG_DEBUG("Target node position is negative: ({}, {})", targetNodePos.x, targetNodePos.y);
+                        }
 
                         // focus_vec is the vector pointing from the cursor to the center of the node
                         Vector2 focus_vec = {
-                            targetNodeTransform.getActualX() + 0.5f * targetNodeTransform.getActualW() - state.focus_cursor_pos->x,
-                            targetNodeTransform.getActualY() + 0.5f * targetNodeTransform.getActualH() - state.focus_cursor_pos->y
+                            targetNodePos.x + 0.5f * targetNodeTransform.getActualW() - state.focus_cursor_pos->x,
+                            targetNodePos.y + 0.5f * targetNodeTransform.getActualH() - state.focus_cursor_pos->y
                         };
+
+                        if (dir && dir.value() == "D" || dir.value() == "U") { // debug downward dir
+                            SPDLOG_DEBUG("Focusable node found: {}", static_cast<int>(entity.node));
+                            SPDLOG_DEBUG(" -Supplied direction: {}", dir.value());
+                            SPDLOG_DEBUG(" -Focus vector: ({}, {})", focus_vec.x, focus_vec.y);
+                            SPDLOG_DEBUG(" -Target node transform: ({}, {})", targetNodePos.x, targetNodePos.y);
+                            SPDLOG_DEBUG(" -Current focus cursor position: ({}, {})", state.focus_cursor_pos->x, state.focus_cursor_pos->y);
+                        }
 
                         // Determines if the node is within the valid direction using position checks
 
@@ -1889,16 +1932,18 @@ namespace input {
                         }
 
                         if (eligible) {
+                            SPDLOG_DEBUG("Eligible node found: {}", static_cast<int>(entity.node));
                             temporaryListOfFocusedNodes.push_back({.node = entity.node, .dist = std::abs(focus_vec.x) + std::abs(focus_vec.y)});
                         }
 
-                        if (temporaryListOfFocusedNodes.empty()) {
-                            if (registry.valid(state.cursor_focused_target)) {
-                                auto& focused_node = registry.get<transform::GameObject>(state.cursor_focused_target);
-                                focused_node.state.isBeingFocused = true;
-                            }
-                            return;
-                        }
+                        //FIXME: debugging by commenting this out
+                        // if (temporaryListOfFocusedNodes.empty()) {
+                        //     if (registry.valid(state.cursor_focused_target)) {
+                        //         auto& focused_node = registry.get<transform::GameObject>(state.cursor_focused_target);
+                        //         focused_node.state.isBeingFocused = true;
+                        //     }
+                        //     return;
+                        // }
                     } // end for loop
 
                     if (temporaryListOfFocusedNodes.empty()) {

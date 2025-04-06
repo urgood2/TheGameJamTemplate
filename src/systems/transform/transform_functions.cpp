@@ -728,7 +728,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (dynamicMotion->endTime < GetTime())
         {
-            SPDLOG_DEBUG("Dynamic motion ended");
+            // SPDLOG_DEBUG("Dynamic motion ended");
             dynamicMotion = std::nullopt;
             return;
         }

@@ -23,6 +23,9 @@ LATER: (not needed immediately)
 ---
 ### 🖱️ Interaction & Input
 
+- [ ] controller clicks do not work?
+- [ ] focus rects not disappearing when controller plugged in & mouse moves
+
 - [ ] Implement controller focus interactivity (e.g., gamepad navigation). 
     - [ ] funnel_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] funnel_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
@@ -123,3 +126,4 @@ LATER: (not needed immediately)
 - [ ] shadows for sprites using the sprites themselves (grayed out version)
 - [ ] Fix jagged bottom outlines when buttons are scaled down.
 - [ ] Controller input does not work on the mac.
+- [ ] focus menu layers for controller not implemented/tested.

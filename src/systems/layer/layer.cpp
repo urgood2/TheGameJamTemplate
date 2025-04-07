@@ -13,6 +13,7 @@
 #include "core/globals.hpp"
 
 #include "systems/ui/ui_data.hpp"
+#include "systems/shaders/shader_pipeline.hpp"
 
 #include "entt/entt.hpp"
 
@@ -951,7 +952,7 @@ namespace layer
         setLastRenderTarget(front());
     
         // 5. Final draw with transform
-        const auto& transform = registry.get<transform::Transform>(e);
+        auto& transform = registry.get<transform::Transform>(e);
     
         // Where we want the final (padded) texture drawn on screen
         Vector2 drawPos = {

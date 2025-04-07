@@ -95,7 +95,8 @@ LATER: (not needed immediately)
 ---
 
 ## Immediate laters
-
+ 
+- [ ] button presses need to shift down text as well (dynamic text)
 - [ ] Add support for UI element and box alignment to rotation/scale when bound to transforms.
 - [ ] Need to apply individual sprite atlas uv change to every shader that will be used with sprites & create web versions
 - [ ] Fix clicking + dragging not working unless hover is enabled.

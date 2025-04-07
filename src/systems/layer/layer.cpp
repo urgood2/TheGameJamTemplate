@@ -854,6 +854,131 @@ namespace layer
             EndShaderMode();
     }
     
+    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e, Texture2D spriteAtlas) -> void {
+        using namespace shaders;
+        using namespace shader_pipeline;
+    
+        AssertThat(spriteAtlas.id, Is().Not().EqualTo(0));
+    
+        // 1. Fetch animation frame and sprite
+        Rectangle* animationFrame = nullptr;
+        SpriteComponentASCII* currentSprite = nullptr;
+    
+        if (registry.any_of<AnimationQueueComponent>(e)) {
+            auto& aqc = registry.get<AnimationQueueComponent>(e);
+            if (aqc.animationQueue.empty()) {
+                if (!aqc.defaultAnimation.animationList.empty()) {
+                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteFrame;
+                    currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
+                }
+            } else {
+                auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
+                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteFrame;
+                currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
+            }
+        }
+    
+        AssertThat(animationFrame, Is().Not().Null());
+        AssertThat(currentSprite, Is().Not().Null());
+    
+        float baseWidth = animationFrame->width;
+        float baseHeight = animationFrame->height;
+    
+        auto& pipelineComp = registry.get<ShaderPipelineComponent>(e);
+        float pad = pipelineComp.padding;
+    
+        float renderWidth = baseWidth + pad * 2.0f;
+        float renderHeight = baseHeight + pad * 2.0f;
+    
+        AssertThat(renderWidth, IsGreaterThan(0.0f));
+        AssertThat(renderHeight, IsGreaterThan(0.0f));
+    
+        Color bgColor = currentSprite->bgColor;
+        Color fgColor = currentSprite->fgColor;
+        bool drawBackground = !currentSprite->noBackgroundColor;
+        bool drawForeground = !currentSprite->noForegroundColor;
+    
+        // 2. Init pipeline buffer if needed
+        if (!isInitialized() || width < renderWidth || height < renderHeight) {
+            unload();
+            init((int)std::ceil(renderWidth), (int)std::ceil(renderHeight));
+        }
+    
+        // 3. Draw base sprite to ping texture (no transforms!)
+        BeginTextureMode(front());
+        ClearBackground({0, 0, 0, 0});
+    
+        Vector2 drawOffset = { pad, pad };
+    
+        if (drawBackground) {
+            layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, bgColor);
+        }
+    
+        if (drawForeground) {
+            if (animationFrame) {
+                layer::TexturePro(spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+            } else {
+                layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+            }
+        }
+    
+        EndTextureMode();
+    
+        // 4. Apply shader passes
+        const auto* uniformComp = registry.try_get<ShaderUniformComponent>(e);
+    
+        for (const ShaderPass& pass : pipelineComp.passes) {
+            if (!pass.enabled) continue;
+    
+            Shader shader = getShader(pass.shaderName);
+    
+            BeginTextureMode(back());
+            ClearBackground({0, 0, 0, 0});
+    
+            BeginShaderMode(shader);
+            if (uniformComp) {
+                uniformComp->applyToShader(shader, pass.shaderName, e, registry);
+            }
+    
+            DrawTextureRec(front().texture, {0, 0, (float)width, -(float)height}, {0, 0}, WHITE);
+    
+            EndShaderMode();
+            EndTextureMode();
+    
+            swap();
+        }
+    
+        setLastRenderTarget(front());
+    
+        // 5. Final draw with transform
+        const auto& transform = registry.get<transform::Transform>(e);
+    
+        // Where we want the final (padded) texture drawn on screen
+        Vector2 drawPos = {
+            transform.getVisualX() - pad,
+            transform.getVisualY() - pad
+        };
+    
+        // Update for use elsewhere
+        setLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
+    
+        Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight };  // Negative height to flip Y
+        Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
+        Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
+    
+        PushMatrix();
+        Translate(position.x, position.y);
+        Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+        Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+        Translate(-origin.x, -origin.y);
+    
+        DrawTextureRec(front().texture, sourceRect, { 0, 0 }, WHITE);
+    
+        PopMatrix();
+    }
+    
+    
+    
     auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z) -> void
     {
         AddDrawCommand(layer, "draw_transform_entity_animation", {e, registry, spriteAtlas}, z);

@@ -98,9 +98,18 @@ namespace shaders {
     struct ShaderUniformComponent {
         std::unordered_map<std::string, ShaderUniformSet> shaderUniforms;
         
+        // NEW: entity-specific uniform update lambdas, called before rendering each entity
+        std::unordered_map<std::string, std::function<void(Shader&, entt::entity, entt::registry&)>> entityUniformCallbacks;
+
+        
         void set(const std::string& shaderName, const std::string& uniformName, ShaderUniformValue value) {
             shaderUniforms[shaderName].set(uniformName, std::move(value));
             // SPDLOG_DEBUG("Set uniform {} for shader {}", uniformName, shaderName);
+        }
+        
+        // entity-specific uniform update lambdas, called before rendering each entity
+        void registerEntityUniformCallback(const std::string& shaderName, std::function<void(Shader&, entt::entity, entt::registry&)> callback) {
+            entityUniformCallbacks[shaderName] = std::move(callback);
         }
     
         const ShaderUniformSet* getSet(const std::string& shaderName) const {

@@ -98,6 +98,7 @@ namespace layer
         const Rectangle &destRect, const Color &color, Shader shader);
     void DrawCustomLamdaToSpecificCanvas(const std::shared_ptr<Layer> layer, const std::string &canvasName = "main", std::function<void()> drawActions = []() {}); // render whatever is in the function lambda to a specific canvas within a layer object. Note that you should not call any of the AddXXX functions in the lambda, as they will not be rendered to the canvas. Instead, call the AddXXX functions outside of the lambda, then call things like DrawCanvasToCurrentRenderTargetWithTransform() in the actions lambda to render the commands to the canvas.
     auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e, Texture2D spriteAtlas) -> void;
+    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e, Texture2D spriteAtlas) -> void;
 
     // Command helpers - These functions add draw commands to the specified layer
     void AddBeginDrawing(std::shared_ptr<Layer> layer);

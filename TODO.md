@@ -19,6 +19,7 @@ LATER: (not needed immediately)
 ## 🧠 General Design / Architecture
 
 - [ ] Integrate the animated sprites with the UI system (as a UI object/component).
+- [ ] test DrawTransformEntityWithAnimationWithPipeline, add Add~~() version for layer system, also need to try using various shaders with the sprites
 
 ---
 ### 🖱️ Interaction & Input

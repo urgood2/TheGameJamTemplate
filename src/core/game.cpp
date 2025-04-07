@@ -211,9 +211,14 @@ namespace game
         globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-        player = globals::registry.create();
-        auto &anim = factory::emplaceAnimationQueue(globals::registry, player);
-        anim.defaultAnimation = init::getAnimationObject("idle_animation");
+        player = animation_system::createAnimatedObjectWithTransform("idle_animation", 400, 400);
+        auto &playerTransform = globals::registry.get<transform::Transform>(player);
+        auto &playerNode = globals::registry.get<transform::GameObject>(player);
+        playerNode.debug.debugText = "Player";
+        playerNode.state.dragEnabled = true;
+        playerNode.state.hoverEnabled = true;
+        playerNode.state.collisionEnabled = true;
+        playerNode.state.clickEnabled = true;
 
         // massive container the size of the screen
         transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
@@ -583,7 +588,8 @@ namespace game
 
         // we will draw to the sprites layer main canvas, modify it with a shader, then draw it to the screen
         // The reason we do this every frame is to allow position changes to the entities to be reflected in the draw commands
-        layer::AddDrawEntityWithAnimation(sprites, &globals::registry, player, 100 + sin(GetTime()) * 100, 100, globals::spriteAtlas, 0);
+        // layer::AddDrawEntityWithAnimation(sprites, &globals::registry, player, 100 + sin(GetTime()) * 100, 100, globals::spriteAtlas, 0);
+        layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, player, globals::spriteAtlas, 0);
 
         // clear the screen, not any canvas
         // renderer::ClearBackground(loading::getColor("brick_palette_red_resurrect"));

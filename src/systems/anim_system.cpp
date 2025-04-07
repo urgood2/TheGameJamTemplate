@@ -3,8 +3,24 @@
 #include "anim_system.hpp"
 #include "../core/globals.hpp"
 #include "../components/graphics.hpp"
+#include "systems/transform/transform_functions.hpp"
+#include "core/init.hpp"
 
 namespace animation_system {
+    
+    auto createAnimatedObjectWithTransform (std::string defaultAnimationID, int x, int y) -> entt::entity {
+        auto e = globals::registry.create();
+        transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 0, 0, e);
+        auto &transform = globals::registry.get<transform::Transform>(e);
+        auto &animQueue = globals::registry.emplace<AnimationQueueComponent>(e);
+        animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationID);
+        
+        // set width and height to the animation size
+        transform.setActualW(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame.width);
+        transform.setActualH(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame.height);        
+        
+        return e;
+    }
 
     auto update(float delta) -> void {
         auto view = globals::registry.view<AnimationQueueComponent>();

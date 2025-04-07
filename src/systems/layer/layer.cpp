@@ -487,6 +487,13 @@ namespace layer
                 Texture2D spriteAtlas = std::get<Texture2D>(command.args[4]);
                 layer::DrawEntityWithAnimation(*registry, e, x, y, spriteAtlas);
             }
+            else if (command.type == "draw_transform_entity_animation") {
+                AssertThat(command.args.size(), Equals(3)); // Validate number of arguments
+                entt::entity e = std::get<entt::entity>(command.args[0]);
+                entt::registry *registry = std::get<entt::registry *>(command.args[1]);
+                Texture2D spriteAtlas = std::get<Texture2D>(command.args[2]);
+                layer::DrawTransformEntityWithAnimation(*registry, e,spriteAtlas);
+            }
 
             // Shader Commands
             else if (command.type == "set_shader")
@@ -845,6 +852,120 @@ namespace layer
 
         if (shader.id != 0)
             EndShaderMode();
+    }
+    
+    auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z) -> void
+    {
+        AddDrawCommand(layer, "draw_transform_entity_animation", {e, registry, spriteAtlas}, z);
+    }
+    
+    auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e, Texture2D spriteAtlas) -> void {
+        
+        // Fetch the animation frame if the entity has an animation queue
+        Rectangle *animationFrame = nullptr;
+        SpriteComponentASCII *currentSprite = nullptr;
+
+        if (registry.any_of<AnimationQueueComponent>(e))
+        {
+            auto &aqc = registry.get<AnimationQueueComponent>(e);
+
+            // Use the current animation frame or the default frame
+            if (aqc.animationQueue.empty())
+            {
+                if (!aqc.defaultAnimation.animationList.empty())
+                {
+                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteFrame;
+                    currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
+                }
+            }
+            else
+            {
+                auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
+                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteFrame;
+                currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
+            }
+        }
+
+        using namespace snowhouse;
+        AssertThat(spriteAtlas.id, Is().Not().EqualTo(0));
+
+        AssertThat(animationFrame, Is().Not().Null());
+        AssertThat(currentSprite, Is().Not().Null());
+
+        float renderWidth = animationFrame->width;
+        float renderHeight = animationFrame->height;
+        AssertThat(renderWidth, IsGreaterThan(0.0f));
+        AssertThat(renderHeight, IsGreaterThan(0.0f));
+
+        // Check if the entity has colors (fg/bg)
+        Color bgColor = Color{0, 0, 0, 0}; // Default to fully transparent
+        Color fgColor = WHITE;             // Default foreground color
+        bool drawBackground = false;
+        bool drawForeground = true;
+
+        if (currentSprite)
+        {
+            bgColor = currentSprite->bgColor;
+            fgColor = currentSprite->fgColor;
+            drawBackground = !currentSprite->noBackgroundColor;
+            drawForeground = !currentSprite->noForegroundColor;
+        }
+        
+        // fetch transform
+        auto &transform = registry.get<transform::Transform>(e);
+        
+        PushMatrix();
+        
+        Translate(transform.getVisualX() + transform.getVisualW() * 0.5, transform.getVisualY() + transform.getVisualH() * 0.5);
+
+        Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+
+        Rotate(transform.getVisualR() + transform.rotationOffset);
+
+        Translate(-transform.getVisualW() * 0.5, -transform.getVisualH() * 0.5);
+
+        // TODO: draw shadow based on shadow displacement
+        // if (node.shadowDisplacement)
+        // {
+        //     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        //     float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
+
+        //     // Adjust displacement using shadow height
+        //     float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+        //     float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+
+        //     // Translate to shadow position
+        //     layer::AddTranslate(layer, -shadowOffsetX, shadowOffsetY);
+
+        //     // Draw shadow outline
+        //     // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
+        //     layer::AddRectanglePro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, Fade(BLACK, 0.7f));
+
+        //     // Reset translation to original position
+        //     layer::AddTranslate(layer, shadowOffsetX, -shadowOffsetY);
+        // }
+        
+        // Draw background rectangle if enabled
+        if (drawBackground)
+        {
+            layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0, {bgColor.r, bgColor.g, bgColor.b, bgColor.a});
+        }
+
+        // Draw the animation frame or a default rectangle if no animation is present
+        if (drawForeground)
+        {
+            if (animationFrame)
+            {
+                layer::TexturePro(spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height}, 0, 0, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+            }
+            else
+            {
+                layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+            }
+        }
+
+        PopMatrix();
+        
     }
     
     auto AddDrawEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int x, int y, Texture2D spriteAtlas, int z) -> void

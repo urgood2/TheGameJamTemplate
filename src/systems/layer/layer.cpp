@@ -1050,13 +1050,14 @@ namespace layer
         // fetch transform
         auto &transform = registry.get<transform::Transform>(e);
         
+        
         PushMatrix();
         
         Translate(transform.getVisualX() + transform.getVisualW() * 0.5, transform.getVisualY() + transform.getVisualH() * 0.5);
 
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
 
-        Rotate(transform.getVisualR() + transform.rotationOffset);
+        Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
 
         Translate(-transform.getVisualW() * 0.5, -transform.getVisualH() * 0.5);
 

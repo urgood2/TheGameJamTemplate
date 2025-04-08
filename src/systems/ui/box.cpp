@@ -941,31 +941,34 @@ namespace ui
     {
         auto object = globals::registry.get<UIConfig>(uiElement).object.value_or(entt::null);
         //REVIEW: why is the ui element checked? shouldn't the object be checked?
-        if (globals::registry.any_of<TextSystem::Text>(uiElement))
-        {
-            // debug
-            SPDLOG_DEBUG("Placing text entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
+        // if (globals::registry.any_of<TextSystem::Text>(uiElement))
+        // {
+        //     // debug
+        //     SPDLOG_DEBUG("Placing text entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
-            // also apply to text object TODO: apply later to other object ui entities
-            auto object = globals::registry.get<UIConfig>(uiElement).object.value();
-            auto &textRole = globals::registry.get<transform::InheritedProperties>(object);
-            auto &textTransform = globals::registry.get<transform::Transform>(object);
+        //     // also apply to text object TODO: apply later to other object ui entities
+        //     auto object = globals::registry.get<UIConfig>(uiElement).object.value();
+        //     auto &textRole = globals::registry.get<transform::InheritedProperties>(object);
+        //     auto &textTransform = globals::registry.get<transform::Transform>(object);
 
-            textRole.offset = {runningTransform.x, runningTransform.y};
-        }
-        else if (object != entt::null && globals::registry.any_of<AnimationQueueComponent>(object))
-        {
-            // debug
-            SPDLOG_DEBUG("Placing animated entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
+        //     textRole.offset = {runningTransform.x, runningTransform.y};
+        // }
+        // else if (object != entt::null && globals::registry.any_of<AnimationQueueComponent>(object))
+        // {
+        //     // debug
+        //     SPDLOG_DEBUG("Placing animated entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
-            // also apply to animated object TODO: apply later to other object ui entities
-            auto object = globals::registry.get<UIConfig>(uiElement).object.value();
-            auto &animationRole = globals::registry.get<transform::InheritedProperties>(object);
-            auto &animationTransform = globals::registry.get<transform::Transform>(object);
+        //     // also apply to animated object TODO: apply later to other object ui entities
+        //     auto object = globals::registry.get<UIConfig>(uiElement).object.value();
+        //     auto &animationRole = globals::registry.get<transform::InheritedProperties>(object);
+        //     auto &animationTransform = globals::registry.get<transform::Transform>(object);
 
-            animationRole.offset = {runningTransform.x, runningTransform.y};
-        }
-        role.offset = {runningTransform.x, runningTransform.y};
+        //     animationRole.offset = {runningTransform.x, runningTransform.y};
+        // }
+        // else {
+            role.offset = {runningTransform.x, runningTransform.y};
+        // }
+        
 
         // place at the given location, adding padding.
         // runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding);

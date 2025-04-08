@@ -66,6 +66,8 @@ namespace shaders {
         }
     };
 
+    extern auto ApplyUniformsToShader(Shader shader, const ShaderUniformSet& set) -> void;
+
     // attach this to a sprite entity, for example
     /**
      * @struct ShaderUniformComponent
@@ -117,9 +119,22 @@ namespace shaders {
             // SPDLOG_DEBUG("Get uniform set for shader {}", shaderName);
             return it != shaderUniforms.end() ? &it->second : nullptr;
         }
+
+        void applyToShaderForEntity(Shader& shader, const std::string& shaderName, entt::entity e, entt::registry& registry) {
+            // Apply static uniform set (if any)
+            if (const ShaderUniformSet* uniformSet = getSet(shaderName)) {
+                shaders::ApplyUniformsToShader(shader, *uniformSet);
+            }
+        
+            // Call per-entity uniform lambda if registered
+            auto it = entityUniformCallbacks.find(shaderName);
+            if (it != entityUniformCallbacks.end()) {
+                it->second(shader, e, registry);
+            }
+        }
     };
 
-    extern auto ApplyUniformsToShader(Shader shader, const ShaderUniformSet& set) -> void;
+    
 
     inline void TryApplyUniforms(Shader shader, const ShaderUniformComponent& component, const std::string& shaderName) {
         if (const auto* uniformSet = component.getSet(shaderName)) {

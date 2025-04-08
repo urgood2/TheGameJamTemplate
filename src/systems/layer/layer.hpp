@@ -75,6 +75,8 @@ namespace layer
                                                       const Color &color = WHITE,
                                                       Shader shader = {},
                                                       bool flat = false); // render a layer's given canvas to the screen, or whatever target is in use.
+    
+    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e, Texture2D spriteAtlas) -> void;
     void DrawCanvasOntoOtherLayer(
         const std::shared_ptr<Layer> &srcLayer,
         const std::string &srcCanvasName,
@@ -138,6 +140,7 @@ namespace layer
     void AddSetRLTexture(std::shared_ptr<Layer> layer, Texture2D texture, int z);
     void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color, int z = 0);
     void AddRenderRectVerticlesOutlineLayer(std::shared_ptr<Layer> layer, entt::entity cacheEntity, const Color color, bool useFull, int z = 0);
+    auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z = 0) -> void;
 
     // Command management - These functions add, remove, and sort draw commands, usually used internally
     void SortDrawCommands(std::shared_ptr<Layer> layer);

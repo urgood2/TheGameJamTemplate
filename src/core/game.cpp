@@ -335,6 +335,15 @@ namespace game
                                                             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
                                                     .build();
+        ui::UIElementTemplateNode uiAnimatedSpriteEntry = ui::UIElementTemplateNode::Builder::create()
+                                                    .addType(ui::UITypeEnum::OBJECT)
+                                                    .addConfig(
+                                                        ui::UIConfig::Builder::create()
+                                                            .addColor(WHITE)
+                                                            .addObject(player)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .build())
+                                                    .build();
         ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
                                                              .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
                                                              .addConfig(
@@ -412,9 +421,10 @@ namespace game
                                                               .build())
                                                       // .addChild(uiColumnDef)
                                                     //   .addChild(uiDynamicTextEntry)
-                                                      .addChild(getRandomRectDef())
-                                                      .addChild(uiRowDef)
-                                                      .build();
+                                                    //   .addChild(getRandomRectDef())
+                                                        .addChild(uiAnimatedSpriteEntry)
+                                                        .addChild(uiRowDef)
+                                                        .build();
 
         uiBox = ui::box::Initialize(
             globals::registry,
@@ -582,6 +592,7 @@ namespace game
         transformProfiler.Stop();
 
         TextSystem::Functions::renderText(textEntity, ui_layer, true);
+        layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
         uiProfiler.Stop();
 
         particle::DrawParticles(globals::registry, ui_layer);
@@ -589,15 +600,15 @@ namespace game
         // we will draw to the sprites layer main canvas, modify it with a shader, then draw it to the screen
         // The reason we do this every frame is to allow position changes to the entities to be reflected in the draw commands
         // layer::AddDrawEntityWithAnimation(sprites, &globals::registry, player, 100 + sin(GetTime()) * 100, 100, globals::spriteAtlas, 0);
-        layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, player, globals::spriteAtlas, 0);
+        // layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, player, globals::spriteAtlas, 0);
 
         // clear the screen, not any canvas
         // renderer::ClearBackground(loading::getColor("brick_palette_red_resurrect"));
 
         util::Profiler drawProfiler("Draw Layers");
         layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr);  // render the background layer commands to its main canvas
-        layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
         layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
+        layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
         layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
 
         layer::Push(&globals::camera2D);
@@ -639,9 +650,11 @@ namespace game
         // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
         layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
 
+        
+        layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
+
         layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 
-        layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
 
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(ui_layer, "main", 0, 0, 0, 1, 1, WHITE);
 

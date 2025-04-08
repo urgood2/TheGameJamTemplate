@@ -388,8 +388,7 @@ namespace transform
         auto *parentRole = registry->try_get<InheritedProperties>(parent);
 
         // FIXME: hacky fix: if this is a ui element's object, we need to use the immediate master
-        
-        bool isUIElementObject = registry->any_of<TextSystem::Text>(e);
+        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent>(e);
 
         if (isUIElementObject) //FIXME: is this enough?
         {

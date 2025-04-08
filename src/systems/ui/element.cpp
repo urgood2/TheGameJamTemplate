@@ -408,7 +408,7 @@ namespace ui
                 else if (registry.try_get<TextSystem::Text>(*uiConfig->object)) {
                     objectType = "Text";
                     // print LOC, OFF, and OFF_ALN for text objects
-                    boxStr += fmt::format(" MText({})--[LOC({},{}) OFF({},{}) OFF_ALN({},{}) MSTR({})]",
+                    boxStr += fmt::format(" MovingText({})--[LOC({},{}) OFF({},{}) OFF_ALN({},{}) MSTR({})]",
                         static_cast<int>(uiConfig->object.value()),
                         static_cast<int>(objTransform->getActualX()),
                         static_cast<int>(objTransform->getActualY()),
@@ -418,6 +418,20 @@ namespace ui
                         static_cast<int>(objectRole->flags->extraAlignmentFinetuningOffset.y),
                         static_cast<int>(objectRole->master));
                 }
+                else if (registry.try_get<AnimationQueueComponent>(*uiConfig->object)) {
+                    objectType = "AnimatedSprite";
+                    // print LOC, OFF, and OFF_ALN for animated sprite objects
+                    boxStr += fmt::format(" AnimQueue({})--[LOC({},{}) OFF({},{}) OFF_ALN({},{}) MSTR({})]",
+                        static_cast<int>(uiConfig->object.value()),
+                        static_cast<int>(objTransform->getActualX()),
+                        static_cast<int>(objTransform->getActualY()),
+                        static_cast<int>(objectRole->offset->x),
+                        static_cast<int>(objectRole->offset->y),
+                        static_cast<int>(objectRole->flags->extraAlignmentFinetuningOffset.x),
+                        static_cast<int>(objectRole->flags->extraAlignmentFinetuningOffset.y),
+                        static_cast<int>(objectRole->master));
+                }
+                
                     
                 // else if (registry.try_get<Particles>(*uiConfig->object)) objectType = "Particles";
                 // else if (registry.try_get<AnimatedSprite>(*uiConfig->object)) objectType = "AnimatedSprite";

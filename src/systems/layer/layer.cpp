@@ -495,7 +495,13 @@ namespace layer
                 Texture2D spriteAtlas = std::get<Texture2D>(command.args[2]);
                 layer::DrawTransformEntityWithAnimation(*registry, e,spriteAtlas);
             }
-
+            else if (command.type == "draw_transform_entity_animation_pipeline") {
+                AssertThat(command.args.size(), Equals(3)); // Validate number of arguments
+                entt::entity e = std::get<entt::entity>(command.args[0]);
+                entt::registry *registry = std::get<entt::registry *>(command.args[1]);
+                Texture2D spriteAtlas = std::get<Texture2D>(command.args[2]);
+                layer::DrawTransformEntityWithAnimationWithPipeline(*registry, e, spriteAtlas);
+            }
             // Shader Commands
             else if (command.type == "set_shader")
             {
@@ -854,6 +860,10 @@ namespace layer
         if (shader.id != 0)
             EndShaderMode();
     }
+
+    auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z) -> void {
+        AddDrawCommand(layer, "draw_transform_entity_animation_pipeline", {e, registry, spriteAtlas}, z);
+    }
     
     auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e, Texture2D spriteAtlas) -> void {
         using namespace shaders;
@@ -926,9 +936,9 @@ namespace layer
         EndTextureMode();
     
         // 4. Apply shader passes
-        const auto* uniformComp = registry.try_get<ShaderUniformComponent>(e);
+        auto* uniformComp = registry.try_get<ShaderUniformComponent>(e);
     
-        for (const ShaderPass& pass : pipelineComp.passes) {
+        for (ShaderPass& pass : pipelineComp.passes) {
             if (!pass.enabled) continue;
     
             Shader shader = getShader(pass.shaderName);
@@ -938,7 +948,7 @@ namespace layer
     
             BeginShaderMode(shader);
             if (uniformComp) {
-                uniformComp->applyToShader(shader, pass.shaderName, e, registry);
+                uniformComp->applyToShaderForEntity(shader, pass.shaderName, e, registry);
             }
     
             DrawTextureRec(front().texture, {0, 0, (float)width, -(float)height}, {0, 0}, WHITE);

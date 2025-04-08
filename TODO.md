@@ -19,7 +19,7 @@ LATER: (not needed immediately)
 ## 🧠 General Design / Architecture
 
 - [ ] Integrate the animated sprites with the UI system (as a UI object/component).
-- [ ] test DrawTransformEntityWithAnimationWithPipeline, add Add~~() version for layer system, also need to try using various shaders with the sprites
+- [ ] How to make objects attached to ui windows behave like cards in balatro?
 
 ---
 ### 🖱️ Interaction & Input
@@ -95,7 +95,8 @@ LATER: (not needed immediately)
 ---
 
 ## Immediate laters
- 
+- [ ] AddDrawTransformEntityWithAnimationWithPipeline needs to be tested.
+- [ ] Some shaders, simple ones, which can be layered fro sprites and serve as a backbone for other additions later on. (drop shadow, holoram, 3d skew, sheen)
 - [ ] button presses need to shift down text as well (dynamic text)
 - [ ] Add support for UI element and box alignment to rotation/scale when bound to transforms.
 - [ ] Need to apply individual sprite atlas uv change to every shader that will be used with sprites & create web versions

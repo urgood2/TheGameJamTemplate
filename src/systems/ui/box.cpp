@@ -1,6 +1,7 @@
 #include "box.hpp"
 
 #include "systems/text/textVer2.hpp"
+#include "components/graphics.hpp"
 
 namespace ui
 {
@@ -938,6 +939,8 @@ namespace ui
 
     void box::placeNonContainerUIE(transform::InheritedProperties &role, ui::LocalTransform &runningTransform, entt::entity uiElement, ui::UITypeEnum parentType, ui::UIState &uiState, ui::UIConfig &uiConfig)
     {
+        auto object = globals::registry.get<UIConfig>(uiElement).object.value_or(entt::null);
+        //REVIEW: why is the ui element checked? shouldn't the object be checked?
         if (globals::registry.any_of<TextSystem::Text>(uiElement))
         {
             // debug
@@ -950,11 +953,20 @@ namespace ui
 
             textRole.offset = {runningTransform.x, runningTransform.y};
         }
-        else {
-            role.offset = {runningTransform.x, runningTransform.y};
+        else if (object != entt::null && globals::registry.any_of<AnimationQueueComponent>(object))
+        {
+            // debug
+            SPDLOG_DEBUG("Placing animated entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
-            
+            // also apply to animated object TODO: apply later to other object ui entities
+            auto object = globals::registry.get<UIConfig>(uiElement).object.value();
+            auto &animationRole = globals::registry.get<transform::InheritedProperties>(object);
+            auto &animationTransform = globals::registry.get<transform::Transform>(object);
+
+            animationRole.offset = {runningTransform.x, runningTransform.y};
         }
+        role.offset = {runningTransform.x, runningTransform.y};
+
         // place at the given location, adding padding.
         // runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding);
         // runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding);
@@ -1281,6 +1293,14 @@ namespace ui
                     auto &textTransform = globals::registry.get<transform::Transform>(object);
                     calcCurrentNodeTransform.w = textTransform.getActualW();
                     calcCurrentNodeTransform.h = textTransform.getActualH();
+                }
+                // is it animated sprite?
+                else if (globals::registry.any_of<AnimationQueueComponent>(object))
+                {
+                    auto &anim = globals::registry.get<AnimationQueueComponent>(object);
+                    auto &animTransform = globals::registry.get<transform::Transform>(object);
+                    calcCurrentNodeTransform.w = animTransform.getActualW();
+                    calcCurrentNodeTransform.h = animTransform.getActualH();
                 }
             }
             

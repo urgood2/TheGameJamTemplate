@@ -20,6 +20,8 @@ LATER: (not needed immediately)
 
 - [ ] Integrate the animated sprites with the UI system (as a UI object/component).
 - [ ] How to make objects attached to ui windows behave like cards in balatro?
+- [ ] simple lighting shader with normal maps
+- [ ] Card area-type ui for draggable objects
 
 ---
 ### 🖱️ Interaction & Input

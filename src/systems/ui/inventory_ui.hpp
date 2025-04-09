@@ -11,9 +11,9 @@ namespace ui {
     struct InventoryGrid {
         int columns = 5;
         int rows = 3;
-        // padding comes from uiConfig
         float cellW = 1.0f;
         float cellH = 1.0f;
+        float padding = 5.0f; // padding between slots
     
         std::vector<entt::entity> slots;
     
@@ -38,13 +38,10 @@ namespace ui {
         inventoryGrid.rows = rows;
         inventoryGrid.cellW = cellW;
         inventoryGrid.cellH = cellH;
+        inventoryGrid.padding = padding;
         inventoryGrid.containerEntity = worldContainer;
         inventoryGrid.slots.resize(rows * columns);
         
-        // init grid with entt::null
-        for (int i = 0; i < rows * columns; ++i) {
-            inventoryGrid.slots[i] = entt::null;
-        }
         
         // populate with some dummy items
         
@@ -56,6 +53,50 @@ namespace ui {
             itemGameObject.state.dragEnabled = true;
             itemGameObject.state.hoverEnabled = true;
             itemGameObject.state.collisionEnabled = true;
+            
+            // add detection on drag release
+            itemGameObject.methods->onRelease = [newAreaEntity, itemEntity](entt::registry &registry, entt::entity entity, entt::entity entity2) { // REVIEW: not sure what the second one is?
+                
+                SPDLOG_DEBUG("Item {} released in inventory", static_cast<int>(itemEntity));
+                
+                auto &gridTransform = registry.get<transform::Transform>(newAreaEntity);
+                auto &grid = registry.get<InventoryGrid>(newAreaEntity);
+                
+                // check all items
+                float baseX = gridTransform.getVisualX();
+                float baseY = gridTransform.getVisualY();
+                
+                entt::entity hoveredSlotEntity = entt::null;
+                entt::entity originSlotEntity = entt::null;
+
+                for (int i = 0; i < grid.rows * grid.columns; ++i) {
+                    auto slotEntity = grid.slots[i];
+                    auto& slot = registry.get<ui::InventorySlot>(slotEntity);
+                    if (!registry.valid(slotEntity)) continue;
+                    
+                    if (slotEntity == itemEntity) {
+                        originSlotEntity = grid.slots[i];
+                    }
+                    
+                    float x = baseX + grid.padding + slot.col * (grid.cellW + grid.padding);
+                    float y = baseY + grid.padding + slot.row * (grid.cellH + grid.padding);
+                    Rectangle slotRect = { x, y, grid.cellW, grid.cellH };
+
+                    if (CheckCollisionPointRec(GetMousePosition(), slotRect)) {
+                        hoveredSlotEntity = slotEntity;
+                    }
+                }
+                
+                if (hoveredSlotEntity != entt::null && hoveredSlotEntity != originSlotEntity) {
+                    auto& originSlot = registry.get<ui::InventorySlot>(originSlotEntity);
+                    auto& targetSlot = registry.get<ui::InventorySlot>(hoveredSlotEntity);
+            
+                    // Swap the item entities
+                    std::swap(originSlot.itemEntity, targetSlot.itemEntity);
+                }
+            
+                
+            };
         
             inventoryGrid.slots[i] = registry.create();
             auto &slot = registry.emplace<ui::InventorySlot>(inventoryGrid.slots[i]);
@@ -103,17 +144,7 @@ namespace ui {
             }
         };
         
-        
-        
-        // add custom update function to align each entity to the grid, provided it isn't being dragged
-        
-        
-        
-        // auto &slotTransform = registry.get<transform::Transform>(itemEntity);
-        // slotTransform.setPosition(
-        //     padding + slot.col * (cellW + padding),
-        //     padding + slot.row * (cellH + padding)
-        // );
+    
 
         
         return newAreaEntity;

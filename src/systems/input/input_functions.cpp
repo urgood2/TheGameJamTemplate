@@ -345,7 +345,7 @@ namespace input {
                 if (registry.any_of<ui::UIElementComponent>(inputState.cursor_released_on_target)) {
                     auto &uiElement = registry.get<ui::UIElementComponent>(inputState.cursor_released_on_target);
                     ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
-                }else if (releasedOnTargetNode.methods->onStopHover) releasedOnTargetNode.methods->onStopHover(registry, inputState.cursor_released_on_target);
+                } else if (releasedOnTargetNode.methods->onStopHover) releasedOnTargetNode.methods->onStopHover(registry, inputState.cursor_released_on_target);
                 
                 inputState.current_designated_hover_target = entt::null;                
             }
@@ -354,7 +354,8 @@ namespace input {
                 auto &uiElement = registry.get<ui::UIElementComponent>(inputState.cursor_released_on_target);
                 ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
             }
-            else if (releasedOnTargetNode.methods->onRelease) {
+            //TODO: onrelease not being called
+            if (releasedOnTargetNode.methods->onRelease) {
                 releasedOnTargetNode.methods->onRelease(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
             }
             inputState.cursor_released_on_handled = true;

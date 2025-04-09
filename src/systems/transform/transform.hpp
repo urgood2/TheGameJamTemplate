@@ -166,7 +166,7 @@ namespace transform
             bool dragEnabled = false;    // set to true if the entity can be dragged
             bool isBeingDragged = false; // set to true if the entity is currently being dragged
 
-            bool triggerOnReleaseEnabled = false; // set to true if the entity handles being released (mouse button release)
+            bool triggerOnReleaseEnabled = true; // set to true if the entity handles being released (mouse button release)
             bool isTriggeringOnRelease = false;   // set to true if the entity is currently being released
 
             bool isUnderOverlay = false; // set to true if the entity is under an overlay, in the DrawBoundingBoxAndDebugInfo method for node.

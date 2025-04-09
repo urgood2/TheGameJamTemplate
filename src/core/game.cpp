@@ -23,6 +23,7 @@
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/text/textVer2.hpp"
 #include "../systems/ui/common_definitions.hpp"
+#include "../systems/ui/inventory_ui.hpp"
 #include "rlgl.h"
 
 using std::pair;
@@ -78,6 +79,7 @@ entt::entity uiBox{entt::null};
 entt::entity hoverPopupUIBox{entt::null};
 entt::entity dragPopupUIBox{entt::null};
 entt::entity alertUIBox{entt::null};
+entt::entity testInventory{entt::null};
 
 float transitionShaderPositionVar = 0.f;
 
@@ -132,6 +134,16 @@ namespace game
     // specific to a game project
     auto init() -> void
     {
+        testInventory = ui::createNewObjectArea(
+            globals::registry,
+            globals::gameWorldContainerEntity,
+            2,
+            2,
+            50.f,
+            50.f);
+        auto &testInventoryTransform = globals::registry.get<transform::Transform>(testInventory);
+        testInventoryTransform.setActualX(300);
+        testInventoryTransform.setActualY(300);
 
         // load font
         // globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
@@ -589,6 +601,10 @@ namespace game
         {
             transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
         }
+        
+        // draw object area
+        auto &objectArea = globals::registry.get<transform::GameObject>(testInventory);
+        objectArea.drawFunction(ui_layer, globals::registry, testInventory);
         transformProfiler.Stop();
 
         TextSystem::Functions::renderText(textEntity, ui_layer, true);

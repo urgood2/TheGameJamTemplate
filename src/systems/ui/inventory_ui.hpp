@@ -74,7 +74,7 @@ namespace ui {
                     auto& slot = registry.get<ui::InventorySlot>(slotEntity);
                     if (!registry.valid(slotEntity)) continue;
                     
-                    if (slotEntity == itemEntity) {
+                    if (slot.itemEntity == itemEntity) {
                         originSlotEntity = grid.slots[i];
                     }
                     

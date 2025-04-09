@@ -231,6 +231,16 @@ namespace input {
         
         // cursor has been released, but not handled yet.
         if (inputState.cursor_up_handled == false) {
+            
+            auto *cursorUpTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_up_target);
+                    
+            // or was dragging something else?
+            if (registry.valid(inputState.cursor_prev_dragging_target) && registry.valid(inputState.cursor_up_target) && cursorUpTargetNode->state.triggerOnReleaseEnabled) {
+                inputState.cursor_released_on_target = inputState.cursor_up_target;
+                //TODO: change these anmes to be more intuitive
+                inputState.cursor_released_on_handled = false;
+            }
+            
             // if dragging, stop dragging
             if (registry.valid(inputState.cursor_dragging_target)) {
                 SPDLOG_DEBUG("Stop dragging");
@@ -240,6 +250,8 @@ namespace input {
                 downTargetNode.state.isBeingDragged = false;
                 inputState.cursor_dragging_target = entt::null;
             }
+            
+            
             
             // cursor released in same location as cursor press and within cursor timeout
             //TODO: de-nest this horrible code
@@ -259,14 +271,7 @@ namespace input {
                         }
                     }
                     
-                    auto *cursorUpTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_up_target);
                     
-                    // or was dragging something else?
-                    if (registry.valid(inputState.cursor_prev_dragging_target) && registry.valid(inputState.cursor_up_target) && cursorUpTargetNode->state.triggerOnReleaseEnabled) {
-                        inputState.cursor_released_on_target = inputState.cursor_up_target;
-                        //TODO: change these anmes to be more intuitive
-                        inputState.cursor_released_on_handled = false;
-                    }
                 }
             }
             inputState.cursor_up_handled = true; // finish handling cursor up

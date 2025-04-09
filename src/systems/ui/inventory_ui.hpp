@@ -56,6 +56,7 @@ namespace ui {
             
             // add detection on drag release
             itemGameObject.methods->onRelease = [newAreaEntity, itemEntity](entt::registry &registry, entt::entity entity, entt::entity entity2) { // REVIEW: not sure what the second one is?
+
                 
                 SPDLOG_DEBUG("Item {} released in inventory", static_cast<int>(itemEntity));
                 
@@ -111,6 +112,8 @@ namespace ui {
         auto &gameObjectArea = registry.get<transform::GameObject>(newAreaEntity);
         gameObjectArea.drawFunction = [areaWidth, areaHeight, cellW, cellH, rows, columns, padding](std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) {
             auto &transform = registry.get<transform::Transform>(entity);
+            
+            //TODO: only draw in debug mode
         
             float baseX = transform.getVisualX();
             float baseY = transform.getVisualY();
@@ -143,9 +146,6 @@ namespace ui {
     
             }
         };
-        
-    
-
         
         return newAreaEntity;
     }

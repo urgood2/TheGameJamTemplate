@@ -130,6 +130,22 @@ namespace game
         // TODO: how to chain timer calls optionally in a queue
     }
 
+    ui::UIElementTemplateNode getNewTextEntry(std::string text, entt::entity transformEntity, std::string refComponent, std::string refValue) {
+        return ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::TEXT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    .addText("Hello, world!")
+                    .addShadow(true)
+                    .addRefEntity(transformEntity)
+                    .addRefComponent("Tooltip")
+                    .addRefValue("title")
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+    }
+
     // perform game-specific initialization here. This makes it easier to find all the initialization code
     // specific to a game project
     auto init() -> void
@@ -356,6 +372,30 @@ namespace game
                                                             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
                                                     .build();
+        ui::UIElementTemplateNode uiTestInventoryEntry = ui::UIElementTemplateNode::Builder::create()
+                                                    .addType(ui::UITypeEnum::OBJECT)
+                                                    .addConfig(
+                                                        ui::UIConfig::Builder::create()
+                                                            .addColor(WHITE)
+                                                            .addObject(testInventory)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .build())
+                                                    .build();
+        ui::UIElementTemplateNode uiTestInventoryColumn = ui::UIElementTemplateNode::Builder::create()
+                                                    .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+                                                    .addConfig(
+                                                        ui::UIConfig::Builder::create()
+                                                            .addColor(YELLOW)
+                                                            .addEmboss(2.f)
+                                                            .addOutlineColor(BLUE)
+                                                            // .addOutlineThickness(5.0f)
+                                                            // .addMinWidth(500.f)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .build())
+                                                    .addChild(getRandomRectDef())
+                                                    .addChild(getRandomRectDef())
+                                                    .addChild(uiTestInventoryEntry)
+                                                    .build();
         ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
                                                              .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
                                                              .addConfig(
@@ -435,6 +475,7 @@ namespace game
                                                     //   .addChild(uiDynamicTextEntry)
                                                     //   .addChild(getRandomRectDef())
                                                         .addChild(uiAnimatedSpriteEntry)
+                                                        .addChild(uiTestInventoryEntry)
                                                         .addChild(uiRowDef)
                                                         .build();
 

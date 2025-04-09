@@ -9,6 +9,7 @@
 #include "systems/ui/element.hpp"
 #include "systems/text/textVer2.hpp"
 #include "systems/ui/box.hpp"
+#include "systems/ui/inventory_ui.hpp"
 
 #include "core/globals.hpp"
 
@@ -354,16 +355,6 @@ namespace transform
     auto MoveWithMaster(entt::registry *registry, entt::entity e, float dt) -> void
     {
         
-        // debug break
-        if (e == static_cast<entt::entity>(7))
-        {
-            // SPDLOG_DEBUG("Moving Text found in MoveWithMaster");
-
-            auto &text = registry->get<TextSystem::Text>(e);
-
-            // SPDLOG_DEBUG("Text: {}", text.rawText);
-        }
-        
         Vector2 tempRotatedOffset{};
         Vector2 tempIntermediateOffsets{};
         float tempAngleCos = 0.0f;
@@ -387,8 +378,8 @@ namespace transform
         auto *parentTransform = registry->try_get<Transform>(parent);
         auto *parentRole = registry->try_get<InheritedProperties>(parent);
 
-        // FIXME: hacky fix: if this is a ui element's object, we need to use the immediate master
-        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent>(e);
+        // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
+        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 
         if (isUIElementObject) //FIXME: is this enough?
         {

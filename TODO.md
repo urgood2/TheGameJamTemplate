@@ -18,9 +18,10 @@ LATER: (not needed immediately)
 
 ## 🧠 General Design / Architecture
 
-- [ ] Integrate the animated sprites with the UI system (as a UI object/component).
 - [ ] How to make objects attached to ui windows behave like cards in balatro?
 - [ ] Card area-type ui for draggable objects
+- [ ] higher shadow on hovered items, draw above everything else. How?
+- [ ] Leave shadow height as-is in text when it moves in the y direction?
 
 ---
 ### 🖱️ Interaction & Input

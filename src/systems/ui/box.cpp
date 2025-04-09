@@ -2,7 +2,7 @@
 
 #include "systems/text/textVer2.hpp"
 #include "components/graphics.hpp"
-
+#include "inventory_ui.hpp"
 namespace ui
 {
     // TODO: update function registry for methods that replace transform-provided methods
@@ -1289,22 +1289,13 @@ namespace ui
             if (uiConfig.uiType == UITypeEnum::OBJECT)
             {
                 auto object = uiConfig.object.value();
-                // // is it text?
-                if (globals::registry.any_of<TextSystem::Text>(object))
-                {
-                    auto &text = globals::registry.get<TextSystem::Text>(object);
-                    auto &textTransform = globals::registry.get<transform::Transform>(object);
-                    calcCurrentNodeTransform.w = textTransform.getActualW();
-                    calcCurrentNodeTransform.h = textTransform.getActualH();
-                }
-                // is it animated sprite?
-                else if (globals::registry.any_of<AnimationQueueComponent>(object))
-                {
-                    auto &anim = globals::registry.get<AnimationQueueComponent>(object);
-                    auto &animTransform = globals::registry.get<transform::Transform>(object);
-                    calcCurrentNodeTransform.w = animTransform.getActualW();
-                    calcCurrentNodeTransform.h = animTransform.getActualH();
-                }
+                // text, animated, or inventory grid object.
+                // if (globals::registry.any_of<TextSystem::Text>(object) || globals::registry.any_of<AnimationQueueComponent>(object) || globals::registry.any_of<InventoryGrid>(object))
+                // {
+                    auto &objectTransform = globals::registry.get<transform::Transform>(object);
+                    calcCurrentNodeTransform.w = objectTransform.getActualW();
+                    calcCurrentNodeTransform.h = objectTransform.getActualH();
+                // }
             }
             
 
@@ -1553,6 +1544,9 @@ namespace ui
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)
     {
+        bool doNotUse = true;
+        AssertThat(doNotUse, Is().EqualTo(false)); // TODO: this method should be deleted
+
         auto *uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *uiBoxRole = registry.try_get<transform::InheritedProperties>(entity);
         auto *transform = registry.try_get<transform::Transform>(entity);

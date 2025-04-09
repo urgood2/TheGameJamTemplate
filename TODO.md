@@ -20,7 +20,6 @@ LATER: (not needed immediately)
 
 - [ ] Integrate the animated sprites with the UI system (as a UI object/component).
 - [ ] How to make objects attached to ui windows behave like cards in balatro?
-- [ ] simple lighting shader with normal maps
 - [ ] Card area-type ui for draggable objects
 
 ---
@@ -97,6 +96,7 @@ LATER: (not needed immediately)
 ---
 
 ## Immediate laters
+- [ ] simple lighting shader with normal maps
 - [ ] AddDrawTransformEntityWithAnimationWithPipeline needs to be tested.
 - [ ] Some shaders, simple ones, which can be layered fro sprites and serve as a backbone for other additions later on. (drop shadow, holoram, 3d skew, sheen)
 - [ ] button presses need to shift down text as well (dynamic text)

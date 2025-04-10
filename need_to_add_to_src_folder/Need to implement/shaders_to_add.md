@@ -25,3 +25,8 @@
 - https://godotshaders.com/shader/2d-burn-dissolve-from-point-v-1-0/
 - https://godotshaders.com/shader/gooby-gop/
 - https://godotshaders.com/shader/card-shadow-pseudo-3d-shader/
+https://godotshaders.com/shader/bloody-pool-smooth-blood-trail/
+https://godotshaders.com/shader/water-toon-torrent-shader/
+https://godotshaders.com/shader/redacted/
+https://godotshaders.com/shader/wobbly-grid/
+https://godotshaders.com/shader/cosine-water-2/

@@ -18,18 +18,18 @@ LATER: (not needed immediately)
 
 ## 🧠 General Design / Architecture
 
-- [ ] How to make objects attached to ui windows behave like cards in balatro?
-- [ ] Card area-type ui for draggable objects
 - [ ] higher shadow on hovered items, draw above everything else. How?
-- [ ] Leave shadow height as-is in text when it moves in the y direction?
-- [ ] change shadow heigth based on scale
+- [ ] Leave shadow height as-is in text when it moves in the y direction? ->change shadow heigth based on scale
+- [ ] hook up reflection-based updates for dynamic text
+
+
 - [ ] choose a shader to apply to ui, test it
 - [ ] generic glow, might be nice to do https://godotshaders.com/shader/dynamic-glow/
 - [ ] https://godotshaders.com/shader/pixel-perfect-dissolving/ dissolving for  ui?
 - [ ] https://godotshaders.com/shader/2d-rim-light-2/ rim light for emphasizing ui?
 - [ ] radial shine for ui?
 
-spectrum line shader (make a square?)
+spectrum line shader (make this go around a rounded rect)
 ```glsl
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {

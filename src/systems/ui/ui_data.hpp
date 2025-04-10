@@ -732,7 +732,7 @@ namespace ui
                 uiElement->config = config;
                 return *this;
             }
-
+            
             Builder& addChild(const UIElementTemplateNode& child) {
                 uiElement->children.push_back(child);
                 return *this;

@@ -130,20 +130,65 @@ namespace game
         // TODO: how to chain timer calls optionally in a queue
     }
 
-    ui::UIElementTemplateNode getNewTextEntry(std::string text, entt::entity transformEntity, std::string refComponent, std::string refValue) {
-        return ui::UIElementTemplateNode::Builder::create()
+    // returns a UIElementTemplateNode for UITypeEnum::TEXT (no container)
+    ui::UIElementTemplateNode getNewTextEntry(std::string text, std::optional<entt::entity> refEntity = std::nullopt, std::optional<std::string> refComponent = std::nullopt, std::optional<std::string> refValue = std::nullopt) {
+        auto configBuilder = ui::UIConfig::Builder::create()
+            .addColor(WHITE)
+            .addText(text)
+            .addShadow(true)
+            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
+
+        if (refEntity && refComponent && refValue) {
+            configBuilder.addRefEntity(*refEntity)
+                .addRefComponent(*refComponent)
+                .addRefValue(*refValue);
+        }
+
+        auto node = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::TEXT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(WHITE)
-                    .addText("Hello, world!")
-                    .addShadow(true)
-                    .addRefEntity(transformEntity)
-                    .addRefComponent("Tooltip")
-                    .addRefValue("title")
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .build();
+            .addConfig(configBuilder.build());
+
+        return node.build();        
+    }
+
+    //TODO: set up dynamic updating for dynamic text through refEntity, refComponent, refValue -> make updates cause texts to jiggle, or something like that, ideally have a configurable trigger
+    ui::UIElementTemplateNode getNewDynamicTextEntry(std::string text, float fontSize, std::optional<float> wrapWidth, std::optional<std::string> textEffect = std::nullopt, std::optional<entt::entity> refEntity = std::nullopt, std::optional<std::string> refComponent = std::nullopt, std::optional<std::string> refValue = std::nullopt) {
+
+        TextSystem::Text textData = {
+            // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
+            // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
+            
+            .rawText = text,
+            .font = globals::fontData.font,
+            .fontSize = fontSize,
+            .wrapEnabled = wrapWidth ? true : false,
+            .wrapWidth = wrapWidth.value_or(0.0f),
+            .alignment = TextSystem::Text::Alignment::LEFT,
+            .wrapMode = TextSystem::Text::WrapMode::WORD
+        };
+
+        auto textEntity = TextSystem::Functions::createTextEntity(textData, 0, 0);
+
+        if (textEffect) {
+            TextSystem::Functions::applyGlobalEffects(textEntity, *textEffect);
+        }
+
+        auto configBuilder = ui::UIConfig::Builder::create()
+            .addColor(WHITE)
+            .addObject(textEntity)
+            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
+
+        if (refEntity && refComponent && refValue) {
+            configBuilder.addRefEntity(*refEntity)
+                .addRefComponent(*refComponent)
+                .addRefValue(*refValue);
+        }
+
+        auto node = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::OBJECT)
+            .addConfig(configBuilder.build());
+
+        return node.build();        
     }
 
     // perform game-specific initialization here. This makes it easier to find all the initialization code
@@ -459,25 +504,54 @@ namespace game
                                                  .addChild(uiColumnDef)
                                                  .addChild(getRandomRectDef())
                                                  .build();
+        ui::UIElementTemplateNode consumablesRowDef = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(YELLOW)
+                    .addEmboss(2.f)
+                    .addOutlineColor(BLUE)
+                    .addOutlineThickness(2.0f)
+                    // .addMinWidth(500.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(getNewDynamicTextEntry("Consumables: ", 20.f, 500.f, "bump=6.0,8.0,0.9,0.2"))
+            .addChild(uiTestInventoryEntry)
+            .build();
+        ui::UIElementTemplateNode spriteRowDef = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(YELLOW)
+                    .addEmboss(2.f)
+                    .addOutlineColor(BLUE)
+                    .addOutlineThickness(2.0f)
+                    // .addMinWidth(500.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(getNewDynamicTextEntry("Item sprite: ", 20.f, 500.f, "bump=6.0,8.0,0.9,0.2"))
+            .addChild(uiAnimatedSpriteEntry)
+            .build();
         ui::UIElementTemplateNode uiTestRootDef = ui::UIElementTemplateNode::Builder::create()
-                                                      .addType(ui::UITypeEnum::ROOT)
-                                                      .addConfig(
-                                                          ui::UIConfig::Builder::create()
-                                                              // .addMaxWidth(700.f)
-                                                              .addColor(BLUE)
-                                                              .addShadow(true)
-                                                              // .addHover(true)
-                                                              // .addButtonCallback("testCallback")
-                                                              .addAlign(
-                                                                  transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                              .build())
-                                                      // .addChild(uiColumnDef)
-                                                    //   .addChild(uiDynamicTextEntry)
-                                                    //   .addChild(getRandomRectDef())
-                                                        .addChild(uiAnimatedSpriteEntry)
-                                                        .addChild(uiTestInventoryEntry)
-                                                        .addChild(uiRowDef)
-                                                        .build();
+            .addType(ui::UITypeEnum::ROOT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    // .addMaxWidth(700.f)
+                    .addColor(BLUE)
+                    .addShadow(true)
+                    // .addHover(true)
+                    // .addButtonCallback("testCallback")
+                    .addAlign(
+                        transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(uiColumnDef)
+        //   .addChild(uiDynamicTextEntry)
+        //   .addChild(getRandomRectDef())
+            .addChild(consumablesRowDef)
+            .addChild(spriteRowDef)
+            // .addChild(uiRowDef)
+            .addChild(getNewTextEntry("This is a test"))
+            .build();
 
         uiBox = ui::box::Initialize(
             globals::registry,
@@ -501,19 +575,19 @@ namespace game
         uiTextEntry.config.ref_entity.reset();
         uiTextEntry.config.ref_value.reset();
         
-        hoverPopupUIBox = ui::box::Initialize(
-            globals::registry,
-            {.w = 200, .h = 200},
-            uiTextEntry,
-            ui::UIConfig::Builder::create()
-                .addRole(transform::InheritedProperties::Builder()
-                             .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
-                             .addMaster(transformEntity)
-                             .addLocationBond(transform::InheritedProperties::Sync::Strong)
-                             .addRotationBond(transform::InheritedProperties::Sync::Strong)
-                             .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM)
-                             .build())
-                .build());
+        // hoverPopupUIBox = ui::box::Initialize(
+        //     globals::registry,
+        //     {.w = 200, .h = 200},
+        //     uiTextEntry,
+        //     ui::UIConfig::Builder::create()
+        //         .addRole(transform::InheritedProperties::Builder()
+        //                      .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
+        //                      .addMaster(transformEntity)
+        //                      .addLocationBond(transform::InheritedProperties::Sync::Strong)
+        //                      .addRotationBond(transform::InheritedProperties::Sync::Strong)
+        //                      .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM)
+        //                      .build())
+        //         .build());
 
         // LATER: figure out button UIE more precisely
         // LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently
@@ -570,18 +644,18 @@ namespace game
 
         SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
 
-        auto testUI = ui::createTooltipUIBoxDef(globals::registry, {std::string("Tooltip"), std::string("tooltip")});
-        auto textTooltipUIBOX = ui::box::Initialize(globals::registry, {.w = 200, .h = 200}, testUI, ui::UIConfig::Builder::create().build());
+        // auto testUI = ui::createTooltipUIBoxDef(globals::registry, {std::string("Tooltip"), std::string("tooltip")});
+        // auto textTooltipUIBOX = ui::box::Initialize(globals::registry, {.w = 200, .h = 200}, testUI, ui::UIConfig::Builder::create().build());
         SetUpShaderUniforms();
 
-        auto &tooltipTransform = globals::registry.get<transform::Transform>(textTooltipUIBOX);
-        auto &tooltipNode = globals::registry.get<transform::GameObject>(textTooltipUIBOX);
-        auto &tooltipUIConfig = globals::registry.get<ui::UIConfig>(textTooltipUIBOX);
+        // auto &tooltipTransform = globals::registry.get<transform::Transform>(textTooltipUIBOX);
+        // auto &tooltipNode = globals::registry.get<transform::GameObject>(textTooltipUIBOX);
+        // auto &tooltipUIConfig = globals::registry.get<ui::UIConfig>(textTooltipUIBOX);
 
-        tooltipNode.state.dragEnabled = true;
-        tooltipNode.state.collisionEnabled = true;
-        tooltipNode.state.clickEnabled = true;
-        tooltipUIConfig.noMovementWhenDragged = true;
+        // tooltipNode.state.dragEnabled = true;
+        // tooltipNode.state.collisionEnabled = true;
+        // tooltipNode.state.clickEnabled = true;
+        // tooltipUIConfig.noMovementWhenDragged = true;
     }
 
     auto update(float delta) -> void
@@ -643,12 +717,20 @@ namespace game
             transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
         }
         
-        // draw object area
+        // draw object area (inventory comp)
         auto &objectArea = globals::registry.get<transform::GameObject>(testInventory);
         objectArea.drawFunction(ui_layer, globals::registry, testInventory);
         transformProfiler.Stop();
 
-        TextSystem::Functions::renderText(textEntity, ui_layer, true);
+        // dynamic text
+        auto textView = globals::registry.view<TextSystem::Text>();
+        for (auto e : textView)
+        {
+            auto &text = globals::registry.get<TextSystem::Text>(e);
+            TextSystem::Functions::renderText(e, ui_layer, true);
+        }
+
+        // sprites with transform (including those in ui)
         layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
         uiProfiler.Stop();
 

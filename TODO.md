@@ -21,6 +21,8 @@ LATER: (not needed immediately)
 - [ ] higher shadow on hovered items, draw above everything else. How?
 - [ ] Leave shadow height as-is in text when it moves in the y direction? ->change shadow heigth based on scale
 - [ ] hook up reflection-based updates for dynamic text - or just make it a getter and setter lamnda based like event queue
+- [ ] rounded rect needs testing - outline doesn't seem to work right all the time
+- [ ] global debug setting for UI & transforms
 
 
 - [ ] choose a shader to apply to ui, test it

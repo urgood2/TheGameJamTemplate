@@ -37,3 +37,7 @@ https://godotshaders.com/shader/dynamic-glow/
 https://godotshaders.com/shader/colorful-outline/
 https://godotshaders.com/shader/chromatic-aberration-sphere/
 https://godotshaders.com/shader/efficient-2d-pixel-outlines/
+
+
+- [ ] https://godotshaders.com/shader/pixel-perfect-dissolving/ dissolving for  ui?
+- [ ] https://godotshaders.com/shader/2d-rim-light-2/ rim light for emphasizing ui?

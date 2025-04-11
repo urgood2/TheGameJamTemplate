@@ -27,8 +27,6 @@ LATER: (not needed immediately)
 
 - [ ] choose a shader to apply to ui, test it
 - [ ] generic glow, might be nice to do https://godotshaders.com/shader/dynamic-glow/
-- [ ] https://godotshaders.com/shader/pixel-perfect-dissolving/ dissolving for  ui?
-- [ ] https://godotshaders.com/shader/2d-rim-light-2/ rim light for emphasizing ui?
 - [ ] radial shine for ui?
 
 spectrum line shader (make this go around a rounded rect)

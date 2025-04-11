@@ -199,7 +199,8 @@ namespace transform
                 
                 if (registry->valid(child) == false) continue;
                 
-                DrawBoundingBoxAndDebugInfo(registry, child, layer);
+                if (globals::drawDebugInfo)
+                    DrawBoundingBoxAndDebugInfo(registry, child, layer);
                 auto &childNode = registry->get<GameObject>(child);
                 if (childNode.state.visible  && childNode.state.visible && childNode.methods->draw) {
                     childNode.methods->draw(layer, *registry, child);

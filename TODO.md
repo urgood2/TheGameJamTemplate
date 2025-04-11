@@ -23,6 +23,7 @@ LATER: (not needed immediately)
 - [ ] hook up reflection-based updates for dynamic text - or just make it a getter and setter lamnda based like event queue
 - [ ] rounded rect needs testing - outline doesn't seem to work right all the time
 - [ ] global debug setting for UI & transforms
+- [ ] dynamic text centering seems off? https://chatgpt.com/share/67f8f530-8ebc-800a-a345-0b7f7350cc1f < reference
 
 
 - [ ] choose a shader to apply to ui, test it

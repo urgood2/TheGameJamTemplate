@@ -1484,7 +1484,9 @@ namespace ui
         }
         
         //TODO: enable this back later
-        // transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
+
+        if (globals::drawDebugInfo)
+            transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
 
         profiler.Stop();
     }

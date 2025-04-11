@@ -79,7 +79,8 @@ namespace input
 
 namespace globals
 {
-
+    extern bool drawDebugInfo; // set to true to allow debug drawing of transforms
+    
     extern shaders::ShaderUniformComponent globalShaderUniforms; // keep track of shader uniforms;
 
     extern GameState currentGameState;

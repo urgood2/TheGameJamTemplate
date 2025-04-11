@@ -405,7 +405,7 @@ namespace game
                                                         ui::UIConfig::Builder::create()
                                                             .addColor(WHITE)
                                                             .addObject(textEntity)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
                                                     .build();
         ui::UIElementTemplateNode uiAnimatedSpriteEntry = ui::UIElementTemplateNode::Builder::create()
@@ -467,7 +467,7 @@ namespace game
                                                             .addOutlineColor(BLUE)
                                                             // .addOutlineThickness(5.0f)
                                                             // .addMinWidth(500.f)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
                                                     .addChild(getRandomRectDef())
                                                     .addChild(getRandomRectDef())
@@ -515,7 +515,7 @@ namespace game
                     // .addMinWidth(500.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(getNewDynamicTextEntry("Consumables: ", 20.f, 500.f, "bump=6.0,8.0,0.9,0.2"))
+            .addChild(getNewDynamicTextEntry("Consumables: ", 20.f, 500.f, "bump"))
             .addChild(uiTestInventoryEntry)
             .build();
         ui::UIElementTemplateNode spriteRowDef = ui::UIElementTemplateNode::Builder::create()
@@ -714,7 +714,8 @@ namespace game
         auto view = globals::registry.view<transform::Transform>();
         for (auto e : view)
         {
-            transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+            if (globals::drawDebugInfo)
+                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
         }
         
         // draw object area (inventory comp)

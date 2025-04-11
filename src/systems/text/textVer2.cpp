@@ -1523,7 +1523,7 @@ namespace TextSystem
             }
 
             // Draw debug bounding box
-            if (debug)
+            if (debug && globals::drawDebugInfo)
             {
                 auto &transform = globals::registry.get<transform::Transform>(textEntity);
                 

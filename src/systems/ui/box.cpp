@@ -1539,7 +1539,8 @@ namespace ui
             }
         }
 
-        transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
+        if (globals::drawDebugInfo)
+            transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
     }
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)

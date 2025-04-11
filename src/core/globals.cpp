@@ -30,6 +30,8 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
 
+    bool drawDebugInfo = true; // set to true to allow debug drawing of transforms
+
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
 
     std::map<std::string, Rectangle> spriteDrawFrames; 

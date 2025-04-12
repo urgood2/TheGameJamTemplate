@@ -11,8 +11,7 @@
 ## 🧠 General Design / Architecture
 
 - [ ] higher shadow on hovered items, draw above everything else. How?
-- [ ] hook up reflection-based updates for dynamic text - or just make it a getter and setter lamnda based like event queue
-- [ ] rounded rect needs testing - outline doesn't seem to work right all the time
+
 - [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
 
 - [ ] choose a shader to apply to ui, test it
@@ -142,6 +141,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 ---
 
 ## Immediate laters
+- [ ] rounded rect needs testing - outline doesn't seem to work right all the time
 - [ ] simple lighting shader with normal maps
 - [ ] AddDrawTransformEntityWithAnimationWithPipeline needs to be tested.
 - [ ] Some shaders, simple ones, which can be layered fro sprites and serve as a backbone for other additions later on. (drop shadow, holoram, 3d skew, sheen)

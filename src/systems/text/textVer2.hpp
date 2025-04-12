@@ -68,11 +68,10 @@ namespace TextSystem
     {
         // used to dynamically update the text
         //TODO: apply
-        std::function<void(float)> set_value_callback{}; // Function to update the value to be shown as text. 
+        std::function<std::string(void)> get_value_callback; // Function to get the value to be shown as text. 
+        std::function<void(entt::entity)> onStringContentUpdatedViaCallback; // function which is called when the rawText is changed through get_value_callback.
         
-        std::function<float(void)> get_value_callback{}; // Function to get the value to be shown as text. 
-        
-        std::vector<std::string> tagsToApplyGloballyOnTextChange{}; // these tags will be applied to all characters in the text when the text is updated. This is useful for applying effects to all characters in the text, such as pop-in or fade-in effects, consistently even when the content of the text is updated.
+        std::vector<std::string> effectStringsToApplyGloballyOnTextChange; // these tags will be applied to all characters in the text when the text is updated. This is useful for applying effects to all characters in the text, such as pop-in or fade-in effects, consistently even when the content of the text is updated.
         
         std::function<void()> onFinishedEffect; // callback for when an effect that keeps track of finished state has finished in the last character of a text. Note that it doesn't keep track of multiple such effects, and will respond tot he first one that finishes.
         
@@ -82,7 +81,6 @@ namespace TextSystem
 
         float width{}, height{}; // width and height of the entire text, updated every draw call
         
-        float fontSize{10.f};
         
         enum class Alignment
         {
@@ -100,6 +98,8 @@ namespace TextSystem
         std::vector<Character> characters; // contains the generated characters, with their effects applied
         
         globals::FontData fontData;
+        
+        float fontSize{10.f};
         bool wrapEnabled = true;          // if enabled, will disrespect provided wrap width and behave like there is no wrap width at all
         //FIXME: wrap is bugged, so is alignment
         float wrapWidth;

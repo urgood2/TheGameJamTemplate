@@ -31,14 +31,30 @@ namespace TextSystem
             auto &transform = globals::registry.get<transform::Transform>(entity);
             auto &gameObject = globals::registry.get<transform::GameObject>(entity);
             auto &textComp = globals::registry.emplace<Text>(entity, text);
+
+            // update the text if there is a callback
+            if (textComp.get_value_callback)
+            {
+                textComp.rawText = textComp.get_value_callback();
+
+                SPDLOG_DEBUG("Text value callback returned: {}", textComp.rawText);
+            }
             
             if (effectFunctions.empty())
             {
                 initEffects();
             }
             parseText(entity);
-            
-            
+
+            // apply effects if any are set
+            if (textComp.effectStringsToApplyGloballyOnTextChange.size() > 0)
+            {
+                for (auto &tag : textComp.effectStringsToApplyGloballyOnTextChange)
+                {
+                    applyGlobalEffects(entity, tag);
+                    SPDLOG_DEBUG("Applying global effects for tag: {}", tag);
+                }
+            }
 
             //TODO: testing
             gameObject.state.dragEnabled = true;
@@ -1342,7 +1358,33 @@ namespace TextSystem
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
 
             auto &text = globals::registry.get<Text>(textEntity);
-            spdlog::debug("Updating text with delta time: {}", dt);
+            // spdlog::debug("Updating text with delta time: {}", dt);
+
+            // check value from lamdba function if there is one
+
+            if (text.get_value_callback)
+            {
+                auto value = text.get_value_callback();
+                if (value != text.rawText)
+                {
+                    // call callback
+                    if (text.onStringContentUpdatedViaCallback)
+                    {
+                        text.onStringContentUpdatedViaCallback(textEntity);
+                    }
+
+                    SPDLOG_DEBUG("Text value changed from '{}' to '{}'", text.rawText, value);
+                    text.rawText = value;
+                    clearAllEffects(textEntity);
+                    parseText(textEntity);
+                    for (auto tag : text.effectStringsToApplyGloballyOnTextChange) {
+                        applyGlobalEffects(textEntity, tag);
+                    }
+                }
+            }
+
+
+
             for (auto &character : text.characters)
             {
                 // update shadow
@@ -1364,7 +1406,7 @@ namespace TextSystem
                 for (const auto &[effectName, effectFunction] : character.effects)
                 {
                     const auto &args = character.parsedEffectArguments.arguments.at(effectName);
-                    spdlog::debug("Applying effect: {} with arguments: {}", effectName, args.size());
+                    // spdlog::debug("Applying effect: {} with arguments: {}", effectName, args.size());
                     effectFunction(dt, character, args);
                 }
 

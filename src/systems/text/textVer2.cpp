@@ -215,15 +215,20 @@ namespace TextSystem
                 {
                     character.offsets[effectName] = Vector2{0, 0};
                 }
+                if (character.shadowDisplacementOffsets.find(effectName) == character.offsets.end())
+                {
+                    character.shadowDisplacementOffsets[effectName] = Vector2{0, 0};
+                }
 
                 // Time-based sine wave with optional character phase offset
-                float time = GetTime() * speed + character.index * stagger;
+                float time = - GetTime() * speed + character.index * stagger;
                 float wave = (std::sin(time) + 1.0f) * 0.5f; // Normalize sine to 0–1
 
                 // Apply bump only when wave exceeds threshold (creates a snap/jump instead of a floaty sine)
                 float bump = (wave > threshold) ? amplitude : 0.0f;
 
-                character.offsets[effectName].y = bump;
+                character.offsets[effectName].y = -bump; // bump up
+                character.shadowDisplacementOffsets[effectName].y = bump;
             };
 
             // this is the same as rotation, but has different defaults
@@ -771,8 +776,8 @@ namespace TextSystem
                 character.pop_in_delay = index * 0.1f; // Staggered pop-in effect
             }
 
-            currentX += text.spacing + charSize.x;         // Advance X position (include spacing)
-            currentLineWidth += charSize.x + text.spacing; // Update line width
+            currentX += text.fontData.spacing + charSize.x;         // Advance X position (include spacing)
+            currentLineWidth += charSize.x + text.fontData.spacing; // Update line width
             return character;
         }
 
@@ -974,7 +979,7 @@ namespace TextSystem
                     {
                         lineWidths.push_back(currentLineWidth); // Save current line width
                         currentX = transform.getActualX();             // Reset X position
-                        currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
                         currentLineWidth = 0.0f;
                         lineNumber++;
                     }
@@ -996,7 +1001,7 @@ namespace TextSystem
                             // Measure the size of the character and add to the word's width
                             lookaheadChar = CodepointToString(lookaheadCodepoint);
                             lookaheadCharString = lookaheadCharString + lookaheadChar;
-                            Vector2 charSize = MeasureTextEx(text.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
+                            Vector2 charSize = MeasureTextEx(text.fontData.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
                             nextWordWidth += charSize.x;
 
                             // Advance the lookahead pointer
@@ -1011,7 +1016,7 @@ namespace TextSystem
                             // If the next word exceeds the wrap width, move to the next line
                             lineWidths.push_back(currentLineWidth);                           // Save current line width
                             currentX = transform.getActualX();                                       // Reset X position
-                            currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Move to the next line
+                            currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y; // Move to the next line
                             currentLineWidth = 0.0f;
                             lineNumber++;
 
@@ -1020,7 +1025,7 @@ namespace TextSystem
                         }
                         else
                         {
-                            auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                            auto character = createCharacter(textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
                                                              currentX, currentY, effectiveWrapWidth, text.alignment,
                                                              currentLineWidth, lineWidths, codepointIndex, lineNumber);
                             text.characters.push_back(character);
@@ -1037,7 +1042,7 @@ namespace TextSystem
                         }
                         else
                         {
-                            auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                            auto character = createCharacter(textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
                                                              currentX, currentY, effectiveWrapWidth, text.alignment,
                                                              currentLineWidth, lineWidths, codepointIndex, lineNumber);
                             text.characters.push_back(character);
@@ -1045,7 +1050,7 @@ namespace TextSystem
                     }
                     else
                     {
-                        auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                        auto character = createCharacter(textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
                                                          currentX, currentY, effectiveWrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
@@ -1089,7 +1094,7 @@ namespace TextSystem
                 {
                     lineWidths.push_back(currentLineWidth); // Save current line width
                     currentX = transform.getActualX();             // Reset X position
-                    currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+                    currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
                     currentLineWidth = 0.0f;
                     lineNumber++;
                 }
@@ -1111,7 +1116,7 @@ namespace TextSystem
                         // Measure the size of the character and add to the word's width
                         lookaheadChar = CodepointToString(lookaheadCodepoint);
                         lookaheadCharString = lookaheadCharString + lookaheadChar;
-                        Vector2 charSize = MeasureTextEx(text.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
+                        Vector2 charSize = MeasureTextEx(text.fontData.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
                         nextWordWidth += charSize.x;
 
                         // Advance the lookahead pointer
@@ -1124,7 +1129,7 @@ namespace TextSystem
                         // If the next word exceeds the wrap width, move to the next line
                         lineWidths.push_back(currentLineWidth);                           // Save current line width
                         currentX = transform.getActualX();                                       // Reset X position
-                        currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Move to the next line
+                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y; // Move to the next line
                         currentLineWidth = 0.0f;
                         lineNumber++;
 
@@ -1134,7 +1139,7 @@ namespace TextSystem
                     else
                     {
                         // FIXME: Ignore the space character if line changed
-                        auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                        auto character = createCharacter(textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
                                                          currentX, currentY, effectiveWrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
@@ -1143,7 +1148,7 @@ namespace TextSystem
                 else if (codepoint == ' ' && text.wrapMode == Text::WrapMode::CHARACTER) // Detect spaces
                 {
                     // does adding the char take us over the wrap width?
-                    if ((currentX - transform.getActualX()) + MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x > effectiveWrapWidth)
+                    if ((currentX - transform.getActualX()) + MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x > effectiveWrapWidth)
                     {
                         // if so skip this space character
 
@@ -1154,7 +1159,7 @@ namespace TextSystem
                     }
                     else
                     {
-                        auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                        auto character = createCharacter(textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
                                                          currentX, currentY, effectiveWrapWidth, text.alignment,
                                                          currentLineWidth, lineWidths, codepointIndex, lineNumber);
                         text.characters.push_back(character);
@@ -1162,7 +1167,7 @@ namespace TextSystem
                 }
                 else
                 {
-                    auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                    auto character = createCharacter(textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
                                                      currentX, currentY, effectiveWrapWidth, text.alignment,
                                                      currentLineWidth, lineWidths, codepointIndex, lineNumber);
                     text.characters.push_back(character);
@@ -1237,7 +1242,7 @@ namespace TextSystem
                         int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadSize);
                         std::string utf8Char = CodepointToString(lookaheadCodepoint);
                         //TODO: spacing should omitted if the previous character is a space or the first character of the string
-                        nextWordWidth += text.spacing + MeasureTextEx(text.font, utf8Char.c_str(), text.fontSize, 1.0f).x;
+                        nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x;
                         lookaheadPos += lookaheadSize;
                     }
 
@@ -1248,7 +1253,7 @@ namespace TextSystem
                     {
                         lineWidths.push_back(currentLineWidth);
                         currentX = textPosition.x;
-                        currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
                         currentLineWidth = 0.0f;
                         lineNumber++;
                     }
@@ -1258,7 +1263,7 @@ namespace TextSystem
                 {
                     lineWidths.push_back(currentLineWidth);
                     currentX = textPosition.x;
-                    currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+                    currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
                     currentLineWidth = 0.0f;
                     lineNumber++;
                 }
@@ -1276,7 +1281,7 @@ namespace TextSystem
                             int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadSize);
                             std::string utf8Char = CodepointToString(lookaheadCodepoint);
                             //TODO: spacing should omitted if the previous character is a space or the first character of the string
-                            nextWordWidth += text.spacing + MeasureTextEx(text.font, utf8Char.c_str(), text.fontSize, 1.0f).x;
+                            nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x;
                             lookaheadPos += lookaheadSize;
                         }
 
@@ -1286,7 +1291,7 @@ namespace TextSystem
                         {
                             lineWidths.push_back(currentLineWidth);
                             currentX = textPosition.x;
-                            currentY += MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+                            currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
                             currentLineWidth = 0.0f;
                             lineNumber++;
                             effectPos += codepointSize;
@@ -1296,7 +1301,7 @@ namespace TextSystem
                     }
                     else if (text.wrapMode == Text::WrapMode::CHARACTER)
                     {
-                        float spaceWidth = MeasureTextEx(text.font, " ", text.fontSize, 1.0f).x;
+                        float spaceWidth = MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x;
                         if ((currentX - textPosition.x) + spaceWidth > effectiveWrapWidth)
                         {
                             // Skip space at start of line
@@ -1308,7 +1313,7 @@ namespace TextSystem
                 }
 
                 // Create and store character
-                auto character = createCharacter(textEntity, codepoint, textPosition, text.font, text.fontSize,
+                auto character = createCharacter(textEntity, codepoint, textPosition, text.fontData.font, text.fontSize,
                                                       currentX, currentY, effectiveWrapWidth, text.alignment,
                                                       currentLineWidth, lineWidths, codepointIndex, lineNumber);
 
@@ -1337,7 +1342,7 @@ namespace TextSystem
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
 
             auto &text = globals::registry.get<Text>(textEntity);
-            // spdlog::debug("Updating text with delta time: {}", dt);
+            spdlog::debug("Updating text with delta time: {}", dt);
             for (auto &character : text.characters)
             {
                 // update shadow
@@ -1345,21 +1350,21 @@ namespace TextSystem
 
                 // Apply Pop-in Animation
                 //TODO: deprecated, use pop effect instead
-                if (character.pop_in && character.pop_in < 1.0f)
-                {
-                    float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
-                    if (elapsedTime > 0)
-                    {
-                        character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
-                        character.pop_in = character.pop_in.value() * character.pop_in.value(); // Ease-in effect
-                    }
-                }
+                // if (character.pop_in && character.pop_in < 1.0f)
+                // {
+                //     float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
+                //     if (elapsedTime > 0)
+                //     {
+                //         character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
+                //         character.pop_in = character.pop_in.value() * character.pop_in.value(); // Ease-in effect
+                //     }
+                // }
 
                 // Apply all effects to the character
                 for (const auto &[effectName, effectFunction] : character.effects)
                 {
                     const auto &args = character.parsedEffectArguments.arguments.at(effectName);
-                    // spdlog::debug("Applying effect: {} with arguments: {}", effectName, args.size());
+                    spdlog::debug("Applying effect: {} with arguments: {}", effectName, args.size());
                     effectFunction(dt, character, args);
                 }
 
@@ -1409,8 +1414,8 @@ namespace TextSystem
                 // get the character's position and size
                 float charX = transform.getActualX() + character.offset.x ;
                 float charY = transform.getActualY() +character.offset.y ;
-                float charWidth = MeasureTextEx(text.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x;
-                float charHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y; // Assuming height is same for all characters
+                float charWidth = MeasureTextEx(text.fontData.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x;
+                float charHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y; // Assuming height is same for all characters
 
                 // Update min and max values
                 minX = std::min(minX, charX);
@@ -1421,7 +1426,7 @@ namespace TextSystem
 
             // auto &lastChar = text.characters.back();
             // // get line height of last character
-            // float lineHeight = MeasureTextEx(text.font, "A", text.fontSize, 1.0f).y;
+            // float lineHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
             // maxY = transform.getActualY() + (lastChar.lineNumber + 1) * (lineHeight);
 
             float width = maxX - minX;
@@ -1435,10 +1440,30 @@ namespace TextSystem
             auto &text = globals::registry.get<Text>(textEntity);
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
 
-            if (static_cast<int>(textEntity) == 88)
+            layer::AddPushMatrix(layerPtr);
+
+            // Apply entity-level transforms
+            layer::AddTranslate(layerPtr,
+                textTransform.getVisualX() + textTransform.getVisualW() * 0.5f,
+                textTransform.getVisualY() + textTransform.getVisualH() * 0.5f,
+                0);
+                
+            if (text.applyTransformRotationAndScale)
             {
-                spdlog::error("debug break");
+                layer::AddScale(layerPtr,
+                    textTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+                    textTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+                    1);
+                    
+                layer::AddRotate(layerPtr,
+                    textTransform.getVisualRWithDynamicMotionAndXLeaning());
             }
+            
+            layer::AddTranslate(layerPtr,
+                -textTransform.getVisualW() * 0.5f,
+                -textTransform.getVisualH() * 0.5f,
+                0);
+
 
             for (const auto &character : text.characters)
             {
@@ -1451,8 +1476,8 @@ namespace TextSystem
 
                 // Calculate character position with offset
                 Vector2 charPosition = {
-                    textTransform.getVisualX() + character.offset.x,
-                    textTransform.getVisualY() + character.offset.y}; //TODO: how to mesh with transform's position + offset system?
+                    character.offset.x,
+                    character.offset.y};
 
                 // add all optional offsets
                 for (const auto &[effectName, offset] : character.offsets)
@@ -1460,13 +1485,14 @@ namespace TextSystem
                     charPosition.x += offset.x;
                     charPosition.y += offset.y;
                 }
+                
 
                 // Convert the codepoint to UTF-8 string for rendering
                 int utf8Size = 0;
                 const char *utf8Char = CodepointToUTF8(character.overrideCodepoint.value_or(character.value), &utf8Size);
                 auto utf8String = CodepointToString(character.overrideCodepoint.value_or(character.value));
 
-                Vector2 charSize = MeasureTextEx(text.font, utf8String.c_str(), text.fontSize, 1.0f);
+                Vector2 charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(), text.fontSize, 1.0f);
                 // sanity checkdd
                 if (charSize.x == 0)
                 {
@@ -1482,17 +1508,16 @@ namespace TextSystem
                 }
                 float finalScaleX = character.scaleXModifier.value_or(1.0f) * finalScale;
                 float finalScaleY = character.scaleYModifier.value_or(1.0f) * finalScale;
+                finalScaleX *= text.fontData.fontScale;
+                finalScaleY *= text.fontData.fontScale;
+                
+                // add fontdata offset for finetuning
+                charPosition.x += text.fontData.fontRenderOffset.x * finalScaleX;
+                charPosition.y += text.fontData.fontRenderOffset.y * finalScaleY;
 
-                // rlPushMatrix();
                 layer::AddPushMatrix(layerPtr);
 
                 // apply scaling that is centered on the character
-
-                // rlTranslatef(charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
-                // rlScalef(finalScaleX, finalScaleY, 1);
-                // rlRotatef(character.rotation, 0, 0, 1);
-                // rlTranslatef(-charSize.x * 0.5f, -charSize.y * 0.5f, 0);
-
                 layer::AddTranslate(layerPtr, charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
                 layer::AddScale(layerPtr, finalScaleX, finalScaleY, 1);
                 layer::AddRotate(layerPtr, character.rotation);
@@ -1509,31 +1534,35 @@ namespace TextSystem
                     // Adjust displacement using shadow height
                     float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor;
                     float shadowOffsetY = - character.shadowDisplacement.y * baseExaggeration * heightFactor; // make shadow stretch downward
+                    
+                    // apply offsets to shadow if any
+                    for (const auto &[effectName, offset] : character.shadowDisplacementOffsets)
+                    {
+                        shadowOffsetX += offset.x;
+                        shadowOffsetY += offset.y;
+                    }
 
                     // Translate to shadow position
                     layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
 
                     // Draw shadow 
-                    // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
-                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, character.rotation, text.fontSize * finalScale, text.spacing, Fade(BLACK, 0.7f));
-                    // layer::AddRectanglePro(layerPtr, 0, 0, Vector2{charTransform.getVisualW(), charTransform.getVisualH()}, Fade(BLACK, 0.7f));
+                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize, text.fontData.spacing, Fade(BLACK, 0.7f));
 
                     // Reset translation to original position
                     layer::AddTranslate(layerPtr, shadowOffsetX, -shadowOffsetY);
                 }
 
                 // Render the character
-                layer::AddTextPro(layerPtr, utf8String.c_str(), text.font, 0, 0, {0, 0}, character.rotation, text.fontSize * finalScale, text.spacing, character.color);
-
-                // DrawTextPro(text.font, utf8String.c_str(), Vector2{0, 0}, Vector2{0, 0}, 0.f, text.fontSize, text.spacing, character.color);
-
+                layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize, text.fontData.spacing, character.color);
                 
                 if (debug && globals::drawDebugInfo) {
+                    // subtract finetuning offset
+                    layer::AddTranslate(layerPtr, - text.fontData.fontRenderOffset.x * finalScaleX, - text.fontData.fontRenderOffset.y * finalScaleY, 0);
+                    
                     // draw bounding box for the character
                     layer::AddRectangleLinesPro(layerPtr, 0, 0, charSize, 1.0f, BLUE);
                 }
-
-                // rlPopMatrix();
+                
                 layer::AddPopMatrix(layerPtr);
             }
 
@@ -1551,9 +1580,10 @@ namespace TextSystem
 
                 // Draw text showing the dimensions
                 std::string dimensionsText = "Width: " + std::to_string(width) + ", Height: " + std::to_string(height);
-                layer::AddText(layerPtr, dimensionsText.c_str(), GetFontDefault(), transform.getVisualX(), transform.getVisualY() - 20, GRAY, 10); // Position the text above the box
-                // DrawText(dimensionsText.c_str(), transform.getVisualX(), transform.getVisualY() - 20, 10, GRAY); 
+                layer::AddText(layerPtr, dimensionsText.c_str(), GetFontDefault(), 0, -20, GRAY, 10); // Position the text above the box
             }
+            
+            layer::AddPopMatrix(layerPtr); // Pops the entity-level transform
             
         }
 
@@ -1567,6 +1597,7 @@ namespace TextSystem
                 character.parsedEffectArguments.arguments.clear();
                 character.scaleModifiers.clear();
                 character.offsets.clear();
+                character.shadowDisplacementOffsets.clear();
                 character.scaleXModifier.reset();
                 character.scaleYModifier.reset();
                 character.overrideCodepoint.reset();
@@ -1602,13 +1633,13 @@ namespace TextSystem
             auto &text = globals::registry.get<Text>(textEntity);
             SPDLOG_DEBUG("Text Entity: {}", static_cast<int>(textEntity));
             SPDLOG_DEBUG("\tText: {}", text.rawText);
-            SPDLOG_DEBUG("\tFont: {}", text.font.baseSize);
+            SPDLOG_DEBUG("\tFont: {}", text.fontData.font.baseSize);
             SPDLOG_DEBUG("\tFont Size: {}", text.fontSize);
             // SPDLOG_DEBUG("Position: ({}, {})", text.position.x, text.position.y);
             SPDLOG_DEBUG("\tAlignment: {}", magic_enum::enum_name<Text::Alignment>(text.alignment));
             SPDLOG_DEBUG("\tWrap Width: {}", text.wrapWidth);
             SPDLOG_DEBUG("\tWrap Mode: {}", static_cast<int>(text.wrapMode));
-            SPDLOG_DEBUG("\tSpacing: {}", text.spacing);
+            SPDLOG_DEBUG("\tSpacing: {}", text.fontData.spacing);
             SPDLOG_DEBUG("\tShadow Enabled: {}", text.shadow_enabled);
             SPDLOG_DEBUG("\tPop-in Enabled: {}", text.pop_in_enabled);
             SPDLOG_DEBUG("\tCharacters: {}", text.characters.size());

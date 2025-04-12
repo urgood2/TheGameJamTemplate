@@ -1,14 +1,6 @@
 
 
-- [] Need to integrate new text system with movable
-- [] math.cpp needs cleanup
-- [] controller.lua functionality
-- [] ui functionaltiy from card game
-- [] how to insert image into text? https://chatgpt.com/share/6781d2e2-6654-800a-a76d-bd14921b469f
-- [] shader TODOs
 
-LATER: (not needed immediately)
-- [] spine rendering + layer integration https://chatgpt.com/share/67766376-ac24-800a-8711-f6fd64a6d733
 
 
 # ✅ TODOs: Organized by Category
@@ -19,14 +11,9 @@ LATER: (not needed immediately)
 ## 🧠 General Design / Architecture
 
 - [ ] higher shadow on hovered items, draw above everything else. How?
-- [ ] Leave shadow height as-is in text when it moves in the y direction? ->change shadow heigth based on scale
 - [ ] hook up reflection-based updates for dynamic text - or just make it a getter and setter lamnda based like event queue
 - [ ] rounded rect needs testing - outline doesn't seem to work right all the time
-- [ ] dynamic text centering seems off? https://chatgpt.com/share/67f8f530-8ebc-800a-a345-0b7f7350cc1f < reference
 - [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
-- [ ] apply fontData to all text rendering (raw ui text, dynamic text)
-- [ ] Effects only working for one text entity only, needs debugging
-- [ ] are effect ufnctions being called for every character on every text? check
 
 - [ ] choose a shader to apply to ui, test it
 - [ ] generic glow, might be nice to do https://godotshaders.com/shader/dynamic-glow/
@@ -190,3 +177,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 - [ ] focus menu layers for controller not tested. It's simply used to save the previously focused node before opening something that will hog all the focus (onscreen keyboard for instance), which can then be restored after the thing is closed again. Mostly it's under_overlay that's used to mark buttons as being under overlay and mark them as not part of focusable list. Overlays are not implemented/tested and need to be debugged.
 - [ ] focus navigation selection box should be a rounded rect, not a straight out rect
 - [ ] probably make shadows stay in place vertically when shifting characters around in fancy text
+- [ ] math.cpp needs cleanup
+- [ ] refactoring input functionality
+- [ ] shader TODOs
+- [ ] spine rendering + layer integration https://chatgpt.com/share/67766376-ac24-800a-8711-f6fd64a6d733

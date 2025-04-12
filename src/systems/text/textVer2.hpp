@@ -9,6 +9,7 @@
 #include <set>
 #include <optional>
 
+#include "core/globals.hpp"
 #include "util/common_headers.hpp"
 
 //TODO: some error-checking to ensure that all tags are enclosed
@@ -37,6 +38,7 @@ namespace TextSystem
         std::optional<float> scaleXModifier, scaleYModifier; // optionally modify x or y scale separately
         Color color;
         std::unordered_map<std::string, Vector2> offsets; // offsets used by various effects
+        std::unordered_map<std::string, Vector2> shadowDisplacementOffsets; // offsets used by various effects, applied to shadow
         std::unordered_map<std::string, float> scaleModifiers; // scale used by various effects
         std::unordered_map<std::string, float> customData; // cutom data storage for effects
         Vector2 offset; // just the base offset
@@ -57,6 +59,7 @@ namespace TextSystem
 
         bool isFinalCharacterInText = false; // whether this character is the last character in the text
         std::unordered_map<std::string, bool> effectFinished; // keeps track of whether an effect has finished, not tracked by all effects but only by effects that need to know when they are done, such as pop. This is used in tandem with isFinalCharacterInText to trigger callbacks when the last character in the text has finished all relevant effects.
+        
     };
 
     extern std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
@@ -88,15 +91,17 @@ namespace TextSystem
         std::string rawText;
         std::vector<Character> characters;
         std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
-        Font font;
+        globals::FontData fontData;
         float fontSize;
         bool wrapEnabled = true;          // if enabled, will disrespect provided wrap width and behave like there is no wrap width at all
         float wrapWidth;
         Alignment alignment = Alignment::LEFT; // 0: Left, 1: Center, 2: Right
         WrapMode wrapMode = WrapMode::WORD;
-        int spacing = 1;        // spacing amount used when rendering & calculating text
         float createdTime = -1; // time the text was created, used for pop-in animation
         std::unordered_map<std::string, float> effectStartTime;// keeps track of effect started times unique to each effect
+        
+        
+        bool applyTransformRotationAndScale = true; // whether to apply the transform rotation and scale to this character. If false, dynamic motion, rotation, scale changes to the base transform will not affect the final output.
     };
 
     namespace Builders
@@ -115,9 +120,9 @@ namespace TextSystem
                 return *this;
             }
 
-            TextBuilder &setFont(Font font)
+            TextBuilder &setFontData(const globals::FontData &fontData)
             {
-                text_.font = font;
+                text_.fontData = fontData;
                 return *this;
             }
 
@@ -148,12 +153,6 @@ namespace TextSystem
             TextBuilder &setWrapMode(Text::WrapMode mode)
             {
                 text_.wrapMode = mode;
-                return *this;
-            }
-
-            TextBuilder &setSpacing(int spacing)
-            {
-                text_.spacing = spacing;
                 return *this;
             }
 

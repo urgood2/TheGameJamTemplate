@@ -103,7 +103,7 @@ namespace game
         globalShaderUniforms.set("crt", "pixel_strength", -0.14f);
         globalShaderUniforms.set("crt", "vignette_amount", 0.24f);
         globalShaderUniforms.set("crt", "warp_amount", 0.06f);
-        globalShaderUniforms.set("crt", "interference_amount", 1.4f);
+        globalShaderUniforms.set("crt", "interference_amount", 0.3f);
         globalShaderUniforms.set("crt", "roll_line_amount", 0.04f);
         globalShaderUniforms.set("crt", "grille_size", 0.f);
         globalShaderUniforms.set("crt", "vignette_intensity", 0.11f);

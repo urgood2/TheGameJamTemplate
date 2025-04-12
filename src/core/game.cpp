@@ -159,7 +159,7 @@ namespace game
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
             .rawText = text,
-            .font = globals::fontData.font,
+            .fontData = globals::fontData,
             .fontSize = fontSize,
             .wrapEnabled = wrapWidth ? true : false,
             .wrapWidth = wrapWidth.value_or(0.0f),
@@ -221,7 +221,7 @@ namespace game
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
             .rawText = fmt::format("[HEY HEY!](rainbow;bump)"),
-            .font = globals::fontData.font,
+            .fontData = globals::fontData,
             .fontSize = 50.0f,
             .wrapEnabled = false,
             // .wrapWidth = 1200.0f,
@@ -676,8 +676,12 @@ namespace game
 
         particle::UpdateParticles(globals::registry, delta);
         shaders::updateAllShaderUniforms();
-
-        TextSystem::Functions::updateText(textEntity, delta); // update text system
+        
+        auto textView = globals::registry.view<TextSystem::Text>();
+        for (auto e : textView)
+        {
+            TextSystem::Functions::updateText(e, delta);
+        }
 
         // update ui components
         // auto viewUI = globals::registry.view<ui::UIBoxComponent>();

@@ -35,6 +35,8 @@ using std::pair;
 #include "spine/Bone.h"
 
 #include <map>
+#include <string>
+#include <vector>
 
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
@@ -85,6 +87,28 @@ float transitionShaderPositionVar = 0.f;
 
 namespace game
 {
+    
+    std::string randomStringText{};
+    std::vector<std::string> randomStringTextList = {
+        "Hello",
+        "World",
+        "This is a test",
+        "Random text",
+        "Another line",
+        "More text here",
+        "Just some random words",
+        "Lorem ipsum dolor sit amet",
+        "The quick brown fox jumps over the lazy dog",
+        "Sample text for testing purposes"
+    };
+    std::vector<std::string> randomEffects = {
+        "bump",
+        "wiggle",
+        "pop",
+        "slide",
+        "pulse",
+        "shake"
+    };
 
     bool gameStarted{false}; // if game state has begun (not in menu )
 
@@ -194,27 +218,7 @@ namespace game
         return node.build();        
     }
 
-    std::string randomStringText{};
-    std::vector<std::string> randomStringTextList = {
-        "Hello",
-        "World",
-        "This is a test",
-        "Random text",
-        "Another line",
-        "More text here",
-        "Just some random words",
-        "Lorem ipsum dolor sit amet",
-        "The quick brown fox jumps over the lazy dog",
-        "Sample text for testing purposes"
-    };
-    std::vector<std::string> randomEffects = {
-        "bump",
-        "wiggle",
-        "pop",
-        "slide",
-        "pulse",
-        "shake"
-    };
+    
 
 
     // perform game-specific initialization here. This makes it easier to find all the initialization code
@@ -250,22 +254,22 @@ namespace game
             // .wrapWidth = 1200.0f,
             .alignment = TextSystem::Text::Alignment::LEFT,
             .wrapMode = TextSystem::Text::WrapMode::WORD};
-        text.get_value_callback = []() {
-            return randomStringText; // updates text entity based on randomStringText
-        };
+        // text.get_value_callback = []() {
+        //     return randomStringText; // updates text entity based on randomStringText
+        // };
 
         // make this text update regularly, with a new effect
-        timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
-            randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
+        // timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
+        //     randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
 
-            // clear all effects
-            TextSystem::Functions::clearAllEffects(textEntity);
+        //     // clear all effects
+        //     TextSystem::Functions::clearAllEffects(textEntity);
 
-            // set new random effect to update on text change
-            auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-            text.effectStringsToApplyGloballyOnTextChange.clear();
-            text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
-        });
+        //     // set new random effect to update on text change
+        //     auto &text = globals::registry.get<TextSystem::Text>(textEntity);
+        //     text.effectStringsToApplyGloballyOnTextChange.clear();
+        //     text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
+        // });
 
         text.onFinishedEffect = []()
         {

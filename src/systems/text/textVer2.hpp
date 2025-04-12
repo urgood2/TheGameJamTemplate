@@ -82,6 +82,8 @@ namespace TextSystem
 
         float width{}, height{}; // width and height of the entire text, updated every draw call
         
+        float fontSize{10.f};
+        
         enum class Alignment
         {
             LEFT,
@@ -166,12 +168,6 @@ namespace TextSystem
             TextBuilder &setCreatedTime(float time)
             {
                 text_.createdTime = time;
-                return *this;
-            }
-
-            TextBuilder &setEffectFunctions(const std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> &functions)
-            {
-                text_.effectFunctions = functions;
                 return *this;
             }
 

@@ -88,7 +88,8 @@ float transitionShaderPositionVar = 0.f;
 namespace game
 {
     
-    std::string randomStringText{};
+    std::string randomStringText{"NOTHING"
+    };
     std::vector<std::string> randomStringTextList = {
         "Hello",
         "World",
@@ -254,22 +255,23 @@ namespace game
             // .wrapWidth = 1200.0f,
             .alignment = TextSystem::Text::Alignment::LEFT,
             .wrapMode = TextSystem::Text::WrapMode::WORD};
-        // text.get_value_callback = []() {
-        //     return randomStringText; // updates text entity based on randomStringText
-        // };
+            
+        text.get_value_callback = []() {
+            return randomStringText; // updates text entity based on randomStringText
+        };
 
         // make this text update regularly, with a new effect
-        // timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
-        //     randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
+        timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
+            randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
 
-        //     // clear all effects
-        //     TextSystem::Functions::clearAllEffects(textEntity);
+            // clear all effects
+            TextSystem::Functions::clearAllEffects(textEntity);
 
-        //     // set new random effect to update on text change
-        //     auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-        //     text.effectStringsToApplyGloballyOnTextChange.clear();
-        //     text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
-        // });
+            // set new random effect to update on text change
+            auto &text = globals::registry.get<TextSystem::Text>(textEntity);
+            text.effectStringsToApplyGloballyOnTextChange.clear();
+            text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
+        });
 
         text.onFinishedEffect = []()
         {

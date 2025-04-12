@@ -26,6 +26,7 @@ LATER: (not needed immediately)
 - [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
 - [ ] apply fontData to all text rendering (raw ui text, dynamic text)
 - [ ] Effects only working for one text entity only, needs debugging
+- [ ] are effect ufnctions being called for every character on every text? check
 
 - [ ] choose a shader to apply to ui, test it
 - [ ] generic glow, might be nice to do https://godotshaders.com/shader/dynamic-glow/

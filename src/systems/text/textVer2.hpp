@@ -66,15 +66,21 @@ namespace TextSystem
 
     struct Text
     {
+        // used to dynamically update the text
+        //TODO: apply
+        std::function<void(float)> set_value_callback{}; // Function to update the value to be shown as text. 
+        
+        std::function<float(void)> get_value_callback{}; // Function to get the value to be shown as text. 
+        
+        std::vector<std::string> tagsToApplyGloballyOnTextChange{}; // these tags will be applied to all characters in the text when the text is updated. This is useful for applying effects to all characters in the text, such as pop-in or fade-in effects, consistently even when the content of the text is updated.
+        
         std::function<void()> onFinishedEffect; // callback for when an effect that keeps track of finished state has finished in the last character of a text. Note that it doesn't keep track of multiple such effects, and will respond tot he first one that finishes.
         
-        bool pop_in_enabled = false; // New: Enable pop-in animation for individual characters
+        bool pop_in_enabled = false; // deprecated
 
-        bool shadow_enabled = true; // New: Enable shadow effect for characters. Uses shadow data from transform components
+        bool shadow_enabled = true; // Enable shadow effect for characters. Uses shadow data from transform components
 
-        
-        
-        float width{}, height{}; // width and height of the text, updated every draw call
+        float width{}, height{}; // width and height of the entire text, updated every draw call
         
         enum class Alignment
         {
@@ -88,13 +94,14 @@ namespace TextSystem
             WORD,
             CHARACTER
         };
-        std::string rawText;
-        std::vector<Character> characters;
-        std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
+        std::string rawText; // can contain text with effect tags
+        std::vector<Character> characters; // contains the generated characters, with their effects applied
+        
         globals::FontData fontData;
-        float fontSize;
         bool wrapEnabled = true;          // if enabled, will disrespect provided wrap width and behave like there is no wrap width at all
+        //FIXME: wrap is bugged, so is alignment
         float wrapWidth;
+        
         Alignment alignment = Alignment::LEFT; // 0: Left, 1: Center, 2: Right
         WrapMode wrapMode = WrapMode::WORD;
         float createdTime = -1; // time the text was created, used for pop-in animation

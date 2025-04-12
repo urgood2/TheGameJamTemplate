@@ -23,7 +23,9 @@ LATER: (not needed immediately)
 - [ ] hook up reflection-based updates for dynamic text - or just make it a getter and setter lamnda based like event queue
 - [ ] rounded rect needs testing - outline doesn't seem to work right all the time
 - [ ] dynamic text centering seems off? https://chatgpt.com/share/67f8f530-8ebc-800a-a345-0b7f7350cc1f < reference
-
+- [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
+- [ ] apply fontData to all text rendering (raw ui text, dynamic text)
+- [ ] Effects only working for one text entity only, needs debugging
 
 - [ ] choose a shader to apply to ui, test it
 - [ ] generic glow, might be nice to do https://godotshaders.com/shader/dynamic-glow/

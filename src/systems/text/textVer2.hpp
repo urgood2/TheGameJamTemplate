@@ -15,6 +15,7 @@
 
 namespace TextSystem
 {
+    
 
     struct ParsedEffectArguments
     {
@@ -57,6 +58,8 @@ namespace TextSystem
         bool isFinalCharacterInText = false; // whether this character is the last character in the text
         std::unordered_map<std::string, bool> effectFinished; // keeps track of whether an effect has finished, not tracked by all effects but only by effects that need to know when they are done, such as pop. This is used in tandem with isFinalCharacterInText to trigger callbacks when the last character in the text has finished all relevant effects.
     };
+
+    extern std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
 
     struct Text
     {
@@ -190,7 +193,7 @@ namespace TextSystem
     namespace Functions
     {
 
-        extern void initEffects(Text &text);
+        extern void initEffects();
 
         extern Character createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
             float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,

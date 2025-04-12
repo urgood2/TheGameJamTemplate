@@ -170,11 +170,10 @@ namespace game
         auto textEntity = TextSystem::Functions::createTextEntity(textData, 0, 0);
 
         if (textEffect) {
-            TextSystem::Functions::applyGlobalEffects(textEntity, *textEffect);
+            TextSystem::Functions::applyGlobalEffects(textEntity, textEffect.value_or(""));
         }
 
         auto configBuilder = ui::UIConfig::Builder::create()
-            .addColor(WHITE)
             .addObject(textEntity)
             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
 
@@ -183,6 +182,10 @@ namespace game
                 .addRefComponent(*refComponent)
                 .addRefValue(*refValue);
         }
+
+        timer::TimerSystem::timer_every(3.f, [textEntity](std::optional<float> f) {
+            TextSystem::Functions::debugPrintText(textEntity);
+        });
 
         auto node = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::OBJECT)
@@ -217,9 +220,9 @@ namespace game
             // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
-            .rawText = fmt::format("[HEY HEY!](rainbow)"),
+            .rawText = fmt::format("[HEY HEY!](rainbow;bump)"),
             .font = globals::fontData.font,
-            .fontSize = 30.0f,
+            .fontSize = 50.0f,
             .wrapEnabled = false,
             // .wrapWidth = 1200.0f,
             .alignment = TextSystem::Text::Alignment::LEFT,
@@ -248,6 +251,8 @@ namespace game
         // TextSystem::Functions::parseText(text);
 
         textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
+
+        auto textEntity2 = TextSystem::Functions::createTextEntity(text, 300, 300); // testing
 
         // TextSystem::Functions::clearAllEffects(text);
         // TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,out;spin=4,0.1;"); // ;
@@ -515,7 +520,7 @@ namespace game
                     // .addMinWidth(500.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(getNewDynamicTextEntry("Consumables: ", 20.f, 500.f, "bump"))
+            .addChild(getNewDynamicTextEntry("Consumables:", 20.f, 500.f, "bump;rainbow"))
             .addChild(uiTestInventoryEntry)
             .build();
         ui::UIElementTemplateNode spriteRowDef = ui::UIElementTemplateNode::Builder::create()
@@ -550,7 +555,7 @@ namespace game
             .addChild(consumablesRowDef)
             .addChild(spriteRowDef)
             // .addChild(uiRowDef)
-            .addChild(getNewTextEntry("This is a test"))
+            .addChild(getNewTextEntry("HEY HEY!"))
             .build();
 
         uiBox = ui::box::Initialize(
@@ -727,7 +732,6 @@ namespace game
         auto textView = globals::registry.view<TextSystem::Text>();
         for (auto e : textView)
         {
-            auto &text = globals::registry.get<TextSystem::Text>(e);
             TextSystem::Functions::renderText(e, ui_layer, true);
         }
 

@@ -19,6 +19,7 @@
 
 namespace TextSystem
 {
+    std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
 
     namespace Functions
     {
@@ -31,7 +32,10 @@ namespace TextSystem
             auto &gameObject = globals::registry.get<transform::GameObject>(entity);
             auto &textComp = globals::registry.emplace<Text>(entity, text);
             
-            initEffects(textComp);
+            if (effectFunctions.empty())
+            {
+                initEffects();
+            }
             parseText(entity);
             
             
@@ -56,10 +60,10 @@ namespace TextSystem
         };
 
         // adds some default effects to the text. This is a good place to add custom effects
-        void initEffects(Text &text)
+        void initEffects()
         {
             spdlog::debug("Initializing effects for text.");
-            text.effectFunctions["color"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["color"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 if (!args.empty())
                 {
@@ -76,7 +80,7 @@ namespace TextSystem
                 }
             };
 
-            text.effectFunctions["shake"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["shake"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 auto effectName = "shake";
                 if (character.offsets.find(effectName) == character.offsets.end())
@@ -101,7 +105,7 @@ namespace TextSystem
             };
 
             // Four arguments: min scale, max scale, pulse speed, stagger offset (optional)
-            text.effectFunctions["pulse"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["pulse"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float minScale = 0.8f;
                 float maxScale = 1.2f;
@@ -132,7 +136,7 @@ namespace TextSystem
                 character.scale = minScale + (maxScale - minScale) * wave;
             };
 
-            text.effectFunctions["rotate"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["rotate"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float speed = 2.0f;  // Default speed (Hz)
                 float angle = 25.0f; // Default rotation angle in degrees
@@ -152,7 +156,7 @@ namespace TextSystem
                 character.rotation = std::sin(GetTime() * speed + character.index * 10.0f) * angle;
             };
 
-            text.effectFunctions["float"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["float"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float speed = 2.5f;
                 float amplitude = 5.0f;
@@ -181,7 +185,7 @@ namespace TextSystem
                 character.offsets[effectName].y = std::sin(GetTime() * speed + character.index * phaseOffsetPerChar) * amplitude;
             };
 
-            text.effectFunctions["bump"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["bump"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 // === Configurable parameters ===
                 float speed = 6.0f;     // Oscillation speed (e.g., 2.0 = medium bounce rate)
@@ -223,7 +227,7 @@ namespace TextSystem
             };
 
             // this is the same as rotation, but has different defaults
-            text.effectFunctions["wiggle"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["wiggle"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float speed = 10.0f; // how fast it wiggles
                 float angle = 10.0f; // max angle in degrees
@@ -248,7 +252,7 @@ namespace TextSystem
             // TODO: Make the rest of the effects, including pop-in. pop-out, etc.
 
             // FIXME: only works for entire text only, partial text will lag too much
-            text.effectFunctions["slide"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["slide"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 if (character.firstFrame)
                 {
@@ -340,7 +344,7 @@ namespace TextSystem
                 }
             };
 
-            text.effectFunctions["pop"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["pop"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 if (character.firstFrame)
                 {
@@ -395,7 +399,7 @@ namespace TextSystem
                 }
             };
 
-            text.effectFunctions["spin"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["spin"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 if (character.firstFrame)
                 {
@@ -432,7 +436,7 @@ namespace TextSystem
                 }
             };
 
-            text.effectFunctions["fade"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["fade"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float speed = 3.0f;
                 float minAlpha = 0.4f;
@@ -463,7 +467,7 @@ namespace TextSystem
                 character.color.a = static_cast<unsigned char>(alpha * 255.0f);
             };
 
-            text.effectFunctions["highlight"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["highlight"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float speed = 4.0f;
                 float brightness = 0.4f;
@@ -539,7 +543,7 @@ namespace TextSystem
                 character.color = result;
             };
 
-            text.effectFunctions["rainbow"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["rainbow"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float speed = 60.0f;         // Hue change speed (degrees/sec)
                 float stagger = 10.0f;       // Phase delay per character
@@ -569,7 +573,7 @@ namespace TextSystem
                 character.color = ColorFromHSV(hue, 1.0f, 1.0f);
             };
 
-            text.effectFunctions["expand"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["expand"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float speed = 2.0f;     // How fast it pulses
                 float minScale = 0.8f;  // Minimum scale
@@ -617,7 +621,7 @@ namespace TextSystem
                 }
             };
 
-            text.effectFunctions["bounce"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["bounce"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float gravity = 700.0f;
                 float height = -20.0f; // Starting Y offset
@@ -677,7 +681,7 @@ namespace TextSystem
                 }
             };
 
-            text.effectFunctions["scramble"] = [](float dt, Character &character, const std::vector<std::string> &args)
+            effectFunctions["scramble"] = [](float dt, Character &character, const std::vector<std::string> &args)
             {
                 float duration = 0.4f;     // How long scrambling lasts
                 float stagger = 0.1f;      // Delay per character index
@@ -1312,9 +1316,9 @@ namespace TextSystem
 
                 for (const auto &[effectName, args] : parsedArguments.arguments)
                 {
-                    if (text.effectFunctions.count(effectName))
+                    if (effectFunctions.count(effectName))
                     {
-                        character.effects[effectName] = text.effectFunctions[effectName];
+                        character.effects[effectName] = effectFunctions[effectName];
                     }
                 }
 
@@ -1431,6 +1435,11 @@ namespace TextSystem
             auto &text = globals::registry.get<Text>(textEntity);
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
 
+            if (static_cast<int>(textEntity) == 88)
+            {
+                spdlog::error("debug break");
+            }
+
             for (const auto &character : text.characters)
             {
 
@@ -1518,6 +1527,12 @@ namespace TextSystem
 
                 // DrawTextPro(text.font, utf8String.c_str(), Vector2{0, 0}, Vector2{0, 0}, 0.f, text.fontSize, text.spacing, character.color);
 
+                
+                if (debug && globals::drawDebugInfo) {
+                    // draw bounding box for the character
+                    layer::AddRectangleLinesPro(layerPtr, 0, 0, charSize, 1.0f, BLUE);
+                }
+
                 // rlPopMatrix();
                 layer::AddPopMatrix(layerPtr);
             }
@@ -1530,10 +1545,8 @@ namespace TextSystem
                 // Calculate the bounding box dimensions
                 auto [width, height] = calculateBoundingBox(textEntity);
                 
-                //TODO: this does not take final scale into account
-
-                // Draw the bounding box
-                layer::AddRectangleLinesPro(layerPtr, transform.getVisualX(), transform.getVisualY(), {width, height}, 5.0f, GRAY);
+                // Draw the bounding box for the text
+                layer::AddRectangleLinesPro(layerPtr, 0, 0, {width, height}, 1.0f, WHITE);
                 // DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
 
                 // Draw text showing the dimensions
@@ -1541,6 +1554,7 @@ namespace TextSystem
                 layer::AddText(layerPtr, dimensionsText.c_str(), GetFontDefault(), transform.getVisualX(), transform.getVisualY() - 20, GRAY, 10); // Position the text above the box
                 // DrawText(dimensionsText.c_str(), transform.getVisualX(), transform.getVisualY() - 20, 10, GRAY); 
             }
+            
         }
 
         void clearAllEffects(entt::entity textEntity)
@@ -1571,9 +1585,9 @@ namespace TextSystem
 
                 for (const auto &[effectName, args] : parsedArguments.arguments)
                 {
-                    if (text.effectFunctions.count(effectName))
+                    if (effectFunctions.count(effectName))
                     {
-                        character.effects[effectName] = text.effectFunctions[effectName];
+                        character.effects[effectName] = effectFunctions[effectName];
                     }
                     else
                     {

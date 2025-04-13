@@ -296,6 +296,9 @@ namespace game
         // TextSystem::Functions::parseText(text);
 
         textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
+        
+        // clear
+        text.get_value_callback = {};
 
         auto textEntity2 = TextSystem::Functions::createTextEntity(text, 300, 300); // testing
 

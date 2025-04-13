@@ -21713,6 +21713,28 @@
                 "y": 21
             },
             "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "char_test_woman",
+            "filename": "test_char_woman.png",
+            "frame": {
+                "h": 85,
+                "w": 70,
+                "x": 345,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 128,
+                "w": 128
+            },
+            "spriteSourceSize": {
+                "h": 85,
+                "w": 70,
+                "x": 30,
+                "y": 21
+            },
+            "trimmed": true
         }
     ],
     "meta": {
@@ -21724,7 +21746,7 @@
             "h": 2048,
             "w": 1024
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:0330f2ff058d92712cf8dc0bc86d03cc:7edb80413d87054c04f860c8c93399a5:0816b7a675e2ebccf76e0169ef47fb32$",
+        "smartupdate": "$TexturePacker:SmartUpdate:08a9095e3fe58d3e8e13853e55a35693:5431f45fd196102a0cce2bdf92dae1cb:0816b7a675e2ebccf76e0169ef47fb32$",
         "version": "1.0"
     }
 }

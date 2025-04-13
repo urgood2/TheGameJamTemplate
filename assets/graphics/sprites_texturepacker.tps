@@ -1272,6 +1272,21 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/test_char_woman.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>32,32,64,64</rect>
+                <key>scale9Paddings</key>
+                <rect>32,32,64,64</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
         </map>
         <key>fileLists</key>
         <map type="SpriteSheetMap">
@@ -2266,6 +2281,7 @@
                     <filename>pre-packing-files_globbed/Buff n Debuff P3 01_7.png</filename>
                     <filename>pre-packing-files_globbed/Buff n Debuff P3 01_8.png</filename>
                     <filename>pre-packing-files_globbed/Buff n Debuff P3 01_9.png</filename>
+                    <filename>pre-packing-files_globbed/test_char_woman.png</filename>
                 </array>
             </struct>
         </map>

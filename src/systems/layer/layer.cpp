@@ -1093,6 +1093,37 @@ namespace layer
         {
             if (animationFrame)
             {
+                auto &node = registry.get<transform::GameObject>(e);
+
+                if (node.shadowDisplacement) {
+                    float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                    float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
+    
+                    // Adjust displacement using shadow height
+                    float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+                    float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+    
+                    float shadowAlpha = 0.8f;      // 0.0f to 1.0f
+                    Color shadowColor = Fade(BLACK, shadowAlpha);
+    
+                    // Translate to shadow position
+                    Translate(-shadowOffsetX, shadowOffsetY);
+    
+                    // Draw shadow by rendering the same frame with a black tint and offset
+                    layer::TexturePro(
+                        spriteAtlas,
+                        {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height},
+                        0, 0,
+                        {renderWidth, renderHeight},
+                        {0, 0},
+                        0,
+                        shadowColor
+                    );
+    
+                    // Reset translation to original position
+                    Translate(shadowOffsetX, -shadowOffsetY);
+                }
+
                 layer::TexturePro(spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height}, 0, 0, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
             }
             else
@@ -1170,17 +1201,72 @@ namespace layer
         }
 
         // Draw the animation frame or a default rectangle if no animation is present
-        if (drawForeground)
+        if (!drawForeground) return; 
+
+        auto &node = registry.get<transform::GameObject>(e);
+
+        // draw shadow based on shadow displacement
+        // if (node.shadowDisplacement)
+        // {
+        //     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        //     float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
+
+        //     // Adjust displacement using shadow height
+        //     float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+        //     float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+
+        //     // Translate to shadow position
+        //     layer::AddTranslate(layer, -shadowOffsetX, shadowOffsetY);
+
+        //     // Draw shadow outline
+        //     // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
+        //     layer::AddRectanglePro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, Fade(BLACK, 0.7f));
+
+        //     // Reset translation to original position
+        //     layer::AddTranslate(layer, shadowOffsetX, -shadowOffsetY);
+        // }
+        
+        if (animationFrame)
         {
-            if (animationFrame)
-            {
-                layer::TexturePro(spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height}, x, y, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+
+            if (node.shadowDisplacement) {
+                float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
+
+                // Adjust displacement using shadow height
+                float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+                float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+
+                float shadowAlpha = 0.8f;      // 0.0f to 1.0f
+                Color shadowColor = Fade(BLACK, shadowAlpha);
+
+                // Translate to shadow position
+                Translate(-shadowOffsetX, shadowOffsetY);
+
+                // Draw shadow by rendering the same frame with a black tint and offset
+                layer::TexturePro(
+                    spriteAtlas,
+                    {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height},
+                    0, 0,
+                    {renderWidth, renderHeight},
+                    {0, 0},
+                    0,
+                    shadowColor
+                );
+
+                // Reset translation to original position
+                Translate(shadowOffsetX, -shadowOffsetY);
             }
-            else
-            {
-                layer::RectanglePro(x, y, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
-            }
+            
+            // draw main image
+
+            layer::TexturePro(spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height}, x, y, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
         }
+        else
+        {
+            layer::RectanglePro(x, y, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+        }
+    
 
     }
 

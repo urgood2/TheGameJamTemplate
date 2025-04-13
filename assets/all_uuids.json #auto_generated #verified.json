@@ -9456,6 +9456,15 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/celestial-circus-pro.atlas",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\celestial-circus-pro.png"
     ],
+    "char_example": [
+        "example_char"
+    ],
+    "char_file_globbed_packing_pre_test_woman": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\test_char_woman.png"
+    ],
+    "char_test_woman": [
+        "test_char_woman.png"
+    ],
     "chartreuse": [
         "CHARTREUSE"
     ],

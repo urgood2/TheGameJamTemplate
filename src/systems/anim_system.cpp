@@ -14,6 +14,8 @@ namespace animation_system {
         auto &transform = globals::registry.get<transform::Transform>(e);
         auto &animQueue = globals::registry.emplace<AnimationQueueComponent>(e);
         animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationID);
+
+        auto &gameObject = globals::registry.get<transform::GameObject>(e);
         
         // set width and height to the animation size
         transform.setActualW(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame.width);

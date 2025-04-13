@@ -334,7 +334,7 @@ namespace game
         globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-        player = animation_system::createAnimatedObjectWithTransform("idle_animation", 400, 400);
+        player = animation_system::createAnimatedObjectWithTransform("example_char", 400, 400);
         auto &playerTransform = globals::registry.get<transform::Transform>(player);
         auto &playerNode = globals::registry.get<transform::GameObject>(player);
         playerNode.debug.debugText = "Player";

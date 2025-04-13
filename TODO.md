@@ -11,6 +11,7 @@
 ## 🧠 General Design / Architecture
 
 - [ ] higher shadow on hovered items, draw above everything else. How?
+- [ ] text source being shared by multiple entities? why?
 
 - [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
 

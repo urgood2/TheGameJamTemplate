@@ -18,7 +18,8 @@
 - [ ] generic glow, might be nice to do https://godotshaders.com/shader/dynamic-glow/
 - [ ] radial shine for ui?
 
-spectrum line shader (make this go around a rounded rect)
+spectrum line shader (make this go around a rounded rect) & make it complete a loop around the rect given a certain length in seconds, animated
+refer to: https://chatgpt.com/share/67fbe1d9-eb6c-800a-ae3b-dd4489c2658b
 ```glsl
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {

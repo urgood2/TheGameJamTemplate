@@ -266,23 +266,26 @@ namespace game
         };
 
         // make this text update regularly, with a new effect
-        // timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
-        //     randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
-
-        //     // clear all effects
-        //     TextSystem::Functions::clearAllEffects(textEntity);
-
-        //     // set new random effect to update on text change
-        //     auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-        //     text.effectStringsToApplyGloballyOnTextChange.clear();
-        //     text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
-        // });
-        
         timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
-                // renderscale test
+            randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
+
+            // clear all effects
+            TextSystem::Functions::clearAllEffects(textEntity);
+
+            // set new random effect to update on text change
             auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-            text.renderScale = random_utils::random_float(0.5f, 2.0f);
+            text.effectStringsToApplyGloballyOnTextChange.clear();
+            text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
         });
+        
+        text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
+            // get master
+            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+            auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
+            
+            TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
+        };
+        
 
         text.onFinishedEffect = []()
         {

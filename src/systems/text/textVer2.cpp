@@ -75,43 +75,17 @@ namespace TextSystem
         void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight)
         {
             auto &transform = globals::registry.get<transform::Transform>(textEntity);
-            auto currentWidth = transform.getActualW();
-            auto currentHeight = transform.getActualH();
-            if (currentWidth <= 0.0f || currentHeight <= 0.0f)
-            {
-                spdlog::warn("resizeTextToFit: Invalid bounding box dimensions ({}, {}). Skipping resize.", currentWidth, currentHeight);
-                return;
-            }
-            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
-
+            auto &text = globals::registry.get<Text>(textEntity);
             
-            float currentScale = transform.getActualScale();
-            spdlog::debug("Current scale: {:.4f}", currentScale);
-
-            float unscaledW = currentWidth / currentScale;
-            float unscaledH = currentHeight / currentScale;
-            spdlog::debug("Unscaled dimensions: ({:.4f}, {:.4f})", unscaledW, unscaledH);
-
-            float newScaleX = targetWidth / unscaledW;
-            float newScaleY = targetHeight / unscaledH;
-            float newScale = std::min(newScaleX, newScaleY);
-            spdlog::debug("Target size: ({:.4f}, {:.4f}) → scaleX: {:.4f}, scaleY: {:.4f}, chosen scale: {:.4f}",
-                        targetWidth, targetHeight, newScaleX, newScaleY, newScale);
-
-            // Apply new scale
-            transform.setActualScale(newScale);
-
-            float newW = unscaledW * newScale;
-            float newH = unscaledH * newScale;
-            spdlog::debug("New scaled dimensions: ({:.4f}, {:.4f})", newW, newH);
-
-            float deltaW = newW - currentWidth;
-            float deltaH = newH - currentHeight;
-            spdlog::debug("Delta in dimensions: deltaW = {:.4f}, deltaH = {:.4f}", deltaW, deltaH);
-
-            role.offset->x = - deltaW * 0.5f;
-            role.offset->y = - deltaH * 0.5f;
-            spdlog::debug("New offset: ({:.4f}, {:.4f})", role.offset->x, role.offset->y);
+            auto [width, height] = calculateBoundingBox(textEntity);
+            
+            // calculate the scale factor to fit the target width and height
+            float scaleX = targetWidth / width;
+            float scaleY = targetHeight / height;
+            float scale = std::min(scaleX, scaleY); // Use the smaller scale factor to maintain aspect ratio
+            
+            // apply the new scale
+            text.renderScale = scale;
         }
 
 
@@ -740,6 +714,17 @@ namespace TextSystem
             // spdlog::debug("Updating text with delta time: {}", dt);
 
             // check value from lamdba function if there is one
+            
+            // check if renderscale changed
+            if (text.renderScale != text.prevRenderScale) {
+                spdlog::debug("Render scale changed from {} to {}", text.prevRenderScale, text.renderScale);
+                text.prevRenderScale = text.renderScale;
+                
+                // update transform dimensions
+                auto [width, height] = calculateBoundingBox(textEntity);
+                textTransform.setActualW(width);
+                textTransform.setActualH(height);
+            }
 
             if (text.get_value_callback)
             {
@@ -820,6 +805,7 @@ namespace TextSystem
             return std::string(utf8Char, utf8Size);
         }
         
+        //TODO: probably sync transform dimensions to this
         Vector2 calculateBoundingBox (entt::entity textEntity) {
 
             auto &text = globals::registry.get<Text>(textEntity);
@@ -835,8 +821,8 @@ namespace TextSystem
             for (auto &character: text.characters) {
 
                 // get the character's position and size
-                float charX = transform.getActualX() + character.offset.x ;
-                float charY = transform.getActualY() +character.offset.y ;
+                float charX = transform.getActualX() + character.offset.x * text.renderScale;
+                float charY = transform.getActualY() +character.offset.y * text.renderScale;
                 float charWidth = MeasureTextEx(text.fontData.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x * text.renderScale;
                 float charHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale; // Assuming height is same for all characters
 
@@ -1006,7 +992,7 @@ namespace TextSystem
                 auto [width, height] = calculateBoundingBox(textEntity);
                 
                 // Draw the bounding box for the text
-                layer::AddRectangleLinesPro(layerPtr, 0, 0, {width, height}, 1.0f, WHITE);
+                layer::AddRectangleLinesPro(layerPtr, 0, 0, {width, height}, 5.0f, WHITE);
                 // DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
 
                 // Draw text showing the dimensions

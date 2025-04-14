@@ -94,6 +94,7 @@ namespace TextSystem
             WORD,
             CHARACTER
         };
+        float prevRenderScale = 1.0f; // used to check if the render scale has changed, so we can update the text
         float renderScale = 1.0f; // Modifies the scale of the entire text object. TODO: should probably be synced with the transform as well.
         std::string rawText; // can contain text with effect tags
         std::vector<Character> characters; // contains the generated characters, with their effects applied

@@ -9853,6 +9853,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\polychrome_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_fragment.fs"
     ],
+    "fragment_rect_shader_spectrum": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_rect_fragment.fs"
+    ],
     "fragment_screen_shader_tone_transition": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/screen_tone_transition_fragment.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\screen_tone_transition_fragment.fs",
@@ -10282,6 +10285,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\.DS_Store",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/.DS_Store",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\.DS_Store"
+    ],
+    "rect_shader_spectrum_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_rect_vertex.vs"
     ],
     "red": [
         "RED"

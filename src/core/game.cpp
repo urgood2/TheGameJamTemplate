@@ -260,6 +260,28 @@ namespace game
             return randomStringText; // updates text entity based on randomStringText
         };
 
+        static Vector2 textPreviousWidthAndHeight{0, 0};
+
+        text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
+            // resize text to fit the new content
+            TextSystem::Functions::resizeTextToFit(textEntity, textPreviousWidthAndHeight.x, textPreviousWidthAndHeight.y);
+
+            // get the role
+            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+            SPDLOG_DEBUG("Text entity {} size changed to ({}, {})", static_cast<int>(textEntity), textPreviousWidthAndHeight.x, textPreviousWidthAndHeight.y);
+            
+            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
+
+            SPDLOG_DEBUG("Text entity's current location: ({}, {})", transform.getActualX(), transform.getActualY());
+            SPDLOG_DEBUG("Text entity's master's current location: ({}, {})", masterTransform.getActualX(), masterTransform.getActualY());
+            
+            
+            // resize the ui element
+            // recalc box
+            // ui::box::RenewAlignment(globals::registry, uiBox);
+        };
+
         // make this text update regularly, with a new effect
         timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
             randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
@@ -296,9 +318,15 @@ namespace game
         // TextSystem::Functions::parseText(text);
 
         textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
+
+        // save size of text entity for resizing later
+        auto textTransform = globals::registry.get<transform::Transform>(textEntity);
+        textPreviousWidthAndHeight.x = textTransform.getActualW();
+        textPreviousWidthAndHeight.y = textTransform.getActualH();
         
         // clear
         text.get_value_callback = {};
+        text.onStringContentUpdatedViaCallback = {};
 
         auto textEntity2 = TextSystem::Functions::createTextEntity(text, 300, 300); // testing
 

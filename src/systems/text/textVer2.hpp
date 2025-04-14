@@ -69,7 +69,7 @@ namespace TextSystem
         // used to dynamically update the text
         //TODO: apply
         std::function<std::string(void)> get_value_callback; // Function to get the value to be shown as text. 
-        std::function<void(entt::entity)> onStringContentUpdatedViaCallback; // function which is called when the rawText is changed through get_value_callback.
+        std::function<void(entt::entity)> onStringContentUpdatedViaCallback; // function which is called when the rawText is changed through get_value_callback. Called after parseText is called anew to apply changes.
         
         std::vector<std::string> effectStringsToApplyGloballyOnTextChange; // these tags will be applied to all characters in the text when the text is updated. This is useful for applying effects to all characters in the text, such as pop-in or fade-in effects, consistently even when the content of the text is updated.
         
@@ -222,6 +222,8 @@ namespace TextSystem
         extern void applyGlobalEffects(entt::entity textEntity, const std::string &effectString);
 
         extern void debugPrintText(entt::entity textEntity);
+
+        extern void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight);
 
     } // namespace Functions
 

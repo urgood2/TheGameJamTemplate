@@ -10,8 +10,10 @@
 
 ## 🧠 General Design / Architecture
 
-- [ ] higher shadow on hovered items, draw above everything else. How?
+- [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess
 - [ ] text source being shared by multiple entities? why?
+- [ ] how to assign a maximum width in advance (in a single line, so the text gets scaled down?)
+
 
 - [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
 
@@ -161,6 +163,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 - [ ] UI objects in ui elements might call renew alignment on ui box every time. need to check this.
 
 ## 🧭 Later later laters *(future consideration)*
+- [ ] optimize text implementation
 - [ ] Determine how to programmatically modify frame times for particle animations.
 - [ ] Consider using VBOs/IBOs for rendering to improve performance.
 - [ ] "LATER: figure out button UIE more precisely"

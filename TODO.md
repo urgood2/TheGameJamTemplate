@@ -160,6 +160,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 - [ ] UI objects in ui elements might call renew alignment on ui box every time. need to check this.
 
 ## 🧭 Later later laters *(future consideration)*
+- [ ] make debug window that has debugDraw toggle
 - [ ] some text effects randomly freeze, rotation seems off with renderscale other than 1
 - [ ] optimize text implementation
 - [ ] Determine how to programmatically modify frame times for particle animations.

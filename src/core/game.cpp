@@ -88,7 +88,7 @@ float transitionShaderPositionVar = 0.f;
 namespace game
 {
     
-    std::string randomStringText{"NOTHING"
+    std::string randomStringText{"HEY HEY!"
     };
     std::vector<std::string> randomStringTextList = {
         "Hello",
@@ -263,36 +263,25 @@ namespace game
         static Vector2 textPreviousWidthAndHeight{0, 0};
 
         text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
-            // resize text to fit the new content
-            TextSystem::Functions::resizeTextToFit(textEntity, textPreviousWidthAndHeight.x, textPreviousWidthAndHeight.y);
-
-            // get the role
-            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
-            SPDLOG_DEBUG("Text entity {} size changed to ({}, {})", static_cast<int>(textEntity), textPreviousWidthAndHeight.x, textPreviousWidthAndHeight.y);
-            
-            auto &transform = globals::registry.get<transform::Transform>(textEntity);
-            auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
-
-            SPDLOG_DEBUG("Text entity's current location: ({}, {})", transform.getActualX(), transform.getActualY());
-            SPDLOG_DEBUG("Text entity's master's current location: ({}, {})", masterTransform.getActualX(), masterTransform.getActualY());
-            
-            
-            // resize the ui element
-            // recalc box
-            // ui::box::RenewAlignment(globals::registry, uiBox);
         };
 
         // make this text update regularly, with a new effect
+        // timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
+        //     randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
+
+        //     // clear all effects
+        //     TextSystem::Functions::clearAllEffects(textEntity);
+
+        //     // set new random effect to update on text change
+        //     auto &text = globals::registry.get<TextSystem::Text>(textEntity);
+        //     text.effectStringsToApplyGloballyOnTextChange.clear();
+        //     text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
+        // });
+        
         timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
-            randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
-
-            // clear all effects
-            TextSystem::Functions::clearAllEffects(textEntity);
-
-            // set new random effect to update on text change
+                // renderscale test
             auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-            text.effectStringsToApplyGloballyOnTextChange.clear();
-            text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
+            text.renderScale = random_utils::random_float(0.5f, 2.0f);
         });
 
         text.onFinishedEffect = []()

@@ -65,6 +65,8 @@ namespace TextSystem
             gameObject.state.clickEnabled = true;
             return entity;
         }
+        
+        
 
         #include <algorithm> // For std::min
 
@@ -125,6 +127,9 @@ namespace TextSystem
             const char *utf8Char = CodepointToUTF8(codepoint, &utf8Size);
             std::string characterString(utf8Char, utf8Size); // Create a string with the exact size
             Vector2 charSize = MeasureTextEx(font, characterString.c_str(), fontSize, 1.0f);
+            // apply renderscale
+            charSize.x *= text.renderScale;
+            charSize.y *= text.renderScale;
 
             // Check for line wrapping, do this only if character wrapping is enabled
             if (text.wrapMode == Text::WrapMode::CHARACTER && wrapWidth > 0 && (currentX - startPosition.x) + charSize.x > wrapWidth)
@@ -158,8 +163,8 @@ namespace TextSystem
                 character.pop_in_delay = index * 0.1f; // Staggered pop-in effect
             }
 
-            currentX += text.fontData.spacing + charSize.x;         // Advance X position (include spacing)
-            currentLineWidth += charSize.x + text.fontData.spacing; // Update line width
+            currentX += text.fontData.spacing * text.renderScale + charSize.x;         // Advance X position (include spacing)
+            currentLineWidth += charSize.x + text.fontData.spacing * text.renderScale; // Update line width
             return character;
         }
 
@@ -167,11 +172,13 @@ namespace TextSystem
         {
             auto &text = globals::registry.get<Text>(textEntity);
             
+            float scaledWrapWidth = text.wrapWidth / text.renderScale;
+            
             // spdlog::debug("Adjusting alignment for text with alignment mode: {}", magic_enum::enum_name<Text::Alignment>(text.alignment));
 
             for (size_t line = 0; line < lineWidths.size(); ++line)
             {
-                float leftoverWidth = text.wrapWidth - lineWidths[line];
+                float leftoverWidth = scaledWrapWidth - lineWidths[line];
                 // spdlog::debug("Line {}: leftoverWidth = {}, wrapWidth = {}, lineWidth = {}", line, leftoverWidth, text.wrapWidth, lineWidths[line]);
 
                 if (leftoverWidth <= 0.0f)
@@ -316,7 +323,9 @@ namespace TextSystem
             auto &text = globals::registry.get<Text>(textEntity);
             auto &transform = globals::registry.get<transform::Transform>(textEntity);
 
+            // float effectiveWrapWidth = text.wrapEnabled ? text.wrapWidth : std::numeric_limits<float>::max();
             float effectiveWrapWidth = text.wrapEnabled ? text.wrapWidth : std::numeric_limits<float>::max();
+            effectiveWrapWidth /= text.renderScale;
 
             Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
             
@@ -361,7 +370,7 @@ namespace TextSystem
                     {
                         lineWidths.push_back(currentLineWidth); // Save current line width
                         currentX = transform.getActualX();             // Reset X position
-                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
+                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale;
                         currentLineWidth = 0.0f;
                         lineNumber++;
                     }
@@ -384,6 +393,8 @@ namespace TextSystem
                             lookaheadChar = CodepointToString(lookaheadCodepoint);
                             lookaheadCharString = lookaheadCharString + lookaheadChar;
                             Vector2 charSize = MeasureTextEx(text.fontData.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
+                            charSize.x *= text.renderScale;
+                            charSize.y *= text.renderScale;
                             nextWordWidth += charSize.x;
 
                             // Advance the lookahead pointer
@@ -398,7 +409,7 @@ namespace TextSystem
                             // If the next word exceeds the wrap width, move to the next line
                             lineWidths.push_back(currentLineWidth);                           // Save current line width
                             currentX = transform.getActualX();                                       // Reset X position
-                            currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y; // Move to the next line
+                            currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y  * text.renderScale; // Move to the next line
                             currentLineWidth = 0.0f;
                             lineNumber++;
 
@@ -476,7 +487,7 @@ namespace TextSystem
                 {
                     lineWidths.push_back(currentLineWidth); // Save current line width
                     currentX = transform.getActualX();             // Reset X position
-                    currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
+                    currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y  * text.renderScale;
                     currentLineWidth = 0.0f;
                     lineNumber++;
                 }
@@ -499,6 +510,8 @@ namespace TextSystem
                         lookaheadChar = CodepointToString(lookaheadCodepoint);
                         lookaheadCharString = lookaheadCharString + lookaheadChar;
                         Vector2 charSize = MeasureTextEx(text.fontData.font, lookaheadChar.c_str(), text.fontSize, 1.0f);
+                        charSize.x *= text.renderScale;
+                        charSize.y *= text.renderScale;
                         nextWordWidth += charSize.x;
 
                         // Advance the lookahead pointer
@@ -511,7 +524,7 @@ namespace TextSystem
                         // If the next word exceeds the wrap width, move to the next line
                         lineWidths.push_back(currentLineWidth);                           // Save current line width
                         currentX = transform.getActualX();                                       // Reset X position
-                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y; // Move to the next line
+                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y  * text.renderScale; // Move to the next line
                         currentLineWidth = 0.0f;
                         lineNumber++;
 
@@ -530,7 +543,7 @@ namespace TextSystem
                 else if (codepoint == ' ' && text.wrapMode == Text::WrapMode::CHARACTER) // Detect spaces
                 {
                     // does adding the char take us over the wrap width?
-                    if ((currentX - transform.getActualX()) + MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x > effectiveWrapWidth)
+                    if ((currentX - transform.getActualX()) + MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x  * text.renderScale > effectiveWrapWidth)
                     {
                         // if so skip this space character
 
@@ -624,7 +637,7 @@ namespace TextSystem
                         int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadSize);
                         std::string utf8Char = CodepointToString(lookaheadCodepoint);
                         //TODO: spacing should omitted if the previous character is a space or the first character of the string
-                        nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x;
+                        nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x  * text.renderScale;
                         lookaheadPos += lookaheadSize;
                     }
 
@@ -635,7 +648,7 @@ namespace TextSystem
                     {
                         lineWidths.push_back(currentLineWidth);
                         currentX = textPosition.x;
-                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
+                        currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale;
                         currentLineWidth = 0.0f;
                         lineNumber++;
                     }
@@ -645,7 +658,7 @@ namespace TextSystem
                 {
                     lineWidths.push_back(currentLineWidth);
                     currentX = textPosition.x;
-                    currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
+                    currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale;
                     currentLineWidth = 0.0f;
                     lineNumber++;
                 }
@@ -663,7 +676,7 @@ namespace TextSystem
                             int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadSize);
                             std::string utf8Char = CodepointToString(lookaheadCodepoint);
                             //TODO: spacing should omitted if the previous character is a space or the first character of the string
-                            nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x;
+                            nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x * text.renderScale;
                             lookaheadPos += lookaheadSize;
                         }
 
@@ -673,7 +686,7 @@ namespace TextSystem
                         {
                             lineWidths.push_back(currentLineWidth);
                             currentX = textPosition.x;
-                            currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
+                            currentY += MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale;
                             currentLineWidth = 0.0f;
                             lineNumber++;
                             effectPos += codepointSize;
@@ -683,7 +696,7 @@ namespace TextSystem
                     }
                     else if (text.wrapMode == Text::WrapMode::CHARACTER)
                     {
-                        float spaceWidth = MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x;
+                        float spaceWidth = MeasureTextEx(text.fontData.font, " ", text.fontSize, 1.0f).x * text.renderScale;
                         if ((currentX - textPosition.x) + spaceWidth > effectiveWrapWidth)
                         {
                             // Skip space at start of line
@@ -824,8 +837,8 @@ namespace TextSystem
                 // get the character's position and size
                 float charX = transform.getActualX() + character.offset.x ;
                 float charY = transform.getActualY() +character.offset.y ;
-                float charWidth = MeasureTextEx(text.fontData.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x;
-                float charHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y; // Assuming height is same for all characters
+                float charWidth = MeasureTextEx(text.fontData.font, CodepointToString(character.value).c_str(), text.fontSize, 1.0f).x * text.renderScale;
+                float charHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale; // Assuming height is same for all characters
 
                 // Update min and max values
                 minX = std::min(minX, charX);
@@ -853,6 +866,8 @@ namespace TextSystem
         {
             auto &text = globals::registry.get<Text>(textEntity);
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
+            float renderScale = text.renderScale; // 🟡 Use renderScale
+
 
             layer::AddPushMatrix(layerPtr);
 
@@ -890,14 +905,14 @@ namespace TextSystem
 
                 // Calculate character position with offset
                 Vector2 charPosition = {
-                    character.offset.x,
-                    character.offset.y};
+                    character.offset.x * renderScale,
+                    character.offset.y * renderScale};
 
                 // add all optional offsets
                 for (const auto &[effectName, offset] : character.offsets)
                 {
-                    charPosition.x += offset.x;
-                    charPosition.y += offset.y;
+                    charPosition.x += offset.x * renderScale;
+                    charPosition.y += offset.y * renderScale;
                 }
                 
 
@@ -907,6 +922,8 @@ namespace TextSystem
                 auto utf8String = CodepointToString(character.overrideCodepoint.value_or(character.value));
 
                 Vector2 charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(), text.fontSize, 1.0f);
+                charSize.x *= text.renderScale;
+                charSize.y *= text.renderScale;
                 // sanity checkdd
                 if (charSize.x == 0)
                 {
@@ -926,8 +943,8 @@ namespace TextSystem
                 finalScaleY *= text.fontData.fontScale;
                 
                 // add fontdata offset for finetuning
-                charPosition.x += text.fontData.fontRenderOffset.x * finalScaleX;
-                charPosition.y += text.fontData.fontRenderOffset.y * finalScaleY;
+                charPosition.x += text.fontData.fontRenderOffset.x * finalScaleX * renderScale;
+                charPosition.y += text.fontData.fontRenderOffset.y * finalScaleY * renderScale;
 
                 layer::AddPushMatrix(layerPtr);
 
@@ -946,8 +963,8 @@ namespace TextSystem
                     float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
                     // Adjust displacement using shadow height
-                    float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor;
-                    float shadowOffsetY = - character.shadowDisplacement.y * baseExaggeration * heightFactor; // make shadow stretch downward
+                    float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor * renderScale;
+                    float shadowOffsetY = - character.shadowDisplacement.y * baseExaggeration * heightFactor * renderScale; // make shadow stretch downward
                     
                     // apply offsets to shadow if any
                     for (const auto &[effectName, offset] : character.shadowDisplacementOffsets)
@@ -960,18 +977,18 @@ namespace TextSystem
                     layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
 
                     // Draw shadow 
-                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize, text.fontData.spacing, Fade(BLACK, 0.7f));
+                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize * renderScale, text.fontData.spacing, Fade(BLACK, 0.7f));
 
                     // Reset translation to original position
                     layer::AddTranslate(layerPtr, shadowOffsetX, -shadowOffsetY);
                 }
 
                 // Render the character
-                layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize, text.fontData.spacing, character.color);
+                layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize * renderScale, text.fontData.spacing, character.color);
                 
                 if (debug && globals::drawDebugInfo) {
                     // subtract finetuning offset
-                    layer::AddTranslate(layerPtr, - text.fontData.fontRenderOffset.x * finalScaleX, - text.fontData.fontRenderOffset.y * finalScaleY, 0);
+                    layer::AddTranslate(layerPtr, - text.fontData.fontRenderOffset.x * finalScaleX * renderScale, - text.fontData.fontRenderOffset.y * finalScaleY * renderScale, 0);
                     
                     // draw bounding box for the character
                     layer::AddRectangleLinesPro(layerPtr, 0, 0, charSize, 1.0f, BLUE);

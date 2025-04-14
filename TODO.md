@@ -12,7 +12,7 @@
 
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess
 - [ ] text source being shared by multiple entities? why?
-- [ ] how to assign a maximum width in advance (in a single line, so the text gets scaled down?)
+- [ ] how to assign a maximum width in advance (in a single line, so the text gets scaled down?) -> resizeText scales down the text transform way too much for some reason. why?
 
 
 - [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader

@@ -9460,7 +9460,8 @@
         "example_char"
     ],
     "char_file_globbed_packing_pre_test_woman": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\test_char_woman.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\test_char_woman.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/test_char_woman.png"
     ],
     "char_test_woman": [
         "test_char_woman.png"
@@ -9854,7 +9855,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_fragment.fs"
     ],
     "fragment_rect_shader_spectrum": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_rect_fragment.fs"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_rect_fragment.fs",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_rect_fragment.fs"
     ],
     "fragment_screen_shader_tone_transition": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/screen_tone_transition_fragment.fs",
@@ -10287,7 +10289,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\.DS_Store"
     ],
     "rect_shader_spectrum_vertex": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_rect_vertex.vs"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_rect_vertex.vs",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_rect_vertex.vs"
     ],
     "red": [
         "RED"

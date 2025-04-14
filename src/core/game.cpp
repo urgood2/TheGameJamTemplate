@@ -208,9 +208,9 @@ namespace game
                 .addRefValue(*refValue);
         }
 
-        timer::TimerSystem::timer_every(3.f, [textEntity](std::optional<float> f) {
-            TextSystem::Functions::debugPrintText(textEntity);
-        });
+        // timer::TimerSystem::timer_every(3.f, [textEntity](std::optional<float> f) {
+        //     TextSystem::Functions::debugPrintText(textEntity);
+        // });
 
         auto node = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::OBJECT)
@@ -431,11 +431,11 @@ namespace game
         // SPDLOG_DEBUG("Injecting dynamic motion");
         transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
 
-        timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
-                                        { 
-                                            SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); 
-                                            TextSystem::Functions::debugPrintText(textEntity);
-                                        });
+        // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
+        //                                 { 
+        //                                     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); 
+        //                                     TextSystem::Functions::debugPrintText(textEntity);
+        //                                 });
 
         timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
                                         {

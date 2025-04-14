@@ -72,38 +72,44 @@ namespace TextSystem
         // also modifes the offset so that the text is still in the same location as before with respect to the top left corner
         void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight)
         {
-            auto [currentWidth, currentHeight] = TextSystem::Functions::calculateBoundingBox(textEntity);
-            if (currentWidth <= 0.0f || currentHeight <= 0.0f) return;
-
             auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            auto currentWidth = transform.getActualW();
+            auto currentHeight = transform.getActualH();
+            if (currentWidth <= 0.0f || currentHeight <= 0.0f)
+            {
+                spdlog::warn("resizeTextToFit: Invalid bounding box dimensions ({}, {}). Skipping resize.", currentWidth, currentHeight);
+                return;
+            }
             auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
 
-            // 1. Save world position of top-left before scaling
+            
             float currentScale = transform.getActualScale();
-            float centerX = transform.getActualX();
-            float centerY = transform.getActualY();
-            float halfW = currentWidth * 0.5f;
-            float halfH = currentHeight * 0.5f;
-            Vector2 topLeftBefore = {centerX - halfW, centerY - halfH};
+            spdlog::debug("Current scale: {:.4f}", currentScale);
 
-            // 2. Compute new scale
             float unscaledW = currentWidth / currentScale;
             float unscaledH = currentHeight / currentScale;
+            spdlog::debug("Unscaled dimensions: ({:.4f}, {:.4f})", unscaledW, unscaledH);
+
             float newScaleX = targetWidth / unscaledW;
             float newScaleY = targetHeight / unscaledH;
             float newScale = std::min(newScaleX, newScaleY);
+            spdlog::debug("Target size: ({:.4f}, {:.4f}) → scaleX: {:.4f}, scaleY: {:.4f}, chosen scale: {:.4f}",
+                        targetWidth, targetHeight, newScaleX, newScaleY, newScale);
+
+            // Apply new scale
             transform.setActualScale(newScale);
 
-            // 3. Recalculate half size with new scale
-            float newHalfW = unscaledW * newScale * 0.5f;
-            float newHalfH = unscaledH * newScale * 0.5f;
+            float newW = unscaledW * newScale;
+            float newH = unscaledH * newScale;
+            spdlog::debug("New scaled dimensions: ({:.4f}, {:.4f})", newW, newH);
 
-            // 4. Move entity so that the top-left corner stays in place
-            role.offset->x = - (newHalfW);
-            role.offset->y = - (newHalfH);
+            float deltaW = newW - currentWidth;
+            float deltaH = newH - currentHeight;
+            spdlog::debug("Delta in dimensions: deltaW = {:.4f}, deltaH = {:.4f}", deltaW, deltaH);
 
-            SPDLOG_DEBUG("Resized to fit ({},{}). New scale: {}, adjusted position to keep top-left anchored.",
-                        targetWidth, targetHeight, newScale);
+            role.offset->x = - deltaW * 0.5f;
+            role.offset->y = - deltaH * 0.5f;
+            spdlog::debug("New offset: ({:.4f}, {:.4f})", role.offset->x, role.offset->y);
         }
 
 
@@ -130,7 +136,7 @@ namespace TextSystem
                 lineNumber++;                           // Increment line number
             }
 
-            spdlog::debug("Creating character: '{}' (codepoint: {}), x={}, y={}, line={}", characterString, codepoint, currentX, currentY, lineNumber);
+            // spdlog::debug("Creating character: '{}' (codepoint: {}), x={}, y={}, line={}", characterString, codepoint, currentX, currentY, lineNumber);
 
             Character character{};
 
@@ -161,49 +167,49 @@ namespace TextSystem
         {
             auto &text = globals::registry.get<Text>(textEntity);
             
-            spdlog::debug("Adjusting alignment for text with alignment mode: {}", magic_enum::enum_name<Text::Alignment>(text.alignment));
+            // spdlog::debug("Adjusting alignment for text with alignment mode: {}", magic_enum::enum_name<Text::Alignment>(text.alignment));
 
             for (size_t line = 0; line < lineWidths.size(); ++line)
             {
                 float leftoverWidth = text.wrapWidth - lineWidths[line];
-                spdlog::debug("Line {}: leftoverWidth = {}, wrapWidth = {}, lineWidth = {}", line, leftoverWidth, text.wrapWidth, lineWidths[line]);
+                // spdlog::debug("Line {}: leftoverWidth = {}, wrapWidth = {}, lineWidth = {}", line, leftoverWidth, text.wrapWidth, lineWidths[line]);
 
                 if (leftoverWidth <= 0.0f)
                 {
-                    spdlog::debug("Line {} fits perfectly, skipping alignment.", line);
+                    // spdlog::debug("Line {} fits perfectly, skipping alignment.", line);
                     continue; // Skip alignment for lines that perfectly fit
                 }
 
                 if (text.alignment == Text::Alignment::CENTER)
                 { // Center alignment
-                    spdlog::debug("Applying center alignment for line {}", line);
+                    // spdlog::debug("Applying center alignment for line {}", line);
                     for (auto &character : text.characters)
                     {
                         if (character.lineNumber == line)
                         {
-                            spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
+                            // spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
                             character.offset.x += leftoverWidth / 2.0f;
-                            spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
+                            // spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
                         }
                     }
                 }
                 else if (text.alignment == Text::Alignment::RIGHT)
                 { // Right alignment
-                    spdlog::debug("Applying right alignment for line {}", line);
+                    // spdlog::debug("Applying right alignment for line {}", line);
                     for (auto &character : text.characters)
                     {
                         if (character.lineNumber == line)
                         {
                             auto currentLineWidth = lineWidths[line];
-                            spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
+                            // spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
                             character.offset.x = character.offset.x - currentLineWidth + text.wrapWidth;
-                            spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
+                            // spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
                         }
                     }
                 }
                 else if (text.alignment == Text::Alignment::JUSTIFIED)
                 { // Justified alignment
-                    spdlog::debug("Applying justified alignment for line {}", line);
+                    // spdlog::debug("Applying justified alignment for line {}", line);
 
                     size_t spacesCount = 0;
                     std::vector<size_t> spaceIndices; // To track indices of spaces for debugging
@@ -218,12 +224,12 @@ namespace TextSystem
                         }
                     }
 
-                    spdlog::debug("Line {}: spacesCount = {}", line, spacesCount);
+                    // spdlog::debug("Line {}: spacesCount = {}", line, spacesCount);
 
                     if (spacesCount > 0)
                     {
                         float addedSpacePerSpace = leftoverWidth / spacesCount;
-                        spdlog::debug("Line {}: addedSpacePerSpace = {}", line, addedSpacePerSpace);
+                        // spdlog::debug("Line {}: addedSpacePerSpace = {}", line, addedSpacePerSpace);
 
                         float cumulativeShift = 0.0f;
 
@@ -234,13 +240,13 @@ namespace TextSystem
                             {
                                 if (character.value == ' ')
                                 {
-                                    spdlog::debug("Space character at x={} gets additional space: {}", character.offset.x, addedSpacePerSpace);
+                                    // spdlog::debug("Space character at x={} gets additional space: {}", character.offset.x, addedSpacePerSpace);
                                     cumulativeShift += addedSpacePerSpace;
                                 }
 
-                                spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
+                                // spdlog::debug("Before: Character '{}' at x={}", character.value, character.offset.x);
                                 character.offset.x += cumulativeShift;
-                                spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
+                                // spdlog::debug("After: Character '{}' at x={}", character.value, character.offset.x);
                             }
                         }
 
@@ -248,12 +254,12 @@ namespace TextSystem
                         for (size_t index : spaceIndices)
                         {
                             auto &spaceCharacter = text.characters[index];
-                            spdlog::debug("Space character position: x={}, y={}, index={}", spaceCharacter.offset.x, spaceCharacter.offset.y, index);
+                            // spdlog::debug("Space character position: x={}, y={}, index={}", spaceCharacter.offset.x, spaceCharacter.offset.y, index);
                         }
                     }
                     else
                     {
-                        spdlog::warn("Line {} has no spaces, skipping justified alignment.", line);
+                        // spdlog::warn("Line {} has no spaces, skipping justified alignment.", line);
                     }
                 }
             }
@@ -261,7 +267,7 @@ namespace TextSystem
 
         ParsedEffectArguments splitEffects(const std::string &effects)
         {
-            spdlog::debug("Splitting effects: {}", effects);
+            // spdlog::debug("Splitting effects: {}", effects);
             ParsedEffectArguments parsedArguments;
 
             std::regex pattern(R"((\w+)(?:=([\-\w\.,]+))?)"); // Matches 'name' or 'name=arg,...'
@@ -314,7 +320,7 @@ namespace TextSystem
 
             Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
             
-            spdlog::debug("Parsing text: {}", text.rawText);
+            // spdlog::debug("Parsing text: {}", text.rawText);
 
             const char *rawText = text.rawText.c_str();
 
@@ -336,11 +342,11 @@ namespace TextSystem
             // Regex matching on raw UTF-8 text
             while (std::regex_search(regexText, match, pattern))
             {
-                spdlog::debug("Match found: {} with effects: {}", match[1].str(), match[2].str());
+                // spdlog::debug("Match found: {} with effects: {}", match[1].str(), match[2].str());
 
-                spdlog::debug("Match position: {}, length: {}", match.position(0), match.length(0));
-                spdlog::debug("Processing plain text before the match");
-                spdlog::debug("Plain text string: {}", std::string(currentPos, match.position(0)));
+                // spdlog::debug("Match position: {}, length: {}", match.position(0), match.length(0));
+                // spdlog::debug("Processing plain text before the match");
+                // spdlog::debug("Plain text string: {}", std::string(currentPos, match.position(0)));
 
                 // Process plain text before the match
                 while (currentPos < regexText.c_str() + match.position(0))
@@ -387,7 +393,7 @@ namespace TextSystem
                         // Check if the next word will exceed the wrap width
                         if ((currentX - transform.getActualX()) + nextWordWidth > effectiveWrapWidth)
                         {
-                            spdlog::debug("Wrap would have exceeded width: currentX={}, wrapWidth={}, nextWordWidth={}, exceeds={}", currentX, effectiveWrapWidth, nextWordWidth, (currentX - transform.getActualX()) + nextWordWidth);
+                            // spdlog::debug("Wrap would have exceeded width: currentX={}, wrapWidth={}, nextWordWidth={}, exceeds={}", currentX, effectiveWrapWidth, nextWordWidth, (currentX - transform.getActualX()) + nextWordWidth);
 
                             // If the next word exceeds the wrap width, move to the next line
                             lineWidths.push_back(currentLineWidth);                           // Save current line width
@@ -396,8 +402,8 @@ namespace TextSystem
                             currentLineWidth = 0.0f;
                             lineNumber++;
 
-                            spdlog::debug("Word wrap: Moving to next line before processing space at x={}, y={}, line={}, with word {}",
-                                          currentX, currentY, lineNumber, lookaheadCharString);
+                            // // spdlog::debug("Word wrap: Moving to next line before processing space at x={}, y={}, line={}, with word {}",
+                            //               currentX, currentY, lineNumber, lookaheadCharString);
                         }
                         else
                         {
@@ -441,7 +447,7 @@ namespace TextSystem
                 std::string effects = match[2];
                 ParsedEffectArguments parsedArguments = splitEffects(effects);
 
-                spdlog::debug("Processing effect text: {}", effectText);
+                // spdlog::debug("Processing effect text: {}", effectText);
 
                 const char *effectPos = effectText.c_str();
 
@@ -457,7 +463,7 @@ namespace TextSystem
                 currentPos = regexText.c_str();
             }
 
-            spdlog::debug("Processing plain text after the last match: {}", currentPos);
+            // spdlog::debug("Processing plain text after the last match: {}", currentPos);
             while (*currentPos)
             {
                 // get string at match position
@@ -509,8 +515,8 @@ namespace TextSystem
                         currentLineWidth = 0.0f;
                         lineNumber++;
 
-                        spdlog::debug("Word wrap: Moving to next line before processing space at x={}, y={}, line={}, with word {}",
-                                      currentX, currentY, lineNumber, lookaheadCharString);
+                        // spdlog::debug("Word wrap: Moving to next line before processing space at x={}, y={}, line={}, with word {}",
+                        //               currentX, currentY, lineNumber, lookaheadCharString);
                     }
                     else
                     {
@@ -566,7 +572,7 @@ namespace TextSystem
             for (const auto &character : text.characters)
             {
                 int utf8Size = 0;
-                spdlog::debug("Character: '{}', x={}, y={}, line={}", CodepointToUTF8(character.value, &utf8Size), character.offset.x, character.offset.y, character.lineNumber);
+                // spdlog::debug("Character: '{}', x={}, y={}, line={}", CodepointToUTF8(character.value, &utf8Size), character.offset.x, character.offset.y, character.lineNumber);
             }
 
             auto ptr = std::make_shared<Text>(text);
@@ -729,7 +735,7 @@ namespace TextSystem
                 {
                     
 
-                    SPDLOG_DEBUG("Text value changed from '{}' to '{}'", text.rawText, value);
+                    // SPDLOG_DEBUG("Text value changed from '{}' to '{}'", text.rawText, value);
                     text.rawText = value;
                     clearAllEffects(textEntity);
                     parseText(textEntity);

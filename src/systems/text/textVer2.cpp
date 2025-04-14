@@ -703,6 +703,17 @@ namespace TextSystem
                 firstCharacter = false;
             }
         }
+        
+        void setText(entt::entity textEntity, const std::string &text)
+        {
+            auto &textComponent = globals::registry.get<Text>(textEntity);
+            textComponent.rawText = text;
+            textComponent.renderScale = 1.0f;
+            
+            clearAllEffects(textEntity);
+            deleteCharacters(textEntity);
+            parseText(textEntity);
+        }
 
         void updateText(entt::entity textEntity, float dt)
         {
@@ -731,7 +742,8 @@ namespace TextSystem
                 auto value = text.get_value_callback();
                 if (value != text.rawText)
                 {
-                    
+                    // reset renderscale
+                    text.renderScale = 1.0f;
 
                     // SPDLOG_DEBUG("Text value changed from '{}' to '{}'", text.rawText, value);
                     text.rawText = value;

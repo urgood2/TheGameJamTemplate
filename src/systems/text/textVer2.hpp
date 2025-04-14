@@ -226,6 +226,8 @@ namespace TextSystem
         extern void debugPrintText(entt::entity textEntity);
 
         extern void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight);
+        
+        extern void setText(entt::entity textEntity, const std::string &text);
 
     } // namespace Functions
 

@@ -72,10 +72,12 @@ namespace TextSystem
 
         // Function to resize text entity to fit the given target width and height
         // also modifes the offset so that the text is still in the same location as before with respect to the top left corner
-        void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight)
+        // the centering is done by modifying the offset of the transform
+        void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
         {
             auto &transform = globals::registry.get<transform::Transform>(textEntity);
             auto &text = globals::registry.get<Text>(textEntity);
+            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
             
             auto [width, height] = calculateBoundingBox(textEntity);
             
@@ -86,6 +88,24 @@ namespace TextSystem
             
             // apply the new scale
             text.renderScale = scale;
+            
+            // if necessary, center the text laterally and vertically
+            if (centerLaterally)
+            {
+                role.offset->x = (targetWidth - width * scale) / 2.0f;
+            }
+            else 
+            {
+                role.offset->x = 0.0f; // Reset lateral offset if not centering
+            }
+            if (centerVertically)
+            {
+                role.offset->y = (targetHeight - height * scale) / 2.0f;
+            }
+            else 
+            {
+                role.offset->y = 0.0f; // Reset vertical offset if not centering
+            }
         }
 
 

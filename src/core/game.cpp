@@ -102,13 +102,23 @@ namespace game
         "The quick brown fox jumps over the lazy dog",
         "Sample text for testing purposes"
     };
+              
     std::vector<std::string> randomEffects = {
+        "shake",
+        "pulse",
+        "rotate",
+        "float",
         "bump",
         "wiggle",
-        "pop",
         "slide",
-        "pulse",
-        "shake"
+        "pop",
+        "spin",
+        "fade",
+        "highlight",
+        "rainbow",
+        "expand",
+        "bounce",
+        "scramble"
     };
 
     bool gameStarted{false}; // if game state has begun (not in menu )

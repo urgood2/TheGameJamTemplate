@@ -843,6 +843,8 @@ namespace game
         // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
         auto crt = shaders::getShader("crt");
         shaders::TryApplyUniforms(crt, globals::globalShaderUniforms, "crt");
+        auto spectrum_rect = shaders::getShader("spectrum_rect");
+        shaders::TryApplyUniforms(spectrum_rect, globals::globalShaderUniforms, "spectrum_rect");
         // auto shockwave = shaders::getShader("shockwave");
         // shaders::TryApplyUniforms(shockwave, globalShaderUniforms, "shockwave");
         // auto glitch = shaders::getShader("glitch");
@@ -874,7 +876,7 @@ namespace game
 
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
         // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
-        layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
+        layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_rect); // render the background layer main canvas to the screen
 
         
         layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen

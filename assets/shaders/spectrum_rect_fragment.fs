@@ -4,55 +4,67 @@ precision mediump float;
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
-uniform sampler2D texture0;     // Raylib default texture sampler
-uniform vec4 colDiffuse;        // Raylib default tint color
-
-uniform vec2 iResolution;       // Screen resolution
-uniform float iTime;            // Time for animation
-uniform vec2 rectSize;          // Size of the rectangle
-uniform float rectRadius;       // Rounded corner radius
-uniform float duration;         // Time for full loop animation
-uniform float lineWidth;        // Thickness of the spectrum border
-uniform vec2 rectTopLeft;       // Top-left corner of the rectangle
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+uniform float iTime;
+uniform vec4 glowRect = vec4(0.0, 0.0, 1.0, 1.0); // x, y, w, h
 
 out vec4 finalColor;
 
-// Rounded rectangle SDF
-float roundedRectSDF(vec2 p, vec2 halfSize, float r)
+vec2 getGlowPositionFromEdge(float t, vec4 rect)
 {
-    vec2 d = abs(p) - halfSize + vec2(r);
-    return min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - r;
+    float x = rect.x, y = rect.y, w = rect.z, h = rect.w;
+    t = mod(t, 1.0);
+
+    if (t < 0.25) return vec2(x + t / 0.25 * w, y);
+    if (t < 0.5)  return vec2(x + w, y + (t - 0.25) / 0.25 * h);
+    if (t < 0.75) return vec2(x + (1.0 - (t - 0.5) / 0.25) * w, y + h);
+    return vec2(x, y + (1.0 - (t - 0.75) / 0.25) * h);
 }
 
-// HSV to RGB
-vec3 hsv2rgb(vec3 c)
+float getEdgeCoord(vec2 uv, vec4 rect, float borderWidth)
 {
-    vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0,4.0,2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
-    return c.z * mix(vec3(1.0), rgb, c.y);
+    float x = rect.x, y = rect.y, w = rect.z, h = rect.w;
+
+    if (abs(uv.y - y) < borderWidth) return (uv.x - x) / w * 0.25;
+    if (abs(uv.x - (x + w)) < borderWidth) return 0.25 + (uv.y - y) / h * 0.25;
+    if (abs(uv.y - (y + h)) < borderWidth) return 0.5 + (1.0 - (uv.x - x) / w) * 0.25;
+    if (abs(uv.x - x) < borderWidth) return 0.75 + (1.0 - (uv.y - y) / h) * 0.25;
+
+    return -1.0;
 }
 
 void main()
 {
-    vec2 uv = fragTexCoord * iResolution;
+    vec4 texelColor = texture(texture0, fragTexCoord);
+    vec4 baseColor = texelColor * colDiffuse * fragColor;
 
-    vec2 halfSize = rectSize * 0.5;
-    vec2 rectCenter = rectTopLeft + halfSize;
-    vec2 p = uv - rectCenter;
+    float borderWidth = 0.015;
 
-    float dist = roundedRectSDF(p, halfSize, rectRadius);
-    float borderMask = smoothstep(lineWidth, lineWidth * 0.5, abs(dist));
+    float pulsePos = mod(iTime * 0.2, 1.0);
+    float glowAmount = 0.0;
 
-    vec2 normP = p / halfSize;
-    float angle = atan(normP.y, normP.x);
-    float borderParam = (angle + 3.14159265) / (2.0 * 3.14159265);
-    float phase = mod(borderParam - iTime / duration, 1.0);
-    vec3 spectrumCol = hsv2rgb(vec3(phase, 1.0, 1.0));
+    // === Soft trail along edge ===
+    float edgeCoord = getEdgeCoord(fragTexCoord, glowRect, borderWidth);
+    if (edgeCoord >= 0.0)
+    {
+        float delta = mod(pulsePos - edgeCoord + 1.0, 1.0);
 
-    // Sample the base texture color (default white if no texture)
-    vec4 texColor = texture(texture0, fragTexCoord) * colDiffuse;
+        // Use Gaussian-style falloff for smooth trail
+        float trailFalloff = exp(-pow(delta * 15.0, 2.0)); // smooth, wide
+        glowAmount += trailFalloff;
+    }
 
-    // Blend the animated border color into the base texture
-    vec3 finalRGB = mix(texColor.rgb, spectrumCol, borderMask);
+    // === Soft blur aura around glow ===
+    vec2 glowCenter = getGlowPositionFromEdge(pulsePos, glowRect);
+    float radialDist = distance(fragTexCoord, glowCenter);
+    float blurMask = exp(-pow(radialDist / 0.05, 2.0));
+    glowAmount += blurMask * 0.4;
 
-    finalColor = vec4(finalRGB, texColor.a); // retain original alpha
+    // Final color blend
+    vec3 glowColor = vec3(1.0, 0.6, 0.2); // warm yellow-orange
+    vec4 glow = vec4(glowColor * glowAmount, glowAmount);
+
+    finalColor = baseColor + glow;
+    finalColor.a = clamp(finalColor.a, 0.0, 1.0);
 }

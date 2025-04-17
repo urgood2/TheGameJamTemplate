@@ -9484,6 +9484,12 @@
     "chocolate": [
         "CHOCOLATE"
     ],
+    "circle_fragment_shader_spectrum": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_fragment.fs"
+    ],
+    "circle_shader_spectrum_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_vertex.vs"
+    ],
     "color_raw": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/raws/colors.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\colors.json",

@@ -338,19 +338,15 @@ namespace game
         globalShaderUniforms.set("negative", "screen_scale", 1.0f); // UI scale factor
         
         // spectrum rect
-        globalShaderUniforms.set("spectrum_rect", "iResolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
+        globalShaderUniforms.set("spectrum_circle", "iResolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
 
-        shaders::registerUniformUpdate("spectrum_rect", [](Shader &shader) {
-            globalShaderUniforms.set("spectrum_rect", "iTime", static_cast<float>(GetTime()));
+        shaders::registerUniformUpdate("spectrum_circle", [](Shader &shader) {
+            globalShaderUniforms.set("spectrum_circle", "iTime", static_cast<float>(GetTime()));
         });
-
-        // Static uniform values (customize these!)
-        globalShaderUniforms.set("spectrum_rect", "rectSize", Vector2{400.0f, 150.0f});   // Your rectangle's width and height
-        globalShaderUniforms.set("spectrum_rect", "rectRadius", 20.0f);                   // Rounded corner radius
-        globalShaderUniforms.set("spectrum_rect", "duration", 3.5f);                      // Loop time in seconds
-        globalShaderUniforms.set("spectrum_rect", "lineWidth", 4.0f);                     // Border thickness
-        Vector2 topLeft = {300.0f, 200.0f}; // your desired position
-        globalShaderUniforms.set("spectrum_rect", "rectTopLeft", topLeft);
+        globalShaderUniforms.set("spectrum_circle", "uCenter",   Vector2{200, 150});  // relative to uRectPos
+        globalShaderUniforms.set("spectrum_circle", "uRadius",   30.0f);
+        
+        
 
 
     }

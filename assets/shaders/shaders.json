@@ -72,8 +72,8 @@
         "vertex": "negative_vertex.vs",
         "fragment": "negative_fragment.fs"
     },
-    "spectrum_rect": {
-        "vertex": "spectrum_rect_vertex.vs",
-        "fragment": "spectrum_rect_fragment.fs"
+    "spectrum_circle": {
+        "vertex": "spectrum_circle_vertex.vs",
+        "fragment": "spectrum_circle_fragment.fs"
     }
 }

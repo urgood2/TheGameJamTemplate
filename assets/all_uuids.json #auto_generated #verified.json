@@ -9292,6 +9292,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\peaches_background_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_fragment.fs"
     ],
+    "background_line_shader_spectrum_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_line_background_vertex.vs"
+    ],
     "background_peache_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\peaches_background_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_vertex.vs"
@@ -9307,6 +9310,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\base.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/base.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\base.vs"
+    ],
+    "beam_customizable_fragment_overlay_shader_spectrum": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/customizable_spectrum_beam_overlay_fragment.fs"
     ],
     "beige": [
         "BEIGE"

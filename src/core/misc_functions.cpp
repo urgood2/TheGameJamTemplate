@@ -346,7 +346,22 @@ namespace game
         globalShaderUniforms.set("spectrum_circle", "uCenter",   Vector2{200, 150});  // relative to uRectPos
         globalShaderUniforms.set("spectrum_circle", "uRadius",   30.0f);
         
+        // spectrum line
+        shaders::registerUniformUpdate("spectrum_line_background", [](Shader &shader) {
+            globalShaderUniforms.set("spectrum_line_background", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("spectrum_line_background", "iResolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
+        });
         
+        // One-time configuration (or updated as needed)
+        globalShaderUniforms.set("spectrum_line_background", "uLineSpacing", 100.0f);     // spacing between scanlines
+        globalShaderUniforms.set("spectrum_line_background", "uLineWidth", 0.75f);        // thickness of each scanline
+        globalShaderUniforms.set("spectrum_line_background", "uBeamHeight", 30.0f);       // vertical beam thickness
+        globalShaderUniforms.set("spectrum_line_background", "uBeamIntensity", 1.0f);     // how strong the beam glows
+        globalShaderUniforms.set("spectrum_line_background", "uOpacity", 1.0f);           // overlay strength (0 = invisible, 1 = full effect)
+        
+        globalShaderUniforms.set("spectrum_line_background", "uBeamY",          200.0f);  // vertical position in pixels
+        globalShaderUniforms.set("spectrum_line_background", "uBeamWidth",      400.0f);  // horizontal length in pixels
+        globalShaderUniforms.set("spectrum_line_background", "uBeamX",          400.0f);  //
 
 
     }

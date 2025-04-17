@@ -75,5 +75,9 @@
     "spectrum_circle": {
         "vertex": "spectrum_circle_vertex.vs",
         "fragment": "spectrum_circle_fragment.fs"
+    },
+    "spectrum_line_background": {
+        "vertex": "spectrum_line_background_vertex.vs",
+        "fragment": "spectrum_line_background_fragment.fs"
     }
 }

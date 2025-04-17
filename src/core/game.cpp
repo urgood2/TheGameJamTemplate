@@ -70,7 +70,7 @@ std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
 // AsteroidManager *asteroidManager = nullptr;
 
 // example entity
-entt::entity player{entt::null};
+entt::entity player{entt::null}, player2{entt::null}; // example player entity
 
 // example transform entity (which can be anything)
 entt::entity transformEntity{entt::null};
@@ -375,6 +375,18 @@ namespace game
         playerNode.state.hoverEnabled = true;
         playerNode.state.collisionEnabled = true;
         playerNode.state.clickEnabled = true;
+
+        player2 = animation_system::createAnimatedObjectWithTransform("example_char", 400, 400);
+        auto &playerTransform2 = globals::registry.get<transform::Transform>(player);
+        auto &playerNode2 = globals::registry.get<transform::GameObject>(player);
+        playerNode2.debug.debugText = "Player (untethered)";
+        playerNode2.state.dragEnabled = true;
+        playerNode2.state.hoverEnabled = true;
+        playerNode2.state.collisionEnabled = true;
+        playerNode2.state.clickEnabled = true;
+        //TODO: add ShaderPipelineComponent, optional ShaderUniformComponent
+        //TODO: set up shaders 
+        //TODO: init shader pipeline system
 
         // massive container the size of the screen
         transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
@@ -819,6 +831,7 @@ namespace game
 
         // sprites with transform (including those in ui)
         layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
+        layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         uiProfiler.Stop();
 
         particle::DrawParticles(globals::registry, ui_layer);

@@ -377,8 +377,8 @@ namespace game
         playerNode.state.clickEnabled = true;
 
         player2 = animation_system::createAnimatedObjectWithTransform("example_char", 400, 400);
-        auto &playerTransform2 = globals::registry.get<transform::Transform>(player);
-        auto &playerNode2 = globals::registry.get<transform::GameObject>(player);
+        auto &playerTransform2 = globals::registry.get<transform::Transform>(player2);
+        auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
         playerNode2.debug.debugText = "Player (untethered)";
         playerNode2.state.dragEnabled = true;
         playerNode2.state.hoverEnabled = true;

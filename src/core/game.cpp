@@ -43,6 +43,7 @@ using std::pair;
 
 #include "core/globals.hpp"
 #include "core/misc_fuctions.hpp"
+#include "core/ui_definitions.hpp"
 
 #include "systems/layer/layer.hpp"
 #include "systems/shaders/shader_system.hpp"
@@ -137,97 +138,9 @@ namespace game
     TextSystem::Text text;
     entt::entity textEntity{entt::null};
 
-    ui::UIElementTemplateNode getRandomRectDef()
-    {
-        return ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::RECT_SHAPE)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GREEN)
-                    .addHover(true)
-                    // .addOnePress(true)
-                    .addButtonCallback([]()
-                                       { SPDLOG_DEBUG("Button callback triggered"); })
-                    .addWidth(Random::get<float>(20, 100))
-                    .addHeight(Random::get<float>(20, 100))
-                    .addMinWidth(200.f)
-                    .addOutlineThickness(5.0f)
-                    // .addShadowColor(Fade(BLACK, 0.4f))
-                    .addShadow(true)
-                    // .addEmboss(4.f)
-                    // .addOutlineThickness(2.0f)
-                    .addOutlineColor(BLUE)
-                    // .addShadow(true)
-                    .build())
-            .build();
+    
 
-        // TODO: templates for timer
-        // TODO: how to chain timer calls optionally in a queue
-    }
 
-    // returns a UIElementTemplateNode for UITypeEnum::TEXT (no container)
-    ui::UIElementTemplateNode getNewTextEntry(std::string text, std::optional<entt::entity> refEntity = std::nullopt, std::optional<std::string> refComponent = std::nullopt, std::optional<std::string> refValue = std::nullopt) {
-        auto configBuilder = ui::UIConfig::Builder::create()
-            .addColor(WHITE)
-            .addText(text)
-            .addShadow(true)
-            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
-
-        if (refEntity && refComponent && refValue) {
-            configBuilder.addRefEntity(*refEntity)
-                .addRefComponent(*refComponent)
-                .addRefValue(*refValue);
-        }
-
-        auto node = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::TEXT)
-            .addConfig(configBuilder.build());
-
-        return node.build();        
-    }
-
-    //TODO: set up dynamic updating for dynamic text through refEntity, refComponent, refValue -> make updates cause texts to jiggle, or something like that, ideally have a configurable trigger
-    ui::UIElementTemplateNode getNewDynamicTextEntry(std::string text, float fontSize, std::optional<float> wrapWidth, std::optional<std::string> textEffect = std::nullopt, std::optional<entt::entity> refEntity = std::nullopt, std::optional<std::string> refComponent = std::nullopt, std::optional<std::string> refValue = std::nullopt) {
-
-        TextSystem::Text textData = {
-            // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
-            // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
-            
-            .rawText = text,
-            .fontData = globals::fontData,
-            .fontSize = fontSize,
-            .wrapEnabled = wrapWidth ? true : false,
-            .wrapWidth = wrapWidth.value_or(0.0f),
-            .alignment = TextSystem::Text::Alignment::LEFT,
-            .wrapMode = TextSystem::Text::WrapMode::WORD
-        };
-
-        auto textEntity = TextSystem::Functions::createTextEntity(textData, 0, 0);
-
-        if (textEffect) {
-            TextSystem::Functions::applyGlobalEffects(textEntity, textEffect.value_or(""));
-        }
-
-        auto configBuilder = ui::UIConfig::Builder::create()
-            .addObject(textEntity)
-            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER);
-
-        if (refEntity && refComponent && refValue) {
-            configBuilder.addRefEntity(*refEntity)
-                .addRefComponent(*refComponent)
-                .addRefValue(*refValue);
-        }
-
-        // timer::TimerSystem::timer_every(3.f, [textEntity](std::optional<float> f) {
-        //     TextSystem::Functions::debugPrintText(textEntity);
-        // });
-
-        auto node = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::OBJECT)
-            .addConfig(configBuilder.build());
-
-        return node.build();        
-    }
 
     
 
@@ -532,8 +445,8 @@ namespace game
                                                             // .addMinWidth(500.f)
                                                             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
-                                                    .addChild(getRandomRectDef())
-                                                    .addChild(getRandomRectDef())
+                                                    .addChild(ui_defs::getRandomRectDef())
+                                                    .addChild(ui_defs::getRandomRectDef())
                                                     .addChild(uiTestInventoryEntry)
                                                     .build();
         ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
@@ -564,8 +477,8 @@ namespace game
                                                             // .addMinWidth(500.f)
                                                             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                                             .build())
-                                                    .addChild(getRandomRectDef())
-                                                    .addChild(getRandomRectDef())
+                                                    .addChild(ui_defs::getRandomRectDef())
+                                                    .addChild(ui_defs::getRandomRectDef())
                                                     .addChild(uiDynamicTextEntry)
                                                     .build();
 
@@ -597,7 +510,7 @@ namespace game
                                                          .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
                                                          .build())
                                                  .addChild(uiColumnDef)
-                                                 .addChild(getRandomRectDef())
+                                                 .addChild(ui_defs::getRandomRectDef())
                                                  .build();
         ui::UIElementTemplateNode consumablesRowDef = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
@@ -610,7 +523,7 @@ namespace game
                     // .addMinWidth(500.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(getNewDynamicTextEntry("Consumables:", 20.f, 500.f, "bump;rainbow"))
+            .addChild(ui_defs::getNewDynamicTextEntry("Consumables:", 20.f, 500.f, "bump;rainbow"))
             .addChild(uiTestInventoryEntry)
             .build();
         ui::UIElementTemplateNode spriteRowDef = ui::UIElementTemplateNode::Builder::create()
@@ -624,7 +537,7 @@ namespace game
                     // .addMinWidth(500.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(getNewDynamicTextEntry("Item sprite: ", 20.f, 500.f, "bump=6.0,8.0,0.9,0.2"))
+            .addChild(ui_defs::getNewDynamicTextEntry("Item sprite: ", 20.f, 500.f, "bump=6.0,8.0,0.9,0.2"))
             .addChild(uiAnimatedSpriteEntry)
             .build();
         ui::UIElementTemplateNode uiTestRootDef = ui::UIElementTemplateNode::Builder::create()
@@ -640,12 +553,13 @@ namespace game
                         transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .addChild(uiColumnDef)
+            .addChild(ui_defs::getButtonGroupRowDef())
         //   .addChild(uiDynamicTextEntry)
         //   .addChild(getRandomRectDef())
             .addChild(consumablesRowDef)
             .addChild(spriteRowDef)
             // .addChild(uiRowDef)
-            .addChild(getNewTextEntry("HEY HEY!"))
+            .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
             .build();
 
         uiBox = ui::box::Initialize(

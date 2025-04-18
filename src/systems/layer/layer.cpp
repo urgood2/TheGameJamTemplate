@@ -636,6 +636,13 @@ namespace layer
                 bool useFullVertices = std::get<bool>(command.args[2]);
                 RenderRectVerticlesOutlineLayer(layer, cache, color, useFullVertices);
             }
+            else if (command.type == "polygon") {
+                AssertThat(command.args.size(), Equals(3));
+                std::vector<Vector2> vertices = std::get<std::vector<Vector2>>(command.args[0]);
+                Color color = std::get<Color>(command.args[1]);
+                float lineWidth = std::get<float>(command.args[2]);
+                layer::Polygon(vertices, color, lineWidth);
+            }
             // Fallback for undefined commands
             else
             {

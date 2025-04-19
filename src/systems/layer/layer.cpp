@@ -930,9 +930,9 @@ namespace layer
         bool drawForeground = !currentSprite->noForegroundColor;
     
         // 2. Init pipeline buffer if needed
-        if (!isInitialized() || width < renderWidth || height < renderHeight) {
-            unload();
-            init((int)std::ceil(renderWidth), (int)std::ceil(renderHeight));
+        if (!IsInitialized() || width < renderWidth || height < renderHeight) {
+            shader_pipeline::ShaderPipelineUnload();
+            ShaderPipelineInit(renderWidth, renderHeight);
         }
     
         // 3. Draw base sprite to ping texture (no transforms!)
@@ -976,10 +976,10 @@ namespace layer
             EndShaderMode();
             EndTextureMode();
     
-            swap();
+            Swap();
         }
     
-        setLastRenderTarget(front());
+        SetLastRenderTarget(front());
     
         // 5. Final draw with transform
         auto& transform = registry.get<transform::Transform>(e);
@@ -991,7 +991,7 @@ namespace layer
         };
     
         // Update for use elsewhere
-        setLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
+        SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
     
         Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight };  // Negative height to flip Y
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };

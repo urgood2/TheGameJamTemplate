@@ -5,6 +5,558 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/Sprite-0001.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\Sprite-0001.json"
     ],
+    "000_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-000.png"
+    ],
+    "000_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-000.png"
+    ],
+    "000_border_panel": [
+        "panel-border-000.png"
+    ],
+    "000_border_panel_transparent": [
+        "panel-transparent-border-000.png"
+    ],
+    "000_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-000.png"
+    ],
+    "000_center_panel_transparent": [
+        "panel-transparent-center-000.png"
+    ],
+    "000_divider": [
+        "divider-000.png"
+    ],
+    "000_divider_divider": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-000.png"
+    ],
+    "000_divider_divider_fade_fade": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-000.png"
+    ],
+    "000_divider_fade": [
+        "divider-fade-000.png"
+    ],
+    "000_panel": [
+        "panel-000.png"
+    ],
+    "000_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-000.png"
+    ],
+    "001_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-001.png"
+    ],
+    "001_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-001.png"
+    ],
+    "001_border_panel": [
+        "panel-border-001.png"
+    ],
+    "001_border_panel_transparent": [
+        "panel-transparent-border-001.png"
+    ],
+    "001_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-001.png"
+    ],
+    "001_center_panel_transparent": [
+        "panel-transparent-center-001.png"
+    ],
+    "001_divider": [
+        "divider-001.png"
+    ],
+    "001_divider_divider": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-001.png"
+    ],
+    "001_divider_divider_fade_fade": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-001.png"
+    ],
+    "001_divider_fade": [
+        "divider-fade-001.png"
+    ],
+    "001_panel": [
+        "panel-001.png"
+    ],
+    "001_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-001.png"
+    ],
+    "002_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-002.png"
+    ],
+    "002_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-002.png"
+    ],
+    "002_border_panel": [
+        "panel-border-002.png"
+    ],
+    "002_border_panel_transparent": [
+        "panel-transparent-border-002.png"
+    ],
+    "002_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-002.png"
+    ],
+    "002_center_panel_transparent": [
+        "panel-transparent-center-002.png"
+    ],
+    "002_divider": [
+        "divider-002.png"
+    ],
+    "002_divider_divider": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-002.png"
+    ],
+    "002_divider_divider_fade_fade": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-002.png"
+    ],
+    "002_divider_fade": [
+        "divider-fade-002.png"
+    ],
+    "002_panel": [
+        "panel-002.png"
+    ],
+    "002_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-002.png"
+    ],
+    "003_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-003.png"
+    ],
+    "003_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-003.png"
+    ],
+    "003_border_panel": [
+        "panel-border-003.png"
+    ],
+    "003_border_panel_transparent": [
+        "panel-transparent-border-003.png"
+    ],
+    "003_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-003.png"
+    ],
+    "003_center_panel_transparent": [
+        "panel-transparent-center-003.png"
+    ],
+    "003_divider": [
+        "divider-003.png"
+    ],
+    "003_divider_divider": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-003.png"
+    ],
+    "003_divider_divider_fade_fade": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-003.png"
+    ],
+    "003_divider_fade": [
+        "divider-fade-003.png"
+    ],
+    "003_panel": [
+        "panel-003.png"
+    ],
+    "003_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-003.png"
+    ],
+    "004_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-004.png"
+    ],
+    "004_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-004.png"
+    ],
+    "004_border_panel": [
+        "panel-border-004.png"
+    ],
+    "004_border_panel_transparent": [
+        "panel-transparent-border-004.png"
+    ],
+    "004_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-004.png"
+    ],
+    "004_center_panel_transparent": [
+        "panel-transparent-center-004.png"
+    ],
+    "004_divider": [
+        "divider-004.png"
+    ],
+    "004_divider_divider": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-004.png"
+    ],
+    "004_divider_divider_fade_fade": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-004.png"
+    ],
+    "004_divider_fade": [
+        "divider-fade-004.png"
+    ],
+    "004_panel": [
+        "panel-004.png"
+    ],
+    "004_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-004.png"
+    ],
+    "005_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-005.png"
+    ],
+    "005_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-005.png"
+    ],
+    "005_border_panel": [
+        "panel-border-005.png"
+    ],
+    "005_border_panel_transparent": [
+        "panel-transparent-border-005.png"
+    ],
+    "005_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-005.png"
+    ],
+    "005_center_panel_transparent": [
+        "panel-transparent-center-005.png"
+    ],
+    "005_divider": [
+        "divider-005.png"
+    ],
+    "005_divider_divider": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-005.png"
+    ],
+    "005_divider_divider_fade_fade": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-005.png"
+    ],
+    "005_divider_fade": [
+        "divider-fade-005.png"
+    ],
+    "005_panel": [
+        "panel-005.png"
+    ],
+    "005_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-005.png"
+    ],
+    "006_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-006.png"
+    ],
+    "006_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-006.png"
+    ],
+    "006_border_panel": [
+        "panel-border-006.png"
+    ],
+    "006_border_panel_transparent": [
+        "panel-transparent-border-006.png"
+    ],
+    "006_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-006.png"
+    ],
+    "006_center_panel_transparent": [
+        "panel-transparent-center-006.png"
+    ],
+    "006_panel": [
+        "panel-006.png"
+    ],
+    "006_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-006.png"
+    ],
+    "007_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-007.png"
+    ],
+    "007_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-007.png"
+    ],
+    "007_border_panel": [
+        "panel-border-007.png"
+    ],
+    "007_border_panel_transparent": [
+        "panel-transparent-border-007.png"
+    ],
+    "007_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-007.png"
+    ],
+    "007_center_panel_transparent": [
+        "panel-transparent-center-007.png"
+    ],
+    "007_panel": [
+        "panel-007.png"
+    ],
+    "007_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-007.png"
+    ],
+    "008_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-008.png"
+    ],
+    "008_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-008.png"
+    ],
+    "008_border_panel": [
+        "panel-border-008.png"
+    ],
+    "008_border_panel_transparent": [
+        "panel-transparent-border-008.png"
+    ],
+    "008_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-008.png"
+    ],
+    "008_center_panel_transparent": [
+        "panel-transparent-center-008.png"
+    ],
+    "008_panel": [
+        "panel-008.png"
+    ],
+    "008_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-008.png"
+    ],
+    "009_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-009.png"
+    ],
+    "009_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-009.png"
+    ],
+    "009_border_panel": [
+        "panel-border-009.png"
+    ],
+    "009_border_panel_transparent": [
+        "panel-transparent-border-009.png"
+    ],
+    "009_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-009.png"
+    ],
+    "009_center_panel_transparent": [
+        "panel-transparent-center-009.png"
+    ],
+    "009_panel": [
+        "panel-009.png"
+    ],
+    "009_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-009.png"
+    ],
+    "010_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-010.png"
+    ],
+    "010_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-010.png"
+    ],
+    "010_border_panel": [
+        "panel-border-010.png"
+    ],
+    "010_border_panel_transparent": [
+        "panel-transparent-border-010.png"
+    ],
+    "010_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-010.png"
+    ],
+    "010_center_panel_transparent": [
+        "panel-transparent-center-010.png"
+    ],
+    "010_panel": [
+        "panel-010.png"
+    ],
+    "010_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-010.png"
+    ],
+    "011_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-011.png"
+    ],
+    "011_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-011.png"
+    ],
+    "011_border_panel": [
+        "panel-border-011.png"
+    ],
+    "011_border_panel_transparent": [
+        "panel-transparent-border-011.png"
+    ],
+    "011_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-011.png"
+    ],
+    "011_center_panel_transparent": [
+        "panel-transparent-center-011.png"
+    ],
+    "011_panel": [
+        "panel-011.png"
+    ],
+    "011_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-011.png"
+    ],
+    "012_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-012.png"
+    ],
+    "012_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-012.png"
+    ],
+    "012_border_panel": [
+        "panel-border-012.png"
+    ],
+    "012_border_panel_transparent": [
+        "panel-transparent-border-012.png"
+    ],
+    "012_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-012.png"
+    ],
+    "012_center_panel_transparent": [
+        "panel-transparent-center-012.png"
+    ],
+    "012_panel": [
+        "panel-012.png"
+    ],
+    "012_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-012.png"
+    ],
+    "013_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-013.png"
+    ],
+    "013_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-013.png"
+    ],
+    "013_border_panel": [
+        "panel-border-013.png"
+    ],
+    "013_border_panel_transparent": [
+        "panel-transparent-border-013.png"
+    ],
+    "013_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-013.png"
+    ],
+    "013_center_panel_transparent": [
+        "panel-transparent-center-013.png"
+    ],
+    "013_panel": [
+        "panel-013.png"
+    ],
+    "013_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-013.png"
+    ],
+    "014_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-014.png"
+    ],
+    "014_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-014.png"
+    ],
+    "014_border_panel": [
+        "panel-border-014.png"
+    ],
+    "014_border_panel_transparent": [
+        "panel-transparent-border-014.png"
+    ],
+    "014_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-014.png"
+    ],
+    "014_center_panel_transparent": [
+        "panel-transparent-center-014.png"
+    ],
+    "014_panel": [
+        "panel-014.png"
+    ],
+    "014_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-014.png"
+    ],
+    "015_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-015.png"
+    ],
+    "015_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-015.png"
+    ],
+    "015_border_panel": [
+        "panel-border-015.png"
+    ],
+    "015_border_panel_transparent": [
+        "panel-transparent-border-015.png"
+    ],
+    "015_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-015.png"
+    ],
+    "015_center_panel_transparent": [
+        "panel-transparent-center-015.png"
+    ],
+    "015_panel": [
+        "panel-015.png"
+    ],
+    "015_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-015.png"
+    ],
+    "016_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-016.png"
+    ],
+    "016_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-016.png"
+    ],
+    "016_border_panel": [
+        "panel-border-016.png"
+    ],
+    "016_border_panel_transparent": [
+        "panel-transparent-border-016.png"
+    ],
+    "016_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-016.png"
+    ],
+    "016_center_panel_transparent": [
+        "panel-transparent-center-016.png"
+    ],
+    "016_panel": [
+        "panel-016.png"
+    ],
+    "016_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-016.png"
+    ],
+    "017_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-017.png"
+    ],
+    "017_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-017.png"
+    ],
+    "017_border_panel": [
+        "panel-border-017.png"
+    ],
+    "017_border_panel_transparent": [
+        "panel-transparent-border-017.png"
+    ],
+    "017_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-017.png"
+    ],
+    "017_center_panel_transparent": [
+        "panel-transparent-center-017.png"
+    ],
+    "017_panel": [
+        "panel-017.png"
+    ],
+    "017_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-017.png"
+    ],
+    "018_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-018.png"
+    ],
+    "018_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-018.png"
+    ],
+    "018_border_panel": [
+        "panel-border-018.png"
+    ],
+    "018_border_panel_transparent": [
+        "panel-transparent-border-018.png"
+    ],
+    "018_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-018.png"
+    ],
+    "018_center_panel_transparent": [
+        "panel-transparent-center-018.png"
+    ],
+    "018_panel": [
+        "panel-018.png"
+    ],
+    "018_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-018.png"
+    ],
+    "019_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-019.png"
+    ],
+    "019_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-019.png"
+    ],
+    "019_border_panel": [
+        "panel-border-019.png"
+    ],
+    "019_border_panel_transparent": [
+        "panel-transparent-border-019.png"
+    ],
+    "019_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-019.png"
+    ],
+    "019_center_panel_transparent": [
+        "panel-transparent-center-019.png"
+    ],
+    "019_panel": [
+        "panel-019.png"
+    ],
+    "019_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-019.png"
+    ],
     "01_1_buff_debuff_file_globbed_n_p3_packing_pre": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/pre-packing-files_globbed/Buff n Debuff P3 01_1.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\pre-packing-files_globbed\\Buff n Debuff P3 01_1.png",
@@ -92,6 +644,246 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/TOY_Steam_Train_01_loop_mono.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\TOY_Steam_Train_01_loop_mono.wav"
     ],
+    "020_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-020.png"
+    ],
+    "020_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-020.png"
+    ],
+    "020_border_panel": [
+        "panel-border-020.png"
+    ],
+    "020_border_panel_transparent": [
+        "panel-transparent-border-020.png"
+    ],
+    "020_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-020.png"
+    ],
+    "020_center_panel_transparent": [
+        "panel-transparent-center-020.png"
+    ],
+    "020_panel": [
+        "panel-020.png"
+    ],
+    "020_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-020.png"
+    ],
+    "021_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-021.png"
+    ],
+    "021_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-021.png"
+    ],
+    "021_border_panel": [
+        "panel-border-021.png"
+    ],
+    "021_border_panel_transparent": [
+        "panel-transparent-border-021.png"
+    ],
+    "021_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-021.png"
+    ],
+    "021_center_panel_transparent": [
+        "panel-transparent-center-021.png"
+    ],
+    "021_panel": [
+        "panel-021.png"
+    ],
+    "021_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-021.png"
+    ],
+    "022_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-022.png"
+    ],
+    "022_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-022.png"
+    ],
+    "022_border_panel": [
+        "panel-border-022.png"
+    ],
+    "022_border_panel_transparent": [
+        "panel-transparent-border-022.png"
+    ],
+    "022_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-022.png"
+    ],
+    "022_center_panel_transparent": [
+        "panel-transparent-center-022.png"
+    ],
+    "022_panel": [
+        "panel-022.png"
+    ],
+    "022_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-022.png"
+    ],
+    "023_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-023.png"
+    ],
+    "023_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-023.png"
+    ],
+    "023_border_panel": [
+        "panel-border-023.png"
+    ],
+    "023_border_panel_transparent": [
+        "panel-transparent-border-023.png"
+    ],
+    "023_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-023.png"
+    ],
+    "023_center_panel_transparent": [
+        "panel-transparent-center-023.png"
+    ],
+    "023_panel": [
+        "panel-023.png"
+    ],
+    "023_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-023.png"
+    ],
+    "024_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-024.png"
+    ],
+    "024_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-024.png"
+    ],
+    "024_border_panel": [
+        "panel-border-024.png"
+    ],
+    "024_border_panel_transparent": [
+        "panel-transparent-border-024.png"
+    ],
+    "024_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-024.png"
+    ],
+    "024_center_panel_transparent": [
+        "panel-transparent-center-024.png"
+    ],
+    "024_panel": [
+        "panel-024.png"
+    ],
+    "024_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-024.png"
+    ],
+    "025_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-025.png"
+    ],
+    "025_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-025.png"
+    ],
+    "025_border_panel": [
+        "panel-border-025.png"
+    ],
+    "025_border_panel_transparent": [
+        "panel-transparent-border-025.png"
+    ],
+    "025_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-025.png"
+    ],
+    "025_center_panel_transparent": [
+        "panel-transparent-center-025.png"
+    ],
+    "025_panel": [
+        "panel-025.png"
+    ],
+    "025_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-025.png"
+    ],
+    "026_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-026.png"
+    ],
+    "026_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-026.png"
+    ],
+    "026_border_panel": [
+        "panel-border-026.png"
+    ],
+    "026_border_panel_transparent": [
+        "panel-transparent-border-026.png"
+    ],
+    "026_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-026.png"
+    ],
+    "026_center_panel_transparent": [
+        "panel-transparent-center-026.png"
+    ],
+    "026_panel": [
+        "panel-026.png"
+    ],
+    "026_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-026.png"
+    ],
+    "027_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-027.png"
+    ],
+    "027_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-027.png"
+    ],
+    "027_border_panel": [
+        "panel-border-027.png"
+    ],
+    "027_border_panel_transparent": [
+        "panel-transparent-border-027.png"
+    ],
+    "027_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-027.png"
+    ],
+    "027_center_panel_transparent": [
+        "panel-transparent-center-027.png"
+    ],
+    "027_panel": [
+        "panel-027.png"
+    ],
+    "027_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-027.png"
+    ],
+    "028_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-028.png"
+    ],
+    "028_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-028.png"
+    ],
+    "028_border_panel": [
+        "panel-border-028.png"
+    ],
+    "028_border_panel_transparent": [
+        "panel-transparent-border-028.png"
+    ],
+    "028_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-028.png"
+    ],
+    "028_center_panel_transparent": [
+        "panel-transparent-center-028.png"
+    ],
+    "028_panel": [
+        "panel-028.png"
+    ],
+    "028_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-028.png"
+    ],
+    "029_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-029.png"
+    ],
+    "029_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-029.png"
+    ],
+    "029_border_panel": [
+        "panel-border-029.png"
+    ],
+    "029_border_panel_transparent": [
+        "panel-transparent-border-029.png"
+    ],
+    "029_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-029.png"
+    ],
+    "029_center_panel_transparent": [
+        "panel-transparent-center-029.png"
+    ],
+    "029_panel": [
+        "panel-029.png"
+    ],
+    "029_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-029.png"
+    ],
     "02_case_latch_mono_open_sound_storage": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/STORAGE_CASE_Open_Latch_02_mono.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\STORAGE_CASE_Open_Latch_02_mono.wav",
@@ -103,6 +895,54 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\MAGIC_SPELL_Flame_02_mono.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MAGIC_SPELL_Flame_02_mono.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MAGIC_SPELL_Flame_02_mono.wav"
+    ],
+    "030_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-030.png"
+    ],
+    "030_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-030.png"
+    ],
+    "030_border_panel": [
+        "panel-border-030.png"
+    ],
+    "030_border_panel_transparent": [
+        "panel-transparent-border-030.png"
+    ],
+    "030_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-030.png"
+    ],
+    "030_center_panel_transparent": [
+        "panel-transparent-center-030.png"
+    ],
+    "030_panel": [
+        "panel-030.png"
+    ],
+    "030_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-030.png"
+    ],
+    "031_border_border_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-031.png"
+    ],
+    "031_border_border_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-031.png"
+    ],
+    "031_border_panel": [
+        "panel-border-031.png"
+    ],
+    "031_border_panel_transparent": [
+        "panel-transparent-border-031.png"
+    ],
+    "031_center_center_panel_transparent_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-031.png"
+    ],
+    "031_center_panel_transparent": [
+        "panel-transparent-center-031.png"
+    ],
+    "031_panel": [
+        "panel-031.png"
+    ],
+    "031_panel_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-031.png"
     ],
     "03c_effect_fast_music_platform_positive_sound_stereo": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/MUSIC_EFFECT_Platform_Positive_03c_Fast_stereo.wav",
@@ -9899,6 +10739,21 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/Galmuri11-Bold.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\ko\\Galmuri11-Bold.ttf"
     ],
+    "border_double": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border"
+    ],
+    "border_double_fantasy_ui": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double"
+    ],
+    "border_double_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border"
+    ],
+    "border_fantasy_file_globbed_packing_pre_ui": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border"
+    ],
+    "border_fantasy_ui": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/.DS_Store"
+    ],
     "bottle_cap_foley_mono_sound_unscrew": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/FOLEY_Unscrew_Bottle_Cap_mono.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\FOLEY_Unscrew_Bottle_Cap_mono.wav",
@@ -10133,6 +10988,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\celestial-circus-pro.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/celestial-circus-pro.atlas",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\celestial-circus-pro.png"
+    ],
+    "center_double_transparent": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center"
     ],
     "char_example": [
         "example_char"
@@ -10629,11 +11487,20 @@
     "disabled_flair_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled.svg"
     ],
+    "divider_double": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider"
+    ],
+    "divider_double_fade": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade"
+    ],
     "dospilgi_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/DOSPilgi.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\ko\\DOSPilgi.ttf",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/DOSPilgi.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\ko\\DOSPilgi.ttf"
+    ],
+    "double": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/.DS_Store"
     ],
     "double_down_dpad_outline_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_down_outline.png"
@@ -10781,6 +11648,9 @@
     ],
     "double_outline_rt_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rt_outline.png"
+    ],
+    "double_panel": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel"
     ],
     "double_pres_r_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_press.png"

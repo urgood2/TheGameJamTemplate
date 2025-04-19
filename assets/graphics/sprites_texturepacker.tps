@@ -1363,6 +1363,216 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-000.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-001.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-002.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-003.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-004.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-005.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-006.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-007.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-008.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-009.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-010.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-011.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-012.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-013.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-014.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-015.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-016.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-017.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-018.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-019.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-020.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-021.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-022.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-023.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-024.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-025.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-026.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-027.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-028.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-029.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-030.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-031.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-000.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-001.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-002.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-003.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-004.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-005.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-006.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-007.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-008.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-009.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-010.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-011.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-012.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-013.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-014.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-015.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-016.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-017.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-018.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-019.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-020.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-021.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-022.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-023.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-024.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-025.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-026.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-027.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-028.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-029.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-030.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-031.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-000.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-001.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-002.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-003.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-004.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-005.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-006.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-007.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-008.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-009.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-010.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-011.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-012.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-013.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-014.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-015.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-016.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-017.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-018.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-019.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-020.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-021.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-022.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-023.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-024.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-025.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-026.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-027.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-028.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-029.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-030.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-031.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-000.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-001.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-002.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-003.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-004.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-005.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-006.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-007.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-008.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-009.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-010.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-011.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-012.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-013.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-014.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-015.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-016.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-017.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-018.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-019.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-020.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-021.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-022.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-023.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-024.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-025.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-026.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-027.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-028.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-029.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-030.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-031.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>24,24,48,48</rect>
+                <key>scale9Paddings</key>
+                <rect>24,24,48,48</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-000.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-001.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-000.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-001.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,11,96,22</rect>
+                <key>scale9Paddings</key>
+                <rect>48,11,96,22</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-002.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-002.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,5,96,10</rect>
+                <key>scale9Paddings</key>
+                <rect>48,5,96,10</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-003.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-005.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-003.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-005.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,9,96,18</rect>
+                <key>scale9Paddings</key>
+                <rect>48,9,96,18</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-004.png</key>
+            <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-004.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,7,96,14</rect>
+                <key>scale9Paddings</key>
+                <rect>48,7,96,14</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/game icons/checkmark.png</key>
             <key type="filename">pre-packing-files_globbed/game icons/exclamation.png</key>
             <key type="filename">pre-packing-files_globbed/game icons/gear.png</key>
@@ -2474,6 +2684,146 @@
                     <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_r.png</filename>
                     <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_l.png</filename>
                     <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_r.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-000.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-001.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-002.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-003.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-004.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-005.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-006.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-007.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-008.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-009.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-010.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-011.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-012.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-013.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-014.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-015.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-016.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-017.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-018.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-019.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-020.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-021.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-022.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-023.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-024.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-025.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-026.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-027.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-028.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-029.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-030.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-031.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-000.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-001.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-002.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-003.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-004.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider/divider-005.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-000.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-001.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-002.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-003.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-004.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade/divider-fade-005.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-000.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-001.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-002.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-003.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-004.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-005.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-006.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-007.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-008.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-009.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-010.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-011.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-012.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-013.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-014.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-015.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-016.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-017.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-018.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-019.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-020.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-021.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-022.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-023.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-024.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-025.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-026.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-027.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-028.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-029.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-030.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-031.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-000.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-001.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-002.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-003.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-004.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-005.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-006.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-007.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-008.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-009.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-010.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-011.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-012.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-013.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-014.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-015.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-016.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-017.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-018.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-019.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-020.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-021.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-022.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-023.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-024.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-025.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-026.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-027.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-028.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-029.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-030.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent border/panel-transparent-border-031.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-000.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-001.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-002.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-003.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-004.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-005.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-006.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-007.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-008.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-009.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-010.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-011.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-012.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-013.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-014.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-015.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-016.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-017.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-018.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-019.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-020.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-021.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-022.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-023.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-024.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-025.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-026.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-027.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-028.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-029.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-030.png</filename>
+                    <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-031.png</filename>
                 </array>
             </struct>
         </map>

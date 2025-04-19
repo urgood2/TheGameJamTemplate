@@ -584,6 +584,7 @@ namespace game
         uiTextEntry.config.ref_entity.reset();
         uiTextEntry.config.ref_value.reset();
         
+        
         // hoverPopupUIBox = ui::box::Initialize(
         //     globals::registry,
         //     {.w = 200, .h = 200},
@@ -598,57 +599,10 @@ namespace game
         //                      .build())
         //         .build());
 
-        // LATER: figure out button UIE more precisely
-        // LATER: when clicking on nested buttons, the outer button will sometimes trigger hover color intermittently
-
-        // TODO: hover is currently required for clicking to work
-        // TODO: elements should not be clikable by default, they seem to be
-        // TODO: need to reflect rotation + scale in ui elements (optionally)
-        // TODO: arguments to test
-        /*
-            button:
-
-            choice = args.choice,
-            chosen = args.chosen,
-            focus_args = args.focus_args,
-            func = args.func, -> just an update function
-
-            slider:
-
-            focus_args = {type = 'slider'}
-            refresh_movement = true
-            collideable = true
-
-            toggle:
-
-            button_dist = 0.2
-            focus_args = {redirect_focus_to = true}
-
-
-        */
-        // LATER: bottom outline is sometimes jagged when buttons are scaled down
-        //  LATER: use VBO & IBOS for rendering
-        // LATER: ninepatch?
-
-        // needed for correct disposal of transform components
         // TODO: move this to transform system init
         transform::registerDestroyListeners(globals::registry);
 
-        // TODO: integrate new text system with ui (as object)
-        // TODO: hover enlargement amount, whether to shake on hover, color change on hover, automatically recalculate button size (maybe scale it if necessary) after text size changes,
-        // TODO: ui recalc function needs to be fixed. Not working at the moment.
-        // TODO: hover scale amount should be customizable
-        // TODO: h_popup and d_popup and alert
-        // TODO: how to recenter text after it changes (refresh entire layout? or just center the text?)
-        // TODO: how to use button delay
-        // TODO: various ui elements (buttons, slider, toggle, radio button behavior, switch button with pips for selection, check box)
-        // TODO: testing interactivity (click, drag, hover)
-        // TODO: drag should probalby be replaced with custom function if ui is not meant to be moved (anything other than root)
-        // TODO: popups for hover and drag
-        // TODO: controller focus interactivity
-        // TODO: apply, stop hover and release for ui elements
 
-        // TODO: not sure how hover enlargement works yet.
         // REVIEW: to add jiggle on hover, just use node.methods->onHover with custom lamnda on the appropriate ui element's transform component.
 
         SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
@@ -746,6 +700,10 @@ namespace game
         // sprites with transform (including those in ui)
         layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
         layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
+        
+        //TODO: need to test this
+        // layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
+        // layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         uiProfiler.Stop();
 
         particle::DrawParticles(globals::registry, ui_layer);

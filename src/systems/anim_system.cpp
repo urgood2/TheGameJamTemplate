@@ -4,6 +4,7 @@
 #include "../core/globals.hpp"
 #include "../components/graphics.hpp"
 #include "systems/transform/transform_functions.hpp"
+#include "systems/shaders/shader_pipeline.hpp"
 #include "core/init.hpp"
 
 namespace animation_system {
@@ -16,6 +17,14 @@ namespace animation_system {
         animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationID);
 
         auto &gameObject = globals::registry.get<transform::GameObject>(e);
+        
+        // add pipeline component
+        auto &shaderPipeline = globals::registry.emplace<shader_pipeline::ShaderPipelineComponent>(e);
+        
+        //TODO: corerct this to contain the uniforms here instead? more intuitive.
+        shaderPipeline.passes.push_back(shader_pipeline::ShaderPass{
+            .shaderName = "foil"
+        });
         
         // set width and height to the animation size
         transform.setActualW(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame.width);

@@ -643,6 +643,14 @@ namespace layer
                 float lineWidth = std::get<float>(command.args[2]);
                 layer::Polygon(vertices, color, lineWidth);
             }
+            else if (command.type == "circle") {
+                AssertThat(command.args.size(), Equals(4));
+                float x = std::get<float>(command.args[0]);
+                float y = std::get<float>(command.args[1]);
+                float radius = std::get<float>(command.args[2]);
+                Color color = std::get<Color>(command.args[3]);
+                layer::Circle(x, y, radius, color);
+            }
             // Fallback for undefined commands
             else
             {
@@ -687,6 +695,11 @@ namespace layer
     void AddVertex(std::shared_ptr<Layer> layer, Vector2 v, Color color, int z)
     {
         AddDrawCommand(layer, "vertex", {v, color}, z);
+    }
+
+    void AddCircle(std::shared_ptr<Layer> layer, float x, float y, float radius, Color color, int z)
+    {
+        AddDrawCommand(layer, "circle", {x, y, radius, color}, z);
     }
 
     void SetRLTexture(Texture2D texture)

@@ -13,10 +13,7 @@
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess
 
 - [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
-
-- [ ] modify element's drawself method to show a selection sprite above the button chosen
-- [ ] select controller buttons, checkmark, new character for alerts, left and righ tarrow characters, chosen tab mark (sprites, add to sprite sheet)
-
+- [ ] test draw shader pipeline for sprite
 
 ---
 ### 🖱️ Interaction & Input

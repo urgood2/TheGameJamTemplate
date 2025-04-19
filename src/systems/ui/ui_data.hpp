@@ -129,7 +129,8 @@ namespace ui
         std::optional<UITypeEnum> uiType;        // UI type category
         //TODO: check implementation done properly
         std::optional<int> drawLayer;            // Determines which layer this UI element should be drawn in.
-        std::optional<std::string> group;        // Group to which this element belongs
+        std::optional<std::string> group;        // radio button group to which this element belongs
+        std::optional<entt::entity> groupParent; // the parent entity of the group, set automatically during init
  
 
         //TODO: document which settings are used only for initial config, and what is used for runtime state

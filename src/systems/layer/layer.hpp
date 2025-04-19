@@ -109,6 +109,7 @@ namespace layer
     void AddDrawEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry *registry, entt::entity e, int x, int y, Texture2D spriteAtlas, int z = 0);
     auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z) -> void;
     void AddRectangle(std::shared_ptr<Layer> layer, float x, float y, float width, float height, const Color &color, float lineWidth = 0.0f, int z = 0);
+    void AddCircle(std::shared_ptr<Layer> layer, float x, float y, float radius, Color color, int z = 0);
     void AddRectangleLinesPro(std::shared_ptr<Layer> layer, float offsetX, float offsetY, const Vector2 &size, float lineThickness, const Color &color, int z = 0);
     void AddRectanglePro(std::shared_ptr<Layer> layer, float offsetX, float offsetY, const Vector2 &size, const Color &color, const Vector2 &rotationCenter = {}, float rotation = 0.f, int z = 0);
     void AddDashedLine(std::shared_ptr<Layer> layer, float x1, float y1, float x2, float y2, float dashSize, float gapSize, const Color &color, float lineWidth, int z = 0);

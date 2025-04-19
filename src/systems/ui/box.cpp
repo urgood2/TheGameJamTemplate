@@ -46,7 +46,10 @@ namespace ui
             // Apply inherited config values
             if (registry.valid(parent) && parentConfig) {
                 if (parentConfig->group) {
-                    if (config) config->group = parentConfig->group;
+                    if (config) {
+                        config->group = parentConfig->group;
+                        config->groupParent= parent;
+                    }
                     else registry.emplace<UIConfig>(entity).group = parentConfig->group;
                 }
 

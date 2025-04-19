@@ -21500,7 +21500,7 @@
             "frame": {
                 "h": 42,
                 "w": 12,
-                "x": 153,
+                "x": 519,
                 "y": 1551
             },
             "rotated": false,
@@ -21522,7 +21522,7 @@
             "frame": {
                 "h": 46,
                 "w": 15,
-                "x": 176,
+                "x": 542,
                 "y": 1551
             },
             "rotated": false,
@@ -21544,8 +21544,8 @@
             "frame": {
                 "h": 52,
                 "w": 20,
-                "x": 202,
-                "y": 1551
+                "x": 639,
+                "y": 1795
             },
             "rotated": false,
             "sourceSize": {
@@ -21566,8 +21566,8 @@
             "frame": {
                 "h": 54,
                 "w": 24,
-                "x": 233,
-                "y": 1551
+                "x": 670,
+                "y": 1795
             },
             "rotated": false,
             "sourceSize": {
@@ -21588,8 +21588,8 @@
             "frame": {
                 "h": 55,
                 "w": 27,
-                "x": 268,
-                "y": 1551
+                "x": 827,
+                "y": 1795
             },
             "rotated": false,
             "sourceSize": {
@@ -21610,8 +21610,8 @@
             "frame": {
                 "h": 55,
                 "w": 28,
-                "x": 306,
-                "y": 1551
+                "x": 865,
+                "y": 1795
             },
             "rotated": false,
             "sourceSize": {
@@ -21632,7 +21632,7 @@
             "frame": {
                 "h": 37,
                 "w": 27,
-                "x": 115,
+                "x": 481,
                 "y": 1551
             },
             "rotated": false,
@@ -21715,13 +21715,123 @@
             "trimmed": true
         },
         {
+            "auto_generated_uuid": "checkmark",
+            "filename": "checkmark.png",
+            "frame": {
+                "h": 59,
+                "w": 66,
+                "x": 126,
+                "y": 1862
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 100,
+                "w": 100
+            },
+            "spriteSourceSize": {
+                "h": 59,
+                "w": 66,
+                "x": 17,
+                "y": 22
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "exclamation",
+            "filename": "exclamation.png",
+            "frame": {
+                "h": 62,
+                "w": 18,
+                "x": 203,
+                "y": 1862
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 100,
+                "w": 100
+            },
+            "spriteSourceSize": {
+                "h": 62,
+                "w": 18,
+                "x": 41,
+                "y": 23
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "gear",
+            "filename": "gear.png",
+            "frame": {
+                "h": 66,
+                "w": 66,
+                "x": 232,
+                "y": 1862
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 100,
+                "w": 100
+            },
+            "spriteSourceSize": {
+                "h": 66,
+                "w": 66,
+                "x": 19,
+                "y": 19
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "left",
+            "filename": "left.png",
+            "frame": {
+                "h": 66,
+                "w": 42,
+                "x": 309,
+                "y": 1862
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 100,
+                "w": 100
+            },
+            "spriteSourceSize": {
+                "h": 66,
+                "w": 42,
+                "x": 29,
+                "y": 17
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "right",
+            "filename": "right.png",
+            "frame": {
+                "h": 66,
+                "w": 42,
+                "x": 362,
+                "y": 1862
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 100,
+                "w": 100
+            },
+            "spriteSourceSize": {
+                "h": 66,
+                "w": 42,
+                "x": 29,
+                "y": 17
+            },
+            "trimmed": true
+        },
+        {
             "auto_generated_uuid": "char_test_woman",
             "filename": "test_char_woman.png",
             "frame": {
                 "h": 85,
                 "w": 70,
-                "x": 345,
-                "y": 1551
+                "x": 415,
+                "y": 1862
             },
             "rotated": false,
             "sourceSize": {
@@ -21735,6 +21845,1700 @@
                 "y": 21
             },
             "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "a_button_xbox",
+            "filename": "xbox_button_a.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 812,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "a_button_outline_xbox",
+            "filename": "xbox_button_a_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 873,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "b_button_xbox",
+            "filename": "xbox_button_b.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 934,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "b_button_outline_xbox",
+            "filename": "xbox_button_b_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 4,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "a_button_color_xbox",
+            "filename": "xbox_button_color_a.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 65,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "a_button_color_outline_xbox",
+            "filename": "xbox_button_color_a_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 126,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "b_button_color_xbox",
+            "filename": "xbox_button_color_b.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 187,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "b_button_color_outline_xbox",
+            "filename": "xbox_button_color_b_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 248,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_color_x_xbox",
+            "filename": "xbox_button_color_x.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 309,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_color_outline_x_xbox",
+            "filename": "xbox_button_color_x_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 370,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_color_xbox_y",
+            "filename": "xbox_button_color_y.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 431,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_color_outline_xbox_y",
+            "filename": "xbox_button_color_y_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 492,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_menu_xbox",
+            "filename": "xbox_button_menu.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 553,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_menu_outline_xbox",
+            "filename": "xbox_button_menu_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 614,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_share_xbox",
+            "filename": "xbox_button_share.png",
+            "frame": {
+                "h": 34,
+                "w": 50,
+                "x": 115,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 34,
+                "w": 50,
+                "x": 7,
+                "y": 15
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_outline_share_xbox",
+            "filename": "xbox_button_share_outline.png",
+            "frame": {
+                "h": 34,
+                "w": 50,
+                "x": 176,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 34,
+                "w": 50,
+                "x": 7,
+                "y": 15
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_view_xbox",
+            "filename": "xbox_button_view.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 675,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_outline_view_xbox",
+            "filename": "xbox_button_view_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 736,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_x_xbox",
+            "filename": "xbox_button_x.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 797,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_outline_x_xbox",
+            "filename": "xbox_button_x_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 858,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_xbox_y",
+            "filename": "xbox_button_y.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 919,
+                "y": 1612
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "button_outline_xbox_y",
+            "filename": "xbox_button_y_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 4,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_xbox",
+            "filename": "xbox_dpad.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 65,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "all_dpad_xbox",
+            "filename": "xbox_dpad_all.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 126,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "down_dpad_xbox",
+            "filename": "xbox_dpad_down.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 187,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "down_dpad_outline_xbox",
+            "filename": "xbox_dpad_down_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 248,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_horizontal_xbox",
+            "filename": "xbox_dpad_horizontal.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 309,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_horizontal_outline_xbox",
+            "filename": "xbox_dpad_horizontal_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 370,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_left_xbox",
+            "filename": "xbox_dpad_left.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 431,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_left_outline_xbox",
+            "filename": "xbox_dpad_left_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 492,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_none_xbox",
+            "filename": "xbox_dpad_none.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 553,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_right_xbox",
+            "filename": "xbox_dpad_right.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 614,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_outline_right_xbox",
+            "filename": "xbox_dpad_right_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 675,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_round_xbox",
+            "filename": "xbox_dpad_round.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 736,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "all_dpad_round_xbox",
+            "filename": "xbox_dpad_round_all.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 797,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "down_dpad_round_xbox",
+            "filename": "xbox_dpad_round_down.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 858,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_horizontal_round_xbox",
+            "filename": "xbox_dpad_round_horizontal.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 919,
+                "y": 1673
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_left_round_xbox",
+            "filename": "xbox_dpad_round_left.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 4,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_right_round_xbox",
+            "filename": "xbox_dpad_round_right.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 65,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_round_up_xbox",
+            "filename": "xbox_dpad_round_up.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 126,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_round_vertical_xbox",
+            "filename": "xbox_dpad_round_vertical.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 187,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_up_xbox",
+            "filename": "xbox_dpad_up.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 248,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_outline_up_xbox",
+            "filename": "xbox_dpad_up_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 309,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_vertical_xbox",
+            "filename": "xbox_dpad_vertical.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 370,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "dpad_outline_vertical_xbox",
+            "filename": "xbox_dpad_vertical_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 431,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "lb_xbox",
+            "filename": "xbox_lb.png",
+            "frame": {
+                "h": 34,
+                "w": 50,
+                "x": 237,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 34,
+                "w": 50,
+                "x": 7,
+                "y": 15
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "lb_outline_xbox",
+            "filename": "xbox_lb_outline.png",
+            "frame": {
+                "h": 34,
+                "w": 50,
+                "x": 298,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 34,
+                "w": 50,
+                "x": 7,
+                "y": 15
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_xbox",
+            "filename": "xbox_ls.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 492,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_outline_xbox",
+            "filename": "xbox_ls_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 553,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "lt_xbox",
+            "filename": "xbox_lt.png",
+            "frame": {
+                "h": 46,
+                "w": 50,
+                "x": 568,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 46,
+                "w": 50,
+                "x": 7,
+                "y": 9
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "lt_outline_xbox",
+            "filename": "xbox_lt_outline.png",
+            "frame": {
+                "h": 46,
+                "w": 50,
+                "x": 629,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 46,
+                "w": 50,
+                "x": 7,
+                "y": 9
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "rb_xbox",
+            "filename": "xbox_rb.png",
+            "frame": {
+                "h": 34,
+                "w": 50,
+                "x": 359,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 34,
+                "w": 50,
+                "x": 7,
+                "y": 15
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "outline_rb_xbox",
+            "filename": "xbox_rb_outline.png",
+            "frame": {
+                "h": 34,
+                "w": 50,
+                "x": 420,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 34,
+                "w": 50,
+                "x": 7,
+                "y": 15
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "r_xbox",
+            "filename": "xbox_rs.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 614,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "outline_r_xbox",
+            "filename": "xbox_rs_outline.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 675,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "rt_xbox",
+            "filename": "xbox_rt.png",
+            "frame": {
+                "h": 46,
+                "w": 50,
+                "x": 690,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 46,
+                "w": 50,
+                "x": 7,
+                "y": 9
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "outline_rt_xbox",
+            "filename": "xbox_rt_outline.png",
+            "frame": {
+                "h": 46,
+                "w": 50,
+                "x": 751,
+                "y": 1551
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 46,
+                "w": 50,
+                "x": 7,
+                "y": 9
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_stick_xbox",
+            "filename": "xbox_stick_l.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 736,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "down_l_stick_xbox",
+            "filename": "xbox_stick_l_down.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 797,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "horizontal_l_stick_xbox",
+            "filename": "xbox_stick_l_horizontal.png",
+            "frame": {
+                "h": 50,
+                "w": 60,
+                "x": 858,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 60,
+                "x": 2,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_left_stick_xbox",
+            "filename": "xbox_stick_l_left.png",
+            "frame": {
+                "h": 50,
+                "w": 55,
+                "x": 929,
+                "y": 1734
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 55,
+                "x": 2,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_pres_stick_xbox",
+            "filename": "xbox_stick_l_press.png",
+            "frame": {
+                "h": 54,
+                "w": 50,
+                "x": 705,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 54,
+                "w": 50,
+                "x": 7,
+                "y": 3
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_right_stick_xbox",
+            "filename": "xbox_stick_l_right.png",
+            "frame": {
+                "h": 50,
+                "w": 55,
+                "x": 4,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 55,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_stick_up_xbox",
+            "filename": "xbox_stick_l_up.png",
+            "frame": {
+                "h": 56,
+                "w": 50,
+                "x": 904,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 56,
+                "w": 50,
+                "x": 7,
+                "y": 1
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_stick_vertical_xbox",
+            "filename": "xbox_stick_l_vertical.png",
+            "frame": {
+                "h": 56,
+                "w": 50,
+                "x": 965,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 56,
+                "w": 50,
+                "x": 7,
+                "y": 1
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "r_stick_xbox",
+            "filename": "xbox_stick_r.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 70,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "down_r_stick_xbox",
+            "filename": "xbox_stick_r_down.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 131,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "horizontal_r_stick_xbox",
+            "filename": "xbox_stick_r_horizontal.png",
+            "frame": {
+                "h": 50,
+                "w": 60,
+                "x": 192,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 60,
+                "x": 2,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "left_r_stick_xbox",
+            "filename": "xbox_stick_r_left.png",
+            "frame": {
+                "h": 50,
+                "w": 55,
+                "x": 263,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 55,
+                "x": 2,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "pres_r_stick_xbox",
+            "filename": "xbox_stick_r_press.png",
+            "frame": {
+                "h": 54,
+                "w": 50,
+                "x": 766,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 54,
+                "w": 50,
+                "x": 7,
+                "y": 3
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "r_right_stick_xbox",
+            "filename": "xbox_stick_r_right.png",
+            "frame": {
+                "h": 50,
+                "w": 55,
+                "x": 329,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 55,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "r_stick_up_xbox",
+            "filename": "xbox_stick_r_up.png",
+            "frame": {
+                "h": 56,
+                "w": 50,
+                "x": 4,
+                "y": 1862
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 56,
+                "w": 50,
+                "x": 7,
+                "y": 1
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "r_stick_vertical_xbox",
+            "filename": "xbox_stick_r_vertical.png",
+            "frame": {
+                "h": 56,
+                "w": 50,
+                "x": 65,
+                "y": 1862
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 56,
+                "w": 50,
+                "x": 7,
+                "y": 1
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_side_stick_xbox",
+            "filename": "xbox_stick_side_l.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 395,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "r_side_stick_xbox",
+            "filename": "xbox_stick_side_r.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 456,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "l_stick_top_xbox",
+            "filename": "xbox_stick_top_l.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 517,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "r_stick_top_xbox",
+            "filename": "xbox_stick_top_r.png",
+            "frame": {
+                "h": 50,
+                "w": 50,
+                "x": 578,
+                "y": 1795
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 64,
+                "w": 64
+            },
+            "spriteSourceSize": {
+                "h": 50,
+                "w": 50,
+                "x": 7,
+                "y": 7
+            },
+            "trimmed": true
         }
     ],
     "meta": {
@@ -21746,7 +23550,7 @@
             "h": 2048,
             "w": 1024
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:08a9095e3fe58d3e8e13853e55a35693:5431f45fd196102a0cce2bdf92dae1cb:0816b7a675e2ebccf76e0169ef47fb32$",
+        "smartupdate": "$TexturePacker:SmartUpdate:7fdfe8b118c7189044331d243309a848:12cbe7f7823bf18de6782bb1c2bd6a41:0816b7a675e2ebccf76e0169ef47fb32$",
         "version": "1.0"
     }
 }

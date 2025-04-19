@@ -4,7 +4,7 @@
         <key>fileFormatVersion</key>
         <int>6</int>
         <key>texturePackerVersion</key>
-        <string>7.5.0</string>
+        <string>7.4.0</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -1272,6 +1272,116 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_a.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_a_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_b.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_b_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_a.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_a_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_b.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_b_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_x.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_x_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_y.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_y_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_menu.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_menu_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_share.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_share_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_view.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_view_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_x.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_x_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_y.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_y_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_all.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_down_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_horizontal.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_horizontal_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_left.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_left_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_none.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_right.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_right_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_all.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_horizontal.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_left.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_right.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_vertical.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_up_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_vertical.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_vertical_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_lb.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_lb_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_ls.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_ls_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_lt.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_lt_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_rb.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_rb_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_rs.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_rs_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_rt.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_rt_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_horizontal.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_left.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_press.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_right.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_vertical.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_horizontal.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_left.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_press.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_right.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_vertical.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_l.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_r.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_l.png</key>
+            <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_r.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>16,16,32,32</rect>
+                <key>scale9Paddings</key>
+                <rect>16,16,32,32</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/game icons/checkmark.png</key>
+            <key type="filename">pre-packing-files_globbed/game icons/exclamation.png</key>
+            <key type="filename">pre-packing-files_globbed/game icons/gear.png</key>
+            <key type="filename">pre-packing-files_globbed/game icons/left.png</key>
+            <key type="filename">pre-packing-files_globbed/game icons/right.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>25,25,50,50</rect>
+                <key>scale9Paddings</key>
+                <rect>25,25,50,50</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/test_char_woman.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -2282,6 +2392,88 @@
                     <filename>pre-packing-files_globbed/Buff n Debuff P3 01_8.png</filename>
                     <filename>pre-packing-files_globbed/Buff n Debuff P3 01_9.png</filename>
                     <filename>pre-packing-files_globbed/test_char_woman.png</filename>
+                    <filename>pre-packing-files_globbed/game icons/checkmark.png</filename>
+                    <filename>pre-packing-files_globbed/game icons/exclamation.png</filename>
+                    <filename>pre-packing-files_globbed/game icons/gear.png</filename>
+                    <filename>pre-packing-files_globbed/game icons/left.png</filename>
+                    <filename>pre-packing-files_globbed/game icons/right.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_a.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_a_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_b.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_b_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_a.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_a_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_b.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_b_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_x.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_x_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_y.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_y_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_menu.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_menu_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_share.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_share_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_view.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_view_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_x.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_x_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_y.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_button_y_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_all.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_down.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_down_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_horizontal.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_horizontal_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_left.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_left_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_none.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_right.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_right_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_all.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_down.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_horizontal.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_left.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_right.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_up.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_vertical.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_up.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_up_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_vertical.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_vertical_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_lb.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_lb_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_ls.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_ls_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_lt.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_lt_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_rb.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_rb_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_rs.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_rs_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_rt.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_rt_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_down.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_horizontal.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_left.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_press.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_right.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_up.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_vertical.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_down.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_horizontal.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_left.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_press.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_right.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_up.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_vertical.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_l.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_r.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_l.png</filename>
+                    <filename>pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_r.png</filename>
                 </array>
             </struct>
         </map>

@@ -1460,20 +1460,33 @@ namespace ui
         }
 
         // draw "selection" triangle (arrow pointing to selected object)
-        if (config->chosen)
+        if (config->chosen.value_or(false))
         {
+            // draw a circle which floats up and down slightly, centered slightly above the transform
+            auto circleSize = 10.f;
+            auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
+            auto centerX = actualX + actualW * 0.5f;
+            auto circleY = actualY - actualH * 0.5f - circleSize * 0.5f + sineOffset;
+            
             // layer::AddScale(layerPtr, .98f, .98f);
             // util::PrepDraw(layerPtr, registry, entity, 0.98f);
             if (config->shadow && globals::settings.shadowsOn)
             {
+                //TODO: probably change this to use the same values as transform shadows
+                constexpr auto FLAT_SHADOW_AMOUNT = 3.f;
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
-                auto points = util::GetChosenTriangleFromRect(node->layerDisplacement->x - node->shadowDisplacement->x * parallaxDist * 0.5f, node->layerDisplacement->y - node->shadowDisplacement->y * parallaxDist * 0.5f, transform->getActualW(), transform->getActualH(), config->chosen_vert == "vert");
-                layer::AddPolygon(layerPtr, points, shadowColor);
+                
+                auto shadowOffsetX = node->shadowDisplacement->x * FLAT_SHADOW_AMOUNT;
+                auto shadowOffsetY = - node->shadowDisplacement->y * FLAT_SHADOW_AMOUNT;
+                
+                layer::AddCircle(layerPtr, centerX + shadowOffsetX, circleY + shadowOffsetY, circleSize, shadowColor);
+                
             };
             // layer::AddPopMatrix(layerPtr);
 
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
-            layer::AddPolygon(layerPtr, util::GetChosenTriangleFromRect(node->layerDisplacement->x, node->layerDisplacement->y, transform->getActualW(), transform->getActualH() , config->chosen_vert == "vert"), RED);
+            // layer::AddPolygon(layerPtr, util::GetChosenTriangleFromRect(node->layerDisplacement->x, node->layerDisplacement->y, transform->getActualW(), transform->getActualH() , config->chosen_vert == "vert"), RED);
+            layer::AddCircle(layerPtr, centerX, circleY, circleSize, RED);
         }
 
         // call the object's own lambda draw function, if it has one
@@ -1631,7 +1644,7 @@ namespace ui
             // REVIEW: chosen can be boolean or a string. Not sure how this will pan out. For now, adding a chosen param to the config which is bool, and another string one in the node.config struct.
             if (uiConfig->choice)
             {
-                std::vector<entt::entity> choices = ui::box::GetGroup(registry, entity, uiConfig->group.value_or(""));
+                std::vector<entt::entity> choices = ui::box::GetGroup(registry, uiConfig->groupParent.value_or(entt::null), uiConfig->group.value_or(""));
 
                 for (auto choiceEntity : choices)
                 {

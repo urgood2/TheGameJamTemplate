@@ -128,6 +128,42 @@
     "0_1_10_3207_alpha_theroguelike": [
         "3207-TheRoguelike_1_10_alpha_0.png"
     ],
+    "0_arrow_center_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_center_0.png"
+    ],
+    "0_arrow_center_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_0.png"
+    ],
+    "0_arrow_center_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_0.svg"
+    ],
+    "0_arrow_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_0.png"
+    ],
+    "0_arrow_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_0.png"
+    ],
+    "0_arrow_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_0.svg"
+    ],
+    "0_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_0.png"
+    ],
+    "0_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_0.png"
+    ],
+    "0_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_0.png"
+    ],
+    "0_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_0.png"
+    ],
+    "0_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_0.svg"
+    ],
+    "0_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_0.svg"
+    ],
     "1_10_100_3307_alpha_file_globbed_packing_pre_theroguelike": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/pre-packing-files_globbed/3307-TheRoguelike_1_10_alpha_100.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\pre-packing-files_globbed\\3307-TheRoguelike_1_10_alpha_100.png",
@@ -8912,6 +8948,42 @@
     "1_1_10_3208_alpha_theroguelike": [
         "3208-TheRoguelike_1_10_alpha_1.png"
     ],
+    "1_arrow_center_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_center_1.png"
+    ],
+    "1_arrow_center_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_1.png"
+    ],
+    "1_arrow_center_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_1.svg"
+    ],
+    "1_arrow_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_1.png"
+    ],
+    "1_arrow_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_1.png"
+    ],
+    "1_arrow_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_1.svg"
+    ],
+    "1_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_1.png"
+    ],
+    "1_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_1.png"
+    ],
+    "1_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_1.png"
+    ],
+    "1_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_1.png"
+    ],
+    "1_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_1.svg"
+    ],
+    "1_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_1.svg"
+    ],
     "20x20_cp437_for_graphic_sprite_viewing": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/cp437_20x20_sprites_for_viewing.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\cp437_20x20_sprites_for_viewing.png",
@@ -8933,6 +9005,24 @@
     "2_antique_white": [
         "ANTIQUE WHITE 2"
     ],
+    "2_arrow_center_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_center_2.png"
+    ],
+    "2_arrow_center_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_2.png"
+    ],
+    "2_arrow_center_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_2.svg"
+    ],
+    "2_arrow_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_2.png"
+    ],
+    "2_arrow_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_2.png"
+    ],
+    "2_arrow_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_2.svg"
+    ],
     "2_bisque": [
         "BISQUE 2"
     ],
@@ -8941,6 +9031,24 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\celestial-circus-pro_2.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/celestial-circus-pro_2.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\celestial-circus-pro_2.png"
+    ],
+    "2_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_2.png"
+    ],
+    "2_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_2.png"
+    ],
+    "2_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_2.png"
+    ],
+    "2_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_2.png"
+    ],
+    "2_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_2.svg"
+    ],
+    "2_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_2.svg"
     ],
     "2_cornsilk": [
         "CORNSILK 2"
@@ -8969,8 +9077,44 @@
     "3_antique_white": [
         "ANTIQUE WHITE 3"
     ],
+    "3_arrow_center_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_center_3.png"
+    ],
+    "3_arrow_center_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_3.png"
+    ],
+    "3_arrow_center_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_3.svg"
+    ],
+    "3_arrow_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_3.png"
+    ],
+    "3_arrow_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_3.png"
+    ],
+    "3_arrow_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_3.svg"
+    ],
     "3_bisque": [
         "BISQUE 3"
+    ],
+    "3_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_3.png"
+    ],
+    "3_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_3.png"
+    ],
+    "3_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_3.png"
+    ],
+    "3_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_3.png"
+    ],
+    "3_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_3.svg"
+    ],
+    "3_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_3.svg"
     ],
     "3_cornsilk": [
         "CORNSILK 3"
@@ -9014,6 +9158,24 @@
     "4_bisque": [
         "BISQUE 4"
     ],
+    "4_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_4.png"
+    ],
+    "4_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_4.png"
+    ],
+    "4_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_4.png"
+    ],
+    "4_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_4.png"
+    ],
+    "4_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_4.svg"
+    ],
+    "4_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_4.svg"
+    ],
     "4_cornsilk": [
         "CORNSILK 4"
     ],
@@ -9038,17 +9200,89 @@
     "4_snow": [
         "SNOW 4"
     ],
+    "5_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_5.png"
+    ],
+    "5_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_5.png"
+    ],
+    "5_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_5.png"
+    ],
+    "5_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_5.png"
+    ],
+    "5_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_5.svg"
+    ],
+    "5_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_5.svg"
+    ],
     "5_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_5.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro_5.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/snowglobe-pro_5.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\snowglobe-pro_5.png"
     ],
+    "6_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_6.png"
+    ],
+    "6_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_6.png"
+    ],
+    "6_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_6.png"
+    ],
+    "6_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_6.png"
+    ],
+    "6_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_6.svg"
+    ],
+    "6_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_6.svg"
+    ],
     "6_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_6.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro_6.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/snowglobe-pro_6.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\snowglobe-pro_6.png"
+    ],
+    "7_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_7.png"
+    ],
+    "7_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_7.png"
+    ],
+    "7_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_7.png"
+    ],
+    "7_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_7.png"
+    ],
+    "7_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_7.svg"
+    ],
+    "7_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_7.svg"
+    ],
+    "8_circle_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_8.png"
+    ],
+    "8_circle_default_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_red_8.png"
+    ],
+    "8_circle_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_8.png"
+    ],
+    "8_circle_double_flair_red": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_8.png"
+    ],
+    "8_circle_flair_red_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_8.svg"
+    ],
+    "8_circle_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_8.svg"
     ],
     "9x16_ac437_en_ig_vga": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Ac437_IGS_VGA_9x16.ttf",
@@ -9067,6 +9301,63 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en\\Px437_IBM_EGA_9x8.ttf",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Px437_IBM_EGA_9x8.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Px437_IBM_EGA_9x8.ttf"
+    ],
+    "a_button_color_default_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_a_outline.png"
+    ],
+    "a_button_color_default_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_a.png"
+    ],
+    "a_button_color_double_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_a_outline.png"
+    ],
+    "a_button_color_double_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_a.png"
+    ],
+    "a_button_color_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_a_outline.svg"
+    ],
+    "a_button_color_outline_xbox": [
+        "xbox_button_color_a_outline.png"
+    ],
+    "a_button_color_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_a.svg"
+    ],
+    "a_button_color_xbox": [
+        "xbox_button_color_a.png"
+    ],
+    "a_button_default_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_a_outline.png"
+    ],
+    "a_button_default_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_a.png"
+    ],
+    "a_button_double_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_a_outline.png"
+    ],
+    "a_button_double_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_a.png"
+    ],
+    "a_button_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_a_outline.svg"
+    ],
+    "a_button_outline_xbox": [
+        "xbox_button_a_outline.png"
+    ],
+    "a_button_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_a.svg"
+    ],
+    "a_button_xbox": [
+        "xbox_button_a.png"
+    ],
+    "a_circle_default_flair_target": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_target_a.png"
+    ],
+    "a_circle_double_flair_target": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_target_a.png"
+    ],
+    "a_circle_flair_target_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_target_a.svg"
     ],
     "ac437_bio_en_ibm": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Ac437_IBM_BIOS.ttf",
@@ -9107,11 +9398,53 @@
     "alice_blue": [
         "ALICE BLUE"
     ],
+    "all_arrow_default_diagonal_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_diagonal_all.png"
+    ],
+    "all_arrow_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_all.png"
+    ],
+    "all_arrow_diagonal_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_diagonal_all.png"
+    ],
+    "all_arrow_diagonal_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_diagonal_all.svg"
+    ],
+    "all_arrow_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_all.png"
+    ],
+    "all_arrow_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_all.svg"
+    ],
     "all_asset_uuid": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/all_uuids.json #auto_generated #verified.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/all_uuids.json #auto_generated #verified.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/all_uuids.json #auto_generated #verified.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/all_uuids.json #auto_generated #verified.json"
+    ],
+    "all_default_dpad_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_all.png"
+    ],
+    "all_default_dpad_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_all.png"
+    ],
+    "all_double_dpad_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round_all.png"
+    ],
+    "all_double_dpad_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_all.png"
+    ],
+    "all_dpad_round_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round_all.svg"
+    ],
+    "all_dpad_round_xbox": [
+        "xbox_dpad_round_all.png"
+    ],
+    "all_dpad_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_all.svg"
+    ],
+    "all_dpad_xbox": [
+        "xbox_dpad_all.png"
     ],
     "almond_blanched": [
         "BLANCHED ALMOND"
@@ -9151,6 +9484,114 @@
     ],
     "aquamarine_medium": [
         "MEDIUM AQUAMARINE"
+    ],
+    "arrow_backforth_default_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_backforth.png"
+    ],
+    "arrow_backforth_double_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_backforth.png"
+    ],
+    "arrow_backforth_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_backforth.svg"
+    ],
+    "arrow_default_diagonal_generic_left": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_diagonal_left.png"
+    ],
+    "arrow_default_diagonal_generic_right": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_diagonal_right.png"
+    ],
+    "arrow_default_down_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_down.png"
+    ],
+    "arrow_default_generic_horizontal": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_horizontal.png"
+    ],
+    "arrow_default_generic_left": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_left.png"
+    ],
+    "arrow_default_generic_long": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_long.png"
+    ],
+    "arrow_default_generic_right": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_right.png"
+    ],
+    "arrow_default_generic_short": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_short.png"
+    ],
+    "arrow_default_generic_up": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_up.png"
+    ],
+    "arrow_default_generic_vertical": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_vertical.png"
+    ],
+    "arrow_default_generic_z": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_z.png"
+    ],
+    "arrow_diagonal_double_generic_left": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_diagonal_left.png"
+    ],
+    "arrow_diagonal_double_generic_right": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_diagonal_right.png"
+    ],
+    "arrow_diagonal_generic_left_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_diagonal_left.svg"
+    ],
+    "arrow_diagonal_generic_right_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_diagonal_right.svg"
+    ],
+    "arrow_double_down_generic": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_down.png"
+    ],
+    "arrow_double_generic_horizontal": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_horizontal.png"
+    ],
+    "arrow_double_generic_left": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_left.png"
+    ],
+    "arrow_double_generic_long": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_long.png"
+    ],
+    "arrow_double_generic_right": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_right.png"
+    ],
+    "arrow_double_generic_short": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_short.png"
+    ],
+    "arrow_double_generic_up": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_up.png"
+    ],
+    "arrow_double_generic_vertical": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_vertical.png"
+    ],
+    "arrow_double_generic_z": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_z.png"
+    ],
+    "arrow_down_generic_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_down.svg"
+    ],
+    "arrow_generic_horizontal_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_horizontal.svg"
+    ],
+    "arrow_generic_left_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_left.svg"
+    ],
+    "arrow_generic_long_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_long.svg"
+    ],
+    "arrow_generic_right_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_right.svg"
+    ],
+    "arrow_generic_short_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_short.svg"
+    ],
+    "arrow_generic_up_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_up.svg"
+    ],
+    "arrow_generic_vector_vertical": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_vertical.svg"
+    ],
+    "arrow_generic_vector_z": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_z.svg"
     ],
     "asset": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/.DS_Store",
@@ -9254,6 +9695,63 @@
     ],
     "azure": [
         "AZURE"
+    ],
+    "b_button_color_default_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_b_outline.png"
+    ],
+    "b_button_color_default_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_b.png"
+    ],
+    "b_button_color_double_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_b_outline.png"
+    ],
+    "b_button_color_double_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_b.png"
+    ],
+    "b_button_color_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_b_outline.svg"
+    ],
+    "b_button_color_outline_xbox": [
+        "xbox_button_color_b_outline.png"
+    ],
+    "b_button_color_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_b.svg"
+    ],
+    "b_button_color_xbox": [
+        "xbox_button_color_b.png"
+    ],
+    "b_button_default_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_b_outline.png"
+    ],
+    "b_button_default_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_b.png"
+    ],
+    "b_button_double_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_b_outline.png"
+    ],
+    "b_button_double_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_b.png"
+    ],
+    "b_button_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_b_outline.svg"
+    ],
+    "b_button_outline_xbox": [
+        "xbox_button_b_outline.png"
+    ],
+    "b_button_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_b.svg"
+    ],
+    "b_button_xbox": [
+        "xbox_button_b.png"
+    ],
+    "b_circle_default_flair_target": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_target_b.png"
+    ],
+    "b_circle_double_flair_target": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_target_b.png"
+    ],
+    "b_circle_flair_target_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_target_b.svg"
     ],
     "babel_edit_localization_warning": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/localization/BABEL_EDIT_WARNING.md",
@@ -9444,11 +9942,179 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Clean_with_Tail_mono.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\BUTTON_Clean_with_Tail_mono.wav"
     ],
+    "button_color_default_outline_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_x_outline.png"
+    ],
+    "button_color_default_outline_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_y_outline.png"
+    ],
+    "button_color_default_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_x.png"
+    ],
+    "button_color_default_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_y.png"
+    ],
+    "button_color_double_outline_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_x_outline.png"
+    ],
+    "button_color_double_outline_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_y_outline.png"
+    ],
+    "button_color_double_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_x.png"
+    ],
+    "button_color_double_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_color_y.png"
+    ],
+    "button_color_outline_vector_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_x_outline.svg"
+    ],
+    "button_color_outline_vector_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_y_outline.svg"
+    ],
+    "button_color_outline_x_xbox": [
+        "xbox_button_color_x_outline.png"
+    ],
+    "button_color_outline_xbox_y": [
+        "xbox_button_color_y_outline.png"
+    ],
+    "button_color_vector_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_x.svg"
+    ],
+    "button_color_vector_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_color_y.svg"
+    ],
+    "button_color_x_xbox": [
+        "xbox_button_color_x.png"
+    ],
+    "button_color_xbox_y": [
+        "xbox_button_color_y.png"
+    ],
+    "button_default_menu_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_menu_outline.png"
+    ],
+    "button_default_menu_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_menu.png"
+    ],
+    "button_default_outline_share_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_share_outline.png"
+    ],
+    "button_default_outline_view_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_view_outline.png"
+    ],
+    "button_default_outline_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_x_outline.png"
+    ],
+    "button_default_outline_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_y_outline.png"
+    ],
+    "button_default_share_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_share.png"
+    ],
+    "button_default_view_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_view.png"
+    ],
+    "button_default_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_x.png"
+    ],
+    "button_default_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_y.png"
+    ],
+    "button_double_menu_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_menu_outline.png"
+    ],
+    "button_double_menu_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_menu.png"
+    ],
+    "button_double_outline_share_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_share_outline.png"
+    ],
+    "button_double_outline_view_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_view_outline.png"
+    ],
+    "button_double_outline_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_x_outline.png"
+    ],
+    "button_double_outline_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_y_outline.png"
+    ],
+    "button_double_share_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_share.png"
+    ],
+    "button_double_view_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_view.png"
+    ],
+    "button_double_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_x.png"
+    ],
+    "button_double_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_button_y.png"
+    ],
     "button_light_mono_off_plastic_sound_switch": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/BUTTON_Plastic_Light_Switch_Off_mono.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\BUTTON_Plastic_Light_Switch_Off_mono.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Plastic_Light_Switch_Off_mono.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\BUTTON_Plastic_Light_Switch_Off_mono.wav"
+    ],
+    "button_menu_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_menu_outline.svg"
+    ],
+    "button_menu_outline_xbox": [
+        "xbox_button_menu_outline.png"
+    ],
+    "button_menu_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_menu.svg"
+    ],
+    "button_menu_xbox": [
+        "xbox_button_menu.png"
+    ],
+    "button_outline_share_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_share_outline.svg"
+    ],
+    "button_outline_share_xbox": [
+        "xbox_button_share_outline.png"
+    ],
+    "button_outline_vector_view_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_view_outline.svg"
+    ],
+    "button_outline_vector_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_x_outline.svg"
+    ],
+    "button_outline_vector_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_y_outline.svg"
+    ],
+    "button_outline_view_xbox": [
+        "xbox_button_view_outline.png"
+    ],
+    "button_outline_x_xbox": [
+        "xbox_button_x_outline.png"
+    ],
+    "button_outline_xbox_y": [
+        "xbox_button_y_outline.png"
+    ],
+    "button_share_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_share.svg"
+    ],
+    "button_share_xbox": [
+        "xbox_button_share.png"
+    ],
+    "button_vector_view_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_view.svg"
+    ],
+    "button_vector_x_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_x.svg"
+    ],
+    "button_vector_xbox_y": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_button_y.svg"
+    ],
+    "button_view_xbox": [
+        "xbox_button_view.png"
+    ],
+    "button_x_xbox": [
+        "xbox_button_x.png"
+    ],
+    "button_xbox_y": [
+        "xbox_button_y.png"
     ],
     "buyelf_sound": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/BuyElf.wav",
@@ -9481,8 +10147,32 @@
     "chartreuse": [
         "CHARTREUSE"
     ],
+    "check_default_flair_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_check_outline.png"
+    ],
+    "check_default_flair_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_check.png"
+    ],
+    "check_double_flair_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_check_outline.png"
+    ],
+    "check_double_flair_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_check.png"
+    ],
+    "check_flair_outline_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_check_outline.svg"
+    ],
+    "check_flair_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_check.svg"
+    ],
     "checkbox": [
         "checkbox"
+    ],
+    "checkmark": [
+        "checkmark.png"
+    ],
+    "checkmark_game_icon": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons/checkmark.png"
     ],
     "cherry_palette_resurrect_vivid": [
         "RESURRECT_PALETTE_VIVID_CHERRY"
@@ -9570,6 +10260,51 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FIREWORKS_Rocket_Launch_Crop_RR5_mono.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\FIREWORKS_Rocket_Launch_Crop_RR5_mono.wav"
     ],
+    "cros_default_disabled_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_disabled_cross.png"
+    ],
+    "cros_default_disabled_flair_outline": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_disabled_cross_outline.png"
+    ],
+    "cros_default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_cross.png"
+    ],
+    "cros_default_flair_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_cross_outline.png"
+    ],
+    "cros_default_flair_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_cross.png"
+    ],
+    "cros_disabled_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_disabled_cross.png"
+    ],
+    "cros_disabled_double_flair_outline": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_disabled_cross_outline.png"
+    ],
+    "cros_disabled_flair_outline_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_cross_outline.svg"
+    ],
+    "cros_disabled_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_cross.svg"
+    ],
+    "cros_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_cross.png"
+    ],
+    "cros_double_flair_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_cross_outline.png"
+    ],
+    "cros_double_flair_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_cross.png"
+    ],
+    "cros_flair_outline_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_cross_outline.svg"
+    ],
+    "cros_flair_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_cross.svg"
+    ],
+    "cros_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_cross.svg"
+    ],
     "crt_fragment_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/crt_fragment.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\crt_fragment.fs",
@@ -9639,11 +10374,209 @@
     "deep_pink": [
         "DEEP PINK"
     ],
+    "default_disabled_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_disabled.png"
+    ],
+    "default_disabled_flair_line": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_disabled_line.png"
+    ],
+    "default_disabled_flair_line_outline": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_disabled_line_outline.png"
+    ],
+    "default_disabled_flair_outline": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_disabled_outline.png"
+    ],
+    "default_disabled_flair_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_disabled_outline.png"
+    ],
+    "default_disabled_flair_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_disabled.png"
+    ],
+    "default_down_dpad_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_down_outline.png"
+    ],
+    "default_down_dpad_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_down.png"
+    ],
+    "default_down_dpad_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_down.png"
+    ],
+    "default_down_l_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_down.png"
+    ],
+    "default_down_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_down.png"
+    ],
+    "default_dpad_horizontal_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_horizontal_outline.png"
+    ],
+    "default_dpad_horizontal_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_horizontal.png"
+    ],
+    "default_dpad_horizontal_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_horizontal.png"
+    ],
+    "default_dpad_left_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_left_outline.png"
+    ],
+    "default_dpad_left_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_left.png"
+    ],
+    "default_dpad_left_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_left.png"
+    ],
+    "default_dpad_none_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_none.png"
+    ],
+    "default_dpad_outline_right_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_right_outline.png"
+    ],
+    "default_dpad_outline_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_up_outline.png"
+    ],
+    "default_dpad_outline_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_vertical_outline.png"
+    ],
+    "default_dpad_right_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_right.png"
+    ],
+    "default_dpad_right_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_right.png"
+    ],
+    "default_dpad_round_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_up.png"
+    ],
+    "default_dpad_round_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round_vertical.png"
+    ],
+    "default_dpad_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_round.png"
+    ],
+    "default_dpad_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_up.png"
+    ],
+    "default_dpad_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_vertical.png"
+    ],
+    "default_dpad_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad.png"
+    ],
+    "default_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default"
+    ],
+    "default_flair_info_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_info_outline.png"
+    ],
+    "default_flair_info_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_info.png"
+    ],
+    "default_flair_outline_rotate_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_rotate_outline.png"
+    ],
+    "default_flair_plu": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_plus.png"
+    ],
+    "default_flair_rotate_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_rotate.png"
+    ],
+    "default_horizontal_l_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_horizontal.png"
+    ],
+    "default_horizontal_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_horizontal.png"
+    ],
     "default_init": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/init/default.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\init\\default.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init/default.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\init\\default.lua"
+    ],
+    "default_l_left_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_left.png"
+    ],
+    "default_l_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_ls_outline.png"
+    ],
+    "default_l_pres_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_press.png"
+    ],
+    "default_l_right_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_right.png"
+    ],
+    "default_l_side_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_l.png"
+    ],
+    "default_l_stick_top_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_l.png"
+    ],
+    "default_l_stick_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_up.png"
+    ],
+    "default_l_stick_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_vertical.png"
+    ],
+    "default_l_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l.png"
+    ],
+    "default_l_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_ls.png"
+    ],
+    "default_lb_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_lb_outline.png"
+    ],
+    "default_lb_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_lb.png"
+    ],
+    "default_left_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_left.png"
+    ],
+    "default_lt_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_lt_outline.png"
+    ],
+    "default_lt_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_lt.png"
+    ],
+    "default_outline_r_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_rs_outline.png"
+    ],
+    "default_outline_rb_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_rb_outline.png"
+    ],
+    "default_outline_rt_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_rt_outline.png"
+    ],
+    "default_pres_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_press.png"
+    ],
+    "default_r_right_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_right.png"
+    ],
+    "default_r_side_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_r.png"
+    ],
+    "default_r_stick_top_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_r.png"
+    ],
+    "default_r_stick_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_up.png"
+    ],
+    "default_r_stick_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_vertical.png"
+    ],
+    "default_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r.png"
+    ],
+    "default_r_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_rs.png"
+    ],
+    "default_rb_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_rb.png"
+    ],
+    "default_rt_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_rt.png"
+    ],
+    "default_serie_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default"
     ],
     "defined_event_list_of_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/list_of_defined_events.md",
@@ -9660,17 +10593,371 @@
     "dim_gray": [
         "DIM GRAY"
     ],
+    "disabled_double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_disabled.png"
+    ],
+    "disabled_double_flair_line": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_disabled_line.png"
+    ],
+    "disabled_double_flair_line_outline": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_disabled_line_outline.png"
+    ],
+    "disabled_double_flair_outline": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_disabled_outline.png"
+    ],
+    "disabled_double_flair_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_disabled_outline.png"
+    ],
+    "disabled_double_flair_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_disabled.png"
+    ],
+    "disabled_flair_line_outline_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_line_outline.svg"
+    ],
+    "disabled_flair_line_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_line.svg"
+    ],
+    "disabled_flair_outline_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_disabled_outline.svg"
+    ],
+    "disabled_flair_outline_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_outline.svg"
+    ],
+    "disabled_flair_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_disabled.svg"
+    ],
+    "disabled_flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled.svg"
+    ],
     "dospilgi_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/DOSPilgi.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\ko\\DOSPilgi.ttf",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/DOSPilgi.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\ko\\DOSPilgi.ttf"
     ],
+    "double_down_dpad_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_down_outline.png"
+    ],
+    "double_down_dpad_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round_down.png"
+    ],
+    "double_down_dpad_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_down.png"
+    ],
+    "double_down_l_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_down.png"
+    ],
+    "double_down_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_down.png"
+    ],
+    "double_dpad_horizontal_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_horizontal_outline.png"
+    ],
+    "double_dpad_horizontal_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round_horizontal.png"
+    ],
+    "double_dpad_horizontal_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_horizontal.png"
+    ],
+    "double_dpad_left_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_left_outline.png"
+    ],
+    "double_dpad_left_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round_left.png"
+    ],
+    "double_dpad_left_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_left.png"
+    ],
+    "double_dpad_none_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_none.png"
+    ],
+    "double_dpad_outline_right_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_right_outline.png"
+    ],
+    "double_dpad_outline_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_up_outline.png"
+    ],
+    "double_dpad_outline_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_vertical_outline.png"
+    ],
+    "double_dpad_right_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round_right.png"
+    ],
+    "double_dpad_right_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_right.png"
+    ],
+    "double_dpad_round_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round_up.png"
+    ],
+    "double_dpad_round_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round_vertical.png"
+    ],
+    "double_dpad_round_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_round.png"
+    ],
+    "double_dpad_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_up.png"
+    ],
+    "double_dpad_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_vertical.png"
+    ],
+    "double_dpad_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad.png"
+    ],
+    "double_flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double"
+    ],
+    "double_flair_info_outline_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_info_outline.png"
+    ],
+    "double_flair_info_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_info.png"
+    ],
+    "double_flair_outline_rotate_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_rotate_outline.png"
+    ],
+    "double_flair_plu": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_plus.png"
+    ],
+    "double_flair_rotate_small": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_rotate.png"
+    ],
+    "double_horizontal_l_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_horizontal.png"
+    ],
+    "double_horizontal_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_horizontal.png"
+    ],
+    "double_l_left_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_left.png"
+    ],
+    "double_l_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_ls_outline.png"
+    ],
+    "double_l_pres_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_press.png"
+    ],
+    "double_l_right_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_right.png"
+    ],
+    "double_l_side_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_side_l.png"
+    ],
+    "double_l_stick_top_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_top_l.png"
+    ],
+    "double_l_stick_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_up.png"
+    ],
+    "double_l_stick_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_vertical.png"
+    ],
+    "double_l_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l.png"
+    ],
+    "double_l_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_ls.png"
+    ],
+    "double_lb_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_lb_outline.png"
+    ],
+    "double_lb_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_lb.png"
+    ],
+    "double_left_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_left.png"
+    ],
+    "double_lt_outline_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_lt_outline.png"
+    ],
+    "double_lt_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_lt.png"
+    ],
+    "double_outline_r_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rs_outline.png"
+    ],
+    "double_outline_rb_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rb_outline.png"
+    ],
+    "double_outline_rt_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rt_outline.png"
+    ],
+    "double_pres_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_press.png"
+    ],
+    "double_r_right_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_right.png"
+    ],
+    "double_r_side_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_side_r.png"
+    ],
+    "double_r_stick_top_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_top_r.png"
+    ],
+    "double_r_stick_up_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_up.png"
+    ],
+    "double_r_stick_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_vertical.png"
+    ],
+    "double_r_stick_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r.png"
+    ],
+    "double_r_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rs.png"
+    ],
+    "double_rb_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rb.png"
+    ],
+    "double_rt_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rt.png"
+    ],
+    "double_serie_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double"
+    ],
     "dovemayo_gothic_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/Dovemayo_gothic.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\ko\\Dovemayo_gothic.ttf",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/Dovemayo_gothic.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\ko\\Dovemayo_gothic.ttf"
+    ],
+    "down_dpad_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_down_outline.svg"
+    ],
+    "down_dpad_outline_xbox": [
+        "xbox_dpad_down_outline.png"
+    ],
+    "down_dpad_round_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round_down.svg"
+    ],
+    "down_dpad_round_xbox": [
+        "xbox_dpad_round_down.png"
+    ],
+    "down_dpad_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_down.svg"
+    ],
+    "down_dpad_xbox": [
+        "xbox_dpad_down.png"
+    ],
+    "down_l_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_down.svg"
+    ],
+    "down_l_stick_xbox": [
+        "xbox_stick_l_down.png"
+    ],
+    "down_r_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_down.svg"
+    ],
+    "down_r_stick_xbox": [
+        "xbox_stick_r_down.png"
+    ],
+    "dpad_horizontal_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_horizontal_outline.svg"
+    ],
+    "dpad_horizontal_outline_xbox": [
+        "xbox_dpad_horizontal_outline.png"
+    ],
+    "dpad_horizontal_round_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round_horizontal.svg"
+    ],
+    "dpad_horizontal_round_xbox": [
+        "xbox_dpad_round_horizontal.png"
+    ],
+    "dpad_horizontal_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_horizontal.svg"
+    ],
+    "dpad_horizontal_xbox": [
+        "xbox_dpad_horizontal.png"
+    ],
+    "dpad_left_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_left_outline.svg"
+    ],
+    "dpad_left_outline_xbox": [
+        "xbox_dpad_left_outline.png"
+    ],
+    "dpad_left_round_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round_left.svg"
+    ],
+    "dpad_left_round_xbox": [
+        "xbox_dpad_round_left.png"
+    ],
+    "dpad_left_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_left.svg"
+    ],
+    "dpad_left_xbox": [
+        "xbox_dpad_left.png"
+    ],
+    "dpad_none_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_none.svg"
+    ],
+    "dpad_none_xbox": [
+        "xbox_dpad_none.png"
+    ],
+    "dpad_outline_right_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_right_outline.svg"
+    ],
+    "dpad_outline_right_xbox": [
+        "xbox_dpad_right_outline.png"
+    ],
+    "dpad_outline_up_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_up_outline.svg"
+    ],
+    "dpad_outline_up_xbox": [
+        "xbox_dpad_up_outline.png"
+    ],
+    "dpad_outline_vector_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_vertical_outline.svg"
+    ],
+    "dpad_outline_vertical_xbox": [
+        "xbox_dpad_vertical_outline.png"
+    ],
+    "dpad_right_round_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round_right.svg"
+    ],
+    "dpad_right_round_xbox": [
+        "xbox_dpad_round_right.png"
+    ],
+    "dpad_right_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_right.svg"
+    ],
+    "dpad_right_xbox": [
+        "xbox_dpad_right.png"
+    ],
+    "dpad_round_up_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round_up.svg"
+    ],
+    "dpad_round_up_xbox": [
+        "xbox_dpad_round_up.png"
+    ],
+    "dpad_round_vector_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round_vertical.svg"
+    ],
+    "dpad_round_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_round.svg"
+    ],
+    "dpad_round_vertical_xbox": [
+        "xbox_dpad_round_vertical.png"
+    ],
+    "dpad_round_xbox": [
+        "xbox_dpad_round.png"
+    ],
+    "dpad_up_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_up.svg"
+    ],
+    "dpad_up_xbox": [
+        "xbox_dpad_up.png"
+    ],
+    "dpad_vector_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad_vertical.svg"
+    ],
+    "dpad_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_dpad.svg"
+    ],
+    "dpad_vertical_xbox": [
+        "xbox_dpad_vertical.png"
+    ],
+    "dpad_xbox": [
+        "xbox_dpad.png"
     ],
     "drab_olive": [
         "OLIVE DRAB"
@@ -9744,6 +11031,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/eng_synonyms.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\eng_synonyms.json"
     ],
+    "exclamation": [
+        "exclamation.png"
+    ],
+    "exclamation_game_icon": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons/exclamation.png"
+    ],
     "fade_fragment_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_fragment.fs"
@@ -9775,14 +11068,47 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/pre-packing-files_globbed.zip",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\pre-packing-files_globbed.zip"
     ],
+    "file_flair_globbed_packing_pre": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs"
+    ],
+    "file_game_globbed_icon_packing_pre": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons"
+    ],
     "file_globbed_graphic_packing_pre": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/pre-packing-files_globbed",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\pre-packing-files_globbed",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed"
     ],
+    "file_globbed_packing_pre": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/.DS_Store"
+    ],
+    "file_globbed_packing_pre_serie_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series"
+    ],
     "firebrick": [
         "FIREBRICK"
+    ],
+    "flair": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/.DS_Store"
+    ],
+    "flair_info_outline_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_info_outline.svg"
+    ],
+    "flair_info_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_info.svg"
+    ],
+    "flair_outline_rotate_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_rotate_outline.svg"
+    ],
+    "flair_plu_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_plus.svg"
+    ],
+    "flair_rotate_small_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_rotate.svg"
+    ],
+    "flair_vector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector"
     ],
     "flash_fragment_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/flash_fragment.fs",
@@ -9917,11 +11243,23 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/Galmuri14.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\ko\\Galmuri14.ttf"
     ],
+    "game_gear_icon": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons/gear.png"
+    ],
+    "game_icon_left": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons/left.png"
+    ],
+    "game_icon_right": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons/right.png"
+    ],
     "game_main_start_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/start_main_game.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\start_main_game.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_game.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\start_main_game.lua"
+    ],
+    "gear": [
+        "gear.png"
     ],
     "ghost_white": [
         "GHOST WHITE"
@@ -10077,6 +11415,18 @@
     "honeydew": [
         "HONEYDEW"
     ],
+    "horizontal_l_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_horizontal.svg"
+    ],
+    "horizontal_l_stick_xbox": [
+        "xbox_stick_l_horizontal.png"
+    ],
+    "horizontal_r_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_horizontal.svg"
+    ],
+    "horizontal_r_stick_xbox": [
+        "xbox_stick_r_horizontal.png"
+    ],
     "hot_pink": [
         "HOT PINK"
     ],
@@ -10107,6 +11457,66 @@
     "khaki": [
         "KHAKI"
     ],
+    "l_left_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_left.svg"
+    ],
+    "l_left_stick_xbox": [
+        "xbox_stick_l_left.png"
+    ],
+    "l_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_ls_outline.svg"
+    ],
+    "l_outline_xbox": [
+        "xbox_ls_outline.png"
+    ],
+    "l_pres_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_press.svg"
+    ],
+    "l_pres_stick_xbox": [
+        "xbox_stick_l_press.png"
+    ],
+    "l_right_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_right.svg"
+    ],
+    "l_right_stick_xbox": [
+        "xbox_stick_l_right.png"
+    ],
+    "l_side_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_side_l.svg"
+    ],
+    "l_side_stick_xbox": [
+        "xbox_stick_side_l.png"
+    ],
+    "l_stick_top_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_top_l.svg"
+    ],
+    "l_stick_top_xbox": [
+        "xbox_stick_top_l.png"
+    ],
+    "l_stick_up_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_up.svg"
+    ],
+    "l_stick_up_xbox": [
+        "xbox_stick_l_up.png"
+    ],
+    "l_stick_vector_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_vertical.svg"
+    ],
+    "l_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l.svg"
+    ],
+    "l_stick_vertical_xbox": [
+        "xbox_stick_l_vertical.png"
+    ],
+    "l_stick_xbox": [
+        "xbox_stick_l.png"
+    ],
+    "l_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_ls.svg"
+    ],
+    "l_xbox": [
+        "xbox_ls.png"
+    ],
     "lace_old": [
         "OLD LACE"
     ],
@@ -10115,6 +11525,27 @@
     ],
     "lavender_palette_resurrect_shadowed": [
         "RESURRECT_PALETTE_SHADOWED_LAVENDER"
+    ],
+    "lb_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_lb_outline.svg"
+    ],
+    "lb_outline_xbox": [
+        "xbox_lb_outline.png"
+    ],
+    "lb_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_lb.svg"
+    ],
+    "lb_xbox": [
+        "xbox_lb.png"
+    ],
+    "left": [
+        "left.png"
+    ],
+    "left_r_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_left.svg"
+    ],
+    "left_r_stick_xbox": [
+        "xbox_stick_r_left.png"
     ],
     "light_pink": [
         "LIGHT PINK"
@@ -10148,6 +11579,18 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\logic",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/logic",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\logic"
+    ],
+    "lt_outline_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_lt_outline.svg"
+    ],
+    "lt_outline_xbox": [
+        "xbox_lt_outline.png"
+    ],
+    "lt_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_lt.svg"
+    ],
+    "lt_xbox": [
+        "xbox_lt.png"
     ],
     "main_menu_start_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/start_main_menu.lua",
@@ -10229,6 +11672,24 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/pixelperfect_outline.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\pixelperfect_outline.vs"
     ],
+    "outline_r_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rs_outline.svg"
+    ],
+    "outline_r_xbox": [
+        "xbox_rs_outline.png"
+    ],
+    "outline_rb_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rb_outline.svg"
+    ],
+    "outline_rb_xbox": [
+        "xbox_rb_outline.png"
+    ],
+    "outline_rt_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rt_outline.svg"
+    ],
+    "outline_rt_xbox": [
+        "xbox_rt_outline.png"
+    ],
     "pale_red_violet": [
         "PALE VIOLET RED"
     ],
@@ -10287,6 +11748,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/powerup-pro.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\powerup-pro.png"
     ],
+    "pres_r_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_press.svg"
+    ],
+    "pres_r_stick_xbox": [
+        "xbox_stick_r_press.png"
+    ],
     "pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro.atlas",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro.png",
@@ -10302,11 +11769,59 @@
     "purple": [
         "PURPLE"
     ],
+    "r_right_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_right.svg"
+    ],
+    "r_right_stick_xbox": [
+        "xbox_stick_r_right.png"
+    ],
+    "r_side_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_side_r.svg"
+    ],
+    "r_side_stick_xbox": [
+        "xbox_stick_side_r.png"
+    ],
+    "r_stick_top_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_top_r.svg"
+    ],
+    "r_stick_top_xbox": [
+        "xbox_stick_top_r.png"
+    ],
+    "r_stick_up_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_up.svg"
+    ],
+    "r_stick_up_xbox": [
+        "xbox_stick_r_up.png"
+    ],
+    "r_stick_vector_vertical_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_vertical.svg"
+    ],
+    "r_stick_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r.svg"
+    ],
+    "r_stick_vertical_xbox": [
+        "xbox_stick_r_vertical.png"
+    ],
+    "r_stick_xbox": [
+        "xbox_stick_r.png"
+    ],
+    "r_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rs.svg"
+    ],
+    "r_xbox": [
+        "xbox_rs.png"
+    ],
     "raw": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/raws/.DS_Store",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\.DS_Store",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/.DS_Store",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\.DS_Store"
+    ],
+    "rb_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rb.svg"
+    ],
+    "rb_xbox": [
+        "xbox_rb.png"
     ],
     "rect_shader_spectrum_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_rect_vertex.vs",
@@ -10324,11 +11839,20 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/register_tutorials.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\register_tutorials.lua"
     ],
+    "right": [
+        "right.png"
+    ],
     "ripple_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/ripple.vs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\ripple.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/ripple.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\ripple.vs"
+    ],
+    "rt_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rt.svg"
+    ],
+    "rt_xbox": [
+        "xbox_rt.png"
     ],
     "salmon": [
         "SALMON"
@@ -10353,6 +11877,12 @@
     ],
     "seashell": [
         "SEASHELL"
+    ],
+    "serie_vector_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector"
+    ],
+    "serie_xbox": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/.DS_Store"
     ],
     "shader_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/shaders.json",

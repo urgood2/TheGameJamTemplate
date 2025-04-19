@@ -1645,12 +1645,17 @@ namespace ui
             if (uiConfig->choice)
             {
                 std::vector<entt::entity> choices = ui::box::GetGroup(registry, uiConfig->groupParent.value_or(entt::null), uiConfig->group.value_or(""));
+                
+                SPDLOG_DEBUG("Click(): Group parent: {}, group: {}", static_cast<int>(uiConfig->groupParent.value_or(entt::null)), uiConfig->group.value_or(""));
+                SPDLOG_DEBUG("Click(): Choices size: {}", choices.size());
+                
 
                 for (auto choiceEntity : choices)
                 {
                     auto *choiceConfig = registry.try_get<UIConfig>(choiceEntity);
-                    if (choiceConfig && choiceConfig->choice)
+                    if (choiceConfig && choiceConfig->chosen)
                     {
+                        SPDLOG_DEBUG("Click(): Unsetting choice for entity: {}", static_cast<int>(choiceEntity));
                         choiceConfig->chosen = false;
                     }
                 }

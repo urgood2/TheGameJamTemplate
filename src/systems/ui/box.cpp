@@ -1397,8 +1397,10 @@ namespace ui
         for (auto childEntry : node->orderedChildren)
         {
             auto child = childEntry;
-            ingroup = GetGroup(registry, child, group);
+            auto childGroup = GetGroup(registry, child, group);
+            ingroup.insert(ingroup.end(), childGroup.begin(), childGroup.end());
         }
+
 
         // If this node belongs to the requested group, add it to the list
         if (uiConfig && uiConfig->group && uiConfig->group.value() == group)

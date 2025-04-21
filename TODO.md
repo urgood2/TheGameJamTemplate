@@ -12,8 +12,9 @@
 
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
-- [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
-- [ ] test draw shader pipeline for sprite 
+- [ ] sprite rendering not working over ui?
+- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass)
+
 
 - [ ] add kenney borders & rounded rect logic 
     - Add logic to fetch sprite & automatically nine-patch close to the center
@@ -84,6 +85,7 @@
 ---
 
 ## Immediate laters
+- [ ] Some shaders don't work with the multi-pass system I have. 
 - [ ] rounded rect needs testing - outline doesn't seem to work right all the time
 - [ ] simple lighting shader with normal maps
 - [ ] AddDrawTransformEntityWithAnimationWithPipeline needs to be tested.

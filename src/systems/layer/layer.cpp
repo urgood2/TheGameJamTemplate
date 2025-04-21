@@ -252,6 +252,65 @@ namespace layer
     
         EndTextureMode();
     }
+    
+    // only use for (DrawLayerCommandsToSpecificCanvas)
+    namespace render_stack_switch_internal
+    {
+        static std::stack<RenderTexture2D> renderStack{};
+
+        // Push a new render target, auto-ending the previous one if needed
+        inline void Push(RenderTexture2D target)
+        {
+            if (!renderStack.empty())
+            {
+                // End the currently active texture mode
+                EndTextureMode();
+            }
+
+            renderStack.push(target);
+            BeginTextureMode(target);
+        }
+
+        // Pop the top render target and resume the previous one
+        inline void Pop()
+        {
+            assert(!renderStack.empty() && "Render stack underflow: Pop called without a matching Push!");
+
+            // End current texture mode
+            EndTextureMode();
+            renderStack.pop();
+
+            // Resume the previous target
+            if (!renderStack.empty())
+            {
+                BeginTextureMode(renderStack.top());
+            }
+        }
+
+        // Peek current render target (optional utility)
+        inline RenderTexture2D* Current()
+        {
+            if (renderStack.empty()) return nullptr;
+            return &renderStack.top();
+        }
+
+        // Check if we’re inside any render target
+        inline bool IsActive()
+        {
+            return !renderStack.empty();
+        }
+
+        // Clear the entire stack and end current mode — use with caution
+        inline void ForceClear()
+        {
+            if (!renderStack.empty())
+            {
+                EndTextureMode();
+            }
+
+            while (!renderStack.empty()) renderStack.pop();
+        }
+    }
 
     void DrawLayerCommandsToSpecificCanvas(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera)
     {
@@ -260,7 +319,8 @@ namespace layer
 
         // SPDLOG_DEBUG("Drawing commands to canvas: {}", canvasName);
 
-        BeginTextureMode(layer->canvases[canvasName]);
+        // BeginTextureMode(layer->canvases[canvasName]);
+        render_stack_switch_internal::Push(layer->canvases[canvasName]);
         
         // Clear the canvas with the background color
         ClearBackground(layer->backgroundColor);
@@ -663,7 +723,8 @@ namespace layer
             EndMode2D();
         }
 
-        EndTextureMode();
+        // EndTextureMode();
+        render_stack_switch_internal::Pop();
     }
 
     void AddSetColor(std::shared_ptr<Layer> layer, const Color& color, int z)
@@ -936,7 +997,8 @@ namespace layer
         }
     
         // 3. Draw base sprite to ping texture (no transforms!)
-        BeginTextureMode(front());
+        // BeginTextureMode(front());
+        render_stack_switch_internal::Push(front());
         ClearBackground({0, 0, 0, 0});
     
         Vector2 drawOffset = { pad, pad };
@@ -948,15 +1010,23 @@ namespace layer
         if (drawForeground) {
             if (animationFrame) {
                 layer::TexturePro(spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+                // debug draw rect
+                layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+                
             } else {
                 layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
             }
         }
     
         EndTextureMode();
+        
+        // render the result of front() to the screen for debugging
+        
+        DrawTextureRec(front().texture, {0, 0, renderWidth, renderHeight}, {0, 0}, WHITE);
     
         // 4. Apply shader passes
-        auto* uniformComp = registry.try_get<ShaderUniformComponent>(e);
+        
+        int debugPassIndex = 0;  // you can reset this outside if needed
     
         for (ShaderPass& pass : pipelineComp.passes) {
             if (!pass.enabled) continue;
@@ -974,8 +1044,7 @@ namespace layer
             }
     
             AssertThat(shader.id, IsGreaterThan(0));
-            //FIXME: turning off shaders for checking
-            // BeginShaderMode(shader);
+            BeginShaderMode(shader);
             // per-entity overrides not necessary?
             // if (uniformComp) {
             //     uniformComp->applyToShaderForEntity(shader, pass.shaderName, e, registry);
@@ -984,10 +1053,26 @@ namespace layer
     
             DrawTextureRec(front().texture, {0, 0, (float)width, (float)height}, {0, 0}, WHITE);
     
-            // EndShaderMode();
+            EndShaderMode();
             EndTextureMode();
     
             Swap();
+            
+            // DEBUG: Show result of each pass visually
+            
+
+            int debugOffsetX = 10;
+            int debugOffsetY = 10 + debugPassIndex * (int)(renderHeight + 10);
+
+            DrawTextureRec(
+                front().texture,
+                { 0, 0, renderWidth, renderHeight },  // negative Y to flip
+                { (float)debugOffsetX, (float)debugOffsetY },
+                WHITE
+            );
+            DrawRectangleLines(debugOffsetX, debugOffsetY, (int)renderWidth, (int)renderHeight, RED);
+
+            debugPassIndex++;
         }
     
         SetLastRenderTarget(front());
@@ -1004,7 +1089,7 @@ namespace layer
         // Update for use elsewhere
         SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
     
-        Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight };  // Negative height to flip Y
+        Rectangle sourceRect = { 0, 0, renderWidth, renderHeight };  // Negative height to flip Y
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
         

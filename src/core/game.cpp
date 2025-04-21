@@ -698,13 +698,14 @@ namespace game
         }
 
         // sprites with transform (including those in ui)
-        layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
-        layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
+        // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
+        // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         
         //TODO: need to test this
-        // layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
-        // layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
-        uiProfiler.Stop();
+        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
+        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
+        
+        // uiProfiler.Stop();
 
         particle::DrawParticles(globals::registry, ui_layer);
 

@@ -10,21 +10,12 @@
 
 ## 🧠 General Design / Architecture
 
-- [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess
+- [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
-- [ ] make the shader fucntionatlity for sprites just render the sprite to the target without buffering if there is only one shader
-- [ ] test draw shader pipeline for sprite - probably include the shader uniforms with the shader name in ShaderPass init. But then again, how to selectively add uniforms live through lamndas, rather than initializing them based on the value on load?
-```c++
-//TODO: corerct this to contain the uniforms here instead? more intuitive.
-    shaderPipeline.passes.push_back(shader_pipeline::ShaderPass{
-        .shader = "foil",
-        .uniforms = {
-            {"u_color", {1.0f, 1.0f, 1.0f, 1.0f}},
-            {"u_time", {0.0f}},
-            {"u_resolution", {static_cast<float>(globals::screenWidth), static_cast<float>(globals::screenHeight)}}
-        }
-    });
-```
+- [ ] sprite rendering not working over ui?
+- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass)
+
+
 - [ ] add kenney borders & rounded rect logic 
     - Add logic to fetch sprite & automatically nine-patch close to the center
     - dividers go on each side of the text or element and the second one is mirrored (first one is not), should be scaled down probably by some factor of the line height
@@ -95,8 +86,7 @@
 ---
 
 ## Immediate laters
-- [ ] Add some more text effects (like fan spread), not necessarily flashy, something that can be added to the toolkit
-- [ ] Debug text effects, some don't work
+- [ ] Some shaders don't work with the multi-pass system I have. 
 - [ ] rounded rect needs testing - outline doesn't seem to work right all the time
 - [ ] simple lighting shader with normal maps
 - [ ] AddDrawTransformEntityWithAnimationWithPipeline needs to be tested.

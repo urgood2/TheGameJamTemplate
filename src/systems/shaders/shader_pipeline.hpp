@@ -5,11 +5,19 @@
 #include <vector>
 #include <unordered_map>
 
+#include "shader_system.hpp"
+
 namespace shader_pipeline {
 
     struct ShaderPass {
         std::string shaderName;
         bool enabled = true;
+        
+        // custom uniforms for this shader pass, applied for this pass only
+        shaders::ShaderUniformSet uniforms;
+        
+        // custom lamdna for this shader pass, run before activatingt the shader for this pass
+        std::function<void()> customPrePassFunction{};
     };
 
     struct ShaderPipelineComponent {
@@ -62,6 +70,24 @@ namespace shader_pipeline {
         BeginTextureMode(pong);
         ClearBackground(color);
         EndTextureMode();
+    }
+    /*
+        usage:
+        ```
+        shaderPipeline.passes.push_back(createShaderPass("foil", {
+            {"u_color", Vector4{1,1,1,1}},
+            {"u_time", 0.0f},
+            {"u_resolution", Vector2{globals::screenWidth, globals::screenHeight}}
+        }));
+        ```
+    */
+    inline ShaderPass createShaderPass(const std::string& name, std::initializer_list<std::pair<std::string, ShaderUniformValue>> uniformList) {
+        ShaderPass pass;
+        pass.shaderName = name;
+        for (auto& [k, v] : uniformList) {
+            pass.uniforms.set(k, v);
+        }
+        return pass;
     }
 
     inline void DebugDrawFront(int x = 0, int y = 0) {

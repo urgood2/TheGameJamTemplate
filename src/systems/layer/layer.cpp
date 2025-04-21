@@ -965,15 +965,26 @@ namespace layer
     
             BeginTextureMode(back());
             ClearBackground({0, 0, 0, 0});
-    
-            BeginShaderMode(shader);
-            if (uniformComp) {
-                uniformComp->applyToShaderForEntity(shader, pass.shaderName, e, registry);
+            
+            shaders::ApplyUniformsToShader(shader, pass.uniforms);
+            
+            // run optional lambda pre-pass
+            if (pass.customPrePassFunction) {
+                pass.customPrePassFunction();
             }
     
-            DrawTextureRec(front().texture, {0, 0, (float)width, -(float)height}, {0, 0}, WHITE);
+            AssertThat(shader.id, IsGreaterThan(0));
+            //FIXME: turning off shaders for checking
+            // BeginShaderMode(shader);
+            // per-entity overrides not necessary?
+            // if (uniformComp) {
+            //     uniformComp->applyToShaderForEntity(shader, pass.shaderName, e, registry);
+            // }
+            
     
-            EndShaderMode();
+            DrawTextureRec(front().texture, {0, 0, (float)width, (float)height}, {0, 0}, WHITE);
+    
+            // EndShaderMode();
             EndTextureMode();
     
             Swap();
@@ -996,7 +1007,10 @@ namespace layer
         Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight };  // Negative height to flip Y
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
-    
+        
+        // FIXME: debug draw
+        DrawTexture(back().texture, 10, 10, WHITE); // Just paste it to the screen directly
+        
         PushMatrix();
         Translate(position.x, position.y);
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
@@ -1004,6 +1018,7 @@ namespace layer
         Translate(-origin.x, -origin.y);
     
         DrawTextureRec(front().texture, sourceRect, { 0, 0 }, WHITE);
+        // debug rect
     
         PopMatrix();
     }

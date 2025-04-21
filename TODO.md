@@ -90,10 +90,13 @@
 - [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
+- [ ] Text input (with cursor displayed, etc, software keyboard)
 
 ---
 
 ## Immediate laters
+- [ ] Add some more text effects (like fan spread), not necessarily flashy, something that can be added to the toolkit
+- [ ] Debug text effects, some don't work
 - [ ] rounded rect needs testing - outline doesn't seem to work right all the time
 - [ ] simple lighting shader with normal maps
 - [ ] AddDrawTransformEntityWithAnimationWithPipeline needs to be tested.

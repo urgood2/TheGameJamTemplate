@@ -22,20 +22,22 @@ namespace animation_system {
         auto &shaderPipeline = globals::registry.emplace<shader_pipeline::ShaderPipelineComponent>(e);
         
         //FIXME: testing
-        auto pass = shader_pipeline::createShaderPass("foil", {
-            {"u_color", Vector4{1,1,1,1}},
-            {"u_time", 0.0f},
-            {"u_resolution", Vector2{(float)globals::screenWidth, (float)globals::screenHeight}}
-        });
+        auto pass = shader_pipeline::createShaderPass("holo", {});
         pass.customPrePassFunction = []() {
             // Custom pre-pass logic here
             // For example, you can set shader uniforms or perform other operations
             // before the shader is activated for this pass.
             // this function is called after the uniforms are applied for the pass
-            shaders::TryApplyUniforms(shaders::getShader("foil"), globals::globalShaderUniforms, "foil");
+            shaders::TryApplyUniforms(shaders::getShader("holo"), globals::globalShaderUniforms, "holo");
         };
         
         shaderPipeline.passes.push_back(pass);
+        
+        auto pass2 = shader_pipeline::createShaderPass("flash", {});
+        pass2.customPrePassFunction = []() {
+            shaders::TryApplyUniforms(shaders::getShader("flash"), globals::globalShaderUniforms, "flash");
+        };
+        shaderPipeline.passes.push_back(pass2);
         
         
         

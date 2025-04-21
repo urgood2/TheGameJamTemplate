@@ -12,6 +12,11 @@ namespace game
 
         using namespace globals;
         // pre-load shader values for later use
+        
+        // flash shader
+        shaders::registerUniformUpdate("flash", [](Shader &shader) { // update iTime every frame
+            globalShaderUniforms.set("flash", "iTime", static_cast<float>(GetTime()));
+        });
 
         // screen transition
         globalShaderUniforms.set("screen_tone_transition", "in_out", 0.f);
@@ -145,7 +150,7 @@ namespace game
         globalShaderUniforms.set("wind", "offset", 1.0f); // vary per object
 
         // pseudo 3d skew
-        shaders::registerUniformUpdate("3d_skew", [](Shader &shader)
+    shaders::registerUniformUpdate("3d_skew", [](Shader &shader)
                                        {
         globalShaderUniforms.set("3d_skew", "iTime", static_cast<float>(GetTime()));
         globalShaderUniforms.set("3d_skew", "mouse_screen_pos", GetMousePosition());

@@ -1011,18 +1011,17 @@ namespace layer
             if (animationFrame) {
                 layer::TexturePro(spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
                 // debug draw rect
-                layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+                // layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
                 
             } else {
                 layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
             }
         }
-    
-        EndTextureMode();
+        
+        render_stack_switch_internal::Pop();
         
         // render the result of front() to the screen for debugging
         
-        DrawTextureRec(front().texture, {0, 0, renderWidth, renderHeight}, {0, 0}, WHITE);
     
         // 4. Apply shader passes
         
@@ -1032,8 +1031,9 @@ namespace layer
             if (!pass.enabled) continue;
     
             Shader shader = getShader(pass.shaderName);
-    
-            BeginTextureMode(back());
+            
+            render_stack_switch_internal::Push(back());
+            // BeginTextureMode(back());
             ClearBackground({0, 0, 0, 0});
             
             shaders::ApplyUniformsToShader(shader, pass.uniforms);
@@ -1044,17 +1044,13 @@ namespace layer
             }
     
             AssertThat(shader.id, IsGreaterThan(0));
+            //FIXME: commenting out shader for debugging
             BeginShaderMode(shader);
-            // per-entity overrides not necessary?
-            // if (uniformComp) {
-            //     uniformComp->applyToShaderForEntity(shader, pass.shaderName, e, registry);
-            // }
-            
     
-            DrawTextureRec(front().texture, {0, 0, (float)width, (float)height}, {0, 0}, WHITE);
+            DrawTextureRec(front().texture, {0, 0, (float)width, (float)-height}, {0, 0}, WHITE); // invert Y 
     
             EndShaderMode();
-            EndTextureMode();
+            render_stack_switch_internal::Pop();
     
             Swap();
             
@@ -1066,11 +1062,18 @@ namespace layer
 
             DrawTextureRec(
                 front().texture,
-                { 0, 0, renderWidth, renderHeight },  // negative Y to flip
+                { 0, 0, renderWidth, -renderHeight },  // negative Y to flip
                 { (float)debugOffsetX, (float)debugOffsetY },
                 WHITE
             );
             DrawRectangleLines(debugOffsetX, debugOffsetY, (int)renderWidth, (int)renderHeight, RED);
+            DrawText(
+                fmt::format("Pass {}: {}", debugPassIndex, pass.shaderName).c_str(),
+                debugOffsetX + 5,
+                debugOffsetY + 5,
+                10,
+                WHITE
+            );
 
             debugPassIndex++;
         }
@@ -1089,12 +1092,9 @@ namespace layer
         // Update for use elsewhere
         SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
     
-        Rectangle sourceRect = { 0, 0, renderWidth, renderHeight };  // Negative height to flip Y
+        Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight };  // Negative height to flip Y
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
-        
-        // FIXME: debug draw
-        DrawTexture(back().texture, 10, 10, WHITE); // Just paste it to the screen directly
         
         PushMatrix();
         Translate(position.x, position.y);

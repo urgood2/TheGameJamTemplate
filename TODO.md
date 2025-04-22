@@ -13,9 +13,8 @@
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
 - [ ] sprite rendering not working over ui?
-- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass)
+- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
 - [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
-- [ ] Add sprite sheet multi-pack support
 
 - Add shader variations:
 Suggestions for Gloss/Shine Shader Variations

@@ -77,11 +77,6 @@ namespace init {
 
         jsonStream.close();
 
-        jsonStream.open(util::getAssetPathUUIDVersion("graphics/sprites.json"));
-        globals::spritesJSON = json::parse(jsonStream);
-
-        jsonStream.close();
-
         jsonStream.open(util::getAssetPathUUIDVersion("graphics/animations.json"));
         globals::animationsJSON = json::parse(jsonStream);
 
@@ -99,8 +94,7 @@ namespace init {
 
         loadColorsFromJSON();
 
-        // load animations map (spriteFrames and colorsMap must be initialized before this part)
-        loadAnimationsFromJSON();
+        
 
         // dump uuids to a file for debugging & reference
         uuid::dump_to_json(util::getRawAssetPathNoUUID("all_uuids.json #auto_generated #verified.json"));
@@ -160,8 +154,9 @@ namespace init {
                 AssertThat(getSpriteFrame(frame.spriteUUID).frame.width, IsGreaterThan(0));
                 frame.spriteData.frame = getSpriteFrame(frame.spriteUUID).frame;
                 //TODO: need to load in the atlas to the texturemap
-                frame.spriteData.texture = &globals::textureAtlasMap[getSpriteFrame(frame.spriteUUID).atlasUUID];
-
+                auto atlasUUID = getSpriteFrame(frame.spriteUUID).atlasUUID;
+                frame.spriteData.texture = &globals::textureAtlasMap.at(atlasUUID);
+                frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(getSpriteFrame(frame.spriteUUID));
 
                 double duration = frameData.at("duration_seconds");
 
@@ -243,9 +238,10 @@ namespace init {
                 jsonStream >> spriteJson;
                 jsonStream.close();
 
-                std::string jsonFilename = path.filename().string();
-                std::string baseName = path.stem().string(); // e.g. sprites-0
-                std::string pngFilename = baseName + ".png";
+                std::string jsonFilename = path.filename().string();           // e.g., "sprites-0.json"
+                std::string indexPart = path.stem().string().substr(8);        // Extract index after "sprites-", e.g., "0"
+                std::string pngFilename = "sprites_atlas-" + indexPart + ".png"; // e.g., "sprites_atlas-0.png"
+
 
                 // Generate UUID for the matching PNG
                 std::string atlasUUID = uuid::add(pngFilename);
@@ -426,7 +422,7 @@ namespace init {
             if (!entry.is_regular_file()) continue;
 
             const auto& path = entry.path();
-            if (path.extension() == ".png" && path.filename().string().starts_with("sprites-")) {
+            if (path.extension() == ".png" && path.filename().string().starts_with("sprites_atlas-")) {
                 std::string pngFilename = path.filename().string(); // e.g., sprites-0.png
 
                 // Register and get UUID
@@ -439,6 +435,20 @@ namespace init {
                 globals::textureAtlasMap[uuid] = tex;
 
                 SPDLOG_INFO("Loaded texture '{}' as UUID '{}'", pngFilename, uuid);
+            }
+        }
+
+        // iterate through every animation object and populate the texture map with the atlas textures
+        for (auto& animation : globals::animationsMap) {
+            auto& anim = animation.second;
+            for (auto& frame : anim.animationList) {
+                auto& spriteData = frame.first.spriteData;
+                if (spriteData.texture == nullptr) {
+                    // Load the texture using the UUID
+                    spriteData.texture = &globals::textureAtlasMap[frame.first.spriteFrame->atlasUUID];
+                    spriteData.frame = frame.first.spriteFrame->frame; // set the frame to the spriteFrame data 
+                    //FIXME: we are using both spriteData and spriteFrame, need to phase out one of them
+                }
             }
         }
     }
@@ -462,8 +472,7 @@ namespace init {
         scanAssetsFolderAndAddAllPaths();
         loadJSONData();
         loadColorsFromJSON();
-        loadInSpriteFramesFromJSON();
-        loadAnimationsFromJSON();        
+        loadInSpriteFramesFromJSON();       
         loadConfigFileValues(); // should be called after loadJSONData()
         // in general, loadConfigFileValues() should be called before any pertinent values are used
 
@@ -476,6 +485,8 @@ namespace init {
         rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
         initGUI();
         loadTextures();
+        // load animations map (spriteFrames and colorsMap must be initialized before this part)
+        loadAnimationsFromJSON();
         //InitAudioDevice(); done in audioManager
         loadSounds();
         

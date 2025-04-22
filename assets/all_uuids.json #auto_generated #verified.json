@@ -1705,6 +1705,9 @@
     "0_atla_graphic_sprite": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites_atlas-0.png"
     ],
+    "0_atla_sprite": [
+        "sprites_atlas-0.png"
+    ],
     "0_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_0.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\flair_circle_0.png"
@@ -10551,6 +10554,9 @@
     ],
     "1_atla_graphic_sprite": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites_atlas-1.png"
+    ],
+    "1_atla_sprite": [
+        "sprites_atlas-1.png"
     ],
     "1_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_1.png",

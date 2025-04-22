@@ -702,8 +702,8 @@ namespace game
         // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         
         //TODO: need to test this
-        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
-        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
+        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player, 0);
+        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player2, 0);
         
         // uiProfiler.Stop();
 

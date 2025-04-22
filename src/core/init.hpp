@@ -28,7 +28,7 @@ namespace init {
     std::string getAssetPath(const std::string path_uuid_or_raw_identifier);
     AnimationObject getAnimationObject(std::string uuid_or_raw_identifier);
     std::string getUIString(std::string uuid_or_raw_identifier);
-    Rectangle getSpriteFrame(std::string uuid_or_raw_identifier);
+    globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier);
 
 
     // utility

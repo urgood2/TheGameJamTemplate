@@ -42,8 +42,9 @@ namespace animation_system {
         
         
         // set width and height to the animation size
-        transform.setActualW(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame.width);
-        transform.setActualH(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame.height);        
+        //TODO: optionally provide custom size upon init
+        transform.setActualW(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.width);
+        transform.setActualH(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.height);        
         
         return e;
     }

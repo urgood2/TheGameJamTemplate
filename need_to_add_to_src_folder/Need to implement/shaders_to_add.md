@@ -1,4 +1,5 @@
 
+- https://godotshaders.com/shader/efficient-2d-pixel-outlines/
 - https://godotshaders.com/shader/wobbly-shader/
 - https://godotshaders.com/shader/topdown-windy-plants/
 - https://godotshaders.com/shader/custom-2d-light/

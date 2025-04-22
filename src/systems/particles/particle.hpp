@@ -117,8 +117,8 @@ namespace particle {
                 anim.useCallbackOnAnimationQueueComplete = true;
             }
             // override size
-            transform.setActualW(anim.defaultAnimation.animationList[0].first.spriteFrame.width);
-            transform.setActualH(anim.defaultAnimation.animationList[0].first.spriteFrame.height);
+            transform.setActualW(anim.defaultAnimation.animationList[0].first.spriteFrame->frame.width);
+            transform.setActualH(anim.defaultAnimation.animationList[0].first.spriteFrame->frame.height);
         }
 
         return particle;
@@ -288,7 +288,7 @@ namespace particle {
 
             // does it have animation?
             if (registry.any_of<AnimationQueueComponent>(entity)) {
-                layer::AddDrawEntityWithAnimation(layerPtr, &globals::registry, entity, 0, 0, globals::spriteAtlas, 0);
+                layer::AddDrawEntityWithAnimation(layerPtr, &globals::registry, entity, 0, 0, 0);
             } else {
                 // just draw rect
                 layer::AddRectangle(layerPtr, 0, 0, transform.getVisualW(), transform.getVisualH(), drawColor);

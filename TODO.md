@@ -14,7 +14,34 @@
 
 - [ ] sprite rendering not working over ui?
 - [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass)
+- [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
+- [ ] Add sprite sheet multi-pack support
 
+- Add shader variations:
+Suggestions for Gloss/Shine Shader Variations
+🔷 Material-Focused Shines
+    Brushed Metal – directional highlights with anisotropic streaks based on tangents.
+    Velvet Sheen – edge-based soft highlights with fuzzy falloff (rim lit, but diffused).
+    Lacquer/Plastic – hard specular with sharp, clean falloff + slight clear coat shine.
+    Worn Metal – gloss modulated by grunge/noise masks; procedural wear and tear.
+    Pearlescent – multi-layered interference hues depending on view angle and light angle.
+    Holographic – shifting diffraction-like rainbow highlights from camera angle.
+🔷 Stylized/Procedural Effects
+    Ramp-based Specular (Toon Shine) – non-linear specular ramping using a 1D texture or math step function.
+    Anime Glint – animated diagonal lines or sparkles that pulse across edges.
+    Sheen Lines (Vista Glow) – trailing glow point that animates around a border (like high-end foil cards).
+    Moving Bokeh Reflection – light spots (fake lens bokeh) that flow across the surface.
+🔷 Overlay/Multipass Ideas
+    Environment Map Reflection – even without actual environment maps, use fake cubemap glint swipes.
+    Dynamic Bloom Outline – bright specular zones that spill light (bloom) and pulse.
+    Double Coat Shader – simulate a thin transparent glossy coat over a rough underlayer.
+    Scanline Sparkle – thin traveling scanline that causes strong sparkle on intersect.
+🔷 Noise/Distortion Driven
+    Distorted Shine – use noise to break up highlights into irregular reflections.
+    Liquid Shine – sine-driven ripple effect modulating specular zones.
+    Time-based Wave Gloss – sin(time + pos) driven specular strength shifting.
+    Fractal Shine Veins – highlights that follow perlin/fractal veins.
+    Edge Pulse Gloss – gloss increases along UV edges or silhouette outlines.
 
 - [ ] add kenney borders & rounded rect logic 
     - Add logic to fetch sprite & automatically nine-patch close to the center

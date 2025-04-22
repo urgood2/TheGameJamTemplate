@@ -152,7 +152,7 @@ namespace globals
     extern json spritesJSON, cp437MappingsJSON;
 
     // Global vector to hold all loaded textures
-    extern std::map<string, Texture2D> textureMap;
+    extern std::map<string, Texture2D> textureAtlasMap;
 
     // game config
     extern json configJSON;
@@ -163,8 +163,14 @@ namespace globals
     extern Vector2 cameraVelocity;
     extern Vector2 nextCameraTarget; // keep track of desired next camera target position
 
+    struct SpriteFrameData
+    {
+        std::string atlasUUID{}; // texture for the sprite frame, from the laoded texture map
+        Rectangle frame{};   // frame rectangle
+    };
+
     // map sprite number to sprite draw rect (source)
-    extern std::map<std::string, Rectangle> spriteDrawFrames;
+    extern std::map<std::string, SpriteFrameData> spriteDrawFrames; 
 
     // map sprite number to CP437 char and UTF codepoint, vice versa
 
@@ -261,6 +267,8 @@ namespace globals
         float uiPadding = 10.0f;
     };
 
+    
+
     extern Settings settings;
 
     struct FontData
@@ -293,9 +301,7 @@ namespace globals
     extern bool screenWipe; // true when the screen is being wiped (transitioning between scenes)
 
     extern entt::entity gameWorldContainerEntity; // entity representing the entire game world (usually the size of the screen)
-    // all sprites are found on this atlas (supports only one sprite atlas for now)
-    extern Texture2D spriteAtlas;
-
+    
     // ECS registry
     extern entt::registry registry;
 

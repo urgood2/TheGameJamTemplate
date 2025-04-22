@@ -397,8 +397,8 @@ namespace util {
         // get tile location, make sure is valid
         SpriteComponentASCII &sc = globals::registry.get<SpriteComponentASCII>(globals::map[0][0]);
         
-        pos.x = (int)(pos.x / sc.spriteFrame.width);
-        pos.y = (int)(pos.y / sc.spriteFrame.height);
+        pos.x = (int)(pos.x / sc.spriteFrame->frame.width);
+        pos.y = (int)(pos.y / sc.spriteFrame->frame.height);
         
         
         

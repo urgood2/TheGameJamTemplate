@@ -30,17 +30,19 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
 
+    
+
     bool drawDebugInfo = true; // set to true to allow debug drawing of transforms
 
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
 
-    std::map<std::string, Rectangle> spriteDrawFrames; 
+    std::map<std::string, SpriteFrameData> spriteDrawFrames; 
 
     // store gui ninepatch data
     std::map<std::string, gui::NinePatchData> ninePatchDataMap;
 
     // Vector to keep track of all loaded textures to manage their lifetime
-    std::vector<Texture2D> loadedTextures;
+    std::map<std::string, Texture2D> loadedTextures;
 
     // keep track of mouse dragging coords (start and end, in tile units)
     Vector2 mouseDragStartedCoords{-1.0f, -1.0f}, mouseDragEndedCoords{-1.0f, -1.0f};
@@ -78,9 +80,6 @@ namespace globals {
 
     // Texture onto which game world is drawn
     RenderTexture gameWorldViewPort{};
-
-    // all sprites are found on this atlas (supports only one sprite atlas for now)
-    Texture2D spriteAtlas{};
 
     // world map (2d grid - maybe make into 3d later?)
     vector<vector<entt::entity>> map{};
@@ -147,7 +146,7 @@ namespace globals {
     Texture2D titleTexture{};
 
     // Global vector to hold all loaded textures (non sprite atlas)
-    std::map<string, Texture2D> textureMap;
+    std::map<string, Texture2D> textureAtlasMap;
 
     layer::Layer backgroundLayer{}, gameLayer{}, uiLayer{};
 

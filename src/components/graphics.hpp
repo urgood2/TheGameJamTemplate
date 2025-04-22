@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <memory>
 
 #include "tweeny.h"
 
@@ -14,10 +15,13 @@ struct FrameData {
     Texture2D* texture; // Use a pointer to manage multiple textures efficiently
 };
 
+namespace globals {
+    struct SpriteFrameData;
+}
 
 struct SpriteComponentASCII
 {
-    Rectangle spriteFrame{}; // coordinates of the sprite on the sprite image
+    std::shared_ptr<globals::SpriteFrameData> spriteFrame{}; // coordinates of the sprite on the sprite image
 
     FrameData spriteData{}; // the sprite data for the sprite TODO: phase out spriteframe and use this instead
     

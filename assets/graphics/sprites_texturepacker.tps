@@ -4,7 +4,7 @@
         <key>fileFormatVersion</key>
         <int>6</int>
         <key>texturePackerVersion</key>
-        <string>7.4.0</string>
+        <string>7.5.0</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -34,7 +34,7 @@
         <key>dataFormat</key>
         <string>json-array</string>
         <key>textureFileName</key>
-        <filename>sprites_atlas.png</filename>
+        <filename>sprites_atlas-{n}.png</filename>
         <key>flipPVR</key>
         <false/>
         <key>pvrQualityLevel</key>
@@ -80,9 +80,9 @@
         <key>maxTextureSize</key>
         <QSize>
             <key>width</key>
-            <int>2048</int>
+            <int>4096</int>
             <key>height</key>
-            <int>2048</int>
+            <int>4096</int>
         </QSize>
         <key>fixedTextureSize</key>
         <QSize>
@@ -124,11 +124,11 @@
             <key>data</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename>sprites.json</filename>
+                <filename>sprites-{n}.json</filename>
             </struct>
         </map>
         <key>multiPackMode</key>
-        <enum type="SettingsBase::MultiPackMode">MultiPackOff</enum>
+        <enum type="SettingsBase::MultiPackMode">MultiPackAuto</enum>
         <key>forceIdenticalLayout</key>
         <false/>
         <key>outputFormat</key>
@@ -1592,6 +1592,116 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/particles/circle_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/circle_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/circle_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/circle_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/circle_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/dirt_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/dirt_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/dirt_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/fire_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/fire_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_05_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_06.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flame_06_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/flare_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/light_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/light_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/light_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/magic_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/magic_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/magic_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/magic_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/magic_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_01_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_02_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_03_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_04_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/muzzle_05_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/scorch_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/scorch_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/scorch_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/scratch_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/slash_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/slash_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/slash_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/slash_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_06.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_07.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_08.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_09.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/smoke_10.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_05_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_06.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_06_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/spark_07.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_06.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_07.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_08.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/star_09.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/symbol_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/symbol_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_01_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_02_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_03_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_04.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_04_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_05.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_05_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_06.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_06_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_07.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/trace_07_rotated.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/twirl_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/twirl_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/twirl_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/window_01.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/window_02.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/window_03.png</key>
+            <key type="filename">pre-packing-files_globbed/particles/window_04.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>128,128,256,256</rect>
+                <key>scale9Paddings</key>
+                <rect>128,128,256,256</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/test_char_woman.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -2824,6 +2934,102 @@
                     <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-029.png</filename>
                     <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-030.png</filename>
                     <filename>pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center/panel-transparent-center-031.png</filename>
+                    <filename>pre-packing-files_globbed/particles/circle_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/circle_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/circle_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/circle_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/circle_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/dirt_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/dirt_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/dirt_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/fire_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/fire_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_05_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_06.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flame_06_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/flare_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/light_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/light_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/light_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/magic_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/magic_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/magic_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/magic_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/magic_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_01_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_02_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_03_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_04_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/muzzle_05_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/scorch_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/scorch_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/scorch_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/scratch_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/slash_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/slash_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/slash_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/slash_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_06.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_07.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_08.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_09.png</filename>
+                    <filename>pre-packing-files_globbed/particles/smoke_10.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_05_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_06.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_06_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/spark_07.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_06.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_07.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_08.png</filename>
+                    <filename>pre-packing-files_globbed/particles/star_09.png</filename>
+                    <filename>pre-packing-files_globbed/particles/symbol_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/symbol_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_01_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_02_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_03_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_04.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_04_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_05.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_05_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_06.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_06_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_07.png</filename>
+                    <filename>pre-packing-files_globbed/particles/trace_07_rotated.png</filename>
+                    <filename>pre-packing-files_globbed/particles/twirl_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/twirl_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/twirl_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/window_01.png</filename>
+                    <filename>pre-packing-files_globbed/particles/window_02.png</filename>
+                    <filename>pre-packing-files_globbed/particles/window_03.png</filename>
+                    <filename>pre-packing-files_globbed/particles/window_04.png</filename>
                 </array>
             </struct>
         </map>

@@ -362,17 +362,19 @@ namespace Movable
             {
                 if (!aqc.defaultAnimation.animationList.empty())
                 {
-                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteFrame;
+                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteFrame->frame;
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
                 }
             }
             else
             {
                 auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteFrame;
+                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteFrame->frame;
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
             }
         }
+
+        Texture2D atlasTexture = *currentSprite->spriteData.texture;
 
         // Determine rendering size based on Movable component
         float finalScale = movable.visualScale.value();
@@ -429,7 +431,7 @@ namespace Movable
             if (animationFrame)
             {
                 DrawTexturePro(
-                    globals::spriteAtlas,
+                    atlasTexture,
                     *animationFrame,
                     Rectangle{-offsetX, -offsetY, movable.visualSize->x, movable.visualSize->y},
                     Vector2{0, 0}, // Rotation center

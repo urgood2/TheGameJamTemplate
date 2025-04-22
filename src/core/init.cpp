@@ -157,8 +157,10 @@ namespace init {
                 frame.spriteUUID = frameData.at("sprite_UUID");
 
                 using namespace snowhouse;
-                AssertThat(getSpriteFrame(frame.spriteUUID).width, IsGreaterThan(0));
-                frame.spriteFrame = getSpriteFrame(frame.spriteUUID);
+                AssertThat(getSpriteFrame(frame.spriteUUID).frame.width, IsGreaterThan(0));
+                frame.spriteData.frame = getSpriteFrame(frame.spriteUUID).frame;
+                //TODO: need to load in the atlas to the texturemap
+                frame.spriteData.texture = &globals::textureAtlasMap[getSpriteFrame(frame.spriteUUID).atlasUUID];
 
 
                 double duration = frameData.at("duration_seconds");
@@ -219,53 +221,78 @@ namespace init {
 
     void loadInSpriteFramesFromJSON()
     {
-        for (auto &cp437Sprite : globals::spritesJSON.at("frames"))
+        namespace fs = std::filesystem;
+        const std::string graphicsDir = util::getRawAssetPathNoUUID("graphics/");
+        
+        for (const auto& entry : fs::directory_iterator(graphicsDir))
         {
-            std::string filename = cp437Sprite.at("filename").get<std::string>();
+            if (!entry.is_regular_file()) continue;
+            const auto& path = entry.path();
 
-            // Generate UUID using unify
-            std::string uuid = uuid::add(filename);
+            // Match files like sprites-0.json, sprites-1.json, ...
+            if (path.extension() == ".json" && path.filename().string().starts_with("sprites-"))
+            {
+                std::ifstream jsonStream(path);
+                if (!jsonStream.is_open())
+                {
+                    SPDLOG_ERROR("Failed to open sprite JSON '{}'", path.string());
+                    continue;
+                }
 
-            //  append "uuid" at the end
-            cp437Sprite["auto_generated_uuid"] = uuid;
+                json spriteJson;
+                jsonStream >> spriteJson;
+                jsonStream.close();
 
-            // Extract frame details
-            Rectangle frame{};
-            frame.x = cp437Sprite.at("frame").at("x").get<int>();
-            frame.y = cp437Sprite.at("frame").at("y").get<int>();
-            frame.width = cp437Sprite.at("frame").at("w").get<int>();
-            frame.height = cp437Sprite.at("frame").at("h").get<int>();
+                std::string jsonFilename = path.filename().string();
+                std::string baseName = path.stem().string(); // e.g. sprites-0
+                std::string pngFilename = baseName + ".png";
 
-            // Log the details
-            // SPDLOG_DEBUG("Got sprite file {}, UUID {}, frame : [x:{}, y:{}, w:{}, h:{}]", filename, uuid, frame.position.x, frame.position.y, frame.size.x, frame.size.y);
+                // Generate UUID for the matching PNG
+                std::string atlasUUID = uuid::add(pngFilename);
 
-            // Store frame in map, based on raw file name
-            globals::spriteDrawFrames[filename] = frame;
+                for (auto& cp437Sprite : spriteJson.at("frames"))
+                {
+                    std::string filename = cp437Sprite.at("filename").get<std::string>();
+
+                    // Generate UUID using unify
+                    std::string uuid = uuid::add(filename);
+                    cp437Sprite["auto_generated_uuid"] = uuid;
+
+                    // Extract frame details
+                    globals::SpriteFrameData data{};
+                    data.frame.x = cp437Sprite.at("frame").at("x").get<int>();
+                    data.frame.y = cp437Sprite.at("frame").at("y").get<int>();
+                    data.frame.width = cp437Sprite.at("frame").at("w").get<int>();
+                    data.frame.height = cp437Sprite.at("frame").at("h").get<int>();
+                    data.atlasUUID = atlasUUID;
+
+                    globals::spriteDrawFrames[filename] = data;
+                }
+
+                // Overwrite the updated JSON with UUIDs
+                std::ofstream outFile(path);
+                if (!outFile.is_open())
+                {
+                    SPDLOG_ERROR("Failed to open '{}' for writing.", path.string());
+                    continue;
+                }
+
+                outFile << spriteJson.dump(4);
+                outFile.close();
+
+                SPDLOG_INFO("Processed '{}', associated with '{}'", jsonFilename, pngFilename);
+            }
         }
-
-        auto filePath = util::getAssetPathUUIDVersion("graphics/sprites.json");
-        std::ofstream outFile(filePath);
-        if (!outFile.is_open())
-        {
-            SPDLOG_ERROR("Failed to open '{}' for writing.", filePath);
-            return;
-        }
-
-        // Dump the JSON with pretty-print (4 spaces indentation)
-        outFile << globals::spritesJSON.dump(4);
-        outFile.close();
-
-        SPDLOG_INFO("Dumped updated sprites JSON to '{}'.", filePath);
     }
 
     Texture2D retrieveNotAtlasTexture(string refrence) {
         using namespace snowhouse;
-        //AssertThat(textureMap.contains(refrence), IsTrue());
-        if(!globals::textureMap.contains(refrence)) {
-            SPDLOG_ERROR("Texture {} not found in textureMap", refrence);
+        //AssertThat(textureAtlasMap.contains(refrence), IsTrue());
+        if(!globals::textureAtlasMap.contains(refrence)) {
+            SPDLOG_ERROR("Texture {} not found in textureAtlasMap", refrence);
             return {};
         }
-        return globals::textureMap[refrence];
+        return globals::textureAtlasMap[refrence];
     }
 
     /**
@@ -305,7 +332,7 @@ namespace init {
         return globals::uiStringsJSON[uuid::lookup(uuid_or_raw_identifier)];
     }
 
-    Rectangle getSpriteFrame(std::string uuid_or_raw_identifier) {
+    globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier) {
         using namespace snowhouse;
         AssertThat(globals::spriteDrawFrames.find(uuid::lookup(uuid_or_raw_identifier)) != globals::spriteDrawFrames.end(), IsTrue());
         return globals::spriteDrawFrames[uuid::lookup(uuid_or_raw_identifier)];
@@ -389,12 +416,31 @@ namespace init {
 
     
     /**
-     * Loads the required textures for the game.
+     * Loads all sprite atlas textures from the graphics directory using UUIDs.
      */
     auto loadTextures() -> void {
-        // load texture
-        //TODO: this should load in from json instead of being hard-coded
-        globals::spriteAtlas = LoadTexture(util::getAssetPathUUIDVersion("graphics/sprites_atlas.png").c_str());
+        namespace fs = std::filesystem;
+        const std::string graphicsDir = util::getRawAssetPathNoUUID("graphics/");
+
+        for (const auto& entry : fs::directory_iterator(graphicsDir)) {
+            if (!entry.is_regular_file()) continue;
+
+            const auto& path = entry.path();
+            if (path.extension() == ".png" && path.filename().string().starts_with("sprites-")) {
+                std::string pngFilename = path.filename().string(); // e.g., sprites-0.png
+
+                // Register and get UUID
+                std::string uuid = uuid::add(pngFilename);
+
+                // Load texture
+                Texture2D tex = LoadTexture(path.string().c_str());
+
+                // Store in atlas map
+                globals::textureAtlasMap[uuid] = tex;
+
+                SPDLOG_INFO("Loaded texture '{}' as UUID '{}'", pngFilename, uuid);
+            }
+        }
     }
 
     auto loadSounds() -> void {

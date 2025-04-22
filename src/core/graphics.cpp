@@ -112,6 +112,8 @@ namespace graphics {
         if (isTileVisible((int)lc.x, (int)lc.y) == false) return;
         
         SpriteComponentASCII *sc = nullptr;
+
+        
         
         
         // does the entity have a animation queue component? 
@@ -141,7 +143,7 @@ namespace graphics {
         }
         
         
-        
+        Texture2D atlasTexture = *sc->spriteData.texture;
         
         
         
@@ -170,7 +172,7 @@ namespace graphics {
             entityY = lc.y;
         }
         
-        Rectangle &sourceRec = sc->spriteFrame;
+        Rectangle &sourceRec = sc->spriteData.frame;
         // 1:1 render
         // take into account sprites that aren't 20x20
         const float baseDestW = 20.0f;
@@ -197,9 +199,9 @@ namespace graphics {
         //TODO drawing background slows rendering. Find a way to optimize this.
         if (drawBackground) DrawRectangle(destRec.x, destRec.y, destRec.width, destRec.height, bg);
         if (drawForeground) 
-            DrawTexturePro(globals::spriteAtlas, sourceRec, destRec, origin, 0, fg); 
+            DrawTexturePro(atlasTexture, sourceRec, destRec, origin, 0, fg); 
         else 
-            DrawTexturePro(globals::spriteAtlas, sourceRec, destRec, origin, 0, WHITE);
+            DrawTexturePro(atlasTexture, sourceRec, destRec, origin, 0, WHITE);
 
         
         // DrawRectangle(destRec.x, destRec.y, destRec.width, destRec.height, bg);

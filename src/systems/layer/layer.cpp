@@ -540,27 +540,24 @@ namespace layer
             }
             else if (command.type == "draw_entity_animation")
             {
-                AssertThat(command.args.size(), Equals(5)); // Validate number of arguments
+                AssertThat(command.args.size(), Equals(4)); // Validate number of arguments
                 entt::entity e = std::get<entt::entity>(command.args[0]);
                 entt::registry *registry = std::get<entt::registry *>(command.args[1]);
                 int x = std::get<int>(command.args[2]);
                 int y = std::get<int>(command.args[3]);
-                Texture2D spriteAtlas = std::get<Texture2D>(command.args[4]);
-                layer::DrawEntityWithAnimation(*registry, e, x, y, spriteAtlas);
+                layer::DrawEntityWithAnimation(*registry, e, x, y);
             }
             else if (command.type == "draw_transform_entity_animation") {
-                AssertThat(command.args.size(), Equals(3)); // Validate number of arguments
+                AssertThat(command.args.size(), Equals(2)); // Validate number of arguments
                 entt::entity e = std::get<entt::entity>(command.args[0]);
                 entt::registry *registry = std::get<entt::registry *>(command.args[1]);
-                Texture2D spriteAtlas = std::get<Texture2D>(command.args[2]);
-                layer::DrawTransformEntityWithAnimation(*registry, e,spriteAtlas);
+                layer::DrawTransformEntityWithAnimation(*registry, e);
             }
             else if (command.type == "draw_transform_entity_animation_pipeline") {
-                AssertThat(command.args.size(), Equals(3)); // Validate number of arguments
+                AssertThat(command.args.size(), Equals(2)); // Validate number of arguments
                 entt::entity e = std::get<entt::entity>(command.args[0]);
                 entt::registry *registry = std::get<entt::registry *>(command.args[1]);
-                Texture2D spriteAtlas = std::get<Texture2D>(command.args[2]);
-                layer::DrawTransformEntityWithAnimationWithPipeline(*registry, e, spriteAtlas);
+                layer::DrawTransformEntityWithAnimationWithPipeline(*registry, e);
             }
             // Shader Commands
             else if (command.type == "set_shader")
@@ -942,15 +939,14 @@ namespace layer
             EndShaderMode();
     }
 
-    auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z) -> void {
-        AddDrawCommand(layer, "draw_transform_entity_animation_pipeline", {e, registry, spriteAtlas}, z);
+    auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z) -> void {
+        AddDrawCommand(layer, "draw_transform_entity_animation_pipeline", {e, registry}, z);
     }
     
-    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e, Texture2D spriteAtlas) -> void {
+    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void {
         using namespace shaders;
         using namespace shader_pipeline;
-    
-        AssertThat(spriteAtlas.id, Is().Not().EqualTo(0));
+
     
         // 1. Fetch animation frame and sprite
         Rectangle* animationFrame = nullptr;
@@ -960,18 +956,20 @@ namespace layer
             auto& aqc = registry.get<AnimationQueueComponent>(e);
             if (aqc.animationQueue.empty()) {
                 if (!aqc.defaultAnimation.animationList.empty()) {
-                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteFrame;
+                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
                 }
             } else {
                 auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteFrame;
+                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteData.frame;
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
             }
         }
     
         AssertThat(animationFrame, Is().Not().Null());
         AssertThat(currentSprite, Is().Not().Null());
+
+        auto spriteAtlas = currentSprite->spriteData.texture;
     
         float baseWidth = animationFrame->width;
         float baseHeight = animationFrame->height;
@@ -1009,7 +1007,7 @@ namespace layer
     
         if (drawForeground) {
             if (animationFrame) {
-                layer::TexturePro(spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+                layer::TexturePro(*spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
                 // debug draw rect
                 // layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
                 
@@ -1110,12 +1108,12 @@ namespace layer
     
     
     
-    auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z) -> void
+    auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z) -> void
     {
-        AddDrawCommand(layer, "draw_transform_entity_animation", {e, registry, spriteAtlas}, z);
+        AddDrawCommand(layer, "draw_transform_entity_animation", {e, registry}, z);
     }
     
-    auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e, Texture2D spriteAtlas) -> void {
+    auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void {
         
         // Fetch the animation frame if the entity has an animation queue
         Rectangle *animationFrame = nullptr;
@@ -1130,23 +1128,24 @@ namespace layer
             {
                 if (!aqc.defaultAnimation.animationList.empty())
                 {
-                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteFrame;
+                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
                 }
             }
             else
             {
                 auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteFrame;
+                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteData.frame;
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
             }
         }
 
         using namespace snowhouse;
-        AssertThat(spriteAtlas.id, Is().Not().EqualTo(0));
 
         AssertThat(animationFrame, Is().Not().Null());
         AssertThat(currentSprite, Is().Not().Null());
+
+        auto spriteAtlas = currentSprite->spriteData.texture;
 
         float renderWidth = animationFrame->width;
         float renderHeight = animationFrame->height;
@@ -1231,7 +1230,7 @@ namespace layer
     
                     // Draw shadow by rendering the same frame with a black tint and offset
                     layer::TexturePro(
-                        spriteAtlas,
+                        *spriteAtlas,
                         {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height},
                         0, 0,
                         {renderWidth, renderHeight},
@@ -1244,7 +1243,7 @@ namespace layer
                     Translate(shadowOffsetX, -shadowOffsetY);
                 }
 
-                layer::TexturePro(spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height}, 0, 0, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+                layer::TexturePro(*spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height}, 0, 0, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
             }
             else
             {
@@ -1256,12 +1255,12 @@ namespace layer
         
     }
     
-    auto AddDrawEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int x, int y, Texture2D spriteAtlas, int z) -> void
+    auto AddDrawEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int x, int y, int z) -> void
     {
-        AddDrawCommand(layer, "draw_entity_animation", {e, registry, x, y, spriteAtlas}, z);
+        AddDrawCommand(layer, "draw_entity_animation", {e, registry, x, y}, z);
     }
     
-    auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x, int y, Texture2D spriteAtlas) -> void
+    auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x, int y) -> void
     {
         
         // Fetch the animation frame if the entity has an animation queue
@@ -1277,20 +1276,21 @@ namespace layer
             {
                 if (!aqc.defaultAnimation.animationList.empty())
                 {
-                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteFrame;
+                    animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
                 }
             }
             else
             {
                 auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteFrame;
+                animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteData.frame;
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
             }
         }
 
         using namespace snowhouse;
-        AssertThat(spriteAtlas.id, Is().Not().EqualTo(0));
+
+        auto spriteAtlas = *currentSprite->spriteData.texture;
 
         AssertThat(animationFrame, Is().Not().Null());
         AssertThat(currentSprite, Is().Not().Null());

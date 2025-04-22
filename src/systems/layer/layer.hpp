@@ -76,7 +76,7 @@ namespace layer
                                                       Shader shader = {},
                                                       bool flat = false); // render a layer's given canvas to the screen, or whatever target is in use.
     
-    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e, Texture2D spriteAtlas) -> void;
+    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void;
     void DrawCanvasOntoOtherLayer(
         const std::shared_ptr<Layer> &srcLayer,
         const std::string &srcCanvasName,
@@ -99,15 +99,15 @@ namespace layer
         const std::shared_ptr<Layer> layer, const std::string &canvasName,
         const Rectangle &destRect, const Color &color, Shader shader);
     void DrawCustomLamdaToSpecificCanvas(const std::shared_ptr<Layer> layer, const std::string &canvasName = "main", std::function<void()> drawActions = []() {}); // render whatever is in the function lambda to a specific canvas within a layer object. Note that you should not call any of the AddXXX functions in the lambda, as they will not be rendered to the canvas. Instead, call the AddXXX functions outside of the lambda, then call things like DrawCanvasToCurrentRenderTargetWithTransform() in the actions lambda to render the commands to the canvas.
-    auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e, Texture2D spriteAtlas) -> void;
-    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e, Texture2D spriteAtlas) -> void;
+    auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void;
+    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void;
 
     // Command helpers - These functions add draw commands to the specified layer
     void AddBeginDrawing(std::shared_ptr<Layer> layer);
     void AddEndDrawing(std::shared_ptr<Layer> layer);
     void AddClearBackground(std::shared_ptr<Layer> layer, Color color);
-    void AddDrawEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry *registry, entt::entity e, int x, int y, Texture2D spriteAtlas, int z = 0);
-    auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z) -> void;
+    void AddDrawEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry *registry, entt::entity e, int x, int y, int z = 0);
+    auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z) -> void;
     void AddRectangle(std::shared_ptr<Layer> layer, float x, float y, float width, float height, const Color &color, float lineWidth = 0.0f, int z = 0);
     void AddCircle(std::shared_ptr<Layer> layer, float x, float y, float radius, Color color, int z = 0);
     void AddRectangleLinesPro(std::shared_ptr<Layer> layer, float offsetX, float offsetY, const Vector2 &size, float lineThickness, const Color &color, int z = 0);
@@ -141,7 +141,7 @@ namespace layer
     void AddSetRLTexture(std::shared_ptr<Layer> layer, Texture2D texture, int z);
     void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color, int z = 0);
     void AddRenderRectVerticlesOutlineLayer(std::shared_ptr<Layer> layer, entt::entity cacheEntity, const Color color, bool useFull, int z = 0);
-    auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, Texture2D spriteAtlas, int z = 0) -> void;
+    auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z = 0) -> void;
 
     // Command management - These functions add, remove, and sort draw commands, usually used internally
     void SortDrawCommands(std::shared_ptr<Layer> layer);
@@ -151,7 +151,7 @@ namespace layer
     void BeginDrawingAction();
     void EndDrawingAction();
     void ClearBackgroundAction(Color color);
-    void DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x, int y, Texture2D spriteAtlas);
+    void DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x, int y);
     void Circle(float x, float y, float radius, const Color &color);
     void Line(float x1, float y1, float x2, float y2, const Color &color, float lineWidth);
     void RectangleDraw(float x, float y, float width, float height, const Color &color, float lineWidth = 0.0f);

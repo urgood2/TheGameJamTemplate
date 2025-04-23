@@ -198,7 +198,9 @@ namespace game
             // set new random effect to update on text change
             auto &text = globals::registry.get<TextSystem::Text>(textEntity);
             text.effectStringsToApplyGloballyOnTextChange.clear();
-            text.effectStringsToApplyGloballyOnTextChange.push_back(random_utils::random_element(randomEffects));
+            auto randomEffect = random_utils::random_element(randomEffects);
+            text.effectStringsToApplyGloballyOnTextChange.push_back(randomEffect); // add effect to all characters in the text
+            SPDLOG_DEBUG("Random effect: {}", randomEffect);
         });
         
         text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {

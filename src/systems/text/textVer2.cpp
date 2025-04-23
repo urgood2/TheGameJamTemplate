@@ -959,7 +959,7 @@ namespace TextSystem
                 float finalScaleY = character.scaleYModifier.value_or(1.0f) * finalScale;
                 finalScaleX *= text.fontData.fontScale;
                 finalScaleY *= text.fontData.fontScale;
-                
+
                 // add fontdata offset for finetuning
                 charPosition.x += text.fontData.fontRenderOffset.x * finalScaleX * renderScale;
                 charPosition.y += text.fontData.fontRenderOffset.y * finalScaleY * renderScale;
@@ -995,14 +995,14 @@ namespace TextSystem
                     layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
 
                     // Draw shadow 
-                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize * renderScale, text.fontData.spacing, Fade(BLACK, 0.7f));
+                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, Fade(BLACK, 0.7f));
 
                     // Reset translation to original position
                     layer::AddTranslate(layerPtr, shadowOffsetX, -shadowOffsetY);
                 }
 
                 // Render the character
-                layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, character.rotation, text.fontSize * renderScale, text.fontData.spacing, character.color);
+                layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, character.color);
                 
                 if (debug && globals::drawDebugInfo) {
                     // subtract finetuning offset
@@ -1050,6 +1050,7 @@ namespace TextSystem
                 character.scaleXModifier.reset();
                 character.scaleYModifier.reset();
                 character.overrideCodepoint.reset();
+                character.effectFinished.clear();
             }
 
         }

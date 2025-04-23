@@ -10,6 +10,7 @@
 
 ## 🧠 General Design / Architecture
 
+- [ ] shake not working, bounce not working, spin/wiggle rotating around the wrong center
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
 - [ ] sprite rendering not working over ui?

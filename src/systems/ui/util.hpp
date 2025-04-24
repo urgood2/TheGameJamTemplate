@@ -64,6 +64,8 @@ namespace ui {
         
         auto DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides = {}, std::optional<float> progress = std::nullopt, std::optional<float> lineWidthOverride = std::nullopt) -> void;
         
+        auto DrawNPatchUIElement(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress = std::nullopt) -> void;
+        
         auto RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, const std::vector<Vector2> &outerVertices, const Color color, const  std::vector<Vector2> &innerVertices) -> void;
 
         auto RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, const std::vector<Vector2> &outerVertices, const Color color) -> void;

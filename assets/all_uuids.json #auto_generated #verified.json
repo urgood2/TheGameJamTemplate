@@ -734,37 +734,43 @@
         "circle_01.png"
     ],
     "01_circle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/circle_01.png"
     ],
     "01_dirt": [
         "dirt_01.png"
     ],
     "01_dirt_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\dirt_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\dirt_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/dirt_01.png"
     ],
     "01_fire": [
         "fire_01.png"
     ],
     "01_fire_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\fire_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\fire_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/fire_01.png"
     ],
     "01_flame": [
         "flame_01.png"
     ],
     "01_flame_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_01.png"
     ],
     "01_flare": [
         "flare_01.png"
     ],
     "01_flare_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flare_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flare_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flare_01.png"
     ],
     "01_light": [
         "light_01.png"
     ],
     "01_light_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\light_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\light_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/light_01.png"
     ],
     "01_loop_mono_sound_steam_toy_train": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/TOY_Steam_Train_01_loop_mono.wav",
@@ -776,52 +782,66 @@
         "magic_01.png"
     ],
     "01_magic_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_01.png"
     ],
     "01_muzzle": [
         "muzzle_01.png"
     ],
     "01_muzzle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_01.png"
     ],
     "01_muzzle_particle_rotated": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_01_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_01_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_01_rotated.png"
     ],
     "01_muzzle_rotated": [
         "muzzle_01_rotated.png"
     ],
     "01_particle_rotated_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_01_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_01_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_01_rotated.png"
     ],
     "01_particle_scorch": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scorch_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scorch_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/scorch_01.png"
     ],
     "01_particle_scratch": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scratch_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scratch_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/scratch_01.png"
     ],
     "01_particle_slash": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/slash_01.png"
     ],
     "01_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_01.png"
     ],
     "01_particle_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_01.png"
     ],
     "01_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_01.png"
     ],
     "01_particle_symbol": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\symbol_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\symbol_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/symbol_01.png"
     ],
     "01_particle_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_01.png"
     ],
     "01_particle_twirl": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\twirl_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\twirl_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/twirl_01.png"
     ],
     "01_particle_window": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_01.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_01.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/window_01.png"
     ],
     "01_rotated_trace": [
         "trace_01_rotated.png"
@@ -1146,19 +1166,22 @@
         "circle_02.png"
     ],
     "02_circle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/circle_02.png"
     ],
     "02_dirt": [
         "dirt_02.png"
     ],
     "02_dirt_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\dirt_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\dirt_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/dirt_02.png"
     ],
     "02_fire": [
         "fire_02.png"
     ],
     "02_fire_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\fire_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\fire_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/fire_02.png"
     ],
     "02_flame": [
         "flame_02.png"
@@ -1170,61 +1193,76 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MAGIC_SPELL_Flame_02_mono.wav"
     ],
     "02_flame_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_02.png"
     ],
     "02_light": [
         "light_02.png"
     ],
     "02_light_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\light_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\light_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/light_02.png"
     ],
     "02_magic": [
         "magic_02.png"
     ],
     "02_magic_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_02.png"
     ],
     "02_muzzle": [
         "muzzle_02.png"
     ],
     "02_muzzle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_02.png"
     ],
     "02_muzzle_particle_rotated": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_02_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_02_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_02_rotated.png"
     ],
     "02_muzzle_rotated": [
         "muzzle_02_rotated.png"
     ],
     "02_particle_rotated_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_02_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_02_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_02_rotated.png"
     ],
     "02_particle_scorch": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scorch_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scorch_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/scorch_02.png"
     ],
     "02_particle_slash": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/slash_02.png"
     ],
     "02_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_02.png"
     ],
     "02_particle_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_02.png"
     ],
     "02_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_02.png"
     ],
     "02_particle_symbol": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\symbol_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\symbol_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/symbol_02.png"
     ],
     "02_particle_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_02.png"
     ],
     "02_particle_twirl": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\twirl_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\twirl_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/twirl_02.png"
     ],
     "02_particle_window": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_02.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_02.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/window_02.png"
     ],
     "02_rotated_trace": [
         "trace_02_rotated.png"
@@ -1316,70 +1354,86 @@
         "circle_03.png"
     ],
     "03_circle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/circle_03.png"
     ],
     "03_dirt": [
         "dirt_03.png"
     ],
     "03_dirt_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\dirt_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\dirt_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/dirt_03.png"
     ],
     "03_flame": [
         "flame_03.png"
     ],
     "03_flame_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_03.png"
     ],
     "03_light": [
         "light_03.png"
     ],
     "03_light_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\light_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\light_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/light_03.png"
     ],
     "03_magic": [
         "magic_03.png"
     ],
     "03_magic_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_03.png"
     ],
     "03_muzzle": [
         "muzzle_03.png"
     ],
     "03_muzzle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_03.png"
     ],
     "03_muzzle_particle_rotated": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_03_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_03_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_03_rotated.png"
     ],
     "03_muzzle_rotated": [
         "muzzle_03_rotated.png"
     ],
     "03_particle_rotated_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_03_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_03_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_03_rotated.png"
     ],
     "03_particle_scorch": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scorch_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\scorch_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/scorch_03.png"
     ],
     "03_particle_slash": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/slash_03.png"
     ],
     "03_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_03.png"
     ],
     "03_particle_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_03.png"
     ],
     "03_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_03.png"
     ],
     "03_particle_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_03.png"
     ],
     "03_particle_twirl": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\twirl_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\twirl_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/twirl_03.png"
     ],
     "03_particle_window": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_03.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_03.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/window_03.png"
     ],
     "03_rotated_trace": [
         "trace_03_rotated.png"
@@ -1418,52 +1472,64 @@
         "circle_04.png"
     ],
     "04_circle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/circle_04.png"
     ],
     "04_flame": [
         "flame_04.png"
     ],
     "04_flame_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_04.png"
     ],
     "04_magic": [
         "magic_04.png"
     ],
     "04_magic_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_04.png"
     ],
     "04_muzzle": [
         "muzzle_04.png"
     ],
     "04_muzzle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_04.png"
     ],
     "04_muzzle_particle_rotated": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_04_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_04_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_04_rotated.png"
     ],
     "04_muzzle_rotated": [
         "muzzle_04_rotated.png"
     ],
     "04_particle_rotated_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_04_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_04_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_04_rotated.png"
     ],
     "04_particle_slash": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\slash_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/slash_04.png"
     ],
     "04_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_04.png"
     ],
     "04_particle_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_04.png"
     ],
     "04_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_04.png"
     ],
     "04_particle_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_04.png"
     ],
     "04_particle_window": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_04.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\window_04.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/window_04.png"
     ],
     "04_rotated_trace": [
         "trace_04_rotated.png"
@@ -1490,16 +1556,19 @@
         "circle_05.png"
     ],
     "05_circle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\circle_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/circle_05.png"
     ],
     "05_flame": [
         "flame_05.png"
     ],
     "05_flame_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_05.png"
     ],
     "05_flame_particle_rotated": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_05_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_05_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_05_rotated.png"
     ],
     "05_flame_rotated": [
         "flame_05_rotated.png"
@@ -1508,37 +1577,46 @@
         "magic_05.png"
     ],
     "05_magic_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_05.png"
     ],
     "05_muzzle": [
         "muzzle_05.png"
     ],
     "05_muzzle_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_05.png"
     ],
     "05_muzzle_particle_rotated": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_05_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\muzzle_05_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/muzzle_05_rotated.png"
     ],
     "05_muzzle_rotated": [
         "muzzle_05_rotated.png"
     ],
     "05_particle_rotated_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_05_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_05_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_05_rotated.png"
     ],
     "05_particle_rotated_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_05_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_05_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_05_rotated.png"
     ],
     "05_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_05.png"
     ],
     "05_particle_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_05.png"
     ],
     "05_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_05.png"
     ],
     "05_particle_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_05.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_05.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_05.png"
     ],
     "05_rotated_spark": [
         "spark_05_rotated.png"
@@ -1562,31 +1640,39 @@
         "flame_06.png"
     ],
     "06_flame_particle": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_06.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_06.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_06.png"
     ],
     "06_flame_particle_rotated": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_06_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\flame_06_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/flame_06_rotated.png"
     ],
     "06_flame_rotated": [
         "flame_06_rotated.png"
     ],
     "06_particle_rotated_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_06_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_06_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_06_rotated.png"
     ],
     "06_particle_rotated_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_06_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_06_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_06_rotated.png"
     ],
     "06_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_06.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_06.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_06.png"
     ],
     "06_particle_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_06.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_06.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_06.png"
     ],
     "06_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_06.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_06.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_06.png"
     ],
     "06_particle_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_06.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_06.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_06.png"
     ],
     "06_rotated_spark": [
         "spark_06_rotated.png"
@@ -1607,19 +1693,24 @@
         "trace_06.png"
     ],
     "07_particle_rotated_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_07_rotated.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_07_rotated.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_07_rotated.png"
     ],
     "07_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_07.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_07.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_07.png"
     ],
     "07_particle_spark": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_07.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_07.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/spark_07.png"
     ],
     "07_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_07.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_07.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_07.png"
     ],
     "07_particle_trace": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_07.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_07.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/trace_07.png"
     ],
     "07_rotated_trace": [
         "trace_07_rotated.png"
@@ -1637,10 +1728,12 @@
         "trace_07.png"
     ],
     "08_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_08.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_08.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_08.png"
     ],
     "08_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_08.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_08.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_08.png"
     ],
     "08_smoke": [
         "smoke_08.png"
@@ -1649,10 +1742,12 @@
         "star_08.png"
     ],
     "09_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_09.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_09.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_09.png"
     ],
     "09_particle_star": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_09.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\star_09.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/star_09.png"
     ],
     "09_smoke": [
         "smoke_09.png"
@@ -1703,7 +1798,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_0.svg"
     ],
     "0_atla_graphic_sprite": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites_atlas-0.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites_atlas-0.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites_atlas-0.png"
     ],
     "0_atla_sprite": [
         "sprites_atlas-0.png"
@@ -1733,13 +1829,15 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_0.svg"
     ],
     "0_graphic_sprite": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites-0.json"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites-0.json",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites-0.json"
     ],
     "0_sprite": [
         "sprites-0.png"
     ],
     "10_particle_smoke": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_10.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_10.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/smoke_10.png"
     ],
     "10_smoke": [
         "smoke_10.png"
@@ -10553,7 +10651,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_1.svg"
     ],
     "1_atla_graphic_sprite": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites_atlas-1.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites_atlas-1.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites_atlas-1.png"
     ],
     "1_atla_sprite": [
         "sprites_atlas-1.png"
@@ -10583,7 +10682,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_1.svg"
     ],
     "1_graphic_sprite": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites-1.json"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites-1.json",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites-1.json"
     ],
     "1_sprite": [
         "sprites-1.png"
@@ -13085,7 +13185,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed"
     ],
     "file_globbed_packing_particle_pre": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles"
     ],
     "file_globbed_packing_pre": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/.DS_Store",

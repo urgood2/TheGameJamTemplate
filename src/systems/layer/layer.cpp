@@ -708,6 +708,16 @@ namespace layer
                 Color color = std::get<Color>(command.args[3]);
                 layer::Circle(x, y, radius, color);
             }
+            else if (command.type == "render_npatch") {
+                AssertThat(command.args.size(), Equals(6));
+                Texture2D sourceTexture = std::get<Texture2D>(command.args[0]);
+                NPatchInfo info = std::get<NPatchInfo>(command.args[1]);
+                Rectangle dest = std::get<Rectangle>(command.args[2]);
+                Vector2 origin = std::get<Vector2>(command.args[3]);
+                float rotation = std::get<float>(command.args[4]);
+                Color tint = std::get<Color>(command.args[5]);
+                layer::RenderNPatchRect(sourceTexture, info, dest, origin, rotation, tint);
+            }
             // Fallback for undefined commands
             else
             {
@@ -788,6 +798,15 @@ namespace layer
     void AddEndRLMode(std::shared_ptr<Layer> layer, int z)
     {
         AddDrawCommand(layer, "end_mode", {}, z);
+    }
+    
+    void AddRenderNPatchRect(std::shared_ptr<Layer> layer, Texture2D sourceTexture, const NPatchInfo &info, const Rectangle& dest, const Vector2& origin, float rotation, const Color& tint, int z)
+    {
+        AddDrawCommand(layer, "render_npatch", {sourceTexture, info, dest, origin, rotation, tint}, z);
+    }
+    
+    void RenderNPatchRect(Texture2D sourceTexture, NPatchInfo info, Rectangle dest, Vector2 origin, float rotation, Color tint) {
+        DrawTextureNPatch(sourceTexture, info, dest, origin, rotation, tint);
     }
 
     void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color, int z) {

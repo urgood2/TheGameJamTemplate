@@ -199,7 +199,8 @@ namespace game
             auto &text = globals::registry.get<TextSystem::Text>(textEntity);
             text.effectStringsToApplyGloballyOnTextChange.clear();
             auto randomEffect = random_utils::random_element(randomEffects);
-            text.effectStringsToApplyGloballyOnTextChange.push_back(randomEffect); // add effect to all characters in the text
+            text.effectStringsToApplyGloballyOnTextChange.push_back(randomEffect); // add effect to all characters in the texttext.
+            text.effectStringsToApplyGloballyOnTextChange.push_back("fan"); 
             SPDLOG_DEBUG("Random effect: {}", randomEffect);
         });
         

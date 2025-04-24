@@ -396,6 +396,32 @@ namespace TextSystem {
             }
         };
 
+        effectFunctions["fan"] = [](float /*dt*/, Character &character, const std::vector<std::string> &args)
+        {
+            // args[0] = maxAngle in degrees (optional, defaults to 30)
+            float maxAngle = 10.0f;
+            try {
+                if (!args.empty())
+                    maxAngle = std::stof(args[0]);
+            } catch (...) { /* ignore bad input */ }
+
+            // If there's only one character, no fan
+            
+            if (character.parentText->characters.size() <= 1)
+            {
+                character.rotation = 0.0f;
+                return;
+            }
+
+            // Compute a normalized [-1..+1] index around center
+            float mid         = (character.parentText->characters.size() - 1) * 0.5f;
+            float offsetIndex = static_cast<float>(character.index) - mid;
+            float normalized  = offsetIndex / mid;  // = -1 at first char, +1 at last
+
+            // Apply constant rotation
+            character.rotation = normalized * maxAngle;
+        };
+
         effectFunctions["fade"] = [](float dt, Character &character, const std::vector<std::string> &args)
         {
             float speed = 3.0f;

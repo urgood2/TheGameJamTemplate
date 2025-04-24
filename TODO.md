@@ -10,7 +10,8 @@
 
 ## 🧠 General Design / Architecture
 
-- [ ] shake not working, bounce not working, spin/wiggle rotating around the wrong center
+- [ ] shake not working, scramble not working. Slight stall when the app loads, not sure why.
+- [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
 - [ ] sprite rendering not working over ui?

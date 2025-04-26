@@ -707,7 +707,7 @@ namespace game
         // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         
         //TODO: need to test this
-        auto spriteView = globals::registry.view<AnimationQueueComponent>(entt::exclude<ui::UIConfig>);
+        auto spriteView = globals::registry.view<AnimationQueueComponent>(entt::exclude<ui::UIConfig, ui::UIBoxComponent, ui::UIState>);
         for (auto e : spriteView)
         {
             if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))

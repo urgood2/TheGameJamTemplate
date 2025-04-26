@@ -116,12 +116,25 @@ namespace ui
     //TODO: Separate config into its own config entity with separete components for each ui type instead of one mammoth container?
     //TODO: Difference between popups and alerts? - alertss are not drawn, even when they are children. Alerts are drawn on top of everything else (like ! badges on top right). Pop-ups are uiboxes themselves, but I can't figure out where they are drawn. Drag pop-ups are drawn with other children. 
     
+    // defines whether a specific ui element is drawn as a rounded rectangle or a 9-patch border
+    enum class UIStylingType {
+        ROUNDED_RECTANGLE,
+        NINEPATCH_BORDERS
+    };
+    
+    // make tuple<NPatchInfo, Texture2D> a typename
+    using NPatchDataStruct = std::tuple<NPatchInfo, Texture2D>;
+    
     //TODO: Draw layer seems to be a number? Check
     //TODO: Funnel to and funnel from can be boolean? What are they?
     // UIBox interprets this data as high-level container settings which affect all ui elements within
     // UIElement interprets config at a per-element level
     struct UIConfig
     {
+        UIStylingType stylingType = UIStylingType::ROUNDED_RECTANGLE; // Determines how the UI element is drawn (rounded rectangle or 9-patch borders)
+        
+        std::optional<NPatchInfo> nPatchInfo; // 9-patch data for the UI element. This is used when the stylingType is set to NINEPATCH_BORDERS. It contains information about the texture and how to draw it.
+        std::optional<Texture2D> nPatchSourceTexture; // the atlas texture used for 9-patch.
         
         // General Properties
         std::optional<std::string> id;           // Unique identifier, used to store in children vector. If predefined in the definition stage, it will be maintained. Otherwise, children of an entity get a unique id starting at 0 and incrementing.

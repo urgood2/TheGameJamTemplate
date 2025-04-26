@@ -48,6 +48,26 @@ namespace animation_system {
         
         return e;
     }
+    
+    // assumes classic 9 patch layout (9 patches, 4 corners, 4 edges, 1 center)
+    auto getNinepatchUIBorderInfo(std::string uuid_or_raw_identifier) -> std::tuple<NPatchInfo, Texture2D> {
+        
+        // get id, use it to fetch the source rect and texture
+        
+        NPatchInfo nPatchInfo = {};
+        auto frame = init::getSpriteFrame(uuid_or_raw_identifier);
+        
+        nPatchInfo.source = frame.frame;
+        
+        // always assume the texture has 4 pixels at the centers for stretch
+        nPatchInfo.left = nPatchInfo.source.width * 0.5f - 2;
+        nPatchInfo.top = nPatchInfo.source.height * 0.5f - 2;
+        nPatchInfo.right = nPatchInfo.source.width * 0.5f - 2;
+        nPatchInfo.bottom = nPatchInfo.source.height * 0.5f - 2;
+        nPatchInfo.layout = NPatchLayout::NPATCH_NINE_PATCH; // classic 9 patch layout
+        
+        return std::make_tuple(nPatchInfo, globals::textureAtlasMap.at(frame.atlasUUID));
+    }
 
     auto update(float delta) -> void {
         auto view = globals::registry.view<AnimationQueueComponent>();

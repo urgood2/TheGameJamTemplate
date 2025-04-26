@@ -321,6 +321,8 @@ namespace init {
         AssertThat(globals::animationsMap.find(uuid::lookup(uuid_or_raw_identifier)) != globals::animationsMap.end(), IsTrue());
         return globals::animationsMap[uuid::lookup(uuid_or_raw_identifier)]; 
     }
+    
+    
 
     std::string getUIString(std::string uuid_or_raw_identifier) {
         using namespace snowhouse;

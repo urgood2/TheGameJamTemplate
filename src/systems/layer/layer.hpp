@@ -23,7 +23,7 @@ namespace layer
     //------------------------------------------------------------------------------------
     // Data Structures Definition
     //------------------------------------------------------------------------------------
-    using DrawCommandArgs = std::variant<bool, int, int *, float *, float, Color, Camera2D *, Texture2D, struct Rectangle, std::string, Font, Vector2, Vector3, Vector4, std::vector<Vector2>, std::vector<int>, std::vector<float>, Shader, entt::entity, entt::registry *>;
+    using DrawCommandArgs = std::variant<bool, int, int *, float *, float, Color, Camera2D *, Texture2D, struct Rectangle, struct NPatchInfo,  std::string, Font, Vector2, Vector3, Vector4, std::vector<Vector2>, std::vector<int>, std::vector<float>, Shader, entt::entity, entt::registry *>;
 
     // Represents a single draw command
     struct DrawCommand
@@ -101,6 +101,7 @@ namespace layer
     void DrawCustomLamdaToSpecificCanvas(const std::shared_ptr<Layer> layer, const std::string &canvasName = "main", std::function<void()> drawActions = []() {}); // render whatever is in the function lambda to a specific canvas within a layer object. Note that you should not call any of the AddXXX functions in the lambda, as they will not be rendered to the canvas. Instead, call the AddXXX functions outside of the lambda, then call things like DrawCanvasToCurrentRenderTargetWithTransform() in the actions lambda to render the commands to the canvas.
     auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void;
     auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void;
+    void RenderNPatchRect(Texture2D sourceTexture, NPatchInfo info, Rectangle dest, Vector2 origin, float rotation, Color tint);
 
     // Command helpers - These functions add draw commands to the specified layer
     void AddBeginDrawing(std::shared_ptr<Layer> layer);
@@ -142,6 +143,8 @@ namespace layer
     void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color, int z = 0);
     void AddRenderRectVerticlesOutlineLayer(std::shared_ptr<Layer> layer, entt::entity cacheEntity, const Color color, bool useFull, int z = 0);
     auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z = 0) -> void;
+    void AddRenderNPatchRect(std::shared_ptr<Layer> layer, Texture2D sourceTexture, const NPatchInfo &info, const Rectangle& dest, const Vector2& origin, float rotation, const Color& tint, int z = 0);
+    
 
     // Command management - These functions add, remove, and sort draw commands, usually used internally
     void SortDrawCommands(std::shared_ptr<Layer> layer);

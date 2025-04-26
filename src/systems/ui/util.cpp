@@ -484,7 +484,99 @@ namespace ui
         return std::make_pair(innerVertices, outerVertices);
     }
     
+    void util::DrawNPatchUIElement(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress)
+    {
+        ::util::Profiler profiler("DrawNPatchUIElement");
+        auto &transform = registry.get<transform::Transform>(entity);
+        auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
+        auto &node = registry.get<transform::GameObject>(entity);
+        
+        //TODO: ignore or apply emboss?        
+        std::optional<float> &emboss = uiConfig->emboss;
+        
+        
+        const auto actualX = transform.getActualX() + node.layerDisplacement->x;
+        const auto actualY = transform.getActualY() + node.layerDisplacement->y;
+        const auto actualW = transform.getActualW();
+        const auto actualH = transform.getActualH();
+        const auto visualW = transform.getVisualW();
+        const auto visualH = transform.getVisualH();
+        
+        // shadow
+        float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
 
+        // Adjust displacement using shadow height
+        float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+        float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+        
+        // if this is not 1, then we display progress-bar type tinting
+        auto progressVal = progress.value_or(1.0f);
+        
+        auto nPatchInfo = uiConfig->nPatchInfo.value_or(NPatchInfo{});
+        auto nPatchAtlas =  uiConfig->nPatchSourceTexture.value();
+        
+        // draw shadow first
+        if (uiConfig->shadow)
+        {
+            layer::AddPushMatrix(layerPtr);
+            
+            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
+
+            Color colorToUse{};
+
+            // if a shadow override exists, use it
+            colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
+
+            // filled shadow
+            layer::AddRenderNPatchRect(layerPtr, nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, {0, 0}, 0.f, colorToUse);
+            
+            //TODO: resize the shadow to match the progress value?
+            //TODO: how to do rotation later?
+
+            layer::AddPopMatrix(layerPtr);
+        }
+        
+        // then draw the npatch element itself
+        layer::AddPushMatrix(layerPtr);
+        
+        util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+
+        // layer::AddTranslate(layerPtr, actualX, actualY);
+
+        Color colorToUse{};
+
+        // if an fill override exists, use it
+        colorToUse = (uiConfig->color.value_or(WHITE));
+
+        // filled
+        layer::AddRenderNPatchRect(layerPtr, nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, {0, 0}, 0.f, colorToUse);
+        layer::AddPopMatrix(layerPtr);
+
+        // fill progress, if there is any
+        if (progress.has_value())
+        {
+            layer::AddPushMatrix(layerPtr);
+
+            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+
+            Color colorToUse{};
+
+            colorToUse = (uiConfig->progressBarFullColor.value_or(RED));
+            
+            // make trasnlucent since we're tinting
+            colorToUse.a = 125; 
+
+            // not shadow, ensure color is not translucent
+            
+            //TODO: i probably just want an overlay tinting of some sort over the rect, not actually ninepatch.
+
+            // filled progress
+            layer::AddRectanglePro(layerPtr, 0, 0, {visualW * progressVal, visualH}, colorToUse);
+            
+            layer::AddPopMatrix(layerPtr);
+        }
+    }
 
     // parallaxModifier is multiplied by the ui element's shadow displacement (if it exists)
     // emboss is the number of pixels to shift the emboss effect down by, if emboss is active via flags

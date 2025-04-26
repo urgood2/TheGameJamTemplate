@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 #include "core/globals.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
@@ -13,6 +15,10 @@ namespace ui_defs
     // randomly sized rectangle (rounded)
     inline auto getRandomRectDef() -> ui::UIElementTemplateNode
     {
+        NPatchInfo nPatchinfo;
+        Texture2D npatchTexture;
+        std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("panel-005.png");
+        
         return ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::RECT_SHAPE)
             .addConfig(
@@ -25,12 +31,15 @@ namespace ui_defs
                     .addWidth(Random::get<float>(20, 100))
                     .addHeight(Random::get<float>(20, 100))
                     .addMinWidth(200.f)
-                    .addOutlineThickness(5.0f)
+                    .addStylingType(ui::UIStylingType::NINEPATCH_BORDERS)
+                    .addNPatchInfo(nPatchinfo)
+                    .addNPatchSourceTexture(npatchTexture)
+                    // .addOutlineThickness(5.0f)
                     // .addShadowColor(Fade(BLACK, 0.4f))
                     .addShadow(true)
                     // .addEmboss(4.f)
                     // .addOutlineThickness(2.0f)
-                    .addOutlineColor(BLUE)
+                    // .addOutlineColor(BLUE)
                     // .addShadow(true)
                     .build())
             .build();
@@ -107,6 +116,11 @@ namespace ui_defs
     // example of a button group with three buttons which are mutually exclusive
     inline auto getButtonGroupRowDef() -> ui::UIElementTemplateNode
     {
+        //TODO: unify all styles?
+        NPatchInfo nPatchinfo;
+        Texture2D npatchTexture;
+        std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("panel-005.png");
+
         auto button = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -114,15 +128,18 @@ namespace ui_defs
                     .addColor(WHITE)
                     .addText("Button")
                     .addShadow(true)
-                    .addMinWidth(80.f)
-                    .addMinHeight(30.f)
+                    .addMinWidth(100.f)
+                    .addMinHeight(100.f)
                     .addHover(true)
                     .addChoice(true) // radio button
+                    .addStylingType(ui::UIStylingType::NINEPATCH_BORDERS)
+                    .addNPatchInfo(nPatchinfo)
+                    .addNPatchSourceTexture(npatchTexture)
                     // .addOnePress(true)
                     .addButtonCallback([]()
                                     { SPDLOG_DEBUG("Button callback triggered"); })
-                    .addOutlineThickness(2.0f)
-                    .addOutlineColor(BLUE)
+                    // .addOutlineThickness(2.0f)
+                    // .addOutlineColor(BLUE)
                     // .addEmboss(4.f)
                     // .addShadow(true)
                     .build())
@@ -135,8 +152,12 @@ namespace ui_defs
             .addConfig(
                 ui::UIConfig::Builder::create()
                     .addColor(YELLOW)
-                    .addEmboss(2.f)
-                    .addOutlineColor(BLUE)
+                    // .addEmboss(2.f)
+                    // .addOutlineColor(BLUE)
+                    .addPadding(20.f)
+                    .addStylingType(ui::UIStylingType::NINEPATCH_BORDERS)
+                    .addNPatchInfo(nPatchinfo)
+                    .addNPatchSourceTexture(npatchTexture)
                     // .addOutlineThickness(5.0f)
                     // .addMinWidth(500.f)
                     .addGroup("tabGroup")

@@ -1292,7 +1292,11 @@ namespace ui
                 {
                     shadowColor = config->shadowColor.value();
                 }
-                util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist);
+
+                if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist);
+                else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    util::DrawNPatchUIElement(layerPtr, registry, entity, shadowColor, parallaxDist);
                     
                 layer::AddScale(layerPtr, 1 / 0.98f, 1 / 0.98f);
             }
@@ -1318,7 +1322,12 @@ namespace ui
             if (config->emboss)
             {
                 Color c = ColorBrightness(config->color.value(), collidedButtonNode.state.isBeingHovered ? -0.8f : -0.5f);
-                util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}});
+                
+
+                if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}});
+                else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    ; //FIXME: not implemented yet
             } 
         
             
@@ -1357,17 +1366,27 @@ namespace ui
                     if (config->buttonDelay)
                     {
                         // gray background
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
 
-                        // progress bar
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress);
+                        // progress bar                        
+                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress);
+                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, config->buttonDelayProgress);
 
                     }
                     else if (config->progressBar)
                     {
                         auto colorToUse = config->progressBarEmptyColor.value_or(GRAY);
 
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
+                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
+                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
+                        
 
                         // DrawPixellatedRect(layerPtr, registry, entity, "fill", parallaxDist);
                         // colorToUse = config->progressBarFullColor.value_or(BLUE);
@@ -1380,12 +1399,20 @@ namespace ui
                         float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
                         SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
                         
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, std::nullopt, progress);
+                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, std::nullopt, progress);
+                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, progress);
+                        
                     }
                     else
                     {
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                        
                         // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
+                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
                     }
                 }
                 else

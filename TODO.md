@@ -10,45 +10,17 @@
 
 ## 🧠 General Design / Architecture
 
-- [ ] shake not working, scramble not working. Slight stall when the app loads, not sure why.
+- [ ] image buttons should darken in color when clicked. consider swapping bewtween transparent/non transparent versions if in need of outlines, select/unselect, etc. (maybe choose between). consider removing shadows for the image borders, they just look bad.
+- [ ] bug with image buttons rendering multiple times.
+- [ ] try using text dividers. (just add images to row with text in the middle)
+
+
+- [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
 - [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
-- [ ] sprite rendering not working over ui?
 - [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
 - [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
-
-- Add shader variations:
-Suggestions for Gloss/Shine Shader Variations
-🔷 Material-Focused Shines
-    Brushed Metal – directional highlights with anisotropic streaks based on tangents.
-    Velvet Sheen – edge-based soft highlights with fuzzy falloff (rim lit, but diffused).
-    Lacquer/Plastic – hard specular with sharp, clean falloff + slight clear coat shine.
-    Worn Metal – gloss modulated by grunge/noise masks; procedural wear and tear.
-    Pearlescent – multi-layered interference hues depending on view angle and light angle.
-    Holographic – shifting diffraction-like rainbow highlights from camera angle.
-🔷 Stylized/Procedural Effects
-    Ramp-based Specular (Toon Shine) – non-linear specular ramping using a 1D texture or math step function.
-    Anime Glint – animated diagonal lines or sparkles that pulse across edges.
-    Sheen Lines (Vista Glow) – trailing glow point that animates around a border (like high-end foil cards).
-    Moving Bokeh Reflection – light spots (fake lens bokeh) that flow across the surface.
-🔷 Overlay/Multipass Ideas
-    Environment Map Reflection – even without actual environment maps, use fake cubemap glint swipes.
-    Dynamic Bloom Outline – bright specular zones that spill light (bloom) and pulse.
-    Double Coat Shader – simulate a thin transparent glossy coat over a rough underlayer.
-    Scanline Sparkle – thin traveling scanline that causes strong sparkle on intersect.
-🔷 Noise/Distortion Driven
-    Distorted Shine – use noise to break up highlights into irregular reflections.
-    Liquid Shine – sine-driven ripple effect modulating specular zones.
-    Time-based Wave Gloss – sin(time + pos) driven specular strength shifting.
-    Fractal Shine Veins – highlights that follow perlin/fractal veins.
-    Edge Pulse Gloss – gloss increases along UV edges or silhouette outlines.
-
-- [ ] add kenney borders & rounded rect logic 
-    - Add logic to fetch sprite & automatically nine-patch close to the center
-    - dividers go on each side of the text or element and the second one is mirrored (first one is not), should be scaled down probably by some factor of the line height
-    - added the images, now need to set up the list of sprite names to access (maybe a text file or just code comments) for the dividers and panel backgrounds on ui config.
-    - ui config feature to either use the classic rounded rect, raylib rounded rect, or a custom nine-path image (provide sprite uuid). the dividers can just be added in as animations into the current ui setup.
 
 
 ---
@@ -140,6 +112,31 @@ Suggestions for Gloss/Shine Shader Variations
 - [ ] UI context switching for controller context savving (which button was focused, excluding butons from context in the presence of an overlay)
 - [ ] Dynamic text has a problem where center/right alignment breaks ui element placement. Keep it as left aligned and use the ui element alightment, and you should be fine
 - [ ] UI objects in ui elements might call renew alignment on ui box every time. need to check this.
+- [ ] Add shader variations:
+Suggestions for Gloss/Shine Shader Variations
+🔷 Material-Focused Shines
+    Brushed Metal – directional highlights with anisotropic streaks based on tangents.
+    Velvet Sheen – edge-based soft highlights with fuzzy falloff (rim lit, but diffused).
+    Lacquer/Plastic – hard specular with sharp, clean falloff + slight clear coat shine.
+    Worn Metal – gloss modulated by grunge/noise masks; procedural wear and tear.
+    Pearlescent – multi-layered interference hues depending on view angle and light angle.
+    Holographic – shifting diffraction-like rainbow highlights from camera angle.
+🔷 Stylized/Procedural Effects
+    Ramp-based Specular (Toon Shine) – non-linear specular ramping using a 1D texture or math step function.
+    Anime Glint – animated diagonal lines or sparkles that pulse across edges.
+    Sheen Lines (Vista Glow) – trailing glow point that animates around a border (like high-end foil cards).
+    Moving Bokeh Reflection – light spots (fake lens bokeh) that flow across the surface.
+🔷 Overlay/Multipass Ideas
+    Environment Map Reflection – even without actual environment maps, use fake cubemap glint swipes.
+    Dynamic Bloom Outline – bright specular zones that spill light (bloom) and pulse.
+    Double Coat Shader – simulate a thin transparent glossy coat over a rough underlayer.
+    Scanline Sparkle – thin traveling scanline that causes strong sparkle on intersect.
+🔷 Noise/Distortion Driven
+    Distorted Shine – use noise to break up highlights into irregular reflections.
+    Liquid Shine – sine-driven ripple effect modulating specular zones.
+    Time-based Wave Gloss – sin(time + pos) driven specular strength shifting.
+    Fractal Shine Veins – highlights that follow perlin/fractal veins.
+    Edge Pulse Gloss – gloss increases along UV edges or silhouette outlines.
 
 ## 🧭 Later later laters *(future consideration)*
 - [ ] make debug window that has debugDraw toggle

@@ -700,6 +700,21 @@ namespace ui
                 uiConfig->role = role;
                 return *this;
             }
+            
+            Builder& addStylingType(const UIStylingType& stylingType) {
+                uiConfig->stylingType = stylingType;
+                return *this;
+            }
+
+            Builder& addNPatchInfo(const std::optional<NPatchInfo>& nPatchInfo) {
+                uiConfig->nPatchInfo = nPatchInfo;
+                return *this;
+            }
+
+            Builder& addNPatchSourceTexture(const std::optional<Texture2D>& nPatchSourceTexture) {
+                uiConfig->nPatchSourceTexture = nPatchSourceTexture;
+                return *this;
+            }
 
             UIConfig build() {
                 return *uiConfig;

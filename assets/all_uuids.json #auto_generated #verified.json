@@ -11755,6 +11755,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/.DS_Store",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\.DS_Store"
     ],
+    "border_graphic_npatch_sample": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\npatch_border_sample.png"
+    ],
     "bottle_cap_foley_mono_sound_unscrew": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/FOLEY_Unscrew_Bottle_Cap_mono.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\FOLEY_Unscrew_Bottle_Cap_mono.wav",

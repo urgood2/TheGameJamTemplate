@@ -19,6 +19,7 @@
 
 #include "../systems/movable/my_own_movable_impl.hpp"
 #include "../systems/shaders/shader_system.hpp"
+#include "../systems/shaders/shader_pipeline.hpp"
 #include "../systems/event/event_system.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/text/textVer2.hpp"
@@ -469,6 +470,7 @@ namespace game
                                                              .addChild(uiTextEntry)
                                                              .build();
 
+
         ui::UIElementTemplateNode uiColumnDef = ui::UIElementTemplateNode::Builder::create()
                                                     .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
                                                     .addConfig(
@@ -705,8 +707,19 @@ namespace game
         // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         
         //TODO: need to test this
-        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player, 0);
-        layer::AddDrawTransformEntityWithAnimationWithPipeline(ui_layer, &globals::registry, player2, 0);
+        auto spriteView = globals::registry.view<AnimationQueueComponent>(entt::exclude<ui::UIConfig>);
+        for (auto e : spriteView)
+        {
+            if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
+            {
+                layer::AddDrawTransformEntityWithAnimationWithPipeline(sprites, &globals::registry, e, 0);
+            }
+            else
+            {
+                layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, e, 0);
+            }            
+        }
+        
         
         // uiProfiler.Stop();
 

@@ -114,6 +114,14 @@ Suggestions for Gloss/Shine Shader Variations
 ---
 
 ## Immediate laters
+- [ ] Use simple art style + scale down technique for visual prettiness
+- [ ] something to replace current dissolve effect?
+- [ ] some particle ideas:
+  - [ ] particles - appear, move to a certain point via tweening, disappear
+  - [ ] particles - wavering trail of rectangles behind a moving object + circle that flashes into view
+  - [ ] particles - basic shapes changing size or other properties
+  - [ ] particles- spinnig segmented circle which flahses then vanishes
+  - [ ] particles - lightning-shaped irregular lines branching out all at once, then vanishing
 - [ ] Some shaders don't work with the multi-pass system I have. 
 - [ ] rounded rect needs testing - outline doesn't seem to work right all the time
 - [ ] simple lighting shader with normal maps
@@ -129,6 +137,7 @@ Suggestions for Gloss/Shine Shader Variations
 - [ ] UIbox should align itself again if its size changes. right now it does not.
 - [ ] Impplement optional shader support for individual ui elements (or entire ui element trees)
 - [ ] outline interiors look too square
+- [ ] UI context switching for controller context savving (which button was focused, excluding butons from context in the presence of an overlay)
 - [ ] Dynamic text has a problem where center/right alignment breaks ui element placement. Keep it as left aligned and use the ui element alightment, and you should be fine
 - [ ] UI objects in ui elements might call renew alignment on ui box every time. need to check this.
 

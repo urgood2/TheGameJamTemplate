@@ -10,8 +10,7 @@
 
 ## 🧠 General Design / Architecture
 
-- [ ] image buttons should darken in color when clicked. consider swapping bewtween transparent/non transparent versions if in need of outlines, select/unselect, etc. (maybe choose between). consider removing shadows for the image borders, they just look bad.
-- [ ] bug with image buttons rendering multiple times.
+- [ ] image buttons should darken in color when clicked. consider swapping bewtween transparent/non transparent versions if in need of outlines, select/unselect, etc. (maybe choose between). consider removing shadows for the image borders, they just look bad. Also, not sure where the shadows are coming from for the image ui. check
 - [ ] try using text dividers. (just add images to row with text in the middle)
 - [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text
 - [ ] Functionality to programatically produce an animation from a single sprite name

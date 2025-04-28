@@ -1355,11 +1355,14 @@ namespace ui
             {
                 specialColor = ColorBrightness(buttonColor, -0.5f);
                 // specialColor = BLACK;
+
+                SPDLOG_DEBUG("button clicked or hovered, setting special color");
             }
 
             // std::vector<Color> colors = specialColor ? std::vector<Color>{buttonColor, specialColor.value()} : std::vector<Color>{buttonColor};
             std::vector<Color> colors = specialColor ? std::vector<Color>{specialColor.value()} : std::vector<Color>{buttonColor};
             // std::vector<Color> colors = specialColor ? std::vector<Color>{buttonColor} : std::vector<Color>{buttonColor};
+
 
             for (auto color : colors)
             {

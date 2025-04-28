@@ -69,6 +69,12 @@ namespace ui_defs
 
         return node.build();        
     }
+
+    inline auto textDividerTestBoxDef() -> ui::UIElementTemplateNode
+    {
+        
+        // make a row
+    }
     
     //TODO: use get_value_callback and onStringContentUpdatedViaCallback to update text, not reflection. It's just easier
     inline auto getNewDynamicTextEntry(std::string text, float fontSize, std::optional<float> wrapWidth, std::optional<std::string> textEffect = std::nullopt, std::optional<entt::entity> refEntity = std::nullopt, std::optional<std::string> refComponent = std::nullopt, std::optional<std::string> refValue = std::nullopt) -> ui::UIElementTemplateNode {

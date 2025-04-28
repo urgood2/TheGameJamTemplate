@@ -4,6 +4,8 @@
 
 #include "systems/ui/ui_data.hpp"
 #include "systems/transform/transform_functions.hpp"
+#include "systems/random/random.hpp"
+#include "systems/anim_system.hpp"
 
 
 namespace ui {
@@ -42,11 +44,22 @@ namespace ui {
         inventoryGrid.containerEntity = worldContainer;
         inventoryGrid.slots.resize(rows * columns);
         
+        vector<std::string> itemTypes = {
+            "keyboard_enter_outline_anim", 
+            "keyboard_space_outline_anim",
+            "mouse_left_outline_anim",
+            "mouse_right_outline_anim"
+        };
         
         // populate with some dummy items
         
         for (int i = 0; i < rows * columns; ++i) {
-            auto itemEntity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, cellW, cellH);
+            // auto itemEntity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, cellW, cellH);
+            
+            auto itemEntity = animation_system::createAnimatedObjectWithTransform(random_utils::random_element(itemTypes), 0, 0);
+            auto entityTransform = registry.get<transform::Transform>(itemEntity);
+            entityTransform.setActualW(cellW);
+            entityTransform.setActualH(cellH);
             
             auto &itemGameObject = registry.get<transform::GameObject>(itemEntity);
             itemGameObject.state.clickEnabled = true;

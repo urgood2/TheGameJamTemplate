@@ -1,4 +1,16 @@
 {
+    "&_default_keyboard_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default"
+    ],
+    "&_double_keyboard_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double"
+    ],
+    "&_file_globbed_keyboard_mouse_packing_pre": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse"
+    ],
+    "&_keyboard_mouse_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector"
+    ],
     "0001_spine_sprite": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/Sprite-0001.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\Sprite-0001.json",
@@ -1828,9 +1840,33 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_0.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_0.svg"
     ],
+    "0_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_0.png"
+    ],
+    "0_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_0_outline.png"
+    ],
+    "0_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_0.png"
+    ],
+    "0_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_0_outline.png"
+    ],
     "0_graphic_sprite": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites-0.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites-0.json"
+    ],
+    "0_keyboard": [
+        "keyboard_0.png"
+    ],
+    "0_keyboard_outline": [
+        "keyboard_0_outline.png"
+    ],
+    "0_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_0_outline.svg"
+    ],
+    "0_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_0.svg"
     ],
     "0_sprite": [
         "sprites-0.png"
@@ -10681,9 +10717,33 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_1.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_1.svg"
     ],
+    "1_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_1.png"
+    ],
+    "1_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_1_outline.png"
+    ],
+    "1_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_1.png"
+    ],
+    "1_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_1_outline.png"
+    ],
     "1_graphic_sprite": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\sprites-1.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/sprites-1.json"
+    ],
+    "1_keyboard": [
+        "keyboard_1.png"
+    ],
+    "1_keyboard_outline": [
+        "keyboard_1_outline.png"
+    ],
+    "1_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_1_outline.svg"
+    ],
+    "1_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_1.svg"
     ],
     "1_sprite": [
         "sprites-1.png"
@@ -10769,11 +10829,35 @@
     "2_cornsilk": [
         "CORNSILK 2"
     ],
+    "2_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_2.png"
+    ],
+    "2_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_2_outline.png"
+    ],
+    "2_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_2.png"
+    ],
+    "2_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_2_outline.png"
+    ],
     "2_honeydew": [
         "HONEYDEW 2"
     ],
     "2_ivory": [
         "IVORY 2"
+    ],
+    "2_keyboard": [
+        "keyboard_2.png"
+    ],
+    "2_keyboard_outline": [
+        "keyboard_2_outline.png"
+    ],
+    "2_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_2_outline.svg"
+    ],
+    "2_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_2.svg"
     ],
     "2_peach_puff": [
         "PEACH PUFF 2"
@@ -10847,11 +10931,35 @@
     "3_cornsilk": [
         "CORNSILK 3"
     ],
+    "3_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_3.png"
+    ],
+    "3_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_3_outline.png"
+    ],
+    "3_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_3.png"
+    ],
+    "3_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_3_outline.png"
+    ],
     "3_honeydew": [
         "HONEYDEW 3"
     ],
     "3_ivory": [
         "IVORY 3"
+    ],
+    "3_keyboard": [
+        "keyboard_3.png"
+    ],
+    "3_keyboard_outline": [
+        "keyboard_3_outline.png"
+    ],
+    "3_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_3_outline.svg"
+    ],
+    "3_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_3.svg"
     ],
     "3_peach_puff": [
         "PEACH PUFF 3"
@@ -10913,11 +11021,35 @@
     "4_cornsilk": [
         "CORNSILK 4"
     ],
+    "4_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_4.png"
+    ],
+    "4_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_4_outline.png"
+    ],
+    "4_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_4.png"
+    ],
+    "4_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_4_outline.png"
+    ],
     "4_honeydew": [
         "HONEYDEW 4"
     ],
     "4_ivory": [
         "IVORY 4"
+    ],
+    "4_keyboard": [
+        "keyboard_4.png"
+    ],
+    "4_keyboard_outline": [
+        "keyboard_4_outline.png"
+    ],
+    "4_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_4_outline.svg"
+    ],
+    "4_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_4.svg"
     ],
     "4_peach_puff": [
         "PEACH PUFF 4"
@@ -10958,6 +11090,30 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_5.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_5.svg"
     ],
+    "5_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_5.png"
+    ],
+    "5_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_5_outline.png"
+    ],
+    "5_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_5.png"
+    ],
+    "5_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_5_outline.png"
+    ],
+    "5_keyboard": [
+        "keyboard_5.png"
+    ],
+    "5_keyboard_outline": [
+        "keyboard_5_outline.png"
+    ],
+    "5_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_5_outline.svg"
+    ],
+    "5_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_5.svg"
+    ],
     "5_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_5.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro_5.png",
@@ -10987,6 +11143,30 @@
     "6_circle_flair_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_6.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_6.svg"
+    ],
+    "6_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_6.png"
+    ],
+    "6_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_6_outline.png"
+    ],
+    "6_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_6.png"
+    ],
+    "6_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_6_outline.png"
+    ],
+    "6_keyboard": [
+        "keyboard_6.png"
+    ],
+    "6_keyboard_outline": [
+        "keyboard_6_outline.png"
+    ],
+    "6_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_6_outline.svg"
+    ],
+    "6_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_6.svg"
     ],
     "6_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_6.png",
@@ -11018,6 +11198,30 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_7.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_7.svg"
     ],
+    "7_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_7.png"
+    ],
+    "7_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_7_outline.png"
+    ],
+    "7_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_7.png"
+    ],
+    "7_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_7_outline.png"
+    ],
+    "7_keyboard": [
+        "keyboard_7.png"
+    ],
+    "7_keyboard_outline": [
+        "keyboard_7_outline.png"
+    ],
+    "7_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_7_outline.svg"
+    ],
+    "7_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_7.svg"
+    ],
     "8_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_8.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\flair_circle_8.png"
@@ -11041,6 +11245,54 @@
     "8_circle_flair_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_8.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_8.svg"
+    ],
+    "8_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_8.png"
+    ],
+    "8_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_8_outline.png"
+    ],
+    "8_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_8.png"
+    ],
+    "8_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_8_outline.png"
+    ],
+    "8_keyboard": [
+        "keyboard_8.png"
+    ],
+    "8_keyboard_outline": [
+        "keyboard_8_outline.png"
+    ],
+    "8_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_8_outline.svg"
+    ],
+    "8_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_8.svg"
+    ],
+    "9_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_9.png"
+    ],
+    "9_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_9_outline.png"
+    ],
+    "9_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_9.png"
+    ],
+    "9_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_9_outline.png"
+    ],
+    "9_keyboard": [
+        "keyboard_9.png"
+    ],
+    "9_keyboard_outline": [
+        "keyboard_9_outline.png"
+    ],
+    "9_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_9_outline.svg"
+    ],
+    "9_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_9.svg"
     ],
     "9x16_ac437_en_ig_vga": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Ac437_IGS_VGA_9x16.ttf",
@@ -11132,6 +11384,30 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_target_a.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_target_a.svg"
     ],
+    "a_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_a.png"
+    ],
+    "a_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_a_outline.png"
+    ],
+    "a_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_a.png"
+    ],
+    "a_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_a_outline.png"
+    ],
+    "a_keyboard": [
+        "keyboard_a.png"
+    ],
+    "a_keyboard_outline": [
+        "keyboard_a_outline.png"
+    ],
+    "a_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_a_outline.svg"
+    ],
+    "a_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_a.svg"
+    ],
     "ac437_bio_en_ibm": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Ac437_IBM_BIOS.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en\\Ac437_IBM_BIOS.ttf",
@@ -11179,6 +11455,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_all.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\generic_arrows_all.png"
     ],
+    "all_arrow_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrows_all.png"
+    ],
     "all_arrow_diagonal_double_generic": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_diagonal_all.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrows_diagonal_all.png"
@@ -11191,9 +11470,18 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_all.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrows_all.png"
     ],
+    "all_arrow_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_all.png"
+    ],
     "all_arrow_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_all.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_all.svg"
+    ],
+    "all_arrow_keyboard": [
+        "keyboard_arrows_all.png"
+    ],
+    "all_arrow_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrows_all.svg"
     ],
     "all_asset_uuid": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/all_uuids.json #auto_generated #verified.json",
@@ -11234,6 +11522,30 @@
     "almond_blanched": [
         "BLANCHED ALMOND"
     ],
+    "alt_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_alt.png"
+    ],
+    "alt_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_alt_outline.png"
+    ],
+    "alt_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_alt.png"
+    ],
+    "alt_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_alt_outline.png"
+    ],
+    "alt_keyboard": [
+        "keyboard_alt.png"
+    ],
+    "alt_keyboard_outline": [
+        "keyboard_alt_outline.png"
+    ],
+    "alt_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_alt_outline.svg"
+    ],
+    "alt_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_alt.svg"
+    ],
     "amber_burnished_palette_resurrect": [
         "RESURRECT_PALETTE_BURNISHED_AMBER"
     ],
@@ -11264,6 +11576,54 @@
     "antique_white": [
         "ANTIQUE WHITE"
     ],
+    "any_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_any.png"
+    ],
+    "any_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_any_outline.png"
+    ],
+    "any_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_any.png"
+    ],
+    "any_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_any_outline.png"
+    ],
+    "any_keyboard": [
+        "keyboard_any.png"
+    ],
+    "any_keyboard_outline": [
+        "keyboard_any_outline.png"
+    ],
+    "any_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_any_outline.svg"
+    ],
+    "any_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_any.svg"
+    ],
+    "apostrophe_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_apostrophe.png"
+    ],
+    "apostrophe_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_apostrophe_outline.png"
+    ],
+    "apostrophe_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_apostrophe.png"
+    ],
+    "apostrophe_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_apostrophe_outline.png"
+    ],
+    "apostrophe_keyboard": [
+        "keyboard_apostrophe.png"
+    ],
+    "apostrophe_keyboard_outline": [
+        "keyboard_apostrophe_outline.png"
+    ],
+    "apostrophe_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_apostrophe_outline.svg"
+    ],
+    "apostrophe_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_apostrophe.svg"
+    ],
     "aquamarine": [
         "AQUAMARINE"
     ],
@@ -11293,6 +11653,12 @@
     "arrow_default_down_generic": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_down.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\generic_arrows_down.png"
+    ],
+    "arrow_default_down_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_down.png"
+    ],
+    "arrow_default_down_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_down_outline.png"
     ],
     "arrow_default_generic_horizontal": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrows_horizontal.png",
@@ -11326,6 +11692,42 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/generic_arrow_z.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\generic_arrow_z.png"
     ],
+    "arrow_default_horizontal_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrows_horizontal.png"
+    ],
+    "arrow_default_horizontal_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrows_horizontal_outline.png"
+    ],
+    "arrow_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrows.png"
+    ],
+    "arrow_default_keyboard_left": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_left.png"
+    ],
+    "arrow_default_keyboard_left_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_left_outline.png"
+    ],
+    "arrow_default_keyboard_none": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrows_none.png"
+    ],
+    "arrow_default_keyboard_outline_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_right_outline.png"
+    ],
+    "arrow_default_keyboard_outline_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_up_outline.png"
+    ],
+    "arrow_default_keyboard_outline_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrows_vertical_outline.png"
+    ],
+    "arrow_default_keyboard_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_right.png"
+    ],
+    "arrow_default_keyboard_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrow_up.png"
+    ],
+    "arrow_default_keyboard_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_arrows_vertical.png"
+    ],
     "arrow_diagonal_double_generic_left": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_diagonal_left.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrows_diagonal_left.png"
@@ -11345,6 +11747,12 @@
     "arrow_double_down_generic": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_down.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrows_down.png"
+    ],
+    "arrow_double_down_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_down.png"
+    ],
+    "arrow_double_down_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_down_outline.png"
     ],
     "arrow_double_generic_horizontal": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_horizontal.png",
@@ -11378,9 +11786,57 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_z.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_z.png"
     ],
+    "arrow_double_horizontal_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_horizontal.png"
+    ],
+    "arrow_double_horizontal_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_horizontal_outline.png"
+    ],
+    "arrow_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows.png"
+    ],
+    "arrow_double_keyboard_left": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_left.png"
+    ],
+    "arrow_double_keyboard_left_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_left_outline.png"
+    ],
+    "arrow_double_keyboard_none": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_none.png"
+    ],
+    "arrow_double_keyboard_outline_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_right_outline.png"
+    ],
+    "arrow_double_keyboard_outline_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_up_outline.png"
+    ],
+    "arrow_double_keyboard_outline_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_vertical_outline.png"
+    ],
+    "arrow_double_keyboard_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_right.png"
+    ],
+    "arrow_double_keyboard_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrow_up.png"
+    ],
+    "arrow_double_keyboard_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_vertical.png"
+    ],
     "arrow_down_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_down.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_down.svg"
+    ],
+    "arrow_down_keyboard": [
+        "keyboard_arrows_down.png"
+    ],
+    "arrow_down_keyboard_outline": [
+        "keyboard_arrows_down_outline.png"
+    ],
+    "arrow_down_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_down_outline.svg"
+    ],
+    "arrow_down_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_down.svg"
     ],
     "arrow_generic_horizontal_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_horizontal.svg",
@@ -11413,6 +11869,78 @@
     "arrow_generic_vector_z": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_z.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_z.svg"
+    ],
+    "arrow_horizontal_keyboard": [
+        "keyboard_arrows_horizontal.png"
+    ],
+    "arrow_horizontal_keyboard_outline": [
+        "keyboard_arrows_horizontal_outline.png"
+    ],
+    "arrow_horizontal_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrows_horizontal_outline.svg"
+    ],
+    "arrow_horizontal_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrows_horizontal.svg"
+    ],
+    "arrow_keyboard": [
+        "keyboard_arrows.png"
+    ],
+    "arrow_keyboard_left": [
+        "keyboard_arrows_left.png"
+    ],
+    "arrow_keyboard_left_outline": [
+        "keyboard_arrows_left_outline.png"
+    ],
+    "arrow_keyboard_left_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_left_outline.svg"
+    ],
+    "arrow_keyboard_left_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_left.svg"
+    ],
+    "arrow_keyboard_none": [
+        "keyboard_arrows_none.png"
+    ],
+    "arrow_keyboard_none_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrows_none.svg"
+    ],
+    "arrow_keyboard_outline_right": [
+        "keyboard_arrows_right_outline.png"
+    ],
+    "arrow_keyboard_outline_right_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_right_outline.svg"
+    ],
+    "arrow_keyboard_outline_up": [
+        "keyboard_arrows_up_outline.png"
+    ],
+    "arrow_keyboard_outline_up_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_up_outline.svg"
+    ],
+    "arrow_keyboard_outline_vector_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrows_vertical_outline.svg"
+    ],
+    "arrow_keyboard_outline_vertical": [
+        "keyboard_arrows_vertical_outline.png"
+    ],
+    "arrow_keyboard_right": [
+        "keyboard_arrows_right.png"
+    ],
+    "arrow_keyboard_right_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_right.svg"
+    ],
+    "arrow_keyboard_up": [
+        "keyboard_arrows_up.png"
+    ],
+    "arrow_keyboard_up_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_up.svg"
+    ],
+    "arrow_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrows.svg"
+    ],
+    "arrow_keyboard_vector_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrows_vertical.svg"
+    ],
+    "arrow_keyboard_vertical": [
+        "keyboard_arrows_vertical.png"
     ],
     "asset": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/.DS_Store",
@@ -11497,6 +12025,30 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/world.ldtk",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/world.ldtk",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/world.ldtk"
+    ],
+    "asterisk_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_asterisk.png"
+    ],
+    "asterisk_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_asterisk_outline.png"
+    ],
+    "asterisk_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_asterisk.png"
+    ],
+    "asterisk_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_asterisk_outline.png"
+    ],
+    "asterisk_keyboard": [
+        "keyboard_asterisk.png"
+    ],
+    "asterisk_keyboard_outline": [
+        "keyboard_asterisk_outline.png"
+    ],
+    "asterisk_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_asterisk_outline.svg"
+    ],
+    "asterisk_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_asterisk.svg"
     ],
     "asteroidoutline_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/asteroidOutline.fs"
@@ -11589,11 +12141,59 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_target_b.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_target_b.svg"
     ],
+    "b_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_b.png"
+    ],
+    "b_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_b_outline.png"
+    ],
+    "b_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_b.png"
+    ],
+    "b_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_b_outline.png"
+    ],
+    "b_keyboard": [
+        "keyboard_b.png"
+    ],
+    "b_keyboard_outline": [
+        "keyboard_b_outline.png"
+    ],
+    "b_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_b_outline.svg"
+    ],
+    "b_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_b.svg"
+    ],
     "babel_edit_localization_warning": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/localization/BABEL_EDIT_WARNING.md",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/localization\\BABEL_EDIT_WARNING.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/BABEL_EDIT_WARNING.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\BABEL_EDIT_WARNING.md"
+    ],
+    "back_default_keyboard_outline_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_slash_back_outline.png"
+    ],
+    "back_default_keyboard_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_slash_back.png"
+    ],
+    "back_double_keyboard_outline_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_slash_back_outline.png"
+    ],
+    "back_double_keyboard_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_slash_back.png"
+    ],
+    "back_keyboard_outline_slash": [
+        "keyboard_slash_back_outline.png"
+    ],
+    "back_keyboard_outline_slash_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_back_outline.svg"
+    ],
+    "back_keyboard_slash": [
+        "keyboard_slash_back.png"
+    ],
+    "back_keyboard_slash_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_back.svg"
     ],
     "background_balatro_fragment_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/balatro_background_fragment.fs",
@@ -11634,6 +12234,54 @@
     "background_peache_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\peaches_background_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_vertex.vs"
+    ],
+    "backspace_default_icon_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_backspace_icon.png"
+    ],
+    "backspace_default_icon_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_backspace_icon_outline.png"
+    ],
+    "backspace_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_backspace.png"
+    ],
+    "backspace_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_backspace_outline.png"
+    ],
+    "backspace_double_icon_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_backspace_icon.png"
+    ],
+    "backspace_double_icon_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_backspace_icon_outline.png"
+    ],
+    "backspace_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_backspace.png"
+    ],
+    "backspace_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_backspace_outline.png"
+    ],
+    "backspace_icon_keyboard": [
+        "keyboard_backspace_icon.png"
+    ],
+    "backspace_icon_keyboard_outline": [
+        "keyboard_backspace_icon_outline.png"
+    ],
+    "backspace_icon_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_backspace_icon_outline.svg"
+    ],
+    "backspace_icon_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_backspace_icon.svg"
+    ],
+    "backspace_keyboard": [
+        "keyboard_backspace.png"
+    ],
+    "backspace_keyboard_outline": [
+        "keyboard_backspace_outline.png"
+    ],
+    "backspace_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_backspace_outline.svg"
+    ],
+    "backspace_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_backspace.svg"
     ],
     "base_function_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/base_functions.lua",
@@ -11767,6 +12415,102 @@
     "bound_expansion_shader_snippet_sprite": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sprite_bound_expansion_snippet.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sprite_bound_expansion_snippet.md"
+    ],
+    "bracket_close_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_close.png"
+    ],
+    "bracket_close_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_close_outline.png"
+    ],
+    "bracket_close_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_close.png"
+    ],
+    "bracket_close_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_close_outline.png"
+    ],
+    "bracket_close_keyboard": [
+        "keyboard_bracket_close.png"
+    ],
+    "bracket_close_keyboard_outline": [
+        "keyboard_bracket_close_outline.png"
+    ],
+    "bracket_close_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_close_outline.svg"
+    ],
+    "bracket_close_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_close.svg"
+    ],
+    "bracket_default_greater_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_greater.png"
+    ],
+    "bracket_default_greater_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_greater_outline.png"
+    ],
+    "bracket_default_keyboard_les": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_less.png"
+    ],
+    "bracket_default_keyboard_les_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_less_outline.png"
+    ],
+    "bracket_default_keyboard_open": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_open.png"
+    ],
+    "bracket_default_keyboard_open_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_open_outline.png"
+    ],
+    "bracket_double_greater_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_greater.png"
+    ],
+    "bracket_double_greater_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_greater_outline.png"
+    ],
+    "bracket_double_keyboard_les": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_less.png"
+    ],
+    "bracket_double_keyboard_les_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_less_outline.png"
+    ],
+    "bracket_double_keyboard_open": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_open.png"
+    ],
+    "bracket_double_keyboard_open_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_bracket_open_outline.png"
+    ],
+    "bracket_greater_keyboard": [
+        "keyboard_bracket_greater.png"
+    ],
+    "bracket_greater_keyboard_outline": [
+        "keyboard_bracket_greater_outline.png"
+    ],
+    "bracket_greater_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_greater_outline.svg"
+    ],
+    "bracket_greater_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_greater.svg"
+    ],
+    "bracket_keyboard_les": [
+        "keyboard_bracket_less.png"
+    ],
+    "bracket_keyboard_les_outline": [
+        "keyboard_bracket_less_outline.png"
+    ],
+    "bracket_keyboard_les_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_less_outline.svg"
+    ],
+    "bracket_keyboard_les_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_less.svg"
+    ],
+    "bracket_keyboard_open": [
+        "keyboard_bracket_open.png"
+    ],
+    "bracket_keyboard_open_outline": [
+        "keyboard_bracket_open_outline.png"
+    ],
+    "bracket_keyboard_open_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_open_outline.svg"
+    ],
+    "bracket_keyboard_open_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_open.svg"
     ],
     "brick_palette_red_resurrect": [
         "RESURRECT_PALETTE_BRICK_RED"
@@ -12023,6 +12767,102 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BuyElf.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\BuyElf.wav"
     ],
+    "c_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_c.png"
+    ],
+    "c_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_c_outline.png"
+    ],
+    "c_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_c.png"
+    ],
+    "c_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_c_outline.png"
+    ],
+    "c_keyboard": [
+        "keyboard_c.png"
+    ],
+    "c_keyboard_outline": [
+        "keyboard_c_outline.png"
+    ],
+    "c_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_c_outline.svg"
+    ],
+    "c_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_c.svg"
+    ],
+    "capslock_default_icon_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_capslock_icon.png"
+    ],
+    "capslock_default_icon_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_capslock_icon_outline.png"
+    ],
+    "capslock_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_capslock.png"
+    ],
+    "capslock_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_capslock_outline.png"
+    ],
+    "capslock_double_icon_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_capslock_icon.png"
+    ],
+    "capslock_double_icon_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_capslock_icon_outline.png"
+    ],
+    "capslock_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_capslock.png"
+    ],
+    "capslock_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_capslock_outline.png"
+    ],
+    "capslock_icon_keyboard": [
+        "keyboard_capslock_icon.png"
+    ],
+    "capslock_icon_keyboard_outline": [
+        "keyboard_capslock_icon_outline.png"
+    ],
+    "capslock_icon_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_capslock_icon_outline.svg"
+    ],
+    "capslock_icon_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_capslock_icon.svg"
+    ],
+    "capslock_keyboard": [
+        "keyboard_capslock.png"
+    ],
+    "capslock_keyboard_outline": [
+        "keyboard_capslock_outline.png"
+    ],
+    "capslock_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_capslock_outline.svg"
+    ],
+    "capslock_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_capslock.svg"
+    ],
+    "caret_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_caret.png"
+    ],
+    "caret_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_caret_outline.png"
+    ],
+    "caret_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_caret.png"
+    ],
+    "caret_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_caret_outline.png"
+    ],
+    "caret_keyboard": [
+        "keyboard_caret.png"
+    ],
+    "caret_keyboard_outline": [
+        "keyboard_caret_outline.png"
+    ],
+    "caret_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_caret_outline.svg"
+    ],
+    "caret_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_caret.svg"
+    ],
     "cat_potion_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/cat_potion.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\cat_potion.png",
@@ -12103,11 +12943,83 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_circle_vertex.vs"
     ],
+    "colon_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_colon.png"
+    ],
+    "colon_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_colon_outline.png"
+    ],
+    "colon_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_colon.png"
+    ],
+    "colon_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_colon_outline.png"
+    ],
+    "colon_keyboard": [
+        "keyboard_colon.png"
+    ],
+    "colon_keyboard_outline": [
+        "keyboard_colon_outline.png"
+    ],
+    "colon_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_colon_outline.svg"
+    ],
+    "colon_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_colon.svg"
+    ],
     "color_raw": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/raws/colors.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\colors.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/colors.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\colors.json"
+    ],
+    "comma_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_comma.png"
+    ],
+    "comma_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_comma_outline.png"
+    ],
+    "comma_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_comma.png"
+    ],
+    "comma_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_comma_outline.png"
+    ],
+    "comma_keyboard": [
+        "keyboard_comma.png"
+    ],
+    "comma_keyboard_outline": [
+        "keyboard_comma_outline.png"
+    ],
+    "comma_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_comma_outline.svg"
+    ],
+    "comma_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_comma.svg"
+    ],
+    "command_default_key": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\key_command.png"
+    ],
+    "command_default_key_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\key_command_outline.png"
+    ],
+    "command_double_key": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\key_command.png"
+    ],
+    "command_double_key_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\key_command_outline.png"
+    ],
+    "command_key": [
+        "key_command.png"
+    ],
+    "command_key_outline": [
+        "key_command_outline.png"
+    ],
+    "command_key_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\key_command_outline.svg"
+    ],
+    "command_key_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\key_command.svg"
     ],
     "condition_every_tick_update": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/conditions/update_every_tick.lua",
@@ -12244,11 +13156,59 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/crt_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\crt_vertex.vs"
     ],
+    "ctrl_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_ctrl.png"
+    ],
+    "ctrl_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_ctrl_outline.png"
+    ],
+    "ctrl_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_ctrl.png"
+    ],
+    "ctrl_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_ctrl_outline.png"
+    ],
+    "ctrl_keyboard": [
+        "keyboard_ctrl.png"
+    ],
+    "ctrl_keyboard_outline": [
+        "keyboard_ctrl_outline.png"
+    ],
+    "ctrl_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_ctrl_outline.svg"
+    ],
+    "ctrl_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_ctrl.svg"
+    ],
     "cyan": [
         "CYAN"
     ],
     "cyan_light": [
         "LIGHT CYAN"
+    ],
+    "d_default_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_d.png"
+    ],
+    "d_default_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_d_outline.png"
+    ],
+    "d_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_d.png"
+    ],
+    "d_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_d_outline.png"
+    ],
+    "d_keyboard": [
+        "keyboard_d.png"
+    ],
+    "d_keyboard_outline": [
+        "keyboard_d_outline.png"
+    ],
+    "d_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_d_outline.svg"
+    ],
+    "d_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_d.svg"
     ],
     "danger_en_motorway_on_the": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Danger on the Motorway.otf",
@@ -12301,6 +13261,12 @@
     "deep_pink": [
         "DEEP PINK"
     ],
+    "default_delete_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_delete.png"
+    ],
+    "default_delete_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_delete_outline.png"
+    ],
     "default_disabled_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_disabled.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\flair_disabled.png"
@@ -12337,9 +13303,21 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad_down.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_dpad_down.png"
     ],
+    "default_down_keyboard_outline_page": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_page_down_outline.png"
+    ],
+    "default_down_keyboard_page": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_page_down.png"
+    ],
     "default_down_l_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_down.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_stick_l_down.png"
+    ],
+    "default_down_mouse_outline_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll_down_outline.png"
+    ],
+    "default_down_mouse_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll_down.png"
     ],
     "default_down_r_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_down.png",
@@ -12417,6 +13395,120 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_dpad.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_dpad.png"
     ],
+    "default_e_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_e.png"
+    ],
+    "default_e_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_e_outline.png"
+    ],
+    "default_end_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_end.png"
+    ],
+    "default_end_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_end_outline.png"
+    ],
+    "default_enter_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_enter.png"
+    ],
+    "default_enter_keyboard_numpad": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_numpad_enter.png"
+    ],
+    "default_enter_keyboard_numpad_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_numpad_enter_outline.png"
+    ],
+    "default_enter_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_enter_outline.png"
+    ],
+    "default_escape_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_escape.png"
+    ],
+    "default_escape_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_escape_outline.png"
+    ],
+    "default_exclamation_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_exclamation.png"
+    ],
+    "default_exclamation_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_exclamation_outline.png"
+    ],
+    "default_f10_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f10.png"
+    ],
+    "default_f10_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f10_outline.png"
+    ],
+    "default_f11_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f11.png"
+    ],
+    "default_f11_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f11_outline.png"
+    ],
+    "default_f12_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f12.png"
+    ],
+    "default_f12_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f12_outline.png"
+    ],
+    "default_f1_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f1.png"
+    ],
+    "default_f1_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f1_outline.png"
+    ],
+    "default_f2_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f2.png"
+    ],
+    "default_f2_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f2_outline.png"
+    ],
+    "default_f3_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f3.png"
+    ],
+    "default_f3_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f3_outline.png"
+    ],
+    "default_f4_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f4.png"
+    ],
+    "default_f4_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f4_outline.png"
+    ],
+    "default_f5_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f5.png"
+    ],
+    "default_f5_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f5_outline.png"
+    ],
+    "default_f6_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f6.png"
+    ],
+    "default_f6_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f6_outline.png"
+    ],
+    "default_f7_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f7.png"
+    ],
+    "default_f7_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f7_outline.png"
+    ],
+    "default_f8_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f8.png"
+    ],
+    "default_f8_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f8_outline.png"
+    ],
+    "default_f9_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f9.png"
+    ],
+    "default_f9_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f9_outline.png"
+    ],
+    "default_f_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f.png"
+    ],
+    "default_f_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_f_outline.png"
+    ],
     "default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default"
@@ -12441,19 +13533,280 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_rotate.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\flair_small_rotate.png"
     ],
+    "default_forward_keyboard_outline_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_slash_forward_outline.png"
+    ],
+    "default_forward_keyboard_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_slash_forward.png"
+    ],
+    "default_function_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_function.png"
+    ],
+    "default_function_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_function_outline.png"
+    ],
+    "default_g_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_g.png"
+    ],
+    "default_g_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_g_outline.png"
+    ],
+    "default_h_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_h.png"
+    ],
+    "default_h_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_h_outline.png"
+    ],
+    "default_home_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_home.png"
+    ],
+    "default_home_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_home_outline.png"
+    ],
     "default_horizontal_l_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_horizontal.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_stick_l_horizontal.png"
     ],
+    "default_horizontal_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_horizontal.png"
+    ],
     "default_horizontal_r_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_horizontal.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_stick_r_horizontal.png"
+    ],
+    "default_i_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_i.png"
+    ],
+    "default_i_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_i_outline.png"
+    ],
+    "default_icon_key_outline_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\key_tab_icon_outline.png"
+    ],
+    "default_icon_key_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\key_tab_icon.png"
+    ],
+    "default_icon_keyboard_outline_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_shift_icon_outline.png"
+    ],
+    "default_icon_keyboard_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_shift_icon.png"
     ],
     "default_init": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/init/default.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\init\\default.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init/default.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\init\\default.lua"
+    ],
+    "default_insert_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_insert.png"
+    ],
+    "default_insert_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_insert_outline.png"
+    ],
+    "default_j_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_j.png"
+    ],
+    "default_j_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_j_outline.png"
+    ],
+    "default_k_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_k.png"
+    ],
+    "default_k_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_k_outline.png"
+    ],
+    "default_key_outline_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\key_tab_outline.png"
+    ],
+    "default_key_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\key_tab.png"
+    ],
+    "default_keyboard_": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_s.png"
+    ],
+    "default_keyboard_l": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_l.png"
+    ],
+    "default_keyboard_l_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_l_outline.png"
+    ],
+    "default_keyboard_m": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_m.png"
+    ],
+    "default_keyboard_m_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_m_outline.png"
+    ],
+    "default_keyboard_minu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_minus.png"
+    ],
+    "default_keyboard_minu_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_minus_outline.png"
+    ],
+    "default_keyboard_n": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_n.png"
+    ],
+    "default_keyboard_n_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_n_outline.png"
+    ],
+    "default_keyboard_numlock": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_numlock.png"
+    ],
+    "default_keyboard_numlock_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_numlock_outline.png"
+    ],
+    "default_keyboard_numpad_outline_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_numpad_plus_outline.png"
+    ],
+    "default_keyboard_numpad_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_numpad_plus.png"
+    ],
+    "default_keyboard_o": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_o.png"
+    ],
+    "default_keyboard_o_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_o_outline.png"
+    ],
+    "default_keyboard_option": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_option.png"
+    ],
+    "default_keyboard_option_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_option_outline.png"
+    ],
+    "default_keyboard_outline_": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_s_outline.png"
+    ],
+    "default_keyboard_outline_p": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_p_outline.png"
+    ],
+    "default_keyboard_outline_page_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_page_up_outline.png"
+    ],
+    "default_keyboard_outline_period": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_period_outline.png"
+    ],
+    "default_keyboard_outline_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_plus_outline.png"
+    ],
+    "default_keyboard_outline_printscreen": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_printscreen_outline.png"
+    ],
+    "default_keyboard_outline_q": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_q_outline.png"
+    ],
+    "default_keyboard_outline_question": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_question_outline.png"
+    ],
+    "default_keyboard_outline_quote": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_quote_outline.png"
+    ],
+    "default_keyboard_outline_r": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_r_outline.png"
+    ],
+    "default_keyboard_outline_return": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_return_outline.png"
+    ],
+    "default_keyboard_outline_semicolon": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_semicolon_outline.png"
+    ],
+    "default_keyboard_outline_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_shift_outline.png"
+    ],
+    "default_keyboard_outline_space": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_space_outline.png"
+    ],
+    "default_keyboard_outline_t": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_t_outline.png"
+    ],
+    "default_keyboard_outline_tilde": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_tilde_outline.png"
+    ],
+    "default_keyboard_outline_u": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_u_outline.png"
+    ],
+    "default_keyboard_outline_v": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_v_outline.png"
+    ],
+    "default_keyboard_outline_w": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_w_outline.png"
+    ],
+    "default_keyboard_outline_win": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_win_outline.png"
+    ],
+    "default_keyboard_outline_x": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_x_outline.png"
+    ],
+    "default_keyboard_outline_y": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_y_outline.png"
+    ],
+    "default_keyboard_outline_z": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_z_outline.png"
+    ],
+    "default_keyboard_p": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_p.png"
+    ],
+    "default_keyboard_page_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_page_up.png"
+    ],
+    "default_keyboard_period": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_period.png"
+    ],
+    "default_keyboard_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_plus.png"
+    ],
+    "default_keyboard_printscreen": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_printscreen.png"
+    ],
+    "default_keyboard_q": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_q.png"
+    ],
+    "default_keyboard_question": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_question.png"
+    ],
+    "default_keyboard_quote": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_quote.png"
+    ],
+    "default_keyboard_r": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_r.png"
+    ],
+    "default_keyboard_return": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_return.png"
+    ],
+    "default_keyboard_semicolon": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_semicolon.png"
+    ],
+    "default_keyboard_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_shift.png"
+    ],
+    "default_keyboard_space": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_space.png"
+    ],
+    "default_keyboard_t": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_t.png"
+    ],
+    "default_keyboard_tilde": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_tilde.png"
+    ],
+    "default_keyboard_u": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_u.png"
+    ],
+    "default_keyboard_v": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_v.png"
+    ],
+    "default_keyboard_w": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_w.png"
+    ],
+    "default_keyboard_win": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_win.png"
+    ],
+    "default_keyboard_x": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_x.png"
+    ],
+    "default_keyboard_y": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_y.png"
+    ],
+    "default_keyboard_z": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_z.png"
     ],
     "default_l_left_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_l_left.png",
@@ -12503,6 +13856,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_lb.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_lb.png"
     ],
+    "default_left_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_left.png"
+    ],
+    "default_left_mouse_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_left_outline.png"
+    ],
     "default_left_r_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_stick_r_left.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_stick_r_left.png"
@@ -12514,6 +13873,45 @@
     "default_lt_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_lt.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default\\xbox_lt.png"
+    ],
+    "default_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse.png"
+    ],
+    "default_mouse_move": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_move.png"
+    ],
+    "default_mouse_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_outline.png"
+    ],
+    "default_mouse_outline_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_right_outline.png"
+    ],
+    "default_mouse_outline_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll_outline.png"
+    ],
+    "default_mouse_outline_scroll_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll_up_outline.png"
+    ],
+    "default_mouse_outline_scroll_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll_vertical_outline.png"
+    ],
+    "default_mouse_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_right.png"
+    ],
+    "default_mouse_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll.png"
+    ],
+    "default_mouse_scroll_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll_up.png"
+    ],
+    "default_mouse_scroll_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_scroll_vertical.png"
+    ],
+    "default_mouse_small": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_small.png"
+    ],
+    "default_mouse_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\mouse_vertical.png"
     ],
     "default_outline_r_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_rs_outline.png",
@@ -12576,6 +13974,24 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\list_of_defined_events.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/list_of_defined_events.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\list_of_defined_events.md"
+    ],
+    "delete_double_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_delete.png"
+    ],
+    "delete_double_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_delete_outline.png"
+    ],
+    "delete_keyboard": [
+        "keyboard_delete.png"
+    ],
+    "delete_keyboard_outline": [
+        "keyboard_delete_outline.png"
+    ],
+    "delete_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_delete_outline.svg"
+    ],
+    "delete_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_delete.svg"
     ],
     "demand_juice_on_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/on_demand_juice.fs",
@@ -12664,9 +14080,21 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad_down.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_dpad_down.png"
     ],
+    "double_down_keyboard_outline_page": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_page_down_outline.png"
+    ],
+    "double_down_keyboard_page": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_page_down.png"
+    ],
     "double_down_l_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_down.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_stick_l_down.png"
+    ],
+    "double_down_mouse_outline_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll_down_outline.png"
+    ],
+    "double_down_mouse_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll_down.png"
     ],
     "double_down_r_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_down.png",
@@ -12744,6 +14172,120 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_dpad.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_dpad.png"
     ],
+    "double_e_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_e.png"
+    ],
+    "double_e_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_e_outline.png"
+    ],
+    "double_end_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_end.png"
+    ],
+    "double_end_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_end_outline.png"
+    ],
+    "double_enter_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_enter.png"
+    ],
+    "double_enter_keyboard_numpad": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_numpad_enter.png"
+    ],
+    "double_enter_keyboard_numpad_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_numpad_enter_outline.png"
+    ],
+    "double_enter_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_enter_outline.png"
+    ],
+    "double_escape_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_escape.png"
+    ],
+    "double_escape_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_escape_outline.png"
+    ],
+    "double_exclamation_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_exclamation.png"
+    ],
+    "double_exclamation_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_exclamation_outline.png"
+    ],
+    "double_f10_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f10.png"
+    ],
+    "double_f10_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f10_outline.png"
+    ],
+    "double_f11_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f11.png"
+    ],
+    "double_f11_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f11_outline.png"
+    ],
+    "double_f12_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f12.png"
+    ],
+    "double_f12_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f12_outline.png"
+    ],
+    "double_f1_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f1.png"
+    ],
+    "double_f1_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f1_outline.png"
+    ],
+    "double_f2_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f2.png"
+    ],
+    "double_f2_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f2_outline.png"
+    ],
+    "double_f3_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f3.png"
+    ],
+    "double_f3_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f3_outline.png"
+    ],
+    "double_f4_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f4.png"
+    ],
+    "double_f4_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f4_outline.png"
+    ],
+    "double_f5_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f5.png"
+    ],
+    "double_f5_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f5_outline.png"
+    ],
+    "double_f6_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f6.png"
+    ],
+    "double_f6_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f6_outline.png"
+    ],
+    "double_f7_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f7.png"
+    ],
+    "double_f7_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f7_outline.png"
+    ],
+    "double_f8_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f8.png"
+    ],
+    "double_f8_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f8_outline.png"
+    ],
+    "double_f9_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f9.png"
+    ],
+    "double_f9_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f9_outline.png"
+    ],
+    "double_f_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f.png"
+    ],
+    "double_f_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_f_outline.png"
+    ],
     "double_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double"
@@ -12768,13 +14310,274 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_rotate.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_small_rotate.png"
     ],
+    "double_forward_keyboard_outline_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_slash_forward_outline.png"
+    ],
+    "double_forward_keyboard_slash": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_slash_forward.png"
+    ],
+    "double_function_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_function.png"
+    ],
+    "double_function_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_function_outline.png"
+    ],
+    "double_g_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_g.png"
+    ],
+    "double_g_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_g_outline.png"
+    ],
+    "double_h_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_h.png"
+    ],
+    "double_h_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_h_outline.png"
+    ],
+    "double_home_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_home.png"
+    ],
+    "double_home_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_home_outline.png"
+    ],
     "double_horizontal_l_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_horizontal.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_stick_l_horizontal.png"
     ],
+    "double_horizontal_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_horizontal.png"
+    ],
     "double_horizontal_r_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_horizontal.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_stick_r_horizontal.png"
+    ],
+    "double_i_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_i.png"
+    ],
+    "double_i_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_i_outline.png"
+    ],
+    "double_icon_key_outline_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\key_tab_icon_outline.png"
+    ],
+    "double_icon_key_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\key_tab_icon.png"
+    ],
+    "double_icon_keyboard_outline_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_shift_icon_outline.png"
+    ],
+    "double_icon_keyboard_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_shift_icon.png"
+    ],
+    "double_insert_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_insert.png"
+    ],
+    "double_insert_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_insert_outline.png"
+    ],
+    "double_j_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_j.png"
+    ],
+    "double_j_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_j_outline.png"
+    ],
+    "double_k_keyboard": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_k.png"
+    ],
+    "double_k_keyboard_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_k_outline.png"
+    ],
+    "double_key_outline_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\key_tab_outline.png"
+    ],
+    "double_key_tab": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\key_tab.png"
+    ],
+    "double_keyboard_": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_s.png"
+    ],
+    "double_keyboard_l": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_l.png"
+    ],
+    "double_keyboard_l_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_l_outline.png"
+    ],
+    "double_keyboard_m": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_m.png"
+    ],
+    "double_keyboard_m_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_m_outline.png"
+    ],
+    "double_keyboard_minu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_minus.png"
+    ],
+    "double_keyboard_minu_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_minus_outline.png"
+    ],
+    "double_keyboard_n": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_n.png"
+    ],
+    "double_keyboard_n_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_n_outline.png"
+    ],
+    "double_keyboard_numlock": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_numlock.png"
+    ],
+    "double_keyboard_numlock_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_numlock_outline.png"
+    ],
+    "double_keyboard_numpad_outline_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_numpad_plus_outline.png"
+    ],
+    "double_keyboard_numpad_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_numpad_plus.png"
+    ],
+    "double_keyboard_o": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_o.png"
+    ],
+    "double_keyboard_o_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_o_outline.png"
+    ],
+    "double_keyboard_option": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_option.png"
+    ],
+    "double_keyboard_option_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_option_outline.png"
+    ],
+    "double_keyboard_outline_": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_s_outline.png"
+    ],
+    "double_keyboard_outline_p": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_p_outline.png"
+    ],
+    "double_keyboard_outline_page_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_page_up_outline.png"
+    ],
+    "double_keyboard_outline_period": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_period_outline.png"
+    ],
+    "double_keyboard_outline_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_plus_outline.png"
+    ],
+    "double_keyboard_outline_printscreen": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_printscreen_outline.png"
+    ],
+    "double_keyboard_outline_q": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_q_outline.png"
+    ],
+    "double_keyboard_outline_question": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_question_outline.png"
+    ],
+    "double_keyboard_outline_quote": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_quote_outline.png"
+    ],
+    "double_keyboard_outline_r": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_r_outline.png"
+    ],
+    "double_keyboard_outline_return": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_return_outline.png"
+    ],
+    "double_keyboard_outline_semicolon": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_semicolon_outline.png"
+    ],
+    "double_keyboard_outline_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_shift_outline.png"
+    ],
+    "double_keyboard_outline_space": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_space_outline.png"
+    ],
+    "double_keyboard_outline_t": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_t_outline.png"
+    ],
+    "double_keyboard_outline_tilde": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_tilde_outline.png"
+    ],
+    "double_keyboard_outline_u": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_u_outline.png"
+    ],
+    "double_keyboard_outline_v": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_v_outline.png"
+    ],
+    "double_keyboard_outline_w": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_w_outline.png"
+    ],
+    "double_keyboard_outline_win": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_win_outline.png"
+    ],
+    "double_keyboard_outline_x": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_x_outline.png"
+    ],
+    "double_keyboard_outline_y": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_y_outline.png"
+    ],
+    "double_keyboard_outline_z": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_z_outline.png"
+    ],
+    "double_keyboard_p": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_p.png"
+    ],
+    "double_keyboard_page_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_page_up.png"
+    ],
+    "double_keyboard_period": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_period.png"
+    ],
+    "double_keyboard_plu": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_plus.png"
+    ],
+    "double_keyboard_printscreen": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_printscreen.png"
+    ],
+    "double_keyboard_q": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_q.png"
+    ],
+    "double_keyboard_question": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_question.png"
+    ],
+    "double_keyboard_quote": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_quote.png"
+    ],
+    "double_keyboard_r": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_r.png"
+    ],
+    "double_keyboard_return": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_return.png"
+    ],
+    "double_keyboard_semicolon": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_semicolon.png"
+    ],
+    "double_keyboard_shift": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_shift.png"
+    ],
+    "double_keyboard_space": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_space.png"
+    ],
+    "double_keyboard_t": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_t.png"
+    ],
+    "double_keyboard_tilde": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_tilde.png"
+    ],
+    "double_keyboard_u": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_u.png"
+    ],
+    "double_keyboard_v": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_v.png"
+    ],
+    "double_keyboard_w": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_w.png"
+    ],
+    "double_keyboard_win": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_win.png"
+    ],
+    "double_keyboard_x": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_x.png"
+    ],
+    "double_keyboard_y": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_y.png"
+    ],
+    "double_keyboard_z": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_z.png"
     ],
     "double_l_left_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_l_left.png",
@@ -12824,6 +14627,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_lb.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_lb.png"
     ],
+    "double_left_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_left.png"
+    ],
+    "double_left_mouse_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_left_outline.png"
+    ],
     "double_left_r_stick_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_stick_r_left.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_stick_r_left.png"
@@ -12835,6 +14644,45 @@
     "double_lt_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_lt.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double\\xbox_lt.png"
+    ],
+    "double_mouse": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse.png"
+    ],
+    "double_mouse_move": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_move.png"
+    ],
+    "double_mouse_outline": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_outline.png"
+    ],
+    "double_mouse_outline_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_right_outline.png"
+    ],
+    "double_mouse_outline_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll_outline.png"
+    ],
+    "double_mouse_outline_scroll_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll_up_outline.png"
+    ],
+    "double_mouse_outline_scroll_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll_vertical_outline.png"
+    ],
+    "double_mouse_right": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_right.png"
+    ],
+    "double_mouse_scroll": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll.png"
+    ],
+    "double_mouse_scroll_up": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll_up.png"
+    ],
+    "double_mouse_scroll_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_scroll_vertical.png"
+    ],
+    "double_mouse_small": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_small.png"
+    ],
+    "double_mouse_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\mouse_vertical.png"
     ],
     "double_outline_r_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double/xbox_rs_outline.png",
@@ -12923,12 +14771,36 @@
     "down_dpad_xbox": [
         "xbox_dpad_down.png"
     ],
+    "down_keyboard_outline_page": [
+        "keyboard_page_down_outline.png"
+    ],
+    "down_keyboard_outline_page_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_page_down_outline.svg"
+    ],
+    "down_keyboard_page": [
+        "keyboard_page_down.png"
+    ],
+    "down_keyboard_page_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_page_down.svg"
+    ],
     "down_l_stick_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_down.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Vector\\xbox_stick_l_down.svg"
     ],
     "down_l_stick_xbox": [
         "xbox_stick_l_down.png"
+    ],
+    "down_mouse_outline_scroll": [
+        "mouse_scroll_down_outline.png"
+    ],
+    "down_mouse_outline_scroll_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll_down_outline.svg"
+    ],
+    "down_mouse_scroll": [
+        "mouse_scroll_down.png"
+    ],
+    "down_mouse_scroll_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll_down.svg"
     ],
     "down_r_stick_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_down.svg",
@@ -13081,6 +14953,18 @@
     "dusky_mauve_palette_resurrect": [
         "RESURRECT_PALETTE_DUSKY_MAUVE"
     ],
+    "e_keyboard": [
+        "keyboard_e.png"
+    ],
+    "e_keyboard_outline": [
+        "keyboard_e_outline.png"
+    ],
+    "e_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_e_outline.svg"
+    ],
+    "e_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_e.svg"
+    ],
     "en_font": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en",
@@ -13129,11 +15013,59 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/slkscreb.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\slkscreb.ttf"
     ],
+    "end_keyboard": [
+        "keyboard_end.png"
+    ],
+    "end_keyboard_outline": [
+        "keyboard_end_outline.png"
+    ],
+    "end_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_end_outline.svg"
+    ],
+    "end_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_end.svg"
+    ],
     "eng_raw_synonym": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/raws/eng_synonyms.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\eng_synonyms.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/eng_synonyms.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\eng_synonyms.json"
+    ],
+    "enter_keyboard": [
+        "keyboard_enter.png"
+    ],
+    "enter_keyboard_numpad": [
+        "keyboard_numpad_enter.png"
+    ],
+    "enter_keyboard_numpad_outline": [
+        "keyboard_numpad_enter_outline.png"
+    ],
+    "enter_keyboard_numpad_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_numpad_enter_outline.svg"
+    ],
+    "enter_keyboard_numpad_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_numpad_enter.svg"
+    ],
+    "enter_keyboard_outline": [
+        "keyboard_enter_outline.png"
+    ],
+    "enter_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_enter_outline.svg"
+    ],
+    "enter_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_enter.svg"
+    ],
+    "escape_keyboard": [
+        "keyboard_escape.png"
+    ],
+    "escape_keyboard_outline": [
+        "keyboard_escape_outline.png"
+    ],
+    "escape_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_escape_outline.svg"
+    ],
+    "escape_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_escape.svg"
     ],
     "exclamation": [
         "exclamation.png"
@@ -13141,6 +15073,174 @@
     "exclamation_game_icon": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons/exclamation.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\game icons\\exclamation.png"
+    ],
+    "exclamation_keyboard": [
+        "keyboard_exclamation.png"
+    ],
+    "exclamation_keyboard_outline": [
+        "keyboard_exclamation_outline.png"
+    ],
+    "exclamation_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation_outline.svg"
+    ],
+    "exclamation_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation.svg"
+    ],
+    "f10_keyboard": [
+        "keyboard_f10.png"
+    ],
+    "f10_keyboard_outline": [
+        "keyboard_f10_outline.png"
+    ],
+    "f10_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f10_outline.svg"
+    ],
+    "f10_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f10.svg"
+    ],
+    "f11_keyboard": [
+        "keyboard_f11.png"
+    ],
+    "f11_keyboard_outline": [
+        "keyboard_f11_outline.png"
+    ],
+    "f11_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f11_outline.svg"
+    ],
+    "f11_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f11.svg"
+    ],
+    "f12_keyboard": [
+        "keyboard_f12.png"
+    ],
+    "f12_keyboard_outline": [
+        "keyboard_f12_outline.png"
+    ],
+    "f12_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f12_outline.svg"
+    ],
+    "f12_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f12.svg"
+    ],
+    "f1_keyboard": [
+        "keyboard_f1.png"
+    ],
+    "f1_keyboard_outline": [
+        "keyboard_f1_outline.png"
+    ],
+    "f1_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f1_outline.svg"
+    ],
+    "f1_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f1.svg"
+    ],
+    "f2_keyboard": [
+        "keyboard_f2.png"
+    ],
+    "f2_keyboard_outline": [
+        "keyboard_f2_outline.png"
+    ],
+    "f2_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f2_outline.svg"
+    ],
+    "f2_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f2.svg"
+    ],
+    "f3_keyboard": [
+        "keyboard_f3.png"
+    ],
+    "f3_keyboard_outline": [
+        "keyboard_f3_outline.png"
+    ],
+    "f3_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f3_outline.svg"
+    ],
+    "f3_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f3.svg"
+    ],
+    "f4_keyboard": [
+        "keyboard_f4.png"
+    ],
+    "f4_keyboard_outline": [
+        "keyboard_f4_outline.png"
+    ],
+    "f4_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f4_outline.svg"
+    ],
+    "f4_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f4.svg"
+    ],
+    "f5_keyboard": [
+        "keyboard_f5.png"
+    ],
+    "f5_keyboard_outline": [
+        "keyboard_f5_outline.png"
+    ],
+    "f5_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f5_outline.svg"
+    ],
+    "f5_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f5.svg"
+    ],
+    "f6_keyboard": [
+        "keyboard_f6.png"
+    ],
+    "f6_keyboard_outline": [
+        "keyboard_f6_outline.png"
+    ],
+    "f6_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f6_outline.svg"
+    ],
+    "f6_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f6.svg"
+    ],
+    "f7_keyboard": [
+        "keyboard_f7.png"
+    ],
+    "f7_keyboard_outline": [
+        "keyboard_f7_outline.png"
+    ],
+    "f7_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f7_outline.svg"
+    ],
+    "f7_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f7.svg"
+    ],
+    "f8_keyboard": [
+        "keyboard_f8.png"
+    ],
+    "f8_keyboard_outline": [
+        "keyboard_f8_outline.png"
+    ],
+    "f8_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f8_outline.svg"
+    ],
+    "f8_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f8.svg"
+    ],
+    "f9_keyboard": [
+        "keyboard_f9.png"
+    ],
+    "f9_keyboard_outline": [
+        "keyboard_f9_outline.png"
+    ],
+    "f9_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f9_outline.svg"
+    ],
+    "f9_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f9.svg"
+    ],
+    "f_keyboard": [
+        "keyboard_f.png"
+    ],
+    "f_keyboard_outline": [
+        "keyboard_f_outline.png"
+    ],
+    "f_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f_outline.svg"
+    ],
+    "f_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f.svg"
     ],
     "fade_fragment_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_fragment.fs",
@@ -13298,6 +15398,18 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/string_formatting.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\string_formatting.md"
     ],
+    "forward_keyboard_outline_slash": [
+        "keyboard_slash_forward_outline.png"
+    ],
+    "forward_keyboard_outline_slash_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_forward_outline.svg"
+    ],
+    "forward_keyboard_slash": [
+        "keyboard_slash_forward.png"
+    ],
+    "forward_keyboard_slash_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_forward.svg"
+    ],
     "fragment_glitch_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glitch_fragment.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\glitch_fragment.fs",
@@ -13353,6 +15465,30 @@
     ],
     "frosted_jade_palette_resurrect": [
         "RESURRECT_PALETTE_FROSTED_JADE"
+    ],
+    "function_keyboard": [
+        "keyboard_function.png"
+    ],
+    "function_keyboard_outline": [
+        "keyboard_function_outline.png"
+    ],
+    "function_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_function_outline.svg"
+    ],
+    "function_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_function.svg"
+    ],
+    "g_keyboard": [
+        "keyboard_g.png"
+    ],
+    "g_keyboard_outline": [
+        "keyboard_g_outline.png"
+    ],
+    "g_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_g_outline.svg"
+    ],
+    "g_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_g.svg"
     ],
     "gainsboro": [
         "GAINSBORO"
@@ -13531,9 +15667,33 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/movable_gui.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\movable_gui.vs"
     ],
+    "h_keyboard": [
+        "keyboard_h.png"
+    ],
+    "h_keyboard_outline": [
+        "keyboard_h_outline.png"
+    ],
+    "h_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_h_outline.svg"
+    ],
+    "h_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_h.svg"
+    ],
     "holo_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_vertex.vs"
+    ],
+    "home_keyboard": [
+        "keyboard_home.png"
+    ],
+    "home_keyboard_outline": [
+        "keyboard_home_outline.png"
+    ],
+    "home_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_home_outline.svg"
+    ],
+    "home_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_home.svg"
     ],
     "honeydew": [
         "HONEYDEW"
@@ -13544,6 +15704,12 @@
     ],
     "horizontal_l_stick_xbox": [
         "xbox_stick_l_horizontal.png"
+    ],
+    "horizontal_mouse": [
+        "mouse_horizontal.png"
+    ],
+    "horizontal_mouse_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_horizontal.svg"
     ],
     "horizontal_r_stick_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_horizontal.svg",
@@ -13561,6 +15727,42 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Hover.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\Hover.wav"
     ],
+    "i_keyboard": [
+        "keyboard_i.png"
+    ],
+    "i_keyboard_outline": [
+        "keyboard_i_outline.png"
+    ],
+    "i_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_i_outline.svg"
+    ],
+    "i_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_i.svg"
+    ],
+    "icon_key_outline_tab": [
+        "key_tab_icon_outline.png"
+    ],
+    "icon_key_outline_tab_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\key_tab_icon_outline.svg"
+    ],
+    "icon_key_tab": [
+        "key_tab_icon.png"
+    ],
+    "icon_key_tab_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\key_tab_icon.svg"
+    ],
+    "icon_keyboard_outline_shift": [
+        "keyboard_shift_icon_outline.png"
+    ],
+    "icon_keyboard_outline_shift_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_shift_icon_outline.svg"
+    ],
+    "icon_keyboard_shift": [
+        "keyboard_shift_icon.png"
+    ],
+    "icon_keyboard_shift_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_shift_icon.svg"
+    ],
     "in_juice_shader_window": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/window_juice_in.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\window_juice_in.vs",
@@ -13576,8 +15778,428 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\init"
     ],
+    "insert_keyboard": [
+        "keyboard_insert.png"
+    ],
+    "insert_keyboard_outline": [
+        "keyboard_insert_outline.png"
+    ],
+    "insert_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_insert_outline.svg"
+    ],
+    "insert_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_insert.svg"
+    ],
     "ivory": [
         "IVORY"
+    ],
+    "j_keyboard": [
+        "keyboard_j.png"
+    ],
+    "j_keyboard_outline": [
+        "keyboard_j_outline.png"
+    ],
+    "j_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_j_outline.svg"
+    ],
+    "j_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_j.svg"
+    ],
+    "k_keyboard": [
+        "keyboard_k.png"
+    ],
+    "k_keyboard_outline": [
+        "keyboard_k_outline.png"
+    ],
+    "k_keyboard_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_k_outline.svg"
+    ],
+    "k_keyboard_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_k.svg"
+    ],
+    "key_outline_tab": [
+        "key_tab_outline.png"
+    ],
+    "key_outline_tab_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\key_tab_outline.svg"
+    ],
+    "key_tab": [
+        "key_tab.png"
+    ],
+    "key_tab_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\key_tab.svg"
+    ],
+    "keyboard_": [
+        "keyboard_s.png"
+    ],
+    "keyboard__vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_s.svg"
+    ],
+    "keyboard_l": [
+        "keyboard_l.png"
+    ],
+    "keyboard_l_outline": [
+        "keyboard_l_outline.png"
+    ],
+    "keyboard_l_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_l_outline.svg"
+    ],
+    "keyboard_l_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_l.svg"
+    ],
+    "keyboard_m": [
+        "keyboard_m.png"
+    ],
+    "keyboard_m_outline": [
+        "keyboard_m_outline.png"
+    ],
+    "keyboard_m_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_m_outline.svg"
+    ],
+    "keyboard_m_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_m.svg"
+    ],
+    "keyboard_minu": [
+        "keyboard_minus.png"
+    ],
+    "keyboard_minu_outline": [
+        "keyboard_minus_outline.png"
+    ],
+    "keyboard_minu_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_minus_outline.svg"
+    ],
+    "keyboard_minu_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_minus.svg"
+    ],
+    "keyboard_n": [
+        "keyboard_n.png"
+    ],
+    "keyboard_n_outline": [
+        "keyboard_n_outline.png"
+    ],
+    "keyboard_n_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_n_outline.svg"
+    ],
+    "keyboard_n_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_n.svg"
+    ],
+    "keyboard_numlock": [
+        "keyboard_numlock.png"
+    ],
+    "keyboard_numlock_outline": [
+        "keyboard_numlock_outline.png"
+    ],
+    "keyboard_numlock_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_numlock_outline.svg"
+    ],
+    "keyboard_numlock_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_numlock.svg"
+    ],
+    "keyboard_numpad_outline_plu": [
+        "keyboard_numpad_plus_outline.png"
+    ],
+    "keyboard_numpad_outline_plu_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_numpad_plus_outline.svg"
+    ],
+    "keyboard_numpad_plu": [
+        "keyboard_numpad_plus.png"
+    ],
+    "keyboard_numpad_plu_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_numpad_plus.svg"
+    ],
+    "keyboard_o": [
+        "keyboard_o.png"
+    ],
+    "keyboard_o_outline": [
+        "keyboard_o_outline.png"
+    ],
+    "keyboard_o_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_o_outline.svg"
+    ],
+    "keyboard_o_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_o.svg"
+    ],
+    "keyboard_option": [
+        "keyboard_option.png"
+    ],
+    "keyboard_option_outline": [
+        "keyboard_option_outline.png"
+    ],
+    "keyboard_option_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_option_outline.svg"
+    ],
+    "keyboard_option_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_option.svg"
+    ],
+    "keyboard_outline_": [
+        "keyboard_s_outline.png"
+    ],
+    "keyboard_outline__vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_s_outline.svg"
+    ],
+    "keyboard_outline_p": [
+        "keyboard_p_outline.png"
+    ],
+    "keyboard_outline_p_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_p_outline.svg"
+    ],
+    "keyboard_outline_page_up": [
+        "keyboard_page_up_outline.png"
+    ],
+    "keyboard_outline_page_up_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_page_up_outline.svg"
+    ],
+    "keyboard_outline_period": [
+        "keyboard_period_outline.png"
+    ],
+    "keyboard_outline_period_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_period_outline.svg"
+    ],
+    "keyboard_outline_plu": [
+        "keyboard_plus_outline.png"
+    ],
+    "keyboard_outline_plu_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_plus_outline.svg"
+    ],
+    "keyboard_outline_printscreen": [
+        "keyboard_printscreen_outline.png"
+    ],
+    "keyboard_outline_printscreen_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_printscreen_outline.svg"
+    ],
+    "keyboard_outline_q": [
+        "keyboard_q_outline.png"
+    ],
+    "keyboard_outline_q_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_q_outline.svg"
+    ],
+    "keyboard_outline_question": [
+        "keyboard_question_outline.png"
+    ],
+    "keyboard_outline_question_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_question_outline.svg"
+    ],
+    "keyboard_outline_quote": [
+        "keyboard_quote_outline.png"
+    ],
+    "keyboard_outline_quote_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_quote_outline.svg"
+    ],
+    "keyboard_outline_r": [
+        "keyboard_r_outline.png"
+    ],
+    "keyboard_outline_r_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_r_outline.svg"
+    ],
+    "keyboard_outline_return": [
+        "keyboard_return_outline.png"
+    ],
+    "keyboard_outline_return_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_return_outline.svg"
+    ],
+    "keyboard_outline_semicolon": [
+        "keyboard_semicolon_outline.png"
+    ],
+    "keyboard_outline_semicolon_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_semicolon_outline.svg"
+    ],
+    "keyboard_outline_shift": [
+        "keyboard_shift_outline.png"
+    ],
+    "keyboard_outline_shift_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_shift_outline.svg"
+    ],
+    "keyboard_outline_space": [
+        "keyboard_space_outline.png"
+    ],
+    "keyboard_outline_space_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_space_outline.svg"
+    ],
+    "keyboard_outline_t": [
+        "keyboard_t_outline.png"
+    ],
+    "keyboard_outline_t_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_t_outline.svg"
+    ],
+    "keyboard_outline_tilde": [
+        "keyboard_tilde_outline.png"
+    ],
+    "keyboard_outline_tilde_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_tilde_outline.svg"
+    ],
+    "keyboard_outline_u": [
+        "keyboard_u_outline.png"
+    ],
+    "keyboard_outline_u_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_u_outline.svg"
+    ],
+    "keyboard_outline_v": [
+        "keyboard_v_outline.png"
+    ],
+    "keyboard_outline_v_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_v_outline.svg"
+    ],
+    "keyboard_outline_vector_w": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_w_outline.svg"
+    ],
+    "keyboard_outline_vector_win": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_win_outline.svg"
+    ],
+    "keyboard_outline_vector_x": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_x_outline.svg"
+    ],
+    "keyboard_outline_vector_y": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_y_outline.svg"
+    ],
+    "keyboard_outline_vector_z": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_z_outline.svg"
+    ],
+    "keyboard_outline_w": [
+        "keyboard_w_outline.png"
+    ],
+    "keyboard_outline_win": [
+        "keyboard_win_outline.png"
+    ],
+    "keyboard_outline_x": [
+        "keyboard_x_outline.png"
+    ],
+    "keyboard_outline_y": [
+        "keyboard_y_outline.png"
+    ],
+    "keyboard_outline_z": [
+        "keyboard_z_outline.png"
+    ],
+    "keyboard_p": [
+        "keyboard_p.png"
+    ],
+    "keyboard_p_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_p.svg"
+    ],
+    "keyboard_page_up": [
+        "keyboard_page_up.png"
+    ],
+    "keyboard_page_up_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_page_up.svg"
+    ],
+    "keyboard_period": [
+        "keyboard_period.png"
+    ],
+    "keyboard_period_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_period.svg"
+    ],
+    "keyboard_plu": [
+        "keyboard_plus.png"
+    ],
+    "keyboard_plu_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_plus.svg"
+    ],
+    "keyboard_printscreen": [
+        "keyboard_printscreen.png"
+    ],
+    "keyboard_printscreen_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_printscreen.svg"
+    ],
+    "keyboard_q": [
+        "keyboard_q.png"
+    ],
+    "keyboard_q_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_q.svg"
+    ],
+    "keyboard_question": [
+        "keyboard_question.png"
+    ],
+    "keyboard_question_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_question.svg"
+    ],
+    "keyboard_quote": [
+        "keyboard_quote.png"
+    ],
+    "keyboard_quote_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_quote.svg"
+    ],
+    "keyboard_r": [
+        "keyboard_r.png"
+    ],
+    "keyboard_r_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_r.svg"
+    ],
+    "keyboard_return": [
+        "keyboard_return.png"
+    ],
+    "keyboard_return_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_return.svg"
+    ],
+    "keyboard_semicolon": [
+        "keyboard_semicolon.png"
+    ],
+    "keyboard_semicolon_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_semicolon.svg"
+    ],
+    "keyboard_shift": [
+        "keyboard_shift.png"
+    ],
+    "keyboard_shift_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_shift.svg"
+    ],
+    "keyboard_space": [
+        "keyboard_space.png"
+    ],
+    "keyboard_space_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_space.svg"
+    ],
+    "keyboard_t": [
+        "keyboard_t.png"
+    ],
+    "keyboard_t_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_t.svg"
+    ],
+    "keyboard_tilde": [
+        "keyboard_tilde.png"
+    ],
+    "keyboard_tilde_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_tilde.svg"
+    ],
+    "keyboard_u": [
+        "keyboard_u.png"
+    ],
+    "keyboard_u_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_u.svg"
+    ],
+    "keyboard_v": [
+        "keyboard_v.png"
+    ],
+    "keyboard_v_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_v.svg"
+    ],
+    "keyboard_vector_w": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_w.svg"
+    ],
+    "keyboard_vector_win": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_win.svg"
+    ],
+    "keyboard_vector_x": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_x.svg"
+    ],
+    "keyboard_vector_y": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_y.svg"
+    ],
+    "keyboard_vector_z": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_z.svg"
+    ],
+    "keyboard_w": [
+        "keyboard_w.png"
+    ],
+    "keyboard_win": [
+        "keyboard_win.png"
+    ],
+    "keyboard_x": [
+        "keyboard_x.png"
+    ],
+    "keyboard_y": [
+        "keyboard_y.png"
+    ],
+    "keyboard_z": [
+        "keyboard_z.png"
     ],
     "khaki": [
         "KHAKI"
@@ -13678,6 +16300,18 @@
     "left": [
         "left.png"
     ],
+    "left_mouse": [
+        "mouse_left.png"
+    ],
+    "left_mouse_outline": [
+        "mouse_left_outline.png"
+    ],
+    "left_mouse_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_left_outline.svg"
+    ],
+    "left_mouse_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_left.svg"
+    ],
     "left_r_stick_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_left.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Vector\\xbox_stick_r_left.svg"
@@ -13770,6 +16404,84 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\MomentumGain.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MomentumGain.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MomentumGain.wav"
+    ],
+    "mouse": [
+        "mouse.png"
+    ],
+    "mouse_move": [
+        "mouse_move.png"
+    ],
+    "mouse_move_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_move.svg"
+    ],
+    "mouse_outline": [
+        "mouse_outline.png"
+    ],
+    "mouse_outline_right": [
+        "mouse_right_outline.png"
+    ],
+    "mouse_outline_right_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_right_outline.svg"
+    ],
+    "mouse_outline_scroll": [
+        "mouse_scroll_outline.png"
+    ],
+    "mouse_outline_scroll_up": [
+        "mouse_scroll_up_outline.png"
+    ],
+    "mouse_outline_scroll_up_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll_up_outline.svg"
+    ],
+    "mouse_outline_scroll_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll_outline.svg"
+    ],
+    "mouse_outline_scroll_vector_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll_vertical_outline.svg"
+    ],
+    "mouse_outline_scroll_vertical": [
+        "mouse_scroll_vertical_outline.png"
+    ],
+    "mouse_outline_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_outline.svg"
+    ],
+    "mouse_right": [
+        "mouse_right.png"
+    ],
+    "mouse_right_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_right.svg"
+    ],
+    "mouse_scroll": [
+        "mouse_scroll.png"
+    ],
+    "mouse_scroll_up": [
+        "mouse_scroll_up.png"
+    ],
+    "mouse_scroll_up_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll_up.svg"
+    ],
+    "mouse_scroll_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll.svg"
+    ],
+    "mouse_scroll_vector_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_scroll_vertical.svg"
+    ],
+    "mouse_scroll_vertical": [
+        "mouse_scroll_vertical.png"
+    ],
+    "mouse_small": [
+        "mouse_small.png"
+    ],
+    "mouse_small_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_small.svg"
+    ],
+    "mouse_vector": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse.svg"
+    ],
+    "mouse_vector_vertical": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\mouse_vertical.svg"
+    ],
+    "mouse_vertical": [
+        "mouse_vertical.png"
     ],
     "muted_palette_resurrect_rosewood": [
         "RESURRECT_PALETTE_MUTED_ROSEWOOD"

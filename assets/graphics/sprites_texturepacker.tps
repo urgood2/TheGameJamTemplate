@@ -4,7 +4,7 @@
         <key>fileFormatVersion</key>
         <int>6</int>
         <key>texturePackerVersion</key>
-        <string>7.5.0</string>
+        <string>7.6.3</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -1272,6 +1272,239 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_command.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_command_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab_icon.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab_icon_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_0.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_0_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_1.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_1_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_2.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_2_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_3.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_3_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_4.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_4_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_5.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_5_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_6.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_6_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_7.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_7_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_8.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_8_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_9.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_9_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_a.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_a_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_alt.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_alt_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_any.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_any_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_apostrophe.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_apostrophe_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_down_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_left.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_left_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_right.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_right_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_up_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_all.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_down_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_horizontal.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_horizontal_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_left.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_left_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_none.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_right.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_right_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_up_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_vertical.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_vertical_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_asterisk.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_asterisk_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_b.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_b_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace_icon.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace_icon_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_close.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_close_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_greater.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_greater_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_less.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_less_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_open.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_open_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_c.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_c_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock_icon.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock_icon_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_caret.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_caret_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_colon.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_colon_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_comma.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_comma_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_ctrl.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_ctrl_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_d.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_d_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_delete.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_delete_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_e.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_e_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_end.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_end_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_enter.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_enter_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_escape.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_escape_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_exclamation.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_exclamation_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f1.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f10.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f10_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f11.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f11_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f12.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f12_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f1_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f2.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f2_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f3.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f3_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f4.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f4_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f5.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f5_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f6.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f6_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f7.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f7_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f8.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f8_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f9.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f9_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_function.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_function_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_g.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_g_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_h.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_h_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_home.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_home_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_i.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_i_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_insert.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_insert_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_j.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_j_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_k.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_k_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_l.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_l_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_m.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_m_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_minus.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_minus_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_n.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_n_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numlock.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numlock_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_enter.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_enter_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_plus.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_plus_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_o.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_o_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_option.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_option_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_p.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_p_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_down_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_up_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_period.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_period_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_plus.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_plus_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_printscreen.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_printscreen_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_q.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_q_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_question.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_question_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_quote.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_quote_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_r.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_r_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_return.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_return_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_s.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_s_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_semicolon.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_semicolon_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift_icon.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift_icon_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_back.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_back_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_forward.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_forward_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_space.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_space_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_t.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_t_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_tilde.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_tilde_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_u.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_u_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_v.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_v_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_w.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_w_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_win.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_win_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_x.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_x_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_y.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_y_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_z.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_z_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_horizontal.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_left.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_left_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_move.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_right.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_right_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_down.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_down_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_up.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_up_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_vertical.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_vertical_outline.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_small.png</key>
+            <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_vertical.png</key>
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_a.png</key>
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_a_outline.png</key>
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_button_b.png</key>
@@ -3030,6 +3263,239 @@
                     <filename>pre-packing-files_globbed/particles/window_02.png</filename>
                     <filename>pre-packing-files_globbed/particles/window_03.png</filename>
                     <filename>pre-packing-files_globbed/particles/window_04.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_command.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_command_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab_icon.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab_icon_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_0.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_0_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_1.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_1_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_2.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_2_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_3.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_3_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_4.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_4_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_5.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_5_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_6.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_6_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_7.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_7_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_8.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_8_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_9.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_9_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_a.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_a_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_alt.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_alt_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_any.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_any_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_apostrophe.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_apostrophe_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_down.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_down_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_left.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_left_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_right.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_right_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_up.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrow_up_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_all.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_down.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_down_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_horizontal.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_horizontal_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_left.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_left_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_none.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_right.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_right_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_up.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_up_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_vertical.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_arrows_vertical_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_asterisk.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_asterisk_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_b.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_b_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace_icon.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace_icon_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_backspace_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_close.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_close_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_greater.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_greater_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_less.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_less_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_open.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_bracket_open_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_c.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_c_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock_icon.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock_icon_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_capslock_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_caret.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_caret_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_colon.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_colon_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_comma.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_comma_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_ctrl.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_ctrl_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_d.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_d_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_delete.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_delete_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_e.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_e_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_end.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_end_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_enter.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_enter_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_escape.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_escape_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_exclamation.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_exclamation_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f1.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f10.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f10_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f11.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f11_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f12.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f12_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f1_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f2.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f2_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f3.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f3_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f4.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f4_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f5.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f5_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f6.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f6_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f7.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f7_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f8.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f8_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f9.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f9_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_f_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_function.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_function_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_g.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_g_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_h.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_h_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_home.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_home_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_i.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_i_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_insert.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_insert_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_j.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_j_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_k.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_k_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_l.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_l_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_m.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_m_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_minus.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_minus_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_n.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_n_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numlock.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numlock_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_enter.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_enter_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_plus.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_numpad_plus_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_o.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_o_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_option.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_option_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_p.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_p_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_down.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_down_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_up.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_page_up_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_period.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_period_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_plus.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_plus_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_printscreen.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_printscreen_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_q.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_q_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_question.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_question_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_quote.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_quote_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_r.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_r_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_return.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_return_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_s.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_s_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_semicolon.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_semicolon_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift_icon.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift_icon_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_shift_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_back.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_back_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_forward.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_slash_forward_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_space.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_space_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_t.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_t_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_tilde.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_tilde_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_u.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_u_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_v.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_v_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_w.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_w_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_win.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_win_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_x.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_x_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_y.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_y_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_z.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/keyboard_z_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_horizontal.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_left.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_left_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_move.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_right.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_right_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_down.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_down_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_up.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_up_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_vertical.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_vertical_outline.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_small.png</filename>
+                    <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_vertical.png</filename>
                 </array>
             </struct>
         </map>

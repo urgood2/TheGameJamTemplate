@@ -13,7 +13,23 @@
 - [ ] image buttons should darken in color when clicked. consider swapping bewtween transparent/non transparent versions if in need of outlines, select/unselect, etc. (maybe choose between). consider removing shadows for the image borders, they just look bad.
 - [ ] bug with image buttons rendering multiple times.
 - [ ] try using text dividers. (just add images to row with text in the middle)
+- [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text
+- [ ] Functionality to programatically produce an animation from a single sprite name
+- [ ] Can't seem to get other sprites to render?
 
+- [ ] can't load checkmark.png?
+```json
+    "checkmark": {
+        "frames": [
+            {
+                "sprite_UUID": "checkmark.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+```
 
 - [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
 - [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
@@ -22,6 +38,7 @@
 - [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
 - [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
 
+- [ ] make everything compile for web
 
 ---
 ### 🖱️ Interaction & Input

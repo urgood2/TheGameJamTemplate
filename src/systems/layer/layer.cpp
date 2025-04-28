@@ -1184,6 +1184,7 @@ namespace layer
             drawBackground = !currentSprite->noBackgroundColor;
             drawForeground = !currentSprite->noForegroundColor;
         }
+
         
         // fetch transform
         auto &transform = registry.get<transform::Transform>(e);

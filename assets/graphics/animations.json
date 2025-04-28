@@ -122,5 +122,214 @@
                 "bg_color": "NONE"
             }
         ]
+    },
+
+    "divider_anim_000": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-000.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_001": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-001.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_002": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-002.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_003": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-003.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_004": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-004.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_005": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-005.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_fade_000": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-fade-000.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    
+    "divider_anim_fade_001": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-fade-001.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_fade_002": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-fade-002.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_fade_003": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-fade-003.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_fade_004": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-fade-004.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "divider_anim_fade_005": {
+        "frames": [
+            {
+                "sprite_UUID": "divider-fade-005.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+
+    "right_arrow": {
+        "frames": [
+            {
+                "sprite_UUID": "right.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "left_arrow": {
+        "frames": [
+            {
+                "sprite_UUID": "left.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "gear_icon_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "gear.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "mouse_left_outline_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "mouse_left_outline.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "mouse_right_outline_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "mouse_right_outline.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+
+    "keyboard_enter_outline_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "keyboard_enter_outline.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "keyboard_space_outline_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "keyboard_space_outline.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
     }
 }

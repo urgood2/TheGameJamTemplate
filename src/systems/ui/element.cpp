@@ -1296,7 +1296,9 @@ namespace ui
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                     util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist);
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                    util::DrawNPatchUIElement(layerPtr, registry, entity, shadowColor, parallaxDist);
+                    //FIXME: removing for testing
+                    // util::DrawNPatchUIElement(layerPtr, registry, entity, shadowColor, parallaxDist);
+                    ;
                     
                 layer::AddScale(layerPtr, 1 / 0.98f, 1 / 0.98f);
             }
@@ -1327,8 +1329,8 @@ namespace ui
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                     util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}});
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                    ; //FIXME: not implemented yet
-            } 
+                    util::DrawNPatchUIElement(layerPtr, registry, entity, c, parallaxDist);
+            }
         
             
             // darken if button is on cooldown

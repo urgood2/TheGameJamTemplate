@@ -283,8 +283,30 @@ namespace game
         globals::camera2D.rotation = 0;
         globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 
+        auto shaderPassConfigFunction = [](entt::entity e) {
+            
+            // add pipeline component
+            auto &shaderPipeline = globals::registry.emplace<shader_pipeline::ShaderPipelineComponent>(e);
+            auto pass = shader_pipeline::createShaderPass("holo", {});
+            pass.customPrePassFunction = []() {
+                // Custom pre-pass logic here
+                // For example, you can set shader uniforms or perform other operations
+                // before the shader is activated for this pass.
+                // this function is called after the uniforms are applied for the pass
+                shaders::TryApplyUniforms(shaders::getShader("holo"), globals::globalShaderUniforms, "holo");
+            };
+            
+            shaderPipeline.passes.push_back(pass);
+            
+            auto pass2 = shader_pipeline::createShaderPass("flash", {});
+            pass2.customPrePassFunction = []() {
+                shaders::TryApplyUniforms(shaders::getShader("flash"), globals::globalShaderUniforms, "flash");
+            };
+            shaderPipeline.passes.push_back(pass2);
+        };
+
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-        player = animation_system::createAnimatedObjectWithTransform("example_char", 400, 400);
+        player = animation_system::createAnimatedObjectWithTransform("keyboard_space_outline_anim", 400, 400, shaderPassConfigFunction);
         auto &playerTransform = globals::registry.get<transform::Transform>(player);
         auto &playerNode = globals::registry.get<transform::GameObject>(player);
         playerNode.debug.debugText = "Player";
@@ -293,7 +315,7 @@ namespace game
         playerNode.state.collisionEnabled = true;
         playerNode.state.clickEnabled = true;
 
-        player2 = animation_system::createAnimatedObjectWithTransform("example_char", 400, 400);
+        player2 = animation_system::createAnimatedObjectWithTransform("keyboard_space_outline_anim", 400, 400, shaderPassConfigFunction);
         auto &playerTransform2 = globals::registry.get<transform::Transform>(player2);
         auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
         playerNode2.debug.debugText = "Player (untethered)";
@@ -707,7 +729,7 @@ namespace game
         // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         
         //TODO: need to test this
-        auto spriteView = globals::registry.view<AnimationQueueComponent>(entt::exclude<ui::UIConfig, ui::UIBoxComponent, ui::UIState>);
+        auto spriteView = globals::registry.view<AnimationQueueComponent>();
         for (auto e : spriteView)
         {
             if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))

@@ -9,7 +9,7 @@
 
 namespace animation_system {
     
-    auto createAnimatedObjectWithTransform (std::string defaultAnimationID, int x, int y) -> entt::entity {
+    auto createAnimatedObjectWithTransform (std::string defaultAnimationID, int x, int y, std::function<void(entt::entity)> shaderPassConfig) -> entt::entity {
         auto e = globals::registry.create();
         transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 0, 0, e);
         auto &transform = globals::registry.get<transform::Transform>(e);
@@ -17,29 +17,6 @@ namespace animation_system {
         animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationID);
 
         auto &gameObject = globals::registry.get<transform::GameObject>(e);
-        
-        // add pipeline component
-        auto &shaderPipeline = globals::registry.emplace<shader_pipeline::ShaderPipelineComponent>(e);
-        
-        //FIXME: testing
-        auto pass = shader_pipeline::createShaderPass("holo", {});
-        pass.customPrePassFunction = []() {
-            // Custom pre-pass logic here
-            // For example, you can set shader uniforms or perform other operations
-            // before the shader is activated for this pass.
-            // this function is called after the uniforms are applied for the pass
-            shaders::TryApplyUniforms(shaders::getShader("holo"), globals::globalShaderUniforms, "holo");
-        };
-        
-        shaderPipeline.passes.push_back(pass);
-        
-        auto pass2 = shader_pipeline::createShaderPass("flash", {});
-        pass2.customPrePassFunction = []() {
-            shaders::TryApplyUniforms(shaders::getShader("flash"), globals::globalShaderUniforms, "flash");
-        };
-        shaderPipeline.passes.push_back(pass2);
-        
-        
         
         // set width and height to the animation size
         //TODO: optionally provide custom size upon init

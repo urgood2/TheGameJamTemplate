@@ -647,6 +647,9 @@ namespace game
         // tooltipNode.state.collisionEnabled = true;
         // tooltipNode.state.clickEnabled = true;
         // tooltipUIConfig.noMovementWhenDragged = true;
+        
+        // static_ui_text_system::parseText("[Hello\nNow](color=red;background=blue) \nWorld");
+        static_ui_text_system::parseText("[안녕\n하세](color=red;background=blue)우\n요");
     }
 
     auto update(float delta) -> void

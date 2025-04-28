@@ -6,7 +6,7 @@
 #include "raylib.h" // raylib
 #include "entt/entt.hpp" // ECS
 #include "raygui.h" // raylib gui
-#include "tweeny.h" // tweening library
+// #include "tweeny.h" // tweening library
 
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
 using json = nlohmann::json;

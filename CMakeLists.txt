@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(raylib-cpp-cmake-template CXX)
+project(raylib-cpp-cmake-template CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -121,11 +121,11 @@ add_git_dependency(
 # # )
 
 # Add {tweeny} library
-add_git_dependency(
-    tweeny
-    https://github.com/mobius3/tweeny.git
-    v3.2.0
-)
+# add_git_dependency(
+#     tweeny
+#     https://github.com/mobius3/tweeny.git
+#     v3.2.0
+# )
 
 # # {HFSM2} library was removed from the template because source directory was not being set correctly
 
@@ -270,7 +270,7 @@ target_include_directories(CommonSettings INTERFACE
     "${glm_SOURCE_DIR}"    
     "${sol2_SOURCE_DIR}/include"
     "${sol2_SOURCE_DIR}/include/sol"
-    "${tweeny_SOURCE_DIR}"
+    # "${tweeny_SOURCE_DIR}"
     "${raygui_SOURCE_DIR}/src"
     "${PROJECT_INCLUDE}/spine"
     "${stduuid_SOURCE_DIR}/include"
@@ -281,7 +281,7 @@ target_link_libraries(CommonSettings INTERFACE
     fmt
     nlohmann_json::nlohmann_json
     spdlog
-    tweeny
+    # tweeny
     effolkronium_random
     EnTT::EnTT
     lua::lua

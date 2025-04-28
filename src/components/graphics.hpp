@@ -5,7 +5,7 @@
 #include <map>
 #include <memory>
 
-#include "tweeny.h"
+// #include "tweeny.h"
 
 #include "raylib.h"
 
@@ -63,5 +63,5 @@ struct AnimationQueueComponent
 /// @brief Any object with this component will be updated by a locationTweeningSystem. The actual location will be kept in the location component, but this component will be used for rendering (for movement animations)
 struct TweenedLocationComponent 
 {
-    tweeny::tween<double, double> locationTween{}; 
+    // tweeny::tween<double, double> locationTween{}; 
 };

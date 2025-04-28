@@ -149,10 +149,10 @@ namespace graphics {
         
         float entityX, entityY;
         if (globals::registry.any_of<TweenedLocationComponent>(e)) {
-            auto &tlc = globals::registry.get<TweenedLocationComponent>(e);
-            auto &tween = tlc.locationTween.peek();
-            entityX = tween.at(0);
-            entityY = tween.at(1);
+            // auto &tlc = globals::registry.get<TweenedLocationComponent>(e);
+            // auto &tween = tlc.locationTween.peek();
+            // entityX = tween.at(0);
+            // entityY = tween.at(1);
             
             // debug section ----------------
         

@@ -4,7 +4,7 @@
 
 #include "raylib.h"      // raylib
 #include "entt/entt.hpp" // ECS
-#include "tweeny.h"      // tweening library
+// #include "tweeny.h"      // tweening library
 
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines

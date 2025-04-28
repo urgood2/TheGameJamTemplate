@@ -1,7 +1,5 @@
 
-cmake_minimum_required(VERSION 3.4.1)
-
-project(gpgoap C)
+cmake_minimum_required(VERSION 3.5)
 
 # build libgpgoap as a static lib
 add_library(gpgoap STATIC

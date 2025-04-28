@@ -23,6 +23,7 @@
 #include "../systems/event/event_system.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/text/textVer2.hpp"
+#include "../systems/text/static_ui_text.hpp"
 #include "../systems/ui/common_definitions.hpp"
 #include "../systems/ui/inventory_ui.hpp"
 #include "rlgl.h"
@@ -315,7 +316,7 @@ namespace game
         playerNode.state.collisionEnabled = true;
         playerNode.state.clickEnabled = true;
 
-        player2 = animation_system::createAnimatedObjectWithTransform("4170-TheRoguelike_1_10_alpha_963.png", true, 400, 400, shaderPassConfigFunction);
+        player2 = animation_system::createAnimatedObjectWithTransform("checkmark.png", true, 400, 400, shaderPassConfigFunction);
         auto &playerTransform2 = globals::registry.get<transform::Transform>(player2);
         auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
         playerNode2.debug.debugText = "Player (untethered)";

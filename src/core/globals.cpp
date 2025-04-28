@@ -32,7 +32,7 @@ namespace globals {
 
     
 
-    bool drawDebugInfo = true; // set to true to allow debug drawing of transforms
+    bool drawDebugInfo = false; // set to true to allow debug drawing of transforms
 
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
 

@@ -1356,76 +1356,76 @@ namespace ui
                 specialColor = ColorBrightness(buttonColor, -0.5f);
                 // specialColor = BLACK;
 
-                SPDLOG_DEBUG("button clicked or hovered, setting special color");
+                SPDLOG_DEBUG("button clicked or hovered, setting special color: {}, {}, {}, {}", specialColor->r, specialColor->g, specialColor->b, specialColor->a);
             }
 
             // std::vector<Color> colors = specialColor ? std::vector<Color>{buttonColor, specialColor.value()} : std::vector<Color>{buttonColor};
-            std::vector<Color> colors = specialColor ? std::vector<Color>{specialColor.value()} : std::vector<Color>{buttonColor};
+            Color color = specialColor ? specialColor.value() : buttonColor;
             // std::vector<Color> colors = specialColor ? std::vector<Color>{buttonColor} : std::vector<Color>{buttonColor};
+            if (specialColor) SPDLOG_DEBUG("Special color applied.");
 
 
-            for (auto color : colors)
+            // SPDLOG_DEBUG("Processing final button color: {}, {}, {}, {}", color.r, color.g, color.b, color.a);
+            if (/*config->pixelatedRectangle && */visualW > 0.01)
             {
-                if (/*config->pixelatedRectangle && */visualW > 0.01)
+                if (config->buttonDelay)
                 {
-                    if (config->buttonDelay)
-                    {
-                        // gray background
-                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
-                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
+                    // gray background
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
 
-                        // progress bar                        
-                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress);
-                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, config->buttonDelayProgress);
+                    // progress bar                        
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress);
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, config->buttonDelayProgress);
 
-                    }
-                    else if (config->progressBar)
-                    {
-                        auto colorToUse = config->progressBarEmptyColor.value_or(GRAY);
+                }
+                else if (config->progressBar)
+                {
+                    auto colorToUse = config->progressBarEmptyColor.value_or(GRAY);
 
-                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
-                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
-                        
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
+                    
 
-                        // DrawPixellatedRect(layerPtr, registry, entity, "fill", parallaxDist);
-                        // colorToUse = config->progressBarFullColor.value_or(BLUE);
+                    // DrawPixellatedRect(layerPtr, registry, entity, "fill", parallaxDist);
+                    // colorToUse = config->progressBarFullColor.value_or(BLUE);
 
-                        colorToUse = config->progressBarFullColor.value_or(BLUE);
-                        
-                        // retrieve the current progress bar value using reflection
-                        auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
-                        auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
-                        float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
-                        SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
-                        
-                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, std::nullopt, progress);
-                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, progress);
-                        
-                    }
-                    else
-                    {
-                        
-                        // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
-                        if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
-                        else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                            util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
-                    }
+                    colorToUse = config->progressBarFullColor.value_or(BLUE);
+                    
+                    // retrieve the current progress bar value using reflection
+                    auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
+                    auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
+                    float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
+                    SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
+                    
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, std::nullopt, progress);
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, progress);
+                    
                 }
                 else
                 {
-                    layer::AddRectangle(layerPtr, 0, 0, actualW, actualH, color);
-                    SPDLOG_DEBUG("DrawSelf(): Drawing rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
+                    
+                    // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
                 }
             }
+            else
+            {
+                layer::AddRectangle(layerPtr, 0, 0, actualW, actualH, color);
+                SPDLOG_DEBUG("DrawSelf(): Drawing rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
+            }
+        
 
             layer::AddPopMatrix(layerPtr);
         }

@@ -139,7 +139,7 @@ namespace init {
 
                 if (colorNameStringFG == uuid::lookup("NONE"))
                 {
-                    frame.noForegroundColor = true;
+                    // frame.noForegroundColor = false;
                     frame.fgColor = WHITE; // just retain original sprite color
                 }
                 else

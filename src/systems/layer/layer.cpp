@@ -1181,8 +1181,13 @@ namespace layer
         {
             bgColor = currentSprite->bgColor;
             fgColor = currentSprite->fgColor;
+            //FIXME: debug
+            if (fgColor.a <= 0)
+                fgColor = WHITE;                      
             drawBackground = !currentSprite->noBackgroundColor;
             drawForeground = !currentSprite->noForegroundColor;
+            // FIXME: debug
+            drawForeground = true;
         }
 
         

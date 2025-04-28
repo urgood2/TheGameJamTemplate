@@ -547,7 +547,7 @@ namespace ui
         Color colorToUse{};
 
         // if an fill override exists, use it
-        colorToUse = (uiConfig->color.value_or(WHITE));
+        colorToUse = colorOverride;
 
         // filled
         layer::AddRenderNPatchRect(layerPtr, nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, {0, 0}, 0.f, colorToUse);

@@ -15,7 +15,7 @@
 - [ ] Some better appear/disaapear text effects
 - [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
 - [ ] try using text dividers. (just add images to row with text in the middle)
-- [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text - Make text to ui feature unicode capable
+- [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text - Make text to ui feature unicode capable - basic parsing working, now need to add correct scaling + actually adding the segments to ui
 
 - [ ] can't load checkmark.png?
 ```json

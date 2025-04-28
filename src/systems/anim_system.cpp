@@ -1,20 +1,82 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include <tuple>
+#include <optional>
+
 #include "anim_system.hpp"
 #include "../core/globals.hpp"
 #include "../components/graphics.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
+#include "systems/uuid/uuid.hpp"
 #include "core/init.hpp"
 
 namespace animation_system {
     
-    auto createAnimatedObjectWithTransform (std::string defaultAnimationID, int x, int y, std::function<void(entt::entity)> shaderPassConfig) -> entt::entity {
+    auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg, std::optional<Color> bg) -> AnimationObject {
+        
+        constexpr float DEFAULT_DURATION = 5.0f;
+        
+        AnimationObject ao = {};
+        
+        ao.id = "PROGRAM_GENERATED_ANIMATION";
+        ao.uuid = "PROGRAM_GENERATED_ANIMATION";
+        ao.currentAnimIndex = 0;
+        
+        SpriteComponentASCII frame{};
+        if (!bg)
+        {
+            frame.noBackgroundColor = true;
+        }
+        else
+        {
+            frame.bgColor = bg.value();
+        }
+
+        if (!fg)
+        {
+            // frame.noForegroundColor = false;
+            frame.fgColor = WHITE; // just retain original sprite color
+        }
+        else
+        {
+            frame.fgColor = fg.value();
+        }
+
+        frame.fgColor = fg.value_or(WHITE);
+        frame.bgColor = bg.value_or(BLANK);
+        frame.spriteUUID = uuid::add(spriteUUID);
+        // using namespace snowhouse;
+        // AssertThat(::init::getSpriteFrame(frame.spriteUUID).frame.width, IsGreaterThan(0));
+        frame.spriteData.frame = init::getSpriteFrame(frame.spriteUUID).frame;
+        //TODO: need to load in the atlas to the texturemap
+        auto atlasUUID = init::getSpriteFrame(frame.spriteUUID).atlasUUID;
+        frame.spriteData.texture = &globals::textureAtlasMap.at(atlasUUID);
+        frame.spriteFrame = std::make_shared<globals::SpriteFrameData>(init::getSpriteFrame(frame.spriteUUID));
+
+        ao.animationList.emplace_back(frame, DEFAULT_DURATION);
+        
+        return ao;
+    }
+    
+    /*
+        for generateNewAnimFromSprite, please set only to true if the provided uuid is not for an animation (animations.json), but for a sprite from the sprite sheet
+    */
+    auto createAnimatedObjectWithTransform (std::string defaultAnimationIDorSpriteUUID, bool generateNewAnimFromSprite, int x, int y, std::function<void(entt::entity)> shaderPassConfig) ->  entt::entity {
         auto e = globals::registry.create();
         transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 0, 0, e);
         auto &transform = globals::registry.get<transform::Transform>(e);
         auto &animQueue = globals::registry.emplace<AnimationQueueComponent>(e);
-        animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationID);
+        if (generateNewAnimFromSprite) {
+            // create a new animation object from the sprite UUID
+            animQueue.defaultAnimation = createStillAnimationFromSpriteUUID(defaultAnimationIDorSpriteUUID, std::nullopt, std::nullopt);
+        }
+        else {
+            // use the default animation object
+            animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationIDorSpriteUUID);
+        }
 
         auto &gameObject = globals::registry.get<transform::GameObject>(e);
         

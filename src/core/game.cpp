@@ -306,7 +306,7 @@ namespace game
         };
 
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-        player = animation_system::createAnimatedObjectWithTransform("keyboard_space_outline_anim", 400, 400, shaderPassConfigFunction);
+        player = animation_system::createAnimatedObjectWithTransform("4126-TheRoguelike_1_10_alpha_919.png", true, 400, 400, shaderPassConfigFunction);
         auto &playerTransform = globals::registry.get<transform::Transform>(player);
         auto &playerNode = globals::registry.get<transform::GameObject>(player);
         playerNode.debug.debugText = "Player";
@@ -315,7 +315,7 @@ namespace game
         playerNode.state.collisionEnabled = true;
         playerNode.state.clickEnabled = true;
 
-        player2 = animation_system::createAnimatedObjectWithTransform("keyboard_space_outline_anim", 400, 400, shaderPassConfigFunction);
+        player2 = animation_system::createAnimatedObjectWithTransform("4170-TheRoguelike_1_10_alpha_963.png", true, 400, 400, shaderPassConfigFunction);
         auto &playerTransform2 = globals::registry.get<transform::Transform>(player2);
         auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
         playerNode2.debug.debugText = "Player (untethered)";

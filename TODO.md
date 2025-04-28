@@ -10,11 +10,12 @@
 
 ## 🧠 General Design / Architecture
 
-- [ ] image buttons should darken in color when clicked. consider swapping bewtween transparent/non transparent versions if in need of outlines, select/unselect, etc. (maybe choose between). consider removing shadows for the image borders, they just look bad. Also, not sure where the shadows are coming from for the image ui. check
+- [ ] Option to set images for hover/ not hover/ clicked separately instead of using hover colors (one or the other)
+- [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
+- [ ] Some better appear/disaapear text effects
+- [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
 - [ ] try using text dividers. (just add images to row with text in the middle)
-- [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text
-- [ ] Functionality to programatically produce an animation from a single sprite name
-- [ ] Can't seem to get other sprites to render?
+- [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text - Make text to ui feature unicode capable
 
 - [ ] can't load checkmark.png?
 ```json

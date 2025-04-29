@@ -217,7 +217,7 @@ namespace ui_defs
                         .addConfig(
                             ui::UIConfig::Builder::create()
                                 .addColor(color)
-                                .addPadding(3.f)
+                                .addPadding(4.f)
                                 .addEmboss(2.f)
                                 .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                 .build())

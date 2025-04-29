@@ -6,6 +6,7 @@
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 #include "systems/text/textVer2.hpp"
+#include "systems/text/static_ui_text.hpp"
 
 #include "systems/ui/ui.hpp"
 
@@ -175,5 +176,90 @@ namespace ui_defs
             .build();
             
         return row;
+    }
+
+    inline auto getTextFromString(std::string text) -> ui::UIElementTemplateNode
+    {
+        
+        auto parseResult = static_ui_text_system::parseText(text);
+
+        auto rows = parseResult.lines.size();
+
+        vector<ui::UIElementTemplateNode> textRowDefs{};
+
+        for (auto i = 0; i < rows; i++) {
+            auto row = parseResult.lines[i];
+            auto segments = row.segments.size();
+
+            vector<ui::UIElementTemplateNode> textSegmentDefs{};
+
+            for (auto j = 0; j < segments; j++) {
+                auto segment = row.segments[j];
+
+
+                auto textSegmentDef = getNewTextEntry(segment.text);
+
+                if (segment.attributes.find("color") != segment.attributes.end()) {
+                    auto colorString = std::get<std::string>(segment.attributes["color"]);
+
+                    auto color = util::getColor(colorString);
+
+                    textSegmentDef.config.color = color;
+                }
+                if (segment.attributes.find("background") != segment.attributes.end()) {
+                    auto backgroundString = std::get<std::string>(segment.attributes["background"]);
+
+                    auto color = util::getColor(backgroundString);
+
+                    // wrap in a horizontal container
+                    auto wrapperDef = ui::UIElementTemplateNode::Builder::create()
+                        .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+                        .addConfig(
+                            ui::UIConfig::Builder::create()
+                                .addColor(color)
+                                .addPadding(3.f)
+                                .addEmboss(2.f)
+                                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                .build())
+                        .addChild(textSegmentDef)
+                        .build();
+
+                    textSegmentDef = wrapperDef;
+                }
+
+                textSegmentDefs.push_back(textSegmentDef);
+            }
+
+            auto textRowDef = ui::UIElementTemplateNode::Builder::create()
+                .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+                .addConfig(
+                    ui::UIConfig::Builder::create()
+                        // .addColor(WHITE)
+                        .addPadding(1.f)
+                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                        .build());
+
+            for (auto &segmentDef : textSegmentDefs) {
+                textRowDef.addChild(segmentDef);
+            }
+
+            textRowDefs.push_back(textRowDef.build());
+        }
+
+        // add the final to a vertical container
+        auto textDef = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    // .addColor(WHITE)
+                    .addPadding(0.0f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build());
+        
+        for (auto &rowDef : textRowDefs) {
+            textDef.addChild(rowDef);
+        }
+
+        return textDef.build();
     }
 }

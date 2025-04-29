@@ -607,14 +607,14 @@ namespace timer
                         else if (event.ease.type == EaseType::ELASTIC_IN)
                         {
                             // Elastic ease-in
-                            float elastic_progress = -std::pow(2, 10 * (percent_done - 1)) * std::sin((percent_done * 10 - 10.75) * 2 * M_PI / 3);
+                            float elastic_progress = -std::pow(2, 10 * (percent_done - 1)) * std::sin((percent_done * 10 - 10.75) * 2 * PI / 3);
                             valueToPassToEaseCallback = (1.0f - elastic_progress) * event.ease.startValue + elastic_progress * event.ease.endValue;
                             // SPDLOG_DEBUG("ELASTIC_IN value: {}", valueToPassToEaseCallback);
                         }
                         else if (event.ease.type == EaseType::ELASTIC_OUT)
                         {
                             // Elastic ease-out
-                            float elastic_progress = std::pow(2, -10 * percent_done) * std::sin((percent_done * 10 - 0.75) * 2 * M_PI / 3);
+                            float elastic_progress = std::pow(2, -10 * percent_done) * std::sin((percent_done * 10 - 0.75) * 2 * PI / 3);
                             valueToPassToEaseCallback = (1.0f - elastic_progress) * event.ease.startValue + elastic_progress * event.ease.endValue;
                             // SPDLOG_DEBUG("ELASTIC_OUT value: {}", valueToPassToEaseCallback);
                         }

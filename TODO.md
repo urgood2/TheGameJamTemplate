@@ -1,49 +1,35 @@
 
 
 
-
-
 # ✅ TODOs: Organized by Category
-
----
-
 
 ## 🧠 General Design / Architecture
 
-- [ ] Option to set images for hover/ not hover/ clicked separately instead of using hover colors (one or the other)
+### UI
+- Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui
+- [ ] Option to set images for hover/ not hover/ clicked separately instead of using hover colors (one or the other). 
+- [ ] way to set the scale of an animation -> based on size of sprite, given a constraint to fit
+- [ ] Context handling for modal dialogs (controller focus)
 - [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
+
+### TEXT
 - [ ] Some better appear/disaapear text effects
+- [ ] ui text buildng needs to ignore trailing/leading spaces in every parsed segment
+
+### SHADERS
 - [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
 - [ ] try using text dividers. (just add images to row with text in the middle)
 - [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text - Make text to ui feature unicode capable - basic parsing working, now need to add correct scaling + actually adding the segments to ui
-
-- [ ] can't load checkmark.png?
-```json
-    "checkmark": {
-        "frames": [
-            {
-                "sprite_UUID": "checkmark.png",
-                "duration_seconds": 5,
-                "fg_color": "NONE",
-                "bg_color": "NONE"
-            }
-        ]
-    },
-```
-
 - [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
 - [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
-- [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
-
 - [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
 - [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
 
+### MISC. RENDERING
+- [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
+
+### LAUNCH CODE
 - [ ] make everything compile for web
-
----
-### 🖱️ Interaction & Input
-
-
 
 ### 🧪 UI Widgets & Behavior
 
@@ -99,7 +85,7 @@
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
 - [ ] Text input (with cursor displayed, etc, software keyboard)
-
+- [ ] Skill tree, refer to bytepath
 ---
 
 ## Immediate laters

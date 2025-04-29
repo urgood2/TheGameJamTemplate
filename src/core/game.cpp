@@ -420,6 +420,8 @@ namespace game
 
         auto type = entt::resolve("Tooltip"_hs);
         auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
+    
+        auto testTextContentForUI = ui_defs::getTextFromString("[Hello here's a longer test\nNow test this](color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh?");
 
         ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
                                                     .addType(ui::UITypeEnum::TEXT)
@@ -581,6 +583,7 @@ namespace game
                         transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .addChild(uiColumnDef)
+            .addChild(testTextContentForUI)
             .addChild(ui_defs::getButtonGroupRowDef())
         //   .addChild(uiDynamicTextEntry)
         //   .addChild(getRandomRectDef())
@@ -649,7 +652,9 @@ namespace game
         // tooltipUIConfig.noMovementWhenDragged = true;
         
         // static_ui_text_system::parseText("[Hello\nNow](color=red;background=blue) \nWorld");
-        static_ui_text_system::parseText("[안녕\n하세](color=red;background=blue)우\n요");
+        // static_ui_text_system::parseText("[안녕\n하세](color=red;background=blue)우\n요");
+
+        
     }
 
     auto update(float delta) -> void

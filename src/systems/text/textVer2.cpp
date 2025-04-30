@@ -14,8 +14,11 @@
 #include "text_effects.hpp"
 
 #include "util/common_headers.hpp"
+#include "util/utilities.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/transform/transform.hpp"
+
+#include "core/init.hpp"
 
 #include "../../core/globals.hpp"
 
@@ -151,6 +154,7 @@ namespace TextSystem
             character.rotation = 0.0f;
             character.createdTime = text.createdTime;
 
+            SPDLOG_DEBUG("Creating character: '{}' (codepoint: {}), x={}, y={}, line={}, offsetY={}, offsetX={}", characterString, codepoint, currentX, currentY, lineNumber, character.offset.y, character.offset.x);
             if (text.pop_in_enabled)
             {
                 character.pop_in = 0.0f;
@@ -266,6 +270,70 @@ namespace TextSystem
             }
         }
 
+        Character createImageCharacter(entt::entity textEntity, const std::string &uuid, float width, float height, float scale,
+            Color fg, Color bg,
+            const Vector2 &startPosition, // Added to match createCharacter
+            float &currentX, float &currentY,
+            float wrapWidth,
+            Text::Alignment alignment,
+            float &currentLineWidth, std::vector<float> &lineWidths,
+            int index, int &lineNumber)
+        {
+            auto &text = globals::registry.get<Text>(textEntity);
+
+            // Scale image size based on render scale and imageScale
+            float scaledWidth = width * scale * text.renderScale;
+            float scaledHeight = height * scale * text.renderScale;
+
+            // get max line height 
+            float maxLineHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y;
+            float lineHeight = text.fontSize * text.renderScale; // Approximate line height (same as text char height)
+            float verticalOffset = (lineHeight - scaledHeight) * 0.5f;
+
+            // Line wrapping check (same logic as character layout)
+            if (text.wrapMode == Text::WrapMode::CHARACTER && wrapWidth > 0 &&
+                (currentX - startPosition.x) + scaledWidth > wrapWidth)
+            {
+                lineWidths.push_back(currentLineWidth); // Save the width of the completed line
+                currentX = startPosition.x;             // Reset X to start of line
+                currentY += scaledHeight;               // Move Y down by line height
+                currentLineWidth = 0.0f;                // Reset width accumulator
+                lineNumber++;                           // Move to next line
+            }
+
+            Character imgChar;
+            imgChar.value = 0;
+            imgChar.isImage = true;
+            imgChar.spriteUUID = uuid;
+            imgChar.imageScale = scale;
+            imgChar.fgTint = fg;
+            imgChar.bgTint = bg;
+            imgChar.offset.x = currentX - startPosition.x;
+            imgChar.offset.y = currentY - startPosition.y + verticalOffset; // Adjust Y offset for image height, to center it vertically
+            imgChar.size.x = scaledWidth;
+            imgChar.size.y = scaledHeight;
+            imgChar.index = index;
+            imgChar.lineNumber = lineNumber;
+            imgChar.color = WHITE;
+            imgChar.scale = 1.0f;
+            imgChar.rotation = 0.0f;
+            imgChar.createdTime = text.createdTime;
+
+            SPDLOG_DEBUG("Creating image character '{}' @ {},{} size {}x{}", uuid, currentX, currentY, scaledWidth, scaledHeight);
+
+            if (text.pop_in_enabled)
+            {
+                imgChar.pop_in = 0.0f;
+                imgChar.pop_in_delay = index * 0.1f;
+            }
+
+            // Advance cursor and width
+            currentX += scaledWidth + text.fontData.spacing * text.renderScale;
+            currentLineWidth += scaledWidth + text.fontData.spacing * text.renderScale;
+
+            return imgChar;
+        }
+
         ParsedEffectArguments splitEffects(const std::string &effects)
         {
             // spdlog::debug("Splitting effects: {}", effects);
@@ -327,7 +395,7 @@ namespace TextSystem
 
             const char *rawText = text.rawText.c_str();
 
-            std::regex pattern(R"(\[(.*?)\]\((.*?)\))");
+            std::regex pattern(R"(\[(.*?)\]\((.*?)\))"); // support [img](uuid=SPRITE_UUID;scale=1.2;fg=FFFFFF;bg=000000)
             std::smatch match;
             std::string regexText = text.rawText;
 
@@ -450,12 +518,58 @@ namespace TextSystem
                 // Process matched effect text
                 std::string effectText = match[1];
                 std::string effects = match[2];
-                ParsedEffectArguments parsedArguments = splitEffects(effects);
+                
+
+                if (effectText == "img")
+                {
+                    // this has to be an image character, ignore effect text
+                    ParsedEffectArguments imgArgs = splitEffects(effects);
+
+                    // extract image params
+                    std::string uuid = imgArgs.arguments["uuid"].empty() ? "" : imgArgs.arguments["uuid"][0];
+                    float scale = imgArgs.arguments["scale"].empty() ? 1.0f : std::stof(imgArgs.arguments["scale"][0]);
+                    Color fgTint = util::getColor(imgArgs.arguments["fg"].empty() ? "WHITE" : imgArgs.arguments["fg"][0]);
+                    Color bgTint = util::getColor(imgArgs.arguments["bg"].empty() ? "BLANK" : imgArgs.arguments["bg"][0]);
+                    bool shadow = imgArgs.arguments["shadow"].empty() ? false : (imgArgs.arguments["shadow"][0] == "true" || imgArgs.arguments["shadow"][0] == "1");
+
+                    // scaling for image
+                    //TODO: fetch the sprite size, scale it down to fit the text heigth
+                    float maxFontHeight = MeasureTextEx(text.fontData.font, "A", text.fontSize, 1.0f).y * text.renderScale;
+                    auto spriteFrame = init::getSpriteFrame(uuid);
+                    auto desiredImageHeight = maxFontHeight * scale;
+                    auto desiredImageWidth = spriteFrame.frame.width * (desiredImageHeight / spriteFrame.frame.height);
+                    
+                    // wrapping check
+                    //TODO: maybe refactor this
+                    if ((currentX - transform.getActualX()) + desiredImageWidth > effectiveWrapWidth)
+                    {
+                        lineWidths.push_back(currentLineWidth);
+                        currentX = transform.getActualX();
+                        currentY += maxFontHeight;
+                        currentLineWidth = 0.0f;
+                        lineNumber++;
+                    } 
+
+                    auto imageChar = createImageCharacter(textEntity, uuid, desiredImageWidth, desiredImageHeight, scale,
+                        fgTint, bgTint,
+                        textPosition, currentX, currentY, effectiveWrapWidth, text.alignment,
+                        currentLineWidth, lineWidths, codepointIndex, lineNumber);
+
+                    imageChar.imageShadowEnabled = shadow; // Set shadow effect for images
+                    
+                    text.characters.push_back(imageChar);
+
+                    // move regexText and currentPos forward
+                    regexText = match.suffix().str();
+                    currentPos = regexText.c_str();
+                    continue; // skip to next match
+                }
 
                 // spdlog::debug("Processing effect text: {}", effectText);
 
+                // handle normal effect text
                 const char *effectPos = effectText.c_str();
-
+                ParsedEffectArguments parsedArguments = splitEffects(effects);
                 handleEffectSegment(effectPos, lineWidths, currentLineWidth, currentX, textEntity, currentY, lineNumber, codepointIndex, parsedArguments);
 
                 // Update regexText to process the suffix
@@ -915,6 +1029,10 @@ namespace TextSystem
             for (const auto &character : text.characters)
             {
 
+                if (character.isImage) 
+                    SPDLOG_DEBUG("Rendering image character: {} with size: {}x{}", character.value, character.size.x, character.size.y);
+                
+
                 float popInScale = 1.0f;
                 if (character.pop_in)
                 {
@@ -942,6 +1060,12 @@ namespace TextSystem
                 Vector2 charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(), text.fontSize, 1.0f);
                 charSize.x *= text.renderScale;
                 charSize.y *= text.renderScale;
+
+                if (character.isImage) { 
+                    charSize.x = character.size.x * renderScale;
+                    charSize.y = character.size.y * renderScale;
+                }
+
                 // sanity checkdd
                 if (charSize.x == 0)
                 {
@@ -961,8 +1085,10 @@ namespace TextSystem
                 finalScaleY *= text.fontData.fontScale;
 
                 // add fontdata offset for finetuning
-                charPosition.x += text.fontData.fontRenderOffset.x * finalScaleX * renderScale;
-                charPosition.y += text.fontData.fontRenderOffset.y * finalScaleY * renderScale;
+                if (!character.isImage) {
+                    charPosition.x += text.fontData.fontRenderOffset.x * finalScaleX * renderScale;
+                    charPosition.y += text.fontData.fontRenderOffset.y * finalScaleY * renderScale;
+                }
 
                 layer::AddPushMatrix(layerPtr);
 
@@ -994,19 +1120,42 @@ namespace TextSystem
                     // Translate to shadow position
                     layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
 
-                    // Draw shadow 
-                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, Fade(BLACK, 0.7f));
+                    
+
+                    if (character.isImage) {
+                        auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
+                        auto sourceRect = spriteFrame.frame;
+                        auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
+                        auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
+                        layer::AddTexturePro(layerPtr, atlasTexture, sourceRect, 0, 0, {destRect.width, destRect.height}, {0, 0}, 0, Fade(BLACK, 0.7f)); 
+                    }
+                    else {
+                        // Draw shadow 
+                        layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, Fade(BLACK, 0.7f));
+                    }
 
                     // Reset translation to original position
                     layer::AddTranslate(layerPtr, shadowOffsetX, -shadowOffsetY);
                 }
 
                 // Render the character
-                layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, character.color);
+                if (character.isImage) {
+                    auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
+                    auto sourceRect = spriteFrame.frame;
+                    auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
+                    auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
+                    layer::AddTexturePro(layerPtr, atlasTexture, sourceRect, 0, 0, {destRect.width, destRect.height}, {0, 0}, 0, character.fgTint); 
+                }
+                else {
+                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, character.color);
+                }
                 
                 if (debug && globals::drawDebugInfo) {
                     // subtract finetuning offset
-                    layer::AddTranslate(layerPtr, - text.fontData.fontRenderOffset.x * finalScaleX * renderScale, - text.fontData.fontRenderOffset.y * finalScaleY * renderScale, 0);
+                    if (!character.isImage) {
+                        layer::AddTranslate(layerPtr, - text.fontData.fontRenderOffset.x * finalScaleX * renderScale, - text.fontData.fontRenderOffset.y * finalScaleY * renderScale, 0);
+                    }
+                    
                     
                     // draw bounding box for the character
                     layer::AddRectangleLinesPro(layerPtr, 0, 0, charSize, 1.0f, BLUE);
@@ -1022,9 +1171,11 @@ namespace TextSystem
                 
                 // Calculate the bounding box dimensions
                 auto [width, height] = calculateBoundingBox(textEntity);
+
+                //FIXME: known bug where this bounding box stretchs to the right and down when scaled up, instead of being centered
                 
                 // Draw the bounding box for the text
-                layer::AddRectangleLinesPro(layerPtr, 0, 0, {width, height}, 5.0f, WHITE);
+                // layer::AddRectangleLinesPro(layerPtr, 0, 0, {width, height}, 5.0f, WHITE);
                 // DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
 
                 // Draw text showing the dimensions

@@ -173,7 +173,7 @@ namespace game
             // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
-            .rawText = fmt::format("[HEY HEY!](rainbow;bump)"),
+            .rawText = fmt::format("[HEY!](rainbow;bump)[img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)[HEY!](rainbow;bump)"),
             .fontData = globals::fontData,
             .fontSize = 50.0f,
             .wrapEnabled = false,
@@ -577,6 +577,7 @@ namespace game
                     // .addMaxWidth(700.f)
                     .addColor(BLUE)
                     .addShadow(true)
+                    .addMinWidth(300.f)
                     // .addHover(true)
                     // .addButtonCallback("testCallback")
                     .addAlign(
@@ -833,6 +834,7 @@ namespace game
         rlImGuiBegin(); // Required: starts ImGui frame
 
         shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
+        ShowDebugUI();
 
         rlImGuiEnd(); // Required: renders ImGui on top of Raylib
 

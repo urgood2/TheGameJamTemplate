@@ -59,7 +59,14 @@ namespace TextSystem
 
         bool isFinalCharacterInText = false; // whether this character is the last character in the text
         std::unordered_map<std::string, bool> effectFinished; // keeps track of whether an effect has finished, not tracked by all effects but only by effects that need to know when they are done, such as pop. This is used in tandem with isFinalCharacterInText to trigger callbacks when the last character in the text has finished all relevant effects.
-        
+
+        // support images
+        bool isImage = false;
+        bool imageShadowEnabled = true; // Enable shadow effect for images. Uses shadow data from transform components
+        std::string spriteUUID;
+        float imageScale = 1.0f;
+        Color fgTint = WHITE;
+        Color bgTint = BLANK;        
     };
 
     extern std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
@@ -212,6 +219,15 @@ namespace TextSystem
         extern Vector2 calculateBoundingBox (entt::entity textEntity);
 
         extern std::string CodepointToString(int codepoint);
+        
+        extern Character createImageCharacter(entt::entity textEntity, const std::string &uuid, float width, float height, float scale,
+            Color fg, Color bg,
+            const Vector2 &startPosition, // Added to match createCharacter
+            float &currentX, float &currentY,
+            float wrapWidth,
+            Text::Alignment alignment,
+            float &currentLineWidth, std::vector<float> &lineWidths,
+            int index, int &lineNumber);
 
         extern void parseText(entt::entity textEntity);
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);

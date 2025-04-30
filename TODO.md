@@ -13,8 +13,9 @@
 - [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
 
 ### TEXT
+- [ ] Min width not respected for preconfigured text
 - [ ] Some better appear/disaapear text effects
-- [ ] ui text buildng needs to ignore trailing/leading spaces in every parsed segment
+- [ ] Apply image adding to static ui text as well
 
 ### SHADERS
 - [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
@@ -26,6 +27,7 @@
 - [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
 
 ### MISC. RENDERING
+- [ ] Try using std::multimap<int, std::shared_ptr<Layer>> instead for rendering sorting efficiently
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
 ### LAUNCH CODE

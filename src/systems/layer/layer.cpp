@@ -52,7 +52,7 @@ namespace layer
 
     void RenderAllLayersToCurrentRenderTarget(Camera2D *camera)
     {
-        // SortLayers(); //FIXME: not sorting, feature relaly isn't used
+        SortLayers(); //FIXME: not sorting, feature relaly isn't used
 
         using namespace snowhouse;
         AssertThat(layers.size(), IsGreaterThan(0));

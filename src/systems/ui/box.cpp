@@ -1289,6 +1289,7 @@ namespace ui
         }
         else if (uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::RECT_SHAPE)
         {
+            //TODO: minwidth respecting for other types of objects
             if (uiConfig.uiType == UITypeEnum::OBJECT)
             {
                 auto object = uiConfig.object.value();

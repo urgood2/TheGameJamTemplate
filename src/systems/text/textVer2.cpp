@@ -1029,8 +1029,8 @@ namespace TextSystem
             for (const auto &character : text.characters)
             {
 
-                if (character.isImage) 
-                    SPDLOG_DEBUG("Rendering image character: {} with size: {}x{}", character.value, character.size.x, character.size.y);
+                // if (character.isImage) 
+                    // SPDLOG_DEBUG("Rendering image character: {} with size: {}x{}", character.value, character.size.x, character.size.y);
                 
 
                 float popInScale = 1.0f;

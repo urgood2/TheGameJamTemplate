@@ -1220,6 +1220,8 @@ namespace ui
         {
             float textParallaxSX = node->shadowDisplacement->x * globals::fontData.fontLoadedSize * 0.04f / (config->scale.value() * globals::fontData.fontScale);
             float textParallaxSY = node->shadowDisplacement->y * globals::fontData.fontLoadedSize * -0.03f / (config->scale.value() * globals::fontData.fontScale);
+            
+            //TODO: if scale is smaller, make the shadow height smaller too
 
             bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::settings.shadowsOn);
 
@@ -1270,12 +1272,18 @@ namespace ui
                 renderColor = globals::uiTextInactive;
             }
             
-            float textX = globals::fontData.fontRenderOffset.x * config->scale.value_or(1.0f) * globals::fontData.fontScale;
-            float textY = globals::fontData.fontRenderOffset.y * config->scale.value_or(1.0f) * globals::fontData.fontScale;
-            float fontScale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
+            //REVIEW: bugfixing, commenting out
+            // float textX = globals::fontData.fontRenderOffset.x * config->scale.value_or(1.0f) * globals::fontData.fontScale;
+            // float textY = globals::fontData.fontRenderOffset.y * config->scale.value_or(1.0f) * globals::fontData.fontScale;
+            // float fontScale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
+            float textX = globals::fontData.fontRenderOffset.x;
+            float textY = globals::fontData.fontRenderOffset.y;
+            float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
+            layer::AddScale(layerPtr, scale, scale);
+
             float spacing = config->textSpacing.value_or(globals::fontData.spacing);
             
-            layer::AddTextPro(layerPtr, config->text.value(), globals::fontData.font, textX, textY, {0, 0}, 0, fontScale * globals::fontData.fontLoadedSize, spacing, renderColor);
+            layer::AddTextPro(layerPtr, config->text.value(), globals::fontData.font, textX, textY, {0, 0}, 0, globals::fontData.fontLoadedSize, spacing, renderColor);
 
             layer::AddPopMatrix(layerPtr);
         }

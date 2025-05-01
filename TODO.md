@@ -13,7 +13,7 @@
 - [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
 
 ### TEXT
-- [ ] Min width not respected for preconfigured text
+- [ ] Shadow height needs to update proportional to ui scale for text. Also, when scaled down, text overflows the background box. Needs to debug -> check code that scales down the text with maxW/H
 - [ ] Some better appear/disaapear text effects
 - [ ] Apply image adding to static ui text as well
 

@@ -5,43 +5,15 @@
 
 ## 🧠 General Design / Architecture
 
-### UI
-- Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui
-- [ ] Option to set images for hover/ not hover/ clicked separately instead of using hover colors (one or the other). 
-- [ ] way to set the scale of an animation -> based on size of sprite, given a constraint to fit
+## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus)
-- [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
-
-### TEXT
-- [ ] Some better appear/disaapear text effects
-- [ ] adding animations for static text types (not for dynamic text)
-- [ ] text tag documentation
-- [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
-- [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
-
-### SHADERS
-- [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
-- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
-- [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
-
-### MISC. RENDERING
-- [ ] Rendering for animated entities should respect uiconfig's color variable if the master entity has a uiconfig (is a uielement OBJECT type)
-- [ ] Try using std::multimap<int, std::shared_ptr<Layer>> instead for rendering sorting efficiently
-- [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
-
-### LAUNCH CODE
-- [ ] make everything compile for web
-
-### 🧪 UI Widgets & Behavior
-
-- [ ] Actually implement the ui now.
-
+- [ ] way to set the scale of an animation -> based on size of sprite, given a constraint to fit
 - [ ] Implement more UI element types:
   - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.
     - button delay disables button for X seconds after ui is created. (in ui element setValues)
     - in update, this value is updated so callback which is backed up will be restored
-  - [x] Sliders (`focus_args = {type = "slider"}`)
+  - [ ] Sliders (`focus_args = {type = "slider"}`)
     - use UIConfig.noMovementWhenDragged to disable dragging movement
     - Just need to make a function that uses reflection to fetch whatever is being manipulated, based on the following
       ```lua
@@ -69,7 +41,7 @@
     - Adjusts the width of the inner bar (c) to visually match the value
     - Updates the text label to show the new value
     - Optionally calls a callback function after the value changes
-  - [x] Cycles (radio buttons)
+  - [ ] Cycles (radio buttons)
     - Displays a current selection (current_option_val)
     - Has left/right buttons to cycle through a list of args.options
     - args.focus_args.type = 'cycle' allows d-pad and shoulder input to be utilized
@@ -77,16 +49,40 @@
     - Binds to an external data value in ref_table[ref_value]
     - Can trigger a callback when changed
     - Supports keyboard/controller interaction and shoulder button overlays
-  - [x] Checkboxes -> just a button with an image. The image is set to invisible whenbutton is pressed. Funnel_to and from are used for the container of the checkbox, etc.
-  - [x] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
-  - [x] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
-  - [x] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
-  - [x] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
+  - [ ] Checkboxes -> just a button with an image. The image is set to invisible whenbutton is pressed. Funnel_to and from are used for the container of the checkbox, etc.
+  - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
+  - [ ] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
+  - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
+  - [ ] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
 - [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
 - [ ] Text input (with cursor displayed, etc, software keyboard)
 - [ ] Skill tree, refer to bytepath
+
+### UI
+- Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui
+- [ ] Option to set images for hover/ not hover/ clicked separately instead of using hover colors (one or the other). 
+- [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
+
+### TEXT
+- [ ] text tag documentation (img, anim) -> static ui / (img) -> dynamic text
+- [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
+- [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
+
+### SHADERS
+- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
+- [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
+
+### MISC. RENDERING
+- [ ] Rendering for animated entities should respect uiconfig's color variable for tint if the master entity has a uiconfig (is a uielement OBJECT type)
+- [ ] Try using std::multimap<int, std::shared_ptr<Layer>> instead for rendering sorting efficiently
+- [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
+
+### LAUNCH CODE
+- [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
+- [ ] make everything compile for web
+
 ---
 
 ## Immediate laters
@@ -168,3 +164,9 @@ Suggestions for Gloss/Shine Shader Variations
 - [ ] refactoring input functionality
 - [ ] shader TODOs
 - [ ] spine rendering + layer integration https://chatgpt.com/share/67766376-ac24-800a-8711-f6fd64a6d733
+
+
+
+# Done
+
+- [x] adding animations for static text types (not for dynamic text)

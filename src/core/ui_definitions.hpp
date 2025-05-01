@@ -211,13 +211,13 @@ namespace ui_defs
 
                     auto color = util::getColor(backgroundString);
 
-                    // wrap in a horizontal container
+                    // wrap in a horizontal container to produce background
                     auto wrapperDef = ui::UIElementTemplateNode::Builder::create()
                         .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
                         .addConfig(
                             ui::UIConfig::Builder::create()
                                 .addColor(color)
-                                .addPadding(4.f)
+                                .addPadding(10.f)
                                 .addEmboss(2.f)
                                 .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                                 .build())
@@ -262,5 +262,49 @@ namespace ui_defs
         }
 
         return textDef.build();
+    }
+
+
+    inline auto putCodedTextBetweenDividers(std::string text, std::string dividerToUse) -> ui::UIElementTemplateNode
+    {
+        auto dividerAnimRight = animation_system::createAnimatedObjectWithTransform(dividerToUse, true, 0, 0);
+        auto codedTextDef = getTextFromString(text);
+        auto dividerAnimLeft = animation_system::createAnimatedObjectWithTransform(dividerToUse, true, 0, 0);
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(dividerAnimRight);
+        animQueue.defaultAnimation.flippedHorizontally = true; // flip the right divider
+
+        //TODO: disable shadow on dividers
+
+        auto dividerUIObjectLeft = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::OBJECT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addObject(dividerAnimLeft)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        
+        auto dividerUIObjectRight = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::OBJECT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addObject(dividerAnimRight)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+
+        auto row = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    // .addColor(WHITE)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(dividerUIObjectLeft)
+            .addChild(codedTextDef)
+            .addChild(dividerUIObjectRight)
+            .build();
+
+        return row;
     }
 }

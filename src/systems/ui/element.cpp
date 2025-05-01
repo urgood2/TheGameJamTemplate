@@ -1218,8 +1218,10 @@ namespace ui
         // is it text?
         if (config->uiType == UITypeEnum::TEXT && config->scale)
         {
-            float textParallaxSX = node->shadowDisplacement->x * globals::fontData.fontLoadedSize * 0.04f / (config->scale.value() * globals::fontData.fontScale);
-            float textParallaxSY = node->shadowDisplacement->y * globals::fontData.fontLoadedSize * -0.03f / (config->scale.value() * globals::fontData.fontScale);
+            float rawScale = config->scale.value() * globals::fontData.fontScale;
+            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
+            float textParallaxSX = node->shadowDisplacement->x * globals::fontData.fontLoadedSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * globals::fontData.fontLoadedSize * -0.03f * scaleFactor;
             
             //TODO: if scale is smaller, make the shadow height smaller too
 
@@ -1241,16 +1243,16 @@ namespace ui
                 {
                     Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
 
-                    //TODO: figure out how this scaling works?
                     float textX = globals::fontData.fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * globals::fontData.fontScale;
                     float textY = globals::fontData.fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * globals::fontData.fontScale;
                     float fontScale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
                     float spacing = config->textSpacing.value_or(globals::fontData.spacing);   
-                    
-                    layer::AddTextPro(layerPtr, config->text.value(), globals::fontData.font, textX, textY, {0, 0}, 0, fontScale * globals::fontData.fontLoadedSize, spacing, shadowColor);
-                    
-                    //TODO: no such thing as x scale and y scale in raylib. Just add spacing and font size to the globals (spacing to replace squish)
 
+                    float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
+                    layer::AddScale(layerPtr, scale, scale);
+                    
+                    layer::AddTextPro(layerPtr, config->text.value(), globals::fontData.font, textX, textY, {0, 0}, 0, globals::fontData.fontLoadedSize, spacing, shadowColor);
+                    
                     // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
                 }
 

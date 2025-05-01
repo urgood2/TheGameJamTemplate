@@ -46,6 +46,8 @@ struct AnimationObject
     unsigned int currentAnimIndex{0};
     double currentElapsedTime{0};
     std::vector<std::pair<SpriteComponentASCII, double>> animationList{};
+    bool flippedHorizontally{false}; // if true, flip the animation horizontally
+    bool flippedVertically{false}; // if true, flip the animation vertically
 };
 
 /// @brief Any object with this component will be updated by an animationSystem. This object should be attached to any entity which has an animation.

@@ -1106,9 +1106,22 @@ namespace TextSystem
                     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
                     float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
-                    // Adjust displacement using shadow height
-                    float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor * renderScale;
-                    float shadowOffsetY = - character.shadowDisplacement.y * baseExaggeration * heightFactor * renderScale; // make shadow stretch downward
+                    float rawScale = text.renderScale;
+                    float scaleFactor = std::clamp(rawScale * rawScale, 0.01f, 1.0f);
+
+                    // Adjust for font size (reduce shadow effect when font size < 30)
+                    float fontSize = static_cast<float>(globals::fontData.fontLoadedSize);
+                    float fontFactor = std::clamp(fontSize / 60.0f, 0.05f, 1.0f); // Tunable lower bound, higher denominator = less shadow
+
+                    // Final combined scale factor
+                    float finalFactor = scaleFactor * fontFactor;
+
+                    float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor * finalFactor;
+                    float shadowOffsetY = -character.shadowDisplacement.y * baseExaggeration * heightFactor * finalFactor;
+
+                    
+                    // float shadowOffsetX = character.shadowDisplacement.x * baseExaggeration * heightFactor * renderScale;
+                    // float shadowOffsetY = - character.shadowDisplacement.y * baseExaggeration * heightFactor * renderScale; // make shadow stretch downward
                     
                     // apply offsets to shadow if any
                     for (const auto &[effectName, offset] : character.shadowDisplacementOffsets)

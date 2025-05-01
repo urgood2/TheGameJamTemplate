@@ -13,16 +13,13 @@
 - [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
 
 ### TEXT
-- [ ] Shadow height needs to update proportional to ui scale for text. Also, when scaled down, text overflows the background box. Needs to debug -> check code that scales down the text with maxW/H
 - [ ] Some better appear/disaapear text effects
-- [ ] Apply image adding to static ui text as well
+- [ ] Apply image adding to static ui text as well + (animations for both text types)
+- [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
+- [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 
 ### SHADERS
 - [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
-- [ ] try using text dividers. (just add images to row with text in the middle)
-- [ ] Some configurable way to add color-coded text into gui from a text input (will this need wrapping or do we wrap manually?) - not dynamic text, just text - Make text to ui feature unicode capable - basic parsing working, now need to add correct scaling + actually adding the segments to ui
-- [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
-- [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 - [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
 - [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
 

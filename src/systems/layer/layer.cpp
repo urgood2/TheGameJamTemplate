@@ -970,6 +970,9 @@ namespace layer
         // 1. Fetch animation frame and sprite
         Rectangle* animationFrame = nullptr;
         SpriteComponentASCII* currentSprite = nullptr;
+
+        
+        bool flipX{false}, flipY{false};
     
         if (registry.any_of<AnimationQueueComponent>(e)) {
             auto& aqc = registry.get<AnimationQueueComponent>(e);
@@ -977,11 +980,15 @@ namespace layer
                 if (!aqc.defaultAnimation.animationList.empty()) {
                     animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
+                    flipX = aqc.defaultAnimation.flippedHorizontally;
+                    flipY = aqc.defaultAnimation.flippedVertically;
                 }
             } else {
                 auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
                 animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteData.frame;
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
+                flipX = currentAnimObject.flippedHorizontally;
+                flipY = currentAnimObject.flippedVertically;
             }
         }
     
@@ -998,6 +1005,9 @@ namespace layer
     
         float renderWidth = baseWidth + pad * 2.0f;
         float renderHeight = baseHeight + pad * 2.0f;
+
+        float xFlipModifier = flipX ? -1.0f : 1.0f;
+        float yFlipModifier = flipY ? -1.0f : 1.0f;
     
         AssertThat(renderWidth, IsGreaterThan(0.0f));
         AssertThat(renderHeight, IsGreaterThan(0.0f));
@@ -1026,7 +1036,7 @@ namespace layer
     
         if (drawForeground) {
             if (animationFrame) {
-                layer::TexturePro(*spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+                layer::TexturePro(*spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth * xFlipModifier, baseHeight * yFlipModifier}, {0, 0}, 0, fgColor);
                 // debug draw rect
                 // layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
                 
@@ -1064,7 +1074,7 @@ namespace layer
             //FIXME: commenting out shader for debugging
             BeginShaderMode(shader);
     
-            DrawTextureRec(front().texture, {0, 0, (float)width, (float)-height}, {0, 0}, WHITE); // invert Y 
+            DrawTextureRec(front().texture, {0, 0, (float)width * xFlipModifier, (float)-height * yFlipModifier}, {0, 0}, WHITE); // invert Y 
     
             EndShaderMode();
             render_stack_switch_internal::Pop();
@@ -1079,7 +1089,7 @@ namespace layer
 
             DrawTextureRec(
                 front().texture,
-                { 0, 0, renderWidth, -renderHeight },  // negative Y to flip
+                { 0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier},  // negative Y to flip
                 { (float)debugOffsetX, (float)debugOffsetY },
                 WHITE
             );
@@ -1109,7 +1119,7 @@ namespace layer
         // Update for use elsewhere
         SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
     
-        Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight };  // Negative height to flip Y
+        Rectangle sourceRect = { 0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier};  // Negative height to flip Y
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
         
@@ -1138,6 +1148,8 @@ namespace layer
         Rectangle *animationFrame = nullptr;
         SpriteComponentASCII *currentSprite = nullptr;
 
+        bool flipX{false}, flipY{false};
+
         if (registry.any_of<AnimationQueueComponent>(e))
         {
             auto &aqc = registry.get<AnimationQueueComponent>(e);
@@ -1149,6 +1161,8 @@ namespace layer
                 {
                     animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
+                    flipX = aqc.defaultAnimation.flippedHorizontally;
+                    flipY = aqc.defaultAnimation.flippedVertically;
                 }
             }
             else
@@ -1156,6 +1170,8 @@ namespace layer
                 auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
                 animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteData.frame;
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
+                flipX = currentAnimObject.flippedHorizontally;
+                flipY = currentAnimObject.flippedVertically;
             }
         }
 
@@ -1166,10 +1182,13 @@ namespace layer
 
         auto spriteAtlas = currentSprite->spriteData.texture;
 
-        float renderWidth = animationFrame->width;
-        float renderHeight = animationFrame->height;
+        float renderWidth = animationFrame->width ;
+        float renderHeight = animationFrame->height ;
         AssertThat(renderWidth, IsGreaterThan(0.0f));
         AssertThat(renderHeight, IsGreaterThan(0.0f));
+
+        float flipXModifier = flipX ? -1.0f : 1.0f;
+        float flipYModifier = flipY ? -1.0f : 1.0f;
 
         // Check if the entity has colors (fg/bg)
         Color bgColor = Color{0, 0, 0, 0}; // Default to fully transparent
@@ -1256,9 +1275,9 @@ namespace layer
                     // Draw shadow by rendering the same frame with a black tint and offset
                     layer::TexturePro(
                         *spriteAtlas,
-                        {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height},
+                        {animationFrame->x, animationFrame->y, animationFrame->width  * flipXModifier, animationFrame->height  * flipYModifier},
                         0, 0,
-                        {renderWidth, renderHeight},
+                        {renderWidth * flipXModifier, renderHeight * flipYModifier},
                         {0, 0},
                         0,
                         shadowColor
@@ -1268,7 +1287,21 @@ namespace layer
                     Translate(shadowOffsetX, -shadowOffsetY);
                 }
 
-                layer::TexturePro(*spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height}, 0, 0, {renderWidth, renderHeight}, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+                //FIXME: commenting out for debugging
+                layer::TexturePro(*spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width * flipXModifier, animationFrame->height * flipYModifier}, 0, 0, {renderWidth , renderHeight }, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+
+                // Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
+                // Vector2 destPos = {renderWidth * 0.5f, renderHeight * 0.5f};
+
+                // layer::TexturePro(
+                //     *spriteAtlas,
+                //     {animationFrame->x, animationFrame->y, animationFrame->width, animationFrame->height},
+                //     destPos.x, destPos.y,                                         // Destination position (centered)
+                //     {renderWidth * flipXModifier, renderHeight * flipYModifier}, // Size with flip
+                //     origin,                                                       // Origin is center
+                //     0,
+                //     fgColor
+                // );
             }
             else
             {

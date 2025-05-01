@@ -542,6 +542,8 @@ namespace game
                                                  .addChild(uiColumnDef)
                                                  .addChild(ui_defs::getRandomRectDef())
                                                  .build();
+
+        auto dividerText = ui_defs::putCodedTextBetweenDividers("TESTING", "divider-fade-001.png");
         ui::UIElementTemplateNode consumablesRowDef = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -590,6 +592,7 @@ namespace game
         //   .addChild(getRandomRectDef())
             .addChild(consumablesRowDef)
             .addChild(spriteRowDef)
+            .addChild(dividerText)
             // .addChild(uiRowDef)
             .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
             .build();

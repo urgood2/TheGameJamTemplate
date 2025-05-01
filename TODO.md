@@ -7,7 +7,6 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus)
-- [ ] way to set the scale of an animation -> based on size of sprite, given a constraint to fit
 - [ ] Implement more UI element types:
   - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.

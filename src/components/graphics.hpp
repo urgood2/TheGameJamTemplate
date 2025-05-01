@@ -48,6 +48,7 @@ struct AnimationObject
     std::vector<std::pair<SpriteComponentASCII, double>> animationList{};
     bool flippedHorizontally{false}; // if true, flip the animation horizontally
     bool flippedVertically{false}; // if true, flip the animation vertically
+    float renderScale{1.0f}; // the scale of the animation, animation will be scaled relative to the original size
 };
 
 /// @brief Any object with this component will be updated by an animationSystem. This object should be attached to any entity which has an animation.

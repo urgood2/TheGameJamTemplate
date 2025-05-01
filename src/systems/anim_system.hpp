@@ -15,4 +15,8 @@ namespace animation_system {
     
     // convenience function to create a still animation object from a sprite UUID
     auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg = std::nullopt, std::optional<Color> bg = std::nullopt) -> AnimationObject;
+    
+    extern auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth, float targetHeight) -> void;
+    
+    extern auto resizeAnimationObjectToFit(AnimationObject &animObj, float targetWidth, float targetHeight) -> void;
 }

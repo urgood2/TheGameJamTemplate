@@ -88,6 +88,45 @@ namespace animation_system {
         return e;
     }
     
+    auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth, float targetHeight) -> void {
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &transform = globals::registry.get<transform::Transform>(e);
+        
+        // get the scale factor which will fit the target width and height
+        float scaleX = targetWidth / transform.getActualW();
+        float scaleY = targetHeight / transform.getActualH();
+        float scale = std::min(scaleX, scaleY);
+        transform.setActualW(transform.getActualW() * scale);
+        transform.setActualH(transform.getActualH() * scale);
+        
+        // apply the scale to the animation objects
+        for (auto &animObject : animQueue.animationQueue) {
+            animObject.renderScale = scale;
+        }
+        if (!animQueue.defaultAnimation.animationList.empty()) {
+            animQueue.defaultAnimation.renderScale = scale;
+        }
+    }
+    
+    // resizes all animation objects in the queue to fit the target width and height
+    // Note that this assumes the animation frames are all the same size
+    auto resizeAnimationObjectToFit(AnimationObject &animObj, float targetWidth, float targetHeight) -> void {
+        
+        float scaleX = 1.0f;
+        float scaleY = 1.0f;
+        
+        // assert the animation list is not empty
+        using namespace snowhouse;
+        AssertThat(animObj.animationList.size(), IsGreaterThan(0));
+        
+        // get the scale factor which will fit the target width and height
+        scaleX = targetWidth / animObj.animationList.at(animObj.currentAnimIndex).first.spriteFrame->frame.width;
+        scaleY = targetHeight / animObj.animationList.at(animObj.currentAnimIndex).first.spriteFrame->frame.height;
+        float scale = std::min(scaleX, scaleY);
+        animObj.renderScale = scale;
+        
+    }
+    
     // assumes classic 9 patch layout (9 patches, 4 corners, 4 edges, 1 center)
     auto getNinepatchUIBorderInfo(std::string uuid_or_raw_identifier) -> std::tuple<NPatchInfo, Texture2D> {
         

@@ -324,9 +324,7 @@ namespace game
         playerNode2.state.hoverEnabled = true;
         playerNode2.state.collisionEnabled = true;
         playerNode2.state.clickEnabled = true;
-        //TODO: add ShaderPipelineComponent, optional ShaderUniformComponent
-        //TODO: set up shaders 
-        //TODO: init shader pipeline system
+        animation_system::resizeAnimationObjectsInEntityToFit(player2, 150.f, 150.f);
 
         // massive container the size of the screen
         transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
@@ -358,7 +356,6 @@ namespace game
         auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
         childTransform.setActualX(200);
         childTransform.setActualY(200);
-        // TODO: how to make something act like it was actually tacked on to the parent? probably add a flag to allow special case handling for this (like a badge attached to a card, moves uniformly with the card)
         transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
         auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
         childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
@@ -379,7 +376,6 @@ namespace game
         auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
         childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
 
-        // TODO: how to queue events with this timer?
         timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f)
                                         {
         // SPDLOG_DEBUG("Injecting dynamic motion");

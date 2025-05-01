@@ -1154,6 +1154,9 @@ namespace layer
             uiScale = registry.get<ui::UIConfig>(role.master).scale.value_or(1.0f);
         }
         
+        // this renderscale is from the animation object itself.
+        float renderScale = 1.0f;
+        
         // Fetch the animation frame if the entity has an animation queue
         Rectangle *animationFrame = nullptr;
         SpriteComponentASCII *currentSprite = nullptr;
@@ -1173,6 +1176,7 @@ namespace layer
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
                     flipX = aqc.defaultAnimation.flippedHorizontally;
                     flipY = aqc.defaultAnimation.flippedVertically;
+                    renderScale = aqc.defaultAnimation.renderScale;
                 }
             }
             else
@@ -1182,6 +1186,7 @@ namespace layer
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
                 flipX = currentAnimObject.flippedHorizontally;
                 flipY = currentAnimObject.flippedVertically;
+                renderScale = currentAnimObject.renderScale;
             }
         }
 
@@ -1260,6 +1265,8 @@ namespace layer
     
                     // Translate to shadow position
                     Translate(-shadowOffsetX, shadowOffsetY);
+                    
+                    Scale(renderScale, renderScale);
     
                     // Draw shadow by rendering the same frame with a black tint and offset
                     layer::TexturePro(
@@ -1271,10 +1278,15 @@ namespace layer
                         0,
                         shadowColor
                     );
+                    
+                    // undo scale
+                    Scale(1.0f / renderScale, 1.0f / renderScale);
     
                     // Reset translation to original position
                     Translate(shadowOffsetX, -shadowOffsetY);
                 }
+                
+                Scale(renderScale, renderScale);
 
                 //FIXME: commenting out for debugging
                 layer::TexturePro(*spriteAtlas, {animationFrame->x, animationFrame->y, animationFrame->width * flipXModifier, animationFrame->height * flipYModifier}, 0, 0, {renderWidth , renderHeight }, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
@@ -1307,6 +1319,7 @@ namespace layer
         AddDrawCommand(layer, "draw_entity_animation", {e, registry, x, y}, z);
     }
     
+    // deprecated
     auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x, int y) -> void
     {
         

@@ -14,7 +14,8 @@
 
 ### TEXT
 - [ ] Some better appear/disaapear text effects
-- [ ] Apply image adding to static ui text as well + (adding animations for both text types)
+- [ ] adding animations for static text types (not for dynamic text)
+- [ ] text tag documentation
 - [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
 - [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 
@@ -24,6 +25,7 @@
 - [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
 
 ### MISC. RENDERING
+- [ ] Rendering for animated entities should respect uiconfig's color variable if the master entity has a uiconfig (is a uielement OBJECT type)
 - [ ] Try using std::multimap<int, std::shared_ptr<Layer>> instead for rendering sorting efficiently
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 

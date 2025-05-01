@@ -192,11 +192,12 @@ namespace ui_defs
             auto segments = row.segments.size();
 
             vector<ui::UIElementTemplateNode> textSegmentDefs{};
-
+            
+            using static_ui_text_system::StaticStyledTextSegmentType;
             for (auto j = 0; j < segments; j++) {
                 auto segment = row.segments[j];
                 
-                if (segment.isImage) {
+                if (segment.type == StaticStyledTextSegmentType::IMAGE) {
                     // handle case where this is an image, not text
                     // [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)
                     auto uuid = std::get<std::string>(segment.attributes["uuid"]);
@@ -207,6 +208,42 @@ namespace ui_defs
                     
                     // now create a static animation object with uuid
                     auto imageObject = animation_system::createAnimatedObjectWithTransform(uuid, true, 0, 0);
+                    auto &gameObjectComp = globals::registry.get<transform::GameObject>(imageObject);
+                    if (shadow == false) gameObjectComp.shadowDisplacement.reset();
+                    
+                    // add to an object node
+                    auto imageDef = ui::UIElementTemplateNode::Builder::create()
+                        .addType(ui::UITypeEnum::OBJECT)
+                        .addConfig(
+                            ui::UIConfig::Builder::create()
+                                .addObject(imageObject)
+                                .addColor(fgColor)
+                                .addScale(scale)
+                                .addShadow(shadow)
+                                .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                                .build())
+                        .build();
+                        
+                    textSegmentDefs.push_back(imageDef);
+                    
+                    continue;
+                }
+                else if (segment.type == StaticStyledTextSegmentType::ANIMATION) {
+                    
+                    // [anim](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)
+                    auto uuid = std::get<std::string>(segment.attributes["uuid"]);
+                    auto scale = segment.attributes.find("scale") != segment.attributes.end() ? std::stof(std::get<std::string>(segment.attributes["scale"])) : 1.0f;
+                    auto fgColorString = segment.attributes.find("fg") != segment.attributes.end() ? std::get<std::string>(segment.attributes["fg"]) : "WHITE";
+                    auto shadow = segment.attributes.find("shadow") != segment.attributes.end() ? (std::get<std::string>(segment.attributes["shadow"]) == "true" ? true : false) : false;
+                    auto fgColor = util::getColor(fgColorString);
+                    
+                    
+                    // now create a animation object with uuid (animations.json)
+                    auto imageObject = animation_system::createAnimatedObjectWithTransform(uuid, false, 0, 0);
+                    
+                    
+                    auto &gameObjectComp = globals::registry.get<transform::GameObject>(imageObject);
+                    if (shadow == false) gameObjectComp.shadowDisplacement.reset();
                     
                     // add to an object node
                     auto imageDef = ui::UIElementTemplateNode::Builder::create()

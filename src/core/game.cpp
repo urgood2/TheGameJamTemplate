@@ -421,7 +421,7 @@ namespace game
         auto type = entt::resolve("Tooltip"_hs);
         auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
     
-        auto testTextContentForUI = ui_defs::getTextFromString("[Hello here's a longer test\nNow test this](color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](color=red;background=gray)");
+        auto testTextContentForUI = ui_defs::getTextFromString("[Hello here's a longer test\nNow test this](color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
 
         ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
                                                     .addType(ui::UITypeEnum::TEXT)

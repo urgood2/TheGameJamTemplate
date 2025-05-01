@@ -18,11 +18,18 @@
 namespace static_ui_text_system {
     
     using TextSegmentArgumentType = std::variant<std::string, float, int, Color, bool>; // Assuming Color is already defined
+    
+    enum class StaticStyledTextSegmentType {
+        TEXT,
+        IMAGE,
+        ANIMATION
+    };
 
     struct StaticStyledTextSegment {
         std::string text;
         std::map<std::string, TextSegmentArgumentType> attributes;
-        bool isImage = false; // true if this segment is an image, not actual text
+        bool isImage = false; // true if this segment is an image, not actual text -> phase out, use StaticStyledTextSegmentType instead
+        StaticStyledTextSegmentType type = StaticStyledTextSegmentType::TEXT;
     };
 
     struct StaticStyledTextLine {
@@ -114,10 +121,17 @@ namespace static_ui_text_system {
             SPDLOG_DEBUG("Processing styled text: '{}', attributes raw: '{}'", styledText, attributeString);
             
             if (styledText == "img") {
-                StaticStyledTextSegment segment{ "IMAGE", attributes };
+                StaticStyledTextSegment segment{ "$IMAGE$", attributes };
                 segment.isImage = true; // Mark this segment as an image
+                segment.type = StaticStyledTextSegmentType::IMAGE;
                 currentLine.segments.push_back(segment);
-            } else {
+            } 
+            else if (styledText == "anim") {
+                StaticStyledTextSegment segment{ "$ANIMATION$", attributes };
+                segment.type = StaticStyledTextSegmentType::ANIMATION;
+                currentLine.segments.push_back(segment);
+            }
+            else {
                 // Standard styled text segment
                 size_t pos = 0;
                 while (true) {

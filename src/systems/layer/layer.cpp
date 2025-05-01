@@ -15,6 +15,8 @@
 #include "systems/ui/ui_data.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
 
+#include "systems/transform/transform_functions.hpp"
+
 #include "entt/entt.hpp"
 
 #include "rlgl.h"
@@ -1144,6 +1146,14 @@ namespace layer
     
     auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void {
         
+        // if this entity has a master comp that is a ui element, that means it's a ui object and it needs to respect the ui scale
+        float uiScale = 1.0f;
+        auto &role = registry.get<transform::InheritedProperties>(e);
+        if (registry.valid(role.master) && registry.any_of<ui::UIConfig>(role.master))
+        {
+            uiScale = registry.get<ui::UIConfig>(role.master).scale.value_or(1.0f);
+        }
+        
         // Fetch the animation frame if the entity has an animation queue
         Rectangle *animationFrame = nullptr;
         SpriteComponentASCII *currentSprite = nullptr;
@@ -1182,8 +1192,8 @@ namespace layer
 
         auto spriteAtlas = currentSprite->spriteData.texture;
 
-        float renderWidth = animationFrame->width ;
-        float renderHeight = animationFrame->height ;
+        float renderWidth = animationFrame->width * uiScale;
+        float renderHeight = animationFrame->height * uiScale;
         AssertThat(renderWidth, IsGreaterThan(0.0f));
         AssertThat(renderHeight, IsGreaterThan(0.0f));
 
@@ -1224,27 +1234,6 @@ namespace layer
 
         Translate(-transform.getVisualW() * 0.5, -transform.getVisualH() * 0.5);
 
-        // TODO: draw shadow based on shadow displacement
-        // if (node.shadowDisplacement)
-        // {
-        //     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
-        //     float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
-
-        //     // Adjust displacement using shadow height
-        //     float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
-        //     float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
-
-        //     // Translate to shadow position
-        //     layer::AddTranslate(layer, -shadowOffsetX, shadowOffsetY);
-
-        //     // Draw shadow outline
-        //     // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
-        //     layer::AddRectanglePro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, Fade(BLACK, 0.7f));
-
-        //     // Reset translation to original position
-        //     layer::AddTranslate(layer, shadowOffsetX, -shadowOffsetY);
-        // }
-        
         // Draw background rectangle if enabled
         if (drawBackground)
         {

@@ -1880,8 +1880,11 @@ namespace ui
 
         // TODO: question, should this call release on the corresponding node? Assuming so, since ui elements are also nodes and transforms.
         // TODO: other seems to be the object being dragged, if any.
-        node->methods->onRelease(registry, entity, objectBeingDragged);
-
+        if (node->methods->onRelease)
+        {
+            node->methods->onRelease(registry, entity, objectBeingDragged);
+        }
+        
         if (uiElement && registry.valid(*node->parent))
         {
             Release(registry, *node->parent, objectBeingDragged); // Propagate release event to parent

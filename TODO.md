@@ -14,7 +14,7 @@
 
 ### TEXT
 - [ ] Some better appear/disaapear text effects
-- [ ] Apply image adding to static ui text as well + (animations for both text types)
+- [ ] Apply image adding to static ui text as well + (adding animations for both text types)
 - [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
 - [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 

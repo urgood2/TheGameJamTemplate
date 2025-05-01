@@ -17,11 +17,12 @@
 
 namespace static_ui_text_system {
     
-    using TextSegmentArgumentType = std::variant<std::string, float, int, Color>; // Assuming Color is already defined
+    using TextSegmentArgumentType = std::variant<std::string, float, int, Color, bool>; // Assuming Color is already defined
 
     struct StaticStyledTextSegment {
         std::string text;
         std::map<std::string, TextSegmentArgumentType> attributes;
+        bool isImage = false; // true if this segment is an image, not actual text
     };
 
     struct StaticStyledTextLine {
@@ -111,23 +112,30 @@ namespace static_ui_text_system {
             std::map<std::string, TextSegmentArgumentType> attributes = parseAttributes(attributeString);
 
             SPDLOG_DEBUG("Processing styled text: '{}', attributes raw: '{}'", styledText, attributeString);
-
-            size_t pos = 0;
-            while (true) {
-                size_t newLinePos = styledText.find('\n', pos);
-                if (newLinePos == std::string::npos) {
-                    StaticStyledTextSegment segment{ styledText.substr(pos), attributes };
-                    SPDLOG_DEBUG("Styled segment added: '{}'", segment.text);
-                    currentLine.segments.push_back(segment);
-                    break;
-                } else {
-                    StaticStyledTextSegment segment{ styledText.substr(pos, newLinePos - pos), attributes };
-                    SPDLOG_DEBUG("Styled segment added with line split: '{}'", segment.text);
-                    currentLine.segments.push_back(segment);
-                    result.lines.push_back(currentLine);
-                    SPDLOG_DEBUG("Line pushed (styled text split)");
-                    currentLine = StaticStyledTextLine{};
-                    pos = newLinePos + 1;
+            
+            if (styledText == "img") {
+                StaticStyledTextSegment segment{ "IMAGE", attributes };
+                segment.isImage = true; // Mark this segment as an image
+                currentLine.segments.push_back(segment);
+            } else {
+                // Standard styled text segment
+                size_t pos = 0;
+                while (true) {
+                    size_t newLinePos = styledText.find('\n', pos);
+                    if (newLinePos == std::string::npos) {
+                        StaticStyledTextSegment segment{ styledText.substr(pos), attributes };
+                        SPDLOG_DEBUG("Styled segment added: '{}'", segment.text);
+                        currentLine.segments.push_back(segment);
+                        break;
+                    } else {
+                        StaticStyledTextSegment segment{ styledText.substr(pos, newLinePos - pos), attributes };
+                        SPDLOG_DEBUG("Styled segment added with line split: '{}'", segment.text);
+                        currentLine.segments.push_back(segment);
+                        result.lines.push_back(currentLine);
+                        SPDLOG_DEBUG("Line pushed (styled text split)");
+                        currentLine = StaticStyledTextLine{};
+                        pos = newLinePos + 1;
+                    }
                 }
             }
 

@@ -28,6 +28,28 @@ namespace input
     auto Init(InputState &inputState) -> void;
     auto Update(entt::registry &registry, InputState &inputState, float dt) -> void;
 
+    void hoverDragSimultaneousCheck(entt::registry &registry, input::InputState &inputState);
+
+    void propagateReleaseToGameObjects(input::InputState &inputState, entt::registry &registry);
+
+    void propagateDragToGameObjects(entt::registry &registry, input::InputState &inputState);
+
+    void propagateClicksToGameObjects(entt::registry &registry, input::InputState &inputState);
+
+    void handleCursorHoverEvent(input::InputState &inputState, entt::registry &registry);
+
+    void handleCursorReleasedEvent(input::InputState &inputState, entt::registry &registry);
+
+    void handleCursorDownEvent(entt::registry &registry, input::InputState &inputState);
+
+    void processRaylibLeftClick(input::InputState &inputState, entt::registry &registry);
+
+    void cacheInputTargets(input::InputState &inputState);
+
+    void resetInputStateForProcessing(input::InputState &inputState);
+
+    void handleRawCursor(input::InputState &inputState, entt::registry &registry);
+
     void ProcessControllerSnapToObject(input::InputState &inputState, entt::registry &registry);
 
     void PropagateButtonAndKeyUpdates(input::InputState &inputState, entt::registry &registry, float dt);

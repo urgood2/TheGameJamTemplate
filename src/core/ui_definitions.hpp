@@ -374,4 +374,26 @@ namespace ui_defs
 
         return row;
     }
+    
+    inline auto uiFeaturesTestDef() -> ui::UIElementTemplateNode
+    {
+        auto titleDividers = ui_defs::putCodedTextBetweenDividers("UI Test", "divider-fade-001.png");
+        
+        // slider
+        // checkbox
+        // button with delay
+        // button group
+        // button with one-time use
+        // button selector
+        
+        // new row with an alert on the top right corner
+        
+        
+        // a button with a tooltip
+        
+        // object grid with selector rect which hovers over the selected object
+        
+        // text input field
+        
+    }
 }

@@ -54,6 +54,7 @@ struct AnimationObject
 /// @brief Any object with this component will be updated by an animationSystem. This object should be attached to any entity which has an animation.
 struct AnimationQueueComponent
 {
+    bool noDraw{false}; // if true, don't draw the animation
     bool enabled{true};
     AnimationObject defaultAnimation{}; //  if this does not exist, and the queue is empty/completed, the entity's SpriteComponentASCII will be used
     std::vector<AnimationObject> animationQueue{}; // a queue of animations to play.

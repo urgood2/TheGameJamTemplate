@@ -377,23 +377,85 @@ namespace ui_defs
     
     inline auto uiFeaturesTestDef() -> ui::UIElementTemplateNode
     {
+        auto masterVerticalContainer = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(YELLOW)
+                    .addEmboss(2.f)
+                    .addOutlineColor(BLUE)
+                    // .addOutlineThickness(5.0f)
+                    // .addMinWidth(500.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        
         auto titleDividers = ui_defs::putCodedTextBetweenDividers("UI Test", "divider-fade-001.png");
         
-        // slider
-        // checkbox
-        // button with delay
-        // button group
-        // button with one-time use
-        // button selector
-        
-        // new row with an alert on the top right corner
+        // TODO: progress bar
+        // TODO: slider
         
         
-        // a button with a tooltip
+        // TODO: checkbox
+        // ======================================
+        // ======================================
+        auto checkboxImage = animation_system::createAnimatedObjectWithTransform("checkmark.png", true, 0, 0);
+
+        auto checkbox = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::OBJECT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addObject(checkboxImage)
+                    // .addColor(WHITE)
+                    // .addScale(0.5f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
         
-        // object grid with selector rect which hovers over the selected object
+        auto row = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    .addEmboss(2.f)
+                    .addMaxHeight(100.f)
+                    .addMaxWidth(300.f)
+                    .addScale(0.5f)
+                    .addHover(true)
+                    
+                    .addButtonCallback([checkboxImage]()
+                                    { SPDLOG_DEBUG("Button callback triggered"); 
+                                        // disable image
+                                        auto &aqc = globals::registry.get<AnimationQueueComponent>(checkboxImage);
+                                        
+                                        aqc.noDraw = !aqc.noDraw;
+                                    })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(checkbox)
+            .build();
         
-        // text input field
+        // TODO: button with delay
         
+        // TODO: button group
+        // TODO: button with one-time use
+        // TODO: button selector
+        
+        // TODO: new row with an alert on the top right corner
+        
+        
+        // TODO: a button with a tooltip
+        
+        // TODO: object grid with selector rect which hovers over the selected object
+        
+        // TODO: text input field
+        
+        
+        
+        // add everything to the master vertical container
+        masterVerticalContainer.children.push_back(titleDividers);
+        masterVerticalContainer.children.push_back(row);
+        
+        return masterVerticalContainer;
     }
 }

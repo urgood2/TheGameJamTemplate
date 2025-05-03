@@ -977,7 +977,14 @@ namespace layer
         bool flipX{false}, flipY{false};
     
         if (registry.any_of<AnimationQueueComponent>(e)) {
+            
             auto& aqc = registry.get<AnimationQueueComponent>(e);
+            
+            if (aqc.noDraw)
+            {
+                return;
+            }
+            
             if (aqc.animationQueue.empty()) {
                 if (!aqc.defaultAnimation.animationList.empty()) {
                     animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
@@ -1145,6 +1152,16 @@ namespace layer
     }
     
     auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void {
+        
+        if (registry.any_of<AnimationQueueComponent>(e))
+        {
+            auto &aqc = registry.get<AnimationQueueComponent>(e);
+            if (aqc.noDraw)
+            {
+                return;
+            }
+        }
+        
         
         // if this entity has a master comp that is a ui element, that means it's a ui object and it needs to respect the ui scale
         float uiScale = 1.0f;

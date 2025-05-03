@@ -208,10 +208,11 @@ namespace game
         
         text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
             // get master
-            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
-            auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
+            //TODO: enable this back later
+            // auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+            // auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
             
-            TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
+            // TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
         };
         
 
@@ -581,16 +582,17 @@ namespace game
                     .addAlign(
                         transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(uiColumnDef)
-            .addChild(testTextContentForUI)
-            .addChild(ui_defs::getButtonGroupRowDef())
+            // .addChild(uiColumnDef)
+            // .addChild(testTextContentForUI)
+            // .addChild(ui_defs::getButtonGroupRowDef())
         //   .addChild(uiDynamicTextEntry)
         //   .addChild(getRandomRectDef())
-            .addChild(consumablesRowDef)
-            .addChild(spriteRowDef)
-            .addChild(dividerText)
+            // .addChild(consumablesRowDef)
+            // .addChild(spriteRowDef)
+            // .addChild(dividerText)
             // .addChild(uiRowDef)
-            .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
+            // .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
+            .addChild(ui_defs::uiFeaturesTestDef())
             .build();
 
         uiBox = ui::box::Initialize(

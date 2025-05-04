@@ -7,6 +7,7 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus)
+- [ ] sometimes checkmark click doesn't go through, why? Sometimes the checkmark moves with button, other times not
 - [ ] Implement more UI element types:
   - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.
@@ -48,7 +49,6 @@
     - Binds to an external data value in ref_table[ref_value]
     - Can trigger a callback when changed
     - Supports keyboard/controller interaction and shoulder button overlays
-  - [ ] Checkboxes -> just a button with an image. The image is set to invisible whenbutton is pressed. Funnel_to and from are used for the container of the checkbox, etc.
   - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
   - [ ] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later

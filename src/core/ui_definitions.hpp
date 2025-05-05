@@ -393,6 +393,19 @@ namespace ui_defs
         auto titleDividers = ui_defs::putCodedTextBetweenDividers("UI Test", "divider-fade-001.png");
         
         // TODO: progress bar
+        //TODO: needs rework to use lambdas
+        auto progressBar = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    .addEmboss(2.f)
+                    .addMaxHeight(100.f)
+                    .addMaxWidth(300.f)
+                    .addProgressBar(true)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
         // TODO: slider
         
         
@@ -437,6 +450,7 @@ namespace ui_defs
         
         // TODO: button with delay
         
+        
         // TODO: button group
         // TODO: button with one-time use
         // TODO: button selector
@@ -455,6 +469,7 @@ namespace ui_defs
         // add everything to the master vertical container
         masterVerticalContainer.children.push_back(titleDividers);
         masterVerticalContainer.children.push_back(row);
+        masterVerticalContainer.children.push_back(progressBar);
         
         return masterVerticalContainer;
     }

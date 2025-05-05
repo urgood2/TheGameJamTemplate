@@ -18,7 +18,8 @@
 
 namespace input
 {
-    const float CURSOR_MINIMUM_MOVEMENT_DISTANCE = 0.1f; // Minimum distance cursor must move to register as having moved in drag/drop calculations
+    const float CURSOR_MINIMUM_MOVEMENT_DISTANCE = 500.f; // Minimum distance cursor must move to register as having moved for something to be a click
+    
     const float TOUCH_INPUT_MINIMUM_HOVER_TIME = 0.1f; // Minimum time cursor must hover over an entity to register as a hover event while using touch input
     
     //axis_cursor, axis, button, mouse, touch
@@ -138,7 +139,7 @@ namespace input
 
         bool cursor_down_handled = true;             // Whether cursor press has been handled in the current frame. If false, the code will handle a click.
         entt::entity cursor_down_target = entt::null; // Entity pressed on
-        std::optional<float> cursor_down_target_click_timeout = 0.1f; //maximum time to wait before a click becomes a hold
+        std::optional<float> cursor_down_target_click_timeout = 5.f; //maximum time to wait before a click becomes a hold
 
         bool cursor_up_handled = true;             // Whether cursor release has been handled in the current frame. If false, the code will handle a click.
         entt::entity cursor_up_target = entt::null; // Entity released on

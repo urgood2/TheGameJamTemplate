@@ -1203,7 +1203,7 @@ namespace ui
                 parallaxDist = 0;
                 buttonBeingPressed = true;
                 
-                SPDLOG_DEBUG("Button being pressed: {}, setting layer displacement to x: {}, y: {}", buttonBeingPressed, node->layerDisplacement->x, node->layerDisplacement->y);
+                // SPDLOG_DEBUG("Button being pressed: {}, setting layer displacement to x: {}, y: {}", buttonBeingPressed, node->layerDisplacement->x, node->layerDisplacement->y);
             }
     
     
@@ -1409,10 +1409,13 @@ namespace ui
                     colorToUse = config->progressBarFullColor.value_or(BLUE);
                     
                     // retrieve the current progress bar value using reflection
-                    auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
-                    auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
-                    float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
-                    SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
+                    //FIXME: change this to use lamdas optionally, commenting out for now
+                    // auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
+                    // auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
+                    // float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
+                    // SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
+                    
+                    float progress = 0.5f; // TODO: remove this line and uncomment the above lines to use reflection to get the progress value
                     
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, std::nullopt, progress);

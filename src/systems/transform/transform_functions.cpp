@@ -405,6 +405,12 @@ namespace transform
         auto &selfNode = registry->get<GameObject>(e);
         Vector2 layeredDisplacement = selfNode.layerDisplacement.value_or(Vector2{0, 0});
         
+        // print layered displacement if entity == 235
+        if (static_cast<int>(e) == 235)
+        {
+            SPDLOG_DEBUG("Layered displacement: x: {}, y: {}", layeredDisplacement.x, layeredDisplacement.y);
+        }
+        
         if (layeredDisplacement.x != 0 && layeredDisplacement.y != 0) {
             // SPDLOG_DEBUG("Layered displacement: x: {}, y: {}", layeredDisplacement.x, layeredDisplacement.y);
         }

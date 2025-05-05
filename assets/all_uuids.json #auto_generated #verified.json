@@ -15897,7 +15897,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\screen_tone_transition_fragment.fs"
     ],
     "fragment_shader_sheen_voucher": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\voucher_sheen_fragment.fs"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\voucher_sheen_fragment.fs",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_fragment.fs"
     ],
     "fragment_shader_shockwave": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/shockwave_fragment.fs",
@@ -16041,13 +16042,16 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\npatch.json"
     ],
     "graphic_rect_rounded": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/rounded_rect.png"
     ],
     "graphic_rect_rounded_small": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect_small.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect_small.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/rounded_rect_small.png"
     ],
     "graphic_rect_rounded_small_very": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect_very_small.png"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect_very_small.png",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/rounded_rect_very_small.aseprite"
     ],
     "graphic_sprite": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/sprites.json",
@@ -17248,7 +17252,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sheen.vs"
     ],
     "shader_sheen_vertex_voucher": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\voucher_sheen_vertex.vs"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\voucher_sheen_vertex.vs",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/voucher_sheen_vertex.vs"
     ],
     "shader_shockwave_vertex": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/shockwave_vertex.vs",

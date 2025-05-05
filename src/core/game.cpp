@@ -191,20 +191,20 @@ namespace game
         };
 
         // make this text update regularly, with a new effect
-        timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
-            randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
+        // timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
+        //     randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
 
-            // clear all effects
-            TextSystem::Functions::clearAllEffects(textEntity);
+        //     // clear all effects
+        //     TextSystem::Functions::clearAllEffects(textEntity);
 
-            // set new random effect to update on text change
-            auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-            text.effectStringsToApplyGloballyOnTextChange.clear();
-            auto randomEffect = random_utils::random_element(randomEffects);
-            text.effectStringsToApplyGloballyOnTextChange.push_back(randomEffect); // add effect to all characters in the texttext.
-            text.effectStringsToApplyGloballyOnTextChange.push_back("fan"); 
-            SPDLOG_DEBUG("Random effect: {}", randomEffect);
-        });
+        //     // set new random effect to update on text change
+        //     auto &text = globals::registry.get<TextSystem::Text>(textEntity);
+        //     text.effectStringsToApplyGloballyOnTextChange.clear();
+        //     auto randomEffect = random_utils::random_element(randomEffects);
+        //     text.effectStringsToApplyGloballyOnTextChange.push_back(randomEffect); // add effect to all characters in the texttext.
+        //     text.effectStringsToApplyGloballyOnTextChange.push_back("fan"); 
+        //     SPDLOG_DEBUG("Random effect: {}", randomEffect);
+        // });
         
         text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
             // get master
@@ -581,17 +581,17 @@ namespace game
                     .addAlign(
                         transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(uiColumnDef)
-            .addChild(testTextContentForUI)
-            .addChild(ui_defs::getButtonGroupRowDef())
-          .addChild(uiDynamicTextEntry)
-        //   .addChild(getRandomRectDef())
-            .addChild(consumablesRowDef)
-            .addChild(spriteRowDef)
-            .addChild(dividerText)
-            .addChild(uiRowDef)
-            .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
-            // .addChild(ui_defs::uiFeaturesTestDef())
+        //     .addChild(uiColumnDef)
+        //     .addChild(testTextContentForUI)
+        //     .addChild(ui_defs::getButtonGroupRowDef())
+        //   .addChild(uiDynamicTextEntry)
+        // //   .addChild(getRandomRectDef())
+        //     .addChild(consumablesRowDef)
+        //     .addChild(spriteRowDef)
+        //     .addChild(dividerText)
+        //     .addChild(uiRowDef)
+        //     .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
+            .addChild(ui_defs::uiFeaturesTestDef())
             .build();
 
         uiBox = ui::box::Initialize(

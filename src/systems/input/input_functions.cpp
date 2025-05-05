@@ -401,6 +401,11 @@ namespace input
             {
                 auto &uiElement = registry.get<ui::UIElementComponent>(inputState.cursor_clicked_target);
                 ui::element::Click(registry, inputState.cursor_clicked_target);
+                
+                if(static_cast<int>(inputState.cursor_clicked_target) == 228)
+                {
+                    SPDLOG_DEBUG("Clicked on checkbox");
+                }
             }
             else if (clickedTargetNode.methods->onClick)
             {
@@ -484,6 +489,7 @@ namespace input
                         // register as click
                         if (downTargetNode.state.clickEnabled)
                         {
+                            SPDLOG_DEBUG("Cursor releasedEvent: cursor down target {} has click enabled, registering as click", static_cast<int>(inputState.cursor_down_target));
                             inputState.cursor_clicked_target = inputState.cursor_down_target;
                             inputState.cursor_click_handled = false;
                         }

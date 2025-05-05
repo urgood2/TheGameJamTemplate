@@ -19,11 +19,25 @@ namespace shader_pipeline {
         // custom lamdna for this shader pass, run before activatingt the shader for this pass
         std::function<void()> customPrePassFunction{};
     };
+    
+    enum class OverlayInputSource { BaseSprite, PostPassResult };
+
+    struct ShaderOverlayDraw {
+        OverlayInputSource inputSource;
+        std::string shaderName;
+        shaders::ShaderUniformSet uniforms;  // ✅ Now matches ApplyUniformsToShader
+        std::function<void()> customPrePassFunction = nullptr;
+        BlendMode blendMode = BlendMode::BLEND_ALPHA;
+        bool enabled = true;
+    };
 
     struct ShaderPipelineComponent {
         std::vector<ShaderPass> passes;
+        std::vector<ShaderOverlayDraw> overlayDraws;
         float padding = 8.0f; // Default padding for each side
     };
+    
+    
 
     inline RenderTexture2D ping = {};
     inline RenderTexture2D pong = {};

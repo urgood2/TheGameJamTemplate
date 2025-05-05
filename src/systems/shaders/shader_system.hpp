@@ -16,6 +16,7 @@ using ShaderUniformValue = std::variant<
         Vector2,
         Vector3,
         Vector4,
+        bool,
         Texture2D
     >;
 // #include "third_party/rlImGui/imgui.h"

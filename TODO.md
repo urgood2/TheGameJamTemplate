@@ -7,7 +7,12 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus)
-- [ ] sometimes checkmark click doesn't go through, why? Sometimes the checkmark moves with button, other times not
+- [ ] implement voucher sheen
+- [ ] booster shader too transparent? how does it work? figure out -> shaders seem simply overlaid? need to add this feature with draw steps? -> apply from here; https://chatgpt.com/share/68189c46-3d30-800a-b452-5db6ea4ced73
+- [ ] animation scaling not applied to pipeline rendering
+- [ ] buttons need to catch mouse click, even when it moves away after the initia click and releases elsewhere.
+- [ ] apply scaling to render anim function (pipeline) to increase buffer?
+- [ ] sometimes checkmark click doesn't go through, why? Sometimes the checkmark moves with button, other times not -> is this because of thei mage?
 - [ ] Implement more UI element types:
   - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.

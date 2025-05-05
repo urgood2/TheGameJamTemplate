@@ -308,6 +308,9 @@ namespace shaders {
                                 } else if constexpr (std::is_same_v<T, Texture2D>) {
                                     ImGui::Text("%s (Texture ID: %d, %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
                                 }
+                                else if constexpr (std::is_same_v<T, bool>) {
+                                    SPDLOG_INFO("  {}: bool = {}", uniformName, value ? "true" : "false");
+                                }
                                 else {
                                     SPDLOG_WARN("  {}: Unknown uniform type", uniformName);
                                 }
@@ -331,7 +334,10 @@ namespace shaders {
                                 ImGui::DragFloat3(uniformName.c_str(), &value.x, 0.01f);
                             } else if constexpr (std::is_same_v<T, Vector4>) {
                                 ImGui::ColorEdit4(uniformName.c_str(), &value.x);
-                            } else if constexpr (std::is_same_v<T, Texture2D>) {
+                            } else if constexpr (std::is_same_v<T, bool>) {
+                                ImGui::Checkbox(uniformName.c_str(), &value);
+                            }                          
+                            else if constexpr (std::is_same_v<T, Texture2D>) {
                                 ImGui::Text("%s: Texture2D (id: %d, size: %dx%d)", uniformName.c_str(), value.id, value.width, value.height);
                                 // Optional preview
                                 // ImGui::Image((ImTextureID)(intptr_t)value.id, ImVec2(64, 64));

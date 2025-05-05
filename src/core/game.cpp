@@ -289,27 +289,26 @@ namespace game
             
             // add pipeline component
             auto &shaderPipeline = globals::registry.emplace<shader_pipeline::ShaderPipelineComponent>(e);
-            auto pass = shader_pipeline::createShaderPass("holo", {});
+            auto pass = shader_pipeline::createShaderPass("voucher_sheen", {});
             pass.customPrePassFunction = []() {
                 // Custom pre-pass logic here
                 // For example, you can set shader uniforms or perform other operations
                 // before the shader is activated for this pass.
                 // this function is called after the uniforms are applied for the pass
-                shaders::TryApplyUniforms(shaders::getShader("holo"), globals::globalShaderUniforms, "holo");
+                shaders::TryApplyUniforms(shaders::getShader("voucher_sheen"), globals::globalShaderUniforms, "voucher_sheen");
             };
             
             shaderPipeline.passes.push_back(pass);
             
-            auto pass2 = shader_pipeline::createShaderPass("flash", {});
-            pass2.customPrePassFunction = []() {
-                shaders::TryApplyUniforms(shaders::getShader("flash"), globals::globalShaderUniforms, "flash");
-            };
-            shaderPipeline.passes.push_back(pass2);
+            // auto pass2 = shader_pipeline::createShaderPass("flash", {});
+            // pass2.customPrePassFunction = []() {
+            //     shaders::TryApplyUniforms(shaders::getShader("flash"), globals::globalShaderUniforms, "flash");
+            // };
+            // shaderPipeline.passes.push_back(pass2);
         };
 
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
         player = animation_system::createAnimatedObjectWithTransform("4126-TheRoguelike_1_10_alpha_919.png", true, 400, 400, shaderPassConfigFunction);
-        auto &playerTransform = globals::registry.get<transform::Transform>(player);
         auto &playerNode = globals::registry.get<transform::GameObject>(player);
         playerNode.debug.debugText = "Player";
         playerNode.state.dragEnabled = true;
@@ -317,15 +316,15 @@ namespace game
         playerNode.state.collisionEnabled = true;
         playerNode.state.clickEnabled = true;
 
-        player2 = animation_system::createAnimatedObjectWithTransform("checkmark.png", true, 400, 400, shaderPassConfigFunction);
-        auto &playerTransform2 = globals::registry.get<transform::Transform>(player2);
+        player2 = animation_system::createAnimatedObjectWithTransform("test_char_woman.png", true, 400, 400, shaderPassConfigFunction);
         auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
         playerNode2.debug.debugText = "Player (untethered)";
         playerNode2.state.dragEnabled = true;
         playerNode2.state.hoverEnabled = true;
         playerNode2.state.collisionEnabled = true;
         playerNode2.state.clickEnabled = true;
-        animation_system::resizeAnimationObjectsInEntityToFit(player2, 150.f, 150.f);
+        //FIXME: commenting this out for now, for debugging
+        // animation_system::resizeAnimationObjectsInEntityToFit(player2, 150.f, 150.f);
 
         // massive container the size of the screen
         transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
@@ -582,17 +581,17 @@ namespace game
                     .addAlign(
                         transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            // .addChild(uiColumnDef)
-            // .addChild(testTextContentForUI)
-            // .addChild(ui_defs::getButtonGroupRowDef())
-        //   .addChild(uiDynamicTextEntry)
+            .addChild(uiColumnDef)
+            .addChild(testTextContentForUI)
+            .addChild(ui_defs::getButtonGroupRowDef())
+          .addChild(uiDynamicTextEntry)
         //   .addChild(getRandomRectDef())
-            // .addChild(consumablesRowDef)
-            // .addChild(spriteRowDef)
-            // .addChild(dividerText)
-            // .addChild(uiRowDef)
-            // .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
-            .addChild(ui_defs::uiFeaturesTestDef())
+            .addChild(consumablesRowDef)
+            .addChild(spriteRowDef)
+            .addChild(dividerText)
+            .addChild(uiRowDef)
+            .addChild(ui_defs::getNewTextEntry("HEY HEY!"))
+            // .addChild(ui_defs::uiFeaturesTestDef())
             .build();
 
         uiBox = ui::box::Initialize(
@@ -745,6 +744,9 @@ namespace game
         {
             if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
             {
+                //FIXME: debugging, remove later
+                layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, e, 0);
+
                 layer::AddDrawTransformEntityWithAnimationWithPipeline(sprites, &globals::registry, e, 0);
             }
             else

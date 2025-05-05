@@ -83,7 +83,9 @@ namespace animation_system {
         // set width and height to the animation size
         //TODO: optionally provide custom size upon init
         transform.setActualW(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.width);
-        transform.setActualH(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.height);        
+        transform.setActualH(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.height); 
+        
+        shaderPassConfig(e); // pass the entity to the shader pass config function
         
         return e;
     }

@@ -1144,6 +1144,7 @@
             <key type="filename">pre-packing-files_globbed/4181-TheRoguelike_1_10_alpha_974.png</key>
             <key type="filename">pre-packing-files_globbed/4182-TheRoguelike_1_10_alpha_975.png</key>
             <key type="filename">pre-packing-files_globbed/4183-TheRoguelike_1_10_alpha_976.png</key>
+            <key type="filename">rounded_rect_small.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -1582,6 +1583,7 @@
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_r.png</key>
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_l.png</key>
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_r.png</key>
+            <key type="filename">rounded_rect.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -1947,6 +1949,21 @@
                 <rect>32,32,64,64</rect>
                 <key>scale9Paddings</key>
                 <rect>32,32,64,64</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">rounded_rect_very_small.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9Paddings</key>
+                <rect>4,4,8,8</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -3496,6 +3513,9 @@
                     <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_scroll_vertical_outline.png</filename>
                     <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_small.png</filename>
                     <filename>pre-packing-files_globbed/Keyboard &amp; Mouse/Default/mouse_vertical.png</filename>
+                    <filename>rounded_rect.png</filename>
+                    <filename>rounded_rect_small.png</filename>
+                    <filename>rounded_rect_very_small.png</filename>
                 </array>
             </struct>
         </map>

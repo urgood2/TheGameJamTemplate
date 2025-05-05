@@ -18,7 +18,7 @@ namespace ui_defs
     {
         NPatchInfo nPatchinfo;
         Texture2D npatchTexture;
-        std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("panel-005.png");
+        std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("rounded_rect_very_small.png");
         
         return ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::RECT_SHAPE)
@@ -126,7 +126,7 @@ namespace ui_defs
         //TODO: unify all styles?
         NPatchInfo nPatchinfo;
         Texture2D npatchTexture;
-        std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("panel-005.png");
+        std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("rounded_rect_small.png");
 
         auto button = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)

@@ -369,5 +369,19 @@ namespace game
         globalShaderUniforms.set("spectrum_line_background", "uBeamX",          400.0f);  //
 
 
+        globalShaderUniforms.set("voucher_sheen", "booster", Vector2{0.0f, 0.0f});
+        globalShaderUniforms.set("voucher_sheen", "dissolve", 0.0f);
+        globalShaderUniforms.set("voucher_sheen", "time", 0.0f);
+        globalShaderUniforms.set("voucher_sheen", "texture_details", Vector4{0.0f, 0.0f, 64.0f, 64.0f}); // .xy = offset, .zw = scale
+        globalShaderUniforms.set("voucher_sheen", "image_details", Vector2{64.0f, 64.0f}); // set to your texture size
+        globalShaderUniforms.set("voucher_sheen", "shadow", false);
+        globalShaderUniforms.set("voucher_sheen", "burn_colour_1", ColorNormalize(BLUE));
+        globalShaderUniforms.set("voucher_sheen", "burn_colour_2", ColorNormalize(PURPLE));
+
+        // Optional live updates
+        shaders::registerUniformUpdate("voucher_sheen", [](Shader &shader) {
+            globalShaderUniforms.set("voucher_sheen", "time", static_cast<float>(GetTime()));
+        });
+
     }
 }

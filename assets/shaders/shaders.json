@@ -79,5 +79,9 @@
     "spectrum_line_background": {
         "vertex": "spectrum_line_background_vertex.vs",
         "fragment": "spectrum_line_background_fragment.fs"
+    },
+    "voucher_sheen": {
+        "vertex": "voucher_sheen_vertex.vs",
+        "fragment": "voucher_sheen_fragment.fs"
     }
 }

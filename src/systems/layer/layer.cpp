@@ -1072,16 +1072,15 @@ namespace layer
             // BeginTextureMode(back());
             ClearBackground({0, 0, 0, 0});
             
+            AssertThat(shader.id, IsGreaterThan(0));
+            //FIXME: commenting out shader for debugging
+            BeginShaderMode(shader);
+
             shaders::ApplyUniformsToShader(shader, pass.uniforms);
-            
             // run optional lambda pre-pass
             if (pass.customPrePassFunction) {
                 pass.customPrePassFunction();
             }
-    
-            AssertThat(shader.id, IsGreaterThan(0));
-            //FIXME: commenting out shader for debugging
-            BeginShaderMode(shader);
     
             DrawTextureRec(front().texture, {0, 0, (float)width * xFlipModifier, (float)-height * yFlipModifier}, {0, 0}, WHITE); // invert Y 
     

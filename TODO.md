@@ -11,7 +11,7 @@
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] buttons need to catch mouse click, even when it moves away after the initia click and releases elsewhere.
 - [ ] apply scaling to render anim function (pipeline) to increase buffer?
-- [ ] checkbox working, need to offset animated sprites by layer offset. sometimes the checkbox image gets stuck in a lowered state, not sure why, it's not layered displacement 
+- [ ] checkbox working, need to offset animated sprites by layer offset. sometimes the checkbox image gets stuck in a lowered state, not sure why, it's not layered displacement -> should layer offset change the position of the transform? how? -> apply to moving text too
 - [ ] Implement more UI element types:
   - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.

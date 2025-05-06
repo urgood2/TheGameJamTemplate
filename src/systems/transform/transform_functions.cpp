@@ -1,6 +1,7 @@
 #include "transform_functions.hpp"
 
 #include "raylib.h"
+#include "raymath.h"
 #include <cmath>
 
 #include "systems/main_loop_enhancement/main_loop.hpp"
@@ -408,7 +409,7 @@ namespace transform
         // print layered displacement if entity == 235
         if (static_cast<int>(e) == 235)
         {
-            SPDLOG_DEBUG("Layered displacement: x: {}, y: {}", layeredDisplacement.x, layeredDisplacement.y);
+            // SPDLOG_DEBUG("Layered displacement: x: {}, y: {}", layeredDisplacement.x, layeredDisplacement.y);
         }
         
         if (layeredDisplacement.x != 0 && layeredDisplacement.y != 0) {
@@ -955,10 +956,13 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         transform.frameCalculation.currentMasterCache.reset();
         transform.frameCalculation.lastUpdatedFrame = main_loop::mainLoop.frame; // save frame counter
 
-        if (node.ignoresPause == false && globals::isGamePaused)
-        {
-            return; // don't move if paused
-        }
+        //FIXME: this is a hacky fix
+        // if (node.ignoresPause == false && globals::isGamePaused)
+        // {
+        //     return; // don't move if paused
+        // }
+        
+        
 
         AlignToMaster(registry, e);
 
@@ -984,13 +988,32 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                     UpdateTransform(registry, role.master, dt);
                 }
                 
+                
+                
                 transform.frameCalculation.stationary = parentTransform.frameCalculation.stationary;
+                
+                // if layered displacement is different, update it, set stationary to false
+                if (node.layerDisplacement &&
+                    !Vector2Equals(node.layerDisplacement.value(), node.layerDisplacementPrev.value_or(Vector2{0, 0})))
+
+                {
+                    node.layerDisplacementPrev = node.layerDisplacement;
+                    transform.frameCalculation.stationary = false;
+                }
+                
+                if (static_cast<int>(role.master) == 235)
+                {
+                    SPDLOG_DEBUG("Entity 235 stationary state: {}", transform.frameCalculation.stationary);
+                }
 
                 if ((transform.frameCalculation.stationary == false) || (transform.frameCalculation.alignmentChanged) || (transform.dynamicMotion) || (role.location_bond == InheritedProperties::Sync::Weak) || (role.rotation_bond == InheritedProperties::Sync::Weak))
                 {
 
                     node.debug.calculationsInProgress = true;
                     MoveWithMaster(registry, e, dt);
+                    if (static_cast<int>(e) == 235) {
+                        SPDLOG_DEBUG("Entity 235 moving with master");
+                    }
                 }
             }
             

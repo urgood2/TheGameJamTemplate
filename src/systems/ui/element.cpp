@@ -43,7 +43,6 @@ namespace ui
 
         if (config && config->object)
         {
-            // TODO: does this mean objects attached to a ui element also need to have a ui element component? or can this be moved elsewhere?
             // TODO: think of a more logical place for parent variable (perhaps node?)
             // auto &objectUIElement = registry.get<UIElementComponent>(config->object.value());
             auto &objectUINode = registry.get<transform::GameObject>(config->object.value());

@@ -1288,6 +1288,10 @@ namespace layer
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
     
+        if (static_cast<int>(e) == 235)
+        {
+            SPDLOG_DEBUG("DrawTransformEntityWithAnimationWithPipeline > Entity ID: {}, getVisualY: {}, getVisualX: {}, getVisualW: {}, getVisualH: {}", static_cast<int>(e), transform.getVisualY(), transform.getVisualX(), transform.getVisualW(), transform.getVisualH());
+        }
         PushMatrix();
         Translate(position.x, position.y);
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
@@ -1398,6 +1402,11 @@ namespace layer
         
         // fetch transform
         auto &transform = registry.get<transform::Transform>(e);
+        
+        if (static_cast<int>(e) == 235)
+        {
+            SPDLOG_DEBUG("DrawTransformEntityWithAnimationWithPipeline > Entity ID: {}, getVisualY: {}, getVisualX: {}, getVisualW: {}, getVisualH: {}", static_cast<int>(e), transform.getVisualY(), transform.getVisualX(), transform.getVisualW(), transform.getVisualH());
+        }
         
         
         PushMatrix();

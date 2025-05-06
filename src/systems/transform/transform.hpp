@@ -184,6 +184,7 @@ namespace transform
 
         std::optional<Vector2> shadowDisplacement; // parallax for shadows
         std::optional<Vector2> layerDisplacement;  // parallax for layers
+        std::optional<Vector2> layerDisplacementPrev; // previous layer displacement for parallax
         std::optional<float> shadowHeight;         // depth of a shadow, used for rendering shadow
     };
 

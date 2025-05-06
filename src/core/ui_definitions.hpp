@@ -400,13 +400,14 @@ namespace ui_defs
             .addConfig(
                 ui::UIConfig::Builder::create()
                     .addColor(GRAY)
+                    .addProgressBarMaxValue(1.f)
                     .addEmboss(2.f)
                     .addMinHeight(100.f)
                     .addMinWidth(300.f)
                     .addProgressBar(true)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(progressBarText)
+            // .addChild(progressBarText)
             .build();
         // TODO: slider
         

@@ -598,6 +598,8 @@ namespace ui
      */
     void util::DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
     {
+        if (progress)
+            SPDLOG_DEBUG("Progress: {}", progress.value());
         ::util::Profiler profiler("DrawSteppedRoundedRectangle");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
@@ -631,15 +633,6 @@ namespace ui
             || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON)
             || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON))
         {
-            if (rectCache)
-            {
-                // SPDLOG_DEBUG("Visual W: {}, Visual H: {}", transform.getVisualW(), transform.getVisualH());
-                // SPDLOG_DEBUG("Cache w: {}, Cache h: {}", rectCache->w, rectCache->h);
-                // SPDLOG_DEBUG("Cache shadow x: {}, Cache shadow y: {}", rectCache->shadowDisplacement.x, rectCache->shadowDisplacement.y);
-                // SPDLOG_DEBUG("Node shadow x: {}, Node shadow y: {}", node.shadowDisplacement->x, node.shadowDisplacement->y);
-                // SPDLOG_DEBUG("Cache progress: {}, Progress: {}", rectCache->progress.value(), progress.value_or(1.0f));
-                // SPDLOG_DEBUG("Cache type: {}, Type: {}", rectCache->renderTypeFlags, type);
-            }
             // TODO: this runs too often
             //  SPDLOG_DEBUG("Regenerating cache for rounded rectangle");
             //  regenerate cache
@@ -861,6 +854,7 @@ namespace ui
             // filled progress
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVertices, colorToUse);
             layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, entity, colorToUse);
+            
             layer::AddPopMatrix(layerPtr);
         }
         // and ... or outline

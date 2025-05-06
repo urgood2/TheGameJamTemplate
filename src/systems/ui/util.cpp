@@ -844,6 +844,29 @@ namespace ui
             // layer::AddTranslate(layerPtr, actualX, actualY);
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+            
+            // shrink the inner vertices so they look outlined
+            {
+                float shrinkPx = 4.0f;
+
+                float targetW = rectCache->w * progressVal - 2.0f * shrinkPx;
+                float targetH = rectCache->h - 2.0f * shrinkPx;
+
+                // Prevent negative dimensions
+                targetW = std::max(0.0f, targetW);
+                targetH = std::max(0.0f, targetH);
+
+                float scaleX = targetW / (rectCache->w * progressVal);
+                float scaleY = targetH / rectCache->h;
+
+                float centerX = (rectCache->w * progressVal) / 2.0f;
+                float centerY = rectCache->h / 2.0f;
+
+                layer::AddTranslate(layerPtr, centerX, centerY);       // move to center
+                layer::AddScale(layerPtr, scaleX, scaleY);             // scale around center
+                layer::AddTranslate(layerPtr, -centerX, -centerY);     // move back
+
+            }
 
             Color colorToUse{};
 

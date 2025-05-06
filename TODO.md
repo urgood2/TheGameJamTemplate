@@ -7,7 +7,6 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus saving between windows)
-- [ ] render the progress inside the progress bar slightly smaller using scale()
 - [ ] progress bar rendering using scissoring & ninepatch
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering

@@ -394,6 +394,7 @@ namespace ui_defs
         
         // TODO: progress bar
         //TODO: needs rework to use lambdas
+        auto progressBarText = getNewTextEntry("Progress Bar");
         auto progressBar = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -405,6 +406,7 @@ namespace ui_defs
                     .addProgressBar(true)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
+            .addChild(progressBarText)
             .build();
         // TODO: slider
         

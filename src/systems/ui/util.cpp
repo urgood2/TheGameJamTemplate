@@ -626,7 +626,7 @@ namespace ui
             // || rectCache->renderTypeFlags != type
             || (rectCache->innerVertices.empty() && rectCache->outerVertices.empty()) || std::abs(rectCache->w - visualW) > EPSILON || std::abs(rectCache->h - visualH) > EPSILON
             // || (node.shadowDisplacement.has_value() && (rectCache->shadowDisplacement != node.shadowDisplacement.value()))
-            // || std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON
+            || std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON
             || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value() > EPSILON)) 
             || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON)
             || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON))

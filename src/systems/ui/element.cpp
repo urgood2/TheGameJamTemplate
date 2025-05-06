@@ -1571,10 +1571,11 @@ namespace ui
         // Handle button delay
         if (uiConfig->buttonDelay)
         {
-            if (uiConfig->buttonCallback)
-                uiConfig->buttonTemp = uiConfig->buttonCallback;
-            uiConfig->buttonCallback = std::nullopt;
+            // if (uiConfig->buttonCallback)
+            //     uiConfig->buttonTemp = uiConfig->buttonCallback;
+            // uiConfig->buttonCallback = std::nullopt;
             uiConfig->buttonDelayProgress = (main_loop::mainLoop.realtimeTimer - uiConfig->buttonDelayStart.value()) / uiConfig->buttonDelay.value();
+            SPDLOG_DEBUG("Button delay progress: {}", uiConfig->buttonDelayProgress.value());
 
             if (main_loop::mainLoop.realtimeTimer >= uiConfig->buttonDelayEnd.value())
             {

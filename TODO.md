@@ -7,10 +7,12 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus saving between windows)
+- [ ] skipping button delay, doesn't seem useful atm
+- [ ]  onepress-> just add disable feature, please
+- [ ] need to be able to turn off hover darkening on ui
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] apply scaling to render anim function (pipeline) to increase buffer?
-- [ ] apply button press movement to moving text too 
 - [ ] Implement more UI element types:
   - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.

@@ -473,7 +473,6 @@ namespace ui_defs
                 ui::UIConfig::Builder::create()
                     .addObject(checkboxImage)
                     // .addColor(WHITE)
-                    // .addScale(0.5f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .build();
@@ -484,8 +483,8 @@ namespace ui_defs
                 ui::UIConfig::Builder::create()
                     .addColor(GRAY)
                     .addEmboss(2.f)
-                    .addMaxHeight(100.f)
-                    .addMaxWidth(300.f)
+                    .addMaxHeight(50.f)
+                    .addMaxWidth(50.f)
                     .addScale(0.5f)
                     .addHover(true)
                     
@@ -501,8 +500,28 @@ namespace ui_defs
             .addChild(checkbox)
             .build();
         
-        // TODO: button with delay
+        // TODO: button one-press
+        auto buttonDynamicText = getNewDynamicTextEntry("Button (single press)", 20.f, std::nullopt, "pulse=0.9,1.1");
         
+        auto buttonWithDelay = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(RED)
+                    .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(300.f)
+                    .addHover(true)
+                    .addOnePress(true)
+                    
+                    .addButtonCallback([]()
+                                    { 
+                                        
+                                    })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(buttonDynamicText)
+            .build();
         
         // TODO: button group
         // TODO: button with one-time use
@@ -524,6 +543,7 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(row);
         masterVerticalContainer.children.push_back(progressBar);
         masterVerticalContainer.children.push_back(progressBar9Patch);
+        masterVerticalContainer.children.push_back(buttonWithDelay);
         
         return masterVerticalContainer;
     }

@@ -550,7 +550,7 @@ namespace ui
         colorToUse = colorOverride;
 
         // filled
-        layer::AddRenderNPatchRect(layerPtr, nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, {0, 0}, 0.f, colorToUse);
+        layer::AddRenderNPatchRect(layerPtr, nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW, visualH}, {0, 0}, 0.f, colorToUse);
         layer::AddPopMatrix(layerPtr);
 
         // fill progress, if there is any
@@ -563,16 +563,34 @@ namespace ui
             Color colorToUse{};
 
             colorToUse = (uiConfig->progressBarFullColor.value_or(RED));
-            
-            // make trasnlucent since we're tinting
-            colorToUse.a = 125; 
 
             // not shadow, ensure color is not translucent
             
             //TODO: i probably just want an overlay tinting of some sort over the rect, not actually ninepatch.
 
             // filled progress
-            layer::AddRectanglePro(layerPtr, 0, 0, {visualW * progressVal, visualH}, colorToUse);
+            float shrink = globals::UI_PROGRESS_BAR_INSET_PIXELS;
+            float newW = visualW * progressVal - 2 * shrink;
+            float newH = visualH - 2 * shrink;
+
+            newW = std::max(0.0f, newW);
+            newH = std::max(0.0f, newH);
+
+            // Center offset: translate before drawing
+            float translateX = (visualW * progressVal - newW) / 2.0f;
+            float translateY = (visualH - newH) / 2.0f;
+
+            layer::AddTranslate(layerPtr, translateX, translateY);
+
+            layer::AddRenderNPatchRect(
+                layerPtr,
+                nPatchAtlas,
+                nPatchInfo,
+                Rectangle{0, 0, newW, newH},
+                {0, 0}, // ✅ no offset needed inside the rect
+                0.f,
+                colorToUse
+            );
             
             layer::AddPopMatrix(layerPtr);
         }
@@ -847,7 +865,7 @@ namespace ui
             
             // shrink the inner vertices so they look outlined
             {
-                float shrinkPx = 4.0f;
+                float shrinkPx = globals::UI_PROGRESS_BAR_INSET_PIXELS;
 
                 float targetW = rectCache->w * progressVal - 2.0f * shrinkPx;
                 float targetH = rectCache->h - 2.0f * shrinkPx;

@@ -393,10 +393,8 @@ namespace ui_defs
         
         auto titleDividers = ui_defs::putCodedTextBetweenDividers("UI Test", "divider-fade-001.png");
         
-        // TODO: progress bar
-        //TODO: needs rework to use lambdas
-        auto progressBarText = getNewTextEntry("Progress Bar");
-        auto progressBarTextMoving = getNewDynamicTextEntry("Progress Bar", 20.f, std::nullopt, "pulse=0.9,1.1");
+        // TODO: progress bar rounded rect
+        auto progressBarTextMoving = getNewDynamicTextEntry("Progress Bar (vertices)", 20.f, std::nullopt, "pulse=0.9,1.1");
         static float progressValueExample = 0.f;
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
             
@@ -419,6 +417,43 @@ namespace ui_defs
                     .addProgressBarFetchValueLamnda([](entt::entity e)
                                     { 
                                         return progressValueExample;
+                                    })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(progressBarTextMoving)
+            .build();
+            
+        // progress bar with ninepatch
+            
+        progressBarTextMoving = getNewDynamicTextEntry("Progress Bar (9-patch)", 20.f, std::nullopt, "wiggle=12,15,0.5");
+        static float progressValueExample9Patch = 0.f;
+        timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
+            
+            // set value based on sin of time, 0 < value < 1
+            progressValueExample9Patch = (std::sin(GetTime()) + 1.f) / 2.f;
+            
+        });
+        
+        NPatchInfo nPatchinfo;
+        Texture2D npatchTexture;
+        std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("rounded_rect_very_small.png");
+        auto progressBar9Patch = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    // .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(500.f)
+                    .addStylingType(ui::UIStylingType::NINEPATCH_BORDERS)
+                    .addNPatchInfo(nPatchinfo)
+                    .addNPatchSourceTexture(npatchTexture)
+                    .addProgressBar(true)
+                    .addProgressBarEmptyColor(YELLOW)
+                    .addProgressBarFullColor(PINK)
+                    .addProgressBarFetchValueLamnda([](entt::entity e)
+                                    { 
+                                        return progressValueExample9Patch;
                                     })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
@@ -488,6 +523,7 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(titleDividers);
         masterVerticalContainer.children.push_back(row);
         masterVerticalContainer.children.push_back(progressBar);
+        masterVerticalContainer.children.push_back(progressBar9Patch);
         
         return masterVerticalContainer;
     }

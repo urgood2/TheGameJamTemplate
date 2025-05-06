@@ -7,7 +7,6 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus saving between windows)
-- [ ] progress bar rendering using scissoring & ninepatch
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] apply scaling to render anim function (pipeline) to increase buffer?

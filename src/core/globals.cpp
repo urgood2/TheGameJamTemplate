@@ -33,6 +33,8 @@ namespace globals {
     
 
     bool drawDebugInfo = false; // set to true to allow debug drawing of transforms
+    
+    const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 
     shaders::ShaderUniformComponent globalShaderUniforms{}; // keep track of shader uniforms
 

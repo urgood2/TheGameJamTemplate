@@ -186,6 +186,8 @@ namespace ui
         bool disable_button = false;                                 // If this is a button, is it disabled?
 
         // UI Element State
+        // should return a value between 0 and 1, used for setting the progress bar value, given no ref_component is set
+        std::function<float(entt::entity)> progressBarFetchValueLambda = nullptr; 
         bool progressBar = false;                                                            // Indicates if this is a progress bar. A progress bar must have progressBarValueFieldName and progressBarMaxValue and progressBarComponentName set.
         std::optional<Color> progressBarEmptyColor, progressBarFullColor;                    // Progress bar colors
         std::optional<float> progressBarMaxValue;                                            // Max value for progress bar
@@ -463,6 +465,11 @@ namespace ui
 
             Builder& addDisableButton(const bool& disableButton) {
                 uiConfig->disable_button = disableButton;
+                return *this;
+            }
+            
+            Builder& addProgressBarFetchValueLamnda(const std::function<float(entt::entity)>& progressBarFetchValueLambda) {
+                uiConfig->progressBarFetchValueLambda = progressBarFetchValueLambda;
                 return *this;
             }
 

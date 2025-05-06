@@ -62,10 +62,10 @@ namespace TextSystem
             }
 
             //TODO: testing
-            gameObject.state.dragEnabled = true;
-            gameObject.state.hoverEnabled = true;
-            gameObject.state.collisionEnabled = true;
-            gameObject.state.clickEnabled = true;
+            // gameObject.state.dragEnabled = true;
+            // gameObject.state.hoverEnabled = true;
+            // gameObject.state.collisionEnabled = true;
+            // gameObject.state.clickEnabled = true;
             return entity;
         }
         

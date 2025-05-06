@@ -682,11 +682,12 @@ namespace layer
                 SetRLTexture(texture);
             }
             else if (command.type == "render_rect_vertices_filled_layer") {
-                AssertThat(command.args.size(), Equals(3));
+                AssertThat(command.args.size(), Equals(4));
                 Rectangle outerRec = std::get<Rectangle>(command.args[0]);
-                entt::entity cache = std::get<entt::entity>(command.args[1]);
-                Color color = std::get<Color>(command.args[2]);
-                RenderRectVerticesFilledLayer(layer, outerRec, cache, color);
+                bool progressOrFullBackground = std::get<bool>(command.args[1]);
+                entt::entity cache = std::get<entt::entity>(command.args[2]);
+                Color color = std::get<Color>(command.args[3]);
+                RenderRectVerticesFilledLayer(layer, outerRec, progressOrFullBackground, cache, color);
             }
             else if (command.type == "render_rect_verticles_outline_layer") {
                 AssertThat(command.args.size(), Equals(3));
@@ -811,15 +812,15 @@ namespace layer
         DrawTextureNPatch(sourceTexture, info, dest, origin, rotation, tint);
     }
 
-    void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color, int z) {
-        AddDrawCommand(layerPtr, "render_rect_vertices_filled_layer", {outerRec, cacheEntity, color}, z);
+    void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color, int z) {
+        AddDrawCommand(layerPtr, "render_rect_vertices_filled_layer", {outerRec, progressOrFullBackground, cacheEntity, color}, z);
     }
 
-    void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color) {
+    void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color) {
         
         auto &cache  = globals::registry.get<ui::RoundedRectangleVerticesCache>(cacheEntity);
         
-        auto &outerVertices = cache.outerVerticesFull;
+        auto &outerVertices = progressOrFullBackground ? cache.outerVertices : cache.outerVerticesFull;
 
 
         rlColor4ub(255, 255, 255, 255); // Reset to white before each draw

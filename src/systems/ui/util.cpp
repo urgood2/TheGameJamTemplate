@@ -598,8 +598,6 @@ namespace ui
      */
     void util::DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
     {
-        if (progress)
-            SPDLOG_DEBUG("Progress: {}", progress.value());
         ::util::Profiler profiler("DrawSteppedRoundedRectangle");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
@@ -625,19 +623,25 @@ namespace ui
 
         // comparisons to detect if the cache is usable
         if (!rectCache
-            // || rectCache->renderTypeFlags != type
+            || rectCache->renderTypeFlags != type
             || (rectCache->innerVertices.empty() && rectCache->outerVertices.empty()) || std::abs(rectCache->w - visualW) > EPSILON || std::abs(rectCache->h - visualH) > EPSILON
             // || (node.shadowDisplacement.has_value() && (rectCache->shadowDisplacement != node.shadowDisplacement.value()))
             || std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON
-            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value() > EPSILON)) 
-            || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON)
-            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON))
+            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value() > EPSILON)) || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON))
         {
+            if (rectCache)
+            {
+                // SPDLOG_DEBUG("Visual W: {}, Visual H: {}", transform.getVisualW(), transform.getVisualH());
+                // SPDLOG_DEBUG("Cache w: {}, Cache h: {}", rectCache->w, rectCache->h);
+                // SPDLOG_DEBUG("Cache shadow x: {}, Cache shadow y: {}", rectCache->shadowDisplacement.x, rectCache->shadowDisplacement.y);
+                // SPDLOG_DEBUG("Node shadow x: {}, Node shadow y: {}", node.shadowDisplacement->x, node.shadowDisplacement->y);
+                // SPDLOG_DEBUG("Cache progress: {}, Progress: {}", rectCache->progress.value(), progress.value_or(1.0f));
+                // SPDLOG_DEBUG("Cache type: {}, Type: {}", rectCache->renderTypeFlags, type);
+            }
             // TODO: this runs too often
             //  SPDLOG_DEBUG("Regenerating cache for rounded rectangle");
             //  regenerate cache
-            float lineWidthToUse = lineWidthOverride.value_or(uiConfig->outlineThickness.value_or(1.0f));
-            emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, lineWidthToUse, type, progress.value_or(1.0f));
+            emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
         }
 
         rectCache = registry.try_get<RoundedRectangleVerticesCache>(entity);
@@ -658,6 +662,11 @@ namespace ui
         float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
 
         auto progressVal = rectCache->progress.value_or(1.0f);
+        
+        if (progress)
+        {
+            // SPDLOG_DEBUG("Progress value provided: {}", progress.value());
+        }
 
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && uiConfig->shadow)
         {
@@ -686,7 +695,7 @@ namespace ui
 
             // filled shadow
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, entity, colorToUse);
+            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, false, entity, colorToUse);
 
             profiler.Stop();
 
@@ -755,7 +764,7 @@ namespace ui
             AssertThat(colorToUse.a, Is().EqualTo(255));
 
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, entity, colorToUse);
+            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, false, entity, colorToUse);
 
             layer::AddPopMatrix(layerPtr);
         }
@@ -823,7 +832,7 @@ namespace ui
             // AssertThat(colorToUse.a, Is().EqualTo(255));
 
             // filled
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, entity, colorToUse);
+            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, false,  entity, colorToUse);
             layer::AddPopMatrix(layerPtr);
         }
 
@@ -853,8 +862,7 @@ namespace ui
 
             // filled progress
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVertices, colorToUse);
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, entity, colorToUse);
-            
+            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, true, entity, colorToUse);
             layer::AddPopMatrix(layerPtr);
         }
         // and ... or outline
@@ -944,6 +952,7 @@ namespace ui
 
     auto util::ClipRoundedRectVertices(std::vector<Vector2> &vertices, float clipX) -> void
     {
+        // SPDLOG_DEBUG("Clipping vertices at x: {} for progress", clipX);
         for (auto &vertex : vertices)
         {
             if (vertex.x > clipX)

@@ -7,6 +7,7 @@
 #include "util/utilities.hpp"
 #include "systems/text/textVer2.hpp"
 #include "systems/text/static_ui_text.hpp"
+#include "systems/timer/timer.hpp"
 
 #include "systems/ui/ui.hpp"
 
@@ -395,19 +396,33 @@ namespace ui_defs
         // TODO: progress bar
         //TODO: needs rework to use lambdas
         auto progressBarText = getNewTextEntry("Progress Bar");
+        auto progressBarTextMoving = getNewDynamicTextEntry("Progress Bar", 20.f, std::nullopt, "pulse=0.9,1.1");
+        static float progressValueExample = 0.f;
+        timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
+            
+            // set value based on sin of time, 0 < value < 1
+            progressValueExample = (std::sin(GetTime()) + 1.f) / 2.f;
+            
+        });
         auto progressBar = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
                 ui::UIConfig::Builder::create()
                     .addColor(GRAY)
-                    .addProgressBarMaxValue(1.f)
-                    .addEmboss(2.f)
-                    .addMinHeight(100.f)
-                    .addMinWidth(300.f)
+                    .addProgressBarMaxValue(100.f)
+                    // .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(500.f)
                     .addProgressBar(true)
+                    .addProgressBarEmptyColor(WHITE)
+                    .addProgressBarFullColor(BLUE)
+                    .addProgressBarFetchValueLamnda([](entt::entity e)
+                                    { 
+                                        return progressValueExample;
+                                    })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            // .addChild(progressBarText)
+            .addChild(progressBarTextMoving)
             .build();
         // TODO: slider
         

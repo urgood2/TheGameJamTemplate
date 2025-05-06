@@ -1395,26 +1395,30 @@ namespace ui
                 else if (config->progressBar)
                 {
                     auto colorToUse = config->progressBarEmptyColor.value_or(GRAY);
-
-                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
-                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
                     
-
-                    // DrawPixellatedRect(layerPtr, registry, entity, "fill", parallaxDist);
-                    // colorToUse = config->progressBarFullColor.value_or(BLUE);
+                    //FIXME: commenting out for testing
+                    // if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    //     util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", colorToUse}});
+                    // else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    //     util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
+                    
 
                     colorToUse = config->progressBarFullColor.value_or(GREEN);
                     
                     // retrieve the current progress bar value using reflection
                     //FIXME: change this to use lamdas optionally, commenting out for now
-                    // auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
-                    // auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
-                    // float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
-                    // SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
                     
-                    float progress = 0.1f; // TODO: remove this line and uncomment the above lines to use reflection to get the progress value
+                    float progress = 1.0f;
+                    
+                    if (config->progressBarFetchValueLambda) {
+                        progress = config->progressBarFetchValueLambda(entity);
+                    }
+                    else if (config->progressBarValueComponentName){
+                        auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
+                        auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
+                        float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
+                        SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
+                    }
                     
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress);

@@ -1003,7 +1003,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 
                 if (static_cast<int>(role.master) == 235)
                 {
-                    SPDLOG_DEBUG("Entity 235 stationary state: {}", transform.frameCalculation.stationary);
+                    // SPDLOG_DEBUG("Entity 235 stationary state: {}", transform.frameCalculation.stationary);
                 }
 
                 if ((transform.frameCalculation.stationary == false) || (transform.frameCalculation.alignmentChanged) || (transform.dynamicMotion) || (role.location_bond == InheritedProperties::Sync::Weak) || (role.rotation_bond == InheritedProperties::Sync::Weak))
@@ -1012,7 +1012,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                     node.debug.calculationsInProgress = true;
                     MoveWithMaster(registry, e, dt);
                     if (static_cast<int>(e) == 235) {
-                        SPDLOG_DEBUG("Entity 235 moving with master");
+                        // SPDLOG_DEBUG("Entity 235 moving with master");
                     }
                 }
             }

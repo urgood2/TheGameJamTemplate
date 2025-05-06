@@ -140,7 +140,7 @@ namespace layer
     void AddSetColor(std::shared_ptr<Layer> layer, const Color &color, int z = 0);
     void AddSetLineWidth(std::shared_ptr<Layer> layer, float lineWidth, int z = 0);
     void AddSetRLTexture(std::shared_ptr<Layer> layer, Texture2D texture, int z);
-    void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color, int z = 0);
+    void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color, int z = 0);
     void AddRenderRectVerticlesOutlineLayer(std::shared_ptr<Layer> layer, entt::entity cacheEntity, const Color color, bool useFull, int z = 0);
     auto AddDrawTransformEntityWithAnimationWithPipeline(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z = 0) -> void;
     void AddRenderNPatchRect(std::shared_ptr<Layer> layer, Texture2D sourceTexture, const NPatchInfo &info, const Rectangle& dest, const Vector2& origin, float rotation, const Color& tint, int z = 0);
@@ -185,7 +185,7 @@ namespace layer
     void SetLineWidth(float lineWidth);
     void SetColor(const Color &color);
     void SetRLTexture(Texture2D texture);
-    void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, entt::entity cacheEntity, const Color color);
+    void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color);
     void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, entt::entity cacheEntity, const Color color, bool useFull);
 
     // NOTE that you should set shader uniforms directly when rendering at the layer level-- that is, rendering entire layers.

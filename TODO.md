@@ -10,8 +10,7 @@
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] apply scaling to render anim function (pipeline) to increase buffer?
-- [ ] checkbox working, need to offset animated sprites by layer offset. sometimes the checkbox image gets stuck in a lowered state, not sure why, it's not layered displacement -> should layer offset change the position of the transform? how? -> apply to moving text too 
-- [ ] So animated sprite object doesn't actually align with the slot it belongs to right away, there is sometimes a delay. Why is this? 
+- [ ]  apply button press movement to moving text too 
 - [ ] Implement more UI element types:
   - [x] Buttons (with choice, focus args, one-press, delay, etc.)
     - one_press -> ensures button only pressed once per lifetime.

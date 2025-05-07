@@ -1360,7 +1360,18 @@ namespace ui
             //     SPDLOG_DEBUG("DrawSelf(): Button is being hovered: {}", static_cast<int>(entity));
             // if (clickedRecently)
             //     SPDLOG_DEBUG("DrawSelf(): Button is being clicked: {}", static_cast<int>(entity));
-            if (collidedButtonHovered || clickedRecently)
+            if (collidedButtonHovered || clickedRecently || config->disable_button)
+            {
+                // if (collidedButtonHovered)
+                //     SPDLOG_DEBUG("DrawSelf(): Button is being hovered: {}", static_cast<int>(entity));
+                // if (clickedRecently)
+                //     SPDLOG_DEBUG("DrawSelf(): Button is being clicked: {}", static_cast<int>(entity));
+                // if (collidedButtonHovered && clickedRecently)
+                //     SPDLOG_DEBUG("DrawSelf(): Button is being clicked and hovered: {}", static_cast<int>(entity));
+
+                specialColor = ColorBrightness(buttonColor, -0.5f);
+            }
+            else if (buttonBeingPressed)
             {
                 specialColor = ColorBrightness(buttonColor, -0.5f);
                 // specialColor = BLACK;
@@ -1567,6 +1578,20 @@ namespace ui
         AssertThat(node, Is().Not().EqualTo(nullptr));
 
         // REVIEW: not tracking fucntion calls
+        
+        // if button is disabled, set clickable to false
+        if (uiConfig->disable_button)
+        {
+            uiConfig->buttonClicked = false;
+            uiConfig->buttonDelay.reset();
+            uiConfig->buttonCallback.reset();
+            uiConfig->buttonTemp.reset();
+            uiConfig->buttonDelayProgress.reset();
+            
+            node->state.clickEnabled = false;
+        } else {
+            node->state.clickEnabled = true;
+        }
 
         // Handle button delay
         if (uiConfig->buttonDelay)

@@ -376,6 +376,19 @@ namespace ui_defs
         return row;
     }
     
+    inline auto wrapEntityInsideObjectElement(entt::entity entity) -> ui::UIElementTemplateNode{
+        auto objectElement = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::OBJECT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addObject(entity)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+            
+        return objectElement;
+    }
+    
     inline auto uiFeaturesTestDef() -> ui::UIElementTemplateNode
     {
         auto masterVerticalContainer = ui::UIElementTemplateNode::Builder::create()
@@ -393,7 +406,11 @@ namespace ui_defs
         
         auto titleDividers = ui_defs::putCodedTextBetweenDividers("UI Test", "divider-fade-001.png");
         
-        // TODO: progress bar rounded rect
+        // ======================================
+        // ======================================
+        // progress bar rounded rect
+        // ======================================
+        // ======================================
         auto progressBarTextMoving = getNewDynamicTextEntry("Progress Bar (vertices)", 20.f, std::nullopt, "pulse=0.9,1.1");
         static float progressValueExample = 0.f;
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
@@ -422,8 +439,12 @@ namespace ui_defs
                     .build())
             .addChild(progressBarTextMoving)
             .build();
-            
+        
+        // ======================================
+        // ======================================
         // progress bar with ninepatch
+        // ======================================
+        // ======================================
             
         progressBarTextMoving = getNewDynamicTextEntry("Progress Bar (9-patch)", 20.f, std::nullopt, "wiggle=12,15,0.5");
         static float progressValueExample9Patch = 0.f;
@@ -462,7 +483,9 @@ namespace ui_defs
         // TODO: slider
         
         
-        // TODO: checkbox
+        // ======================================
+        // ======================================
+        // checkbox
         // ======================================
         // ======================================
         auto checkboxImage = animation_system::createAnimatedObjectWithTransform("checkmark.png", true, 0, 0);
@@ -500,23 +523,28 @@ namespace ui_defs
             .addChild(checkbox)
             .build();
         
-        // TODO: button one-press
-        auto buttonDynamicText = getNewDynamicTextEntry("Button (single press)", 20.f, std::nullopt, "pulse=0.9,1.1");
+        // ======================================
+        // ======================================
+        // disabled button
+        // ======================================
+        // ======================================
         
-        auto buttonWithDelay = ui::UIElementTemplateNode::Builder::create()
+        auto buttonDynamicText = getNewDynamicTextEntry("Button (disabled)", 20.f, std::nullopt, "pulse=0.9,1.1");
+        
+        auto buttonDisabled = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
                 ui::UIConfig::Builder::create()
                     .addColor(RED)
+                    .addId("buttonDisabled")
                     .addEmboss(2.f)
                     .addMinHeight(50.f)
                     .addMinWidth(300.f)
                     .addHover(true)
-                    .addOnePress(true)
-                    
+                    .addDisableButton(true) // disables clicking, darkens button
                     .addButtonCallback([]()
                                     { 
-                                        
+                                        SPDLOG_DEBUG("This should not be called");
                                     })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
@@ -524,15 +552,40 @@ namespace ui_defs
             .build();
         
         // TODO: button group
-        // TODO: button with one-time use
-        // TODO: button selector
+        
+        
+        // TODO: button selector (cycle)
         
         // TODO: new row with an alert on the top right corner
         
+        // ======================================
+        // ======================================
+        // controller button pip
+        // ======================================
+        // ======================================
+        auto controllerPipText = getNewDynamicTextEntry("Action", 10.f, std::nullopt, "pulse=0.9,1.1");
+        auto anim = animation_system::createAnimatedObjectWithTransform("xbox_button_color_x.png", true, 0, 0);
+        auto controllerPipImage = wrapEntityInsideObjectElement(anim);
+        animation_system::resizeAnimationObjectsInEntityToFit(anim, 30.f, 30.f);
+        // disable shadow
+        auto &gameObjectComp = globals::registry.get<transform::GameObject>(anim);
+        gameObjectComp.shadowDisplacement.reset();
+        
+        auto controllerPipContainer = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(PINK)
+                    .addEmboss(5.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(controllerPipText)
+            .addChild(controllerPipImage)
+            .build();
         
         // TODO: a button with a tooltip
         
-        // TODO: object grid with selector rect which hovers over the selected object
+        // TODO: object grid with selector rect outline which hovers over the selected object
         
         // TODO: text input field
         
@@ -543,7 +596,8 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(row);
         masterVerticalContainer.children.push_back(progressBar);
         masterVerticalContainer.children.push_back(progressBar9Patch);
-        masterVerticalContainer.children.push_back(buttonWithDelay);
+        masterVerticalContainer.children.push_back(buttonDisabled);
+        masterVerticalContainer.children.push_back(controllerPipContainer);
         
         return masterVerticalContainer;
     }

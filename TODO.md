@@ -6,18 +6,13 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] Context handling for modal dialogs (controller focus saving between windows)
-- [ ] skipping button delay, doesn't seem useful atm
-- [ ]  onepress-> just add disable feature, please
-- [ ] need to be able to turn off hover darkening on ui
+- [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
+- [ ] Add function to search child of any uibox by ID (sometimes you don't know the ui box in advance)
+- [ ] images not scaled down properly by maxW/H in rows/columns
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] apply scaling to render anim function (pipeline) to increase buffer?
 - [ ] Implement more UI element types:
-  - [x] Buttons (with choice, focus args, one-press, delay, etc.)
-    - one_press -> ensures button only pressed once per lifetime.
-    - button delay disables button for X seconds after ui is created. (in ui element setValues)
-    - in update, this value is updated so callback which is backed up will be restored
   - [ ] Sliders (`focus_args = {type = "slider"}`)
     - use UIConfig.noMovementWhenDragged to disable dragging movement
     - Just need to make a function that uses reflection to fetch whatever is being manipulated, based on the following

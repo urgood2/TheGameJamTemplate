@@ -480,7 +480,34 @@ namespace ui_defs
                     .build())
             .addChild(progressBarTextMoving)
             .build();
-        // TODO: slider
+
+        // ======================================
+        // ======================================
+        // TODO: slider (not done yet)
+        // ======================================
+        // ======================================
+
+        auto sliderTextMoving = getNewDynamicTextEntry("Slider", 20.f, std::nullopt, "pulse=0.9,1.1");
+        auto slider = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    .addProgressBarMaxValue(100.f)
+                    // .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(500.f)
+                    .addProgressBar(true)
+                    .addProgressBarEmptyColor(WHITE)
+                    .addProgressBarFullColor(BLUE)
+                    .addProgressBarFetchValueLamnda([](entt::entity e)
+                                    { 
+                                        return progressValueExample;
+                                    })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(sliderTextMoving)
+            .build();
         
         
         // ======================================
@@ -598,6 +625,7 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(progressBar9Patch);
         masterVerticalContainer.children.push_back(buttonDisabled);
         masterVerticalContainer.children.push_back(controllerPipContainer);
+        masterVerticalContainer.children.push_back(slider);
         
         return masterVerticalContainer;
     }

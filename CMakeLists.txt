@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Debug)
 
+# enable tracy (disable for web)
+option( TRACY_ENABLE "" ON)
+
 #set opengl version
 #enum_option(OPENGL_VERSION "OFF;4.3;3.3;2.1;1.1;ES 2.0;ES 3.0" "Force a specific OpenGL Version?")
 if (EMSCRIPTEN)
@@ -241,6 +244,7 @@ endif()
 # Add the src subdirectory
 add_subdirectory("src/third_party/GPGOAP")
 add_subdirectory("src/third_party/chipmunk")
+add_subdirectory("src/third_party/tracy-master")
 
 ##########################################################################################
 # Project executable setup
@@ -249,6 +253,15 @@ add_subdirectory("src/third_party/chipmunk")
 # Adding our source files
 # Define PROJECT_SOURCES as a list of all source files
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
+
+# Exclude files in src/third_party/tracy-master
+foreach(file ${PROJECT_SOURCES})
+    if(file MATCHES "/src/third_party/tracy-master")
+        list(REMOVE_ITEM PROJECT_SOURCES ${file})
+    endif()
+endforeach()
+list(APPEND PROJECT_SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/TracyClient.cpp")
+
 
 # Define PROJECT_INCLUDE to be the path to the include directory of the project
 set(PROJECT_INCLUDE "${CMAKE_CURRENT_LIST_DIR}/include/")
@@ -275,6 +288,7 @@ target_include_directories(CommonSettings INTERFACE
     "${PROJECT_INCLUDE}/spine"
     "${stduuid_SOURCE_DIR}/include"
     "${snowhouse_SOURCE_DIR}/include"
+    "third_party/tracy-master/public"
 )
 target_link_libraries(CommonSettings INTERFACE
     raylib
@@ -290,6 +304,7 @@ target_link_libraries(CommonSettings INTERFACE
     chipmunk_static
     stduuid
     snowhouse
+    Tracy::TracyClient
 )
 
 # Declaring our executable

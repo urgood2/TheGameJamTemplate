@@ -116,7 +116,7 @@ namespace layer
     void AddDashedLine(std::shared_ptr<Layer> layer, float x1, float y1, float x2, float y2, float dashSize, float gapSize, const Color &color, float lineWidth, int z = 0);
     void AddLine(std::shared_ptr<Layer> layer, float x1, float y1, float x2, float y2, const Color &color, float lineWidth = 1.0f, int z = 0);
     void AddPolygon(std::shared_ptr<Layer> layer, const std::vector<Vector2> &vertices, const Color &color, float lineWidth = 0.0f, int z = 0);
-    void AddTriangle(std::shared_ptr<Layer> layer, float x, float y, float size, const Color &color, int z = 0);
+    void AddTriangle(std::shared_ptr<Layer> layer, Vector2 p1, Vector2 p2, Vector2 p3, const Color &color, int z = 0);
     void AddDrawImage(std::shared_ptr<Layer> layer, const Texture2D &image, float x, float y, float rotation = 0.0f, float scaleX = 1.0f, float scaleY = 1.0f, const Color &color = WHITE, int z = 0);
     void AddTextPro(std::shared_ptr<Layer> layer, const std::string &text, Font font, float x, float y, const Vector2 &origin, float rotation, float fontSize, float spacing, const Color &color, int z = 0);
     void AddTexturePro(std::shared_ptr<Layer> layer, Texture2D texture, const struct Rectangle &source, float offsetX, float offsetY, const Vector2 &size, const Vector2 &rotationCenter, float rotation, const Color &color, int z = 0);
@@ -158,7 +158,7 @@ namespace layer
     void Circle(float x, float y, float radius, const Color &color);
     void Line(float x1, float y1, float x2, float y2, const Color &color, float lineWidth);
     void RectangleDraw(float x, float y, float width, float height, const Color &color, float lineWidth = 0.0f);
-    void Triangle(float x, float y, float size, const Color &color);
+    void Triangle(Vector2 p1, Vector2 p2, Vector2 p3, const Color &color);
     void DashedLine(float x1, float y1, float x2, float y2, float dashSize, float gapSize, const Color &color, float lineWidth);
     void Polygon(const std::vector<Vector2> &vertices, const Color &color, float lineWidth = 0.0f);
     void Text(const std::string &text, Font font, float x, float y, const Color &color, float fontSize);

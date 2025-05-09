@@ -7,10 +7,13 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
+- [ ] make variations of textures based on voucher sheen/polychrome
+- [ ]create reusable+ modular localize() function for fetching in game text. Also make it easy to switch fonts + languages
 - [ ] Add function to search child of any uibox by ID (sometimes you don't know the ui box in advance)
-- [ ] images not scaled down properly by maxW/H in rows/columns
+- [ ] images not scaled down properly by maxW/H in rows/columns, make that happen
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
+- [] new inventory system with just rows + drag/drop detection
 - [ ] apply scaling to render anim function (pipeline) to increase buffer?
 - [ ] Implement more UI element types:
   - [ ] Sliders (`focus_args = {type = "slider"}`)
@@ -57,7 +60,7 @@
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
 - [ ] Text input (with cursor displayed, etc, software keyboard)
-- [ ] Skill tree, refer to bytepath
+
 
 ### UI
 - Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui
@@ -85,6 +88,8 @@
 ---
 
 ## Immediate laters
+- [ ] Skill tree, refer to bytepath
+- [ ] Text highlight efect - show same text overlaid, which vanishes upwa
 - [ ] Use simple art style + scale down technique for visual prettiness
 - [ ] something to replace current dissolve effect?
 - [ ] some particle ideas:

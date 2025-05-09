@@ -487,7 +487,7 @@ namespace ui_defs
         // ======================================
         // ======================================
 
-        auto sliderTextMoving = getNewDynamicTextEntry("Slider", 20.f, std::nullopt, "pulse=0.9,1.1");
+        auto sliderTextMoving = getNewDynamicTextEntry("Slider (click or drag)", 20.f, std::nullopt, "pulse=0.9,1.1");
         auto slider = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -500,15 +500,49 @@ namespace ui_defs
                     .addProgressBar(true)
                     .addProgressBarEmptyColor(WHITE)
                     .addProgressBarFullColor(BLUE)
-                    .addProgressBarFetchValueLamnda([](entt::entity e)
+                    .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
                                     { 
-                                        return progressValueExample;
+                                        SPDLOG_DEBUG("Slider update called");
+                                        // allo this thing to be dragged, update based on mouse position
                                     })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .addChild(sliderTextMoving)
             .build();
+        // ======================================
+        // ======================================
+        // TODO: text input field
+        // ======================================
+        // ======================================
         
+        auto textInputTextMoving = getNewDynamicTextEntry("Enter Name:", 20.f, std::nullopt, "pulse=0.9,1.1");
+        auto textInput = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    // .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(300.f)
+                    .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
+                                    { 
+                                        SPDLOG_DEBUG("Textinput update called");
+                                        // allo this thing to be dragged, update based on mouse position
+                                    })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        auto textInputRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    // .addEmboss(2.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(textInputTextMoving)
+            .addChild(textInput)
+            .build();
         
         // ======================================
         // ======================================
@@ -579,9 +613,74 @@ namespace ui_defs
             .build();
         
         // TODO: button group
+        auto buttonGroupRow = getButtonGroupRowDef();
         
-        
-        // TODO: button selector (cycle)
+        // ======================================
+        // ======================================
+        // TODO: cycle (how to do pips?)
+        // ======================================
+        // ======================================
+        auto cycleText = getNewTextEntry("Cycle");
+        auto cycleImageLeft = animation_system::createAnimatedObjectWithTransform("left.png", true, 0, 0, nullptr, false); // no shadow
+        auto cycleImageRight = animation_system::createAnimatedObjectWithTransform("right.png", true, 0, 0, nullptr, false); // no shadow
+        animation_system::resizeAnimationObjectsInEntityToFit(cycleImageLeft, 40.f, 40.f);
+        animation_system::resizeAnimationObjectsInEntityToFit(cycleImageRight, 40.f, 40.f);
+        auto cycleImageLeftUI = wrapEntityInsideObjectElement(cycleImageLeft);
+        auto cycleImageRightUI = wrapEntityInsideObjectElement(cycleImageRight);
+        auto leftButton = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(RED)
+                    .addEmboss(2.f)
+                    .addMaxHeight(50.f)
+                    .addMaxWidth(50.f)
+                    .addHover(true)
+                    .addButtonCallback([]()
+                                    { SPDLOG_DEBUG("Left button callback triggered"); })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(cycleImageLeftUI)
+            .build();
+        auto rightButton = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(RED)
+                    .addEmboss(2.f)
+                    .addMaxHeight(50.f)
+                    .addMaxWidth(50.f)
+                    .addHover(true)
+                    .addButtonCallback([]()
+                                    { SPDLOG_DEBUG("Right button callback triggered"); })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(cycleImageRightUI)
+            .build();
+        auto centerText = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(PINK)
+                    .addEmboss(2.f)
+                    .addMaxHeight(50.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(cycleText)
+            .build();
+        auto cycleContainer = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    .addEmboss(2.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(leftButton)
+            .addChild(centerText)
+            .addChild(rightButton)
+            .build();
+
         
         // TODO: new row with an alert on the top right corner
         
@@ -612,10 +711,49 @@ namespace ui_defs
         
         // TODO: a button with a tooltip
         
+        // ======================================
+        // ======================================
         // TODO: object grid with selector rect outline which hovers over the selected object
-        
-        // TODO: text input field
-        
+        // ======================================
+        // ======================================
+
+        int gridWidth = 5;
+        int gridHeight = 3;
+    
+        auto gridRect = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::RECT_SHAPE)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    .addEmboss(2.f)
+                    .addMinWidth(60.f)
+                    .addMinHeight(60.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        auto gridRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        for (int i = 0; i < gridWidth; i++) {
+            gridRow.children.push_back(gridRect);
+        }
+        auto gridContainer = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    .addPadding(2.f)
+                    .addEmboss(2.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        for (int i = 0; i < gridHeight; i++) {
+            gridContainer.children.push_back(gridRow);
+        }
         
         
         // add everything to the master vertical container
@@ -626,6 +764,10 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(buttonDisabled);
         masterVerticalContainer.children.push_back(controllerPipContainer);
         masterVerticalContainer.children.push_back(slider);
+        masterVerticalContainer.children.push_back(textInputRow);
+        masterVerticalContainer.children.push_back(buttonGroupRow);
+        masterVerticalContainer.children.push_back(cycleContainer);
+        masterVerticalContainer.children.push_back(gridContainer);
         
         return masterVerticalContainer;
     }

@@ -64,7 +64,7 @@ namespace animation_system {
     /*
         for generateNewAnimFromSprite, please set only to true if the provided uuid is not for an animation (animations.json), but for a sprite from the sprite sheet
     */
-    auto createAnimatedObjectWithTransform (std::string defaultAnimationIDorSpriteUUID, bool generateNewAnimFromSprite, int x, int y, std::function<void(entt::entity)> shaderPassConfig) ->  entt::entity {
+    auto createAnimatedObjectWithTransform (std::string defaultAnimationIDorSpriteUUID, bool generateNewAnimFromSprite, int x, int y, std::function<void(entt::entity)> shaderPassConfig, bool shadowEnabled) ->  entt::entity {
         auto e = globals::registry.create();
         transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 0, 0, e);
         auto &transform = globals::registry.get<transform::Transform>(e);
@@ -79,13 +79,18 @@ namespace animation_system {
         }
 
         auto &gameObject = globals::registry.get<transform::GameObject>(e);
+
+        if (!shadowEnabled) {
+            gameObject.shadowDisplacement.reset();
+        }
         
         // set width and height to the animation size
         //TODO: optionally provide custom size upon init
         transform.setActualW(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.width);
         transform.setActualH(animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.height); 
         
-        shaderPassConfig(e); // pass the entity to the shader pass config function
+        if (shaderPassConfig)
+            shaderPassConfig(e); // pass the entity to the shader pass config function
         
         return e;
     }

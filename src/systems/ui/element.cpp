@@ -1521,31 +1521,36 @@ namespace ui
         // draw "selection" triangle (arrow pointing to selected object)
         if (config->chosen.value_or(false))
         {
-            // draw a circle which floats up and down slightly, centered slightly above the transform
-            auto circleSize = 10.f;
+            // triangle floats above the object, slightly bobbing with sine
+            constexpr auto TRIANGLE_DISTANCE = 10.f;
+            constexpr auto TRIANGLE_HEIGHT = 25.f;
+            constexpr auto TRIANGLE_WIDTH = 25.f;
             auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
+
             auto centerX = actualX + actualW * 0.5f;
-            auto circleY = actualY - actualH * 0.5f - circleSize * 0.5f + sineOffset;
-            
-            // layer::AddScale(layerPtr, .98f, .98f);
-            // util::PrepDraw(layerPtr, registry, entity, 0.98f);
+            auto triangleY = actualY - TRIANGLE_DISTANCE + sineOffset;
+
+            // triangle points downward, so tip is at triangleY, base is above it
+            Vector2 p1 = {centerX, triangleY};                                // tip (bottom)
+            Vector2 p2 = {centerX - TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-left
+            Vector2 p3 = {centerX + TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-right
+
             if (config->shadow && globals::settings.shadowsOn)
             {
-                //TODO: probably change this to use the same values as transform shadows
                 constexpr auto FLAT_SHADOW_AMOUNT = 3.f;
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
-                
+
                 auto shadowOffsetX = node->shadowDisplacement->x * FLAT_SHADOW_AMOUNT;
                 auto shadowOffsetY = - node->shadowDisplacement->y * FLAT_SHADOW_AMOUNT;
-                
-                layer::AddCircle(layerPtr, centerX + shadowOffsetX, circleY + shadowOffsetY, circleSize, shadowColor);
-                
-            };
-            // layer::AddPopMatrix(layerPtr);
 
-            // util::PrepDraw(layerPtr, registry, entity, 1.0f);
-            // layer::AddPolygon(layerPtr, util::GetChosenTriangleFromRect(node->layerDisplacement->x, node->layerDisplacement->y, transform->getActualW(), transform->getActualH() , config->chosen_vert == "vert"), RED);
-            layer::AddCircle(layerPtr, centerX, circleY, circleSize, RED);
+                Vector2 s1 = {p1.x + shadowOffsetX, p1.y + shadowOffsetY};
+                Vector2 s2 = {p2.x + shadowOffsetX, p2.y + shadowOffsetY};
+                Vector2 s3 = {p3.x + shadowOffsetX, p3.y + shadowOffsetY};
+
+                layer::AddTriangle(layerPtr, s1, s2, s3, shadowColor);
+            }
+
+            layer::AddTriangle(layerPtr, p1, p2, p3, RED);
         }
 
         // call the object's own lambda draw function, if it has one

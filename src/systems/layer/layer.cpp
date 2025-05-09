@@ -721,6 +721,14 @@ namespace layer
                 Color tint = std::get<Color>(command.args[5]);
                 layer::RenderNPatchRect(sourceTexture, info, dest, origin, rotation, tint);
             }
+            else if (command.type == "triangle") {
+                AssertThat(command.args.size(), Equals(4));
+                Vector2 p1 = std::get<Vector2>(command.args[0]);
+                Vector2 p2 = std::get<Vector2>(command.args[1]);
+                Vector2 p3 = std::get<Vector2>(command.args[2]);
+                Color color = std::get<Color>(command.args[3]);
+                layer::Triangle(p1, p2, p3, color);
+            }
             // Fallback for undefined commands
             else
             {
@@ -1706,19 +1714,14 @@ namespace layer
         AddDrawCommand(layer, "polygon", {vertices, color, lineWidth}, z);
     }
 
-    void Triangle(float x, float y, float size, const Color &color)
+    void Triangle(Vector2 p1, Vector2 p2, Vector2 p3, const Color &color)
     {
-        float height = sqrt(size * size - (size / 2) * (size / 2));
-        Vector2 p1 = {x, y - height / 2};
-        Vector2 p2 = {x - size / 2, y + height / 2};
-        Vector2 p3 = {x + size / 2, y + height / 2};
-
-        DrawTriangle(p1, p2, p3, {color.r, color.g, color.b, color.a});
+        DrawTriangle(p2, p1, p3, {color.r, color.g, color.b, color.a});
     }
 
-    void AddTriangle(std::shared_ptr<Layer> layer, float x, float y, float size, const Color &color, int z )
+    void AddTriangle(std::shared_ptr<Layer> layer, Vector2 p1, Vector2 p2, Vector2 p3, const Color &color, int z )
     {
-        AddDrawCommand(layer, "triangle", {x, y, size, color}, z);
+        AddDrawCommand(layer, "triangle", {p1, p2, p3, color}, z);
     }
 
     void Push(Camera2D *camera)

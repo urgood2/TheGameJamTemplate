@@ -641,23 +641,13 @@ namespace ui
 
         // comparisons to detect if the cache is usable
         if (!rectCache
-            || rectCache->renderTypeFlags != type
+            // || rectCache->renderTypeFlags != type
             || (rectCache->innerVertices.empty() && rectCache->outerVertices.empty()) || std::abs(rectCache->w - visualW) > EPSILON || std::abs(rectCache->h - visualH) > EPSILON
             // || (node.shadowDisplacement.has_value() && (rectCache->shadowDisplacement != node.shadowDisplacement.value()))
             || std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON
             || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value() > EPSILON)) || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON))
         {
-            if (rectCache)
-            {
-                // SPDLOG_DEBUG("Visual W: {}, Visual H: {}", transform.getVisualW(), transform.getVisualH());
-                // SPDLOG_DEBUG("Cache w: {}, Cache h: {}", rectCache->w, rectCache->h);
-                // SPDLOG_DEBUG("Cache shadow x: {}, Cache shadow y: {}", rectCache->shadowDisplacement.x, rectCache->shadowDisplacement.y);
-                // SPDLOG_DEBUG("Node shadow x: {}, Node shadow y: {}", node.shadowDisplacement->x, node.shadowDisplacement->y);
-                // SPDLOG_DEBUG("Cache progress: {}, Progress: {}", rectCache->progress.value(), progress.value_or(1.0f));
-                // SPDLOG_DEBUG("Cache type: {}, Type: {}", rectCache->renderTypeFlags, type);
-            }
-            // TODO: this runs too often
-            //  SPDLOG_DEBUG("Regenerating cache for rounded rectangle");
+             SPDLOG_DEBUG("Regenerating cache for rounded rectangle");
             //  regenerate cache
             emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
         }

@@ -225,6 +225,7 @@ namespace shaders {
 
     // Update all shader uniforms
     auto updateAllShaderUniforms() -> void {
+        ZoneScopedN("UpdateAllShaderUniforms"); // custom label
         for (const auto& [shaderName, updateLambda] : uniformUpdateCallbacks) {
             if (loadedShaders.find(shaderName) != loadedShaders.end()) {
                 Shader& shader = loadedShaders[shaderName];

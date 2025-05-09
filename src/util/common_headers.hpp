@@ -23,6 +23,9 @@ using json = nlohmann::json;
 	#undef far
 #endif
 
+
+#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+
 #include "entt/fwd.hpp"
 
 #include "snowhouse/snowhouse.h" // Snowhouse assertion lib

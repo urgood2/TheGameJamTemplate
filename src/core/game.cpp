@@ -6,6 +6,8 @@
 #include "graphics.hpp"
 #include "globals.hpp"
 
+#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+
 #include "../components/components.hpp"
 #include "../components/graphics.hpp"
 
@@ -645,6 +647,7 @@ namespace game
 
     auto update(float delta) -> void
     {
+        ZoneScopedN("game::update"); // custom label
         if (gameStarted == false)
             gameStarted = true;
 
@@ -657,10 +660,13 @@ namespace game
         particle::UpdateParticles(globals::registry, delta);
         shaders::updateAllShaderUniforms();
         
-        auto textView = globals::registry.view<TextSystem::Text>();
-        for (auto e : textView)
         {
-            TextSystem::Functions::updateText(e, delta);
+            ZoneScopedN("TextSystem::Update");
+            auto textView = globals::registry.view<TextSystem::Text>();
+            for (auto e : textView)
+            {
+                TextSystem::Functions::updateText(e, delta);
+            }
         }
 
         // update ui components
@@ -670,10 +676,13 @@ namespace game
         //     ui::box::Move(globals::registry, e, f);
         // }
 
-        auto viewUIElement = globals::registry.view<ui::UIElementComponent>();
-        for (auto e : viewUIElement)
         {
-            ui::element::Update(globals::registry, e, delta);
+            ZoneScopedN("UIElement Update");
+            auto viewUIElement = globals::registry.view<ui::UIElementComponent>();
+            for (auto e : viewUIElement)
+            {
+                ui::element::Update(globals::registry, e, delta);
+            }
         }
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
@@ -681,7 +690,7 @@ namespace game
 
     auto draw(float dt) -> void
     {
-
+        ZoneScopedN("game::draw"); // custom label
         layer::Begin(); // clear all commands, we add new ones every frame
 
         // set up layers (needs to happen every frame)
@@ -690,21 +699,25 @@ namespace game
 
 
 
-        util::Profiler uiProfiler("UI Draw");
-        // debug draw ui elements (draw ui boxes, will auto-propogate to children)
-        auto viewUI = globals::registry.view<ui::UIBoxComponent>();
-        for (auto e : viewUI)
         {
-            ui::box::Draw(ui_layer, globals::registry, e);
+            ZoneScopedN("UIBox Draw");
+            // debug draw ui elements (draw ui boxes, will auto-propogate to children)
+            auto viewUI = globals::registry.view<ui::UIBoxComponent>();
+            for (auto e : viewUI)
+            {
+                ui::box::Draw(ui_layer, globals::registry, e);
+            }
         }
-
-        util::Profiler transformProfiler("Transform Debug Draw");
+        
         // do transform debug drawing
-        auto view = globals::registry.view<transform::Transform>();
-        for (auto e : view)
         {
-            if (globals::drawDebugInfo)
-                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+            ZoneScopedN("Transform Debug Draw");
+            auto view = globals::registry.view<transform::Transform>();
+            for (auto e : view)
+            {
+                if (globals::drawDebugInfo)
+                    transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+            }
         }
         
         // draw object area (inventory comp)
@@ -713,10 +726,13 @@ namespace game
         // transformProfiler.Stop();
 
         // dynamic text
-        auto textView = globals::registry.view<TextSystem::Text>();
-        for (auto e : textView)
         {
-            TextSystem::Functions::renderText(e, ui_layer, true);
+            ZoneScopedN("Dynamic Text Draw");
+            auto textView = globals::registry.view<TextSystem::Text>();
+            for (auto e : textView)
+            {
+                TextSystem::Functions::renderText(e, ui_layer, true);
+            }
         }
 
         // sprites with transform (including those in ui)
@@ -724,23 +740,30 @@ namespace game
         // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
         
         //TODO: need to test this
-        auto spriteView = globals::registry.view<AnimationQueueComponent>();
-        for (auto e : spriteView)
         {
-            if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
+            ZoneScopedN("AnimatedSprite Draw");
+            auto spriteView = globals::registry.view<AnimationQueueComponent>();
+            for (auto e : spriteView)
             {
-                layer::AddDrawTransformEntityWithAnimationWithPipeline(sprites, &globals::registry, e, 0);
+                if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
+                {
+                    layer::AddDrawTransformEntityWithAnimationWithPipeline(sprites, &globals::registry, e, 0);
+                }
+                else
+                {
+                    layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, e, 0);
+                }            
             }
-            else
-            {
-                layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, e, 0);
-            }            
         }
         
         
         // uiProfiler.Stop();
-
-        particle::DrawParticles(globals::registry, ui_layer);
+        
+        {
+            ZoneScopedN("Particle Draw");
+            particle::DrawParticles(globals::registry, ui_layer);
+        }
+        
 
         // we will draw to the sprites layer main canvas, modify it with a shader, then draw it to the screen
         // The reason we do this every frame is to allow position changes to the entities to be reflected in the draw commands
@@ -749,15 +772,7 @@ namespace game
 
         // clear the screen, not any canvas
         // renderer::ClearBackground(loading::getColor("brick_palette_red_resurrect"));
-
-        util::Profiler drawProfiler("Draw Layers");
-        layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr);  // render the background layer commands to its main canvas
-        layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
-        layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
-        layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
-
-        layer::Push(&globals::camera2D);
-
+        
         // auto balatro = shaders::getShader("balatro_background");
         // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
         auto crt = shaders::getShader("crt");
@@ -793,51 +808,66 @@ namespace game
         // auto negative = shaders::getShader("negative");
         // shaders::TryApplyUniforms(negative, globalShaderUniforms, "negative");
 
-        // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
 
-        // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
-        // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
-        layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_line); // render the background layer main canvas to the screen
+        {
+            ZoneScopedN("LayerCommandsToCanvas Draw");
+            layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr);  // render the background layer commands to its main canvas
+            layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
+            layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+            layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
+            
+            layer::Push(&globals::camera2D);
+
+            
+            // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
+
+            // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
+            // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
+            layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_line); // render the background layer main canvas to the screen
+
+            
+            layer::DrawCanvasOntoOtherLayerWithShader(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_circle); // render the ui layer main canvas to the screen
+
+            layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
+        }
 
         
-        layer::DrawCanvasOntoOtherLayerWithShader(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_circle); // render the ui layer main canvas to the screen
-
-        layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 
 
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(ui_layer, "main", 0, 0, 0, 1, 1, WHITE);
 
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(sprites, "flash", 0, 0, 0, 1, 1, WHITE);   // render the sprite layer flash canvas to the screen
 
-        BeginDrawing();
+        {
+            ZoneScopedN("Final Output Draw to screen");
+            BeginDrawing();
 
-        // clear screen
-        ClearBackground(BLACK);
+            // clear screen
+            ClearBackground(BLACK);
 
-        layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
+            layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
 
-        rlImGuiBegin(); // Required: starts ImGui frame
+            rlImGuiBegin(); // Required: starts ImGui frame
 
-        shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
-        ShowDebugUI();
+            shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
+            ShowDebugUI();
 
-        rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+            rlImGuiEnd(); // Required: renders ImGui on top of Raylib
 
-        // Display UPS and FPS
-        const int fps = GetFPS(); // Get the current FPS
-        DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
+            // Display UPS and FPS
+            const int fps = GetFPS(); // Get the current FPS
+            DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
 
-        EndDrawing();
+            EndDrawing();
 
-        layer::Pop();
+            layer::Pop();
 
-        drawProfiler.Stop();
+            // BeginMode2D(globals::camera2D);
 
-        // BeginMode2D(globals::camera2D);
+            // EndMode2D();
 
-        // EndMode2D();
-
-        layer::End();
+            layer::End();
+        }
     }
 
 }

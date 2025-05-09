@@ -212,6 +212,7 @@ namespace particle {
 
     inline void UpdateParticles(entt::registry &registry, float deltaTime)
     {
+        ZoneScopedN("UpdateParticles"); // custom label
         auto view = registry.view<Particle>();
         for (auto entity : view)
         {

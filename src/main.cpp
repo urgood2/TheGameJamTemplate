@@ -6,6 +6,8 @@
 #include "entt/entt.hpp" // ECS
 // #include "tweeny.h"      // tweening library
 
+#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
 #define NOUSER // All USER defines and routines
@@ -115,6 +117,7 @@ void mainMenuStateGameLoop(float dt)
 
 void MainLoopFixedUpdateAbstraction(float dt)
 {
+    ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
     
     updateSystems(dt);
 
@@ -224,8 +227,6 @@ void RunGameLoop()
 
     while (!WindowShouldClose())
     {
-        util::Profiler profiler("Frame Time");
-
         using namespace main_loop;
 
         // Smooth deltaTime over the last few frames
@@ -343,7 +344,7 @@ int main(void)
     // Main game loop
     while (!WindowShouldClose())
     { // Detect window close button or ESC key
-
+        FrameMark; // marks one frame
         RunGameLoop();
     }
 
@@ -372,6 +373,7 @@ int main(void)
 /// @return
 auto updateSystems(float dt) -> void
 {
+    ZoneScopedN("UpdateSystems"); // custom label
     updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
     
     input::Update(globals::registry, globals::inputState, dt);

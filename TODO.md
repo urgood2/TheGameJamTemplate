@@ -7,13 +7,14 @@
 
 ## Kinda high priority
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
+- [ ] Need to make ui rendering more streamlined
 - [ ] make variations of textures based on voucher sheen/polychrome
-- [ ]create reusable+ modular localize() function for fetching in game text. Also make it easy to switch fonts + languages
+- [ ] create reusable+ modular localize() function for fetching in game text. Also make it easy to switch fonts + languages
 - [ ] Add function to search child of any uibox by ID (sometimes you don't know the ui box in advance)
 - [ ] images not scaled down properly by maxW/H in rows/columns, make that happen
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
-- [] new inventory system with just rows + drag/drop detection
+- [ ] new inventory system with just rows + drag/drop detection
 - [ ] apply scaling to render anim function (pipeline) to increase buffer?
 - [ ] Implement more UI element types:
   - [ ] Sliders (`focus_args = {type = "slider"}`)
@@ -53,7 +54,6 @@
     - Can trigger a callback when changed
     - Supports keyboard/controller interaction and shoulder button overlays
   - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
-  - [ ] Pips (for controller button) -> just a uibox component with a button sprite + text describing that action, made a child to the parent ui box 
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
   - [ ] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
 - [ ] Utilize controller focus interactivity focus funneling in the above ui

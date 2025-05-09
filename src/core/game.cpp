@@ -151,16 +151,16 @@ namespace game
     // specific to a game project
     auto init() -> void
     {
-        testInventory = ui::createNewObjectArea(
-            globals::registry,
-            globals::gameWorldContainerEntity,
-            2,
-            2,
-            50.f,
-            50.f);
-        auto &testInventoryTransform = globals::registry.get<transform::Transform>(testInventory);
-        testInventoryTransform.setActualX(300);
-        testInventoryTransform.setActualY(300);
+        // testInventory = ui::createNewObjectArea(
+        //     globals::registry,
+        //     globals::gameWorldContainerEntity,
+        //     2,
+        //     2,
+        //     50.f,
+        //     50.f);
+        // auto &testInventoryTransform = globals::registry.get<transform::Transform>(testInventory);
+        // testInventoryTransform.setActualX(300);
+        // testInventoryTransform.setActualY(300);
 
         // load font
         // globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
@@ -169,87 +169,87 @@ namespace game
 
         //REVIEW: text entries have to be duplicated before being assigned to ui templates.
 
-        text = {
-            // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
-            // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
+        // text = {
+        //     // .rawText = fmt::format("[안녕하세요](color=red;shake=2,2). Here's a UID: [{}](color=red;pulse=0.9,1.1)", testUID),
+        //     // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
-            .rawText = fmt::format("[HEY!](rainbow;bump)[img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)[HEY!](rainbow;bump)"),
-            .fontData = globals::fontData,
-            .fontSize = 50.0f,
-            .wrapEnabled = false,
-            // .wrapWidth = 1200.0f,
-            .alignment = TextSystem::Text::Alignment::LEFT,
-            .wrapMode = TextSystem::Text::WrapMode::WORD};
+        //     .rawText = fmt::format("[HEY!](rainbow;bump)[img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)[HEY!](rainbow;bump)"),
+        //     .fontData = globals::fontData,
+        //     .fontSize = 50.0f,
+        //     .wrapEnabled = false,
+        //     // .wrapWidth = 1200.0f,
+        //     .alignment = TextSystem::Text::Alignment::LEFT,
+        //     .wrapMode = TextSystem::Text::WrapMode::WORD};
             
-        text.get_value_callback = []() {
-            return randomStringText; // updates text entity based on randomStringText
-        };
+        // text.get_value_callback = []() {
+        //     return randomStringText; // updates text entity based on randomStringText
+        // };
 
-        static Vector2 textPreviousWidthAndHeight{0, 0};
+        // static Vector2 textPreviousWidthAndHeight{0, 0};
 
-        text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
-        };
+        // text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
+        // };
 
-        // make this text update regularly, with a new effect
-        // timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
-        //     randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
+        // // make this text update regularly, with a new effect
+        // // timer::TimerSystem::timer_every(5.f, [](std::optional<float> f) {
+        // //     randomStringText = random_utils::random_element(randomStringTextList); // change the variable referenced by the text entity
 
-        //     // clear all effects
-        //     TextSystem::Functions::clearAllEffects(textEntity);
+        // //     // clear all effects
+        // //     TextSystem::Functions::clearAllEffects(textEntity);
 
-        //     // set new random effect to update on text change
-        //     auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-        //     text.effectStringsToApplyGloballyOnTextChange.clear();
-        //     auto randomEffect = random_utils::random_element(randomEffects);
-        //     text.effectStringsToApplyGloballyOnTextChange.push_back(randomEffect); // add effect to all characters in the texttext.
-        //     text.effectStringsToApplyGloballyOnTextChange.push_back("fan"); 
-        //     SPDLOG_DEBUG("Random effect: {}", randomEffect);
-        // });
+        // //     // set new random effect to update on text change
+        // //     auto &text = globals::registry.get<TextSystem::Text>(textEntity);
+        // //     text.effectStringsToApplyGloballyOnTextChange.clear();
+        // //     auto randomEffect = random_utils::random_element(randomEffects);
+        // //     text.effectStringsToApplyGloballyOnTextChange.push_back(randomEffect); // add effect to all characters in the texttext.
+        // //     text.effectStringsToApplyGloballyOnTextChange.push_back("fan"); 
+        // //     SPDLOG_DEBUG("Random effect: {}", randomEffect);
+        // // });
         
-        text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
-            // get master
-            //TODO: enable this back later
-            // auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
-            // auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
+        // text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
+        //     // get master
+        //     //TODO: enable this back later
+        //     // auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+        //     // auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
             
-            // TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
-        };
+        //     // TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
+        // };
         
 
-        text.onFinishedEffect = []()
-        {
-            // spdlog::debug("Text effect finished.");
+        // text.onFinishedEffect = []()
+        // {
+        //     // spdlog::debug("Text effect finished.");
 
-            // // There is a brief flash of white when text changes. why?
+        //     // // There is a brief flash of white when text changes. why?
 
-            // auto &text = globals::registry.get<TextSystem::Text>(textEntity);
-            // TextSystem::Functions::clearAllEffects(textEntity);
-            // text.rawText = fmt::format("[some new text](rainbow;bump)");
-            // TextSystem::Functions::parseText(textEntity);
-            // TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,in;"); // ;
-            // TextSystem::Functions::updateText(textEntity, 0.05f);                     // call update once to apply effects, prevent flashing
-        };
+        //     // auto &text = globals::registry.get<TextSystem::Text>(textEntity);
+        //     // TextSystem::Functions::clearAllEffects(textEntity);
+        //     // text.rawText = fmt::format("[some new text](rainbow;bump)");
+        //     // TextSystem::Functions::parseText(textEntity);
+        //     // TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,in;"); // ;
+        //     // TextSystem::Functions::updateText(textEntity, 0.05f);                     // call update once to apply effects, prevent flashing
+        // };
 
-        // FIXME: there are two text entities which overlap
-        // FIXME: characters are not disposed of properly when text changes
-        // FIXME: text offset not working properly when text changes
+        // // FIXME: there are two text entities which overlap
+        // // FIXME: characters are not disposed of properly when text changes
+        // // FIXME: text offset not working properly when text changes
 
-        // init custom text system
-        // TextSystem::Functions::initEffects(text);
-        // TextSystem::Functions::parseText(text);
+        // // init custom text system
+        // // TextSystem::Functions::initEffects(text);
+        // // TextSystem::Functions::parseText(text);
 
-        textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
+        // textEntity = TextSystem::Functions::createTextEntity(text, 0, 0);
 
-        // save size of text entity for resizing later
-        auto textTransform = globals::registry.get<transform::Transform>(textEntity);
-        textPreviousWidthAndHeight.x = textTransform.getActualW();
-        textPreviousWidthAndHeight.y = textTransform.getActualH();
+        // // save size of text entity for resizing later
+        // auto textTransform = globals::registry.get<transform::Transform>(textEntity);
+        // textPreviousWidthAndHeight.x = textTransform.getActualW();
+        // textPreviousWidthAndHeight.y = textTransform.getActualH();
         
-        // clear
-        text.get_value_callback = {};
-        text.onStringContentUpdatedViaCallback = {};
+        // // clear
+        // text.get_value_callback = {};
+        // text.onStringContentUpdatedViaCallback = {};
 
-        auto textEntity2 = TextSystem::Functions::createTextEntity(text, 300, 300); // testing
+        // auto textEntity2 = TextSystem::Functions::createTextEntity(text, 300, 300); // testing
 
         // TextSystem::Functions::clearAllEffects(text);
         // TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,out;spin=4,0.1;"); // ;
@@ -308,25 +308,24 @@ namespace game
         };
 
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-        player = animation_system::createAnimatedObjectWithTransform("4126-TheRoguelike_1_10_alpha_919.png", true, 400, 400, shaderPassConfigFunction);
-        auto &playerNode = globals::registry.get<transform::GameObject>(player);
-        playerNode.debug.debugText = "Player";
-        playerNode.state.dragEnabled = true;
-        playerNode.state.hoverEnabled = true;
-        playerNode.state.collisionEnabled = true;
-        playerNode.state.clickEnabled = true;
+        // player = animation_system::createAnimatedObjectWithTransform("4126-TheRoguelike_1_10_alpha_919.png", true, 400, 400, shaderPassConfigFunction);
+        // auto &playerNode = globals::registry.get<transform::GameObject>(player);
+        // playerNode.debug.debugText = "Player";
+        // playerNode.state.dragEnabled = true;
+        // playerNode.state.hoverEnabled = true;
+        // playerNode.state.collisionEnabled = true;
+        // playerNode.state.clickEnabled = true;
 
-        player2 = animation_system::createAnimatedObjectWithTransform("test_char_woman.png", true, 400, 400, shaderPassConfigFunction);
-        auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
-        playerNode2.debug.debugText = "Player (untethered)";
-        playerNode2.state.dragEnabled = true;
-        playerNode2.state.hoverEnabled = true;
-        playerNode2.state.collisionEnabled = true;
-        playerNode2.state.clickEnabled = true;
+        // player2 = animation_system::createAnimatedObjectWithTransform("test_char_woman.png", true, 400, 400, shaderPassConfigFunction);
+        // auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
+        // playerNode2.debug.debugText = "Player (untethered)";
+        // playerNode2.state.dragEnabled = true;
+        // playerNode2.state.hoverEnabled = true;
+        // playerNode2.state.collisionEnabled = true;
+        // playerNode2.state.clickEnabled = true;
         //FIXME: commenting this out for now, for debugging
         // animation_system::resizeAnimationObjectsInEntityToFit(player2, 150.f, 150.f);
 
-        // massive container the size of the screen
         transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
         auto &node = globals::registry.get<transform::GameObject>(transformEntity);
         node.debug.debugText = "Parent";
@@ -342,232 +341,232 @@ namespace game
         transform::debugMode = true; // enable debug drawing of transforms
 
         // Testing ui
-        auto &uiConfig = globals::registry.emplace<ui::UIConfig>(transformEntity);
-        uiConfig.color = RED;
-        uiConfig.outlineThickness = 4.0f;
-        uiConfig.outlineColor = YELLOW;
-        uiConfig.shadowColor = Fade(BLACK, 0.4f);
-        uiConfig.shadow = true;
-        uiConfig.emboss = 5.f;
+        // auto &uiConfig = globals::registry.emplace<ui::UIConfig>(transformEntity);
+        // uiConfig.color = RED;
+        // uiConfig.outlineThickness = 4.0f;
+        // uiConfig.outlineColor = YELLOW;
+        // uiConfig.shadowColor = Fade(BLACK, 0.4f);
+        // uiConfig.shadow = true;
+        // uiConfig.emboss = 5.f;
 
-        childEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
-        auto &childNode = globals::registry.get<transform::GameObject>(childEntity);
-        childNode.debug.debugText = "Fixture 1";
-        auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
-        childTransform.setActualX(200);
-        childTransform.setActualY(200);
-        transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
-        auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
-        childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
+        // childEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
+        // auto &childNode = globals::registry.get<transform::GameObject>(childEntity);
+        // childNode.debug.debugText = "Fixture 1";
+        // auto &childTransform = globals::registry.get<transform::Transform>(childEntity);
+        // childTransform.setActualX(200);
+        // childTransform.setActualY(200);
+        // transform::AssignRole(&globals::registry, childEntity, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
+        // auto &childRole = globals::registry.get<transform::InheritedProperties>(childEntity);
+        // childRole.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER | transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES;
 
-        childEntity2 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 40, 20);
-        auto &childNode2 = globals::registry.get<transform::GameObject>(childEntity2);
-        childNode2.debug.debugText = "Fixture 2";
-        auto &childTransform2 = globals::registry.get<transform::Transform>(childEntity2);
-        transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
-        auto &childRole2 = globals::registry.get<transform::InheritedProperties>(childEntity2);
-        childRole2.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER;
+        // childEntity2 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 40, 20);
+        // auto &childNode2 = globals::registry.get<transform::GameObject>(childEntity2);
+        // childNode2.debug.debugText = "Fixture 2";
+        // auto &childTransform2 = globals::registry.get<transform::Transform>(childEntity2);
+        // transform::AssignRole(&globals::registry, childEntity2, transform::InheritedProperties::Type::PermanentAttachment, transformEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, Vector2{});
+        // auto &childRole2 = globals::registry.get<transform::InheritedProperties>(childEntity2);
+        // childRole2.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER;
 
-        childEntity3 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 40);
-        auto &childNode3 = globals::registry.get<transform::GameObject>(childEntity3);
-        childNode3.debug.debugText = "Not fixture";
-        auto &childTransform3 = globals::registry.get<transform::Transform>(childEntity3);
-        transform::AssignRole(&globals::registry, childEntity3, transform::InheritedProperties::Type::RoleInheritor, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{50.f, 50.f});
-        auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
-        childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
+        // childEntity3 = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 40);
+        // auto &childNode3 = globals::registry.get<transform::GameObject>(childEntity3);
+        // childNode3.debug.debugText = "Not fixture";
+        // auto &childTransform3 = globals::registry.get<transform::Transform>(childEntity3);
+        // transform::AssignRole(&globals::registry, childEntity3, transform::InheritedProperties::Type::RoleInheritor, transformEntity, transform::InheritedProperties::Sync::Strong, std::nullopt, transform::InheritedProperties::Sync::Strong, std::nullopt, Vector2{50.f, 50.f});
+        // auto &childRole3 = globals::registry.get<transform::InheritedProperties>(childEntity3);
+        // childRole3.flags->alignment = transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM;
 
-        timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f)
-                                        {
-        // SPDLOG_DEBUG("Injecting dynamic motion");
-        transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
+        // timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f)
+        //                                 {
+        // // SPDLOG_DEBUG("Injecting dynamic motion");
+        // transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
+
+        // // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
+        // //                                 { 
+        // //                                     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); 
+        // //                                     TextSystem::Functions::debugPrintText(textEntity);
+        // //                                 });
 
         // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
-        //                                 { 
-        //                                     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); 
-        //                                     TextSystem::Functions::debugPrintText(textEntity);
+        //                                 {
+        //                                     particle::Particle particle{
+        //                                         .velocity = Vector2{Random::get<float>(-200, 200), Random::get<float>(-200, 200)},
+        //                                         .rotation = Random::get<float>(0, 360),
+        //                                         .rotationSpeed = Random::get<float>(-180, 180),
+        //                                         .scale = Random::get<float>(1, 10),
+        //                                         .lifespan = Random::get<float>(1, 3),
+        //                                         .color = random_utils::random_element<Color>({RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, BROWN, WHITE, BLACK})};
+
+        //                                     // TODO: way to programatically modify frame times for animation
+
+        //                                     particle::CreateParticle(globals::registry,
+        //                                                              GetMousePosition(),
+        //                                                              Vector2{10, 10},
+        //                                                              particle,
+        //                                                              particle::ParticleAnimationConfig{.loop = true, .animationName = "sword_anim"});
         //                                 });
 
-        timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
-                                        {
-                                            particle::Particle particle{
-                                                .velocity = Vector2{Random::get<float>(-200, 200), Random::get<float>(-200, 200)},
-                                                .rotation = Random::get<float>(0, 360),
-                                                .rotationSpeed = Random::get<float>(-180, 180),
-                                                .scale = Random::get<float>(1, 10),
-                                                .lifespan = Random::get<float>(1, 3),
-                                                .color = random_utils::random_element<Color>({RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, BROWN, WHITE, BLACK})};
+        // auto &testConfig = globals::registry.emplace<ui::Tooltip>(transformEntity);
+        // testConfig.title = "Test Tooltip";
 
-                                            // TODO: way to programatically modify frame times for animation
+        // reflection::registerMetaForComponent<ui::Tooltip>([](auto meta)
+        //                                                   { meta.type("Tooltip"_hs) // Ensure type name matches the lookup string
+        //                                                         .template data<&ui::Tooltip::title>("title"_hs)
+        //                                                         .template data<&ui::Tooltip::text>("text"_hs); });
 
-                                            particle::CreateParticle(globals::registry,
-                                                                     GetMousePosition(),
-                                                                     Vector2{10, 10},
-                                                                     particle,
-                                                                     particle::ParticleAnimationConfig{.loop = true, .animationName = "sword_anim"});
-                                        });
-
-        auto &testConfig = globals::registry.emplace<ui::Tooltip>(transformEntity);
-        testConfig.title = "Test Tooltip";
-
-        reflection::registerMetaForComponent<ui::Tooltip>([](auto meta)
-                                                          { meta.type("Tooltip"_hs) // Ensure type name matches the lookup string
-                                                                .template data<&ui::Tooltip::title>("title"_hs)
-                                                                .template data<&ui::Tooltip::text>("text"_hs); });
-
-        auto type = entt::resolve("Tooltip"_hs);
-        auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
+        // auto type = entt::resolve("Tooltip"_hs);
+        // auto test = reflection::retrieveComponent(&globals::registry, transformEntity, "Tooltip");
     
-        auto testTextContentForUI = ui_defs::getTextFromString("[Hello here's a longer test\nNow test this](color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
+        // auto testTextContentForUI = ui_defs::getTextFromString("[Hello here's a longer test\nNow test this](color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
 
-        ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
-                                                    .addType(ui::UITypeEnum::TEXT)
-                                                    .addConfig(
-                                                        ui::UIConfig::Builder::create()
-                                                            .addColor(WHITE)
-                                                            .addText("Hello, world!")
-                                                            .addShadow(true)
-                                                            .addRefEntity(transformEntity)
-                                                            .addRefComponent("Tooltip")
-                                                            .addRefValue("title")
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                            .build())
-                                                    .build();
-        ui::UIElementTemplateNode uiDynamicTextEntry = ui::UIElementTemplateNode::Builder::create()
-                                                    .addType(ui::UITypeEnum::OBJECT)
-                                                    .addConfig(
-                                                        ui::UIConfig::Builder::create()
-                                                            .addColor(WHITE)
-                                                            .addObject(textEntity)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                            .build())
-                                                    .build();
-        ui::UIElementTemplateNode uiAnimatedSpriteEntry = ui::UIElementTemplateNode::Builder::create()
-                                                    .addType(ui::UITypeEnum::OBJECT)
-                                                    .addConfig(
-                                                        ui::UIConfig::Builder::create()
-                                                            .addColor(WHITE)
-                                                            .addObject(player)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                            .build())
-                                                    .build();
-        ui::UIElementTemplateNode uiTestInventoryEntry = ui::UIElementTemplateNode::Builder::create()
-                                                    .addType(ui::UITypeEnum::OBJECT)
-                                                    .addConfig(
-                                                        ui::UIConfig::Builder::create()
-                                                            .addColor(WHITE)
-                                                            .addObject(testInventory)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                            .build())
-                                                    .build();
-        ui::UIElementTemplateNode uiTestInventoryColumn = ui::UIElementTemplateNode::Builder::create()
-                                                    .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
-                                                    .addConfig(
-                                                        ui::UIConfig::Builder::create()
-                                                            .addColor(YELLOW)
-                                                            .addEmboss(2.f)
-                                                            .addOutlineColor(BLUE)
-                                                            // .addOutlineThickness(5.0f)
-                                                            // .addMinWidth(500.f)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                            .build())
-                                                    .addChild(ui_defs::getRandomRectDef())
-                                                    .addChild(ui_defs::getRandomRectDef())
-                                                    .addChild(uiTestInventoryEntry)
-                                                    .build();
-        ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
-                                                             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-                                                             .addConfig(
-                                                                 ui::UIConfig::Builder::create()
-                                                                     .addColor(GRAY)
-                                                                     // .addOutlineThickness(2.0f)
-                                                                     .addHover(true)
-                                                                     .addButtonCallback([]()
-                                                                                        { SPDLOG_DEBUG("Button callback triggered"); })
-                                                                     .addOutlineColor(BLUE)
-                                                                     // .addShadow(true)
-                                                                     .addEmboss(4.f)
-                                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                                     .build())
-                                                             .addChild(uiTextEntry)
-                                                             .build();
+        // ui::UIElementTemplateNode uiTextEntry = ui::UIElementTemplateNode::Builder::create()
+        //                                             .addType(ui::UITypeEnum::TEXT)
+        //                                             .addConfig(
+        //                                                 ui::UIConfig::Builder::create()
+        //                                                     .addColor(WHITE)
+        //                                                     .addText("Hello, world!")
+        //                                                     .addShadow(true)
+        //                                                     .addRefEntity(transformEntity)
+        //                                                     .addRefComponent("Tooltip")
+        //                                                     .addRefValue("title")
+        //                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                                                     .build())
+        //                                             .build();
+        // ui::UIElementTemplateNode uiDynamicTextEntry = ui::UIElementTemplateNode::Builder::create()
+        //                                             .addType(ui::UITypeEnum::OBJECT)
+        //                                             .addConfig(
+        //                                                 ui::UIConfig::Builder::create()
+        //                                                     .addColor(WHITE)
+        //                                                     .addObject(textEntity)
+        //                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                                                     .build())
+        //                                             .build();
+        // ui::UIElementTemplateNode uiAnimatedSpriteEntry = ui::UIElementTemplateNode::Builder::create()
+        //                                             .addType(ui::UITypeEnum::OBJECT)
+        //                                             .addConfig(
+        //                                                 ui::UIConfig::Builder::create()
+        //                                                     .addColor(WHITE)
+        //                                                     .addObject(player)
+        //                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                                                     .build())
+        //                                             .build();
+        // ui::UIElementTemplateNode uiTestInventoryEntry = ui::UIElementTemplateNode::Builder::create()
+        //                                             .addType(ui::UITypeEnum::OBJECT)
+        //                                             .addConfig(
+        //                                                 ui::UIConfig::Builder::create()
+        //                                                     .addColor(WHITE)
+        //                                                     .addObject(testInventory)
+        //                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                                                     .build())
+        //                                             .build();
+        // ui::UIElementTemplateNode uiTestInventoryColumn = ui::UIElementTemplateNode::Builder::create()
+        //                                             .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+        //                                             .addConfig(
+        //                                                 ui::UIConfig::Builder::create()
+        //                                                     .addColor(YELLOW)
+        //                                                     .addEmboss(2.f)
+        //                                                     .addOutlineColor(BLUE)
+        //                                                     // .addOutlineThickness(5.0f)
+        //                                                     // .addMinWidth(500.f)
+        //                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                                                     .build())
+        //                                             .addChild(ui_defs::getRandomRectDef())
+        //                                             .addChild(ui_defs::getRandomRectDef())
+        //                                             .addChild(uiTestInventoryEntry)
+        //                                             .build();
+        // ui::UIElementTemplateNode uiTextEntryContainer = ui::UIElementTemplateNode::Builder::create()
+        //                                                      .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //                                                      .addConfig(
+        //                                                          ui::UIConfig::Builder::create()
+        //                                                              .addColor(GRAY)
+        //                                                              // .addOutlineThickness(2.0f)
+        //                                                              .addHover(true)
+        //                                                              .addButtonCallback([]()
+        //                                                                                 { SPDLOG_DEBUG("Button callback triggered"); })
+        //                                                              .addOutlineColor(BLUE)
+        //                                                              // .addShadow(true)
+        //                                                              .addEmboss(4.f)
+        //                                                              .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                                                              .build())
+        //                                                      .addChild(uiTextEntry)
+        //                                                      .build();
 
 
-        ui::UIElementTemplateNode uiColumnDef = ui::UIElementTemplateNode::Builder::create()
-                                                    .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
-                                                    .addConfig(
-                                                        ui::UIConfig::Builder::create()
-                                                            .addColor(YELLOW)
-                                                            .addEmboss(2.f)
-                                                            .addOutlineColor(BLUE)
-                                                            // .addOutlineThickness(5.0f)
-                                                            // .addMinWidth(500.f)
-                                                            .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                                                            .build())
-                                                    .addChild(ui_defs::getRandomRectDef())
-                                                    .addChild(ui_defs::getRandomRectDef())
-                                                    .addChild(uiDynamicTextEntry)
-                                                    .build();
+        // ui::UIElementTemplateNode uiColumnDef = ui::UIElementTemplateNode::Builder::create()
+        //                                             .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+        //                                             .addConfig(
+        //                                                 ui::UIConfig::Builder::create()
+        //                                                     .addColor(YELLOW)
+        //                                                     .addEmboss(2.f)
+        //                                                     .addOutlineColor(BLUE)
+        //                                                     // .addOutlineThickness(5.0f)
+        //                                                     // .addMinWidth(500.f)
+        //                                                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                                                     .build())
+        //                                             .addChild(ui_defs::getRandomRectDef())
+        //                                             .addChild(ui_defs::getRandomRectDef())
+        //                                             .addChild(uiDynamicTextEntry)
+        //                                             .build();
 
-        ui::UIElementTemplateNode uiRowDef = ui::UIElementTemplateNode::Builder::create()
-                                                 .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
-                                                 .addConfig(
-                                                     ui::UIConfig::Builder::create()
-                                                         .addColor(RED)
-                                                         .addEmboss(2.f)
-                                                         .addId("testRow")
-                                                         .addHover(true)
-                                                         .addButtonCallback([testConfig]()
-                                                                            {
-                    SPDLOG_DEBUG("Button callback triggered, renewing box alignment");
-                    auto button = ui::box::GetUIEByID(globals::registry, uiBox, "testRow"); 
-                    SPDLOG_DEBUG("Button ID: {}", globals::registry.get<ui::UIConfig>(button.value()).id.value());
-                    // set text tooltip to a random string
-                    auto &tooltip = globals::registry.get<ui::Tooltip>(transformEntity);
-                    tooltip.title = random_utils::random_element<std::string>(
-                        {"Hello", "World", "This is a test", "Testing 1, 2, 3", "Lorem ipsum dolor sit amet", "Random string"});
+        // ui::UIElementTemplateNode uiRowDef = ui::UIElementTemplateNode::Builder::create()
+        //                                          .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+        //                                          .addConfig(
+        //                                              ui::UIConfig::Builder::create()
+        //                                                  .addColor(RED)
+        //                                                  .addEmboss(2.f)
+        //                                                  .addId("testRow")
+        //                                                  .addHover(true)
+        //                                                  .addButtonCallback([testConfig]()
+        //                                                                     {
+        //             SPDLOG_DEBUG("Button callback triggered, renewing box alignment");
+        //             auto button = ui::box::GetUIEByID(globals::registry, uiBox, "testRow"); 
+        //             SPDLOG_DEBUG("Button ID: {}", globals::registry.get<ui::UIConfig>(button.value()).id.value());
+        //             // set text tooltip to a random string
+        //             auto &tooltip = globals::registry.get<ui::Tooltip>(transformEntity);
+        //             tooltip.title = random_utils::random_element<std::string>(
+        //                 {"Hello", "World", "This is a test", "Testing 1, 2, 3", "Lorem ipsum dolor sit amet", "Random string"});
 
-                    ui::box::RenewAlignment(globals::registry, uiBox); })
-                                                         // .addMinHeight(500.f)
-                                                         // .addOutlineThickness(5.0f)
-                                                         // .addButtonCallback("testCallback")
-                                                         // .addOnePress(true)
-                                                         // .addFocusArgs((ui::FocusArgs{.redirect_focus_to = entt::entity{entt::null}}))
-                                                         .addOutlineColor(BLUE)
-                                                         .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
-                                                         .build())
-                                                 .addChild(uiColumnDef)
-                                                 .addChild(ui_defs::getRandomRectDef())
-                                                 .build();
+        //             ui::box::RenewAlignment(globals::registry, uiBox); })
+        //                                                  // .addMinHeight(500.f)
+        //                                                  // .addOutlineThickness(5.0f)
+        //                                                  // .addButtonCallback("testCallback")
+        //                                                  // .addOnePress(true)
+        //                                                  // .addFocusArgs((ui::FocusArgs{.redirect_focus_to = entt::entity{entt::null}}))
+        //                                                  .addOutlineColor(BLUE)
+        //                                                  .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT)
+        //                                                  .build())
+        //                                          .addChild(uiColumnDef)
+        //                                          .addChild(ui_defs::getRandomRectDef())
+        //                                          .build();
 
-        auto dividerText = ui_defs::putCodedTextBetweenDividers("TESTING", "divider-fade-001.png");
-        ui::UIElementTemplateNode consumablesRowDef = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(YELLOW)
-                    .addEmboss(2.f)
-                    .addOutlineColor(BLUE)
-                    .addOutlineThickness(2.0f)
-                    // .addMinWidth(500.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(ui_defs::getNewDynamicTextEntry("Consumables:", 20.f, 500.f, "bump;rainbow"))
-            .addChild(uiTestInventoryEntry)
-            .build();
-        ui::UIElementTemplateNode spriteRowDef = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(YELLOW)
-                    .addEmboss(2.f)
-                    .addOutlineColor(BLUE)
-                    .addOutlineThickness(2.0f)
-                    // .addMinWidth(500.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(ui_defs::getNewDynamicTextEntry("Item sprite: ", 20.f, 500.f, "bump=6.0,8.0,0.9,0.2"))
-            .addChild(uiAnimatedSpriteEntry)
-            .build();
+        // auto dividerText = ui_defs::putCodedTextBetweenDividers("TESTING", "divider-fade-001.png");
+        // ui::UIElementTemplateNode consumablesRowDef = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(YELLOW)
+        //             .addEmboss(2.f)
+        //             .addOutlineColor(BLUE)
+        //             .addOutlineThickness(2.0f)
+        //             // .addMinWidth(500.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(ui_defs::getNewDynamicTextEntry("Consumables:", 20.f, 500.f, "bump;rainbow"))
+        //     .addChild(uiTestInventoryEntry)
+        //     .build();
+        // ui::UIElementTemplateNode spriteRowDef = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(YELLOW)
+        //             .addEmboss(2.f)
+        //             .addOutlineColor(BLUE)
+        //             .addOutlineThickness(2.0f)
+        //             // .addMinWidth(500.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(ui_defs::getNewDynamicTextEntry("Item sprite: ", 20.f, 500.f, "bump=6.0,8.0,0.9,0.2"))
+        //     .addChild(uiAnimatedSpriteEntry)
+        //     .build();
         ui::UIElementTemplateNode uiTestRootDef = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::ROOT)
             .addConfig(
@@ -610,26 +609,12 @@ namespace game
 
         );
 
-        uiTextEntry.config.text = "This is a hover popup!";
-        uiTextEntry.config.color = RED;
-        uiTextEntry.config.ref_component.reset();
-        uiTextEntry.config.ref_entity.reset();
-        uiTextEntry.config.ref_value.reset();
+        // uiTextEntry.config.text = "This is a hover popup!";
+        // uiTextEntry.config.color = RED;
+        // uiTextEntry.config.ref_component.reset();
+        // uiTextEntry.config.ref_entity.reset();
+        // uiTextEntry.config.ref_value.reset();
         
-        
-        // hoverPopupUIBox = ui::box::Initialize(
-        //     globals::registry,
-        //     {.w = 200, .h = 200},
-        //     uiTextEntry,
-        //     ui::UIConfig::Builder::create()
-        //         .addRole(transform::InheritedProperties::Builder()
-        //                      .addRoleType(transform::InheritedProperties::Type::RoleInheritor)
-        //                      .addMaster(transformEntity)
-        //                      .addLocationBond(transform::InheritedProperties::Sync::Strong)
-        //                      .addRotationBond(transform::InheritedProperties::Sync::Strong)
-        //                      .addAlignment(transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT | transform::InheritedProperties::Alignment::VERTICAL_BOTTOM)
-        //                      .build())
-        //         .build());
 
         // TODO: move this to transform system init
         transform::registerDestroyListeners(globals::registry);
@@ -723,9 +708,9 @@ namespace game
         }
         
         // draw object area (inventory comp)
-        auto &objectArea = globals::registry.get<transform::GameObject>(testInventory);
-        objectArea.drawFunction(ui_layer, globals::registry, testInventory);
-        transformProfiler.Stop();
+        // auto &objectArea = globals::registry.get<transform::GameObject>(testInventory);
+        // objectArea.drawFunction(ui_layer, globals::registry, testInventory);
+        // transformProfiler.Stop();
 
         // dynamic text
         auto textView = globals::registry.view<TextSystem::Text>();
@@ -744,9 +729,6 @@ namespace game
         {
             if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
             {
-                //FIXME: debugging, remove later
-                layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, e, 0);
-
                 layer::AddDrawTransformEntityWithAnimationWithPipeline(sprites, &globals::registry, e, 0);
             }
             else

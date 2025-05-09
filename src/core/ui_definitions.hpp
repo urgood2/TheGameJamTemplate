@@ -388,29 +388,49 @@ namespace ui_defs
             
         return objectElement;
     }
-    
-    inline auto uiFeaturesTestDef() -> ui::UIElementTemplateNode
+
+    inline auto getCheckboxExample() -> ui::UIElementTemplateNode
     {
-        auto masterVerticalContainer = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+        auto checkboxImage = animation_system::createAnimatedObjectWithTransform("checkmark.png", true, 0, 0);
+
+        auto checkbox = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::OBJECT)
             .addConfig(
                 ui::UIConfig::Builder::create()
-                    .addColor(YELLOW)
-                    .addEmboss(2.f)
-                    .addOutlineColor(BLUE)
-                    // .addOutlineThickness(5.0f)
-                    // .addMinWidth(500.f)
+                    .addObject(checkboxImage)
+                    // .addColor(WHITE)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .build();
         
-        auto titleDividers = ui_defs::putCodedTextBetweenDividers("UI Test", "divider-fade-001.png");
-        
-        // ======================================
-        // ======================================
-        // progress bar rounded rect
-        // ======================================
-        // ======================================
+        auto row = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(GRAY)
+                    .addEmboss(2.f)
+                    .addMaxHeight(50.f)
+                    .addMaxWidth(50.f)
+                    .addScale(0.5f)
+                    .addHover(true)
+                    
+                    .addButtonCallback([checkboxImage]()
+                                    { SPDLOG_DEBUG("Button callback triggered"); 
+                                        // disable image
+                                        auto &aqc = globals::registry.get<AnimationQueueComponent>(checkboxImage);
+                                        
+                                        aqc.noDraw = !aqc.noDraw;
+                                    })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(checkbox)
+            .build();
+
+        return row;
+    }
+
+    inline auto getProgressBarRoundedRectExample() -> ui::UIElementTemplateNode
+    {
         auto progressBarTextMoving = getNewDynamicTextEntry("Progress Bar (vertices)", 20.f, std::nullopt, "pulse=0.9,1.1");
         static float progressValueExample = 0.f;
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
@@ -440,13 +460,12 @@ namespace ui_defs
             .addChild(progressBarTextMoving)
             .build();
         
-        // ======================================
-        // ======================================
-        // progress bar with ninepatch
-        // ======================================
-        // ======================================
-            
-        progressBarTextMoving = getNewDynamicTextEntry("Progress Bar (9-patch)", 20.f, std::nullopt, "wiggle=12,15,0.5");
+        return progressBar;
+    }
+
+    inline auto getSliderNinepatchExample() -> ui::UIElementTemplateNode
+    {
+        auto progressBarTextMoving = getNewDynamicTextEntry("Progress Bar (9-patch)", 20.f, std::nullopt, "wiggle=12,15,0.5");
         static float progressValueExample9Patch = 0.f;
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
             
@@ -480,6 +499,93 @@ namespace ui_defs
                     .build())
             .addChild(progressBarTextMoving)
             .build();
+
+        return progressBar9Patch;
+    }
+
+    inline auto getButtonDisabledExample() -> ui::UIElementTemplateNode
+    {
+        auto buttonDynamicText = getNewDynamicTextEntry("Button (disabled)", 20.f, std::nullopt, "pulse=0.9,1.1");
+        
+        auto buttonDisabled = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(RED)
+                    .addId("buttonDisabled")
+                    .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(300.f)
+                    .addHover(true)
+                    .addDisableButton(true) // disables clicking, darkens button
+                    .addButtonCallback([]()
+                                    { 
+                                        SPDLOG_DEBUG("This should not be called");
+                                    })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(buttonDynamicText)
+            .build();
+            
+        return buttonDisabled;
+    }
+
+    inline auto controllerPipContainer() -> ui::UIElementTemplateNode
+    {
+        auto controllerPipText = getNewDynamicTextEntry("Action", 10.f, std::nullopt, "pulse=0.9,1.1");
+        auto anim = animation_system::createAnimatedObjectWithTransform("xbox_button_color_x.png", true, 0, 0);
+        auto controllerPipImage = wrapEntityInsideObjectElement(anim);
+        animation_system::resizeAnimationObjectsInEntityToFit(anim, 30.f, 30.f);
+        // disable shadow
+        auto &gameObjectComp = globals::registry.get<transform::GameObject>(anim);
+        gameObjectComp.shadowDisplacement.reset();
+        
+        auto controllerPipContainer = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(PINK)
+                    .addEmboss(5.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(controllerPipText)
+            .addChild(controllerPipImage)
+            .build();
+        
+        return controllerPipContainer;
+    }
+    
+    inline auto uiFeaturesTestDef() -> ui::UIElementTemplateNode
+    {
+        auto masterVerticalContainer = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(YELLOW)
+                    .addEmboss(2.f)
+                    .addOutlineColor(BLUE)
+                    // .addOutlineThickness(5.0f)
+                    // .addMinWidth(500.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        
+        auto titleDividers = ui_defs::putCodedTextBetweenDividers("UI Test", "divider-fade-001.png");
+        
+        // ======================================
+        // ======================================
+        // progress bar rounded rect
+        // ======================================
+        // ======================================
+        auto progressBar = getProgressBarRoundedRectExample();
+        
+        // ======================================
+        // ======================================
+        // progress bar with ninepatch
+        // ======================================
+        // ======================================
+            
+        auto progressBar9Patch = getSliderNinepatchExample();
 
         // ======================================
         // ======================================
@@ -549,40 +655,7 @@ namespace ui_defs
         // checkbox
         // ======================================
         // ======================================
-        auto checkboxImage = animation_system::createAnimatedObjectWithTransform("checkmark.png", true, 0, 0);
-
-        auto checkbox = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::OBJECT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addObject(checkboxImage)
-                    // .addColor(WHITE)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .build();
-        
-        auto row = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GRAY)
-                    .addEmboss(2.f)
-                    .addMaxHeight(50.f)
-                    .addMaxWidth(50.f)
-                    .addScale(0.5f)
-                    .addHover(true)
-                    
-                    .addButtonCallback([checkboxImage]()
-                                    { SPDLOG_DEBUG("Button callback triggered"); 
-                                        // disable image
-                                        auto &aqc = globals::registry.get<AnimationQueueComponent>(checkboxImage);
-                                        
-                                        aqc.noDraw = !aqc.noDraw;
-                                    })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(checkbox)
-            .build();
+        auto checkbox = getCheckboxExample();
         
         // ======================================
         // ======================================
@@ -590,29 +663,13 @@ namespace ui_defs
         // ======================================
         // ======================================
         
-        auto buttonDynamicText = getNewDynamicTextEntry("Button (disabled)", 20.f, std::nullopt, "pulse=0.9,1.1");
+        auto buttonDisabled = getButtonDisabledExample();
         
-        auto buttonDisabled = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(RED)
-                    .addId("buttonDisabled")
-                    .addEmboss(2.f)
-                    .addMinHeight(50.f)
-                    .addMinWidth(300.f)
-                    .addHover(true)
-                    .addDisableButton(true) // disables clicking, darkens button
-                    .addButtonCallback([]()
-                                    { 
-                                        SPDLOG_DEBUG("This should not be called");
-                                    })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(buttonDynamicText)
-            .build();
-        
-        // TODO: button group
+        // ======================================
+        // ======================================
+        //button group
+        // ======================================
+        // ======================================
         auto buttonGroupRow = getButtonGroupRowDef();
         
         // ======================================
@@ -681,35 +738,58 @@ namespace ui_defs
             .addChild(rightButton)
             .build();
 
-        
+        // ======================================
+        // ======================================
         // TODO: new row with an alert on the top right corner
+        // ======================================
+        // ======================================
+        auto buttonAlertText = getNewDynamicTextEntry("Alert on top right corner", 20.f, std::nullopt, "wave");
+        auto buttonAlert = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(300.f)
+                    .addHover(true)
+                    .addButtonCallback([]()
+                                    { SPDLOG_DEBUG("Button callback triggered"); })
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(buttonAlertText)
+            .build();
         
         // ======================================
         // ======================================
         // controller button pip
         // ======================================
         // ======================================
-        auto controllerPipText = getNewDynamicTextEntry("Action", 10.f, std::nullopt, "pulse=0.9,1.1");
-        auto anim = animation_system::createAnimatedObjectWithTransform("xbox_button_color_x.png", true, 0, 0);
-        auto controllerPipImage = wrapEntityInsideObjectElement(anim);
-        animation_system::resizeAnimationObjectsInEntityToFit(anim, 30.f, 30.f);
-        // disable shadow
-        auto &gameObjectComp = globals::registry.get<transform::GameObject>(anim);
-        gameObjectComp.shadowDisplacement.reset();
-        
-        auto controllerPipContainer = ui::UIElementTemplateNode::Builder::create()
+        auto controllerPipContainer = ui_defs::controllerPipContainer();
+
+        // ======================================
+        // ======================================
+        // TODO: a button with a tooltip
+        // ======================================
+        // ======================================
+        auto tooltipButtonText = getNewDynamicTextEntry("Hover for tooltip", 20.f, std::nullopt, "rainbow");
+        auto buttonForTooltip = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
                 ui::UIConfig::Builder::create()
-                    .addColor(PINK)
-                    .addEmboss(5.f)
+                    .addColor(GRAY)
+                    .addEmboss(2.f)
+                    .addMinHeight(50.f)
+                    .addMinWidth(300.f)
+                    .addHover(true)
+                    .addButtonCallback([]()
+                                    { SPDLOG_DEBUG("Button callback triggered"); 
+                                        
+                                    })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(controllerPipText)
-            .addChild(controllerPipImage)
+            .addChild(tooltipButtonText)
             .build();
-        
-        // TODO: a button with a tooltip
         
         // ======================================
         // ======================================
@@ -758,7 +838,7 @@ namespace ui_defs
         
         // add everything to the master vertical container
         masterVerticalContainer.children.push_back(titleDividers);
-        masterVerticalContainer.children.push_back(row);
+        masterVerticalContainer.children.push_back(checkbox);
         masterVerticalContainer.children.push_back(progressBar);
         masterVerticalContainer.children.push_back(progressBar9Patch);
         masterVerticalContainer.children.push_back(buttonDisabled);
@@ -768,6 +848,8 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(buttonGroupRow);
         masterVerticalContainer.children.push_back(cycleContainer);
         masterVerticalContainer.children.push_back(gridContainer);
+        masterVerticalContainer.children.push_back(buttonForTooltip);
+        masterVerticalContainer.children.push_back(buttonAlert);
         
         return masterVerticalContainer;
     }

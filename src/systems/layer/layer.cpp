@@ -331,7 +331,7 @@ namespace layer
         }
 
         // Dispatch all draw commands from the arena-based command buffer
-        for (const auto& command : CommandBufferNS::GetCommandsSorted())
+        for (const auto& command : CommandBuffer::GetCommandsSorted())
         {
             auto it = dispatcher.find(command.type);
             if (it != dispatcher.end()) {

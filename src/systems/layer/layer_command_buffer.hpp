@@ -6,10 +6,10 @@
 namespace layer
 {
     namespace CommandBuffer {
-        static std::vector<std::byte> arena;
-        static std::vector<DrawCommandV2> commands;
-        static std::vector<std::function<void()>> destructors;
-        static bool isSorted = true;
+        extern std::vector<std::byte> arena;
+        extern std::vector<DrawCommandV2> commands;
+        extern std::vector<std::function<void()>> destructors;
+        extern bool isSorted;
     
         inline void Clear() {
             for (auto& d : destructors) d();

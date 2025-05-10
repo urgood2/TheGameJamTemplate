@@ -336,35 +336,6 @@ namespace layer
         int z;
     };
 
-    namespace CommandBuffer {
-        static std::vector<std::byte> arena;
-        static std::vector<DrawCommandV2> commands;
-        static std::vector<std::function<void()>> destructors;
-    
-        inline void Clear() {
-            for (auto& d : destructors) d();
-            destructors.clear();
-            arena.clear();
-            commands.clear();
-        }
-    
-        template<typename T>
-        T* Add(DrawCommandType type, int z = 0) {
-            size_t offset = arena.size();
-            arena.resize(offset + sizeof(T));
-            T* cmd = new (&arena[offset]) T{};
-            commands.push_back({type, cmd, z});
-            if constexpr (!std::is_trivially_destructible_v<T>) {
-                destructors.emplace_back([cmd]() { cmd->~T(); });
-            }
-            return cmd;
-        }
-    
-        inline const std::vector<DrawCommandV2>& GetCommands() {
-            return commands;
-        }
-    } // namespace CommandBufferNS
-    
 
     // ===========================
     // Dispatcher System

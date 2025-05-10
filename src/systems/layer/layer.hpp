@@ -68,6 +68,7 @@ namespace layer
     // Drawing utilities
     void RenderAllLayersToCurrentRenderTarget(Camera2D *camera = nullptr);
     void DrawLayerCommandsToSpecificCanvas(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera = nullptr); // render commands in a layer to a specific "canvas" within the layer object, which can then be drawn to another layer, the screen, etc.
+    void DrawLayerCommandsToSpecificCanvasOptimizedVersion(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera);
     void DrawCanvasToCurrentRenderTargetWithTransform(const std::shared_ptr<Layer> layer, const std::string &canvasName,
                                                       float x = 0, float y = 0,
                                                       float rotation = 0,

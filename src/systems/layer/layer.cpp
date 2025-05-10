@@ -315,6 +315,40 @@ namespace layer
             while (!renderStack.empty()) renderStack.pop();
         }
     }
+    
+    void DrawLayerCommandsToSpecificCanvasOptimizedVersion(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera)
+    {
+        if (layer->canvases.find(canvasName) == layer->canvases.end())
+            return;
+
+        render_stack_switch_internal::Push(layer->canvases[canvasName]);
+
+        ClearBackground(layer->backgroundColor);
+
+        if (!layer->fixed && camera)
+        {
+            BeginMode2D(*camera);
+        }
+
+        // Dispatch all draw commands from the arena-based command buffer
+        for (const auto& command : CommandBufferNS::GetCommandsSorted())
+        {
+            auto it = dispatcher.find(command.type);
+            if (it != dispatcher.end()) {
+                it->second(command.data);
+            } else {
+                SPDLOG_ERROR("Unhandled draw command type {}");
+            }
+        }
+
+        if (!layer->fixed && camera)
+        {
+            EndMode2D();
+        }
+
+        render_stack_switch_internal::Pop();
+    }
+
 
     void DrawLayerCommandsToSpecificCanvas(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera)
     {

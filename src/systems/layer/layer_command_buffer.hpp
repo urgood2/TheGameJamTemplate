@@ -5,7 +5,7 @@
 
 namespace layer
 {
-    namespace CommandBufferNS {
+    namespace CommandBuffer {
         static std::vector<std::byte> arena;
         static std::vector<DrawCommandV2> commands;
         static std::vector<std::function<void()>> destructors;

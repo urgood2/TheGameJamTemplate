@@ -25,6 +25,8 @@
 
 #include "util/common_headers.hpp"
 
+#include "layer_command_buffer.hpp"
+
 // Graphics namespace for rendering functions
 namespace layer
 {

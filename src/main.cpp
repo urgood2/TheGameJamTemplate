@@ -76,6 +76,7 @@ using json = nlohmann::json;
 #include "systems/input/input.hpp"
 #include "systems/timer/timer.hpp"
 #include "systems/sound/sound_system.hpp"
+#include "systems/layer/layer_optimized.hpp"
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
@@ -305,6 +306,8 @@ int main(void)
     // --------------------------------------------------------------------------------------
 
     init::base_init();
+    
+    layer::InitDispatcher();
 
     SetTargetFPS(main_loop::mainLoop.framerate); 
 

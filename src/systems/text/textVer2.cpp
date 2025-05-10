@@ -1053,15 +1053,23 @@ namespace TextSystem
                     charPosition.y += offset.y * renderScale;
                 }
                 
-
-                // Convert the codepoint to UTF-8 string for rendering
                 int utf8Size = 0;
-                const char *utf8Char = CodepointToUTF8(character.overrideCodepoint.value_or(character.value), &utf8Size);
-                auto utf8String = CodepointToString(character.overrideCodepoint.value_or(character.value));
-
-                Vector2 charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(), text.fontSize, 1.0f);
-                charSize.x *= text.renderScale;
-                charSize.y *= text.renderScale;
+                static std::string utf8String;
+                // Convert the codepoint to UTF-8 string for rendering
+                {
+                    ZoneScopedN("TextSystem::renderText-codepoint to utf/string conversion");
+                    
+                    utf8String = CodepointToString(character.overrideCodepoint.value_or(character.value));
+                }
+                
+                static Vector2 charSize = {0, 0};
+                {
+                    ZoneScopedN("TextSystem::renderText-measure text size");
+                    charSize = MeasureTextEx(text.fontData.font, utf8String.c_str(), text.fontSize, 1.0f);
+                    charSize.x *= text.renderScale;
+                    charSize.y *= text.renderScale;
+                }
+                
 
                 if (character.isImage) { 
                     charSize.x = character.size.x * renderScale;
@@ -1071,6 +1079,7 @@ namespace TextSystem
                 // sanity checkdd
                 if (charSize.x == 0)
                 {
+                    const char* utf8Char = CodepointToUTF8(character.overrideCodepoint.value_or(character.value), &utf8Size);
                     spdlog::warn("Missing glyph for character: '{}'. Replacing with '?'.", utf8Char);
                     utf8Char = "?";
                 }
@@ -1091,20 +1100,24 @@ namespace TextSystem
                     charPosition.x += text.fontData.fontRenderOffset.x * finalScaleX * renderScale;
                     charPosition.y += text.fontData.fontRenderOffset.y * finalScaleY * renderScale;
                 }
+                
+                {
+                    ZoneScopedN("TextSystem::renderText-apply transformations");
+                    layer::AddPushMatrix(layerPtr);
 
-                layer::AddPushMatrix(layerPtr);
+                    // apply scaling that is centered on the character
+                    layer::AddTranslate(layerPtr, charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
+                    layer::AddScale(layerPtr, finalScaleX, finalScaleY, 1);
+                    layer::AddRotate(layerPtr, character.rotation);
+                    layer::AddTranslate(layerPtr, -charSize.x * 0.5f, -charSize.y * 0.5f, 0);
+                }
 
-                // apply scaling that is centered on the character
-                layer::AddTranslate(layerPtr, charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
-                layer::AddScale(layerPtr, finalScaleX, finalScaleY, 1);
-                layer::AddRotate(layerPtr, character.rotation);
-                layer::AddTranslate(layerPtr, -charSize.x * 0.5f, -charSize.y * 0.5f, 0);
-
-
+                
                 // render shadow if enabled
                 // draw shadow based on shadow displacement
                 if (text.shadow_enabled)
                 {
+                    ZoneScopedN("TextSystem::renderText-render shadow");
                     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
                     float heightFactor = 1.0f + character.shadowHeight; // Increase effect based on height
 
@@ -1138,6 +1151,7 @@ namespace TextSystem
                     
 
                     if (character.isImage) {
+                        ZoneScopedN("TextSystem::renderText-render image shadow");
                         auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
                         auto sourceRect = spriteFrame.frame;
                         auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
@@ -1145,6 +1159,7 @@ namespace TextSystem
                         layer::AddTexturePro(layerPtr, atlasTexture, sourceRect, 0, 0, {destRect.width, destRect.height}, {0, 0}, 0, Fade(BLACK, 0.7f)); 
                     }
                     else {
+                        ZoneScopedN("TextSystem::renderText-render text shadow");
                         // Draw shadow 
                         layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, Fade(BLACK, 0.7f));
                     }
@@ -1155,6 +1170,7 @@ namespace TextSystem
 
                 // Render the character
                 if (character.isImage) {
+                    ZoneScopedN("TextSystem::renderText-render image");
                     auto spriteFrame = init::getSpriteFrame(character.spriteUUID);
                     auto sourceRect = spriteFrame.frame;
                     auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
@@ -1162,10 +1178,12 @@ namespace TextSystem
                     layer::AddTexturePro(layerPtr, atlasTexture, sourceRect, 0, 0, {destRect.width, destRect.height}, {0, 0}, 0, character.fgTint); 
                 }
                 else {
+                    ZoneScopedN("TextSystem::renderText-render text");
                     layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, character.color);
                 }
                 
                 if (debug && globals::drawDebugInfo) {
+                    ZoneScopedN("TextSystem::renderText-debug info");
                     // subtract finetuning offset
                     if (!character.isImage) {
                         layer::AddTranslate(layerPtr, - text.fontData.fontRenderOffset.x * finalScaleX * renderScale, - text.fontData.fontRenderOffset.y * finalScaleY * renderScale, 0);

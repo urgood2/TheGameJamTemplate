@@ -700,7 +700,7 @@ namespace game
 
 
         {
-            ZoneScopedN("UIBox Draw");
+            ZoneScopedN("game::draw-UIElement Draw");
             // debug draw ui elements (draw ui boxes, will auto-propogate to children)
             auto viewUI = globals::registry.view<ui::UIBoxComponent>();
             for (auto e : viewUI)

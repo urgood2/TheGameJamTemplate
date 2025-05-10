@@ -619,7 +619,6 @@ namespace ui
     void util::DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
     {
         ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
-        ::util::Profiler profiler("DrawSteppedRoundedRectangle");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
         auto &node = registry.get<transform::GameObject>(entity);
@@ -681,7 +680,7 @@ namespace ui
 
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && uiConfig->shadow)
         {
-            
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow fill");
             
             layer::AddPushMatrix(layerPtr);
             
@@ -701,19 +700,17 @@ namespace ui
             {
                 colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
             }
-
-            ::util::Profiler profiler("RenderRectVerticesFilledLayer");
-
+            
             // filled shadow
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
             layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, false, entity, colorToUse);
 
-            profiler.Stop();
 
             layer::AddPopMatrix(layerPtr);
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE && uiConfig->outlineShadow)
         {
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow outline");
             layer::AddPushMatrix(layerPtr);
 
             // layer::AddTranslate(layerPtr, -shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier);
@@ -745,7 +742,7 @@ namespace ui
         // then emboss (y+ emboss value)
         if (type & RoundedRectangleVerticesCache_TYPE_EMBOSS)
         {
-
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss fill");
             layer::AddPushMatrix(layerPtr);
 
             if (!emboss)
@@ -781,6 +778,7 @@ namespace ui
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS)
         {
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss outline");
             layer::AddPushMatrix(layerPtr);
 
             if (!emboss)
@@ -820,6 +818,7 @@ namespace ui
         // then fill
         if (type & RoundedRectangleVerticesCache_TYPE_FILL)
         {
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle fill");
             // FIXME: testing with commenting out
             layer::AddPushMatrix(layerPtr);
             
@@ -850,6 +849,7 @@ namespace ui
         // fill progress, if there is any
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && rectCache->innerVertices.size() > 0 && rectCache->outerVertices.size() > 0 && progress.has_value())
         {
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
             layer::AddPushMatrix(layerPtr);
 
             // layer::AddTranslate(layerPtr, actualX, actualY);
@@ -902,6 +902,7 @@ namespace ui
         // and ... or outline
         if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE)
         {
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle outline");
             layer::AddPushMatrix(layerPtr);
 
             // layer::AddTranslate(layerPtr, actualX, actualY);
@@ -930,7 +931,6 @@ namespace ui
             layer::AddPopMatrix(layerPtr);
         }
 
-        profiler.Stop();
     }
 
     void util::RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, const std::vector<Vector2> &outerVertices, const Color color, const std::vector<Vector2> &innerVertices)

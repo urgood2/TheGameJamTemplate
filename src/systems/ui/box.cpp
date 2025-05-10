@@ -1458,6 +1458,7 @@ namespace ui
     // entity is a uibox.
     void box::Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
     {
+        ZoneScopedN("UIBox::Draw");
         // LATER: do not draw if already drawn this frame
         auto *uiBox = registry.try_get<UIBoxComponent>(entity);
         auto *uiState = registry.try_get<UIState>(entity);

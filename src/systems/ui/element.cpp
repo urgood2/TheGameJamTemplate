@@ -1128,7 +1128,7 @@ namespace ui
     // TODO: check logic, ensure working properly, refactor logic to be more readable (test with various ui types and configurations)
     void element::DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
     {
-        ::util::Profiler profiler("DrawSelf");
+        ZoneScopedN("UI Element: DrawSelf");
         auto *uiElement = registry.try_get<UIElementComponent>(entity);
         auto *config = registry.try_get<UIConfig>(entity);
         auto *state = registry.try_get<UIState>(entity);
@@ -1564,8 +1564,6 @@ namespace ui
 
         if (globals::drawDebugInfo)
             transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
-
-        profiler.Stop();
     }
     
 

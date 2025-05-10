@@ -811,10 +811,29 @@ namespace game
 
         {
             ZoneScopedN("LayerCommandsToCanvas Draw");
-            layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr);  // render the background layer commands to its main canvas
-            layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
-            layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
-            layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
+            {
+                ZoneScopedN("background layer commands");
+                layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr);  // render the background layer commands to its main canvas
+            }
+            
+            {
+                ZoneScopedN("ui layer commands");
+                layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
+            }
+            
+            {
+                ZoneScopedN("sprites layer commands");
+                layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+            }
+            
+            {
+                ZoneScopedN("final output layer commands");
+                layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
+            }
+            
+            
+            
+            
             
             layer::Push(&globals::camera2D);
 
@@ -823,12 +842,16 @@ namespace game
 
             // layer::DrawCanvasToCurrentRenderTargetWithTransform(background, "main", 0, 0, 0, 1, 1, WHITE, peaches); // render the background layer main canvas to the screen
             // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
-            layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_line); // render the background layer main canvas to the screen
-
             
-            layer::DrawCanvasOntoOtherLayerWithShader(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_circle); // render the ui layer main canvas to the screen
+            {
+                ZoneScopedN("Draw canvases to other canvases with shaders");
+                layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_line); // render the background layer main canvas to the screen
 
-            layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
+                
+                layer::DrawCanvasOntoOtherLayerWithShader(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_circle); // render the ui layer main canvas to the screen
+
+                layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
+            }
         }
 
         
@@ -844,21 +867,31 @@ namespace game
 
             // clear screen
             ClearBackground(BLACK);
+            
+            {
+                ZoneScopedN("Draw canvas to render target (screen)");
+                layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
+            }
+            
+            {
+                ZoneScopedN("Debug UI");
+                // rlImGuiBegin(); // Required: starts ImGui frame
 
-            layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
+                // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
+                // ShowDebugUI();
 
-            rlImGuiBegin(); // Required: starts ImGui frame
-
-            shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
-            ShowDebugUI();
-
-            rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+                // rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+            }
+            
 
             // Display UPS and FPS
             const int fps = GetFPS(); // Get the current FPS
             DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
 
-            EndDrawing();
+            {
+                ZoneScopedN("EndDrawing call");
+                EndDrawing();
+            }
 
             layer::Pop();
 

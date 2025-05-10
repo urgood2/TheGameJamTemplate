@@ -323,6 +323,7 @@ namespace ui
     // location is implicitly 0, 0
     void util::emplaceOrReplaceNewRectangleCache(entt::registry &registry, entt::entity entity, int width, int height, float lineThickness, const int &type, std::optional<float> progress)
     {
+        ZoneScopedN("ui::util::emplaceOrReplaceNewRectangleCache");
         auto &cache = registry.emplace_or_replace<RoundedRectangleVerticesCache>(entity);
         auto &node = registry.get<transform::GameObject>(entity);
 
@@ -486,6 +487,7 @@ namespace ui
     
     void util::DrawNPatchUIElement(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress)
     {
+        ZoneScopedN("ui::util::DrawNPatchUIElement");
         ::util::Profiler profiler("DrawNPatchUIElement");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
@@ -616,6 +618,7 @@ namespace ui
      */
     void util::DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
     {
+        ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
         ::util::Profiler profiler("DrawSteppedRoundedRectangle");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);

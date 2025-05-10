@@ -996,6 +996,7 @@ namespace TextSystem
 
         void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug)
         {
+            ZoneScopedN("TextSystem::renderText");
             auto &text = globals::registry.get<Text>(textEntity);
             auto &textTransform = globals::registry.get<transform::Transform>(textEntity);
             float renderScale = text.renderScale; // 🟡 Use renderScale
@@ -1028,6 +1029,7 @@ namespace TextSystem
 
             for (const auto &character : text.characters)
             {
+                ZoneScopedN("TextSystem::renderText-render single character");
 
                 // if (character.isImage) 
                     // SPDLOG_DEBUG("Rendering image character: {} with size: {}x{}", character.value, character.size.x, character.size.y);

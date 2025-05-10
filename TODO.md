@@ -6,6 +6,12 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] apply following format to all draw command calls
+```cpp
+layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>([](auto* cmd) {
+    cmd->color = util::getColor("brick_palette_red_resurrect");
+});
+```
 - [ ] profile with built-in tracy profiler tool in tracy folder (need to add frame markers etc)
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
 - [ ] Need to make ui rendering more streamlined

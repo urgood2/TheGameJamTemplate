@@ -98,4 +98,12 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdRenderNPatchRect>() { return DrawCommandType::RenderNPatchRect; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawTriangle>() { return DrawCommandType::Triangle; }
     } // namespace CommandBufferNS
+    
+    template<typename T>
+    T* AddCommandBufferDrawCommand(std::function<void(T*)> initializer, int z = 0) {
+        T* cmd = CommandBuffer::Add<T>(z);
+        initializer(cmd);
+        return cmd;
+    }
+
 }

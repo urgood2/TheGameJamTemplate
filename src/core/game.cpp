@@ -50,6 +50,8 @@ using std::pair;
 #include "core/ui_definitions.hpp"
 
 #include "systems/layer/layer.hpp"
+#include "systems/layer/layer_optimized.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
 #include "systems/shaders/shader_system.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
@@ -694,6 +696,11 @@ namespace game
         layer::Begin(); // clear all commands, we add new ones every frame
 
         // set up layers (needs to happen every frame)
+        
+        layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>([](auto* cmd) {
+            cmd->color = util::getColor("brick_palette_red_resurrect");
+        });
+        
         layer::AddClearBackground(background, util::getColor("brick_palette_red_resurrect"));
         layer::AddTextPro(background, "Title Scene", GetFontDefault(), 10, 30, {0, 0}, 0, 20, 1, util::getColor("WHITE"), 0);
 

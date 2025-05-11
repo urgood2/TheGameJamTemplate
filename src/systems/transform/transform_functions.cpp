@@ -1164,7 +1164,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &springR = transform.getRSpring();
         auto &springS = transform.getSSpring();
 
-        layer::AddPushMatrix(layer);
+        layer::QueueCommand<layer::CmdPushMatrix>(layer, []() {
+            // Push the current matrix onto the stack
+        });
+
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
@@ -1185,26 +1188,6 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->y = y;
         });
 
-        // draw shadow based on shadow displacement
-        // if (node.shadowDisplacement)
-        // {
-        //     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
-        //     float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
-
-        //     // Adjust displacement using shadow height
-        //     float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
-        //     float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
-
-        //     // Translate to shadow position
-        //     layer::AddTranslate(layer, -shadowOffsetX, shadowOffsetY);
-
-        //     // Draw shadow outline
-        //     // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
-        //     layer::AddRectanglePro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, Fade(BLACK, 0.7f));
-
-        //     // Reset translation to original position
-        //     layer::AddTranslate(layer, shadowOffsetX, -shadowOffsetY);
-        // }
         auto scale = 1.0f;
         if (registry->any_of<ui::UIConfig>(e))
         {
@@ -1278,15 +1261,26 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         //     lineColor = BLUE;
         //     lineWidth = 15;
         // }
-
-        layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, lineColor);
+        layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(layer, [width = transform.getVisualW(), height = transform.getVisualH(), lineThickness = lineWidth, color = lineColor](layer::CmdDrawRectangleLinesPro *cmd) {
+            cmd->offsetX = 0;
+            cmd->offsetY = 0;
+            cmd->size = Vector2{width, height};
+            cmd->lineThickness = lineThickness;
+            cmd->color = color;
+        });
+        
         
         // draw emboss effect rect
         auto *uiConfig = registry->try_get<ui::UIConfig>(e);
         if (uiConfig && uiConfig->emboss)
         {
             float embossHeight = uiConfig->emboss.value() * uiConfig->scale.value();
-            layer::AddRectanglePro(layer, 0, transform.getActualH(), Vector2{transform.getActualW(), embossHeight}, Fade(BLACK, 0.3f));
+            layer::QueueCommand<layer::CmdDrawRectanglePro>(layer, [x = 0, y = transform.getActualH(), width = transform.getActualW(), height = embossHeight](layer::CmdDrawRectanglePro *cmd) {
+                cmd->offsetX = x;
+                cmd->offsetY = y;
+                cmd->size = Vector2{width, height};
+                cmd->color = Fade(BLACK, 0.3f);
+            });
         }
 
         layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {});

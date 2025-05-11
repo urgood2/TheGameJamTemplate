@@ -700,9 +700,6 @@ namespace game
         layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
             cmd->color = util::getColor("brick_palette_red_resurrect");
         });
-        
-        // layer::AddClearBackground(background, util::getColor("brick_palette_red_resurrect"));
-
 
 
         {
@@ -741,10 +738,6 @@ namespace game
             }
         }
 
-        // sprites with transform (including those in ui)
-        // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player, globals::spriteAtlas, 0);
-        // layer::AddDrawTransformEntityWithAnimation(ui_layer, &globals::registry, player2, globals::spriteAtlas, 0);
-        
         //TODO: need to test this
         {
             ZoneScopedN("AnimatedSprite Draw");
@@ -776,14 +769,6 @@ namespace game
             particle::DrawParticles(globals::registry, ui_layer);
         }
         
-
-        // we will draw to the sprites layer main canvas, modify it with a shader, then draw it to the screen
-        // The reason we do this every frame is to allow position changes to the entities to be reflected in the draw commands
-        // layer::AddDrawEntityWithAnimation(sprites, &globals::registry, player, 100 + sin(GetTime()) * 100, 100, globals::spriteAtlas, 0);
-        // layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, player, globals::spriteAtlas, 0);
-
-        // clear the screen, not any canvas
-        // renderer::ClearBackground(loading::getColor("brick_palette_red_resurrect"));
         
         // auto balatro = shaders::getShader("balatro_background");
         // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");

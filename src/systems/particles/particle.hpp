@@ -301,13 +301,20 @@ namespace particle {
             // does it have animation?
             if (registry.any_of<AnimationQueueComponent>(entity)) {
                 layer::QueueCommand<layer::CmdDrawEntityAnimation>(layerPtr, [entity = entity](layer::CmdDrawEntityAnimation *cmd) {
-                    cmd->entity = entity;
-                    cmd->offsetX = 0;
-                    cmd->offsetY = 0;
+                    cmd->e = entity;
+                    cmd->registry = &globals::registry;
+                    cmd->x = 0;
+                    cmd->y = 0;
                 }, 0);
             } else {
                 // just draw rect
-                layer::AddRectangle(layerPtr, 0, 0, transform.getVisualW(), transform.getVisualH(), drawColor);
+                layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectangle *cmd) {
+                    cmd->x = 0;
+                    cmd->y = 0;
+                    cmd->width = width;
+                    cmd->height = height;
+                    cmd->color = color;
+                }, 0);
             }
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});

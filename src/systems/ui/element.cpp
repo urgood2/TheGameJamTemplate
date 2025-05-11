@@ -1361,10 +1361,6 @@ namespace ui
                     cmd->y = 1 / 0.98f;
                 });
             }
-
-            // float scale = buttonBeingPressed ? 0.990f : 1.0f;
-            // layer::AddScale(layerPtr, scale, scale);
-            
             
             auto collidedButton = config->button_UIE.value_or(entity);
             
@@ -1499,7 +1495,15 @@ namespace ui
             }
             else
             {
-                layer::AddRectangle(layerPtr, 0, 0, actualW, actualH, color);
+                layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [w = actualW, h = actualH, color](layer::CmdRectangle *cmd) {
+                    cmd->x = 0;
+                    cmd->y = 0;
+                    cmd->w = w;
+                    cmd->h = h;
+                    cmd->color = color;
+                });
+                
+                
                 SPDLOG_DEBUG("DrawSelf(): Drawing rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
             }
         

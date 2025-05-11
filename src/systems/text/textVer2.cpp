@@ -1255,7 +1255,14 @@ namespace TextSystem
                     
                     
                     // draw bounding box for the character
-                    layer::AddRectangleLinesPro(layerPtr, 0, 0, charSize, 1.0f, BLUE);
+                    
+                    layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(layerPtr, [charSize = charSize](layer::CmdDrawRectangleLinesPro *cmd) {
+                        cmd->offsetX = 0;
+                        cmd->offsetY = 0;
+                        cmd->size = charSize;
+                        cmd->lineThickness = 1.0f;
+                        cmd->color = BLUE;
+                    });
                 }
                 
                 layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
@@ -1272,8 +1279,6 @@ namespace TextSystem
                 //FIXME: known bug where this bounding box stretchs to the right and down when scaled up, instead of being centered
                 
                 // Draw the bounding box for the text
-                // layer::AddRectangleLinesPro(layerPtr, 0, 0, {width, height}, 5.0f, WHITE);
-                // DrawRectangleLines(transform.getVisualX(), transform.getVisualY(), width, height, GRAY);
 
                 // Draw text showing the dimensions
                 std::string dimensionsText = "Width: " + std::to_string(width) + ", Height: " + std::to_string(height);

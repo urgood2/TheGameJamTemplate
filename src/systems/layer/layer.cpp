@@ -1615,27 +1615,6 @@ namespace layer
         if (!drawForeground) return; 
 
         auto &node = registry.get<transform::GameObject>(e);
-
-        // draw shadow based on shadow displacement
-        // if (node.shadowDisplacement)
-        // {
-        //     float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
-        //     float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
-
-        //     // Adjust displacement using shadow height
-        //     float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
-        //     float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
-
-        //     // Translate to shadow position
-        //     layer::AddTranslate(layer, -shadowOffsetX, shadowOffsetY);
-
-        //     // Draw shadow outline
-        //     // layer::AddRectangleLinesPro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, lineWidth, BLACK);
-        //     layer::AddRectanglePro(layer, 0, 0, Vector2{transform.getVisualW(), transform.getVisualH()}, Fade(BLACK, 0.7f));
-
-        //     // Reset translation to original position
-        //     layer::AddTranslate(layer, shadowOffsetX, -shadowOffsetY);
-        // }
         
         if (animationFrame)
         {

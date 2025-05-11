@@ -96,7 +96,7 @@ namespace layer
     } // namespace CommandBufferNS
     
     template<typename T>
-    T* AddCommandBufferDrawCommand(std::shared_ptr<layer::Layer> layer, std::function<void(T*)> initializer, int z = 0) {
+    T* QueueCommand(std::shared_ptr<layer::Layer> layer, std::function<void(T*)> initializer, int z = 0) {
         T* cmd = layer_command_buffer::Add<T>(layer, z);
         initializer(cmd);
         return cmd;

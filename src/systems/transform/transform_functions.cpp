@@ -6,6 +6,7 @@
 
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/layer/layer.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
 #include "systems/ui/util.hpp"
 #include "systems/ui/element.hpp"
 #include "systems/text/textVer2.hpp"
@@ -497,7 +498,7 @@ namespace transform
         {
             selfTransform.setVisualX(selfTransform.getVisualX() + (0.5f * (1 - parentTransform->getVisualW() / parentTransform->getActualW()) * selfTransform.getActualW()));
             selfTransform.setVisualW(selfTransform.getActualW() * (parentTransform->getVisualW() / parentTransform->getActualW()));
-            selfTransform.setVisualH(selfTransform.getActualH() * (parentTransform->getVisualH() / parentTransform->getActualH()));
+            selfTransform.setVisualH(selfTransform.getActualH() * (parentTransform->getActualH() / parentTransform->getActualH()));
         }
         else if (selfRole.size_bond == InheritedProperties::Sync::Weak)
         {
@@ -1165,13 +1166,19 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         layer::AddPushMatrix(layer);
 
-        layer::AddTranslate(layer, transform.getVisualX() + transform.getVisualW() * 0.5, transform.getVisualY() + transform.getVisualH() * 0.5);
+        layer::QueueCommand<layer::CmdTranslate>(layer, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        });
 
         layer::AddScale(layer, transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
 
         layer::AddRotate(layer, transform.getVisualR() + transform.rotationOffset);
 
-        layer::AddTranslate(layer, -transform.getVisualW() * 0.5, -transform.getVisualH() * 0.5);
+        layer::QueueCommand<layer::CmdTranslate>(layer, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        });
 
         // draw shadow based on shadow displacement
         // if (node.shadowDisplacement)
@@ -1724,10 +1731,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         auto &containerTransform = registry->get<Transform>(node.container);
 
-        layer::AddTranslate(layer, containerTransform.getActualW() * 0.5, containerTransform.getActualH() * 0.5);
+        layer::QueueCommand<layer::CmdTranslate>(layer, [x = containerTransform.getActualW() * 0.5, y = containerTransform.getActualH() * 0.5](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        });
         layer::AddRotate(layer, containerTransform.getActualRotation());
-        layer::AddTranslate(layer, -containerTransform.getActualW() * 0.5 + containerTransform.getActualX(),
-                            -containerTransform.getActualH() * 0.5 + containerTransform.getActualY());
+        layer::QueueCommand<layer::CmdTranslate>(layer, [x = -containerTransform.getActualW() * 0.5 + containerTransform.getActualX(),
+                                 y = -containerTransform.getActualH() * 0.5 + containerTransform.getActualY()](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        });
     }
 
     // this method should be called every frame for a transform/node entity

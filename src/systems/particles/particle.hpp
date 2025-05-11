@@ -276,16 +276,22 @@ namespace particle {
             float alpha = 255 * (1.0f - (particle.age.value() / particle.lifespan.value()));
             Color drawColor = particle.color.value();
             drawColor.a = (unsigned char)alpha;
-
-            layer::AddPushMatrix(layerPtr);
-
-            layer::AddTranslate(layerPtr, transform.getVisualX() + transform.getVisualW() * 0.5, transform.getVisualY() + transform.getVisualH() * 0.5);
+            
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
+            
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
 
             layer::AddScale(layerPtr, transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
 
             layer::AddRotate(layerPtr, transform.getVisualR() + transform.rotationOffset);
 
-            layer::AddTranslate(layerPtr, -transform.getVisualW() * 0.5, -transform.getVisualH() * 0.5);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
 
             // does it have animation?
             if (registry.any_of<AnimationQueueComponent>(entity)) {

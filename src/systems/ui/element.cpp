@@ -6,6 +6,8 @@
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
 
+#include "systems/layer/layer_command_buffer.hpp"
+
 namespace ui
 {
     //TODO: update function registry for methods that replace transform-provided methods
@@ -1229,13 +1231,19 @@ namespace ui
             if (drawShadow)
             {
                 // util::PrepDraw(layerPtr, registry, entity, 0.97f);
-                layer::AddPushMatrix(layerPtr);
+                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
                 Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
-                layer::AddTranslate(layerPtr, actualX + textParallaxSX + layerDisplacement.x, actualY + textParallaxSY + layerDisplacement.y);
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + textParallaxSX + layerDisplacement.x, y = actualY + textParallaxSY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+                    cmd->x = x;
+                    cmd->y = y;
+                });
                 
                 if (config->verticalText)
                 {
-                    layer::AddTranslate(layerPtr, 0, actualH);
+                    layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = actualH](layer::CmdTranslate *cmd) {
+                        cmd->x = x;
+                        cmd->y = y;
+                    });
                     layer::AddRotate(layerPtr, -PI / 2);
                 }
                 if ((config->shadow || (config->button_UIE && buttonActive)) && globals::settings.shadowsOn)
@@ -1259,12 +1267,18 @@ namespace ui
             }
 
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
-            layer::AddTranslate(layerPtr, actualX + layerDisplacement.x, actualY + layerDisplacement.y);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + layerDisplacement.x, y = actualY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
             if (config->verticalText)
             {
-                layer::AddTranslate(layerPtr, 0, actualH);
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = actualH](layer::CmdTranslate *cmd) {
+                    cmd->x = x;
+                    cmd->y = y;
+                });
                 layer::AddRotate(layerPtr, -PI / 2);
             }
             Color renderColor = config->color.value();
@@ -1291,7 +1305,7 @@ namespace ui
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT)
         {
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             if (config->shadow && globals::settings.shadowsOn)
             {
                 layer::AddScale(layerPtr, 0.98f, 0.98f);

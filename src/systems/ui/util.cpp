@@ -2,6 +2,7 @@
 
 #include "raymath.h"
 #include "util/utilities.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
 
 namespace ui
 {
@@ -238,26 +239,41 @@ namespace ui
 
         if (applyOnlyTranslation)
         {
-            layer::AddTranslate(layerPtr, transform.getVisualX(), transform.getVisualY());
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX(), y = transform.getVisualY()](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
             if (addedOffset)
             {
-                layer::AddTranslate(layerPtr, addedOffset->x, addedOffset->y);
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = addedOffset->x, y = addedOffset->y](layer::CmdTranslate *cmd) {
+                    cmd->x = x;
+                    cmd->y = y;
+                });
             }
             return;
         }
 
-        layer::AddTranslate(layerPtr, transform.getVisualX() + transform.getVisualW() * 0.5, transform.getVisualY() + transform.getVisualH() * 0.5);
+        layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        });
         
         if (addedOffset)
         {
-            layer::AddTranslate(layerPtr, addedOffset->x, addedOffset->y);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = addedOffset->x, y = addedOffset->y](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
         }
 
         layer::AddScale(layerPtr, transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
 
         layer::AddRotate(layerPtr, transform.getVisualR() + transform.rotationOffset);
 
-        layer::AddTranslate(layerPtr, -transform.getVisualW() * 0.5, -transform.getVisualH() * 0.5);
+        layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        });
     }
 
     bool util::IsUIContainer(const entt::registry &registry, entt::entity entity)
@@ -521,7 +537,7 @@ namespace ui
         // draw shadow first
         if (uiConfig->shadow)
         {
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
 
@@ -540,11 +556,14 @@ namespace ui
         }
         
         // then draw the npatch element itself
-        layer::AddPushMatrix(layerPtr);
+        layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
         
         util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
 
-        // layer::AddTranslate(layerPtr, actualX, actualY);
+        // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+        //     cmd->x = x;
+        //     cmd->y = y;
+        // });
 
         Color colorToUse{};
 
@@ -558,7 +577,7 @@ namespace ui
         // fill progress, if there is any
         if (progress.has_value())
         {
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
 
@@ -582,7 +601,10 @@ namespace ui
             float translateX = (visualW * progressVal - newW) / 2.0f;
             float translateY = (visualH - newH) / 2.0f;
 
-            layer::AddTranslate(layerPtr, translateX, translateY);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = translateX, y = translateY](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
 
             layer::AddRenderNPatchRect(
                 layerPtr,
@@ -682,12 +704,18 @@ namespace ui
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow fill");
             
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
-            // layer::AddTranslate(layerPtr, -shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -shadowOffsetX * parallaxModifier, y = -shadowOffsetY * parallaxModifier](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
 
-            // layer::AddTranslate(layerPtr, actualX, actualY);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
 
             Color colorToUse{};
 
@@ -711,10 +739,17 @@ namespace ui
         else if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE && uiConfig->outlineShadow)
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow outline");
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
-            // layer::AddTranslate(layerPtr, -shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier);
-            // layer::AddTranslate(layerPtr, actualX, actualY);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -shadowOffsetX * parallaxModifier, y = -shadowOffsetY * parallaxModifier](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
+
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
 
@@ -743,13 +778,19 @@ namespace ui
         if (type & RoundedRectangleVerticesCache_TYPE_EMBOSS)
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss fill");
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
             if (!emboss)
                 SPDLOG_DEBUG("Emboss value not provided for emboss fill rectangle render flag");
-            // layer::AddTranslate(layerPtr, 0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)); // shift y down for emboss effect
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // }); // shift y down for emboss effect
 
-            // layer::AddTranslate(layerPtr, actualX, actualY);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
 
@@ -779,15 +820,21 @@ namespace ui
         else if (type & RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS)
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss outline");
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
             if (!emboss)
                 SPDLOG_DEBUG("Emboss value not provided for emboss outline rectangle render flag");
-            // layer::AddTranslate(layerPtr, 0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)); // shift y down for emboss effect
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // }); // shift y down for emboss effect
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
 // 
-            // layer::AddTranslate(layerPtr, actualX, actualY);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
 
             Color colorToUse{};
 
@@ -820,11 +867,14 @@ namespace ui
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle fill");
             // FIXME: testing with commenting out
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
 
-            // layer::AddTranslate(layerPtr, actualX, actualY);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
 
             Color colorToUse{};
 
@@ -850,9 +900,12 @@ namespace ui
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && rectCache->innerVertices.size() > 0 && rectCache->outerVertices.size() > 0 && progress.has_value())
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
-            // layer::AddTranslate(layerPtr, actualX, actualY);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
             
@@ -873,9 +926,15 @@ namespace ui
                 float centerX = (rectCache->w * progressVal) / 2.0f;
                 float centerY = rectCache->h / 2.0f;
 
-                layer::AddTranslate(layerPtr, centerX, centerY);       // move to center
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = centerX, y = centerY](layer::CmdTranslate *cmd) {
+                    cmd->x = x;
+                    cmd->y = y;
+                });
                 layer::AddScale(layerPtr, scaleX, scaleY);             // scale around center
-                layer::AddTranslate(layerPtr, -centerX, -centerY);     // move back
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -centerX, y = -centerY](layer::CmdTranslate *cmd) {
+                    cmd->x = x;
+                    cmd->y = y;
+                });
 
             }
 
@@ -903,9 +962,12 @@ namespace ui
         if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE)
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle outline");
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
-            // layer::AddTranslate(layerPtr, actualX, actualY);
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // });
             
             util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
 

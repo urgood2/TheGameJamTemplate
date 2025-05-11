@@ -96,8 +96,12 @@ namespace layer
     // ===========================
     // Draw Command Structs
     // ===========================
-    struct CmdBeginDrawing {};
-    struct CmdEndDrawing {};
+    struct CmdBeginDrawing {
+        bool dummy = false; // Placeholder
+    };
+    struct CmdEndDrawing {
+        bool dummy = false; // Placeholder
+    };
 
     struct CmdClearBackground {
         Color color;
@@ -119,9 +123,15 @@ namespace layer
         Camera2D* camera;
     };
 
-    struct CmdAddPop {};
-    struct CmdPushMatrix {};
-    struct CmdPopMatrix {};
+    struct CmdAddPop {
+        bool dummy = false; // Placeholder
+    };
+    struct CmdPushMatrix {
+        bool dummy = false; // Placeholder
+    };
+    struct CmdPopMatrix {
+        bool dummy = false; // Placeholder
+    };
 
     struct CmdDrawCircle {
         float x, y, radius;
@@ -233,7 +243,9 @@ namespace layer
         int blendMode;
     };
 
-    struct CmdUnsetBlendMode {};
+    struct CmdUnsetBlendMode {
+        bool dummy = false; // Placeholder
+    };
 
     struct CmdSendUniformFloat {
         Shader shader;
@@ -286,7 +298,9 @@ namespace layer
         int mode;
     };
 
-    struct CmdEndOpenGLMode {};
+    struct CmdEndOpenGLMode {
+        bool dummy = false; // Placeholder
+    };
 
     struct CmdSetColor {
         Color color;

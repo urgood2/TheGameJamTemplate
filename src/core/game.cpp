@@ -697,12 +697,11 @@ namespace game
 
         // set up layers (needs to happen every frame)
         
-        layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
+        layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
             cmd->color = util::getColor("brick_palette_red_resurrect");
         });
         
-        layer::AddClearBackground(background, util::getColor("brick_palette_red_resurrect"));
-        layer::AddTextPro(background, "Title Scene", GetFontDefault(), 10, 30, {0, 0}, 0, 20, 1, util::getColor("WHITE"), 0);
+        // layer::AddClearBackground(background, util::getColor("brick_palette_red_resurrect"));
 
 
 
@@ -754,11 +753,17 @@ namespace game
             {
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {
-                    layer::AddDrawTransformEntityWithAnimationWithPipeline(sprites, &globals::registry, e, 0);
+                    layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
+                        cmd->e = e;
+                        cmd->registry = &globals::registry;
+                    });
                 }
                 else
                 {
-                    layer::AddDrawTransformEntityWithAnimation(sprites, &globals::registry, e, 0);
+                    layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(sprites, [e](auto* cmd) {
+                        cmd->e = e;
+                        cmd->registry = &globals::registry;
+                    });
                 }            
             }
         }

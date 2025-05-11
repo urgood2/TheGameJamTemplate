@@ -22,6 +22,8 @@
 
 #include "../../core/globals.hpp"
 
+#include "systems/layer/layer_command_buffer.hpp"
+
 namespace TextSystem
 {
     std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
@@ -1002,13 +1004,13 @@ namespace TextSystem
             float renderScale = text.renderScale; // 🟡 Use renderScale
 
 
-            layer::AddPushMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
             // Apply entity-level transforms
-            layer::AddTranslate(layerPtr,
-                textTransform.getVisualX() + textTransform.getVisualW() * 0.5f,
-                textTransform.getVisualY() + textTransform.getVisualH() * 0.5f,
-                0);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = textTransform.getVisualX() + textTransform.getVisualW() * 0.5f, y = textTransform.getVisualY() + textTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
                 
             if (text.applyTransformRotationAndScale)
             {
@@ -1021,10 +1023,10 @@ namespace TextSystem
                     textTransform.getVisualRWithDynamicMotionAndXLeaning());
             }
             
-            layer::AddTranslate(layerPtr,
-                -textTransform.getVisualW() * 0.5f,
-                -textTransform.getVisualH() * 0.5f,
-                0);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -textTransform.getVisualW() * 0.5f, y = -textTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
 
 
             for (const auto &character : text.characters)
@@ -1103,13 +1105,19 @@ namespace TextSystem
                 
                 {
                     ZoneScopedN("TextSystem::renderText-apply transformations");
-                    layer::AddPushMatrix(layerPtr);
+                    layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
                     // apply scaling that is centered on the character
-                    layer::AddTranslate(layerPtr, charPosition.x + charSize.x * 0.5f, charPosition.y + charSize.y * 0.5f, 0);
+                    layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = charPosition.x + charSize.x * 0.5f, y = charPosition.y + charSize.y * 0.5f](layer::CmdTranslate *cmd) {
+                        cmd->x = x;
+                        cmd->y = y;
+                    });
                     layer::AddScale(layerPtr, finalScaleX, finalScaleY, 1);
                     layer::AddRotate(layerPtr, character.rotation);
-                    layer::AddTranslate(layerPtr, -charSize.x * 0.5f, -charSize.y * 0.5f, 0);
+                    layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -charSize.x * 0.5f, y = -charSize.y * 0.5f](layer::CmdTranslate *cmd) {
+                        cmd->x = x;
+                        cmd->y = y;
+                    });
                 }
 
                 
@@ -1146,7 +1154,10 @@ namespace TextSystem
                     }
 
                     // Translate to shadow position
-                    layer::AddTranslate(layerPtr, -shadowOffsetX, shadowOffsetY);
+                    layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowOffsetX, shadowOffsetY](layer::CmdTranslate *cmd) {
+                        cmd->x = -shadowOffsetX;
+                        cmd->y = shadowOffsetY;
+                    });
 
                     
 
@@ -1165,7 +1176,10 @@ namespace TextSystem
                     }
 
                     // Reset translation to original position
-                    layer::AddTranslate(layerPtr, shadowOffsetX, -shadowOffsetY);
+                    layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowOffsetX, shadowOffsetY](layer::CmdTranslate *cmd) {
+                        cmd->x = shadowOffsetX;
+                        cmd->y = -shadowOffsetY;
+                    });
                 }
 
                 // Render the character
@@ -1186,7 +1200,10 @@ namespace TextSystem
                     ZoneScopedN("TextSystem::renderText-debug info");
                     // subtract finetuning offset
                     if (!character.isImage) {
-                        layer::AddTranslate(layerPtr, - text.fontData.fontRenderOffset.x * finalScaleX * renderScale, - text.fontData.fontRenderOffset.y * finalScaleY * renderScale, 0);
+                        layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -text.fontData.fontRenderOffset.x * finalScaleX * renderScale, y = -text.fontData.fontRenderOffset.y * finalScaleY * renderScale](layer::CmdTranslate *cmd) {
+                            cmd->x = x;
+                            cmd->y = y;
+                        });
                     }
                     
                     

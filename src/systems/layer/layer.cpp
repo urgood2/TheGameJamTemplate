@@ -146,6 +146,8 @@ namespace layer
 
     void ClearDrawCommands(std::shared_ptr<Layer> layer) {
         layer->drawCommands.clear();
+        
+        layer_command_buffer::Clear(layer);
     }
 
     void Begin() {
@@ -331,7 +333,7 @@ namespace layer
         }
 
         // Dispatch all draw commands from the arena-based command buffer
-        for (const auto& command : CommandBuffer::GetCommandsSorted())
+        for (const auto& command : layer_command_buffer::GetCommandsSorted(layer))
         {
             auto it = dispatcher.find(command.type);
             if (it != dispatcher.end()) {

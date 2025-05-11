@@ -5,51 +5,47 @@
 
 namespace layer
 {
-    namespace CommandBuffer {
-        extern std::vector<std::byte> arena;
-        extern std::vector<DrawCommandV2> commands;
-        extern std::vector<std::function<void()>> destructors;
-        extern bool isSorted;
-    
-        inline void Clear() {
-            for (auto& d : destructors) d();
-            destructors.clear();
-            arena.clear();
-            commands.clear();
-            isSorted = true;
-        }
-    
-        template<typename T>
-        T* AddExplicit(DrawCommandType type, int z = 0) {
-            size_t offset = arena.size();
-            arena.resize(offset + sizeof(T));
-            T* cmd = new (&arena[offset]) T{};
-            commands.push_back({type, cmd, z});
-            if constexpr (!std::is_trivially_destructible_v<T>) {
-                destructors.emplace_back([cmd]() { cmd->~T(); });
-            }
-            if (z != 0) isSorted = false;
-            return cmd;
+    namespace layer_command_buffer {
+
+        inline void Clear(const std::shared_ptr<Layer>& layer) {
+            for (auto& d : layer->destructors) d();
+            layer->destructors.clear();
+            layer->arena.clear();
+            layer->commands.clear();
+            layer->isSorted = true;
         }
     
         template<typename T>
         DrawCommandType GetDrawCommandType();
     
         template<typename T>
-        T* Add(int z = 0) {
-            return AddExplicit<T>(GetDrawCommandType<T>(), z);
+        T* AddExplicit(const std::shared_ptr<Layer>& layer, DrawCommandType type, int z = 0) {
+            size_t offset = layer->arena.size();
+            layer->arena.resize(offset + sizeof(T));
+            T* cmd = new (&layer->arena[offset]) T{};
+            layer->commands.push_back({type, cmd, z});
+            if constexpr (!std::is_trivially_destructible_v<T>) {
+                layer->destructors.emplace_back([cmd]() { cmd->~T(); });
+            }
+            if (z != 0) layer->isSorted = false;
+            return cmd;
         }
     
-        inline const std::vector<DrawCommandV2>& GetCommandsSorted() {
-            if (!isSorted) {
-                std::stable_sort(commands.begin(), commands.end(), [](const DrawCommandV2& a, const DrawCommandV2& b) {
+        template<typename T>
+        T* Add(const std::shared_ptr<Layer>& layer, int z = 0) {
+            return AddExplicit<T>(layer, GetDrawCommandType<T>(), z);
+        }
+    
+        inline const std::vector<DrawCommandV2>& GetCommandsSorted(const std::shared_ptr<Layer>& layer) {
+            if (!layer->isSorted) {
+                std::stable_sort(layer->commands.begin(), layer->commands.end(), [](const DrawCommandV2& a, const DrawCommandV2& b) {
                     return a.z < b.z;
                 });
-                isSorted = true;
+                layer->isSorted = true;
             }
-            return commands;
+            return layer->commands;
         }
-    
+        
         // Explicit specializations for GetDrawCommandType
         template<> inline DrawCommandType GetDrawCommandType<CmdBeginDrawing>() { return DrawCommandType::BeginDrawing; }
         template<> inline DrawCommandType GetDrawCommandType<CmdEndDrawing>() { return DrawCommandType::EndDrawing; }
@@ -100,8 +96,8 @@ namespace layer
     } // namespace CommandBufferNS
     
     template<typename T>
-    T* AddCommandBufferDrawCommand(std::function<void(T*)> initializer, int z = 0) {
-        T* cmd = CommandBuffer::Add<T>(z);
+    T* AddCommandBufferDrawCommand(std::shared_ptr<layer::Layer> layer, std::function<void(T*)> initializer, int z = 0) {
+        T* cmd = layer_command_buffer::Add<T>(layer, z);
         initializer(cmd);
         return cmd;
     }

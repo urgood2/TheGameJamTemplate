@@ -23,9 +23,9 @@ namespace graphics {
     extern auto drawEntityAtArbitraryLocation(entt::entity, Vector2 location) -> void;
     extern auto init() -> void;
     extern auto drawSpriteFromAtlas(int spriteNumber, Rectangle destRec, Color fg) -> void;
-    extern auto Vector2Subtract(Vector2 v1, Vector2 v2) -> Vector2;
-    extern auto Vector2Add(Vector2 v1, Vector2 v2) -> Vector2;
-    extern auto Vector2Scale(Vector2 v, float scale) -> Vector2;
+    // extern auto Vector2Subtract(Vector2 v1, Vector2 v2) -> Vector2;
+    // extern auto Vector2Add(Vector2 v1, Vector2 v2) -> Vector2;
+    // extern auto Vector2Scale(Vector2 v, float scale) -> Vector2;
     extern auto Vector2Normalize(Vector2 v) -> Vector2;
     extern auto Vector2Length(Vector2 v) -> float;
     extern auto drawSpriteComponentASCII(entt::entity e) -> void;

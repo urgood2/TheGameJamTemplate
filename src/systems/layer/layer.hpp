@@ -13,6 +13,8 @@
 #include <functional>
 #include <memory>
 
+#include "layer_optimized.hpp"
+
 #include "entt/fwd.hpp"
 
 // TODO: make internal functions not accessible?
@@ -41,6 +43,12 @@ namespace layer
         bool fixed = false;                                        // Whether the layer ignores camera transforms
         int zIndex = 0;                                            // Global Z-index for this layer
         Color backgroundColor = BLANK;                             // Background color (default: transparent)
+        
+        // Per-layer draw command buffer
+        std::vector<std::byte> arena;
+        std::vector<DrawCommandV2> commands;
+        std::vector<std::function<void()>> destructors;
+        bool isSorted = true;
     };
 
     extern std::vector<std::shared_ptr<Layer>> layers;

@@ -1,11 +1,20 @@
 #pragma once
 
-#include "util/common_headers.hpp"
+#include "raylib.h"
+#include "raymath.h"
 
-#include "layer.hpp"
+#include "entt/fwd.hpp"
+
+#include <vector>
+#include <unordered_map>
+#include <string>
+#include <functional>
+
 
 namespace layer
 {
+    struct Layer;
+    
     //TODO: something about manual destruction of non-trivial types, make template-based auto-destructor code
     
     /*
@@ -356,237 +365,55 @@ namespace layer
     // ===========================
     // Render Function Definitions
     // ===========================
-    inline void RenderDrawCircle(CmdDrawCircle* c) {
-        DrawCircleV({c->x, c->y}, c->radius, c->color);
-    }
-    
-    
-    inline void ExecuteTranslate(CmdTranslate* c) {
-        Translate(c->x, c->y);
-    }
-    inline void ExecuteScale(CmdScale* c) {
-        Scale(c->scaleX, c->scaleY);
-    }
-    
-    inline void ExecuteRotate(CmdRotate* c) {
-        Rotate(c->angle);
-    }
-    
-    inline void ExecuteAddPush(CmdAddPush* c) {
-        Push(c->camera);
-    }
-    
-    inline void ExecuteAddPop(CmdAddPop* c) {
-        Pop();
-    }
-    
-    inline void ExecutePushMatrix(CmdPushMatrix* c) {
-        PushMatrix();
-    }
-    
-    inline void ExecutePopMatrix(CmdPopMatrix* c) {
-        PopMatrix();
-    }
-    
-    inline void ExecuteCircle(CmdDrawCircle* c) {
-        Circle(c->x, c->y, c->radius, c->color);
-    }
-    
-    inline void ExecuteRectangle(CmdDrawRectangle* c) {
-        RectangleDraw(c->x, c->y, c->width, c->height, c->color, c->lineWidth);
-    }
-    
-    inline void ExecuteRectanglePro(CmdDrawRectanglePro* c) {
-        RectanglePro(c->offsetX, c->offsetY, c->size, c->rotationCenter, c->rotation, c->color);
-    }
-    
-    inline void ExecuteRectangleLinesPro(CmdDrawRectangleLinesPro* c) {
-        RectangleLinesPro(c->offsetX, c->offsetY, c->size, c->lineThickness, c->color);
-    }
-    
-    inline void ExecuteLine(CmdDrawLine* c) {
-        Line(c->x1, c->y1, c->x2, c->y2, c->color, c->lineWidth);
-    }
-    
-    inline void ExecuteDashedLine(CmdDrawDashedLine* c) {
-        DashedLine(c->x1, c->y1, c->x2, c->y2, c->dashSize, c->gapSize, c->color, c->lineWidth);
-    }
-    
-    inline void ExecuteText(CmdDrawText* c) {
-        Text(c->text, c->font, c->x, c->y, c->color, c->fontSize);
-    }
-    
-    inline void ExecuteTextCentered(CmdDrawTextCentered* c) {
-        Text(c->text, c->font, c->x, c->y, c->color, c->fontSize);
-    }
-    
-    inline void ExecuteTextPro(CmdTextPro* c) {
-        TextPro(c->text, c->font, c->x, c->y, c->origin, c->rotation, c->fontSize, c->spacing, c->color);
-    }
-    
-    inline void ExecuteDrawImage(CmdDrawImage* c) {
-        DrawImage(c->image, c->x, c->y, c->rotation, c->scaleX, c->scaleY, c->color);
-    }
-    
-    inline void ExecuteTexturePro(CmdTexturePro* c) {
-        TexturePro(c->texture, c->source, c->offsetX, c->offsetY, c->size, c->rotationCenter, c->rotation, c->color);
-    }
-    
-    inline void ExecuteDrawEntityAnimation(CmdDrawEntityAnimation* c) {
-        DrawEntityWithAnimation(*c->registry, c->e, c->x, c->y);
-    }
-    
-    inline void ExecuteDrawTransformEntityAnimation(CmdDrawTransformEntityAnimation* c) {
-        DrawTransformEntityWithAnimation(*c->registry, c->e);
-    }
-    
-    inline void ExecuteDrawTransformEntityAnimationPipeline(CmdDrawTransformEntityAnimationPipeline* c) {
-        DrawTransformEntityWithAnimationWithPipeline(*c->registry, c->e);
-    }
-    
-    inline void ExecuteSetShader(CmdSetShader* c) {
-        SetShader(c->shader);
-    }
-    
-    inline void ExecuteResetShader(CmdResetShader* c) {
-        ResetShader();
-    }
-    
-    inline void ExecuteSetBlendMode(CmdSetBlendMode* c) {
-        SetBlendMode(c->blendMode);
-    }
-    
-    inline void ExecuteUnsetBlendMode(CmdUnsetBlendMode* c) {
-        UnsetBlendMode();
-    }
-    
-    inline void ExecuteSendUniformFloat(CmdSendUniformFloat* c) {
-        SendUniformFloat(c->shader, c->uniform, c->value);
-    }
-    
-    inline void ExecuteSendUniformInt(CmdSendUniformInt* c) {
-        SendUniformInt(c->shader, c->uniform, c->value);
-    }
-    
-    inline void ExecuteSendUniformVec2(CmdSendUniformVec2* c) {
-        SendUniformVector2(c->shader, c->uniform, c->value);
-    }
-    
-    inline void ExecuteSendUniformVec3(CmdSendUniformVec3* c) {
-        SendUniformVector3(c->shader, c->uniform, c->value);
-    }
-    
-    inline void ExecuteSendUniformVec4(CmdSendUniformVec4* c) {
-        SendUniformVector4(c->shader, c->uniform, c->value);
-    }
-    
-    inline void ExecuteSendUniformFloatArray(CmdSendUniformFloatArray* c) {
-        SendUniformFloatArray(c->shader, c->uniform, c->values.data(), c->values.size());
-    }
-    
-    inline void ExecuteSendUniformIntArray(CmdSendUniformIntArray* c) {
-        SendUniformIntArray(c->shader, c->uniform, c->values.data(), c->values.size());
-    }
-    
-    inline void ExecuteVertex(CmdVertex* c) {
-        Vertex(c->v, c->color);
-    }
-    
-    inline void ExecuteBeginOpenGLMode(CmdBeginOpenGLMode* c) {
-        BeginRLMode(c->mode);
-    }
-    
-    inline void ExecuteEndOpenGLMode(CmdEndOpenGLMode* c) {
-        EndRLMode();
-    }
-    
-    inline void ExecuteSetColor(CmdSetColor* c) {
-        SetColor(c->color);
-    }
-    
-    inline void ExecuteSetLineWidth(CmdSetLineWidth* c) {
-        SetLineWidth(c->lineWidth);
-    }
-    
-    inline void ExecuteSetTexture(CmdSetTexture* c) {
-        SetRLTexture(c->texture);
-    }
-    
-    
-    inline void ExecuteRenderRectVerticesFilledLayer(CmdRenderRectVerticesFilledLayer* c) {
-        RenderRectVerticesFilledLayer(c->layerPtr, c->outerRec, c->progressOrFullBackground, c->cache, c->color);
-    }
-    
-    inline void ExecuteRenderRectVerticesOutlineLayer(CmdRenderRectVerticesOutlineLayer* c) {
-        RenderRectVerticlesOutlineLayer(c->layerPtr, c->cache, c->color, c->useFullVertices);
-    }
-    
-    inline void ExecutePolygon(CmdDrawPolygon* c) {
-        Polygon(c->vertices, c->color, c->lineWidth);
-    }
-    
-    inline void ExecuteRenderNPatchRect(CmdRenderNPatchRect* c) {
-        RenderNPatchRect(c->sourceTexture, c->info, c->dest, c->origin, c->rotation, c->tint);
-    }
-    
-    inline void ExecuteTriangle(CmdDrawTriangle* c) {
-        Triangle(c->p1, c->p2, c->p3, c->color);
-    }
+    extern void RenderDrawCircle(CmdDrawCircle* c);
+    extern void ExecuteTranslate(CmdTranslate* c);
+    extern void ExecuteScale(CmdScale* c);
+    extern void ExecuteRotate(CmdRotate* c);
+    extern void ExecuteAddPush(CmdAddPush* c);
+    extern void ExecuteAddPop(CmdAddPop* c);
+    extern void ExecutePushMatrix(CmdPushMatrix* c);
+    extern void ExecutePopMatrix(CmdPopMatrix* c);
+    extern void ExecuteCircle(CmdDrawCircle* c);
+    extern void ExecuteRectangle(CmdDrawRectangle* c);
+    extern void ExecuteRectanglePro(CmdDrawRectanglePro* c);
+    extern void ExecuteRectangleLinesPro(CmdDrawRectangleLinesPro* c);
+    extern void ExecuteLine(CmdDrawLine* c);
+    extern void ExecuteDashedLine(CmdDrawDashedLine* c);
+    extern void ExecuteText(CmdDrawText* c);
+    extern void ExecuteTextCentered(CmdDrawTextCentered* c);
+    extern void ExecuteTextPro(CmdTextPro* c);
+    extern void ExecuteDrawImage(CmdDrawImage* c);
+    extern void ExecuteTexturePro(CmdTexturePro* c);
+    extern void ExecuteDrawEntityAnimation(CmdDrawEntityAnimation* c);
+    extern void ExecuteDrawTransformEntityAnimation(CmdDrawTransformEntityAnimation* c);
+    extern void ExecuteDrawTransformEntityAnimationPipeline(CmdDrawTransformEntityAnimationPipeline* c);
+    extern void ExecuteSetShader(CmdSetShader* c);
+    extern void ExecuteResetShader(CmdResetShader* c);
+    extern void ExecuteSetBlendMode(CmdSetBlendMode* c);
+    extern void ExecuteUnsetBlendMode(CmdUnsetBlendMode* c);
+    extern void ExecuteSendUniformFloat(CmdSendUniformFloat* c);
+    extern void ExecuteSendUniformInt(CmdSendUniformInt* c);
+    extern void ExecuteSendUniformVec2(CmdSendUniformVec2* c);
+    extern void ExecuteSendUniformVec3(CmdSendUniformVec3* c);
+    extern void ExecuteSendUniformVec4(CmdSendUniformVec4* c);
+    extern void ExecuteSendUniformFloatArray(CmdSendUniformFloatArray* c);
+    extern void ExecuteSendUniformIntArray(CmdSendUniformIntArray* c);
+    extern void ExecuteVertex(CmdVertex* c);
+    extern void ExecuteBeginOpenGLMode(CmdBeginOpenGLMode* c);
+    extern void ExecuteEndOpenGLMode(CmdEndOpenGLMode* c);
+    extern void ExecuteSetColor(CmdSetColor* c);
+    extern void ExecuteSetLineWidth(CmdSetLineWidth* c);
+    extern void ExecuteSetTexture(CmdSetTexture* c);
+    extern void ExecuteRenderRectVerticesFilledLayer(CmdRenderRectVerticesFilledLayer* c);
+    extern void ExecuteRenderRectVerticesOutlineLayer(CmdRenderRectVerticesOutlineLayer* c);
+    extern void ExecutePolygon(CmdDrawPolygon* c);
+    extern void ExecuteRenderNPatchRect(CmdRenderNPatchRect* c);
+    extern void ExecuteTriangle(CmdDrawTriangle* c);
 
     // ===========================
     // Init Dispatch Table Once
     // ===========================
-    inline void InitDispatcher() {
-        RegisterRenderer<CmdBeginDrawing>(DrawCommandType::BeginDrawing, [](CmdBeginDrawing*) { 
-            BeginDrawingAction(); });
-        RegisterRenderer<CmdEndDrawing>(DrawCommandType::EndDrawing, [](CmdEndDrawing*) { EndDrawingAction(); });
-        RegisterRenderer<CmdClearBackground>(DrawCommandType::ClearBackground, [](CmdClearBackground* c) { 
-            ClearBackgroundAction(c->color); 
-        });
-        RegisterRenderer<CmdTranslate>(DrawCommandType::Translate, ExecuteTranslate);
-        RegisterRenderer<CmdScale>(DrawCommandType::Scale, ExecuteScale);
-        RegisterRenderer<CmdRotate>(DrawCommandType::Rotate, ExecuteRotate);
-        RegisterRenderer<CmdAddPush>(DrawCommandType::AddPush, ExecuteAddPush);
-        RegisterRenderer<CmdAddPop>(DrawCommandType::AddPop, ExecuteAddPop);
-        RegisterRenderer<CmdPushMatrix>(DrawCommandType::PushMatrix, ExecutePushMatrix);
-        RegisterRenderer<CmdPopMatrix>(DrawCommandType::PopMatrix, ExecutePopMatrix);
-        RegisterRenderer<CmdDrawCircle>(DrawCommandType::Circle, ExecuteCircle);
-        RegisterRenderer<CmdDrawRectangle>(DrawCommandType::Rectangle, ExecuteRectangle);
-        RegisterRenderer<CmdDrawRectanglePro>(DrawCommandType::RectanglePro, ExecuteRectanglePro);
-        RegisterRenderer<CmdDrawRectangleLinesPro>(DrawCommandType::RectangleLinesPro, ExecuteRectangleLinesPro);
-        RegisterRenderer<CmdDrawLine>(DrawCommandType::Line, ExecuteLine);
-        RegisterRenderer<CmdDrawDashedLine>(DrawCommandType::DashedLine, ExecuteDashedLine);
-        RegisterRenderer<CmdDrawText>(DrawCommandType::Text, ExecuteText);
-        RegisterRenderer<CmdDrawTextCentered>(DrawCommandType::DrawTextCentered, ExecuteTextCentered);
-        RegisterRenderer<CmdTextPro>(DrawCommandType::TextPro, ExecuteTextPro);
-        RegisterRenderer<CmdDrawImage>(DrawCommandType::DrawImage, ExecuteDrawImage);
-        RegisterRenderer<CmdTexturePro>(DrawCommandType::TexturePro, ExecuteTexturePro);
-        RegisterRenderer<CmdDrawEntityAnimation>(DrawCommandType::DrawEntityAnimation, ExecuteDrawEntityAnimation);
-        RegisterRenderer<CmdDrawTransformEntityAnimation>(DrawCommandType::DrawTransformEntityAnimation, ExecuteDrawTransformEntityAnimation);
-        RegisterRenderer<CmdDrawTransformEntityAnimationPipeline>(DrawCommandType::DrawTransformEntityAnimationPipeline, ExecuteDrawTransformEntityAnimationPipeline);
-        RegisterRenderer<CmdSetShader>(DrawCommandType::SetShader, ExecuteSetShader);
-        RegisterRenderer<CmdResetShader>(DrawCommandType::ResetShader, ExecuteResetShader);
-        RegisterRenderer<CmdSetBlendMode>(DrawCommandType::SetBlendMode, ExecuteSetBlendMode);
-        RegisterRenderer<CmdUnsetBlendMode>(DrawCommandType::UnsetBlendMode, ExecuteUnsetBlendMode);
-        RegisterRenderer<CmdSendUniformFloat>(DrawCommandType::SendUniformFloat, ExecuteSendUniformFloat);
-        RegisterRenderer<CmdSendUniformInt>(DrawCommandType::SendUniformInt, ExecuteSendUniformInt);
-        RegisterRenderer<CmdSendUniformVec2>(DrawCommandType::SendUniformVec2, ExecuteSendUniformVec2);
-        RegisterRenderer<CmdSendUniformVec3>(DrawCommandType::SendUniformVec3, ExecuteSendUniformVec3);
-        RegisterRenderer<CmdSendUniformVec4>(DrawCommandType::SendUniformVec4, ExecuteSendUniformVec4);
-        RegisterRenderer<CmdSendUniformFloatArray>(DrawCommandType::SendUniformFloatArray, ExecuteSendUniformFloatArray);
-        RegisterRenderer<CmdSendUniformIntArray>(DrawCommandType::SendUniformIntArray, ExecuteSendUniformIntArray);
-        RegisterRenderer<CmdVertex>(DrawCommandType::Vertex, ExecuteVertex);
-        RegisterRenderer<CmdBeginOpenGLMode>(DrawCommandType::BeginOpenGLMode, ExecuteBeginOpenGLMode);
-        RegisterRenderer<CmdEndOpenGLMode>(DrawCommandType::EndOpenGLMode, ExecuteEndOpenGLMode);
-        RegisterRenderer<CmdSetColor>(DrawCommandType::SetColor, ExecuteSetColor);
-        RegisterRenderer<CmdSetLineWidth>(DrawCommandType::SetLineWidth, ExecuteSetLineWidth);
-        RegisterRenderer<CmdSetTexture>(DrawCommandType::SetTexture, ExecuteSetTexture);
-        RegisterRenderer<CmdRenderRectVerticesFilledLayer>(DrawCommandType::RenderRectVerticesFilledLayer, ExecuteRenderRectVerticesFilledLayer);
-        RegisterRenderer<CmdRenderRectVerticesOutlineLayer>(DrawCommandType::RenderRectVerticlesOutlineLayer, ExecuteRenderRectVerticesOutlineLayer);
-        RegisterRenderer<CmdDrawPolygon>(DrawCommandType::Polygon, ExecutePolygon);
-        RegisterRenderer<CmdRenderNPatchRect>(DrawCommandType::RenderNPatchRect, ExecuteRenderNPatchRect);
-        RegisterRenderer<CmdDrawTriangle>(DrawCommandType::Triangle, ExecuteTriangle);
-    }
+    extern void InitDispatcher();
 
 }
    

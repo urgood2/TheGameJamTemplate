@@ -697,7 +697,7 @@ namespace game
 
         // set up layers (needs to happen every frame)
         
-        layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>([](auto* cmd) {
+        layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
             cmd->color = util::getColor("brick_palette_red_resurrect");
         });
         

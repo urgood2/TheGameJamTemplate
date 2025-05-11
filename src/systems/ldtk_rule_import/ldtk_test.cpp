@@ -156,8 +156,8 @@ namespace ldtk_test {
             auto center = GetScreenToWorld2D(Vector2{GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}, globals::camera);
             auto offset = Vector2{GetScreenWidth() / 2 * (1.0f / globals::camera.zoom), GetScreenHeight() / 2 * (1.0f / globals::camera.zoom)};
             
-            auto topLeft = graphics::Vector2Subtract(center, offset);
-            auto bottomRight = graphics::Vector2Add(center, offset);
+            auto topLeft = Vector2Subtract(center, offset);
+            auto bottomRight = Vector2Add(center, offset);
             
             const int pad = 1;
             

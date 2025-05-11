@@ -1014,13 +1014,14 @@ namespace TextSystem
                 
             if (text.applyTransformRotationAndScale)
             {
-                layer::AddScale(layerPtr,
-                    textTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
-                    textTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
-                    1);
-                    
-                layer::AddRotate(layerPtr,
-                    textTransform.getVisualRWithDynamicMotionAndXLeaning());
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = textTransform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = textTransform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+                    cmd->scaleX = scaleX;
+                    cmd->scaleY = scaleY;
+                });
+
+                layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = textTransform.getVisualRWithDynamicMotionAndXLeaning()](layer::CmdRotate *cmd) {
+                    cmd->angle = rotation;
+                });
             }
             
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -textTransform.getVisualW() * 0.5f, y = -textTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
@@ -1112,8 +1113,13 @@ namespace TextSystem
                         cmd->x = x;
                         cmd->y = y;
                     });
-                    layer::AddScale(layerPtr, finalScaleX, finalScaleY, 1);
-                    layer::AddRotate(layerPtr, character.rotation);
+                    layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = finalScaleX, scaleY = finalScaleY](layer::CmdScale *cmd) {
+                        cmd->scaleX = scaleX;
+                        cmd->scaleY = scaleY;
+                    });
+                    layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
+                        cmd->angle = rotation;
+                    });
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -charSize.x * 0.5f, y = -charSize.y * 0.5f](layer::CmdTranslate *cmd) {
                         cmd->x = x;
                         cmd->y = y;
@@ -1167,12 +1173,34 @@ namespace TextSystem
                         auto sourceRect = spriteFrame.frame;
                         auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
                         auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
-                        layer::AddTexturePro(layerPtr, atlasTexture, sourceRect, 0, 0, {destRect.width, destRect.height}, {0, 0}, 0, Fade(BLACK, 0.7f)); 
+                        
+                        layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect](layer::CmdTexturePro *cmd) {
+                            cmd->texture = atlasTexture;
+                            cmd->source = sourceRect;
+                            cmd->offsetX = 0;
+                            cmd->offsetY = 0;
+                            cmd->size = {destRect.width, destRect.height};
+                            cmd->rotationCenter = {0, 0};
+                            cmd->rotation = 0;
+                            cmd->color = Fade(BLACK, 0.7f);
+                        });
+                        
                     }
                     else {
                         ZoneScopedN("TextSystem::renderText-render text shadow");
                         // Draw shadow 
-                        layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, Fade(BLACK, 0.7f));
+                        
+                        layer::QueueCommand<layer::CmdTextPro>(layerPtr, [fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale](layer::CmdTextPro *cmd) {
+                            cmd->text = utf8String.c_str();
+                            cmd->font = font;
+                            cmd->x = 0;
+                            cmd->y = 0;
+                            cmd->origin = {0, 0};
+                            cmd->rotation = 0;
+                            cmd->fontSize = fontSize * renderScale;
+                            cmd->spacing = spacing;
+                            cmd->color = Fade(BLACK, 0.7f);
+                        });
                     }
 
                     // Reset translation to original position
@@ -1189,11 +1217,30 @@ namespace TextSystem
                     auto sourceRect = spriteFrame.frame;
                     auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
                     auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
-                    layer::AddTexturePro(layerPtr, atlasTexture, sourceRect, 0, 0, {destRect.width, destRect.height}, {0, 0}, 0, character.fgTint); 
+                    layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect, fgTint = character.fgTint](layer::CmdTexturePro *cmd) {
+                        cmd->texture = atlasTexture;
+                        cmd->source = sourceRect;
+                        cmd->offsetX = 0;
+                        cmd->offsetY = 0;
+                        cmd->size = {destRect.width, destRect.height};
+                        cmd->rotationCenter = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->color = fgTint;
+                    });
                 }
                 else {
                     ZoneScopedN("TextSystem::renderText-render text");
-                    layer::AddTextPro(layerPtr, utf8String.c_str(), text.fontData.font, 0, 0, {0, 0}, 0, text.fontSize * renderScale, text.fontData.spacing, character.color);
+                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale, color = character.color](layer::CmdTextPro *cmd) {
+                        cmd->text = utf8String.c_str();
+                        cmd->font = font;
+                        cmd->x = 0;
+                        cmd->y = 0;
+                        cmd->origin = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->fontSize = fontSize * renderScale;
+                        cmd->spacing = spacing;
+                        cmd->color = color;
+                    });
                 }
                 
                 if (debug && globals::drawDebugInfo) {
@@ -1211,7 +1258,7 @@ namespace TextSystem
                     layer::AddRectangleLinesPro(layerPtr, 0, 0, charSize, 1.0f, BLUE);
                 }
                 
-                layer::AddPopMatrix(layerPtr);
+                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
             }
 
             // Draw debug bounding box
@@ -1230,10 +1277,20 @@ namespace TextSystem
 
                 // Draw text showing the dimensions
                 std::string dimensionsText = "Width: " + std::to_string(width) + ", Height: " + std::to_string(height);
-                layer::AddText(layerPtr, dimensionsText.c_str(), GetFontDefault(), 0, -20, GRAY, 10); // Position the text above the box
+                layer::QueueCommand<layer::CmdTextPro>(layerPtr, [dimensionsText = dimensionsText](layer::CmdTextPro *cmd) {
+                    cmd->text = dimensionsText.c_str();
+                    cmd->font = GetFontDefault();
+                    cmd->x = 0;
+                    cmd->y = -20;
+                    cmd->origin = {0, 0};
+                    cmd->rotation = 0;
+                    cmd->fontSize = 10;
+                    cmd->spacing = 0;
+                    cmd->color = GRAY;
+                });
             }
             
-            layer::AddPopMatrix(layerPtr); // Pops the entity-level transform
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
             
         }
 

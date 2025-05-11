@@ -284,9 +284,14 @@ namespace particle {
                 cmd->y = y;
             });
 
-            layer::AddScale(layerPtr, transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+            layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+                cmd->scaleX = scaleX;
+                cmd->scaleY = scaleY;
+            });
 
-            layer::AddRotate(layerPtr, transform.getVisualR() + transform.rotationOffset);
+            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
+                cmd->angle = rotation;
+            });
 
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
                 cmd->x = x;
@@ -295,13 +300,17 @@ namespace particle {
 
             // does it have animation?
             if (registry.any_of<AnimationQueueComponent>(entity)) {
-                layer::AddDrawEntityWithAnimation(layerPtr, &globals::registry, entity, 0, 0, 0);
+                layer::QueueCommand<layer::CmdDrawEntityAnimation>(layerPtr, [entity = entity](layer::CmdDrawEntityAnimation *cmd) {
+                    cmd->entity = entity;
+                    cmd->offsetX = 0;
+                    cmd->offsetY = 0;
+                }, 0);
             } else {
                 // just draw rect
                 layer::AddRectangle(layerPtr, 0, 0, transform.getVisualW(), transform.getVisualH(), drawColor);
             }
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
     }
 

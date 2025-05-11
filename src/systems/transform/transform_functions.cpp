@@ -1171,9 +1171,14 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->y = y;
         });
 
-        layer::AddScale(layer, transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+        layer::QueueCommand<layer::CmdScale>(layer, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+            cmd->scaleX = scaleX;
+            cmd->scaleY = scaleY;
+        });
 
-        layer::AddRotate(layer, transform.getVisualR() + transform.rotationOffset);
+        layer::QueueCommand<layer::CmdRotate>(layer, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
+            cmd->angle = rotation;
+        });
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
@@ -1211,7 +1216,17 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         {
             
             float textWidth = MeasureText(node.debug.debugText.value().c_str(), 15 * scale);
-            layer::AddText(layer, node.debug.debugText.value(), GetFontDefault(), transform.getVisualW() / 2 - textWidth / 2, transform.getVisualH() * 0.05f, WHITE, 15 * scale);
+            layer::QueueCommand<layer::CmdTextPro>(layer, [text = node.debug.debugText.value(), font = GetFontDefault(), textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH()](layer::CmdTextPro *cmd) {
+                cmd->text = text.c_str();
+                cmd->font = font;
+                cmd->x = visualW / 2 - textWidth / 2;
+                cmd->y = visualH * 0.05f;
+                cmd->origin = {0, 0};
+                cmd->rotation = 0;
+                cmd->fontSize = 15 * scale;
+                cmd->spacing = 1.0f;
+                cmd->color = WHITE;
+            });
         }
         else {
             // If ui, get ui type + entity number
@@ -1223,7 +1238,17 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 debugText = fmt::format("{} {}", magic_enum::enum_name<ui::UITypeEnum>(uiConfig.uiType.value_or(ui::UITypeEnum::NONE)), debugText);
             }
             float textWidth = MeasureText(debugText.c_str(), 15 * scale);
-            layer::AddText(layer, debugText, GetFontDefault(), transform.getVisualW() / 2 - textWidth / 2, transform.getVisualH() * 0.05f, WHITE, 15 * scale);
+            layer::QueueCommand<layer::CmdTextPro>(layer, [debugText, textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH()](layer::CmdTextPro *cmd) {
+                cmd->text = debugText.c_str();
+                cmd->font = GetFontDefault();
+                cmd->x = visualW / 2 - textWidth / 2;
+                cmd->y = visualH * 0.05f;
+                cmd->origin = {0, 0};
+                cmd->rotation = 0;
+                cmd->fontSize = 15 * scale;
+                cmd->spacing = 1.0f;
+                cmd->color = WHITE;
+            });
         }
 
         float lineWidth = 1;
@@ -1264,7 +1289,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             layer::AddRectanglePro(layer, 0, transform.getActualH(), Vector2{transform.getActualW(), embossHeight}, Fade(BLACK, 0.3f));
         }
 
-        layer::AddPopMatrix(layer);
+        layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {});
     }
 
     auto CalculateCursorPositionWithinFocus(entt::registry *registry, entt::entity e) -> Vector2
@@ -1735,7 +1760,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->x = x;
             cmd->y = y;
         });
-        layer::AddRotate(layer, containerTransform.getActualRotation());
+        layer::QueueCommand<layer::CmdRotate>(layer, [rotation = containerTransform.getActualRotation()](layer::CmdRotate *cmd) {
+            cmd->angle = rotation;
+        });
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = -containerTransform.getActualW() * 0.5 + containerTransform.getActualX(),
                                  y = -containerTransform.getActualH() * 0.5 + containerTransform.getActualY()](layer::CmdTranslate *cmd) {
             cmd->x = x;

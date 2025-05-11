@@ -266,9 +266,14 @@ namespace ui
             });
         }
 
-        layer::AddScale(layerPtr, transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
+        layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+            cmd->scaleX = scaleX;
+            cmd->scaleY = scaleY;
+        });
 
-        layer::AddRotate(layerPtr, transform.getVisualR() + transform.rotationOffset);
+        layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
+            cmd->angle = rotation;
+        });
 
         layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
@@ -547,12 +552,19 @@ namespace ui
             colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
 
             // filled shadow
-            layer::AddRenderNPatchRect(layerPtr, nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, {0, 0}, 0.f, colorToUse);
+            layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, visualW, visualH, progressVal, colorToUse](layer::CmdRenderNPatchRect *cmd) {
+                cmd->info = nPatchInfo;
+                cmd->sourceTexture = nPatchAtlas;
+                cmd->dest = Rectangle{0, 0, visualW * progressVal, visualH};
+                cmd->origin = {0, 0};
+                cmd->rotation = 0.f;
+                cmd->tint = colorToUse;
+            });
             
             //TODO: resize the shadow to match the progress value?
             //TODO: how to do rotation later?
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
         
         // then draw the npatch element itself
@@ -571,8 +583,15 @@ namespace ui
         colorToUse = colorOverride;
 
         // filled
-        layer::AddRenderNPatchRect(layerPtr, nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW, visualH}, {0, 0}, 0.f, colorToUse);
-        layer::AddPopMatrix(layerPtr);
+        layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, visualW, visualH, colorToUse](layer::CmdRenderNPatchRect *cmd) {
+            cmd->info = nPatchInfo;
+            cmd->sourceTexture = nPatchAtlas;
+            cmd->dest = Rectangle{0, 0, visualW, visualH};
+            cmd->origin = {0, 0};
+            cmd->rotation = 0.f;
+            cmd->tint = colorToUse;
+        });
+        layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
 
         // fill progress, if there is any
         if (progress.has_value())
@@ -606,17 +625,16 @@ namespace ui
                 cmd->y = y;
             });
 
-            layer::AddRenderNPatchRect(
-                layerPtr,
-                nPatchAtlas,
-                nPatchInfo,
-                Rectangle{0, 0, newW, newH},
-                {0, 0}, // ✅ no offset needed inside the rect
-                0.f,
-                colorToUse
-            );
+            layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, newW, newH, colorToUse](layer::CmdRenderNPatchRect *cmd) {
+                cmd->info = nPatchInfo;
+                cmd->sourceTexture = nPatchAtlas;
+                cmd->dest = Rectangle{0, 0, newW, newH};
+                cmd->origin = {0, 0};
+                cmd->rotation = 0.f;
+                cmd->tint = colorToUse;
+            });
             
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
     }
 
@@ -731,10 +749,15 @@ namespace ui
             
             // filled shadow
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, false, entity, colorToUse);
+            layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
+                cmd->cache = entity;
+                cmd->outerRec = {0, 0, progress, height};
+                cmd->color = colorToUse;
+                cmd->progressOrFullBackground = false;
+            });
 
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE && uiConfig->outlineShadow)
         {
@@ -767,11 +790,17 @@ namespace ui
 
             ::util::Profiler profiler("RenderRectVerticlesOutlineLayer");
             // outline shadow
-            layer::AddRenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, true);
+
+            layer::QueueCommand<layer::CmdRenderRectVerticesOutlineLayer>(layerPtr, [entity, colorToUse](layer::CmdRenderRectVerticesOutlineLayer *cmd) {
+                cmd->cache = entity;
+                cmd->color = colorToUse;
+                cmd->useFullVertices = true;
+            });
+
             // RenderRectVerticlesOutlineLayer(layerPtr, rectCache->outerVerticesFull, colorToUse, rectCache->innerVerticesFull);
             profiler.Stop();
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
 
         // then emboss (y+ emboss value)
@@ -813,9 +842,14 @@ namespace ui
             AssertThat(colorToUse.a, Is().EqualTo(255));
 
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, false, entity, colorToUse);
+            layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
+                cmd->cache = entity;
+                cmd->outerRec = {0, 0, progress, height};
+                cmd->color = colorToUse;
+                cmd->progressOrFullBackground = false;
+            });
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS)
         {
@@ -857,9 +891,13 @@ namespace ui
             // outline emboss
             // TODO: vertice usage changes depending on call.
             // RenderRectVerticlesOutlineLayer(layerPtr, rectCache->outerVertices, colorToUse, rectCache->innerVertices);
-            layer::AddRenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, false);
+            layer::QueueCommand<layer::CmdRenderRectVerticesOutlineLayer>(layerPtr, [entity, colorToUse](layer::CmdRenderRectVerticesOutlineLayer *cmd) {
+                cmd->cache = entity;
+                cmd->color = colorToUse;
+                cmd->useFullVertices = false;
+            });
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
 
         // then fill
@@ -892,8 +930,13 @@ namespace ui
             // AssertThat(colorToUse.a, Is().EqualTo(255));
 
             // filled
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, false,  entity, colorToUse);
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
+                cmd->cache = entity;
+                cmd->outerRec = {0, 0, progress, height};
+                cmd->color = colorToUse;
+                cmd->progressOrFullBackground = false;
+            });
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
 
         // fill progress, if there is any
@@ -930,7 +973,10 @@ namespace ui
                     cmd->x = x;
                     cmd->y = y;
                 });
-                layer::AddScale(layerPtr, scaleX, scaleY);             // scale around center
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = scaleX, scaleY = scaleY](layer::CmdScale *cmd) {
+                    cmd->scaleX = scaleX;
+                    cmd->scaleY = scaleY;
+                });
                 layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -centerX, y = -centerY](layer::CmdTranslate *cmd) {
                     cmd->x = x;
                     cmd->y = y;
@@ -955,8 +1001,13 @@ namespace ui
 
             // filled progress
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVertices, colorToUse);
-            layer::AddRenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, true, entity, colorToUse);
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
+                cmd->cache = entity;
+                cmd->outerRec = {0, 0, progress, height};
+                cmd->color = colorToUse;
+                cmd->progressOrFullBackground = false;
+            });
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
         // and ... or outline
         if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE)
@@ -988,9 +1039,13 @@ namespace ui
 
             // outline
             // RenderRectVerticlesOutlineLayer(layerPtr, rectCache->outerVerticesFull, colorToUse, rectCache->innerVerticesFull);
-            layer::AddRenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, true);
+            layer::QueueCommand<layer::CmdRenderRectVerticesOutlineLayer>(layerPtr, [entity, colorToUse](layer::CmdRenderRectVerticesOutlineLayer *cmd) {
+                cmd->cache = entity;
+                cmd->color = colorToUse;
+                cmd->useFullVertices = true;
+            });
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
 
     }
@@ -1007,14 +1062,38 @@ namespace ui
         {
 
             // First triangle: Outer1 → Inner1 → Inner2
-            layer::AddVertex(layerPtr, outerVertices[i], color);
-            layer::AddVertex(layerPtr, innerVertices[i], color);
-            layer::AddVertex(layerPtr, innerVertices[i + 1], color);
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i].x, y = innerVertices[i].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i + 1].x, y = innerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
 
             // Second triangle: Outer1 → Inner2 → Outer2
-            layer::AddVertex(layerPtr, outerVertices[i], color);
-            layer::AddVertex(layerPtr, innerVertices[i + 1], color);
-            layer::AddVertex(layerPtr, outerVertices[i + 1], color);
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i + 1].x, y = innerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i + 1].x, y = outerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
         }
 
         layer::EndRLMode();
@@ -1036,9 +1115,21 @@ namespace ui
         for (size_t i = 0; i < outerVertices.size(); i += 2)
         {
             // Triangle: Center → Outer1 → Outer2
-            layer::AddVertex(layerPtr, center, color);
-            layer::AddVertex(layerPtr, outerVertices[i + 1], color);
-            layer::AddVertex(layerPtr, outerVertices[i], color);
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = center.x, y = center.y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i + 1].x, y = outerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
+            layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+                cmd->color = color;
+            });
         }
 
         layer::AddEndRLMode(layerPtr);

@@ -1244,7 +1244,9 @@ namespace ui
                         cmd->x = x;
                         cmd->y = y;
                     });
-                    layer::AddRotate(layerPtr, -PI / 2);
+                    layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = -PI / 2](layer::CmdRotate *cmd) {
+                        cmd->angle = rotation;
+                    });
                 }
                 if ((config->shadow || (config->button_UIE && buttonActive)) && globals::settings.shadowsOn)
                 {
@@ -1256,14 +1258,27 @@ namespace ui
                     float spacing = config->textSpacing.value_or(globals::fontData.spacing);   
 
                     float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
-                    layer::AddScale(layerPtr, scale, scale);
+                    layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
+                        cmd->x = scale;
+                        cmd->y = scale;
+                    });
                     
-                    layer::AddTextPro(layerPtr, config->text.value(), globals::fontData.font, textX, textY, {0, 0}, 0, globals::fontData.fontLoadedSize, spacing, shadowColor);
+                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = globals::fontData.font, textX, textY, spacing, shadowColor](layer::CmdTextPro *cmd) {
+                        cmd->text = text.c_str();
+                        cmd->font = font;
+                        cmd->x = textX;
+                        cmd->y = textY;
+                        cmd->origin = {0, 0};
+                        cmd->rotation = 0;
+                        cmd->fontSize = globals::fontData.fontLoadedSize;
+                        cmd->spacing = spacing;
+                        cmd->color = shadowColor;
+                    });
                     
                     // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
                 }
 
-                layer::AddPopMatrix(layerPtr);
+                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
             }
 
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
@@ -1279,7 +1294,9 @@ namespace ui
                     cmd->x = x;
                     cmd->y = y;
                 });
-                layer::AddRotate(layerPtr, -PI / 2);
+                layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = -PI / 2](layer::CmdRotate *cmd) {
+                    cmd->angle = rotation;
+                });
             }
             Color renderColor = config->color.value();
             if (buttonActive == false)
@@ -1294,13 +1311,26 @@ namespace ui
             float textX = globals::fontData.fontRenderOffset.x;
             float textY = globals::fontData.fontRenderOffset.y;
             float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
-            layer::AddScale(layerPtr, scale, scale);
+            layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
+                cmd->x = scale;
+                cmd->y = scale;
+            });
 
             float spacing = config->textSpacing.value_or(globals::fontData.spacing);
             
-            layer::AddTextPro(layerPtr, config->text.value(), globals::fontData.font, textX, textY, {0, 0}, 0, globals::fontData.fontLoadedSize, spacing, renderColor);
+            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = globals::fontData.font, textX, textY, spacing, renderColor](layer::CmdTextPro *cmd) {
+                cmd->text = text.c_str();
+                cmd->font = font;
+                cmd->x = textX;
+                cmd->y = textY;
+                cmd->origin = {0, 0};
+                cmd->rotation = 0;
+                cmd->fontSize = globals::fontData.fontLoadedSize;
+                cmd->spacing = spacing;
+                cmd->color = renderColor;
+            });
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT)
         {
@@ -1308,7 +1338,10 @@ namespace ui
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             if (config->shadow && globals::settings.shadowsOn)
             {
-                layer::AddScale(layerPtr, 0.98f, 0.98f);
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
+                    cmd->x = 0.98f;
+                    cmd->y = 0.98f;
+                });
 
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
                 if (config->shadowColor)
@@ -1323,7 +1356,10 @@ namespace ui
                     // util::DrawNPatchUIElement(layerPtr, registry, entity, shadowColor, parallaxDist);
                     ;
                     
-                layer::AddScale(layerPtr, 1 / 0.98f, 1 / 0.98f);
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
+                    cmd->x = 1 / 0.98f;
+                    cmd->y = 1 / 0.98f;
+                });
             }
 
             // float scale = buttonBeingPressed ? 0.990f : 1.0f;
@@ -1468,7 +1504,7 @@ namespace ui
             }
         
 
-            layer::AddPopMatrix(layerPtr);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
         else if (config->uiType == UITypeEnum::OBJECT && config->object)
         {
@@ -1484,7 +1520,7 @@ namespace ui
                 util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}});
                 c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
                 util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 1.5f);
-                layer::AddPopMatrix(layerPtr);
+                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
             }
             else
             {
@@ -1571,7 +1607,6 @@ namespace ui
         if (node->drawFunction) {
             // util::PrepDraw(layerPtr, registry, entity, 0.98f);
             node->drawFunction(layerPtr, registry, entity);
-            // layer::AddPopMatrix(layerPtr);
         }
         
         //TODO: enable this back later

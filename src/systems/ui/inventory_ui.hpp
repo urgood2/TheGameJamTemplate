@@ -134,13 +134,27 @@ namespace ui {
             // Horizontal lines
             for (int i = 0; i <= rows; ++i) {
                 float y = baseY + padding + i * (cellH + padding);
-                layer::AddLine(layerPtr, baseX + padding, y, baseX + areaWidth - padding, y, PINK, 2.0f);
+                layer::QueueCommand<layer::CmdLine>(layerPtr, [x1 = baseX + padding, y1 = y, x2 = baseX + areaWidth - padding, y2 = y](layer::CmdLine *cmd) {
+                    cmd->x1 = x1;
+                    cmd->y1 = y1;
+                    cmd->x2 = x2;
+                    cmd->y2 = y2;
+                    cmd->color = PINK;
+                    cmd->thickness = 2.0f;
+                });
             }
         
             // Vertical lines
             for (int j = 0; j <= columns; ++j) {
                 float x = baseX + padding + j * (cellW + padding);
-                layer::AddLine(layerPtr, x, baseY + padding, x, baseY + areaHeight - padding, PINK, 2.0f);
+                layer::QueueCommand<layer::CmdLine>(layerPtr, [x1 = x, y1 = baseY + padding, x2 = x, y2 = baseY + areaHeight - padding](layer::CmdLine *cmd) {
+                    cmd->x1 = x1;
+                    cmd->y1 = y1;
+                    cmd->x2 = x2;
+                    cmd->y2 = y2;
+                    cmd->color = PINK;
+                    cmd->thickness = 2.0f;
+                });
             }
             
             //TODO: move this to update function later. Also, only update when not dragging

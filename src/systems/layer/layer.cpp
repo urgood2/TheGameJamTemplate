@@ -416,7 +416,11 @@ namespace layer
             {
                 AssertThat(command.args.size(), Equals(1)); // Validate number of arguments
                 Camera2D *camera = std::get<Camera2D *>(command.args[0]);
-                layer::AddPush(layer, camera, 0);
+                
+                
+                layer::QueueCommand<layer::CmdAddPush>(layer, [camera](layer::CmdAddPush *cmd) {
+                    cmd->camera = camera;
+                });
             }
             else if (command.type == "add_pop")
             {

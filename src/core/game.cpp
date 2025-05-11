@@ -825,22 +825,22 @@ namespace game
             ZoneScopedN("LayerCommandsToCanvas Draw");
             {
                 ZoneScopedN("background layer commands");
-                layer::DrawLayerCommandsToSpecificCanvas(background, "main", nullptr);  // render the background layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(background, "main", nullptr);  // render the background layer commands to its main canvas
             }
             
             {
                 ZoneScopedN("ui layer commands");
-                layer::DrawLayerCommandsToSpecificCanvas(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
             }
             
             {
                 ZoneScopedN("sprites layer commands");
-                layer::DrawLayerCommandsToSpecificCanvas(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
             }
             
             {
                 ZoneScopedN("final output layer commands");
-                layer::DrawLayerCommandsToSpecificCanvas(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
             }
             
             

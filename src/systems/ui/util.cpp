@@ -1054,8 +1054,12 @@ namespace ui
     {
         // Draw the outlines
         // Draw the filled outline
-        layer::AddSetRLTexture(layerPtr, {0}, 0);
-        layer::AddBeginRLMode(layerPtr, RL_TRIANGLES);
+        layer::QueueCommand<layer::CmdSetTexture>(layerPtr, [](layer::CmdSetTexture *cmd) {
+            cmd->texture.id = 0;
+        }, 0);
+        layer::QueueCommand<layer::CmdBeginOpenGLMode>(layerPtr, [](layer::CmdBeginOpenGLMode *cmd) {
+            cmd->mode = RL_TRIANGLES;
+        }, 0);
 
         // Draw quads between outer and inner outlines using two triangles each
         for (size_t i = 0; i < outerVertices.size(); i += 2)
@@ -1063,35 +1067,35 @@ namespace ui
 
             // First triangle: Outer1 → Inner1 → Inner2
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i].x, y = innerVertices[i].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i + 1].x, y = innerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
 
             // Second triangle: Outer1 → Inner2 → Outer2
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i + 1].x, y = innerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i + 1].x, y = outerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
         }
@@ -1104,8 +1108,12 @@ namespace ui
 
         ::util::Profiler profiler("RenderRectVerticesFilledLayer");
 
-        layer::AddSetRLTexture(layerPtr, {0}, 0);
-        layer::AddBeginRLMode(layerPtr, RL_TRIANGLES);
+        layer::QueueCommand<layer::CmdSetTexture>(layerPtr, [](layer::CmdSetTexture *cmd) {
+            cmd->texture.id = 0;
+        }, 0);
+        layer::QueueCommand<layer::CmdBeginOpenGLMode>(layerPtr, [](layer::CmdBeginOpenGLMode *cmd) {
+            cmd->mode = RL_TRIANGLES;
+        }, 0);
 
         // Center of the entire rectangle (for filling)
         Vector2 center = {outerRec.x + outerRec.width / 2.0f, outerRec.y + outerRec.height / 2.0f};
@@ -1116,23 +1124,23 @@ namespace ui
         {
             // Triangle: Center → Outer1 → Outer2
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = center.x, y = center.y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i + 1].x, y = outerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
             layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+                cmd->v.x = x;
+                cmd->v.y = y;
                 cmd->color = color;
             });
         }
 
-        layer::AddEndRLMode(layerPtr);
+        layer::QueueCommand<layer::CmdEndOpenGLMode>(layerPtr, [](layer::CmdEndOpenGLMode *cmd) {}, 0);
 
         profiler.Stop();
     }

@@ -1164,7 +1164,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &springR = transform.getRSpring();
         auto &springS = transform.getSSpring();
 
-        layer::QueueCommand<layer::CmdPushMatrix>(layer, []() {
+        layer::QueueCommand<layer::CmdPushMatrix>(layer, [](layer::CmdPushMatrix *cmd) {
             // Push the current matrix onto the stack
         });
 

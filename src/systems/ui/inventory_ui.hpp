@@ -6,6 +6,9 @@
 #include "systems/transform/transform_functions.hpp"
 #include "systems/random/random.hpp"
 #include "systems/anim_system.hpp"
+#include "systems/layer/layer.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
+#include "systems/layer/layer_optimized.hpp"
 
 
 namespace ui {
@@ -134,26 +137,26 @@ namespace ui {
             // Horizontal lines
             for (int i = 0; i <= rows; ++i) {
                 float y = baseY + padding + i * (cellH + padding);
-                layer::QueueCommand<layer::CmdLine>(layerPtr, [x1 = baseX + padding, y1 = y, x2 = baseX + areaWidth - padding, y2 = y](layer::CmdLine *cmd) {
+                layer::QueueCommand<layer::CmdDrawLine>(layerPtr, [x1 = baseX + padding, y1 = y, x2 = baseX + areaWidth - padding, y2 = y](layer::CmdDrawLine *cmd) {
                     cmd->x1 = x1;
                     cmd->y1 = y1;
                     cmd->x2 = x2;
                     cmd->y2 = y2;
                     cmd->color = PINK;
-                    cmd->thickness = 2.0f;
+                    cmd->lineWidth = 2.0f;
                 });
             }
         
             // Vertical lines
             for (int j = 0; j <= columns; ++j) {
                 float x = baseX + padding + j * (cellW + padding);
-                layer::QueueCommand<layer::CmdLine>(layerPtr, [x1 = x, y1 = baseY + padding, x2 = x, y2 = baseY + areaHeight - padding](layer::CmdLine *cmd) {
+                layer::QueueCommand<layer::CmdDrawLine>(layerPtr, [x1 = x, y1 = baseY + padding, x2 = x, y2 = baseY + areaHeight - padding](layer::CmdDrawLine *cmd) {
                     cmd->x1 = x1;
                     cmd->y1 = y1;
                     cmd->x2 = x2;
                     cmd->y2 = y2;
                     cmd->color = PINK;
-                    cmd->thickness = 2.0f;
+                    cmd->lineWidth = 2.0f;
                 });
             }
             

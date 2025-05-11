@@ -1117,7 +1117,7 @@ namespace TextSystem
                         cmd->scaleX = scaleX;
                         cmd->scaleY = scaleY;
                     });
-                    layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
+                    layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = character.rotation](layer::CmdRotate *cmd) {
                         cmd->angle = rotation;
                     });
                     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -charSize.x * 0.5f, y = -charSize.y * 0.5f](layer::CmdTranslate *cmd) {

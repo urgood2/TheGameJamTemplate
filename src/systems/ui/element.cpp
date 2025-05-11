@@ -1259,8 +1259,8 @@ namespace ui
 
                     float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
                     layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
-                        cmd->x = scale;
-                        cmd->y = scale;
+                        cmd->scaleX = scale;
+                        cmd->scaleY = scale;
                     });
                     
                     layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = globals::fontData.font, textX, textY, spacing, shadowColor](layer::CmdTextPro *cmd) {
@@ -1312,8 +1312,8 @@ namespace ui
             float textY = globals::fontData.fontRenderOffset.y;
             float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
             layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
-                cmd->x = scale;
-                cmd->y = scale;
+                cmd->scaleX = scale;
+                cmd->scaleY = scale;
             });
 
             float spacing = config->textSpacing.value_or(globals::fontData.spacing);
@@ -1339,8 +1339,9 @@ namespace ui
             if (config->shadow && globals::settings.shadowsOn)
             {
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
-                    cmd->x = 0.98f;
-                    cmd->y = 0.98f;
+                    
+                    cmd->scaleX = 0.98f;
+                    cmd->scaleY = 0.98f;
                 });
 
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
@@ -1357,8 +1358,8 @@ namespace ui
                     ;
                     
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
-                    cmd->x = 1 / 0.98f;
-                    cmd->y = 1 / 0.98f;
+                    cmd->scaleX = 1 / 0.98f;
+                    cmd->scaleY = 1 / 0.98f;
                 });
             }
             
@@ -1495,11 +1496,11 @@ namespace ui
             }
             else
             {
-                layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [w = actualW, h = actualH, color](layer::CmdRectangle *cmd) {
+                layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [w = actualW, h = actualH, color](layer::CmdDrawRectangle *cmd) {
                     cmd->x = 0;
                     cmd->y = 0;
-                    cmd->w = w;
-                    cmd->h = h;
+                    cmd->width = w;
+                    cmd->height = h;
                     cmd->color = color;
                 });
                 
@@ -1601,10 +1602,20 @@ namespace ui
                 Vector2 s2 = {p2.x + shadowOffsetX, p2.y + shadowOffsetY};
                 Vector2 s3 = {p3.x + shadowOffsetX, p3.y + shadowOffsetY};
 
-                layer::AddTriangle(layerPtr, s1, s2, s3, shadowColor);
+                layer::QueueCommand<layer::CmdDrawTriangle>(layerPtr, [s1, s2, s3, shadowColor](layer::CmdDrawTriangle *cmd) {
+                    cmd->p1 = s1;
+                    cmd->p2 = s2;
+                    cmd->p3 = s3;
+                    cmd->color = shadowColor;
+                });
             }
 
-            layer::AddTriangle(layerPtr, p1, p2, p3, RED);
+            layer::QueueCommand<layer::CmdDrawTriangle>(layerPtr, [p1, p2, p3](layer::CmdDrawTriangle *cmd) {
+                cmd->p1 = p1;
+                cmd->p2 = p2;
+                cmd->p3 = p3;
+                cmd->color = RED;
+            });
         }
 
         // call the object's own lambda draw function, if it has one

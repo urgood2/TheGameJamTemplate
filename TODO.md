@@ -6,6 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] commands are executed on that particular layer, so maybe use that fact instead of changing queue command signature
 - [ ] apply following format to all draw command calls
 ```cpp
 layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>([](auto* cmd) {

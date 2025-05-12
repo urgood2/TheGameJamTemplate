@@ -337,7 +337,7 @@ namespace layer
         {
             auto it = dispatcher.find(command.type);
             if (it != dispatcher.end()) {
-                it->second(command.data);
+                it->second(layer, command.data);
             } else {
                 SPDLOG_ERROR("Unhandled draw command type {}");
             }

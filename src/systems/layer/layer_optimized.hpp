@@ -363,13 +363,13 @@ namespace layer
     // ===========================
     // Dispatcher System
     // ===========================
-    using RenderFunc = std::function<void(void*)>;
+    using RenderFunc = std::function<void(std::shared_ptr<layer::Layer>, void*)>;
     extern std::unordered_map<DrawCommandType, RenderFunc> dispatcher;
 
     template<typename T>
-    inline void RegisterRenderer(DrawCommandType type, void(*func)(T*)) {
-        dispatcher[type] = [func](void* data) {
-            func(static_cast<T*>(data));
+    inline void RegisterRenderer(DrawCommandType type, void(*func)(std::shared_ptr<layer::Layer>, T*)) {
+        dispatcher[type] = [func](std::shared_ptr<layer::Layer> layer, void* data) {
+            func(layer, static_cast<T*>(data));
         };
     }
     
@@ -379,50 +379,51 @@ namespace layer
     // ===========================
     // Render Function Definitions
     // ===========================
-    extern void RenderDrawCircle(CmdDrawCircle* c);
-    extern void ExecuteTranslate(CmdTranslate* c);
-    extern void ExecuteScale(CmdScale* c);
-    extern void ExecuteRotate(CmdRotate* c);
-    extern void ExecuteAddPush(CmdAddPush* c);
-    extern void ExecuteAddPop(CmdAddPop* c);
-    extern void ExecutePushMatrix(CmdPushMatrix* c);
-    extern void ExecutePopMatrix(CmdPopMatrix* c);
-    extern void ExecuteCircle(CmdDrawCircle* c);
-    extern void ExecuteRectangle(CmdDrawRectangle* c);
-    extern void ExecuteRectanglePro(CmdDrawRectanglePro* c);
-    extern void ExecuteRectangleLinesPro(CmdDrawRectangleLinesPro* c);
-    extern void ExecuteLine(CmdDrawLine* c);
-    extern void ExecuteDashedLine(CmdDrawDashedLine* c);
-    extern void ExecuteText(CmdDrawText* c);
-    extern void ExecuteTextCentered(CmdDrawTextCentered* c);
-    extern void ExecuteTextPro(CmdTextPro* c);
-    extern void ExecuteDrawImage(CmdDrawImage* c);
-    extern void ExecuteTexturePro(CmdTexturePro* c);
-    extern void ExecuteDrawEntityAnimation(CmdDrawEntityAnimation* c);
-    extern void ExecuteDrawTransformEntityAnimation(CmdDrawTransformEntityAnimation* c);
-    extern void ExecuteDrawTransformEntityAnimationPipeline(CmdDrawTransformEntityAnimationPipeline* c);
-    extern void ExecuteSetShader(CmdSetShader* c);
-    extern void ExecuteResetShader(CmdResetShader* c);
-    extern void ExecuteSetBlendMode(CmdSetBlendMode* c);
-    extern void ExecuteUnsetBlendMode(CmdUnsetBlendMode* c);
-    extern void ExecuteSendUniformFloat(CmdSendUniformFloat* c);
-    extern void ExecuteSendUniformInt(CmdSendUniformInt* c);
-    extern void ExecuteSendUniformVec2(CmdSendUniformVec2* c);
-    extern void ExecuteSendUniformVec3(CmdSendUniformVec3* c);
-    extern void ExecuteSendUniformVec4(CmdSendUniformVec4* c);
-    extern void ExecuteSendUniformFloatArray(CmdSendUniformFloatArray* c);
-    extern void ExecuteSendUniformIntArray(CmdSendUniformIntArray* c);
-    extern void ExecuteVertex(CmdVertex* c);
-    extern void ExecuteBeginOpenGLMode(CmdBeginOpenGLMode* c);
-    extern void ExecuteEndOpenGLMode(CmdEndOpenGLMode* c);
-    extern void ExecuteSetColor(CmdSetColor* c);
-    extern void ExecuteSetLineWidth(CmdSetLineWidth* c);
-    extern void ExecuteSetTexture(CmdSetTexture* c);
-    extern void ExecuteRenderRectVerticesFilledLayer(CmdRenderRectVerticesFilledLayer* c);
-    extern void ExecuteRenderRectVerticesOutlineLayer(CmdRenderRectVerticesOutlineLayer* c);
-    extern void ExecutePolygon(CmdDrawPolygon* c);
-    extern void ExecuteRenderNPatchRect(CmdRenderNPatchRect* c);
-    extern void ExecuteTriangle(CmdDrawTriangle* c);
+    extern void RenderDrawCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircle* c);
+    extern void ExecuteTranslate(std::shared_ptr<layer::Layer> layer, CmdTranslate* c);
+    extern void ExecuteScale(std::shared_ptr<layer::Layer> layer, CmdScale* c);
+    extern void ExecuteRotate(std::shared_ptr<layer::Layer> layer, CmdRotate* c);
+    extern void ExecuteAddPush(std::shared_ptr<layer::Layer> layer, CmdAddPush* c);
+    extern void ExecuteAddPop(std::shared_ptr<layer::Layer> layer, CmdAddPop* c);
+    extern void ExecutePushMatrix(std::shared_ptr<layer::Layer> layer, CmdPushMatrix* c);
+    extern void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c);
+    extern void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircle* c);
+    extern void ExecuteRectangle(std::shared_ptr<layer::Layer> layer, CmdDrawRectangle* c);
+    extern void ExecuteRectanglePro(std::shared_ptr<layer::Layer> layer, CmdDrawRectanglePro* c);
+    extern void ExecuteRectangleLinesPro(std::shared_ptr<layer::Layer> layer, CmdDrawRectangleLinesPro* c);
+    extern void ExecuteLine(std::shared_ptr<layer::Layer> layer, CmdDrawLine* c);
+    extern void ExecuteDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c);
+    extern void ExecuteText(std::shared_ptr<layer::Layer> layer, CmdDrawText* c);
+    extern void ExecuteTextCentered(std::shared_ptr<layer::Layer> layer, CmdDrawTextCentered* c);
+    extern void ExecuteTextPro(std::shared_ptr<layer::Layer> layer, CmdTextPro* c);
+    extern void ExecuteDrawImage(std::shared_ptr<layer::Layer> layer, CmdDrawImage* c);
+    extern void ExecuteTexturePro(std::shared_ptr<layer::Layer> layer, CmdTexturePro* c);
+    extern void ExecuteDrawEntityAnimation(std::shared_ptr<layer::Layer> layer, CmdDrawEntityAnimation* c);
+    extern void ExecuteDrawTransformEntityAnimation(std::shared_ptr<layer::Layer> layer, CmdDrawTransformEntityAnimation* c);
+    extern void ExecuteDrawTransformEntityAnimationPipeline(std::shared_ptr<layer::Layer> layer, CmdDrawTransformEntityAnimationPipeline* c);
+    extern void ExecuteSetShader(std::shared_ptr<layer::Layer> layer, CmdSetShader* c);
+    extern void ExecuteResetShader(std::shared_ptr<layer::Layer> layer, CmdResetShader* c);
+    extern void ExecuteSetBlendMode(std::shared_ptr<layer::Layer> layer, CmdSetBlendMode* c);
+    extern void ExecuteUnsetBlendMode(std::shared_ptr<layer::Layer> layer, CmdUnsetBlendMode* c);
+    extern void ExecuteSendUniformFloat(std::shared_ptr<layer::Layer> layer, CmdSendUniformFloat* c);
+    extern void ExecuteSendUniformInt(std::shared_ptr<layer::Layer> layer, CmdSendUniformInt* c);
+    extern void ExecuteSendUniformVec2(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec2* c);
+    extern void ExecuteSendUniformVec3(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec3* c);
+    extern void ExecuteSendUniformVec4(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec4* c);
+    extern void ExecuteSendUniformFloatArray(std::shared_ptr<layer::Layer> layer, CmdSendUniformFloatArray* c);
+    extern void ExecuteSendUniformIntArray(std::shared_ptr<layer::Layer> layer, CmdSendUniformIntArray* c);
+    extern void ExecuteVertex(std::shared_ptr<layer::Layer> layer, CmdVertex* c);
+    extern void ExecuteBeginOpenGLMode(std::shared_ptr<layer::Layer> layer, CmdBeginOpenGLMode* c);
+    extern void ExecuteEndOpenGLMode(std::shared_ptr<layer::Layer> layer, CmdEndOpenGLMode* c);
+    extern void ExecuteSetColor(std::shared_ptr<layer::Layer> layer, CmdSetColor* c);
+    extern void ExecuteSetLineWidth(std::shared_ptr<layer::Layer> layer, CmdSetLineWidth* c);
+    extern void ExecuteSetTexture(std::shared_ptr<layer::Layer> layer, CmdSetTexture* c);
+    extern void ExecuteRenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layer, CmdRenderRectVerticesFilledLayer* c);
+    extern void ExecuteRenderRectVerticesOutlineLayer(std::shared_ptr<layer::Layer> layer, CmdRenderRectVerticesOutlineLayer* c);
+    extern void ExecutePolygon(std::shared_ptr<layer::Layer> layer, CmdDrawPolygon* c);
+    extern void ExecuteRenderNPatchRect(std::shared_ptr<layer::Layer> layer, CmdRenderNPatchRect* c);
+    extern void ExecuteTriangle(std::shared_ptr<layer::Layer> layer, CmdDrawTriangle* c);
+
 
     // ===========================
     // Init Dispatch Table Once

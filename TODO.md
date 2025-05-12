@@ -6,7 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] passed values are garbage in the new queue system?
+- [ ] passed values are garbage in the new queue system? try https://chatgpt.com/share/68221326-36e4-800a-b879-405faa36edf7
 - [ ] commands are executed on that particular layer, so maybe use that fact instead of changing queue command signature
 - [ ] apply following format to all draw command calls
 ```cpp

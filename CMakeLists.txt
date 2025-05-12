@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # enable tracy (disable for web)
 option( TRACY_ENABLE "" ON)
+add_definitions(-DTRACY_NO_CRASH_HANDLER)
 
 #set opengl version
 #enum_option(OPENGL_VERSION "OFF;4.3;3.3;2.1;1.1;ES 2.0;ES 3.0" "Force a specific OpenGL Version?")
@@ -513,6 +514,7 @@ endif()
 add_definitions( -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_STD_OPTIONAL) # Enable std::optional support in sol2 to prevent errors
+target_compile_definitions(tracy PUBLIC TRACY_NO_CRASH_HANDLER)
 
 # Setting ASSETS_PATH
 if (CMAKE_BUILD_TYPE MATCHES "Debug")

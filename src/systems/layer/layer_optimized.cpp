@@ -166,11 +166,11 @@ namespace layer
     }
     
     void ExecuteRenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layer, CmdRenderRectVerticesFilledLayer* c) {
-        RenderRectVerticesFilledLayer(c->layerPtr, c->outerRec, c->progressOrFullBackground, c->cache, c->color);
+        RenderRectVerticesFilledLayer(layer, c->outerRec, c->progressOrFullBackground, c->cache, c->color);
     }
     
     void ExecuteRenderRectVerticesOutlineLayer(std::shared_ptr<layer::Layer> layer, CmdRenderRectVerticesOutlineLayer* c) {
-        RenderRectVerticlesOutlineLayer(c->layerPtr, c->cache, c->color, c->useFullVertices);
+        RenderRectVerticlesOutlineLayer(layer, c->cache, c->color, c->useFullVertices);
     }
     
     void ExecutePolygon(std::shared_ptr<layer::Layer> layer, CmdDrawPolygon* c) {

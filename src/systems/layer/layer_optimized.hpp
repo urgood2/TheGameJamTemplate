@@ -315,7 +315,6 @@ namespace layer
     };
 
     struct CmdRenderRectVerticesFilledLayer {
-        std::shared_ptr<layer::Layer> layerPtr;
         Rectangle outerRec;
         bool progressOrFullBackground;
         entt::entity cache;
@@ -323,7 +322,6 @@ namespace layer
     };
 
     struct CmdRenderRectVerticesOutlineLayer {
-        std::shared_ptr<layer::Layer> layerPtr;
         entt::entity cache;
         Color color;
         bool useFullVertices;

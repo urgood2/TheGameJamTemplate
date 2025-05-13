@@ -246,6 +246,7 @@ endif()
 add_subdirectory("src/third_party/GPGOAP")
 add_subdirectory("src/third_party/chipmunk")
 add_subdirectory("src/third_party/tracy-master")
+add_subdirectory("src/third_party/objectpool-master")
 
 ##########################################################################################
 # Project executable setup
@@ -290,6 +291,7 @@ target_include_directories(CommonSettings INTERFACE
     "${stduuid_SOURCE_DIR}/include"
     "${snowhouse_SOURCE_DIR}/include"
     "third_party/tracy-master/public"
+    "third_party/objectpool-master/src"
 )
 target_link_libraries(CommonSettings INTERFACE
     raylib
@@ -514,7 +516,6 @@ endif()
 add_definitions( -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_STD_OPTIONAL) # Enable std::optional support in sol2 to prevent errors
-target_compile_definitions(tracy PUBLIC TRACY_NO_CRASH_HANDLER)
 
 # Setting ASSETS_PATH
 if (CMAKE_BUILD_TYPE MATCHES "Debug")

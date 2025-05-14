@@ -872,12 +872,12 @@ namespace game
             
             {
                 ZoneScopedN("Debug UI");
-                // rlImGuiBegin(); // Required: starts ImGui frame
+                rlImGuiBegin(); // Required: starts ImGui frame
 
                 // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
-                // ShowDebugUI();
+                ShowDebugUI();
 
-                // rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+                rlImGuiEnd(); // Required: renders ImGui on top of Raylib
             }
             
 

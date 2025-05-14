@@ -658,11 +658,21 @@ namespace ui
      */
     void util::DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
     {
+        
+        if (progress.value_or(1.0f) <= 0.0f)
+        return;
+        
+        
+
+    
         ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
         auto &node = registry.get<transform::GameObject>(entity);
-
+        
+        if (node.state.visible == false)
+            return;
+        
         // TODO: debug layer displacement non-zero for certain entities
         //  SPDLOG_DEBUG("DrawSteppedRoundedRectangle for entity {}, layered displacement: ({}, {})", static_cast<int>(entity), node.layerDisplacement->x, node.layerDisplacement->y);
 
@@ -684,7 +694,9 @@ namespace ui
         // comparisons to detect if the cache is usable
         if (!rectCache
             // || rectCache->renderTypeFlags != type
-            || (rectCache->innerVertices.empty() && rectCache->outerVertices.empty()) || std::abs(rectCache->w - visualW) > EPSILON || std::abs(rectCache->h - visualH) > EPSILON
+            || (rectCache->innerVertices.empty() && rectCache->outerVertices.empty()) || (rectCache->w != static_cast<int>(visualW) || rectCache->h != static_cast<int>(visualH))
+
+            
             // || (node.shadowDisplacement.has_value() && (rectCache->shadowDisplacement != node.shadowDisplacement.value()))
             || std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON
             || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value() > EPSILON)) || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON))
@@ -797,8 +809,6 @@ namespace ui
                 cmd->useFullVertices = true;
             });
 
-            // RenderRectVerticlesOutlineLayer(layerPtr, rectCache->outerVerticesFull, colorToUse, rectCache->innerVerticesFull);
-            profiler.Stop();
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
@@ -1142,7 +1152,6 @@ namespace ui
 
         layer::QueueCommand<layer::CmdEndOpenGLMode>(layerPtr, [](layer::CmdEndOpenGLMode *cmd) {}, 0);
 
-        profiler.Stop();
     }
 
     auto util::ClipRoundedRectVertices(std::vector<Vector2> &vertices, float clipX) -> void

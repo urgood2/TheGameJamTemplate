@@ -564,6 +564,7 @@ namespace ui_defs
                     .addColor(YELLOW)
                     .addEmboss(2.f)
                     .addOutlineColor(BLUE)
+                    .addMaxHeight(800.f)
                     // .addOutlineThickness(5.0f)
                     // .addMinWidth(500.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)

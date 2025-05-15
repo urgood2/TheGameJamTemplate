@@ -6,21 +6,11 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] passed values are garbage in the new queue system? try https://chatgpt.com/share/68221326-36e4-800a-b879-405faa36edf7
-- [ ] commands are executed on that particular layer, so maybe use that fact instead of changing queue command signature
-- [ ] apply following format to all draw command calls
-```cpp
-layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>([](auto* cmd) {
-    cmd->color = util::getColor("brick_palette_red_resurrect");
-});
-```
-- [ ] profile with built-in tracy profiler tool in tracy folder (need to add frame markers etc)
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
-- [ ] Need to make ui rendering more streamlined
 - [ ] make variations of textures based on voucher sheen/polychrome
 - [ ] create reusable+ modular localize() function for fetching in game text. Also make it easy to switch fonts + languages
 - [ ] Add function to search child of any uibox by ID (sometimes you don't know the ui box in advance)
-- [ ] images not scaled down properly by maxW/H in rows/columns, make that happen
+- [ ] images not scaled down properly by maxW/H in rows/columns, make that happen, also same with dynamic text
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] new inventory system with just rows + drag/drop detection
@@ -65,6 +55,7 @@ layer::AddCommandBufferDrawCommand<layer::CmdClearBackground>([](auto* cmd) {
   - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
   - [ ] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
+- [ ] Revamped inventory system using drag & drop + ui boxes
 - [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."

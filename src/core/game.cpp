@@ -579,7 +579,6 @@ namespace game
                     // .addMaxWidth(700.f)
                     .addColor(BLUE)
                     .addShadow(true)
-                    .addMinWidth(300.f)
                     // .addHover(true)
                     // .addButtonCallback("testCallback")
                     .addAlign(

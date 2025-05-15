@@ -15442,7 +15442,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Karmella.otf"
     ],
     "en_localization_u": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/en_us.json"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/en_us.json",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\en_us.json"
     ],
     "en_readme": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/readme.txt",

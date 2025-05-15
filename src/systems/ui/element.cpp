@@ -808,6 +808,9 @@ namespace ui
 
             if (!role || !node || !uiElement || !transform || !uiState || !uiConfig) continue;
 
+            SPDLOG_DEBUG("Applying scaling factor to entity {} with initial width: {}, height: {}, content dimensions: {}, scale: {}",
+                        static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
+
             transform->setActualW(transform->getActualW() * scaling);
             transform->setActualH(transform->getActualH() * scaling);
             uiState->contentDimensions = {transform->getActualW(), transform->getActualH()};
@@ -828,6 +831,7 @@ namespace ui
                 {
                     //FIXME: this isn't working.
                     animation_system::resizeAnimationObjectsInEntityToFit(objectEntity, transform->getActualW(), transform->getActualH());
+
                 }
             }
 

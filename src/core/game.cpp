@@ -28,6 +28,7 @@
 #include "../systems/text/static_ui_text.hpp"
 #include "../systems/ui/common_definitions.hpp"
 #include "../systems/ui/inventory_ui.hpp"
+#include "../systems/localization/localization.hpp"
 #include "rlgl.h"
 
 using std::pair;
@@ -872,12 +873,12 @@ namespace game
             
             {
                 ZoneScopedN("Debug UI");
-                // rlImGuiBegin(); // Required: starts ImGui frame
+                rlImGuiBegin(); // Required: starts ImGui frame
 
-                // // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
-                // ShowDebugUI();
+                // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
+                ShowDebugUI();
 
-                // rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+                rlImGuiEnd(); // Required: renders ImGui on top of Raylib
             }
             
 

@@ -242,6 +242,7 @@ namespace TextSystem
         extern void debugPrintText(entt::entity textEntity);
 
         extern void resizeTextToFit(entt::entity textEntity, float targetWidth, float targetHeight, bool centerLaterally =true, bool centerVertically = true);
+        extern void setTextScaleAndRecenter(entt::entity textEntity, float renderScale, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically);
         
         extern void setText(entt::entity textEntity, const std::string &text);
 

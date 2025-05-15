@@ -530,6 +530,58 @@ namespace ui
             }
         }
     }
+    
+    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, const std::string &id);
+
+    // Internal helper
+    static std::optional<entt::entity> SearchUIHierarchy(entt::registry &registry, entt::entity node, const std::string &id)
+    {
+        if (!registry.valid(node)) return std::nullopt;
+
+        if (auto *config = registry.try_get<UIConfig>(node); config && config->id == id)
+            return node;
+
+        // Check transform children
+        if (auto *nodeComp = registry.try_get<transform::GameObject>(node))
+        {
+            for (auto child : nodeComp->orderedChildren)
+            {
+                if (auto result = SearchUIHierarchy(registry, child, id); result)
+                    return result;
+            }
+        }
+
+        // Check UIConfig::object reference
+        if (auto *config = registry.try_get<UIConfig>(node); config && config->object.has_value())
+        {
+            if (auto result = SearchUIHierarchy(registry, config->object.value(), id); result)
+                return result;
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, const std::string &id)
+    {
+        auto view = registry.view<UIBoxComponent>();
+        for (auto entity : view)
+        {
+            // Check the UIBox entity itself
+            if (auto result = SearchUIHierarchy(registry, entity, id); result)
+                return result;
+
+            // Check the UIBox's root node and its children
+            const auto &uiBox = view.get<UIBoxComponent>(entity);
+            if (uiBox.uiRoot.has_value())
+            {
+                entt::entity uiRoot = uiBox.uiRoot.value();
+                if (auto result = SearchUIHierarchy(registry, uiRoot, id); result)
+                    return result;
+            }
+        }
+
+        return std::nullopt;
+    }
 
     std::optional<entt::entity> box::GetUIEByID(entt::registry &registry, entt::entity node, const std::string &id)
     {

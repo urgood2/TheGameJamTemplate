@@ -6,11 +6,10 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
 - [ ] make variations of textures based on voucher sheen/polychrome
-- [ ] create reusable+ modular localize() function for fetching in game text. Also make it easy to switch fonts + languages
-- [ ] Add function to search child of any uibox by ID (sometimes you don't know the ui box in advance)
-- [ ] images not scaled down properly by maxW/H in rows/columns, make that happen, also same with dynamic text
+- [ ] images/animations not scaled down properly by maxW/H in rows/columns, make that happen
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] new inventory system with just rows + drag/drop detection

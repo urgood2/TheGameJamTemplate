@@ -113,6 +113,54 @@ namespace TextSystem
             }
         }
 
+        
+        /**
+         * @brief Sets the text scale for a given entity and optionally recenters it within a target area.
+         * 
+         * @param textEntity The entity containing the text component to be scaled and repositioned.
+         * @param renderScale The new scale to apply to the text's rendering.
+         * @param targetWidth The width of the target area for optional horizontal centering.
+         * @param targetHeight The height of the target area for optional vertical centering.
+         * @param centerLaterally If true, the text will be horizontally centered within the target width.
+         * @param centerVertically If true, the text will be vertically centered within the target height.
+         * 
+         * @details
+         * This function adjusts the render scale of the text associated with the given entity. After
+         * updating the scale, it recalculates the bounding box of the text to reflect the new dimensions.
+         * If centering is enabled (via `centerLaterally` or `centerVertically`), the function adjusts the
+         * entity's offset to position the text within the specified target area.
+         */
+        void setTextScaleAndRecenter(entt::entity textEntity, float renderScale, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
+        {
+            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            auto &text = globals::registry.get<Text>(textEntity);
+            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+
+            // Set the new scale
+            text.renderScale = renderScale;
+
+            // Recalculate the bounding box with the new scale
+            auto [width, height] = calculateBoundingBox(textEntity);  // should reflect new scale
+
+            // Optional recentering
+            if (centerLaterally)
+            {
+                role.offset->x = (targetWidth - width) / 2.0f;
+            }
+            else
+            {
+                role.offset->x = 0.0f;
+            }
+
+            if (centerVertically)
+            {
+                role.offset->y = (targetHeight - height) / 2.0f;
+            }
+            else
+            {
+                role.offset->y = 0.0f;
+            }
+        }
 
 
 

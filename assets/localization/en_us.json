@@ -1,0 +1,9 @@
+{
+    "ui": {
+      "start_game": "Start Game",
+      "exit": "Exit"
+    },
+    "errors": {
+      "network": "Network error. Please try again."
+    }
+}

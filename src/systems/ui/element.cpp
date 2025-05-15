@@ -814,6 +814,22 @@ namespace ui
             uiConfig->scale = uiConfig->scale.value_or(1.0f) * scaling;
 
             //TODO: custom code for text, object, etc. which need special handling for scaling
+            
+            if (uiConfig->object)
+            {
+                auto objectEntity = uiConfig->object.value();
+                
+                // is it text?
+                if (registry.any_of<TextSystem::Text>(objectEntity))
+                {
+                    TextSystem::Functions::setTextScaleAndRecenter(objectEntity, uiConfig->scale.value(), transform->getActualW(), transform->getActualH(), true, true);
+                }
+                else if (registry.any_of<AnimationQueueComponent>(objectEntity))
+                {
+                    //FIXME: this isn't working.
+                    animation_system::resizeAnimationObjectsInEntityToFit(objectEntity, transform->getActualW(), transform->getActualH());
+                }
+            }
 
             SPDLOG_DEBUG("Applying scaling factor to entity {} resulted in width: {}, height: {}, content dimensions: {}, scale: {}",
                         static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));

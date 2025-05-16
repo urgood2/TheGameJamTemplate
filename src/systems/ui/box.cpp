@@ -828,6 +828,12 @@ namespace ui
             
             transform.setActualW(transform.getActualW() * globals::globalUIScaleFactor);
             transform.setActualH(transform.getActualH() * globals::globalUIScaleFactor);
+            
+            if (uiConfig.object)
+            {
+                ui::element::UpdateUIObjectScalingAndRecnter(&uiConfig, 1.0f, &transform);
+                ui::element::UpdateUIObjectScalingAndRecnter(&uiConfig, globals::globalUIScaleFactor, &transform);
+            }
         }
         
         auto rootContentSize = uiState.contentDimensions.value_or(Vector2{0.f, 0.f});

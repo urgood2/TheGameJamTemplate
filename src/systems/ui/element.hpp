@@ -27,6 +27,7 @@ namespace ui {
     namespace element {
         auto Initialize(entt::registry &registry, entt::entity parent, entt::entity uiBox, UITypeEnum type, std::optional<UIConfig> config) -> entt::entity;
         auto ApplyScalingFactorToSizesInSubtree(entt::registry &registry, entt::entity rootEntity, float scaling) -> void;
+        void UpdateUIObjectScalingAndRecnter(ui::UIConfig *uiConfig, float newScale, transform::Transform *transform);
         auto SetValues(entt::registry &registry, entt::entity entity, const LocalTransform &_T, bool recalculate) -> void;
         auto DebugPrintTree(entt::registry &registry, entt::entity entity, int indent) -> std::string;
         auto InitializeVisualTransform(entt::registry &registry, entt::entity entity) -> void;

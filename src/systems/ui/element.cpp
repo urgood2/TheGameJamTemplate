@@ -820,22 +820,27 @@ namespace ui
             
             if (uiConfig->object)
             {
-                auto objectEntity = uiConfig->object.value();
-                
-                // is it text?
-                if (registry.any_of<TextSystem::Text>(objectEntity))
-                {
-                    TextSystem::Functions::setTextScaleAndRecenter(objectEntity, uiConfig->scale.value(), transform->getActualW(), transform->getActualH(), true, true);
-                }
-                else if (registry.any_of<AnimationQueueComponent>(objectEntity))
-                {
-                    //FIXME: this isn't working.
-                    animation_system::resizeAnimationObjectsInEntityToFitAndCenter(objectEntity, transform->getActualW(), transform->getActualH());
-                }
+                UpdateUIObjectScalingAndRecnter(uiConfig, uiConfig->scale.value(), transform);
             }
 
             SPDLOG_DEBUG("Applying scaling factor to entity {} resulted in width: {}, height: {}, content dimensions: {}, scale: {}",
                         static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
+        }
+    }
+
+    void element::UpdateUIObjectScalingAndRecnter(ui::UIConfig *uiConfig, float newScale, transform::Transform *transform)
+    {
+        auto objectEntity = uiConfig->object.value();
+
+        // is it text?
+        if (globals::registry.any_of<TextSystem::Text>(objectEntity))
+        {
+            TextSystem::Functions::setTextScaleAndRecenter(objectEntity, newScale, transform->getActualW(), transform->getActualH(), true, true);
+        }
+        else if (globals::registry.any_of<AnimationQueueComponent>(objectEntity))
+        {
+            // FIXME: this isn't working.
+            animation_system::resizeAnimationObjectsInEntityToFitAndCenter(objectEntity, transform->getActualW(), transform->getActualH());
         }
     }
 

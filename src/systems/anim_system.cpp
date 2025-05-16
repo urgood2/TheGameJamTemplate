@@ -139,6 +139,9 @@ namespace animation_system {
         float newH = originalHeight * scale;
         transform.setActualW(newW);
         transform.setActualH(newH);
+        
+        SPDLOG_DEBUG("Resizing animation objects in entity {} to fit target width: {}, height: {}, scale: {}",
+                    static_cast<int>(e), targetWidth, targetHeight, scale);
 
         // Apply scale to animation objects
         for (auto &animObject : animQueue.animationQueue) {

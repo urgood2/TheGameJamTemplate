@@ -808,99 +808,27 @@ namespace ui
             element::ApplyScalingFactorToSizesInSubtree(registry, entity, scaling);
             
         }
-
-
-        // sizes have been set. Now we have to actually place all of the nodes in the right places respective to the parent rect (uibox)
-        // top down
-        // ui::UITypeEnum currentAlignmentToUse = UITypeEnum::VERTICAL_CONTAINER; // default layout type is column
-        // calcCurrentNodeTransform.x = parentUINodeRect.x;
-        // calcCurrentNodeTransform.y = parentUINodeRect.y;
-
-        // bool firstVerticalContainer = true;
-        // bool firstHorizontalContainer = true;
-
-        // for (auto it = processingOrder.begin(); it != processingOrder.end(); ++it)
-        // {
-        //     auto [entity, parentUINodeRect, forceRecalculateLayout, scale] = *it;
-
-        //     auto &uiConfig = registry.get<UIConfig>(entity);
-        //     auto &uiState = registry.get<UIState>(entity);
-        //     auto &nodeTransform = registry.get<transform::Transform>(entity);
-        //     auto &node = registry.get<transform::GameObject>(entity);
-        //     auto &role = registry.get<transform::InheritedProperties>(entity);
-
-        //     // is it a container?
-        //     if (uiConfig.uiType.value() == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType.value() == UITypeEnum::HORIZONTAL_CONTAINER || uiConfig.uiType.value() == UITypeEnum::ROOT) {
-        //         currentAlignmentToUse = uiConfig.uiType.value(); // store container for children logic
-
-        //         // root should have 0,0
-        //         if (uiConfig.uiType.value() == UITypeEnum::ROOT) {
-        //             calcCurrentNodeTransform.x = parentUINodeRect.x;
-        //             calcCurrentNodeTransform.y = parentUINodeRect.y;
-        //         }
-        //         else {
-        //             // add padding for the container.
-        //             calcCurrentNodeTransform.x += padding;
-        //             calcCurrentNodeTransform.y += padding;
-        //         }
-
-        //         role.offset = {calcCurrentNodeTransform.x, calcCurrentNodeTransform.y};
-
-        //         // adding a row, so increment y, reset x
-        //         if (uiConfig.uiType.value() == UITypeEnum::HORIZONTAL_CONTAINER && !firstHorizontalContainer) {
-        //             calcCurrentNodeTransform.y += uiState.contentDimensions->y;
-        //             calcCurrentNodeTransform.x = parentUINodeRect.x;
-        //         }
-        //         else if (!firstVerticalContainer) {
-        //             calcCurrentNodeTransform.x += uiState.contentDimensions->x;
-        //             calcCurrentNodeTransform.y = parentUINodeRect.y;
-        //         }
-
-        //         // set first container flags
-        //         if (uiConfig.uiType.value() == UITypeEnum::HORIZONTAL_CONTAINER) {
-        //             firstHorizontalContainer = false;
-        //         }
-        //         else {
-        //             firstVerticalContainer = false;
-        //         }
-        //     }
-        //     // is it a non-container?
-        //     else {
-
-        //         // add padding for the element
-        //         if (currentAlignmentToUse == UITypeEnum::HORIZONTAL_CONTAINER) {
-        //             calcCurrentNodeTransform.x += padding;
-        //         }
-        //         else {
-        //             calcCurrentNodeTransform.y += padding;
-        //         }
-
-        //         // are we in a row currently?
-        //         if (currentAlignmentToUse == UITypeEnum::HORIZONTAL_CONTAINER) {
-        //             // add width for the element
-        //             calcCurrentNodeTransform.x += uiState.contentDimensions->x;
-        //         }
-        //         // are we in a column? (root and vertical container are treated as columns)
-        //         else {
-        //             // add height for the element, but if we are in the root, add nothing
-        //             if (uiConfig.uiType.value() != UITypeEnum::ROOT) {
-        //                 calcCurrentNodeTransform.y += uiState.contentDimensions->y;
-        //             }
-        //         }
-
-        //         role.offset = {calcCurrentNodeTransform.x, calcCurrentNodeTransform.y};
-        //     }
-
-        // }
-
-        // place at the given location, adding padding.
-        // now do the same thing for each child.
-
-        // if self is a container, increment x or y with padding and emboss as necessary.
-        // if self is not a container, increment x or y with padding and emboss as necessary.
-
-        // all processing done. Now we have the final rect size for the root in the map.
-
+        
+        // step 4: scale all by global scale factor
+        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
+        {
+            auto [entity, parentUINodeRect, forceRecalculateLayout, scale] = *it;
+            auto &uiConfig = registry.get<UIConfig>(entity);
+            auto &uiState = registry.get<UIState>(entity);
+            
+            // apply to content dimensions & transform scale, touch nothing else
+            
+            if (uiState.contentDimensions)
+            {
+                uiState.contentDimensions->x *= globals::globalUIScaleFactor;
+                uiState.contentDimensions->y *= globals::globalUIScaleFactor;
+            }
+            
+            auto &transform = registry.get<transform::Transform>(entity);
+            
+            transform.setActualW(transform.getActualW() * globals::globalUIScaleFactor);
+            transform.setActualH(transform.getActualH() * globals::globalUIScaleFactor);
+        }
         
         auto rootContentSize = uiState.contentDimensions.value_or(Vector2{0.f, 0.f});
         // set uibox size to root content size
@@ -1106,11 +1034,6 @@ namespace ui
 
         // // do-over with scale factor to fit everything in.
         // SubCalculateContainerLayouts(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
-        
-        //FIXME: testing with applying the scale factor to the current node transform upon init, then resetting scale to 1.0f
-        calcCurrentNodeTransform.w *= uiConfig.scale.value_or(1.0f);
-        calcCurrentNodeTransform.h *= uiConfig.scale.value_or(1.0f);
-        uiConfig.scale = 1.0f; // reset scale to 1.0f for the rest of the calculations
         
         // final content size for this container
         calcCurrentNodeTransform.x = parentUINodeRect.x;

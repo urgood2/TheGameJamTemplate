@@ -651,9 +651,7 @@ namespace game
             auto &uiRootConfig = globals::registry.get<ui::UIConfig>(uiRoot);
             
             
-            // reset, then apply new scale
-            ui::element::ApplyScalingFactorToSizesInSubtree(globals::registry, uiRoot, 1.f);
-            ui::element::ApplyScalingFactorToSizesInSubtree(globals::registry, uiRoot, globals::globalUIScaleFactor);
+            //  apply new scale
             
             ui::box::RenewAlignment(globals::registry, uiBox);
         };

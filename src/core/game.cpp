@@ -650,6 +650,7 @@ namespace game
             auto &uiRoot  = globals::registry.get<ui::UIBoxComponent>(uiBox).uiRoot.value();
             auto &uiRootConfig = globals::registry.get<ui::UIConfig>(uiRoot);
             
+            SPDLOG_DEBUG("UI Scale changed to: {}", globals::globalUIScaleFactor);
             
             //  apply new scale
             

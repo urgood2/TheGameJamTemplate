@@ -108,62 +108,61 @@ namespace animation_system {
         
         // apply the scale to the animation objects
         for (auto &animObject : animQueue.animationQueue) {
-            animObject.renderScale = scale;
+            animObject.intrinsincRenderScale = scale;
         }
         if (!animQueue.defaultAnimation.animationList.empty()) {
-            animQueue.defaultAnimation.renderScale = scale;
+            animQueue.defaultAnimation.intrinsincRenderScale = scale;
         }
     }
-
+    
+    // utilizes ui render scale to resize the animation objects
     // uses default animation object for size calculations
-    void resizeAnimationObjectsInEntityToFitAndCenter(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
+    void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
     {
         auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
         auto &transform = globals::registry.get<transform::Transform>(e);
         auto &role = globals::registry.get<transform::InheritedProperties>(e);
 
-        // check that the default animation object is not empty
         using namespace snowhouse;
         AssertThat(animQueue.defaultAnimation.animationList.size(), IsGreaterThan(0));
 
-        float originalWidth = animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.width;
-        float originalHeight = animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.height;
+        const auto &firstFrame = animQueue.defaultAnimation.animationList.at(0).first;
+        float rawWidth = firstFrame.spriteFrame->frame.width;
+        float rawHeight = firstFrame.spriteFrame->frame.height;
 
-        // Calculate scale factor that fits the animation in the target dimensions
-        float scaleX = targetWidth / originalWidth;
-        float scaleY = targetHeight / originalHeight;
-        float scale = std::min(scaleX, scaleY);
+        // Use intrinsic scale if available
+        float intrinsicScale = animQueue.defaultAnimation.intrinsincRenderScale.value_or(1.0f);
+        float effectiveWidth = rawWidth * intrinsicScale;
+        float effectiveHeight = rawHeight * intrinsicScale;
 
-        // Apply scaled width/height to transform
-        float newW = originalWidth * scale;
-        float newH = originalHeight * scale;
-        transform.setActualW(newW);
-        transform.setActualH(newH);
-        
-        SPDLOG_DEBUG("Resizing animation objects in entity {} to fit target width: {}, height: {}, scale: {}",
-                    static_cast<int>(e), targetWidth, targetHeight, scale);
+        // Calculate the scale needed to fit within target size
+        float scaleX = targetWidth / effectiveWidth;
+        float scaleY = targetHeight / effectiveHeight;
+        float uiScale = std::min(scaleX, scaleY);
 
-        // Apply scale to animation objects
+        float finalW = effectiveWidth * uiScale;
+        float finalH = effectiveHeight * uiScale;
+
+        // Apply to transform
+        transform.setActualW(finalW);
+        transform.setActualH(finalH);
+
+        SPDLOG_DEBUG("UI Resize entity {} | raw: ({}, {}) | intrinsic: {} | uiScale: {} | final: ({}, {})",
+                    static_cast<int>(e), rawWidth, rawHeight, intrinsicScale, uiScale, finalW, finalH);
+
+        // Apply only uiRenderScale
         for (auto &animObject : animQueue.animationQueue) {
-            animObject.renderScale = scale;
+            animObject.uiRenderScale = uiScale;
         }
         if (!animQueue.defaultAnimation.animationList.empty()) {
-            animQueue.defaultAnimation.renderScale = scale;
+            animQueue.defaultAnimation.uiRenderScale = uiScale;
         }
 
-        // Optional recentering
-        if (centerLaterally) {
-            role.offset->x = (targetWidth - newW) / 2.0f;
-        } else {
-            role.offset->x = 0.0f;
-        }
-
-        if (centerVertically) {
-            role.offset->y = (targetHeight - newH) / 2.0f;
-        } else {
-            role.offset->y = 0.0f;
-        }
+        // Optional centering
+        role.offset->x = centerLaterally ? (targetWidth - finalW) / 2.0f : 0.0f;
+        role.offset->y = centerVertically ? (targetHeight - finalH) / 2.0f : 0.0f;
     }
+
     
     // resizes all animation objects in the queue to fit the target width and height
     // Note that this assumes the animation frames are all the same size
@@ -180,7 +179,7 @@ namespace animation_system {
         scaleX = targetWidth / animObj.animationList.at(animObj.currentAnimIndex).first.spriteFrame->frame.width;
         scaleY = targetHeight / animObj.animationList.at(animObj.currentAnimIndex).first.spriteFrame->frame.height;
         float scale = std::min(scaleX, scaleY);
-        animObj.renderScale = scale;
+        animObj.intrinsincRenderScale = scale;
         
     }
     

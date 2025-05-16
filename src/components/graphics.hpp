@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <optional>
 
 // #include "tweeny.h"
 
@@ -48,7 +49,8 @@ struct AnimationObject
     std::vector<std::pair<SpriteComponentASCII, double>> animationList{};
     bool flippedHorizontally{false}; // if true, flip the animation horizontally
     bool flippedVertically{false}; // if true, flip the animation vertically
-    float renderScale{1.0f}; // the scale of the animation, animation will be scaled relative to the original size
+    std::optional<float> intrinsincRenderScale{std::nullopt}; // the scale of the animation, animation will be scaled relative to the original size if this exists. This serves as a default scale for the animation object.
+    std::optional<float> uiRenderScale{std::nullopt}; // this is scaling applied atop the intrinsic render scale. It's used to scale down animations in ui, when ui animations are already scaled down/up based on necessity. Only applied when it exists.
 };
 
 /// @brief Any object with this component will be updated by an animationSystem. This object should be attached to any entity which has an animation.

@@ -831,7 +831,6 @@ namespace ui
             
             if (uiConfig.object)
             {
-                ui::element::UpdateUIObjectScalingAndRecnter(&uiConfig, 1.0f, &transform);
                 ui::element::UpdateUIObjectScalingAndRecnter(&uiConfig, globals::globalUIScaleFactor, &transform);
             }
         }

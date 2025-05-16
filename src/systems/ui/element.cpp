@@ -840,7 +840,7 @@ namespace ui
         else if (globals::registry.any_of<AnimationQueueComponent>(objectEntity))
         {
             // FIXME: this isn't working.
-            animation_system::resizeAnimationObjectsInEntityToFitAndCenter(objectEntity, transform->getActualW(), transform->getActualH());
+            animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI(objectEntity, transform->getActualW(), transform->getActualH());
         }
     }
 

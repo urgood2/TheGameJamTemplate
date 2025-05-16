@@ -566,6 +566,7 @@ namespace ui_defs
                     .addOutlineColor(BLUE)
                     // .addMaxWidth(300.f)
                     // .addMaxHeight(800.f)
+                    .addScale(0.5f)
                     // .addOutlineThickness(5.0f)
                     // .addMinWidth(500.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
@@ -845,13 +846,13 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(progressBar9Patch);
         masterVerticalContainer.children.push_back(buttonDisabled);
         masterVerticalContainer.children.push_back(controllerPipContainer);
-        masterVerticalContainer.children.push_back(slider);
-        masterVerticalContainer.children.push_back(textInputRow);
-        masterVerticalContainer.children.push_back(buttonGroupRow);
-        masterVerticalContainer.children.push_back(cycleContainer);
-        masterVerticalContainer.children.push_back(gridContainer);
-        masterVerticalContainer.children.push_back(buttonForTooltip);
-        masterVerticalContainer.children.push_back(buttonAlert);
+        // masterVerticalContainer.children.push_back(slider);
+        // masterVerticalContainer.children.push_back(textInputRow);
+        // masterVerticalContainer.children.push_back(buttonGroupRow);
+        // masterVerticalContainer.children.push_back(cycleContainer);
+        // masterVerticalContainer.children.push_back(gridContainer);
+        // masterVerticalContainer.children.push_back(buttonForTooltip);
+        // masterVerticalContainer.children.push_back(buttonAlert);
         
         return masterVerticalContainer;
     }

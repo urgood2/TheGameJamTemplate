@@ -6,6 +6,10 @@
 
 namespace game
 {
+    std::function<void()> OnUIScaleChanged = []() {
+        // Default implementation does nothing
+        SPDLOG_DEBUG("OnUIScaleChanged called, but no action defined.");
+    };
 
     void SetUpShaderUniforms()
     {

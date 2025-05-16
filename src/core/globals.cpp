@@ -30,7 +30,7 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
 
-    
+    float globalUIScaleFactor =1.f; // scale factor for UI elements
 
     bool drawDebugInfo = false; // set to true to allow debug drawing of transforms
     

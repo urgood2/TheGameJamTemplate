@@ -6,6 +6,8 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] apply scale on ui generation -> alter final size by scale. Then reset scale to 1. From there on out, scale can be dynamically modified using global ui scaling
+- [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] images are a bit bigger than transform rn. why?
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)

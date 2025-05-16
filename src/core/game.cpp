@@ -643,7 +643,20 @@ namespace game
         
         // static_ui_text_system::parseText("[Hello\nNow](color=red;background=blue) \nWorld");
         // static_ui_text_system::parseText("[안녕\n하세](color=red;background=blue)우\n요");
-
+        
+        OnUIScaleChanged = []() {
+            
+            // change ui root's scale
+            auto &uiRoot  = globals::registry.get<ui::UIBoxComponent>(uiBox).uiRoot.value();
+            auto &uiRootConfig = globals::registry.get<ui::UIConfig>(uiRoot);
+            
+            
+            // reset, then apply new scale
+            ui::element::ApplyScalingFactorToSizesInSubtree(globals::registry, uiRoot, 1.f);
+            ui::element::ApplyScalingFactorToSizesInSubtree(globals::registry, uiRoot, globals::globalUIScaleFactor);
+            
+            ui::box::RenewAlignment(globals::registry, uiBox);
+        };
         
     }
 
@@ -716,11 +729,12 @@ namespace game
         {
             ZoneScopedN("Transform Debug Draw");
             auto view = globals::registry.view<transform::Transform>();
-            for (auto e : view)
-            {
-                if (globals::drawDebugInfo)
+            if (globals::drawDebugInfo)
+                for (auto e : view)
+                {
+                    
                     transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
-            }
+                }
         }
         
         // draw object area (inventory comp)

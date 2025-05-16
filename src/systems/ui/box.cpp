@@ -253,6 +253,8 @@ namespace ui
 
         // Calculate the correct and width/height and offset for each node
         CalcTreeSizes(registry, uiRoot, {transform.getActualX(), transform.getActualY(), transform.getActualW(), transform.getActualH()}, true);
+        
+        // TODO: iterate through all children, save the sizes at scale = 1 for later use
 
         transform::AlignToMaster(&registry, self);
 
@@ -624,9 +626,6 @@ namespace ui
 
         return std::nullopt;
     }
-
-    // TODO: processing must have parent rect passed in, but it must also have the child elements. how do we do this?
-
     std::pair<float, float> box::CalcTreeSizes(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                                                bool forceRecalculateLayout, std::optional<float> scale)
     {
@@ -1107,7 +1106,12 @@ namespace ui
 
         // // do-over with scale factor to fit everything in.
         // SubCalculateContainerLayouts(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
-
+        
+        //FIXME: testing with applying the scale factor to the current node transform upon init, then resetting scale to 1.0f
+        calcCurrentNodeTransform.w *= uiConfig.scale.value_or(1.0f);
+        calcCurrentNodeTransform.h *= uiConfig.scale.value_or(1.0f);
+        uiConfig.scale = 1.0f; // reset scale to 1.0f for the rest of the calculations
+        
         // final content size for this container
         calcCurrentNodeTransform.x = parentUINodeRect.x;
         ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
@@ -1365,8 +1369,15 @@ namespace ui
                 calcCurrentNodeTransform.h = uiConfig.maxHeight.value();
                 // TODO: scale down the object itself if that's possible. This will depend on the object type.
             }
-            uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w, calcCurrentNodeTransform.h};
+            
+            // FIXME: testing, try applying scale to the element itself. Then reset the scale to 1.0f
+            
+            uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w * uiConfig.scale.value_or(1.0f), calcCurrentNodeTransform.h* uiConfig.scale.value_or(1.0f)};
             ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
+            
+            if (uiConfig.scale) {
+                uiConfig.scale = 1.0f;
+            }
         }
 
         ClampDimensionsToMinimumsIfPresent(uiConfig, calcCurrentNodeTransform);

@@ -114,6 +114,53 @@ namespace animation_system {
             animQueue.defaultAnimation.renderScale = scale;
         }
     }
+
+    // uses default animation object for size calculations
+    void resizeAnimationObjectsInEntityToFitAndCenter(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)
+    {
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &transform = globals::registry.get<transform::Transform>(e);
+        auto &role = globals::registry.get<transform::InheritedProperties>(e);
+
+        // check that the default animation object is not empty
+        using namespace snowhouse;
+        AssertThat(animQueue.defaultAnimation.animationList.size(), IsGreaterThan(0));
+
+        float originalWidth = animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.width;
+        float originalHeight = animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame.height;
+
+        // Calculate scale factor that fits the animation in the target dimensions
+        float scaleX = targetWidth / originalWidth;
+        float scaleY = targetHeight / originalHeight;
+        float scale = std::min(scaleX, scaleY);
+
+        // Apply scaled width/height to transform
+        float newW = originalWidth * scale;
+        float newH = originalHeight * scale;
+        transform.setActualW(newW);
+        transform.setActualH(newH);
+
+        // Apply scale to animation objects
+        for (auto &animObject : animQueue.animationQueue) {
+            animObject.renderScale = scale;
+        }
+        if (!animQueue.defaultAnimation.animationList.empty()) {
+            animQueue.defaultAnimation.renderScale = scale;
+        }
+
+        // Optional recentering
+        if (centerLaterally) {
+            role.offset->x = (targetWidth - newW) / 2.0f;
+        } else {
+            role.offset->x = 0.0f;
+        }
+
+        if (centerVertically) {
+            role.offset->y = (targetHeight - newH) / 2.0f;
+        } else {
+            role.offset->y = 0.0f;
+        }
+    }
     
     // resizes all animation objects in the queue to fit the target width and height
     // Note that this assumes the animation frames are all the same size

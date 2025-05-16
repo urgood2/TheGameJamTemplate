@@ -1373,12 +1373,12 @@ namespace layer
         
         
         // if this entity has a master comp that is a ui element, that means it's a ui object and it needs to respect the ui scale
-        float uiScale = 1.0f;
-        auto &role = registry.get<transform::InheritedProperties>(e);
-        if (registry.valid(role.master) && registry.any_of<ui::UIConfig>(role.master))
-        {
-            uiScale = registry.get<ui::UIConfig>(role.master).scale.value_or(1.0f);
-        }
+        // float uiScale = 1.0f;
+        // auto &role = registry.get<transform::InheritedProperties>(e);
+        // if (registry.valid(role.master) && registry.any_of<ui::UIConfig>(role.master))
+        // {
+        //     uiScale = registry.get<ui::UIConfig>(role.master).scale.value_or(1.0f);
+        // }
         
         // this renderscale is from the animation object itself.
         float renderScale = 1.0f;
@@ -1423,8 +1423,10 @@ namespace layer
 
         auto spriteAtlas = currentSprite->spriteData.texture;
 
-        float renderWidth = animationFrame->width * uiScale;
-        float renderHeight = animationFrame->height * uiScale;
+        // float renderWidth = animationFrame->width * uiScale;
+        // float renderHeight = animationFrame->height * uiScale;
+        float renderWidth = animationFrame->width;
+        float renderHeight = animationFrame->height;
         AssertThat(renderWidth, IsGreaterThan(0.0f));
         AssertThat(renderHeight, IsGreaterThan(0.0f));
 

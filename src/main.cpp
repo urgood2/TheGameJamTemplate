@@ -72,6 +72,7 @@ using json = nlohmann::json;
 // #include "systems/physics/physics_world.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/shaders/shader_system.hpp"
+#include "systems/shaders/shader_pipeline.hpp"
 #include "systems/anim_system.hpp"
 #include "systems/input/input.hpp"
 #include "systems/timer/timer.hpp"
@@ -357,8 +358,8 @@ int main(void)
     //TODO: unload all textures & sprite atlas & sounds
     layer::UnloadAllLayers();
     shaders::unloadShaders();
-    layer::UnloadAllLayers();
     sound_system::Unload();
+    shader_pipeline::ShaderPipelineUnload();
 
     // after your game loop is over, before you close the window
     rlImGuiShutdown(); // cleans up ImGui

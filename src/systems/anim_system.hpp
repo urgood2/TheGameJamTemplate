@@ -17,6 +17,7 @@ namespace animation_system {
     auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg = std::nullopt, std::optional<Color> bg = std::nullopt) -> AnimationObject;
     
     extern auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth, float targetHeight) -> void;
+    extern void resizeAnimationObjectsInEntityToFitAndCenter(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally = true, bool centerVertically = true);
     
     extern auto resizeAnimationObjectToFit(AnimationObject &animObj, float targetWidth, float targetHeight) -> void;
 }

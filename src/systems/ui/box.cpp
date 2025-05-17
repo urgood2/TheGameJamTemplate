@@ -147,13 +147,15 @@ namespace ui
         auto &uiRootConfig = registry.get<UIConfig>(uiRoot);
         
         // First, set parent-child relationships to create the tree structure
-        // BuildUIElementTree(registry, self, definition, entt::null);
-        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
-        // auto *uiBoxRole = registry.try_get<transform::InheritedProperties>(self);
-        // auto uiRoot = uiBox->uiRoot.value();
-        // // Set the midpoint for any future alignments to use
-        // transform.middleEntityForAlignment = uiRoot;
-        // auto &uiRootRole = registry.get<transform::InheritedProperties>(uiRoot);
+        
+        // go through all children wihch are objects and reset size with void resetAnimationUIRenderScale(entt::entity e)
+        
+        box::TraverseUITreeBottomUp(registry, uiRoot, [&](entt::entity child) {
+            auto *childConfig = registry.try_get<UIConfig>(child);
+            if (childConfig && childConfig->object) {
+                animation_system::resetAnimationUIRenderScale(childConfig->object.value());
+            }
+        });
 
         // Calculate the correct and width/height and offset for each node
         CalcTreeSizes(registry, uiRoot, {transform.getActualX(), transform.getActualY(), transform.getActualW(), transform.getActualH()}, true);
@@ -840,6 +842,68 @@ namespace ui
         // uiBoxTransform.setActualW(rootContentSize.x);
         // uiBoxTransform.setActualH(rootContentSize.y);
         return {rootContentSize.x, rootContentSize.y};
+    }
+
+    /**
+     * @brief Traverses a UI tree in a bottom-up order and applies a visitor function to each UI element.
+     *
+     * This function performs a depth-first search (DFS) starting from the given root UI element,
+     * collects all elements in a top-down order, and then processes them in reverse order (bottom-up).
+     *
+     * @param registry The entity-component system (ECS) registry containing the UI elements.
+     * @param rootUIElement The root entity of the UI tree to traverse.
+     * @param visitor A lambda or function to be executed for each UI element in bottom-up order.
+     *
+     * The traversal assumes that each UI element is represented as an entity in the ECS and that
+     * the hierarchy of UI elements is defined using the `transform::GameObject` component. The
+     * `orderedChildren` field of this component is used to determine the child elements of a node.
+     *
+     * Example usage:
+     * @code
+     * entt::registry registry;
+     * entt::entity root = ...; // Root UI element
+     * TraverseUITreeBottomUp(registry, root, [](entt::entity entity) {
+     *     // Perform operations on each UI element
+     * });
+     * @endcode
+     */
+    void box::TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor)
+    {
+        struct StackEntry
+        {
+            entt::entity uiElement{entt::null};
+        };
+
+        std::vector<StackEntry> processingOrder;
+        std::stack<StackEntry> stack;
+
+        stack.push({rootUIElement});
+
+        // Step 1: Top-down DFS collection
+        while (!stack.empty())
+        {
+            auto entry = stack.top();
+            stack.pop();
+
+            processingOrder.push_back(entry);
+
+            if (auto *node = registry.try_get<transform::GameObject>(entry.uiElement))
+            {
+                for (auto child : node->orderedChildren)
+                {
+                    if (registry.valid(child))
+                    {
+                        stack.push({child});
+                    }
+                }
+            }
+        }
+
+        // Step 2: Bottom-up execution of lambda
+        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
+        {
+            visitor(it->uiElement);
+        }
     }
 
     auto isVertContainer(entt::registry &registry, entt::entity uiElement) -> bool

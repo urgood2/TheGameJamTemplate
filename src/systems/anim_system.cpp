@@ -115,6 +115,32 @@ namespace animation_system {
         }
     }
     
+    void resetAnimationUIRenderScale(entt::entity e) {
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        for (auto &animObject : animQueue.animationQueue) {
+            animObject.uiRenderScale = 1.0f;
+        }
+        if (!animQueue.defaultAnimation.animationList.empty()) {
+            animQueue.defaultAnimation.uiRenderScale = 1.0f;
+        }
+        
+        // calc intrinsic size, set to transform
+        auto &transform = globals::registry.get<transform::Transform>(e);
+        auto &role = globals::registry.get<transform::InheritedProperties>(e);
+        auto &firstFrame = animQueue.defaultAnimation.animationList.at(0).first;
+        float rawWidth = firstFrame.spriteFrame->frame.width;
+        float rawHeight = firstFrame.spriteFrame->frame.height;
+        float intrinsicScale = animQueue.defaultAnimation.intrinsincRenderScale.value_or(1.0f);
+        float effectiveWidth = rawWidth * intrinsicScale;
+        float effectiveHeight = rawHeight * intrinsicScale;
+        transform.setActualW(effectiveWidth);
+        transform.setActualH(effectiveHeight);
+        role.offset->x = 0.0f;
+        role.offset->y = 0.0f;
+        SPDLOG_DEBUG("Reset entity {} | raw: ({}, {}) | intrinsic: {} | uiScale: {} | final: ({}, {})",
+                    static_cast<int>(e), rawWidth, rawHeight, intrinsicScale, 1.0f, effectiveWidth, effectiveHeight);
+    }
+    
     // utilizes ui render scale to resize the animation objects
     // uses default animation object for size calculations
     void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally, bool centerVertically)

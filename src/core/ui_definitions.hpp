@@ -534,7 +534,7 @@ namespace ui_defs
         auto controllerPipText = getNewDynamicTextEntry("Action", 10.f, std::nullopt, "pulse=0.9,1.1");
         auto anim = animation_system::createAnimatedObjectWithTransform("xbox_button_color_x.png", true, 0, 0);
         auto controllerPipImage = wrapEntityInsideObjectElement(anim);
-        animation_system::resizeAnimationObjectsInEntityToFit(anim, 30.f, 30.f);
+        animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI(anim, 30.f, 30.f);
         // disable shadow
         auto &gameObjectComp = globals::registry.get<transform::GameObject>(anim);
         gameObjectComp.shadowDisplacement.reset();

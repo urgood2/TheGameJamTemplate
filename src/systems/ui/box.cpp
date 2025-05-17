@@ -312,7 +312,7 @@ namespace ui
         std::vector<StackEntry> processingOrder;
         std::stack<StackEntry> stack;
 
-        stack.push({root, uiConfig.scale.value_or(1.0f)}); // first (root) element
+        stack.push({root, uiConfig.scale.value_or(1.0f) * globals::globalUIScaleFactor}); // first (root) element
 
         // Step 1: Collect nodes in top-down order (DFS)
         while (!stack.empty())
@@ -333,7 +333,7 @@ namespace ui
                 {
                     auto &uiConfig = registry.get<UIConfig>(child);
                     auto &uiState = registry.get<UIState>(child);
-                    stack.push({child, uiConfig.scale.value_or(1.0f)});
+                    stack.push({child, uiConfig.scale.value_or(1.0f) * globals::globalUIScaleFactor});
                 }
             }
         }
@@ -383,8 +383,8 @@ namespace ui
             auto selfDimensions = Vector2{transform.getActualW(), transform.getActualH()};
             auto selfOffset = role.offset.value_or(Vector2{0, 0});
 
-            auto selfDimensionsPaddingShavedOff = Vector2{selfDimensions.x - 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value(), selfDimensions.y - 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value()};
-            auto selfOffsetWithPadding = Vector2{selfOffset.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value(), selfOffset.y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value()};
+            auto selfDimensionsPaddingShavedOff = Vector2{selfDimensions.x - 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, selfDimensions.y - 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor};
+            auto selfOffsetWithPadding = Vector2{selfOffset.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, selfOffset.y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor};
 
             // row + horizontal center should center all children within it
             // column + vertical center should center all children within it
@@ -393,11 +393,11 @@ namespace ui
             auto selfContentOffset = role.offset.value_or(Vector2{0, 0});
 
             // subtract padding from content dimensions
-            selfContentDimensions.x -= 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
-            selfContentDimensions.y -= 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+            selfContentDimensions.x -= 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
+            selfContentDimensions.y -= 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
             // add padding to content offset
-            selfContentOffset.x += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
-            selfContentOffset.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+            selfContentOffset.x += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
+            selfContentOffset.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
 
             int childCounter = 0;
 
@@ -417,7 +417,7 @@ namespace ui
                 // if child has emboss, add to height
                 if (childUIConfig.emboss)
                 {
-                    childDimensions.y += childUIConfig.emboss.value() * uiConfig.scale.value();
+                    childDimensions.y += childUIConfig.emboss.value() * uiConfig.scale.value() * globals::globalUIScaleFactor;
                 }
 
                 sumOfAllChildWidths += childDimensions.x;
@@ -442,7 +442,7 @@ namespace ui
                 // if child has emboss, add to height
                 if (childUIConfig.emboss)
                 {
-                    childDimensions.y += childUIConfig.emboss.value() * uiConfig.scale.value();
+                    childDimensions.y += childUIConfig.emboss.value() * uiConfig.scale.value() * globals::globalUIScaleFactor;
                 }
                 auto childOffset = childRole.offset.value_or(Vector2{0, 0});
 
@@ -468,9 +468,9 @@ namespace ui
                         // self's padded context area / 2 - (sum of all child heights + (child count - 1) * padding) / 2
                         // -> y starting location
                         // increment y starting location by child's width + padding each time
-                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (sumOfAllChildHeights + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding)  * uiConfig.scale.value()) / 2 + runningYOffset;
+                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (sumOfAllChildHeights + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding)  * uiConfig.scale.value() * globals::globalUIScaleFactor) / 2 + runningYOffset;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
-                        runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::settings.uiPadding)  * uiConfig.scale.value();
+                        runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::settings.uiPadding)  * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
                 }
 
@@ -481,9 +481,9 @@ namespace ui
                         // self's padded context area / 2 - (sum of all child widths + (child count - 1) * padding) / 2
                         // -> x starting location
                         // increment x starting location by child's width + padding each time
-                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x / 2) - (sumOfAllChildWidths + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() ) / 2 + runningXOffset;
+                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x / 2) - (sumOfAllChildWidths + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value()  * globals::globalUIScaleFactor) / 2 + runningXOffset;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
-                        runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+                        runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
                     else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
                     {
@@ -500,9 +500,9 @@ namespace ui
                 {
                     if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
                     {
-                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x) - (sumOfAllChildWidths + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value()) + runningXOffset;
+                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x) - (sumOfAllChildWidths + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) + runningXOffset;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
-                        runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+                        runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
                     else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
                     {
@@ -524,9 +524,9 @@ namespace ui
                         // self's padded context offset + self's padded content height - child's height
                         // -> y starting location
                         // increment y starting location by child's height + padding + emboss (if present) each time
-                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y) - (sumOfAllChildHeights + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value()) + runningYOffset;
+                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y) - (sumOfAllChildHeights + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) + runningYOffset;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
-                        runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+                        runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
                 }
 
@@ -680,7 +680,7 @@ namespace ui
             auto &nodeTransform = registry.get<transform::Transform>(entity);
             auto &node = registry.get<transform::GameObject>(entity);
             auto &role = registry.get<transform::InheritedProperties>(entity);
-            SPDLOG_DEBUG("- entity {} | UIT: {} | parentUINodeRect: ({}, {}, {}, {}) | forceRecalculateLayout: {} | scale: {}", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(uiConfig.uiType.value()), parentUINodeRect.x, parentUINodeRect.y, parentUINodeRect.w, parentUINodeRect.h, forceRecalculateLayout, scale.value_or(1.f));
+            SPDLOG_DEBUG("- entity {} | UIT: {} | parentUINodeRect: ({}, {}, {}, {}) | forceRecalculateLayout: {} | scale: {}", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(uiConfig.uiType.value()), parentUINodeRect.x, parentUINodeRect.y, parentUINodeRect.w, parentUINodeRect.h, forceRecalculateLayout, scale.value_or(1.f)  * globals::globalUIScaleFactor);
         }
 
         auto &nodeTransform = registry.get<transform::Transform>(uiElement);
@@ -688,7 +688,7 @@ namespace ui
         auto &uiConfig = registry.get<UIConfig>(uiElement);
         auto &uiState = registry.get<UIState>(uiElement);
         LocalTransform calcCurrentNodeTransform{}; // Stores transformed values for current node
-        float padding = uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+        float padding = uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value()  * globals::globalUIScaleFactor;
 
         // Step 2: Process nodes in bottom-up order (ensuring child elements are always processed before parents), including the root element
         for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
@@ -764,7 +764,7 @@ namespace ui
                 auto incrementHeight = childState.contentDimensions->y + padding;
                 if (childConfig.emboss)
                 {
-                    incrementHeight += childConfig.emboss.value() * uiConfig.scale.value();
+                    incrementHeight += childConfig.emboss.value() * uiConfig.scale.value() * globals::globalUIScaleFactor;
                 }
 
                 rootTransform.setActualH(rootTransform.getActualH() + incrementHeight);
@@ -941,8 +941,8 @@ namespace ui
 
         // cache transform before adding children
         auto transformCache = runningTransform;
-        runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
-        runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+        runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
+        runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
         // for each child, do the same thing.
         for (auto childEntry : node.orderedChildren)
         {
@@ -964,27 +964,27 @@ namespace ui
             // add emboss if it exists
             if (uiConfig.emboss)
             {
-                runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value();
+                runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value() * globals::globalUIScaleFactor;
             }
 
-            runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+            runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
         }
         else if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && parentType == UITypeEnum::HORIZONTAL_CONTAINER)
         {
             // runningTransform.y += uiState.contentDimensions->y + uiConfig.emboss.value_or(0.f) + uiConfig.padding.value_or(globals::settings.uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
         }
         else if (isVertContainer(registry, uiElement) && !isVertContainer(registry, parent))
         { // make sure my parent wasn't the same type
 
             // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
+            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
         }
         else if (isVertContainer(registry, uiElement) && isVertContainer(registry, parent))
         {
 
             // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding);
-            runningTransform.y += uiState.contentDimensions->y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value();
+            runningTransform.y += uiState.contentDimensions->y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::globalUIScaleFactor;
         }
     }
 
@@ -1037,17 +1037,17 @@ namespace ui
             // add emboss if it exists
             if (uiConfig.emboss)
             {
-                runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value();
+                runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value() * globals::globalUIScaleFactor;
             }
-            runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
-            SPDLOG_DEBUG("Incrementing y by {} for entity {}", uiState.contentDimensions->y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value(), static_cast<int>(uiElement));
+            runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
+            SPDLOG_DEBUG("Incrementing y by {} for entity {}", uiState.contentDimensions->y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::globalUIScaleFactor, static_cast<int>(uiElement));
         }
         else
         {
             // increment x with padding as necessary.
             // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding);
-            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
-            SPDLOG_DEBUG("Incrementing x by {} for entity {}", uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value(), static_cast<int>(uiElement));
+            runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
+            SPDLOG_DEBUG("Incrementing x by {} for entity {}", uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, static_cast<int>(uiElement));
         }
     }
 

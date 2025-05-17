@@ -1402,7 +1402,7 @@ namespace layer
                     currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
                     flipX = aqc.defaultAnimation.flippedHorizontally;
                     flipY = aqc.defaultAnimation.flippedVertically;
-                    renderScale = aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f);
+                    renderScale = aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f) * aqc.defaultAnimation.uiRenderScale.value_or(1.0f);
                 }
             }
             else
@@ -1412,9 +1412,10 @@ namespace layer
                 currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
                 flipX = currentAnimObject.flippedHorizontally;
                 flipY = currentAnimObject.flippedVertically;
-                renderScale = currentAnimObject.intrinsincRenderScale.value_or(1.0f);
+                renderScale = currentAnimObject.intrinsincRenderScale.value_or(1.0f) * currentAnimObject.uiRenderScale.value_or(1.0f);
             }
         }
+        
 
         using namespace snowhouse;
 

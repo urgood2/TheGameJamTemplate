@@ -116,6 +116,9 @@ namespace animation_system {
     }
     
     void resetAnimationUIRenderScale(entt::entity e) {
+        if (!globals::registry.any_of<AnimationQueueComponent>(e)) {
+            return;
+        }
         auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
         for (auto &animObject : animQueue.animationQueue) {
             animObject.uiRenderScale = 1.0f;

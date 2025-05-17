@@ -155,6 +155,11 @@ namespace ui
             if (childConfig && childConfig->object) {
                 animation_system::resetAnimationUIRenderScale(childConfig->object.value());
             }
+
+            if (childConfig && childConfig->object && registry.any_of<TextSystem::Text>(childConfig->object.value())) {
+                //TODO: return size to original here
+                TextSystem::Functions::resetTextScaleAndLayout(childConfig->object.value());
+            }
         });
 
         // Calculate the correct and width/height and offset for each node

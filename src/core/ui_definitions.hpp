@@ -839,18 +839,18 @@ namespace ui_defs
         
         // add everything to the master vertical container
         masterVerticalContainer.children.push_back(titleDividers);
-        // masterVerticalContainer.children.push_back(checkbox);
-        // masterVerticalContainer.children.push_back(progressBar);
-        // masterVerticalContainer.children.push_back(progressBar9Patch);
-        // masterVerticalContainer.children.push_back(buttonDisabled);
-        // masterVerticalContainer.children.push_back(controllerPipContainer);
-        // masterVerticalContainer.children.push_back(slider);
+        masterVerticalContainer.children.push_back(checkbox);
+        masterVerticalContainer.children.push_back(progressBar);
+        masterVerticalContainer.children.push_back(progressBar9Patch);
+        masterVerticalContainer.children.push_back(buttonDisabled);
+        masterVerticalContainer.children.push_back(controllerPipContainer);
+        masterVerticalContainer.children.push_back(slider);
         masterVerticalContainer.children.push_back(textInputRow);
         masterVerticalContainer.children.push_back(buttonGroupRow);
-        // masterVerticalContainer.children.push_back(cycleContainer);
-        // masterVerticalContainer.children.push_back(gridContainer);
-        // masterVerticalContainer.children.push_back(buttonForTooltip);
-        // masterVerticalContainer.children.push_back(buttonAlert);
+        masterVerticalContainer.children.push_back(cycleContainer);
+        masterVerticalContainer.children.push_back(gridContainer);
+        masterVerticalContainer.children.push_back(buttonForTooltip);
+        masterVerticalContainer.children.push_back(buttonAlert);
         
         return masterVerticalContainer;
     }

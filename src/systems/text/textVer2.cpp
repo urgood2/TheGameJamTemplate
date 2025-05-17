@@ -163,6 +163,38 @@ namespace TextSystem
         }
 
 
+        /**
+         * @brief Resets the render scale, transform size, and offsets of a text entity to default values.
+         * 
+         * @param textEntity The entity containing the text component to be reset.
+         * 
+         * @details
+         * This function sets the render scale of the text to 1.0f, recalculates its bounding box using
+         * the unscaled dimensions, resets the transform size to match the original unscaled text dimensions,
+         * and clears any positional offsets.
+         */
+        void resetTextScaleAndLayout(entt::entity textEntity)
+        {
+            auto &transform = globals::registry.get<transform::Transform>(textEntity);
+            auto &text = globals::registry.get<Text>(textEntity);
+            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+
+            // Reset render scale to default
+            text.renderScale = 1.0f;
+
+            // Recalculate the unscaled bounding box
+            auto [width, height] = calculateBoundingBox(textEntity); // should now reflect scale = 1
+
+            // Set transform size to match original dimensions
+            transform.setActualW(width);
+            transform.setActualH(height);
+
+            // Reset offset to origin
+            role.offset->x = 0.0f;
+            role.offset->y = 0.0f;
+        }
+
+
 
         Character createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
                                   float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,

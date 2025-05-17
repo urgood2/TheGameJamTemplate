@@ -1281,7 +1281,7 @@ namespace ui
                     float fontScale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
                     float spacing = config->textSpacing.value_or(globals::fontData.spacing);   
 
-                    float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
+                    float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale * globals::globalUIScaleFactor;
                     layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                         cmd->scaleX = scale;
                         cmd->scaleY = scale;
@@ -1334,7 +1334,7 @@ namespace ui
             // float fontScale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
             float textX = globals::fontData.fontRenderOffset.x;
             float textY = globals::fontData.fontRenderOffset.y;
-            float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale;
+            float scale = config->scale.value_or(1.0f) * globals::fontData.fontScale * globals::globalUIScaleFactor;
             layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
                 cmd->scaleX = scale;
                 cmd->scaleY = scale;

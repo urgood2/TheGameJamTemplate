@@ -6,7 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] dynamic text sideways alignment broken when global scale changes? -> only cases where text is next to some other element in the same row, etc
+- [ ] dynamic text sideways alignment broken when global scale changes? -> only cases where text is next to some other element in the same row, etc -> reset text scale on recalc too?
 - [ ] uirenderscale field not applied to drawing yet.
 - [ ] problem of ui window getting smaller each time global factor is changed is still there.
 - [ ] make a ui renderscale field in animation component. change this (std::optional) only when the thing is ui. This will apply on top of the intrinsic renderscale (rename existing renderscale filed). In rendering, respect both scales assuming that they exist. Also make the centering function respect both. (turn both into std::optional)

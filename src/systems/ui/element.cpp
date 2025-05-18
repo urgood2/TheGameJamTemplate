@@ -1601,9 +1601,9 @@ namespace ui
         if (config->chosen.value_or(false))
         {
             // triangle floats above the object, slightly bobbing with sine
-            constexpr auto TRIANGLE_DISTANCE = 10.f;
-            constexpr auto TRIANGLE_HEIGHT = 25.f;
-            constexpr auto TRIANGLE_WIDTH = 25.f;
+            float TRIANGLE_DISTANCE = 10.f * globals::globalUIScaleFactor;
+            float TRIANGLE_HEIGHT = 25.f * globals::globalUIScaleFactor;
+            float TRIANGLE_WIDTH = 25.f * globals::globalUIScaleFactor;
             auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
 
             auto centerX = actualX + actualW * 0.5f;

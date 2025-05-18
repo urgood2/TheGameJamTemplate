@@ -6,18 +6,10 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] dynamic text sideways alignment broken when global scale changes? -> only cases where text is next to some other element in the same row, etc -> reset text scale on recalc too?
-- [ ] uirenderscale field not applied to drawing yet.
-- [ ] problem of ui window getting smaller each time global factor is changed is still there.
-- [ ] make a ui renderscale field in animation component. change this (std::optional) only when the thing is ui. This will apply on top of the intrinsic renderscale (rename existing renderscale filed). In rendering, respect both scales assuming that they exist. Also make the centering function respect both. (turn both into std::optional)
-- [ ] apply scale on ui generation -> alter final size by scale. Then reset scale to 1. From there on out, scale can be dynamically modified using global ui scaling
-- [ ] alignment must respect global scaling factor.
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
-- [ ] images are a bit bigger than transform rn. why?
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
 - [ ] make variations of textures based on voucher sheen/polychrome
-- [ ] images/animations not scaled down properly by maxW/H in rows/columns, make that happen -> probably need to center them after scaling, like with text
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 - [ ] animation scaling not applied to pipeline rendering
 - [ ] new inventory system with just rows + drag/drop detection

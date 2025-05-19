@@ -1202,10 +1202,26 @@ namespace layer
         Rectangle* animationFrame = nullptr;
         SpriteComponentASCII* currentSprite = nullptr;
         bool flipX{false}, flipY{false};
+        
+        float intrinsicScale = 1.0f;
+        float uiScale = 1.0f;
+
+        
     
         if (registry.any_of<AnimationQueueComponent>(e)) {
             auto& aqc = registry.get<AnimationQueueComponent>(e);
             if (aqc.noDraw) return;
+            
+            // compute the same renderScale as in your other overload:
+            intrinsicScale = aqc.animationQueue.empty()
+            ? aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f)
+            : aqc.animationQueue[aqc.currentAnimationIndex]
+                .intrinsincRenderScale.value_or(1.0f);
+
+            uiScale = aqc.animationQueue.empty()
+            ? aqc.defaultAnimation.uiRenderScale.value_or(1.0f)
+            : aqc.animationQueue[aqc.currentAnimationIndex]
+                .uiRenderScale.value_or(1.0f);
     
             if (aqc.animationQueue.empty()) {
                 if (!aqc.defaultAnimation.animationList.empty()) {
@@ -1222,13 +1238,18 @@ namespace layer
                 flipY = currentAnimObject.flippedVertically;
             }
         }
+        
+        float renderScale = intrinsicScale * uiScale;
     
         AssertThat(animationFrame, Is().Not().Null());
         AssertThat(currentSprite, Is().Not().Null());
     
         auto spriteAtlas = currentSprite->spriteData.texture;
-        float baseWidth = animationFrame->width;
-        float baseHeight = animationFrame->height;
+        // float baseWidth = animationFrame->width;
+        // float baseHeight = animationFrame->height;
+        
+        float baseWidth  = animationFrame->width  * renderScale;
+        float baseHeight = animationFrame->height * renderScale;
     
         auto& pipelineComp = registry.get<ShaderPipelineComponent>(e);
         float pad = pipelineComp.padding;

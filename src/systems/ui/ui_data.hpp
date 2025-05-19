@@ -221,6 +221,7 @@ namespace ui
 
         // Function Callbacks & Scripting
         std::optional<std::function<void(entt::registry*, entt::entity, float)>> updateFunc; //  Function to call on update (every frame) & init
+        std::optional<std::function<void(entt::registry*, entt::entity)>> initFunc; //  Function to call once when the UI element is initialized
         std::optional<bool> instaFunc;   // Runs func immediately upon ui initialization.
         std::optional<std::function<void()>> buttonCallback; // the button click callback if this is a button
         std::optional<std::function<void()>> buttonTemp;                     // Temporarily stores the button property while button_delay is active.
@@ -600,6 +601,11 @@ namespace ui
 
             Builder& addUpdateFunc(const std::function<void(entt::registry*, entt::entity, float)> &func) {
                 uiConfig->updateFunc = func;
+                return *this;
+            }
+            
+            Builder& addInitFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
+                uiConfig->initFunc = func;
                 return *this;
             }
 

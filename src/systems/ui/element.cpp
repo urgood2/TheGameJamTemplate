@@ -350,6 +350,11 @@ namespace ui
             
             uiConfig->updateFunc.value()(&registry, entity, 0.f);
         }
+        
+        if (uiConfig->initFunc)
+        {
+            uiConfig->initFunc.value()(&registry, entity);
+        }
     }
 
     std::string element::DebugPrintTree(entt::registry &registry, entt::entity entity, int indent)

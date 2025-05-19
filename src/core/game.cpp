@@ -313,13 +313,15 @@ namespace game
         };
 
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop
-        // player = animation_system::createAnimatedObjectWithTransform("4126-TheRoguelike_1_10_alpha_919.png", true, 400, 400, shaderPassConfigFunction);
-        // auto &playerNode = globals::registry.get<transform::GameObject>(player);
-        // playerNode.debug.debugText = "Player";
-        // playerNode.state.dragEnabled = true;
-        // playerNode.state.hoverEnabled = true;
-        // playerNode.state.collisionEnabled = true;
-        // playerNode.state.clickEnabled = true;
+        player = animation_system::createAnimatedObjectWithTransform("4094-TheRoguelike_1_10_alpha_887.png", true, 400, 400, nullptr);
+        auto &playerNode = globals::registry.get<transform::GameObject>(player);
+        playerNode.debug.debugText = "Player";
+        playerNode.state.dragEnabled = true;
+        playerNode.state.hoverEnabled = true;
+        playerNode.state.collisionEnabled = true;
+        playerNode.state.clickEnabled = true;
+        
+        animation_system::resizeAnimationObjectsInEntityToFit(player, 100.f, 100.f);
 
         // player2 = animation_system::createAnimatedObjectWithTransform("test_char_woman.png", true, 400, 400, shaderPassConfigFunction);
         // auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);

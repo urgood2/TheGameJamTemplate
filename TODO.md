@@ -6,14 +6,14 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] propagateReleaseToGameObjects not working as it should -> cursorUpTargetNode->state.triggerOnReleaseEnabled need to enable this -> need to add new init method for ui elements (other than updateFunc)
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
+- [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
-- [ ] make variations of textures based on voucher sheen/polychrome
+- [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
-- [ ] animation scaling not applied to pipeline rendering
 - [ ] new inventory system with just rows + drag/drop detection
-- [ ] apply scaling to render anim function (pipeline) to increase buffer?
 - [ ] Implement more UI element types:
   - [ ] Sliders (`focus_args = {type = "slider"}`)
     - use UIConfig.noMovementWhenDragged to disable dragging movement

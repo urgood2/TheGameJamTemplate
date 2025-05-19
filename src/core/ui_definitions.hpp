@@ -609,7 +609,7 @@ namespace ui_defs
                     .addProgressBarFullColor(BLUE)
                     .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
                                     { 
-                                        SPDLOG_DEBUG("Slider update called");
+                                        // SPDLOG_DEBUG("Slider update called");
                                         // allo this thing to be dragged, update based on mouse position
                                     })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
@@ -633,7 +633,7 @@ namespace ui_defs
                     .addMinWidth(300.f)
                     .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
                                     { 
-                                        SPDLOG_DEBUG("Textinput update called");
+                                        // SPDLOG_DEBUG("Textinput update called");
                                         // allo this thing to be dragged, update based on mouse position
                                     })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
@@ -809,6 +809,21 @@ namespace ui_defs
                     .addEmboss(2.f)
                     .addMinWidth(60.f)
                     .addMinHeight(60.f)
+                    .addInitFunc([](entt::registry* registry, entt::entity e)
+                                    { 
+                                        //TODO: set up drag-drop here
+                                        
+                                        auto &gameObjectComp = globals::registry.get<transform::GameObject>(e);
+                                        gameObjectComp.state.triggerOnReleaseEnabled = true;
+                                        gameObjectComp.state.collisionEnabled = true;
+                                        SPDLOG_DEBUG("Grid rect init called for entity: {}", (int)e);
+                                        
+                                        gameObjectComp.methods->onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
+                                        {
+                                            SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
+                                        };
+                                        
+                                    })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .build();

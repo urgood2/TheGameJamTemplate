@@ -242,9 +242,12 @@ namespace input
                 auto &uiElement = registry.get<ui::UIElementComponent>(inputState.cursor_released_on_target);
                 ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
             }
+            
             // TODO: onrelease not being called
             if (releasedOnTargetNode.methods->onRelease)
             {
+                SPDLOG_DEBUG("Node {} was released on top of {}", static_cast<int>(inputState.cursor_prev_dragging_target), static_cast<int>(inputState.cursor_released_on_target));
+                
                 releasedOnTargetNode.methods->onRelease(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
             }
             inputState.cursor_released_on_handled = true;
@@ -452,11 +455,38 @@ namespace input
         {
 
             auto *cursorUpTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_up_target);
+            
+            // if cursorUpTargetNode is the same as the cursor_prev_dragging_target, get another entity colliding with the cursor from the collision list and use that instead for cursor_up_target
+            if (inputState.cursor_up_target == inputState.cursor_prev_dragging_target)
+            {
+                entt::entity nextCollided{entt::null};
+                for (auto &collision : inputState.collision_list)
+                {
+                    auto *collisionNode = registry.try_get<transform::GameObject>(collision);
+                    if (collisionNode == nullptr)
+                        continue;
+                    if (collisionNode->state.triggerOnReleaseEnabled == false)
+                        continue;
+                    if (collision != inputState.cursor_prev_dragging_target)
+                    {
+                        nextCollided = collision;
+                        SPDLOG_DEBUG("Cursor up target is the same as cursor down target, using next collided entity {}", static_cast<int>(nextCollided));
+                        break;
+                    }
+                }
+                
+                if (registry.valid(nextCollided))
+                {
+                    inputState.cursor_up_target = nextCollided;
+                    cursorUpTargetNode = registry.try_get<transform::GameObject>(inputState.cursor_up_target);
+                }
+            }
 
             // or was dragging something else?
             if (registry.valid(inputState.cursor_prev_dragging_target) && registry.valid(inputState.cursor_up_target) && cursorUpTargetNode->state.triggerOnReleaseEnabled)
             {
                 inputState.cursor_released_on_target = inputState.cursor_up_target;
+                SPDLOG_DEBUG("Cursor released on target {}", static_cast<int>(inputState.cursor_up_target));
                 // TODO: change these anmes to be more intuitive
                 inputState.cursor_released_on_handled = false;
             }

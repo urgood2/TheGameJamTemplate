@@ -243,7 +243,6 @@ namespace input
                 ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
             }
             
-            // TODO: onrelease not being called
             if (releasedOnTargetNode.methods->onRelease)
             {
                 SPDLOG_DEBUG("Node {} was released on top of {}", static_cast<int>(inputState.cursor_prev_dragging_target), static_cast<int>(inputState.cursor_released_on_target));

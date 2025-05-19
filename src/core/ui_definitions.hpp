@@ -821,6 +821,26 @@ namespace ui_defs
                                         gameObjectComp.methods->onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
                                         {
                                             SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
+                                            
+                                            // TODO: maybe mark inventory ui slots with a component tag 
+                                            // TODO: maybe mark items in inventory with a component tag
+                                            
+                                            //TODO: change color of the ui entity receiving the item?
+                                            
+                                            // set master role for the released entity
+                                            auto &gameObjectComp = registry.get<transform::GameObject>(released);
+                                            auto &roleForReleased = registry.get<transform::InheritedProperties>(released);
+                                            auto &transformForReleased = registry.get<transform::Transform>(released);
+                                            auto &transformForReleasedOn = registry.get<transform::Transform>(releasedOn);
+                                            
+                                            transform::AssignRole(&globals::registry, released, transform::InheritedProperties::Type::RoleInheritor, releasedOn, std::nullopt, std::nullopt, transform::InheritedProperties::Sync::Weak);
+                                            
+                                            transformForReleased.frameCalculation.alignmentChanged = true;
+                                            
+                                            // change actual location of dropped object to equal the grid rect
+                                            transformForReleased.setActualX(transformForReleasedOn.getActualX());
+                                            transformForReleased.setActualY(transformForReleasedOn.getActualY());
+                                            
                                         };
                                         
                                     })

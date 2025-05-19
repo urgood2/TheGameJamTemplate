@@ -6,7 +6,8 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] propagateReleaseToGameObjects not working as it should -> cursorUpTargetNode->state.triggerOnReleaseEnabled need to enable this -> need to add new init method for ui elements (other than updateFunc)
+- [ ] need to center inventory objects. 
+- [ ] later: try sorting & ui rect awareness with each other 
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.

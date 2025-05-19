@@ -321,7 +321,7 @@ namespace game
         playerNode.state.collisionEnabled = true;
         playerNode.state.clickEnabled = true;
         
-        animation_system::resizeAnimationObjectsInEntityToFit(player, 100.f, 100.f);
+        animation_system::resizeAnimationObjectsInEntityToFit(player, 40.f, 40.f);
 
         // player2 = animation_system::createAnimatedObjectWithTransform("test_char_woman.png", true, 400, 400, shaderPassConfigFunction);
         // auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);

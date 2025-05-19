@@ -225,7 +225,7 @@ namespace transform
         auto &transform = registry->get<Transform>(e);
 
         // if alignment and offset unchanged
-        if (role.flags->alignment == role.flags->prevAlignment && role.offset->x == role.prevOffset->x && role.offset->y == role.prevOffset->y && forceAlign == false)
+        if (role.flags->alignment == role.flags->prevAlignment && role.offset->x == role.prevOffset->x && role.offset->y == role.prevOffset->y && forceAlign == false && transform.frameCalculation.alignmentChanged == false)
         {
             // SPDLOG_DEBUG("Alignment and offset unchanged");
             return;
@@ -946,7 +946,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &role = registry->get<InheritedProperties>(e);
         auto &node = registry->get<GameObject>(e);
 
-        if (transform.frameCalculation.lastUpdatedFrame >= main_loop::mainLoop.frame)
+        if (transform.frameCalculation.lastUpdatedFrame >= main_loop::mainLoop.frame && transform.frameCalculation.alignmentChanged == false)
         {
             // SPDLOG_DEBUG("Transform already updated this frame");
             return; // already updated this frame
@@ -984,7 +984,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             {
                 auto &parentTransform = registry->get<Transform>(role.master);
                 // recursively move on parent
-                if (parentTransform.frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame)
+                if (parentTransform.frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame ||transform.frameCalculation.alignmentChanged == true)
                 {
                     UpdateTransform(registry, role.master, dt);
                 }

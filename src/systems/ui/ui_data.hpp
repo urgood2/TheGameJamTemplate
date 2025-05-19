@@ -112,6 +112,11 @@ namespace ui
         std::optional<int> decimal_places;
         std::optional<float> w, h;
     };
+    
+    // marks ui elements which are inventory slots.
+    struct InventoryGridTileComponent {
+        std::optional<entt::entity> item; // the item in the grid tile  
+    };
 
     //TODO: Separate config into its own config entity with separete components for each ui type instead of one mammoth container?
     //TODO: Difference between popups and alerts? - alertss are not drawn, even when they are children. Alerts are drawn on top of everything else (like ! badges on top right). Pop-ups are uiboxes themselves, but I can't figure out where they are drawn. Drag pop-ups are drawn with other children. 
@@ -222,6 +227,7 @@ namespace ui
         // Function Callbacks & Scripting
         std::optional<std::function<void(entt::registry*, entt::entity, float)>> updateFunc; //  Function to call on update (every frame) & init
         std::optional<std::function<void(entt::registry*, entt::entity)>> initFunc; //  Function to call once when the UI element is initialized
+        std::optional<std::function<void(entt::registry*, entt::entity)>> onUIResizeFunc; // Function to call when the UI element is resized
         std::optional<bool> instaFunc;   // Runs func immediately upon ui initialization.
         std::optional<std::function<void()>> buttonCallback; // the button click callback if this is a button
         std::optional<std::function<void()>> buttonTemp;                     // Temporarily stores the button property while button_delay is active.
@@ -606,6 +612,11 @@ namespace ui
             
             Builder& addInitFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
                 uiConfig->initFunc = func;
+                return *this;
+            }
+            
+            Builder& addOnUIResizeFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
+                uiConfig->onUIResizeFunc = func;
                 return *this;
             }
 

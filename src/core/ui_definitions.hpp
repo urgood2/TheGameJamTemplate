@@ -10,6 +10,7 @@
 #include "systems/timer/timer.hpp"
 
 #include "systems/ui/ui.hpp"
+#include "core/misc_fuctions.hpp"
 
 
 namespace ui_defs
@@ -388,6 +389,16 @@ namespace ui_defs
             
         return objectElement;
     }
+    
+    inline auto moveInventoryItemToNewTile(entt::entity released, entt::entity releasedOn) -> void
+    {
+        auto &uiConfigOnReleased = globals::registry.get<ui::UIConfig>(releasedOn);
+        uiConfigOnReleased.color = globals::uiInventoryOccupied;
+        
+        transform::AssignRole(&globals::registry, released, transform::InheritedProperties::Type::RoleInheritor, releasedOn, std::nullopt, std::nullopt, transform::InheritedProperties::Sync::Weak);
+
+        game::centerInventoryItemOnTargetUI(released, releasedOn);
+    }
 
     inline auto getCheckboxExample() -> ui::UIElementTemplateNode
     {
@@ -553,7 +564,9 @@ namespace ui_defs
         
         return controllerPipContainer;
     }
-    
+
+    inline void moveInventoryItemToNewTile(entt::entity released, entt::entity releasedOn);
+
     inline auto uiFeaturesTestDef() -> ui::UIElementTemplateNode
     {
         auto masterVerticalContainer = ui::UIElementTemplateNode::Builder::create()
@@ -809,41 +822,91 @@ namespace ui_defs
                     .addEmboss(2.f)
                     .addMinWidth(60.f)
                     .addMinHeight(60.f)
+                    .addOnUIResizeFunc([](entt::registry* registry, entt::entity e)
+                    {
+                        SPDLOG_DEBUG("Grid rect resize called for entity: {}", (int)e);
+                        // renew centering 
+                        auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
+                        
+                        if (!inventoryTile.item) return;
+                        
+                        game::centerInventoryItemOnTargetUI(inventoryTile.item.value(), e);
+                    })
                     .addInitFunc([](entt::registry* registry, entt::entity e)
-                                    { 
-                                        //TODO: set up drag-drop here
-                                        
-                                        auto &gameObjectComp = globals::registry.get<transform::GameObject>(e);
-                                        gameObjectComp.state.triggerOnReleaseEnabled = true;
-                                        gameObjectComp.state.collisionEnabled = true;
-                                        SPDLOG_DEBUG("Grid rect init called for entity: {}", (int)e);
-                                        
-                                        gameObjectComp.methods->onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
-                                        {
-                                            SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
-                                            
-                                            // TODO: maybe mark inventory ui slots with a component tag 
-                                            // TODO: maybe mark items in inventory with a component tag
-                                            
-                                            //TODO: change color of the ui entity receiving the item?
-                                            
-                                            // set master role for the released entity
-                                            auto &gameObjectComp = registry.get<transform::GameObject>(released);
-                                            auto &roleForReleased = registry.get<transform::InheritedProperties>(released);
-                                            auto &transformForReleased = registry.get<transform::Transform>(released);
-                                            auto &transformForReleasedOn = registry.get<transform::Transform>(releasedOn);
-                                            
-                                            transform::AssignRole(&globals::registry, released, transform::InheritedProperties::Type::RoleInheritor, releasedOn, std::nullopt, std::nullopt, transform::InheritedProperties::Sync::Weak);
-                                            
-                                            transformForReleased.frameCalculation.alignmentChanged = true;
-                                            
-                                            // change actual location of dropped object to equal the grid rect
-                                            transformForReleased.setActualX(transformForReleasedOn.getActualX());
-                                            transformForReleased.setActualY(transformForReleasedOn.getActualY());
-                                            
-                                        };
-                                        
-                                    })
+                    { 
+                        //TODO: set up drag-drop here
+                        
+                        if (!globals::registry.any_of<ui::InventoryGridTileComponent>(e)) {
+                            globals::registry.emplace<ui::InventoryGridTileComponent>(e);   
+                        }
+                        
+                        auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
+                        
+                        auto &gameObjectComp = globals::registry.get<transform::GameObject>(e);
+                        gameObjectComp.state.triggerOnReleaseEnabled = true;
+                        gameObjectComp.state.collisionEnabled = true;
+                        // gameObjectComp.state.hoverEnabled = true;
+                        SPDLOG_DEBUG("Grid rect init called for entity: {}", (int)e);
+                        
+                        
+                        gameObjectComp.methods->onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
+                        {
+                            SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
+                            
+                            auto &inventoryTileReleasedOn = registry.get<ui::InventoryGridTileComponent>(releasedOn);
+                            
+                            
+                            
+                            // set master role for the released entity
+                            auto &uiConfigOnReleased = registry.get<ui::UIConfig>(releasedOn);
+                            auto &roleReleased = registry.get<transform::InheritedProperties>(released);
+                            
+                            // get previous parent (if any)
+                            auto prevParent = roleReleased.master;
+                            
+                            
+                            if (globals::registry.valid(prevParent))
+                            {
+                                auto &uiConfig = globals::registry.get<ui::UIConfig>(prevParent);
+                                uiConfig.color = globals::uiInventoryEmpty;
+                                
+                                auto &prevInventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(prevParent);
+                                
+                                // if current tile is occupied, then switch the items
+                                //TODO: handle cases where something already exists in the inventory tile
+                                if (inventoryTileReleasedOn.item)
+                                {
+                                    SPDLOG_DEBUG("Inventory tile already occupied, switching");
+                                    
+                                    auto temp = inventoryTileReleasedOn.item.value();
+                                    inventoryTileReleasedOn.item = released;
+                                    prevInventoryTile.item = temp;
+                                    
+                                    //TODO: apply the centering & master role switching
+                                    moveInventoryItemToNewTile(released, releasedOn);
+                                    moveInventoryItemToNewTile(temp, prevParent);
+                                    return;
+                                }
+                                else {
+                                    inventoryTileReleasedOn.item = released;
+                                    prevInventoryTile.item.reset();
+                                }
+                                
+                            }
+
+                            moveInventoryItemToNewTile(released, releasedOn);
+
+                            // transformForReleased.frameCalculation.alignmentChanged = true;
+                            
+                            // change actual location of dropped object to equal the grid rect
+                            // transformForReleased.setActualX(transformForReleasedOn.getActualX());
+                            // transformForReleased.setActualY(transformForReleasedOn.getActualY());
+                            
+                            
+                            
+                        };
+                        
+                    })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .build();
@@ -876,16 +939,17 @@ namespace ui_defs
         masterVerticalContainer.children.push_back(titleDividers);
         masterVerticalContainer.children.push_back(checkbox);
         masterVerticalContainer.children.push_back(progressBar);
-        masterVerticalContainer.children.push_back(progressBar9Patch);
-        masterVerticalContainer.children.push_back(buttonDisabled);
+        // masterVerticalContainer.children.push_back(progressBar9Patch);
+        // masterVerticalContainer.children.push_back(buttonDisabled);
         masterVerticalContainer.children.push_back(controllerPipContainer);
         masterVerticalContainer.children.push_back(slider);
-        masterVerticalContainer.children.push_back(textInputRow);
-        masterVerticalContainer.children.push_back(buttonGroupRow);
+        // masterVerticalContainer.children.push_back(textInputRow);
+        // masterVerticalContainer.children.push_back(buttonGroupRow);
         masterVerticalContainer.children.push_back(cycleContainer);
         masterVerticalContainer.children.push_back(gridContainer);
-        masterVerticalContainer.children.push_back(buttonForTooltip);
-        masterVerticalContainer.children.push_back(buttonAlert);
+        // masterVerticalContainer.children.push_back(buttonForTooltip);
+        // masterVerticalContainer.children.push_back(buttonAlert);
+
         
         return masterVerticalContainer;
     }

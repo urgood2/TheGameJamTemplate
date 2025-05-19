@@ -185,7 +185,9 @@ namespace globals {
         uiTextLight = LIGHTGRAY,
         uiOutlineLight = GRAY,
         uiTextInactive = DARKGRAY,
-        uiHover = WHITE;
+        uiHover = WHITE,
+        uiInventoryOccupied = LIGHTGRAY,
+        uiInventoryEmpty = WHITE;
 
     std::string language{"en"}; // the current language for the game
 

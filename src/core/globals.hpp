@@ -290,7 +290,7 @@ namespace globals
 
     extern input::InputState inputState;
 
-    extern Color uiBackgroundDark, uiTextLight, uiOutlineLight, uiTextInactive, uiHover;
+    extern Color uiBackgroundDark, uiTextLight, uiOutlineLight, uiTextInactive, uiHover, uiInventoryOccupied, uiInventoryEmpty;
 
     extern std::string language; // the current language for the game
 

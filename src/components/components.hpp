@@ -38,6 +38,7 @@ struct TransformCustom {
 	float scale = 1.0f; // Scale of the Node, for effects like pulsing
 };
 
+
 // --------------------------------------------------------
 // ------------------ GOAP AI COMPONENTS ------------------
 // --------------------------------------------------------

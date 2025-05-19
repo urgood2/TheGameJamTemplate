@@ -179,6 +179,13 @@ namespace ui
         handleAlignment(registry, uiRoot);
 
         // LATER: LR clamp not implemented, not sure if necessary
+        
+        box::TraverseUITreeBottomUp(registry, uiRoot, [&](entt::entity child) {
+            auto *childConfig = registry.try_get<UIConfig>(child);
+            if (childConfig && childConfig->onUIResizeFunc) {
+                childConfig->onUIResizeFunc.value()(&registry, child);
+            }
+        });
 
         ui::element::InitializeVisualTransform(registry, uiRoot);
     }

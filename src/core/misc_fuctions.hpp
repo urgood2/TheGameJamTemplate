@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/common_headers.hpp"
+#include "systems/transform/transform_functions.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -9,6 +10,29 @@ namespace game {
     void SetUpShaderUniforms(); 
     
     extern std::function<void()> OnUIScaleChanged;
+    
+    inline void centerInventoryItemOnTargetUI(entt::entity itemEntity, entt::entity targetUIElement)
+    {
+        auto &itemTransform = globals::registry.get<transform::Transform>(itemEntity);
+        auto &itemRole = globals::registry.get<transform::InheritedProperties>(itemEntity);
+        auto &targetTransform = globals::registry.get<transform::Transform>(targetUIElement);
+        
+        float targetWidth = targetTransform.getActualW();
+        float targetHeight = targetTransform.getActualH();
+        float itemW = itemTransform.getActualW();
+        float itemH = itemTransform.getActualH();
+        
+        //TODO: cook in dynamic object resizing later if item needs to change size while in ui, but not ouside of it?
+        
+        // prevent jerkiness
+        
+        
+        itemRole.offset->x = (targetWidth - itemW) / 2.0f;
+        itemRole.offset->y = (targetHeight - itemH) / 2.0f;
+        
+        itemTransform.setActualX(targetTransform.getActualX() + itemRole.offset->x);
+        itemTransform.setActualY(targetTransform.getActualY() + itemRole.offset->y);
+    }
 
     inline void ShowDebugUI()
     {

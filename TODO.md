@@ -6,8 +6,6 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] need to center inventory objects. 
-- [ ] later: try sorting & ui rect awareness with each other 
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
@@ -55,7 +53,6 @@
   - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
   - [ ] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
-- [ ] Revamped inventory system using drag & drop + ui boxes
 - [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
@@ -88,6 +85,7 @@
 ---
 
 ## Immediate laters
+- [ ] tween colors for inventory ui, show hover indicator with draw() function
 - [ ] Skill tree, refer to bytepath
 - [ ] Text highlight efect - show same text overlaid, which vanishes upwa
 - [ ] Use simple art style + scale down technique for visual prettiness

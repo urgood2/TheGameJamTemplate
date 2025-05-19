@@ -323,15 +323,15 @@ namespace game
         
         animation_system::resizeAnimationObjectsInEntityToFit(player, 40.f, 40.f);
 
-        // player2 = animation_system::createAnimatedObjectWithTransform("test_char_woman.png", true, 400, 400, shaderPassConfigFunction);
-        // auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
-        // playerNode2.debug.debugText = "Player (untethered)";
-        // playerNode2.state.dragEnabled = true;
-        // playerNode2.state.hoverEnabled = true;
-        // playerNode2.state.collisionEnabled = true;
-        // playerNode2.state.clickEnabled = true;
+        player2 = animation_system::createAnimatedObjectWithTransform("4071-TheRoguelike_1_10_alpha_864.png", true, 400, 400, nullptr);
+        auto &playerNode2 = globals::registry.get<transform::GameObject>(player2);
+        playerNode2.debug.debugText = "Player (untethered)";
+        playerNode2.state.dragEnabled = true;
+        playerNode2.state.hoverEnabled = true;
+        playerNode2.state.collisionEnabled = true;
+        playerNode2.state.clickEnabled = true;
         //FIXME: commenting this out for now, for debugging
-        // animation_system::resizeAnimationObjectsInEntityToFit(player2, 150.f, 150.f);
+        animation_system::resizeAnimationObjectsInEntityToFit(player2, 40.f, 40.f);
 
         transformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 200, 200);
         auto &node = globals::registry.get<transform::GameObject>(transformEntity);

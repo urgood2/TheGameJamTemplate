@@ -12,7 +12,7 @@
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
-- [ ] new inventory system with just rows + drag/drop detection
+
 - [ ] Implement more UI element types:
   - [ ] Sliders (`focus_args = {type = "slider"}`)
     - use UIConfig.noMovementWhenDragged to disable dragging movement
@@ -58,33 +58,26 @@
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
 - [ ] Text input (with cursor displayed, etc, software keyboard)
 
-
-### UI
-- Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui
-- [ ] Option to set images for hover/ not hover/ clicked separately instead of using hover colors (one or the other). 
-- [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
-
-### TEXT
-- [ ] text tag documentation (img, anim) -> static ui / (img) -> dynamic text
-- [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
-- [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
-
-### SHADERS
-- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
-- [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
-
 ### MISC. RENDERING
-- [ ] Rendering for animated entities should respect uiconfig's color variable for tint if the master entity has a uiconfig (is a uielement OBJECT type)
-- [ ] Try using std::multimap<int, std::shared_ptr<Layer>> instead for rendering sorting efficiently
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this
 
 ### LAUNCH CODE
 - [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
+- [ ] Participate in game jam or do a little test game jam on my own to make everything ready
 - [ ] make everything compile for web
 
 ---
 
 ## Immediate laters
+- [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
+- [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
+- Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui
+- [ ] Option to set images for hover/ not hover/ clicked separately instead of using hover colors (one or the other). 
+- [ ] Option to draw something over the button for select marker (instead of chosen circle bob)
+- [ ] text tag documentation (img, anim) -> static ui / (img) -> dynamic text
+- [ ] Rendering for animated entities should respect uiconfig's color variable for tint if the master entity has a uiconfig (is a uielement OBJECT type)
+- [ ] shadows for sprites with shader pipeline, these need to be integrated with the shaders themselves (or use separate shadow pass) -> just render the final image twice with tint, should work
+- [ ] change dissove on foil, etc. shaders, can't be a copy of balatro's
 - [ ] tween colors for inventory ui, show hover indicator with draw() function
 - [ ] Skill tree, refer to bytepath
 - [ ] Text highlight efect - show same text overlaid, which vanishes upwa

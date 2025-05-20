@@ -341,6 +341,11 @@ namespace ui
                 uiConfig->refreshMovement = refreshMovement;
                 return *this;
             }
+            
+            Builder& addNoMovementWhenDragged(const bool& noMovementWhenDragged) {
+                uiConfig->noMovementWhenDragged = noMovementWhenDragged;
+                return *this;
+            }
 
             Builder& addNoRecalc(const bool& noRecalc) {
                 uiConfig->no_recalc = noRecalc;

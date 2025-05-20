@@ -616,15 +616,58 @@ namespace ui_defs
                     .addProgressBarMaxValue(100.f)
                     // .addEmboss(2.f)
                     .addMinHeight(50.f)
+                    .addNoMovementWhenDragged(true)
                     .addMinWidth(500.f)
                     .addProgressBar(true)
                     .addProgressBarEmptyColor(WHITE)
                     .addProgressBarFullColor(BLUE)
+                    .addInitFunc([](entt::registry* registry, entt::entity e)
+                    { 
+                        SPDLOG_DEBUG("Slider init called for entity {}", (int)e);
+                        auto &gameObject = globals::registry.get<transform::GameObject>(e);
+                        gameObject.state.dragEnabled = true;
+                        gameObject.state.collisionEnabled = true;
+                        gameObject.state.clickEnabled = true;
+                        gameObject.state.enlargeOnHover = false;
+                        gameObject.state.enlargeOnDrag = false;
+                        gameObject.methods->onHover = nullptr; // no jiggle
+                        
+                        // gameObject.state.hoverEnabled = true;
+                    })
                     .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
-                                    { 
-                                        // SPDLOG_DEBUG("Slider update called");
-                                        // allo this thing to be dragged, update based on mouse position
-                                    })
+                    { 
+                        // is mouse down? is the dragging darget the slider?
+                        if (globals::inputState.cursor_dragging_target != e) return;
+                        
+                        // get mouse cursor position, compare to slider position
+                        auto &sliderTransform = globals::registry.get<transform::Transform>(e);
+                        auto &cursorTransform = globals::registry.get<transform::Transform>(globals::cursor);
+                        
+                        // clamp x value between 0 and slider width
+                        auto sliderWidth = sliderTransform.getActualW();
+                        auto sliderX = sliderTransform.getActualX();
+                        
+                        auto cursorX = cursorTransform.getActualX();
+                        auto cursorY = cursorTransform.getActualY();
+                        
+                        auto clampedCursorX = std::clamp(cursorX, sliderX, sliderX + sliderWidth);
+                        
+                        // progress value is between 0 and 1
+                        auto progressValue = (clampedCursorX - sliderX) / sliderWidth;
+                        
+                        // should be over 0.01
+                        if (progressValue < 0.01f) progressValue = 0.01f;
+                        
+                        // set the progress value
+                        auto &uiConfig = globals::registry.get<ui::UIConfig>(e);
+                        
+                        // SPDLOG_DEBUG("Slider value: {}", progressValue);
+                        
+                        uiConfig.progressBarFetchValueLambda = [progressValue](entt::entity e)
+                        { 
+                            return progressValue;
+                        };
+                    })
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .addChild(sliderTextMoving)
@@ -834,8 +877,6 @@ namespace ui_defs
                     })
                     .addInitFunc([](entt::registry* registry, entt::entity e)
                     { 
-                        //TODO: set up drag-drop here
-                        
                         if (!globals::registry.any_of<ui::InventoryGridTileComponent>(e)) {
                             globals::registry.emplace<ui::InventoryGridTileComponent>(e);   
                         }

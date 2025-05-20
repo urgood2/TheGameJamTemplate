@@ -1607,17 +1607,18 @@ namespace input
             // exclude cursor and container
             if (entity == globals::cursor || entity == globals::gameWorldContainerEntity)
                 continue;
+                
+            auto &node = registry.get<transform::GameObject>(entity);
+            if (!node.state.collisionEnabled)
+                continue;
+                
             if (transform::CheckCollisionWithPoint(&registry, entity, cursor_trans))
             {
                 // SPDLOG_DEBUG("Collision detected with entity: {}", static_cast<int>(entity));
                 state.nodes_at_cursor.push_back(entity);
 
-                auto &node = registry.get<transform::GameObject>(entity);
-                if (node.state.collisionEnabled)
-                {
-                    node.state.isColliding = true;
-                    state.collision_list.push_back(entity);
-                }
+                node.state.isColliding = true;
+                state.collision_list.push_back(entity);
             }
             else
             {

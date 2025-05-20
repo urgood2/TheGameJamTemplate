@@ -852,7 +852,7 @@ namespace ui
             AssertThat(colorToUse.a, Is().EqualTo(255));
 
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
-            layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
+            layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
                 cmd->cache = entity;
                 cmd->outerRec = {0, 0, progress, height};
                 cmd->color = colorToUse;
@@ -964,33 +964,36 @@ namespace ui
             
             // shrink the inner vertices so they look outlined
             {
-                float shrinkPx = globals::UI_PROGRESS_BAR_INSET_PIXELS;
+                float inset = globals::UI_PROGRESS_BAR_INSET_PIXELS;
 
-                float targetW = rectCache->w * progressVal - 2.0f * shrinkPx;
-                float targetH = rectCache->h - 2.0f * shrinkPx;
+                float fullW = rectCache->w;
+                float fullH = rectCache->h;
 
-                // Prevent negative dimensions
-                targetW = std::max(0.0f, targetW);
-                targetH = std::max(0.0f, targetH);
+                float progressW = fullW * progressVal;
+                float scaledW = std::max(0.0f, progressW - 2.0f * inset);
+                float scaledH = std::max(0.0f, fullH - 2.0f * inset);
 
-                float scaleX = targetW / (rectCache->w * progressVal);
-                float scaleY = targetH / rectCache->h;
+                // Compute scale relative to unscaled progress width and height
+                float scaleX = scaledW / progressW;
+                float scaleY = scaledH / fullH;
 
-                float centerX = (rectCache->w * progressVal) / 2.0f;
-                float centerY = rectCache->h / 2.0f;
+                // Anchor point: left edge of progress bar + left inset
+                float anchorX = inset;
+                float anchorY = fullH / 2.0f;
 
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = centerX, y = centerY](layer::CmdTranslate *cmd) {
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = anchorX, y = anchorY](layer::CmdTranslate *cmd) {
                     cmd->x = x;
                     cmd->y = y;
                 });
-                layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = scaleX, scaleY = scaleY](layer::CmdScale *cmd) {
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX, scaleY](layer::CmdScale *cmd) {
                     cmd->scaleX = scaleX;
                     cmd->scaleY = scaleY;
                 });
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -centerX, y = -centerY](layer::CmdTranslate *cmd) {
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = -anchorY](layer::CmdTranslate *cmd) {
                     cmd->x = x;
                     cmd->y = y;
                 });
+
 
             }
 
@@ -1015,7 +1018,7 @@ namespace ui
                 cmd->cache = entity;
                 cmd->outerRec = {0, 0, progress, height};
                 cmd->color = colorToUse;
-                cmd->progressOrFullBackground = false;
+                cmd->progressOrFullBackground = true;
             });
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }

@@ -7,41 +7,15 @@
 
 ## Kinda high priority
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
+- [ ] inventory recentering not working consistently?
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
-- [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant)
+- [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 
 - [ ] Implement more UI element types:
-  - [ ] Sliders (`focus_args = {type = "slider"}`)
-    - use UIConfig.noMovementWhenDragged to disable dragging movement
-    - Just need to make a function that uses reflection to fetch whatever is being manipulated, based on the following
-      ```lua
-      function G.FUNCS.slider(e)
-        local c = e.children[1]
-        e.states.drag.can = true
-        c.states.drag.can = true
-        if G.CONTROLLER and G.CONTROLLER.dragging.target and
-        (G.CONTROLLER.dragging.target == e or
-        G.CONTROLLER.dragging.target == c) then
-          local rt = c.config.ref_table
-          rt.ref_table[rt.ref_value] = math.min(rt.max,math.max(rt.min, rt.min + (rt.max - rt.min)*(G.CURSOR.T.x - e.parent.T.x - G.ROOM.T.x)/e.T.w))
-          rt.text = string.format("%."..tostring(rt.decimal_places).."f", rt.ref_table[rt.ref_value])
-          c.T.w = (rt.ref_table[rt.ref_value] - rt.min)/(rt.max - rt.min)*rt.w
-          c.config.w = c.T.w
-          if rt.callback then G.FUNCS[rt.callback](rt) end
-        end
-      end
-      ```
-    - has a function that sets sliding to true, updates the stored value depending on mouse movement
-    - focus_args = {type = 'slider'} is used to integrate with controller input logic (e.g., dpad left/right).
-    - The refresh_movement = true flag indicates this should refresh every frame (update should be called every frame)
-    - the slider methods runs when the slider component is being dragged
-    - Updates the value in a reference table (ref_table[ref_value]) based on cursor position
-    - Adjusts the width of the inner bar (c) to visually match the value
-    - Updates the text label to show the new value
-    - Optionally calls a callback function after the value changes
+  
   - [ ] Cycles (radio buttons)
     - Displays a current selection (current_option_val)
     - Has left/right buttons to cycle through a list of args.options

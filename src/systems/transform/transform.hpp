@@ -159,6 +159,7 @@ namespace transform
             bool isBeingHovered = false; // set to true if the entity is currently being hovered over
 
             bool enlargeOnHover = true; // set to true if the entity should enlarge when hovered over (this is a visual effect, not a transform change)
+            bool enlargeOnDrag = true; // set to true if the entity should enlarge when clicked (this is a visual effect, not a transform change)
 
             bool clickEnabled = false;   // set to true if the entity can be clicked
             bool isBeingClicked = false; // set to true if the entity is currently being clicked
@@ -428,7 +429,7 @@ namespace transform
                 {
                     base *= 1.f + COLLISION_BUFFER_ON_HOVER_PERCENTAGE; // increase scale when hovered
                 }
-                if (registry->get<GameObject>(self).state.isBeingDragged)
+                if (registry->get<GameObject>(self).state.isBeingDragged && registry->get<GameObject>(self).state.enlargeOnDrag)
                 {
                     base += COLLISION_BUFFER_ON_HOVER_PERCENTAGE * 2; // increase scale when dragged
                 }

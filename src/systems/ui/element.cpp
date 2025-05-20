@@ -1493,12 +1493,15 @@ namespace ui
                     colorToUse = config->progressBarFullColor.value_or(GREEN);
                     
                     // retrieve the current progress bar value using reflection
-                    //FIXME: change this to use lamdas optionally, commenting out for now
                     
                     float progress = 1.0f;
                     
                     if (config->progressBarFetchValueLambda) {
                         progress = config->progressBarFetchValueLambda(entity);
+                        
+                        if (entity == (entt::entity)238) {
+                            SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
+                        }
                     }
                     else if (config->progressBarValueComponentName){
                         auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
@@ -1976,7 +1979,10 @@ namespace ui
         }
 
         // Step 4: Call the base Node hover function
-        node->methods->onHover(registry, entity);
+        if (node->methods->onHover)
+        {
+            node->methods->onHover(registry, entity);
+        }
     }
 
     void element::StopHover(entt::registry &registry, entt::entity entity)

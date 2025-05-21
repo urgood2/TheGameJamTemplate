@@ -6,6 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] scaling for inventory rects isn't consistent.
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] inventory recentering not working consistently?
 - [ ] Need to test pipeline rendering w/ scaling for animations 

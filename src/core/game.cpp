@@ -169,7 +169,7 @@ namespace game
 
         // load font
         // globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/slkscr.ttf").c_str(), 40, 0, 250);
-        globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/Italipixel.ttf").c_str(), 40, 0, 250);
+        globals::fontData.font = LoadFontEx(util::getAssetPathUUIDVersion("fonts/en/Ac437_IBM_BIOS.ttf").c_str(), 40, 0, 250);
         globals::fontData.fontScale = 1.0f;
 
         //REVIEW: text entries have to be duplicated before being assigned to ui templates.

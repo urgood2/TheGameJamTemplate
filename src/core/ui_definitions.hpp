@@ -810,7 +810,7 @@ namespace ui_defs
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
                 ui::UIConfig::Builder::create()
-                    .addColor(RED)
+                    .addColor(YELLOW)
                     .addEmboss(2.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
@@ -821,6 +821,7 @@ namespace ui_defs
             .addType(ui::UITypeEnum::ROOT)
             .addConfig(
                 ui::UIConfig::Builder::create()
+                    .addPadding(0.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
             .addChild(alertRow)

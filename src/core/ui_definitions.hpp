@@ -398,6 +398,9 @@ namespace ui_defs
         transform::AssignRole(&globals::registry, released, transform::InheritedProperties::Type::RoleInheritor, releasedOn, std::nullopt, std::nullopt, transform::InheritedProperties::Sync::Weak);
 
         game::centerInventoryItemOnTargetUI(released, releasedOn);
+        
+        auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(releasedOn);
+        inventoryTile.item = released;
     }
 
     inline auto getCheckboxExample() -> ui::UIElementTemplateNode
@@ -603,7 +606,7 @@ namespace ui_defs
 
         // ======================================
         // ======================================
-        // TODO: slider (not done yet)
+        // slider
         // ======================================
         // ======================================
 
@@ -865,13 +868,28 @@ namespace ui_defs
                     .addEmboss(2.f)
                     .addMinWidth(60.f)
                     .addMinHeight(60.f)
+                    .addOnUIScalingResetToOne(
+                        [](entt::registry* registry, entt::entity e)
+                        {
+                            // set the size of the grid rect to be 60 x 60
+                            
+                            auto &transform = globals::registry.get<transform::Transform>(e);
+                            transform.setActualW(60.f);
+                            transform.setActualH(60.f);
+                            
+                            auto &role = globals::registry.get<transform::InheritedProperties>(e);
+                            role.offset->x = 0;
+                            role.offset->y = 0;
+                            
+                        })
                     .addOnUIResizeFunc([](entt::registry* registry, entt::entity e)
                     {
-                        SPDLOG_DEBUG("Grid rect resize called for entity: {}", (int)e);
                         // renew centering 
                         auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
                         
                         if (!inventoryTile.item) return;
+                        
+                        SPDLOG_DEBUG("Grid rect resize called for entity: {} with item: {}", (int)e, (int)inventoryTile.item.value());
                         
                         game::centerInventoryItemOnTargetUI(inventoryTile.item.value(), e);
                     })
@@ -936,13 +954,6 @@ namespace ui_defs
                             }
 
                             moveInventoryItemToNewTile(released, releasedOn);
-
-                            // transformForReleased.frameCalculation.alignmentChanged = true;
-                            
-                            // change actual location of dropped object to equal the grid rect
-                            // transformForReleased.setActualX(transformForReleasedOn.getActualX());
-                            // transformForReleased.setActualY(transformForReleasedOn.getActualY());
-                            
                             
                             
                         };

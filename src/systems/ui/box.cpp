@@ -152,13 +152,18 @@ namespace ui
         
         box::TraverseUITreeBottomUp(registry, uiRoot, [&](entt::entity child) {
             auto *childConfig = registry.try_get<UIConfig>(child);
-            if (childConfig && childConfig->object) {
-                animation_system::resetAnimationUIRenderScale(childConfig->object.value());
+            
+            if (childConfig && childConfig->onUIScalingResetToOne) {
+                childConfig->onUIScalingResetToOne.value()(&registry, child);
+                return;
             }
 
             if (childConfig && childConfig->object && registry.any_of<TextSystem::Text>(childConfig->object.value())) {
                 //TODO: return size to original here
                 TextSystem::Functions::resetTextScaleAndLayout(childConfig->object.value());
+            }
+            else if (childConfig && childConfig->object) {
+                animation_system::resetAnimationUIRenderScale(childConfig->object.value());
             }
         });
 

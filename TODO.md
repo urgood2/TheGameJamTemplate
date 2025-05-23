@@ -6,9 +6,8 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] scaling for inventory rects isn't consistent.
+- [ ] modal layers for ui
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
-- [ ] inventory recentering not working consistently?
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers

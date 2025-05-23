@@ -228,6 +228,8 @@ namespace ui
         std::optional<std::function<void(entt::registry*, entt::entity, float)>> updateFunc; //  Function to call on update (every frame) & init
         std::optional<std::function<void(entt::registry*, entt::entity)>> initFunc; //  Function to call once when the UI element is initialized
         std::optional<std::function<void(entt::registry*, entt::entity)>> onUIResizeFunc; // Function to call when the UI element is resized
+        std::optional<std::function<void(entt::registry*, entt::entity)>> onUIScalingResetToOne; // Function to call when ui scaling should be set to 1.0 global scale (so width & height should be reset)
+        
         std::optional<bool> instaFunc;   // Runs func immediately upon ui initialization.
         std::optional<std::function<void()>> buttonCallback; // the button click callback if this is a button
         std::optional<std::function<void()>> buttonTemp;                     // Temporarily stores the button property while button_delay is active.
@@ -622,6 +624,11 @@ namespace ui
             
             Builder& addOnUIResizeFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
                 uiConfig->onUIResizeFunc = func;
+                return *this;
+            }
+            
+            Builder& addOnUIScalingResetToOne(const std::function<void(entt::registry*, entt::entity)> &func) {
+                uiConfig->onUIScalingResetToOne = func;
                 return *this;
             }
 

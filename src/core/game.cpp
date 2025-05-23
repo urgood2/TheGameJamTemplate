@@ -749,7 +749,7 @@ namespace game
             auto textView = globals::registry.view<TextSystem::Text>();
             for (auto e : textView)
             {
-                TextSystem::Functions::renderText(e, ui_layer, true);
+                TextSystem::Functions::renderText(e, ui_layer);
             }
         }
 

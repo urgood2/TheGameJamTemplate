@@ -7,9 +7,7 @@
 
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
-- [ ] alert N not centered.
 - [ ] modal layers for ui
-- [ ] UI rect dimensions are wrong?
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.

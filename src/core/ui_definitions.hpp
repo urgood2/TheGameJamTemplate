@@ -804,20 +804,32 @@ namespace ui_defs
         // ======================================
         // ======================================
         static entt::entity alertBox{entt::null};
-        auto alertText = getNewDynamicTextEntry("N", 40.f, std::nullopt, "wiggle");
+        auto alertText = getNewDynamicTextEntry("!", 20.f, std::nullopt, "wiggle");
         // auto alertText = getNewTextEntry("Alert");
+        
+        auto alertRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    // .addPadding(2.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(alertText)
+            .build();
         
         auto alertRoot = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::ROOT)
             .addConfig(
                 ui::UIConfig::Builder::create()
-                    // .addPadding(0.f)
+                    .addPadding(0.f)
                     .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
                     .build())
-            .addChild(alertText)
+            .addChild(alertRow)
             .build();
             
-        alertBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot);
+        alertBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
+        
+        SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, alertBox, 0));
 
         // ======================================
         // ======================================

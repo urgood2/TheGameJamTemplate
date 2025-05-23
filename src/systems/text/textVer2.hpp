@@ -233,7 +233,7 @@ namespace TextSystem
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
         extern void updateText(entt::entity textEntity, float dt);
 
-        extern void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug = false);
+        extern void renderText(entt::entity textEntity, std::shared_ptr<layer::Layer> layerPtr, bool debug = true);
 
         extern void clearAllEffects(entt::entity textEntity);
 

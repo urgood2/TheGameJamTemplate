@@ -415,7 +415,7 @@ namespace ui
                 else if (registry.try_get<TextSystem::Text>(*uiConfig->object)) {
                     objectType = "Text";
                     // print LOC, OFF, and OFF_ALN for text objects
-                    boxStr += fmt::format(" MovingText({})--[LOC({},{}) OFF({},{}) OFF_ALN({},{}) MSTR({})]",
+                    boxStr += fmt::format(" MovingText({})--[LOC({},{}) OFF({},{}) OFF_ALN({},{}) MSTR({}) DIMS({},{})]",
                         static_cast<int>(uiConfig->object.value()),
                         static_cast<int>(objTransform->getActualX()),
                         static_cast<int>(objTransform->getActualY()),
@@ -423,7 +423,11 @@ namespace ui
                         static_cast<int>(objectRole->offset->y),
                         static_cast<int>(objectRole->flags->extraAlignmentFinetuningOffset.x),
                         static_cast<int>(objectRole->flags->extraAlignmentFinetuningOffset.y),
-                        static_cast<int>(objectRole->master));
+                        static_cast<int>(objectRole->master),
+                        static_cast<int>(objTransform->getActualW()),
+                        static_cast<int>(objTransform->getActualH())
+                    
+                    );
                 }
                 else if (registry.try_get<AnimationQueueComponent>(*uiConfig->object)) {
                     objectType = "AnimatedSprite";

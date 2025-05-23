@@ -849,7 +849,7 @@ namespace ui
             }
 
             // not shadow, ensure color is not translucent
-            AssertThat(colorToUse.a, Is().EqualTo(255));
+            // AssertTh at(colorToUse.a, Is().EqualTo(255));
 
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
             layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {

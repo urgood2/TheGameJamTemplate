@@ -6,7 +6,9 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] UI rect dimensions are wrong?
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
@@ -26,7 +28,7 @@
     - Supports keyboard/controller interaction and shoulder button overlays
   - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
-  - [ ] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox.
+
 - [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
     - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
@@ -43,6 +45,7 @@
 ---
 
 ## Immediate laters
+
 - [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
 - [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 - Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui
@@ -70,6 +73,7 @@
 - [ ] Some shaders, simple ones, which can be layered fro sprites and serve as a backbone for other additions later on. (drop shadow, holoram, 3d skew, sheen)
 - [ ] button presses need to shift down text as well (dynamic text)
 - [ ] Add support for UI element and box alignment to rotation/scale when bound to transforms.
+- [ ] Highlights (like card selection highlights) -> just a uibox that is an empty outline, attached to another uibox. -> do for controller input later
 - [ ] Need to apply individual sprite atlas uv change to every shader that will be used with sprites & create web versions
 - [ ] Fix clicking + dragging not working unless hover is enabled.
 - [ ] Make hover optional for clicking to work.

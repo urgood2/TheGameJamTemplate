@@ -797,6 +797,36 @@ namespace ui_defs
             .addChild(centerText)
             .addChild(rightButton)
             .build();
+            
+        // ======================================
+        // ======================================
+        // TODO: alert 
+        // ======================================
+        // ======================================
+        static entt::entity alertBox{entt::null};
+        auto alertText = getNewDynamicTextEntry("N", 20.f, std::nullopt, "wiggle");
+        
+        auto alertRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(RED)
+                    .addEmboss(2.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(alertText)
+            .build();
+            
+        auto alertRoot = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::ROOT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(alertRow)
+            .build();
+            
+        alertBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot);
 
         // ======================================
         // ======================================
@@ -826,6 +856,43 @@ namespace ui_defs
         // ======================================
         // ======================================
         auto controllerPipContainer = ui_defs::controllerPipContainer();
+        
+        // ======================================
+        // ======================================
+        // TODO: tooltip
+        // ======================================
+        // ======================================
+        
+        static entt::entity tooltipBox{entt::null};
+        
+        //TODO: use backgrounds & images for the tooltip text
+        auto tooltipTitle = getNewDynamicTextEntry("Tooltip Title", 20.f, std::nullopt, "pulse=0.9,1.1");
+        
+        auto tooltipText = getNewDynamicTextEntry("This is a tooltip,\ndynamic text at\nthe moment", 10.f, std::nullopt, "pulse=0.9,1.1");
+        
+        auto tooltipRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addOutlineColor(RED)
+                    .addOutlineThickness(4.f)
+                    .addEmboss(2.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(tooltipTitle)
+            .addChild(tooltipText)
+            .build();
+            
+        auto tooltipRoot = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::ROOT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(tooltipRow)
+            .build();
+            
+        tooltipBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, tooltipRoot);
 
         // ======================================
         // ======================================
@@ -850,6 +917,29 @@ namespace ui_defs
                     .build())
             .addChild(tooltipButtonText)
             .build();
+            
+        // ======================================
+        // ======================================
+        // TODO: Highlight ui box / doesn't need to be used rn, since we aren't doing controller at the moment
+        // ======================================
+        // ======================================
+        static entt::entity highlightBox{entt::null};
+        
+        auto highlightRoot = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::ROOT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(BLANK)
+                    .addOutlineColor(RED)
+                    .addOutlineThickness(4.f)
+                    .addEmboss(2.f)
+                    .addLineEmboss(true)
+                    .addMinHeight(60.f)
+                    .addMinWidth(60.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .build();
+        // highlightBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, highlightRoot);
         
         // ======================================
         // ======================================

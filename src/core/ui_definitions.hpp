@@ -830,6 +830,126 @@ namespace ui_defs
         alertBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
         
         SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, alertBox, 0));
+        
+        // ======================================
+        // ======================================
+        // TODO: onscreen keyboard
+        // ======================================
+        // ======================================
+        
+        entt::entity keyboardUIBox{entt::null};
+        
+        auto numbers = std::vector<std::string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
+        auto letterRow1 = std::vector<std::string>{"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
+        auto letterRow2 = std::vector<std::string>{"A", "S", "D", "F", "G", "H", "J", "K", "L"};
+        auto letterRow3 = std::vector<std::string>{"Z", "X", "C", "V", "B", "N", "M"};
+        auto essentialKeys = std::vector<std::string>{"Enter", "Clear"};
+        
+        std::vector<ui::UIElementTemplateNode> keyboardRows;
+        
+        auto makeKeyboardKey = [](const std::string &keyText, const std::function<void()>& callback) -> ui::UIElementTemplateNode {
+            auto keyTextEntry = getNewDynamicTextEntry(keyText, 15.f, std::nullopt, "pulse=0.9,1.1");
+            return ui::UIElementTemplateNode::Builder::create()
+                .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+                .addConfig(
+                    ui::UIConfig::Builder::create()
+                        .addColor(GRAY)
+                        .addEmboss(2.f)
+                        .addMinHeight(30.f)
+                        .addMinWidth(30.f)
+                        .addHover(true)
+                        .addButtonCallback(callback)
+                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                        .build())
+                .addChild(keyTextEntry)
+                .build();
+        };
+        
+        // Create number row
+        auto numberRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(BLANK)
+                    .addEmboss(2.f)
+                    .addPadding(1.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build());
+                    
+        for (const auto &num : numbers) {
+            numberRow.addChild(makeKeyboardKey(num, [num]()
+                                    { 
+                                        SPDLOG_DEBUG("Number key {} pressed", num);
+                                    }));
+        }
+        keyboardRows.push_back(numberRow.build());
+        
+        // Create letter rows
+        
+        auto makeLetterRow = [&](const std::vector<std::string> &letters) -> ui::UIElementTemplateNode {
+            auto letterRow = ui::UIElementTemplateNode::Builder::create()
+                .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+                .addConfig(
+                    ui::UIConfig::Builder::create()
+                        .addColor(BLANK)
+                        .addPadding(1.f)
+                        .addEmboss(2.f)
+                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                        .build());
+                        
+            for (const auto &letter : letters) {
+                letterRow.addChild(makeKeyboardKey(letter, [letter]()
+                                    { 
+                                        SPDLOG_DEBUG("Letter key {} pressed", letter);
+                                    }));
+            }
+            return letterRow.build();
+        };
+        keyboardRows.push_back(makeLetterRow(letterRow1));
+        keyboardRows.push_back(makeLetterRow(letterRow2));
+        keyboardRows.push_back(makeLetterRow(letterRow3));
+        
+        // Create essential keys row
+        auto essentialRow = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(BLANK)
+                    .addEmboss(2.f)
+                    .addPadding(1.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build());
+        for (const auto &key : essentialKeys) {
+            essentialRow.addChild(makeKeyboardKey(key, [key]()
+                                    { 
+                                        SPDLOG_DEBUG("Essential key {} pressed", key);
+                                    }));
+        }
+        keyboardRows.push_back(essentialRow.build());
+        // Create the keyboard container
+        auto keyboardContainer = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addColor(WHITE)
+                    .addEmboss(2.f)
+                    .addPadding(0.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build());
+        for (const auto &row : keyboardRows) {
+            keyboardContainer.addChild(row);
+        }
+        
+        auto keyboardRoot = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::ROOT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(keyboardContainer.build())
+            .build();
+            
+        keyboardUIBox = ui::box::Initialize(globals::registry, {.x = 100, .y = 200}, keyboardRoot, ui::UIConfig{});
 
         // ======================================
         // ======================================
@@ -1082,18 +1202,18 @@ namespace ui_defs
         
         // add everything to the master vertical container
         masterVerticalContainer.children.push_back(titleDividers);
-        masterVerticalContainer.children.push_back(checkbox);
-        masterVerticalContainer.children.push_back(progressBar);
+        // masterVerticalContainer.children.push_back(checkbox);
+        // masterVerticalContainer.children.push_back(progressBar);
         // masterVerticalContainer.children.push_back(progressBar9Patch);
         // masterVerticalContainer.children.push_back(buttonDisabled);
-        masterVerticalContainer.children.push_back(controllerPipContainer);
+        // masterVerticalContainer.children.push_back(controllerPipContainer);
         masterVerticalContainer.children.push_back(slider);
-        // masterVerticalContainer.children.push_back(textInputRow);
+        masterVerticalContainer.children.push_back(textInputRow);
         // masterVerticalContainer.children.push_back(buttonGroupRow);
         masterVerticalContainer.children.push_back(cycleContainer);
         masterVerticalContainer.children.push_back(gridContainer);
-        // masterVerticalContainer.children.push_back(buttonForTooltip);
-        // masterVerticalContainer.children.push_back(buttonAlert);
+        masterVerticalContainer.children.push_back(buttonForTooltip);
+        masterVerticalContainer.children.push_back(buttonAlert);
 
         
         return masterVerticalContainer;

@@ -8,6 +8,11 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] highlight outline size is wrong. how to fix?
+- [ ] how to disable collision for invisible tooltips?
+- [ ] z-layer based rendering for ui.
+- [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard
+- [ ] how to do z-layer based collision detection for ui?
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.

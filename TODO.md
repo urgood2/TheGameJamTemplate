@@ -8,17 +8,215 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] not sure if object pool is being discarded upon game exit.
 - [ ] highlight outline size is wrong. how to fix?
-- [ ] how to disable collision for invisible tooltips?
-- [ ] z-layer based rendering for ui.
+- [ ] how to disable collision for invisible ui boxes??
+- [ ] z-layer based rendering for ui:
+```cpp
+// Pseudocode: assume each entity has a `LayerOrderComponent`
+std::vector<entt::entity> entities;
+registry.view<Transform, LayerOrderComponent>().each([&](auto entity, auto& transform, auto& layer) {
+    entities.push_back(entity);
+});
+
+// Sort by layer.z ascending (lower layers checked first)
+std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
+    return registry.get<LayerOrderComponent>(a).z < registry.get<LayerOrderComponent>(b).z;
+});
+```
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard
-- [ ] how to do z-layer based collision detection for ui?
+- [ ] how to do z-layer based collision detection for ui:
+```cpp
+// Render
+std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
+    return registry.get<LayerOrderComponent>(a).z < registry.get<LayerOrderComponent>(b).z;
+});
+DrawEntities(entities);
+
+// Collision (e.g., for mouse click)
+std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
+    return registry.get<LayerOrderComponent>(a).z > registry.get<LayerOrderComponent>(b).z;
+});
+for (auto e : entities) {
+    if (MouseOverlaps(registry.get<Transform>(e))) {
+        HandleClick(e);
+        break; // topmost hit only
+    }
+}
+```
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
+- [ ] example collision optimization class
+```cpp
+// BroadPhaseGrid.hpp
+#pragma once
+
+#include <unordered_map>
+#include <vector>
+#include <utility>
+#include <cmath>
+#include <array>
+#include <entt/entt.hpp>
+
+struct AABB {
+    float x, y, w, h;
+};
+
+inline bool AABBOverlap(const AABB &a, const AABB &b) {
+    return !(a.x + a.w < b.x || b.x + b.w < a.x ||
+             a.y + a.h < b.y || b.y + b.h < a.y);
+}
+
+// Optional helper to auto-generate an AABB from Transform and Size components
+struct Transform {
+    struct Vec2 { float x, y; } position;
+};
+
+struct Size {
+    float width, height;
+};
+
+inline AABB MakeAABBFromEntity(entt::registry &registry, entt::entity e) {
+    const auto &t = registry.get<Transform>(e);
+    const auto &s = registry.get<Size>(e);
+
+    float scaleX = 1.0f, scaleY = 1.0f;
+    if (auto *sc = registry.try_get<struct Scale>(e)) {
+        scaleX = sc->x;
+        scaleY = sc->y;
+    }
+
+    float width = s.width * scaleX;
+    float height = s.height * scaleY;
+
+    return AABB{
+        t.position.x,
+        t.position.y,
+        width,
+        height
+    };
+}
+
+class BroadPhaseGrid {
+public:
+    using GridKey = std::pair<int, int>;
+
+    BroadPhaseGrid(float cellSize = 128.0f)
+        : m_cellSize(cellSize) {}
+
+    void Clear() {
+        m_grid.clear();
+    }
+
+    void Insert(entt::entity e, const AABB &aabb) {
+        GridKey key = GetGridKey(aabb.x, aabb.y);
+        m_grid[key].push_back({e, aabb});
+    }
+
+    void InsertAutoAABB(entt::registry &registry, entt::entity e) {
+        AABB aabb = MakeAABBFromEntity(registry, e);
+        Insert(e, aabb);
+    }
+
+    template <typename Func>
+    void ForEachPossibleCollision(Func &&callback) {
+        static const std::array<GridKey, 9> neighborOffsets = {{
+            {-1, -1}, {0, -1}, {1, -1},
+            {-1,  0}, {0,  0}, {1,  0},
+            {-1,  1}, {0,  1}, {1,  1}
+        }};
+
+        for (const auto &[cell, list] : m_grid) {
+            for (size_t i = 0; i < list.size(); ++i) {
+                for (size_t j = i + 1; j < list.size(); ++j) {
+                    callback(list[i].first, list[j].first);
+                }
+            }
+
+            for (const auto &[dx, dy] : neighborOffsets) {
+                if (dx == 0 && dy == 0) continue;
+                GridKey neighbor = {cell.first + dx, cell.second + dy};
+                if (m_grid.find(neighbor) == m_grid.end()) continue;
+
+                for (auto &[e1, a1] : list) {
+                    for (auto &[e2, a2] : m_grid[neighbor]) {
+                        if (AABBOverlap(a1, a2)) {
+                            callback(e1, e2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<entt::entity> FindOverlapsWith(entt::registry &registry, BroadPhaseGrid &broadphase, entt::entity entityA) {
+      AABB target = MakeAABBFromEntity(registry, entityA);
+      auto key = broadphase.GetGridKey(target.x, target.y);
+
+      std::vector<entt::entity> results;
+
+      // Check this cell and neighbors
+      std::array<std::pair<int, int>, 9> neighborOffsets = {{
+          {-1, -1}, {0, -1}, {1, -1},
+          {-1,  0}, {0,  0}, {1,  0},
+          {-1,  1}, {0,  1}, {1,  1}
+      }};
+
+      for (auto [dx, dy] : neighborOffsets) {
+          auto neighborKey = std::make_pair(key.first + dx, key.second + dy);
+          auto it = broadphase.m_grid.find(neighborKey);
+          if (it == broadphase.m_grid.end()) continue;
+
+          for (auto &[otherE, otherAABB] : it->second) {
+              if (otherE == entityA) continue; // skip self
+              if (AABBOverlap(target, otherAABB)) {
+                  results.push_back(otherE);
+              }
+          }
+      }
+
+      return results;
+  }
+
+private:
+    float m_cellSize;
+
+    GridKey GetGridKey(float x, float y) const {
+        return {
+            static_cast<int>(std::floor(x / m_cellSize)),
+            static_cast<int>(std::floor(y / m_cellSize))
+        };
+    }
+
+    std::unordered_map<GridKey, std::vector<std::pair<entt::entity, AABB>>> m_grid;
+};
+```
+
+usage:
+```cpp
+// Per-frame update loop
+broadphase.Clear();
+
+// Re-insert updated AABBs for all entities this frame
+registry.view<Transform, Size>().each([&](entt::entity e, auto&, auto&) {
+    broadphase.InsertAutoAABB(registry, e);
+});
+
+// Run collision logic only between nearby likely pairs
+broadphase.ForEachPossibleCollision([&](entt::entity a, entt::entity b) {
+    // Check collision, resolve overlap, handle response
+});
+
+// collision between given entity A and others
+std::vector<entt::entity> collidedEntities = FindOverlapsWith(registry, broadphase, entityA);
+for (auto e : collidedEntities) {
+    // handle entityA vs e collision
+}
+```
 
 - [ ] Implement more UI element types:
   

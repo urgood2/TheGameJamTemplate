@@ -29,6 +29,14 @@ namespace layer
     //------------------------------------------------------------------------------------
     using DrawCommandArgs = std::variant<bool, int, int *, float *, float, Color, Camera2D *, Texture2D, struct Rectangle, struct NPatchInfo,  std::string, Font, Vector2, Vector3, Vector4, std::vector<Vector2>, std::vector<int>, std::vector<float>, Shader, entt::entity, entt::registry *>;
 
+    struct LayerOrderComponent
+    {
+        int zIndex = 0; // Z-index for sorting layers
+        bool operator<(const LayerOrderComponent &other) const {
+            return zIndex < other.zIndex;
+        }
+    };
+
     // Represents a single draw command
     struct DrawCommand
     {

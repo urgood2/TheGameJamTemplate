@@ -29,6 +29,7 @@
 #include "../systems/ui/common_definitions.hpp"
 #include "../systems/ui/inventory_ui.hpp"
 #include "../systems/localization/localization.hpp"
+#include "../systems/collision/broad_phase.hpp"
 #include "rlgl.h"
 
 using std::pair;

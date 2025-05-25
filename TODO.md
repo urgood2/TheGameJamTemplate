@@ -12,6 +12,8 @@
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] how to disable collision for invisible ui boxes??
 - [ ] z-layer based rendering for ui:
+  - [ ] add automatic z layer index assignment system for ui boxes & elements
+  - [ ] make all ui draw calls respect this z layer index
 ```cpp
 // Pseudocode: assume each entity has a `LayerOrderComponent`
 std::vector<entt::entity> entities;

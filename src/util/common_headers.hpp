@@ -33,3 +33,12 @@ using json = nlohmann::json;
 #include "magic_enum/magic_enum.hpp" // magic_enum lib
 #include "../core/globals.hpp"
 
+namespace std {
+    template<>
+    struct hash<std::pair<int, int>> {
+        auto operator()(const std::pair<int, int>& p) const noexcept -> size_t {
+            // Basic hash combiner
+            return hash<int>()(p.first) ^ (hash<int>()(p.second) << 1);
+        }
+    };
+}

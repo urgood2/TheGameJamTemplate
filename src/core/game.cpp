@@ -54,6 +54,7 @@ using std::pair;
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
+#include "systems/layer/layer_order_system.hpp"
 #include "systems/shaders/shader_system.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
@@ -673,6 +674,8 @@ namespace game
 
         if (game::isPaused)
             return;
+            
+        layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
 
         particle::UpdateParticles(globals::registry, delta);
         shaders::updateAllShaderUniforms();

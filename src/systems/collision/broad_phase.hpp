@@ -11,6 +11,15 @@
 #include "util/common_headers.hpp"
 
 
+namespace std {
+    template<>
+    struct hash<std::pair<int, int>> {
+        auto operator()(const std::pair<int, int>& p) const noexcept -> size_t {
+            // Basic hash combiner
+            return hash<int>()(p.first) ^ (hash<int>()(p.second) << 1);
+        }
+    };
+}
 
 namespace collision {
         
@@ -40,19 +49,9 @@ namespace collision {
         };
     }
     
-    namespace std {
-    template<>
-    struct hash<std::pair<int, int>> {
-        auto operator()(const std::pair<int, int>& p) const noexcept -> size_t {
-            // Basic hash combiner
-            return hash<int>()(p.first) ^ (hash<int>()(p.second) << 1);
-        }
-    };
-}
-
     class BroadPhaseGrid {
     public:
-        using GridKey = std::pair<int, int>;
+        using GridKey = ::std::pair<int, int>;
 
         BroadPhaseGrid(float cellSize = 128.0f)
             : m_cellSize(cellSize) {}
@@ -141,7 +140,7 @@ namespace collision {
             };
         }
 
-        std::unordered_map<GridKey, std::vector<std::pair<entt::entity, AABB>>> m_grid;
+        ::std::unordered_map<GridKey, std::vector<std::pair<entt::entity, AABB>>> m_grid;
     };
     
 }

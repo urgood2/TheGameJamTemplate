@@ -204,6 +204,10 @@ namespace transform
      */
     auto CheckCollisionWithPoint(entt::registry *registry, entt::entity e, const Vector2 &point) -> bool;
     
+    extern std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point);    
+    
+    extern std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& point);    
+    
     auto HandleClick(entt::registry *registry, entt::entity e) -> void;
     
     auto HandleClickReleased(entt::registry *registry, entt::entity e) -> void;

@@ -1435,6 +1435,125 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             return false;
         }
     }
+    
+    /**
+     * @brief Finds all entities at a specific point in the world.
+     * 
+     * This function performs a broadphase query using a quadtree to find candidate entities
+     * near the specified point. It then filters the results by checking precise collision
+     * with the point. The resulting entities are sorted by their zIndex, if they have a 
+     * LayerOrderComponent, with entities lacking a zIndex placed at the end.
+     * 
+     * @param point The point in world coordinates to search for entities.
+     * @return A sorted vector of entities at the specified point, from lowest to highest zIndex.
+     *         Entities without a zIndex are placed after those with a zIndex.
+     */
+    std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& point) {
+        using namespace quadtree;
+        // Make a tiny AABB around the point for the quadtree broadphase
+        constexpr float pointBoxSize = 1.0f;
+        Box<float> queryBox = {
+            {point.x - pointBoxSize * 0.5f, point.y - pointBoxSize * 0.5f},
+            {pointBoxSize, pointBoxSize}
+        };
+    
+        if (!globals::worldBounds.contains(queryBox)) {
+            return {};
+        }
+    
+        // Broadphase query to get possible candidates
+        auto results = globals::quadtree.query(queryBox);
+    
+        // Filter results using precise point check
+        std::vector<entt::entity> filtered;
+        filtered.reserve(results.size());
+    
+        for (entt::entity e : results) {
+            if (e == globals::cursor) continue;
+            if (transform::CheckCollisionWithPoint(&globals::registry, e, point)) {
+                filtered.push_back(e);
+            }
+        }
+    
+        // Sort from lowest to highest zIndex
+        std::sort(filtered.begin(), filtered.end(), [](entt::entity a, entt::entity b) {
+            bool hasA = globals::registry.any_of<layer::LayerOrderComponent>(a);
+            bool hasB = globals::registry.any_of<layer::LayerOrderComponent>(b);
+    
+            if (hasA && hasB) {
+                return globals::registry.get<layer::LayerOrderComponent>(a).zIndex <
+                       globals::registry.get<layer::LayerOrderComponent>(b).zIndex;
+            }
+    
+            return hasA < hasB; // put things with a zIndex after things without
+        });
+    
+        return filtered;
+    }
+    
+    
+    /**
+     * @brief Finds the topmost entity at a given point in the world.
+     *
+     * This function queries the quadtree for entities near the specified point
+     * and determines the topmost entity based on layer order and collision checks.
+     *
+     * @param point The point in world coordinates to check for entities.
+     * @return An optional containing the topmost entity at the point, or std::nullopt
+     *         if no entity is found or the point is out of bounds.
+     *
+     * The function performs the following steps:
+     * 1. Creates a small bounding box around the point for querying the quadtree.
+     * 2. Checks if the point is within the world bounds; returns std::nullopt if not.
+     * 3. Queries the quadtree for entities within the bounding box.
+     * 4. Sorts the entities by their layer order, with topmost entities last.
+     * 5. Traverses the sorted entities from topmost to bottommost, checking for
+     *    collision with the point.
+     * 6. Returns the first entity that collides with the point, skipping the cursor entity.
+     */
+    std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point) {
+        using namespace quadtree;
+        // Make a tiny AABB around the point for the quadtree query
+        constexpr float pointBoxSize = 1.0f;
+        Box<float> queryBox = {
+            {point.x - pointBoxSize * 0.5f, point.y - pointBoxSize * 0.5f},
+            {pointBoxSize, pointBoxSize}
+        };
+    
+        // Skip query if point is out of bounds
+        if (!globals::worldBounds.contains(queryBox)) {
+            return std::nullopt;
+        }
+    
+        // Query quadtree for potential candidates
+        auto results = globals::quadtree.query(queryBox);
+    
+        // Sort by layer order (topmost last)
+        std::sort(results.begin(), results.end(), [](entt::entity a, entt::entity b) {
+            bool hasA = globals::registry.any_of<layer::LayerOrderComponent>(a);
+            bool hasB = globals::registry.any_of<layer::LayerOrderComponent>(b);
+    
+            if (hasA && hasB) {
+                return globals::registry.get<layer::LayerOrderComponent>(a).zIndex <
+                       globals::registry.get<layer::LayerOrderComponent>(b).zIndex;
+            }
+            return hasA < hasB; // Entities without LayerOrderComponent go first
+        });
+    
+        // Traverse from topmost entity downward
+        for (auto it = results.rbegin(); it != results.rend(); ++it) {
+            entt::entity e = *it;
+    
+            if (e == globals::cursor) continue;
+    
+            if (transform::CheckCollisionWithPoint(&globals::registry, e, point)) {
+                return e; // First topmost entity that matches
+            }
+        }
+    
+        return std::nullopt;
+    }
+    
 
     auto SetClickOffset(entt::registry *registry, entt::entity e, const Vector2 &point, bool trueForClickFalseForHover) -> void
     {

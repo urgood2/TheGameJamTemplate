@@ -8,7 +8,7 @@
 #include "../systems/anim_system.hpp"
 #include "systems/input/input_function_data.hpp"
 #include "systems/shaders/shader_system.hpp"
-
+#include "systems/collision/Quadtree.h"
 
 #include <iostream>
 #include <sstream>
@@ -63,6 +63,35 @@ namespace globals {
     int gameWorldViewportWidth{800}, gameWorldViewportHeight{500};
 
     int worldWidth{}, worldHeight{}; // world dimensions
+    
+    // collision detection
+    std::function<quadtree::Box<float>(entt::entity)> getBox = [](entt::entity e) -> quadtree::Box<float> {
+        auto &transform = globals::registry.get<transform::Transform>(e);
+    
+        const float x = transform.getActualX();
+        const float y = transform.getActualY();
+        const float w = transform.getActualW();
+        const float h = transform.getActualH();
+        const float r = std::abs(transform.getActualRotation());
+    
+        // Use inflation factor only when rotation is non-negligible
+        constexpr float inflation = 1.4142f; // sqrt(2)
+        const float factor = (r < 0.0001f) ? 1.0f : inflation;
+    
+        const float hw = w * 0.5f * factor;
+        const float hh = h * 0.5f * factor;
+    
+        const float cx = x + w * 0.5f;
+        const float cy = y + h * 0.5f;
+    
+        return quadtree::Box<float>{
+            {cx - hw, cy - hh},
+            {hw * 2.0f, hh * 2.0f}
+        };
+    };
+    
+    quadtree::Box<float> worldBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the world bounds for the quadtree
+    quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree(worldBounds, getBox);
 
     // Keep track of loading messages
     std::map<int, std::string> loadingStages;

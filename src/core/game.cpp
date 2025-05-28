@@ -148,19 +148,14 @@ namespace game
     TextSystem::Text text;
     entt::entity textEntity{entt::null};
 
-    static auto getBox = [](entt::entity e) -> quadtree::Box<float> {
-            auto& transform = globals::registry.get<transform::Transform>(e);
-            return quadtree::Box<float>{{transform.getActualX(), transform.getActualY()}, {transform.getActualW(), transform.getActualH()}};
-        };
-    quadtree::Box<float> worldBounds{0, 0, globals::screenWidth, globals::screenHeight}; // Define the world bounds for the quadtree
-    quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree(worldBounds, getBox);
+    
 
     auto initCollisionEveryFrame() -> void
     {
         using namespace quadtree;
         
         // reset the quadtree for the current frame
-        quadtree = Quadtree<entt::entity, decltype(getBox)>(worldBounds, getBox);
+        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(globals::worldBounds, globals::getBox);
 
         // TODO: probably need a heuristic to determine when all transforms are within bounds
         // Populate the Quadtree Per Frame
@@ -169,27 +164,61 @@ namespace game
                 transform.getActualX() + transform.getActualW() <= globals::screenWidth &&
                 transform.getActualY() + transform.getActualH() <= globals::screenHeight) 
             {
-                quadtree.add(e);
+                globals::quadtree.add(e);
             }
                 
         });
 
         // all entities intersecting a region
         
-        Box<float> queryArea = getBox(globals::cursor);
-        // return if cursor not contained in world bounds
-        if (!worldBounds.contains(queryArea)) {
-            // SPDLOG_DEBUG("Query area is out of bounds: ({}, {})", queryArea.getTopLeft().x, queryArea.getTopLeft().y);
-            return;
+        auto entitiesAtPoint = transform::FindAllEntitiesAtPoint(
+            GetMousePosition());
+        
+        SPDLOG_DEBUG("excluding cursor & background room entity from entities at point, showing in bottom to top order");
+            
+        // print out the entities at the point
+        for (auto e : entitiesAtPoint) {
+            if (e == globals::cursor || e == globals::gameWorldContainerEntity) {
+                // Skip the cursor entity and the game world container entity
+                continue;
+            }
+            // Entity e intersects with the query area
+            SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
+                (int)e, GetMousePosition().x, GetMousePosition().y);
         }
-        auto results = quadtree.query(queryArea);
-
-        for (auto e : results) {
-            //TODO: leave out the entity itself from the query results
-            // Process entity e
-            // SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
-                // (int)e, queryArea.getTopLeft().x, queryArea.getTopLeft().y);
-        }
+        
+        // Box<float> queryArea = globals::getBox(globals::cursor);
+        // // return if cursor not contained in world bounds
+        // if (!globals::worldBounds.contains(queryArea)) {
+        //     // SPDLOG_DEBUG("Query area is out of bounds: ({}, {})", queryArea.getTopLeft().x, queryArea.getTopLeft().y);
+        //     return;
+        // }
+        // auto results = globals::quadtree.query(queryArea);
+        
+        // // sort results by layer order
+        // std::sort(results.begin(), results.end(), [](entt::entity a, entt::entity b) {
+        //     if (globals::registry.any_of<layer::LayerOrderComponent>(a) && globals::registry.any_of<layer::LayerOrderComponent>(b)) {
+        //         return globals::registry.get<layer::LayerOrderComponent>(a).zIndex < globals::registry.get<layer::LayerOrderComponent>(b).zIndex;
+        //     }
+        //     return false; // if either entity does not have LayerOrderComponent, do not sort
+        // });
+        
+        // SPDLOG_DEBUG("Query area intersects with {} entities at ({}, {})", results.size(), queryArea.getTopLeft().x, queryArea.getTopLeft().y);
+        // //TODO: need to revise with checkCollisionWithPoint to confirm, also sort by layer order
+        // auto point = ::Vector2{queryArea.getTopLeft().x, queryArea.getTopLeft().y};
+        // for (auto e : results) {
+            
+        //     if (e == globals::cursor) {
+        //         // Skip the cursor entity itself
+        //         continue;
+        //     }
+            
+        //     if (!transform::CheckCollisionWithPoint(&globals::registry, e, point)) return;
+            
+        //     // Entity e intersects with the query area
+        //     SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
+        //         (int)e, queryArea.getTopLeft().x, queryArea.getTopLeft().y);
+        // }
 
         // // broad phase collision detection
         // auto overlaps = quadtree.findAllIntersections();

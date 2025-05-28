@@ -28,6 +28,7 @@
 
 #include "../systems/anim_system.hpp"
 #include "../systems/layer/layer.hpp"
+#include "../systems/collision/Quadtree.h"
 #include "../systems/shaders/shader_system.hpp"
 
 #include "third_party/rlImGui/imgui.h" // raylib imGUI binding
@@ -99,6 +100,16 @@ namespace globals
     //---------------------------------------------------------
     // imGUI variables
     extern bool debugRenderWindowShowing;
+    
+    // collision detection
+    // Function to get the bounding box of an entity
+    extern std::function<quadtree::Box<float>(entt::entity)> getBox;
+
+    // Define the world bounds for the quadtree
+    extern quadtree::Box<float> worldBounds;
+
+    // Quadtree instance for collision detection
+    extern quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree;
 
     //---------------------------------------------------------
     // variables

@@ -30,6 +30,7 @@
 #include "../systems/ui/inventory_ui.hpp"
 #include "../systems/localization/localization.hpp"
 #include "../systems/collision/broad_phase.hpp"
+#include "../systems/collision/Quadtree.h"
 #include "rlgl.h"
 
 using std::pair;
@@ -151,7 +152,42 @@ namespace game
 
 
 
-    
+    auto initCollisionEveryFrame() -> void
+    {
+        using namespace quadtree;
+
+        auto getBox = [&](entt::entity e) -> quadtree::Box<float> {
+            auto& transform = globals::registry.get<transform::Transform>(e);
+            return quadtree::Box<float>{{transform.getActualX(), transform.getActualY()}, {transform.getActualW(), transform.getActualH()}};
+        };
+
+        Box<float> worldBounds{{0, 0}, {(float)GetScreenWidth(), (float)GetScreenHeight()}}; 
+
+        quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree(worldBounds, getBox);
+
+        // Populate the Quadtree Per Frame
+        globals::registry.view<transform::Transform>().each([&](entt::entity e, transform::Transform& transform) {
+            if (worldBounds.contains(getBox(e))) {
+                quadtree.add(e);
+            }
+        });
+
+        // all entities intersecting a region
+        Box<float> queryArea = getBox(globals::cursor);
+        auto results = quadtree.query(queryArea);
+
+        for (auto e : results) {
+            // Process entity e
+        }
+
+        // broad phase collision detection
+        auto overlaps = quadtree.findAllIntersections();
+
+        for (auto &[a, b] : overlaps) {
+            // Handle collision between entity a and entity b
+        }
+
+    }
 
 
     // perform game-specific initialization here. This makes it easier to find all the initialization code

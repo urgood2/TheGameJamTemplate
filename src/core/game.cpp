@@ -148,44 +148,55 @@ namespace game
     TextSystem::Text text;
     entt::entity textEntity{entt::null};
 
-    
-
-
+    static auto getBox = [](entt::entity e) -> quadtree::Box<float> {
+            auto& transform = globals::registry.get<transform::Transform>(e);
+            return quadtree::Box<float>{{transform.getActualX(), transform.getActualY()}, {transform.getActualW(), transform.getActualH()}};
+        };
+    quadtree::Box<float> worldBounds{0, 0, globals::screenWidth, globals::screenHeight}; // Define the world bounds for the quadtree
+    quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree(worldBounds, getBox);
 
     auto initCollisionEveryFrame() -> void
     {
         using namespace quadtree;
+        
+        // reset the quadtree for the current frame
+        quadtree = Quadtree<entt::entity, decltype(getBox)>(worldBounds, getBox);
 
-        auto getBox = [&](entt::entity e) -> quadtree::Box<float> {
-            auto& transform = globals::registry.get<transform::Transform>(e);
-            return quadtree::Box<float>{{transform.getActualX(), transform.getActualY()}, {transform.getActualW(), transform.getActualH()}};
-        };
-
-        Box<float> worldBounds{{0, 0}, {(float)GetScreenWidth(), (float)GetScreenHeight()}}; 
-
-        quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree(worldBounds, getBox);
-
+        // TODO: probably need a heuristic to determine when all transforms are within bounds
         // Populate the Quadtree Per Frame
         globals::registry.view<transform::Transform>().each([&](entt::entity e, transform::Transform& transform) {
-            if (worldBounds.contains(getBox(e))) {
+            if (transform.getActualX() >= 0 && transform.getActualY() >= 0 &&
+                transform.getActualX() + transform.getActualW() <= globals::screenWidth &&
+                transform.getActualY() + transform.getActualH() <= globals::screenHeight) 
+            {
                 quadtree.add(e);
             }
+                
         });
 
         // all entities intersecting a region
+        
         Box<float> queryArea = getBox(globals::cursor);
+        // return if cursor not contained in world bounds
+        if (!worldBounds.contains(queryArea)) {
+            // SPDLOG_DEBUG("Query area is out of bounds: ({}, {})", queryArea.getTopLeft().x, queryArea.getTopLeft().y);
+            return;
+        }
         auto results = quadtree.query(queryArea);
 
         for (auto e : results) {
+            //TODO: leave out the entity itself from the query results
             // Process entity e
+            // SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
+                // (int)e, queryArea.getTopLeft().x, queryArea.getTopLeft().y);
         }
 
-        // broad phase collision detection
-        auto overlaps = quadtree.findAllIntersections();
+        // // broad phase collision detection
+        // auto overlaps = quadtree.findAllIntersections();
 
-        for (auto &[a, b] : overlaps) {
-            // Handle collision between entity a and entity b
-        }
+        // for (auto &[a, b] : overlaps) {
+        //     // Handle collision between entity a and entity b
+        // }
 
     }
 
@@ -731,6 +742,11 @@ namespace game
         // {
         //     ui::box::Move(globals::registry, e, f);
         // }
+        {
+            ZoneScopedN("Collison quadtree populate Update");
+            initCollisionEveryFrame();
+        }
+        
 
         {
             ZoneScopedN("UIElement Update");

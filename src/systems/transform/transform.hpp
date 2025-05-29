@@ -21,6 +21,50 @@
 namespace transform
 {
     struct GameObject;
+    
+    struct CollisionOrderInfo {
+        bool hasCollisionOrder;
+        entt::entity parentBox;       // UIBox container (if any)
+        int treeOrder;                // Index among siblings in parent box
+        int layerOrder;               // zIndex of the parent box
+    };
+    
+    
+    // for ui elements, helps with collision ordering
+    struct TreeOrderComponent {
+        int order = -1;
+    };
+    
+    inline auto GetCollisionOrderInfo(entt::registry& registry, entt::entity e) -> CollisionOrderInfo {
+        CollisionOrderInfo info{};
+    
+        if (!registry.valid(e)) return info;
+    
+        if (!registry.all_of<transform::GameObject, transform::InheritedProperties>(e)) return info;
+    
+        const auto& node = registry.get<transform::GameObject>(e);
+        const auto& role = registry.get<transform::InheritedProperties>(e);
+    
+        info.hasCollisionOrder = node.flags.collisionOrder;
+    
+        if (!info.hasCollisionOrder) return info;
+    
+        info.parentBox = role.container;
+        if (!registry.valid(info.parentBox)) return info;
+    
+        // Get tree order from TreeOrderComponent
+        if (registry.all_of<TreeOrderComponent>(e)) {
+            info.treeOrder = registry.get<TreeOrderComponent>(e).order;
+        }
+    
+        // Get layer order from parent box
+        if (registry.all_of<layer::LayerOrderComponent>(info.parentBox)) {
+            info.layerOrder = registry.get<layer::LayerOrderComponent>(info.parentBox).zIndex;
+        }
+    
+        return info;
+    }
+    
 
     enum class TransformMethod
     {

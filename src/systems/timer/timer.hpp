@@ -14,6 +14,10 @@
 #include <limits>
 #include <map>
 
+
+#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+
+
 // TODO: probably use a separate random isntance instead of default one
 #include "effolkronium/random.hpp"
 using Random = effolkronium::random_static;
@@ -303,6 +307,7 @@ namespace timer
 
         inline void update_timers(float dt)
         {
+            ZoneScopedN("Update Timers"); // custom label
             for (auto it = timers.begin(); it != timers.end();)
             {
                 Timer &timer = it->second;

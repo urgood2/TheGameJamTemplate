@@ -922,6 +922,50 @@ namespace ui
             visitor(it->uiElement);
         }
     }
+    
+    void box::AssignTreeOrderComponents(entt::registry& registry, entt::entity rootUIElement) {
+        struct StackEntry {
+            entt::entity uiElement{entt::null};
+        };
+    
+        std::vector<StackEntry> processingOrder;
+        std::stack<StackEntry> stack;
+    
+        stack.push({rootUIElement});
+        int currentOrder = 0;
+    
+        SPDLOG_DEBUG("=== Begin AssignTreeOrderComponents ===");
+    
+        // Step 1: Top-down DFS collection + assign TreeOrderComponent
+        while (!stack.empty()) {
+            auto entry = stack.top();
+            stack.pop();
+    
+            processingOrder.push_back(entry);
+    
+            entt::entity e = entry.uiElement;
+            if (!registry.valid(e)) continue;
+    
+            registry.emplace_or_replace<transform::TreeOrderComponent>(e, transform::TreeOrderComponent{currentOrder});
+    
+            SPDLOG_DEBUG("Assigned TreeOrderComponent to entity {} with order {}", static_cast<int>(e), currentOrder);
+            ++currentOrder;
+    
+            if (auto* node = registry.try_get<transform::GameObject>(e)) {
+                SPDLOG_DEBUG("Entity {} has {} ordered children", static_cast<int>(e), node->orderedChildren.size());
+    
+                for (auto it = node->orderedChildren.rbegin(); it != node->orderedChildren.rend(); ++it) {
+                    if (registry.valid(*it)) {
+                        SPDLOG_DEBUG("  Queuing child entity {} for traversal", static_cast<int>(*it));
+                        stack.push({*it});
+                    }
+                }
+            }
+        }
+    
+        SPDLOG_DEBUG("=== Finished AssignTreeOrderComponents. Total entities ordered: {} ===", currentOrder);
+    }
+    
 
     auto isVertContainer(entt::registry &registry, entt::entity uiElement) -> bool
     {

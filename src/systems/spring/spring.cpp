@@ -9,6 +9,7 @@ namespace spring
     // updates all spring components in the registry
     auto updateAllSprings(entt::registry &registry, float deltaTime) -> void
     {
+        ZoneScopedN("Update springs");
         auto view = registry.view<Spring>();
         for (auto entity : view)
         {

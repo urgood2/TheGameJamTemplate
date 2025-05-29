@@ -715,6 +715,7 @@ namespace timer
             // Update function to process events
             void update(bool forced)
             {
+                ZoneScopedN("Update event queue");
                 queue_timer = globals::G_TIMER_REAL;
 
                 if (queue_timer >= queue_last_processed + queue_dt || forced)

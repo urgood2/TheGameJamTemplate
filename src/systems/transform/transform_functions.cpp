@@ -914,6 +914,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto UpdateAllTransforms(entt::registry *registry, float dt) -> void
     {
+        ZoneScopedN("Update all transforms");
         auto view = registry->view<Transform, InheritedProperties, GameObject>();
         for (auto e : view)
         {

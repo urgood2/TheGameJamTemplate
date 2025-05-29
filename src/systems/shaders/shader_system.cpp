@@ -239,6 +239,7 @@ namespace shaders {
 
     // Called every frame to update shader system
     auto update(float dt) -> void {
+        ZoneScopedN("Shaders update");
         updateAllShaderUniforms();
         hotReloadShaders(); // Check for shader file modifications
     }

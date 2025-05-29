@@ -8,8 +8,24 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] test using AssignTreeOrderComponents, must apply it in box::init and box::renewalignment
+- [ ] collision sort for ui elements:
+```cpp
+std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
+    auto infoA = GetCollisionOrderInfo(registry, a);
+    auto infoB = GetCollisionOrderInfo(registry, b);
+
+    if (!infoA.hasCollisionOrder || !infoB.hasCollisionOrder) return false;
+
+    if (infoA.parentBox == infoB.parentBox) {
+        return infoA.treeOrder < infoB.treeOrder;
+    }
+
+    return infoA.layerOrder < infoB.layerOrder;
+});
+```
 - [ ] ui objects & elements need layer order set if collision order is enabled for them? if they are in the same uibox, then they need to be ordered by tree order. if they are not part of the same uibox, then they must be ordered by the parent uibox's layer order. how to do this? -> use this sort https://chatgpt.com/share/68372471-83c4-800a-b4a3-0fcdbcefcc24
-- [ ] use FindTopEntityAtPoint and FindAllEntitiesAtPoint for point collision
+- [ ] use FindTopEntityAtPoint and FindAllEntitiesAtPoint for point collision -> need  anew version to check if a collided entity at a certain point matches a certain entity
 - [ ] integrate broadphase collision & collision sort based on order layer
 - [ ] apply layer order based rendering to all rendering relevant
 - [ ] not sure if object pool is being discarded upon game exit.

@@ -174,7 +174,7 @@ namespace game
         auto entitiesAtPoint = transform::FindAllEntitiesAtPoint(
             GetMousePosition());
         
-        SPDLOG_DEBUG("excluding cursor & background room entity from entities at point, showing in bottom to top order");
+        // SPDLOG_DEBUG("excluding cursor & background room entity from entities at point, showing in bottom to top order");
             
         // print out the entities at the point
         for (auto e : entitiesAtPoint) {
@@ -183,8 +183,8 @@ namespace game
                 continue;
             }
             // Entity e intersects with the query area
-            SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
-                (int)e, GetMousePosition().x, GetMousePosition().y);
+            // SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
+            //     (int)e, GetMousePosition().x, GetMousePosition().y);
         }
         
         // Box<float> queryArea = globals::getBox(globals::cursor);
@@ -465,11 +465,10 @@ namespace game
         // // SPDLOG_DEBUG("Injecting dynamic motion");
         // transform::InjectDynamicMotion(&globals::registry, transformEntity, .5f); });
 
-        // // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
-        // //                                 { 
-        // //                                     SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); 
-        // //                                     TextSystem::Functions::debugPrintText(textEntity);
-        // //                                 });
+        timer::TimerSystem::timer_every(5.0f, [](std::optional<float> f)
+                                        { 
+                                            SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0)); 
+                                        });
 
         // timer::TimerSystem::timer_every(4.0f, [](std::optional<float> f)
         //                                 {

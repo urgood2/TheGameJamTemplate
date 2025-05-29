@@ -1492,6 +1492,44 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         return filtered;
     }
     
+    auto GetCollisionOrderInfo(entt::registry& registry, entt::entity e) -> CollisionOrderInfo {
+        CollisionOrderInfo info{};
+    
+        if (!registry.valid(e)) return info;
+    
+        if (!registry.all_of<transform::GameObject, transform::InheritedProperties>(e)) return info;
+    
+        const auto& node = registry.get<transform::GameObject>(e);
+        const auto& role = registry.get<transform::InheritedProperties>(e);
+        auto collisionOrderComponent = registry.try_get<transform::TreeOrderComponent>(e);
+        auto uiElementComponent = registry.try_get<ui::UIElementComponent>(e);
+        
+        if (registry.any_of<transform::TreeOrderComponent, layer::LayerOrderComponent>(e)) {
+            info.hasCollisionOrder = true;
+        } else {
+            info.hasCollisionOrder = false;
+        }
+        if (!info.hasCollisionOrder) return info;
+    
+        info.parentBox = entt::null;
+        if (uiElementComponent) {
+            info.parentBox = uiElementComponent->uiBox;
+        }
+        if (!registry.valid(info.parentBox)) return info;
+    
+        // Get tree order from TreeOrderComponent
+        if (registry.all_of<TreeOrderComponent>(e)) {
+            info.treeOrder = registry.get<TreeOrderComponent>(e).order;
+        }
+    
+        // Get layer order from parent box
+        if (registry.all_of<layer::LayerOrderComponent>(info.parentBox)) {
+            info.layerOrder = registry.get<layer::LayerOrderComponent>(info.parentBox).zIndex;
+        }
+    
+        return info;
+    }
+    
     
     /**
      * @brief Finds the topmost entity at a given point in the world.

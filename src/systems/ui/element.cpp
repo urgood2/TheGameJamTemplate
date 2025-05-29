@@ -371,6 +371,7 @@ namespace ui
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
         auto *role = registry.try_get<transform::InheritedProperties>(entity);
+        auto treeOrder = registry.try_get<transform::TreeOrderComponent>(entity);
 
         // Ensure the entity is a valid UIElement
         if (!uiElement || !uiConfig || !transform)
@@ -382,7 +383,7 @@ namespace ui
         std::string UIT(magic_enum::enum_name(uiElement->UIT));
 
         // Build the topology string with indentation
-        std::string boxStr = fmt::format("\n{}| {} | - ID: {} [entt-{}] w/h: {}/{} UIElement children: {} | LOC({},{}) OFF({},{}) OFF_ALN({},{}) {}",
+        std::string boxStr = fmt::format("\n{}| {} | - ID: {} [entt-{}] w/h: {}/{} UIElement children: {} | LOC({},{}) OFF({},{}) OFF_ALN({},{}) {} TreeOrder: {}",
             std::string(indent * 2, ' '),
             UIT,
             uiConfig->id.value_or("N/A"),
@@ -396,7 +397,9 @@ namespace ui
             static_cast<int>(role->offset->y),
             static_cast<int>(role->flags->extraAlignmentFinetuningOffset.x),
             static_cast<int>(role->flags->extraAlignmentFinetuningOffset.y),
-            node->state.isBeingHovered ? "HOVERED" : "");
+            node->state.isBeingHovered ? "HOVERED" : "",
+            treeOrder? std::to_string(treeOrder->order) : "N/A"
+        );
 
         // If this is an "Object" (UIT == "O"), determine object type
         if (uiElement->UIT == UITypeEnum::OBJECT)

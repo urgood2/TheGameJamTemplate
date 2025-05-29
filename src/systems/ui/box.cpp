@@ -1774,8 +1774,10 @@ namespace ui
         AssertThat(transform, Is().Not().EqualTo(nullptr));
         AssertThat(uiBox, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
+        
+        auto layerOrderComp = globals::registry.try_get<layer::LayerOrderComponent>(self);
 
-        std::string result = fmt::format(" \n| UIBox | - ID: {} [entt-{}] w/h: {}/{} UIElement children: {} | LOC({},{}) OFF({},{}) OFF_ALN({},{}) {}",
+        std::string result = fmt::format(" \n| UIBox | - ID: {} [entt-{}] w/h: {}/{} UIElement children: {} | LOC({},{}) OFF({},{}) OFF_ALN({},{}) {} LayerOrder: {}",
                                          uiConfig->id.value_or("N/A"),
                                          static_cast<int>(self),
                                          static_cast<int>(transform->getActualW()),
@@ -1787,7 +1789,9 @@ namespace ui
                                          static_cast<int>(role->offset->y),
                                          static_cast<int>(role->flags->extraAlignmentFinetuningOffset.x),
                                          static_cast<int>(role->flags->extraAlignmentFinetuningOffset.y),
-                                         uiBoxObject->state.isBeingHovered? "HOVERED" : "");
+                                         uiBoxObject->state.isBeingHovered? "HOVERED" : "",
+                                         layerOrderComp ? std::to_string(layerOrderComp->zIndex) : "N/A"
+                                        );
 
         if (uiBox->uiRoot)
         {

@@ -208,6 +208,8 @@ namespace transform
     
     extern std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& point);    
     
+    extern auto GetCollisionOrderInfo(entt::registry& registry, entt::entity e) -> CollisionOrderInfo;
+    
     auto HandleClick(entt::registry *registry, entt::entity e) -> void;
     
     auto HandleClickReleased(entt::registry *registry, entt::entity e) -> void;

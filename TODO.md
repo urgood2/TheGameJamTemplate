@@ -8,8 +8,6 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
-- [ ] need to make sure ui box & elements have layer order and tree order for collision resolution . animations & text objects also need tree order, one more than its parent ui element (master order + 1)
-- [ ] test using AssignTreeOrderComponents, must apply it in box::init and box::renewalignment
 - [ ] collision sort for ui elements:
 ```cpp
 std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {

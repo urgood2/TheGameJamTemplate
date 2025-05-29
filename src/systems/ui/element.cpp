@@ -459,6 +459,9 @@ namespace ui
                         static_cast<int>(objectRole->master));
                 }
                 
+                if (registry.try_get<transform::TreeOrderComponent>(*uiConfig->object))
+                    boxStr += fmt::format(" TreeOrder: {}",
+                    registry.get<transform::TreeOrderComponent>(*uiConfig->object).order);
                     
                 // else if (registry.try_get<Particles>(*uiConfig->object)) objectType = "Particles";
                 // else if (registry.try_get<AnimatedSprite>(*uiConfig->object)) objectType = "AnimatedSprite";

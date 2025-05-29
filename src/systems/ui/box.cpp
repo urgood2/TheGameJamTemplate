@@ -193,6 +193,8 @@ namespace ui
         });
 
         ui::element::InitializeVisualTransform(registry, uiRoot);
+        
+        AssignTreeOrderComponents(registry, uiRoot);
     }
 
     entt::entity box::Initialize(entt::registry &registry, const TransformConfig &transformData,
@@ -296,6 +298,8 @@ namespace ui
         // LATER: LR clamp not implemented, not sure if necessary
 
         ui::element::InitializeVisualTransform(registry, uiRoot);
+        
+        AssignTreeOrderComponents(registry, uiRoot);
 
         // If this is a root UIBox, store it in an instance list
         if (config->instanceType)
@@ -947,6 +951,15 @@ namespace ui
             if (!registry.valid(e)) continue;
     
             registry.emplace_or_replace<transform::TreeOrderComponent>(e, transform::TreeOrderComponent{currentOrder});
+            
+            // does e have an attached object (animation/text)
+            auto &uiConfig = registry.get<UIConfig>(e);
+            if (uiConfig.object)
+            {
+                // if it has an object, set the order on the object as well, but one above the current order
+                auto object = uiConfig.object.value();
+                registry.emplace_or_replace<transform::TreeOrderComponent>(object, transform::TreeOrderComponent{currentOrder + 1});
+            }
     
             SPDLOG_DEBUG("Assigned TreeOrderComponent to entity {} with order {}", static_cast<int>(e), currentOrder);
             ++currentOrder;

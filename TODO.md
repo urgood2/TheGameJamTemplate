@@ -8,31 +8,39 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
-- [ ] collision sort for ui elements:
+- [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable)
 ```cpp
-std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
-    auto infoA = GetCollisionOrderInfo(registry, a);
-    auto infoB = GetCollisionOrderInfo(registry, b);
+std::sort(drawCommands.begin(), drawCommands.end(), [&](const DrawCommand& a, const DrawCommand& b) {
+    auto layerA = registry.any_of<layer::LayerOrderComponent>(a.entity) ? registry.get<layer::LayerOrderComponent>(a.entity).zIndex : 0;
+    auto layerB = registry.any_of<layer::LayerOrderComponent>(b.entity) ? registry.get<layer::LayerOrderComponent>(b.entity).zIndex : 0;
 
-    if (!infoA.hasCollisionOrder || !infoB.hasCollisionOrder) return false;
-
-    if (infoA.parentBox == infoB.parentBox) {
-        return infoA.treeOrder < infoB.treeOrder;
+    if (layerA != layerB) {
+        return layerA < layerB;
     }
 
-    return infoA.layerOrder < infoB.layerOrder;
+    // Same layer order — check tree order
+    auto treeOrderA = registry.any_of<transform::TreeOrderComponent>(a.entity) ? registry.get<transform::TreeOrderComponent>(a.entity).order : 0;
+    auto treeOrderB = registry.any_of<transform::TreeOrderComponent>(b.entity) ? registry.get<transform::TreeOrderComponent>(b.entity).order : 0;
+
+    return treeOrderA < treeOrderB;
 });
+
 ```
-- [ ] ui objects & elements need layer order set if collision order is enabled for them? if they are in the same uibox, then they need to be ordered by tree order. if they are not part of the same uibox, then they must be ordered by the parent uibox's layer order. how to do this? -> use this sort https://chatgpt.com/share/68372471-83c4-800a-b4a3-0fcdbcefcc24
-- [ ] use FindTopEntityAtPoint and FindAllEntitiesAtPoint for point collision -> need  anew version to check if a collided entity at a certain point matches a certain entity
+
+- [ ] use FindTopEntityAtPoint and FindAllEntitiesAtPoint for point collision
 - [ ] integrate broadphase collision & collision sort based on order layer
 - [ ] apply layer order based rendering to all rendering relevant
 - [ ] not sure if object pool is being discarded upon game exit.
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] how to disable collision for invisible ui boxes??
 - [ ] z-layer based rendering for ui:
-  - [ ] add automatic z layer index assignment system for ui boxes & elements
-  - [ ] make all ui draw calls respect this z layer index
+  - [ ] make all ui draw calls respect this z layer index (see below)
+- [ ] all objects, including ui tree elements, need a layerorder object:
+```
+Sort all draw commands by:
+- LayerOrder first (lowest to highest, so higher layers draw later and appear on top).
+- TreeOrder second (within the same LayerOrder, children draw in natural hierarchical order).
+```
 ```cpp
 // Pseudocode: assume each entity has a `LayerOrderComponent`
 std::vector<entt::entity> entities;
@@ -47,53 +55,12 @@ std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) 
 ```
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard
 - [ ] how to do z-layer based collision detection for ui:
-```cpp
-// Render
-std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
-    return registry.get<LayerOrderComponent>(a).z < registry.get<LayerOrderComponent>(b).z;
-});
-DrawEntities(entities);
-
-// Collision (e.g., for mouse click)
-std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
-    return registry.get<LayerOrderComponent>(a).z > registry.get<LayerOrderComponent>(b).z;
-});
-for (auto e : entities) {
-    if (MouseOverlaps(registry.get<Transform>(e))) {
-        HandleClick(e);
-        break; // topmost hit only
-    }
-}
-```
 - [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
-- [ ] example collision optimization class
-// BroadPhaseGrid.hp
-usage:
-```cpp
-// Per-frame update loop
-broadphase.Clear();
-
-// Re-insert updated AABBs for all entities this frame
-registry.view<Transform, Size>().each([&](entt::entity e, auto&, auto&) {
-    broadphase.InsertAutoAABB(registry, e);
-});
-
-// Run collision logic only between nearby likely pairs
-broadphase.ForEachPossibleCollision([&](entt::entity a, entt::entity b) {
-    // Check collision, resolve overlap, handle response
-});
-
-// collision between given entity A and others
-std::vector<entt::entity> collidedEntities = FindOverlapsWith(registry, broadphase, entityA);
-for (auto e : collidedEntities) {
-    // handle entityA vs e collision
-}
-```
 
 - [ ] Implement more UI element types:
   

@@ -171,21 +171,21 @@ namespace game
 
         // all entities intersecting a region
         
-        auto entitiesAtPoint = transform::FindAllEntitiesAtPoint(
-            GetMousePosition());
+        // auto entitiesAtPoint = transform::FindAllEntitiesAtPoint(
+        //     GetMousePosition());
         
-        // SPDLOG_DEBUG("excluding cursor & background room entity from entities at point, showing in bottom to top order");
+        // // SPDLOG_DEBUG("excluding cursor & background room entity from entities at point, showing in bottom to top order");
             
-        // print out the entities at the point
-        for (auto e : entitiesAtPoint) {
-            if (e == globals::cursor || e == globals::gameWorldContainerEntity) {
-                // Skip the cursor entity and the game world container entity
-                continue;
-            }
-            // Entity e intersects with the query area
-            // SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
-            //     (int)e, GetMousePosition().x, GetMousePosition().y);
-        }
+        // // print out the entities at the point
+        // for (auto e : entitiesAtPoint) {
+        //     if (e == globals::cursor || e == globals::gameWorldContainerEntity) {
+        //         // Skip the cursor entity and the game world container entity
+        //         continue;
+        //     }
+        //     // Entity e intersects with the query area
+        //     // SPDLOG_DEBUG("Entity {} intersects with query area at ({}, {})", 
+        //     //     (int)e, GetMousePosition().x, GetMousePosition().y);
+        // }
         
         // Box<float> queryArea = globals::getBox(globals::cursor);
         // // return if cursor not contained in world bounds

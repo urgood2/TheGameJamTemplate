@@ -220,6 +220,7 @@ namespace transform
     // not exposed publicly
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
+        ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
         auto &role = registry->get<InheritedProperties>(e);
         auto &transform = registry->get<Transform>(e);
@@ -972,6 +973,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (role.role_type == InheritedProperties::Type::RoleCarbonCopy)
         {
+            ZoneScopedN("RoleCarbonCopy");
             if (registry->valid(role.master))
             {
                 SyncPerfectlyToMaster(registry, e, role.master);
@@ -980,7 +982,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::RoleInheritor)
         {
-            
+            ZoneScopedN("RoleInheritor");
             if (registry->valid(role.master))
             {
                 auto &parentTransform = registry->get<Transform>(role.master);
@@ -1023,6 +1025,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::PermanentAttachment)
         {
+            ZoneScopedN("RolePermanentAttachment");
             // ignore sync bonds
             auto &parentTransform = registry->get<Transform>(role.master);
             if (registry->valid(role.master))
@@ -1074,6 +1077,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::RoleRoot)
         {
+            ZoneScopedN("RoleRoot");
             transform.frameCalculation.stationary = true;
             UpdateDynamicMotion(registry, e, dt);
             UpdateLocation(registry, e, dt);

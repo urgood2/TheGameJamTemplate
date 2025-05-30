@@ -1597,36 +1597,49 @@ namespace input
             state.collision_list.push_back(target);
         }
 
-        // LATER:Ensure cursor is within the drawable area
+        struct CollisionAtCursorFlag{}; // flag to help clear non-colliding entities
+        
+        // Use quadtree broad-phase + precise collision check
+        auto entitiesAtCursor = transform::FindAllEntitiesAtPoint(cursor_trans);
 
-        // Check collisions in the draw hash area
-        // LATER: make this more efficient (draw hash?)
-        auto view = registry.view<transform::Transform>();
+        // Clear previous collision state
+        state.nodes_at_cursor.clear();
+        state.collision_list.clear();
+        // remove component from all entities
+        registry.view<CollisionAtCursorFlag>().each([&registry](entt::entity e) {
+            registry.remove<CollisionAtCursorFlag>(e);
+        });
 
-        for (auto entity : view)
+        // Iterate through the precise collision results
+        for (entt::entity e : entitiesAtCursor)
         {
-            // exclude cursor and container
-            if (entity == globals::cursor || entity == globals::gameWorldContainerEntity)
-                continue;
-                
-            auto &node = registry.get<transform::GameObject>(entity);
-            if (!node.state.collisionEnabled)
-                continue;
-                
-            if (transform::CheckCollisionWithPoint(&registry, entity, cursor_trans))
-            {
-                // SPDLOG_DEBUG("Collision detected with entity: {}", static_cast<int>(entity));
-                state.nodes_at_cursor.push_back(entity);
+            if (e == globals::gameWorldContainerEntity || e == globals::cursor) continue;  // skip container
 
-                node.state.isColliding = true;
-                state.collision_list.push_back(entity);
-            }
-            else
-            {
-                auto &node = registry.get<transform::GameObject>(entity);
-                node.state.isColliding = false;
-                node.state.isBeingHovered = false;
-            }
+            auto &node = registry.get<transform::GameObject>(e);
+
+            if (!node.state.collisionEnabled) continue;  // skip disabled collision
+
+            // Mark as colliding
+            node.state.isColliding = true;
+            
+            registry.emplace_or_replace<CollisionAtCursorFlag>(e); // mark entity as colliding at cursor
+
+            state.nodes_at_cursor.push_back(e);
+            state.collision_list.push_back(e);
+        }
+        
+        // Clear collision state for entities not at cursor
+        auto allTransformViewExcludeCursorCollision = registry.view<transform::Transform>(entt::exclude<CollisionAtCursorFlag>);
+        
+        for (auto entity : allTransformViewExcludeCursorCollision)
+        {
+            if (entity == globals::gameWorldContainerEntity || entity == globals::cursor) continue;  // skip container
+
+            auto &node = registry.get<transform::GameObject>(entity);
+            if (!node.state.collisionEnabled) continue;  // skip disabled collision
+
+            node.state.isColliding = false; // Clear collision state
+            node.state.isBeingHovered = false; // Clear hover state
         }
     }
 

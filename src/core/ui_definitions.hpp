@@ -949,7 +949,7 @@ namespace ui_defs
             .addChild(keyboardContainer.build())
             .build();
             
-        keyboardUIBox = ui::box::Initialize(globals::registry, {.x = 100, .y = 200}, keyboardRoot, ui::UIConfig{});
+        // keyboardUIBox = ui::box::Initialize(globals::registry, {.x = 100, .y = 200}, keyboardRoot, ui::UIConfig{});
 
         // ======================================
         // ======================================

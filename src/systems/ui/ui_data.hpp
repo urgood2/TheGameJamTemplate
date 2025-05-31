@@ -855,11 +855,11 @@ namespace ui
         std::optional<float> progress = 1.0f; // modifies the width of the rect by scale if active
 
         float lineThickness = 1.0f; // Thickness of the outline, in pixels
-        std::vector<Vector2> innerVertices{}; // inner vertices for rounded rect (reflects progress value in width)
-        std::vector<Vector2> outerVertices{}; // outer vertices for rounded rect (reflects progress value in width)
+        std::vector<Vector2> innerVerticesProgressReflected{}; // inner vertices for rounded rect (reflects progress value in width)
+        std::vector<Vector2> outerVerticesProgressReflected{}; // outer vertices for rounded rect (reflects progress value in width)
 
-        std::vector<Vector2> innerVerticesFull{}; // inner vertices for rounded rect (full width)
-        std::vector<Vector2> outerVerticesFull{}; // outer vertices for rounded rect (full width)
+        std::vector<Vector2> innerVerticesFullRect{}; // inner vertices for rounded rect (full width)
+        std::vector<Vector2> outerVerticesFullRect{}; // outer vertices for rounded rect (full width)
 
     };
 

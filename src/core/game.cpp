@@ -970,13 +970,13 @@ namespace game
             }
             
             {
-                ZoneScopedN("Debug UI");
-                rlImGuiBegin(); // Required: starts ImGui frame
+                // ZoneScopedN("Debug UI");
+                // rlImGuiBegin(); // Required: starts ImGui frame
 
-                // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
-                ShowDebugUI();
+                // // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
+                // ShowDebugUI();
 
-                rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+                // rlImGuiEnd(); // Required: renders ImGui on top of Raylib
             }
             
 

@@ -870,7 +870,7 @@ namespace layer
         
         auto &cache  = globals::registry.get<ui::RoundedRectangleVerticesCache>(cacheEntity);
         
-        auto &outerVertices = progressOrFullBackground ? cache.outerVertices : cache.outerVerticesFull;
+        auto &outerVertices = progressOrFullBackground ? cache.outerVerticesProgressReflected : cache.outerVerticesFullRect;
 
 
         rlColor4ub(255, 255, 255, 255); // Reset to white before each draw
@@ -909,8 +909,8 @@ namespace layer
     void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, entt::entity cacheEntity, const Color color, bool useFullVertices) {
         
         auto &cache  = globals::registry.get<ui::RoundedRectangleVerticesCache>(cacheEntity);
-        auto &innerVertices = (useFullVertices) ? cache.innerVerticesFull : cache.innerVertices;
-        auto &outerVertices = (useFullVertices) ? cache.outerVerticesFull : cache.outerVertices;
+        auto &innerVertices = (useFullVertices) ? cache.innerVerticesFullRect : cache.innerVerticesProgressReflected;
+        auto &outerVertices = (useFullVertices) ? cache.outerVerticesFullRect : cache.outerVerticesProgressReflected;
         
         // Draw the outlines
         // Draw the filled outline

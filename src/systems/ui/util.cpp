@@ -364,17 +364,17 @@ namespace ui
         {
             AssertThat(cache.progress, Is().GreaterThanOrEqualTo(0.0f).And().LessThanOrEqualTo(1.0f));
 
-            cache.innerVertices = inner;
-            cache.outerVertices = outer;
+            cache.innerVerticesProgressReflected = inner;
+            cache.outerVerticesProgressReflected = outer;
 
             // clip the vertices at the progress value
-            ClipRoundedRectVertices(cache.innerVertices, cache.w * progress.value());
-            ClipRoundedRectVertices(cache.outerVertices, cache.w * progress.value());
+            ClipRoundedRectVertices(cache.innerVerticesProgressReflected, cache.w * progress.value());
+            ClipRoundedRectVertices(cache.outerVerticesProgressReflected, cache.w * progress.value());
         }
 
         // generate full rect vertices as well, for outlines
-        cache.innerVerticesFull = inner;
-        cache.outerVerticesFull = outer;
+        cache.innerVerticesFullRect = inner;
+        cache.outerVerticesFullRect = outer;
     }
 
     auto util::GenerateInnerAndOuterVerticesForRoundedRect(float lineThickness, int width, int height, RoundedRectangleVerticesCache &cache) -> std::pair<std::vector<Vector2>, std::vector<Vector2>> // inner, outer
@@ -690,20 +690,51 @@ namespace ui
         const auto actualH = transform.getActualH();
         const auto visualW = transform.getVisualW();
         const auto visualH = transform.getVisualH();
+        
+        bool needFullRegen = false;
+        bool needClipRegen = false;
+
+        // 1) If width/height/renderTypeFlags/lineThickness/shadow changed → rebuild full geometry
+        if (!rectCache
+            || (rectCache->innerVerticesProgressReflected.empty() && rectCache->outerVerticesProgressReflected.empty()) 
+            || (rectCache->w != static_cast<int>(visualW) 
+            || rectCache->h != static_cast<int>(visualH))
+            
+            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON) 
+            || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON)
+        )
+        {
+            needFullRegen = true;
+        }
+        // only progress changed
+        else if (std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON) {
+            needClipRegen = true;
+        }
 
         // comparisons to detect if the cache is usable
-        if (!rectCache
-            // || rectCache->renderTypeFlags != type
-            || (rectCache->innerVertices.empty() && rectCache->outerVertices.empty()) || (rectCache->w != static_cast<int>(visualW) || rectCache->h != static_cast<int>(visualH))
-
-            
-            // || (node.shadowDisplacement.has_value() && (rectCache->shadowDisplacement != node.shadowDisplacement.value()))
-            || std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON
-            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON) || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON))
+        if (needFullRegen)
         {
-            //  SPDLOG_DEBUG("Regenerating cache for rounded rectangle");
-            //  regenerate cache
+            //  regenerate full cache
             emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
+        }
+        else if (needClipRegen)
+        {
+            // regenerate clipped vertices
+            rectCache->progress = progress;
+            if (progress && progress.value() < 1.0f) {
+                AssertThat(rectCache->progress, Is().GreaterThanOrEqualTo(0.0f).And().LessThanOrEqualTo(1.0f));
+
+                rectCache->innerVerticesProgressReflected = rectCache->innerVerticesFullRect;
+                rectCache->outerVerticesProgressReflected = rectCache->outerVerticesFullRect;
+
+                // clip the vertices at the progress value
+                ClipRoundedRectVertices(rectCache->innerVerticesProgressReflected, rectCache->w * progress.value());
+                ClipRoundedRectVertices(rectCache->outerVerticesProgressReflected, rectCache->w * progress.value());
+            } else {
+                // we’re at 100%, just copy full list
+                rectCache->innerVerticesProgressReflected = rectCache->innerVerticesFullRect;
+                rectCache->outerVerticesProgressReflected = rectCache->outerVerticesFullRect;
+            }
         }
 
         rectCache = registry.try_get<RoundedRectangleVerticesCache>(entity);
@@ -760,7 +791,7 @@ namespace ui
             }
             
             // filled shadow
-            // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
+            // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
             layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
                 cmd->cache = entity;
                 cmd->outerRec = {0, 0, progress, height};
@@ -851,7 +882,7 @@ namespace ui
             // not shadow, ensure color is not translucent
             // AssertTh at(colorToUse.a, Is().EqualTo(255));
 
-            // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFull, colorToUse);
+            // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
             layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
                 cmd->cache = entity;
                 cmd->outerRec = {0, 0, progress, height};
@@ -950,7 +981,7 @@ namespace ui
         }
 
         // fill progress, if there is any
-        if (type & RoundedRectangleVerticesCache_TYPE_FILL && rectCache->innerVertices.size() > 0 && rectCache->outerVertices.size() > 0 && progress.has_value())
+        if (type & RoundedRectangleVerticesCache_TYPE_FILL && rectCache->innerVerticesProgressReflected.size() > 0 && rectCache->outerVerticesProgressReflected.size() > 0 && progress.has_value())
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
@@ -1051,7 +1082,7 @@ namespace ui
             AssertThat(colorToUse.a, Is().EqualTo(255));
 
             // outline
-            // RenderRectVerticlesOutlineLayer(layerPtr, rectCache->outerVerticesFull, colorToUse, rectCache->innerVerticesFull);
+            // RenderRectVerticlesOutlineLayer(layerPtr, rectCache->outerVerticesFullRect, colorToUse, rectCache->innerVerticesFullRect);
             layer::QueueCommand<layer::CmdRenderRectVerticesOutlineLayer>(layerPtr, [entity, colorToUse](layer::CmdRenderRectVerticesOutlineLayer *cmd) {
                 cmd->cache = entity;
                 cmd->color = colorToUse;

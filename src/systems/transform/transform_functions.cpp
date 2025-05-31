@@ -1150,7 +1150,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto DrawBoundingBoxAndDebugInfo(entt::registry *registry, entt::entity e, std::shared_ptr<layer::Layer> layer) -> void
     {
-
+        ZoneScopedN("DrawBoundingBoxAndDebugInfo");
         if (debugMode == false)
             return;
 

@@ -8,6 +8,7 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] ui performance unacceptable. optimize using: https://chatgpt.com/share/683b1920-da0c-800a-b0bb-d876802974cf
 - [ ] collision bug where dragging something out of bounds disables collision entirely
 - [ ] need to profile & optimize, fps still terrible
 - [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable)

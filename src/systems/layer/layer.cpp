@@ -145,12 +145,13 @@ namespace layer
     
 
     void ClearDrawCommands(std::shared_ptr<Layer> layer) {
-        layer->drawCommands.clear();
+        // layer->drawCommands.clear();
         
         layer_command_buffer::Clear(layer);
     }
 
     void Begin() {
+        ZoneScopedN("Layer Begin-clear commands");
         ClearAllDrawCommands();
     }
 

@@ -1216,6 +1216,7 @@ namespace ui
         // Is it a button?
         if (config->buttonCallback || config->button_UIE)
         {
+            ZoneScopedN("UI Element: Button Logic");
             auto parentEntity = node->parent.value();
             Vector2 parentParallax = {0, 0};
 
@@ -1258,6 +1259,7 @@ namespace ui
         // is it text?
         if (config->uiType == UITypeEnum::TEXT && config->scale)
         {
+            ZoneScopedN("UI Element: Text Logic");
             float rawScale = config->scale.value() * globals::fontData.fontScale;
             float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
             float textParallaxSX = node->shadowDisplacement->x * globals::fontData.fontLoadedSize * 0.04f * scaleFactor;
@@ -1373,6 +1375,7 @@ namespace ui
         }
         else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT)
         {
+            ZoneScopedN("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             if (config->shadow && globals::settings.shadowsOn)
@@ -1578,6 +1581,7 @@ namespace ui
         // outline
         if (config->outlineColor && config->outlineColor->a > 0.01f)
         {
+            ZoneScopedN("UI Element: Outline Logic");
             if (config->outlineThickness)
             {
                 // util::PrepDraw(layerPtr, registry, entity, 1.0f);

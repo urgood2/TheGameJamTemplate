@@ -1601,6 +1601,7 @@ namespace ui
         // Draw the box's child elements, not the ui root's. The ui hierarchy is stored in the ui root's children, so these would be special-case.
         if (node)
         {
+            ZoneScopedN("UIBox::DrawUIBOXChildren(notRoot)");
             for (auto childEntry : node->children)
             {
                 auto &entryName = childEntry.first;
@@ -1636,6 +1637,7 @@ namespace ui
             // 🎨 Draw the root UI element
             if (uiBox->uiRoot)
             {
+                ZoneScopedN("UIBox::Draw::RootElement");
                 // TODO: are child nodes in defs added to root's children, or to the ui box as children?
                 element::DrawSelf(layerPtr, registry, uiBox->uiRoot.value());
                 element::DrawChildren(layerPtr, registry, uiBox->uiRoot.value());
@@ -1645,6 +1647,7 @@ namespace ui
             // TODO: should elements in layers be excluded from other drawing like above? figure out
             for (auto layerEntry : uiBox->drawLayers)
             {
+                ZoneScopedN("UIBox::DrawIfLayer");
                 auto layerEntity = layerEntry.second;
                 if (registry.valid(layerEntity))
                 {
@@ -1667,6 +1670,7 @@ namespace ui
         // REVIEW: alerts are the red pips on the top right. alerts can also be popups?
         if (node->children.find("alert") != node->children.end())
         {
+            ZoneScopedN("UIBox::Draw::Alert");
             auto alert = node->children["alert"];
             if (registry.valid(alert))
             {

@@ -214,6 +214,8 @@ namespace transform
     
     auto HandleClickReleased(entt::registry *registry, entt::entity e) -> void;
     
+    auto updateTransformCacheForAllTransforms() -> void;
+    
     /**
      * Set the offset for click or hover handling.
      */

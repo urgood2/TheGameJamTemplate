@@ -8,8 +8,8 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
-- [ ] use buildUIDrawList & drawAllBoxes for optimization
 - [ ] root element doesn't seem to draw?
+- [ ] widths and heights for all transforms at zero. why?
 - [ ] make drawAllBoxes respect layer ordering later.
 - [ ] use groups in transform updates & text too.
 - [ ] pass in group to drawself to minimize registry get() calls

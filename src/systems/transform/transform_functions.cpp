@@ -916,11 +916,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     auto UpdateAllTransforms(entt::registry *registry, float dt) -> void
     {
         ZoneScopedN("Update all transforms");
+        
+        updateTransformCacheForAllTransforms();
+        
         auto view = registry->view<Transform, InheritedProperties, GameObject>();
         for (auto e : view)
         {
             UpdateTransform(registry, e, dt);
         }
+        
+        updateTransformCacheForAllTransforms();
     }
 
     // // these are used in frame calculations to determine if the transform needs to be updated
@@ -1147,6 +1152,64 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         springW.velocity = 0;
         springH.velocity = 0;
     }
+    
+    // Call this  method every update loop to keep transform values updated.
+    void updateTransformCacheForAllTransforms() {
+        
+        auto view = globals::registry.view<Transform>();
+        
+        // owning group of springs
+        static auto springGroup = globals::registry.group<Spring>();
+        
+        for (auto e : view) {
+            auto &transform = globals::registry.get<Transform>(e);
+            
+            auto &springX = springGroup.get<Spring>(transform.x);
+            auto &springY = springGroup.get<Spring>(transform.y);
+            auto &springW = springGroup.get<Spring>(transform.w);
+            auto &springH = springGroup.get<Spring>(transform.h);
+            auto &springR = springGroup.get<Spring>(transform.r);
+            auto &springS = springGroup.get<Spring>(transform.s);
+            
+            transform.cachedActualX = springX.targetValue;
+            transform.cachedActualY = springY.targetValue;
+            transform.cachedActualW = springW.targetValue;
+            transform.cachedActualH = springH.targetValue;
+            transform.cachedActualR = springR.targetValue;
+            transform.cachedActualS = springS.targetValue;
+            
+            transform.cachedVisualX = springX.value;
+            transform.cachedVisualY = springY.value;
+            transform.cachedVisualW = springW.value;
+            transform.cachedVisualH = springH.value;
+            transform.cachedVisualRWithDynamicMotionAndXLeaning = springR.value + transform.rotationOffset;
+            transform.cachedVisualS = springS.value;
+            transform.cachedVisualR = springR.value;
+            
+            
+            // cachedVisualSWithHoverAndDynamicMotionReflected
+            float base = transform.cachedVisualS;
+            if (globals::registry.any_of<GameObject>(e))
+            {
+                auto &gameObj = globals::registry.get<GameObject>(e);
+                if (gameObj.state.isBeingHovered && gameObj.state.enlargeOnHover)
+                {
+                    base *= 1.f + COLLISION_BUFFER_ON_HOVER_PERCENTAGE; // increase scale when hovered
+                }
+                if (gameObj.state.isBeingDragged && gameObj.state.enlargeOnDrag)
+                {
+                    base += COLLISION_BUFFER_ON_HOVER_PERCENTAGE * 2; // increase scale when dragged
+                }
+            }
+
+            float added = (transform.dynamicMotion ? transform.dynamicMotion->scale : 0);
+
+            transform.cachedVisualSWithHoverAndDynamicMotionReflected =  base + added;
+            
+        }
+            
+    }
+    
 
     auto DrawBoundingBoxAndDebugInfo(entt::registry *registry, entt::entity e, std::shared_ptr<layer::Layer> layer) -> void
     {

@@ -1210,7 +1210,6 @@ namespace ui
         }
     }
 
-    // TODO: check logic, ensure working properly, refactor logic to be more readable (test with various ui types and configurations)
     void element::DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
     {
         ZoneScopedN("UI Element: DrawSelf");

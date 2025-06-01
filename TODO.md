@@ -8,8 +8,10 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] broaden initial area for collison bounds with quad tree
+- [ ] use cached variables for transform values? single-component groups don't work.
 - [ ] rewire get() methods in transform to be namespace level, and to use a reference to an owning group
-- [ ] root element doesn't seem to draw?
+- [ ] transform cache which updates once per frame upon access, has a dirty bit?
 - [ ] widths and heights for all transforms at zero. why?
 - [ ] make drawAllBoxes respect layer ordering later.
 - [ ] use groups in transform updates & text too.

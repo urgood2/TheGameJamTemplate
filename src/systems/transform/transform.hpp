@@ -6,6 +6,7 @@
 #include "util/common_headers.hpp"
 
 #include "systems/layer/layer.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 
 #include <vector>
 #include <optional>
@@ -407,72 +408,300 @@ namespace transform
         float cachedVisualR; 
         float cachedVisualSWithHoverAndDynamicMotionReflected;
 
+        // ====== CACHED VALUES, updated once per frame ======
+        struct Cached
+        {
+            float actualX, actualY, actualW, actualH, actualR, actualS;
+            float visualX, visualY, visualW, visualH, 
+                visualR, visualRWithDynamicMotionAndXLeaning, 
+                visualS, visualSWithHoverAndDynamicMotionReflected;
+        } cache;
+
+        // Store which frame we last updated "cache" for:
+        int lastCacheFrame = -1;
+
+        //==========================================================================
+        // This is the function you call at the start of every getter. It checks
+        // if we've already filled 'cache' for the current frame. If not, it
+        // reads all Springs (and other data) exactly once and populates the cache.
+        //==========================================================================
+        void updateCachedValues(bool forceUpdate = false)
+        {
+            // Get the current frame counter from your main loop:
+            int currentFrame = main_loop::mainLoop.frame;
+
+            // Only refill if we're in a new frame:
+            if (lastCacheFrame == currentFrame && !forceUpdate)
+                return;
+
+            // --- Read every Spring exactly once and store into local temporaries ---
+            Spring& springX = registry->get<Spring>(x);
+            Spring& springY = registry->get<Spring>(y);
+            Spring& springW = registry->get<Spring>(w);
+            Spring& springH = registry->get<Spring>(h);
+            Spring& springR = registry->get<Spring>(r);
+            Spring& springS = registry->get<Spring>(s);
+
+            // Fill “actual” values straight from targetValue:
+            cache.actualX = springX.targetValue;
+            cache.actualY = springY.targetValue;
+            cache.actualW = springW.targetValue;
+            cache.actualH = springH.targetValue;
+            cache.actualR = springR.targetValue;
+            cache.actualS = springS.targetValue;
+
+            // Fill “visual” values straight from current value:
+            cache.visualX = springX.value;
+            cache.visualY = springY.value;
+            cache.visualW = springW.value;
+            cache.visualH = springH.value;
+            cache.visualR = springR.value;
+            cache.visualS = springS.value;
+
+            // Now compute anything that depends on dynamicMotion or GameObject state:
+            //  – visualRWithDynamicMotionAndXLeaning = value + rotationOffset
+            cache.visualRWithDynamicMotionAndXLeaning = cache.visualR + rotationOffset;
+
+            // For scale with hover/drag, you need to query GameObject only once:
+            float baseScale = cache.visualS;
+            if (registry->any_of<GameObject>(self))
+            {
+                GameObject& go = registry->get<GameObject>(self);
+
+                if (go.state.isBeingHovered && go.state.enlargeOnHover)
+                {
+                    baseScale *= 1.f + COLLISION_BUFFER_ON_HOVER_PERCENTAGE;
+                }
+                if (go.state.isBeingDragged && go.state.enlargeOnDrag)
+                {
+                    baseScale += COLLISION_BUFFER_ON_HOVER_PERCENTAGE * 2.f;
+                }
+            }
+
+            float addedScale = (dynamicMotion ? dynamicMotion->scale : 0.f);
+            cache.visualSWithHoverAndDynamicMotionReflected = baseScale + addedScale;
+
+            // Finally, mark that we updated for this frame:
+            lastCacheFrame = currentFrame;
+        }
+
         bool reduceXToZero = false; // set to true if the w value should interpolate to 0 instead of the target value
         bool reduceYToZero = false; // set to true if the h value should interpolate to 0 instead of the target value
 
         // access methods
         // Actual X is the desired X value, Visual X is the current X value which is slowly easing toward the actual X value
         // Position (X, Y)
-        auto getActualX() -> float { return registry->get<Spring>(x).targetValue; }
-        auto getVisualX() -> float { return registry->get<Spring>(x).value; }
-        auto getXSpring() -> Spring & { return registry->get<Spring>(x); }
-        auto setActualX(float x) -> void { registry->get<Spring>(this->x).targetValue = x; }
-        auto setVisualX(float x) -> void { registry->get<Spring>(this->x).value = x; }
+        // Position (X)
+        auto getActualX() -> float
+        {
+            updateCachedValues();
+            return cache.actualX;
+        }
 
-        auto getActualY() -> float { return registry->get<Spring>(y).targetValue; }
-        auto getVisualY() -> float { return registry->get<Spring>(y).value; }
-        auto getYSpring() -> Spring & { return registry->get<Spring>(y); }
-        auto setActualY(float y) -> void { registry->get<Spring>(this->y).targetValue = y; }
-        auto setVisualY(float y) -> void { registry->get<Spring>(this->y).value = y; }
+        auto getVisualX() -> float
+        {
+            updateCachedValues();
+            return cache.visualX;
+        }
 
-        // Size (W, H)
-        auto getActualW() -> float { return registry->get<Spring>(w).targetValue; }
-        auto getVisualW() -> float { return registry->get<Spring>(w).value; }
-        auto getWSpring() -> Spring & { return registry->get<Spring>(w); }
-        auto setActualW(float w) -> void { registry->get<Spring>(this->w).targetValue = w; }
-        auto setVisualW(float w) -> void { registry->get<Spring>(this->w).value = w; }
+        auto getXSpring() -> Spring &
+        {
+            return registry->get<Spring>(x);
+        }
 
-        auto getActualH() -> float { return registry->get<Spring>(h).targetValue; }
-        auto getVisualH() -> float { return registry->get<Spring>(h).value; }
-        auto getHSpring() -> Spring & { return registry->get<Spring>(h); }
-        auto setActualH(float h) -> void { registry->get<Spring>(this->h).targetValue = h; }
-        auto setVisualH(float h) -> void { registry->get<Spring>(this->h).value = h; }
+        auto setActualX(float newX) -> void
+        {
+            // 1) Update the Spring
+            registry->get<Spring>(this->x).targetValue = newX;
+
+            updateCachedValues(true);
+        }
+
+        auto setVisualX(float newX) -> void
+        {
+            registry->get<Spring>(this->x).value = newX;
+
+            updateCachedValues(true);
+        }
+
+
+        // Position (Y)
+        auto getActualY() -> float
+        {
+            updateCachedValues();
+            return cache.actualY;
+        }
+
+        auto getVisualY() -> float
+        {
+            updateCachedValues();
+            return cache.visualY;
+        }
+
+        auto getYSpring() -> Spring &
+        {
+            return registry->get<Spring>(y);
+        }
+
+        auto setActualY(float newY) -> void
+        {
+            registry->get<Spring>(this->y).targetValue = newY;
+
+            updateCachedValues(true);
+        }
+
+        auto setVisualY(float newY) -> void
+        {
+            registry->get<Spring>(this->y).value = newY;
+
+            updateCachedValues(true);
+        }
+
+
+        // Size (W)
+        auto getActualW() -> float
+        {
+            updateCachedValues();
+            return cache.actualW;
+        }
+
+        auto getVisualW() -> float
+        {
+            updateCachedValues();
+            return cache.visualW;
+        }
+
+        auto getWSpring() -> Spring &
+        {
+            return registry->get<Spring>(w);
+        }
+
+        auto setActualW(float newW) -> void
+        {
+            registry->get<Spring>(this->w).targetValue = newW;
+
+            updateCachedValues(true);
+        }
+
+        auto setVisualW(float newW) -> void
+        {
+            registry->get<Spring>(this->w).value = newW;
+
+            updateCachedValues(true);
+        }
+
+
+        // Size (H)
+        auto getActualH() -> float
+        {
+            updateCachedValues();
+            return cache.actualH;
+        }
+
+        auto getVisualH() -> float
+        {
+            updateCachedValues();
+            return cache.visualH;
+        }
+
+        auto getHSpring() -> Spring &
+        {
+            return registry->get<Spring>(h);
+        }
+
+        auto setActualH(float newH) -> void
+        {
+            registry->get<Spring>(this->h).targetValue = newH;
+
+            updateCachedValues(true);
+        }
+
+        auto setVisualH(float newH) -> void
+        {
+            registry->get<Spring>(this->h).value = newH;
+
+            updateCachedValues(true);
+        }
+
 
         // Rotation (R)
-        auto getActualRotation() -> float { return registry->get<Spring>(r).targetValue; }
-        auto getVisualR() -> float { return registry->get<Spring>(r).value; }
+        auto getActualRotation() -> float
+        {
+            updateCachedValues();
+            return cache.actualR;
+        }
 
-        // incorporates dynamic motion and x leaning, use this for rendering
-        auto getVisualRWithDynamicMotionAndXLeaning() -> float { return registry->get<Spring>(r).value + rotationOffset; }
-        auto getRSpring() -> Spring & { return registry->get<Spring>(r); }
-        auto setActualRotation(float r) -> void { registry->get<Spring>(this->r).targetValue = r; }
-        auto setVisualRotation(float r) -> void { registry->get<Spring>(this->r).value = r; }
+        auto getVisualR() -> float
+        {
+            updateCachedValues();
+            return cache.visualR;
+        }
+
+        // Use this when you need “current rotation + dynamicMotion + x‐leaning”
+        auto getVisualRWithDynamicMotionAndXLeaning() -> float
+        {
+            updateCachedValues();
+            return cache.visualRWithDynamicMotionAndXLeaning;
+        }
+
+        auto getRSpring() -> Spring &
+        {
+            return registry->get<Spring>(r);
+        }
+
+        auto setActualRotation(float newR) -> void
+        {
+            registry->get<Spring>(this->r).targetValue = newR;
+
+            updateCachedValues(true);
+        }
+
+        auto setVisualRotation(float newR) -> void
+        {
+            registry->get<Spring>(this->r).value = newR;
+
+            updateCachedValues(true);
+        }
+
 
         // Scale (S)
-        auto getActualScale() -> float { return registry->get<Spring>(s).targetValue; }
-        auto getVisualScale() -> float { return registry->get<Spring>(s).value; }
+        auto getActualScale() -> float
+        {
+            updateCachedValues();
+            return cache.actualS;
+        }
+
+        auto getVisualScale() -> float
+        {
+            updateCachedValues();
+            return cache.visualS;
+        }
+
+        // When you need hover + dynamic‐motion:
         auto getVisualScaleWithHoverAndDynamicMotionReflected() -> float
         {
-            float base = getVisualScale();
-            if (registry->any_of<GameObject>(self))
-            {
-                if (registry->get<GameObject>(self).state.isBeingHovered && registry->get<GameObject>(self).state.enlargeOnHover)
-                {
-                    base *= 1.f + COLLISION_BUFFER_ON_HOVER_PERCENTAGE; // increase scale when hovered
-                }
-                if (registry->get<GameObject>(self).state.isBeingDragged && registry->get<GameObject>(self).state.enlargeOnDrag)
-                {
-                    base += COLLISION_BUFFER_ON_HOVER_PERCENTAGE * 2; // increase scale when dragged
-                }
-            }
-
-            float added = (dynamicMotion ? dynamicMotion->scale : 0);
-
-            return base + added;
+            updateCachedValues();
+            return cache.visualSWithHoverAndDynamicMotionReflected;
         }
-        auto getSSpring() -> Spring & { return registry->get<Spring>(s); }
-        auto setActualScale(float s) -> void { registry->get<Spring>(this->s).targetValue = s; }
-        auto setVisualScale(float s) -> void { registry->get<Spring>(this->s).value = s; }
+
+        auto getSSpring() -> Spring &
+        {
+            return registry->get<Spring>(s);
+        }
+
+        auto setActualScale(float newS) -> void
+        {
+            registry->get<Spring>(this->s).targetValue = newS;
+
+            updateCachedValues(true);
+        }
+
+        auto setVisualScale(float newS) -> void
+        {
+            registry->get<Spring>(this->s).value = newS;
+
+            updateCachedValues(true);
+        }
 
         // utility
         auto getHoverCollisionBufferX() -> float { return COLLISION_BUFFER_ON_HOVER_PERCENTAGE * getVisualW(); }

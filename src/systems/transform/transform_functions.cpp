@@ -912,6 +912,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             role.master = entt::null;
         }
     }
+    
+    // store in full-owning group for efficiency
+    static auto transformSpringGroup = globals::registry.group<Spring>();
+    
+    auto GetActualX(decltype(transformSpringGroup) &group, Transform &transform) -> float
+    {
+        auto actualX = group.get<Spring>(transform.x).targetValue;
+        
+        return actualX;
+    }
 
     auto UpdateAllTransforms(entt::registry *registry, float dt) -> void
     {
@@ -919,13 +929,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         // updateTransformCacheForAllTransforms();
         
+        
+        
         auto view = registry->view<Transform, InheritedProperties, GameObject>();
         for (auto e : view)
         {
             UpdateTransform(registry, e, dt);
         }
         
-        
+        auto test = GetActualX(transformSpringGroup, registry->get<Transform>(globals::gameWorldContainerEntity));
+        SPDLOG_DEBUG("Game world container actual X: {}", test);
     }
 
     // // these are used in frame calculations to determine if the transform needs to be updated

@@ -8,6 +8,7 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] rewire get() methods in transform to be namespace level, and to use a reference to an owning group
 - [ ] root element doesn't seem to draw?
 - [ ] widths and heights for all transforms at zero. why?
 - [ ] make drawAllBoxes respect layer ordering later.

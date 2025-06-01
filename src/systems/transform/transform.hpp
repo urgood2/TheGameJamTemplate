@@ -402,9 +402,9 @@ namespace transform
         float cachedVisualY;
         float cachedVisualW;
         float cachedVisualH;
-        float cachedVisualR;
         float cachedVisualRWithDynamicMotionAndXLeaning;
         float cachedVisualS;
+        float cachedVisualR; 
         float cachedVisualSWithHoverAndDynamicMotionReflected;
 
         bool reduceXToZero = false; // set to true if the w value should interpolate to 0 instead of the target value
@@ -413,44 +413,44 @@ namespace transform
         // access methods
         // Actual X is the desired X value, Visual X is the current X value which is slowly easing toward the actual X value
         // Position (X, Y)
-        auto getActualX() -> float { return cachedActualX; }
-        auto getVisualX() -> float { return cachedVisualX; }
+        auto getActualX() -> float { return registry->get<Spring>(x).targetValue; }
+        auto getVisualX() -> float { return registry->get<Spring>(x).value; }
         auto getXSpring() -> Spring & { return registry->get<Spring>(x); }
         auto setActualX(float x) -> void { registry->get<Spring>(this->x).targetValue = x; }
         auto setVisualX(float x) -> void { registry->get<Spring>(this->x).value = x; }
 
-        auto getActualY() -> float { return cachedActualY; }
-        auto getVisualY() -> float { return cachedVisualY; }
+        auto getActualY() -> float { return registry->get<Spring>(y).targetValue; }
+        auto getVisualY() -> float { return registry->get<Spring>(y).value; }
         auto getYSpring() -> Spring & { return registry->get<Spring>(y); }
         auto setActualY(float y) -> void { registry->get<Spring>(this->y).targetValue = y; }
         auto setVisualY(float y) -> void { registry->get<Spring>(this->y).value = y; }
 
         // Size (W, H)
-        auto getActualW() -> float { return cachedActualW; }
-        auto getVisualW() -> float { return cachedVisualW; }
+        auto getActualW() -> float { return registry->get<Spring>(w).targetValue; }
+        auto getVisualW() -> float { return registry->get<Spring>(w).value; }
         auto getWSpring() -> Spring & { return registry->get<Spring>(w); }
         auto setActualW(float w) -> void { registry->get<Spring>(this->w).targetValue = w; }
         auto setVisualW(float w) -> void { registry->get<Spring>(this->w).value = w; }
 
-        auto getActualH() -> float { return cachedActualH; }
-        auto getVisualH() -> float { return cachedVisualH; }
+        auto getActualH() -> float { return registry->get<Spring>(h).targetValue; }
+        auto getVisualH() -> float { return registry->get<Spring>(h).value; }
         auto getHSpring() -> Spring & { return registry->get<Spring>(h); }
         auto setActualH(float h) -> void { registry->get<Spring>(this->h).targetValue = h; }
         auto setVisualH(float h) -> void { registry->get<Spring>(this->h).value = h; }
 
         // Rotation (R)
-        auto getActualRotation() -> float { return cachedActualR; }
-        auto getVisualR() -> float { return cachedVisualR; } // this is the visual rotation, which is the current value of the spring plus the rotation offset, which is used for rendering
+        auto getActualRotation() -> float { return registry->get<Spring>(r).targetValue; }
+        auto getVisualR() -> float { return registry->get<Spring>(r).value; }
 
         // incorporates dynamic motion and x leaning, use this for rendering
-        auto getVisualRWithDynamicMotionAndXLeaning() -> float { return cachedVisualRWithDynamicMotionAndXLeaning; }
+        auto getVisualRWithDynamicMotionAndXLeaning() -> float { return registry->get<Spring>(r).value + rotationOffset; }
         auto getRSpring() -> Spring & { return registry->get<Spring>(r); }
         auto setActualRotation(float r) -> void { registry->get<Spring>(this->r).targetValue = r; }
         auto setVisualRotation(float r) -> void { registry->get<Spring>(this->r).value = r; }
 
         // Scale (S)
-        auto getActualScale() -> float { return cachedActualS; }
-        auto getVisualScale() -> float { return cachedVisualS; } // this is the visual scale, which is the current value of the spring, used for rendering
+        auto getActualScale() -> float { return registry->get<Spring>(s).targetValue; }
+        auto getVisualScale() -> float { return registry->get<Spring>(s).value; }
         auto getVisualScaleWithHoverAndDynamicMotionReflected() -> float
         {
             float base = getVisualScale();

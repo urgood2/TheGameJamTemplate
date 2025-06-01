@@ -917,7 +917,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     {
         ZoneScopedN("Update all transforms");
         
-        updateTransformCacheForAllTransforms();
+        // updateTransformCacheForAllTransforms();
         
         auto view = registry->view<Transform, InheritedProperties, GameObject>();
         for (auto e : view)
@@ -925,7 +925,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             UpdateTransform(registry, e, dt);
         }
         
-        updateTransformCacheForAllTransforms();
+        
     }
 
     // // these are used in frame calculations to determine if the transform needs to be updated
@@ -1159,17 +1159,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto view = globals::registry.view<Transform>();
         
         // owning group of springs
-        static auto springGroup = globals::registry.group<Spring>();
         
         for (auto e : view) {
             auto &transform = globals::registry.get<Transform>(e);
             
-            auto &springX = springGroup.get<Spring>(transform.x);
-            auto &springY = springGroup.get<Spring>(transform.y);
-            auto &springW = springGroup.get<Spring>(transform.w);
-            auto &springH = springGroup.get<Spring>(transform.h);
-            auto &springR = springGroup.get<Spring>(transform.r);
-            auto &springS = springGroup.get<Spring>(transform.s);
+            auto &springX = globals::registry.get<Spring>(transform.x);
+            auto &springY = globals::registry.get<Spring>(transform.y);
+            auto &springW = globals::registry.get<Spring>(transform.w);
+            auto &springH = globals::registry.get<Spring>(transform.h);
+            auto &springR = globals::registry.get<Spring>(transform.r);
+            auto &springS = globals::registry.get<Spring>(transform.s);
             
             transform.cachedActualX = springX.targetValue;
             transform.cachedActualY = springY.targetValue;

@@ -23,6 +23,8 @@
 
 
 namespace ui {
+    
+    
 
     namespace element {
         auto Initialize(entt::registry &registry, entt::entity parent, entt::entity uiBox, UITypeEnum type, std::optional<UIConfig> config) -> entt::entity;
@@ -39,7 +41,7 @@ namespace ui {
         auto SetAlignments(entt::registry &registry, entt::entity entity, std::optional<Vector2> uiBoxOffset = std::nullopt, bool rootEntity = false) -> void;
         auto UpdateText(entt::registry &registry, entt::entity entity) -> void;
         auto UpdateObject(entt::registry &registry, entt::entity entity) -> void;
-        auto DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) -> void;
+        auto DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp) -> void;
         auto Update(entt::registry &registry, entt::entity entity, float dt) -> void;
         auto CollidesWithPoint(entt::registry &registry, entt::entity entity, const Vector2 &cursorPosition) -> bool;
         auto PutFocusedCursor(entt::registry &registry, entt::entity entity) -> Vector2;
@@ -48,6 +50,9 @@ namespace ui {
         auto Release(entt::registry &registry, entt::entity entity, entt::entity objectBeingDragged) -> void;
         auto ApplyHover(entt::registry &registry, entt::entity entity) -> void;
         auto StopHover(entt::registry &registry, entt::entity entity) -> void;
+        void buildUIDrawList(entt::registry &registry,
+            entt::entity root,
+            std::vector<entt::entity> &out);
 
     }
 }

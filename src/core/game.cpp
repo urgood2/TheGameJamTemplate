@@ -803,11 +803,12 @@ namespace game
         {
             ZoneScopedN("game::draw-UIElement Draw");
             // debug draw ui elements (draw ui boxes, will auto-propogate to children)
-            auto viewUI = globals::registry.view<ui::UIBoxComponent>();
-            for (auto e : viewUI)
-            {
-                ui::box::Draw(ui_layer, globals::registry, e);
-            }
+            // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
+            // for (auto e : viewUI)
+            // {
+            //     ui::box::Draw(ui_layer, globals::registry, e);
+            // }
+            ui::box::drawAllBoxes(globals::registry, ui_layer);
         }
         
         // do transform debug drawing

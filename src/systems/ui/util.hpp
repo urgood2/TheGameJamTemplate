@@ -62,7 +62,7 @@ namespace ui {
 
         auto GenerateInnerAndOuterVerticesForRoundedRect(float lineThickness, int width, int height, RoundedRectangleVerticesCache &cache) -> std::pair<std::vector<Vector2>, std::vector<Vector2>>;
         
-        auto DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides = {}, std::optional<float> progress = std::nullopt, std::optional<float> lineWidthOverride = std::nullopt) -> void;
+        auto DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, transform::Transform &transform, ui::UIConfig* uiConfig, transform::GameObject &node, RoundedRectangleVerticesCache* rectCache, const float &visualX, const float & visualY, const float & visualW, const float & visualH, const float & visualScaleWithHoverAndMotion, const float & visualR, const float & rotationOffset, const int &type, float parallaxModifier=0, const std::unordered_map<std::string, Color> &colorOverrides={}, std::optional<float> progress = std::nullopt, std::optional<float> lineWidthOverride = std::nullopt) -> void;
         
         auto DrawNPatchUIElement(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress = std::nullopt) -> void;
         
@@ -74,8 +74,7 @@ namespace ui {
         
         auto getCornerSizeForRect(int width, int height) -> float;
         
-        
-        auto ApplyTransformMatrix(entt::registry &registry, entt::entity entity, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset = std::nullopt, bool applyOnlyTranslation = false) -> void;
+        auto ApplyTransformMatrix(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset = std::nullopt, bool applyOnlyTranslation = false) -> void;
 
     }
 }

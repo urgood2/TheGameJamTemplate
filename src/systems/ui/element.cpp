@@ -607,51 +607,95 @@ namespace ui
         return std::nullopt; // No draggable element found
     }
 
-    void element::DrawChildren(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
+    void element::buildUIDrawList(entt::registry &registry,
+                         entt::entity root,
+                         std::vector<entt::entity> &out)
     {
+        // Pull exactly the same pointers you had in DrawChildren:
+        auto *node = registry.try_get<transform::GameObject>(root);
+        auto *uiConfig = registry.try_get<UIConfig>(root);
 
-        auto *uiElement = registry.try_get<UIElementComponent>(entity);
-        auto *uiConfig = registry.try_get<UIConfig>(entity);
-        auto *node = registry.try_get<transform::GameObject>(entity);
-
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
-
-        // If element (node) is not visible, skip drawing
-        if (!node->state.visible)
+        // If the node isn’t a UI element or isn’t visible, skip its entire subtree
+        if (!node || !uiConfig || !node->state.visible)
             return;
 
-        for (auto childEntry : node->orderedChildren)
+        // Iterate children in the same order you did before:
+        for (auto child : node->orderedChildren)
         {
-            auto child = childEntry;
             auto *childConfig = registry.try_get<UIConfig>(child);
-            if (!childConfig)
+            auto *childNode = registry.try_get<transform::GameObject>(child);
+
+            if (!childConfig || !childNode)
                 continue;
 
-            // Skip elements with a `draw_layer` or special names
-
-            // TODO: document h_popup and alert?
-            // TODO: ensure that config->id is always set (to value in children map?)
+            // Skip elements that use drawLayer or have special names:
             if (childConfig->drawLayer || childConfig->id == "h_popup" || childConfig->id == "alert")
-                continue;
-
-            // Draw first if `draw_after` is false
-            if (!childConfig->draw_after)
             {
-                DrawSelf(layerPtr, registry, child);
+                continue;
             }
 
-            // Recursively draw children
-            DrawChildren(layerPtr, registry, child);
+            // “Pre‐draw” if draw_after == false
+            if (!childConfig->draw_after)
+            {
+                out.push_back(child);
+            }
 
-            // Draw again if `draw_after` is true
+            // Recurse into grandchildren
+            buildUIDrawList(registry, child, out);
+
+            // “Post‐draw” if draw_after == true
             if (childConfig->draw_after)
             {
-                DrawSelf(layerPtr, registry, child);
+                out.push_back(child);
             }
         }
     }
+
+    // void element::DrawChildren(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
+    // {
+
+    //     auto *uiElement = registry.try_get<UIElementComponent>(entity);
+    //     auto *uiConfig = registry.try_get<UIConfig>(entity);
+    //     auto *node = registry.try_get<transform::GameObject>(entity);
+
+    //     AssertThat(uiElement, Is().Not().EqualTo(nullptr));
+    //     AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
+    //     AssertThat(node, Is().Not().EqualTo(nullptr));
+
+    //     // If element (node) is not visible, skip drawing
+    //     if (!node->state.visible)
+    //         return;
+
+    //     for (auto childEntry : node->orderedChildren)
+    //     {
+    //         auto child = childEntry;
+    //         auto *childConfig = registry.try_get<UIConfig>(child);
+    //         if (!childConfig)
+    //             continue;
+
+    //         // Skip elements with a `draw_layer` or special names
+
+    //         // TODO: document h_popup and alert?
+    //         // TODO: ensure that config->id is always set (to value in children map?)
+    //         if (childConfig->drawLayer || childConfig->id == "h_popup" || childConfig->id == "alert")
+    //             continue;
+
+    //         // Draw first if `draw_after` is false
+    //         if (!childConfig->draw_after)
+    //         {
+    //             DrawSelf(layerPtr, registry, child);
+    //         }
+
+    //         // Recursively draw children
+    //         DrawChildren(layerPtr, registry, child);
+
+    //         // Draw again if `draw_after` is true
+    //         if (childConfig->draw_after)
+    //         {
+    //             DrawSelf(layerPtr, registry, child);
+    //         }
+    //     }
+    // }
 
     auto createTooltipUIBox(entt::registry &registry, entt::entity parent, ui::Tooltip tooltip) -> UIElementTemplateNode {
 
@@ -1167,14 +1211,15 @@ namespace ui
     }
 
     // TODO: check logic, ensure working properly, refactor logic to be more readable (test with various ui types and configurations)
-    void element::DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
+    void element::DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
     {
         ZoneScopedN("UI Element: DrawSelf");
-        auto *uiElement = registry.try_get<UIElementComponent>(entity);
-        auto *config = registry.try_get<UIConfig>(entity);
-        auto *state = registry.try_get<UIState>(entity);
-        auto *node = registry.try_get<transform::GameObject>(entity);
-        auto *transform = registry.try_get<transform::Transform>(entity);
+        auto *uiElement = &uiElementComp;
+        auto *config = &configComp;
+        auto *state = &stateComp;
+        auto *node =  &nodeComp;
+        auto *transform =  &transformComp;
+        auto *rectCache = globals::registry.try_get<RoundedRectangleVerticesCache>(entity);
 
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(config, Is().Not().EqualTo(nullptr));
@@ -1186,10 +1231,13 @@ namespace ui
         auto actualY = transform->getActualY();
         auto actualW = transform->getActualW();
         auto actualH = transform->getActualH();
-        auto visualX = transform->getVisualX();
-        auto visualY = transform->getVisualY();
         auto visualW = transform->getVisualW();
         auto visualH = transform->getVisualH();
+        auto visualX = transform->getVisualX();
+        auto visualY = transform->getVisualY();
+        auto visualScaleWithHoverAndMotion = transform->getVisualScaleWithHoverAndDynamicMotionReflected();
+        auto visualR = transform->getVisualRWithDynamicMotionAndXLeaning();
+        auto rotationOffset = transform->rotationOffset;
 
         // Check if element should be drawn
         if (!node->state.visible)
@@ -1220,11 +1268,11 @@ namespace ui
             auto parentEntity = node->parent.value();
             Vector2 parentParallax = {0, 0};
 
-            auto *parentElement = registry.try_get<UIElementComponent>(parentEntity);
-            auto *parentNode = registry.try_get<transform::GameObject>(parentEntity);
+            auto *parentElement = globals::registry.try_get<UIElementComponent>(parentEntity);
+            auto *parentNode = globals::registry.try_get<transform::GameObject>(parentEntity);
 
-            float parentLayerX = (registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
-            float parentLayerY = (registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
+            float parentLayerX = (globals::registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
+            float parentLayerY = (globals::registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
 
             float shadowOffsetX = (config->shadow ? 0.4f * node->shadowDisplacement->x : 0) ;
             float shadowOffsetY = (config->shadow ? 0.4f * node->shadowDisplacement->y : 0) ;
@@ -1393,7 +1441,7 @@ namespace ui
                 }
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist);
+                    util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist);
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                     //FIXME: removing for testing
                     // util::DrawNPatchUIElement(layerPtr, registry, entity, shadowColor, parallaxDist);
@@ -1408,15 +1456,15 @@ namespace ui
             auto collidedButton = config->button_UIE.value_or(entity);
             
             // if self is a button itself, ignore button UIE
-            if (registry.get<UIConfig>(entity).buttonCallback) {
+            if (globals::registry.get<UIConfig>(entity).buttonCallback) {
                 collidedButton = entity;
             }
             
               
             
-            auto &collidedButtonConfig = registry.get<UIConfig>(collidedButton);
-            auto &collidedButtonNode = registry.get<transform::GameObject>(collidedButton);
-            auto &collidedButtonUIState = registry.get<UIState>(collidedButton);
+            auto &collidedButtonConfig = globals::registry.get<UIConfig>(collidedButton);
+            auto &collidedButtonNode = globals::registry.get<transform::GameObject>(collidedButton);
+            auto &collidedButtonUIState = globals::registry.get<UIState>(collidedButton);
             
             // draw embossed rectangle
             if (config->emboss)
@@ -1425,9 +1473,9 @@ namespace ui
                 
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}});
+                    util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}});
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                    util::DrawNPatchUIElement(layerPtr, registry, entity, c, parallaxDist);
+                    util::DrawNPatchUIElement(layerPtr, globals::registry, entity, c, parallaxDist);
             }
         
             
@@ -1481,15 +1529,15 @@ namespace ui
                 {
                     // gray background
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                        util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
+                        util::DrawNPatchUIElement(layerPtr, globals::registry, entity, color, parallaxDist);
 
                     // progress bar                        
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress);
+                        util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, config->buttonDelayProgress);
+                        util::DrawNPatchUIElement(layerPtr, globals::registry, entity, color, parallaxDist, config->buttonDelayProgress);
 
                 }
                 else if (config->progressBar)
@@ -1524,9 +1572,9 @@ namespace ui
                     }
                     
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress);
+                        util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist, progress);
+                        util::DrawNPatchUIElement(layerPtr, globals::registry, entity, color, parallaxDist, progress);
                     
                 }
                 else
@@ -1534,9 +1582,9 @@ namespace ui
                     
                     // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
+                        util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}});
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElement(layerPtr, registry, entity, color, parallaxDist);
+                        util::DrawNPatchUIElement(layerPtr, globals::registry, entity, color, parallaxDist);
                 }
             }
             else
@@ -1560,16 +1608,16 @@ namespace ui
         {
             //TODO: this part needs fixing
             // hightlighted object outline
-            auto &objectNode = registry.get<transform::GameObject>(config->object.value());
+            auto &objectNode = globals::registry.get<transform::GameObject>(config->object.value());
             if (config->focusWithObject && objectNode.state.isBeingFocused)
             {
                 state->object_focus_timer = state->object_focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
                 float lw = 50.0f * std::pow(std::max(0.0f, (state->object_focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
                 // util::PrepDraw(layerPtr, registry, entity, 1.0f);
                 Color c = util::AdjustAlpha(WHITE, 0.2f * lw);
-                util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}});
+                util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}});
                 c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
-                util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 1.5f);
+                util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 1.5f);
                 layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
             }
             else
@@ -1589,11 +1637,11 @@ namespace ui
                 if (config->line_emboss)
                 {
                     Color c = ColorBrightness(config->outlineColor.value(), node->state.isBeingHovered ? 0.5f : 0.3f);
-                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth);
+                    util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth);
                 }
                 if (transform->getVisualW() > 0.01)
                 {
-                    util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth);
+                    util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth);
                 }
             }
         }
@@ -1606,12 +1654,12 @@ namespace ui
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             Color c = Fade(WHITE, 0.2f * lw);
 
-            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f);
+            util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f);
             //TODO: refactor this whole method later
 
             c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
 
-            util::DrawSteppedRoundedRectangle(layerPtr, registry, entity, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f);
+            util::DrawSteppedRoundedRectangle(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f);
             
         }
         else
@@ -1667,13 +1715,13 @@ namespace ui
         // call the object's own lambda draw function, if it has one
         if (node->drawFunction) {
             // util::PrepDraw(layerPtr, registry, entity, 0.98f);
-            node->drawFunction(layerPtr, registry, entity);
+            node->drawFunction(layerPtr, globals::registry, entity);
         }
         
         //TODO: enable this back later
 
         if (globals::drawDebugInfo)
-            transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
+            transform::DrawBoundingBoxAndDebugInfo(&globals::registry, entity, layerPtr);
     }
     
 

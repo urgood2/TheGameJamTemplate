@@ -232,16 +232,14 @@ namespace ui
 
     // be sure to call PushMatrix before calling this function
     // if applyOnlyTranslation is true, only translation will be applied, not rotation or scale
-    void util::ApplyTransformMatrix(entt::registry &registry, entt::entity entity, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation)
+    void util::ApplyTransformMatrix(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation)
     {
-
-        auto &transform = registry.get<transform::Transform>(entity);
 
         if (applyOnlyTranslation)
         {
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX(), y = transform.getVisualY()](layer::CmdTranslate *cmd) {
-                cmd->x = x;
-                cmd->y = y;
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [visualX, visualY](layer::CmdTranslate *cmd) {
+                cmd->x = visualX;
+                cmd->y = visualY;
             });
             if (addedOffset)
             {
@@ -253,7 +251,7 @@ namespace ui
             return;
         }
 
-        layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+        layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = visualX + visualW * 0.5, y = visualY + visualH * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
         });
@@ -266,16 +264,16 @@ namespace ui
             });
         }
 
-        layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
-            cmd->scaleX = scaleX;
-            cmd->scaleY = scaleY;
+        layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = visualScaleWithHoverAndDynamicMotionReflected](layer::CmdScale *cmd) {
+            cmd->scaleX = scale;
+            cmd->scaleY = scale;
         });
 
-        layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
+        layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = visualR + rotationOffset](layer::CmdRotate *cmd) {
             cmd->angle = rotation;
         });
 
-        layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+        layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -visualW * 0.5, y = -visualH * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
         });
@@ -524,7 +522,11 @@ namespace ui
         const auto actualH = transform.getActualH();
         const auto visualW = transform.getVisualW();
         const auto visualH = transform.getVisualH();
-        
+        const auto visualX = transform.getVisualX() + node.layerDisplacement->x;
+        const auto visualY = transform.getVisualY() + node.layerDisplacement->y;
+        const auto visualScaleWithHoverAndMotion = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+        const auto visualR = transform.getVisualRWithDynamicMotionAndXLeaning();
+        const auto rotationOffset = transform.rotationOffset;
         // shadow
         float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
         float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
@@ -544,7 +546,7 @@ namespace ui
         {
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
 
             Color colorToUse{};
 
@@ -570,7 +572,7 @@ namespace ui
         // then draw the npatch element itself
         layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
         
-        util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+        util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false);
 
         // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
         //     cmd->x = x;
@@ -598,7 +600,7 @@ namespace ui
         {
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false);
 
             Color colorToUse{};
 
@@ -656,69 +658,55 @@ namespace ui
      * @param progress An optional progress value for rendering progress bars.
      * @param lineWidthOverride An optional override for the line width.
      */
-    void util::DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
+    void util::DrawSteppedRoundedRectangle(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, transform::Transform &transform, ui::UIConfig* uiConfig, transform::GameObject &node, RoundedRectangleVerticesCache* rectCache, const float &visualX, const float & visualY, const float & visualW, const float & visualH, const float & visualScaleWithHoverAndMotion, const float & visualR, const float & rotationOffset, const int &type, float parallaxModifier, const std::unordered_map<std::string, Color> &colorOverrides, std::optional<float> progress, std::optional<float> lineWidthOverride)
     {
         
         if (progress.value_or(1.0f) <= 0.0f)
         return;
         
-        
-
-    
         ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
-        auto &transform = registry.get<transform::Transform>(entity);
-        auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
-        auto &node = registry.get<transform::GameObject>(entity);
         
         if (node.state.visible == false)
             return;
-        
-        // TODO: debug layer displacement non-zero for certain entities
-        //  SPDLOG_DEBUG("DrawSteppedRoundedRectangle for entity {}, layered displacement: ({}, {})", static_cast<int>(entity), node.layerDisplacement->x, node.layerDisplacement->y);
 
         AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
 
         std::optional<float> &emboss = uiConfig->emboss;
-
-        // Cache stored pixelated rect
-        auto *rectCache = registry.try_get<RoundedRectangleVerticesCache>(entity);
-        // TODO: this should take layered parallax into account as well as scale.
-
-        const auto actualX = transform.getActualX() + node.layerDisplacement->x;
-        const auto actualY = transform.getActualY() + node.layerDisplacement->y;
-        const auto actualW = transform.getActualW();
-        const auto actualH = transform.getActualH();
-        const auto visualW = transform.getVisualW();
-        const auto visualH = transform.getVisualH();
         
         bool needFullRegen = false;
         bool needClipRegen = false;
-
-        // 1) If width/height/renderTypeFlags/lineThickness/shadow changed → rebuild full geometry
-        if (!rectCache
-            || (rectCache->innerVerticesProgressReflected.empty() && rectCache->outerVerticesProgressReflected.empty()) 
-            || (rectCache->w != static_cast<int>(visualW) 
-            || rectCache->h != static_cast<int>(visualH))
-            
-            || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON) 
-            || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON)
-        )
+        
         {
-            needFullRegen = true;
-        }
-        // only progress changed
-        else if (std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON) {
-            needClipRegen = true;
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle cache checks");
+            // 1) If width/height/renderTypeFlags/lineThickness/shadow changed → rebuild full geometry
+            if (!rectCache
+                || (rectCache->innerVerticesProgressReflected.empty() && rectCache->outerVerticesProgressReflected.empty()) 
+                || (rectCache->w != static_cast<int>(visualW) 
+                || rectCache->h != static_cast<int>(visualH))
+                
+                || (lineWidthOverride.has_value() && std::abs(rectCache->lineThickness - lineWidthOverride.value()) > EPSILON) 
+                || (uiConfig->outlineThickness.has_value() && std::abs(rectCache->lineThickness - uiConfig->outlineThickness.value()) > EPSILON)
+            )
+            {
+                needFullRegen = true;
+            }
+            // only progress changed
+            else if (std::fabs(rectCache->progress.value() - progress.value_or(1.0f)) > EPSILON) {
+                needClipRegen = true;
+            }
         }
 
         // comparisons to detect if the cache is usable
         if (needFullRegen)
         {
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle full regen");
             //  regenerate full cache
             emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
+            rectCache = globals::registry.try_get<RoundedRectangleVerticesCache>(entity);
         }
         else if (needClipRegen)
         {
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle clip regen");
             // regenerate clipped vertices
             rectCache->progress = progress;
             if (progress && progress.value() < 1.0f) {
@@ -736,8 +724,7 @@ namespace ui
                 rectCache->outerVerticesProgressReflected = rectCache->outerVerticesFullRect;
             }
         }
-
-        rectCache = registry.try_get<RoundedRectangleVerticesCache>(entity);
+        
         AssertThat(rectCache, Is().Not().EqualTo(nullptr));
 
         // render the vertices using flags, parallax, emboss thickness, type flags
@@ -767,7 +754,7 @@ namespace ui
             
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -shadowOffsetX * parallaxModifier, y = -shadowOffsetY * parallaxModifier](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
             //     cmd->y = y;
@@ -817,7 +804,7 @@ namespace ui
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
 
             Color colorToUse{};
 
@@ -852,17 +839,8 @@ namespace ui
 
             if (!emboss)
                 SPDLOG_DEBUG("Emboss value not provided for emboss fill rectangle render flag");
-            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}](layer::CmdTranslate *cmd) {
-            //     cmd->x = x;
-            //     cmd->y = y;
-            // }); // shift y down for emboss effect
-
-            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
-            //     cmd->x = x;
-            //     cmd->y = y;
-            // });
-            
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
+                
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
 
             Color colorToUse{};
 
@@ -904,7 +882,7 @@ namespace ui
             //     cmd->y = y;
             // }); // shift y down for emboss effect
             
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
 // 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
@@ -948,7 +926,7 @@ namespace ui
             // FIXME: testing with commenting out
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false);
 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
@@ -991,7 +969,7 @@ namespace ui
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false);
             
             // shrink the inner vertices so they look outlined
             {
@@ -1064,7 +1042,7 @@ namespace ui
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(registry, entity, layerPtr, Vector2{0, 0}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false);
 
             Color colorToUse{};
 

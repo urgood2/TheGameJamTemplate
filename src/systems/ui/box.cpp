@@ -1585,103 +1585,103 @@ namespace ui
     }
 
     // entity is a uibox.
-    void box::Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
-    {
-        ZoneScopedN("UIBox::Draw");
-        // LATER: do not draw if already drawn this frame
-        auto *uiBox = registry.try_get<UIBoxComponent>(entity);
-        auto *uiState = registry.try_get<UIState>(entity);
-        auto *node = registry.try_get<transform::GameObject>(entity);
+    // void box::Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
+    // {
+    //     ZoneScopedN("UIBox::Draw");
+    //     // LATER: do not draw if already drawn this frame
+    //     auto *uiBox = registry.try_get<UIBoxComponent>(entity);
+    //     auto *uiState = registry.try_get<UIState>(entity);
+    //     auto *node = registry.try_get<transform::GameObject>(entity);
 
-        AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-        AssertThat(uiState, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
+    //     AssertThat(uiBox, Is().Not().EqualTo(nullptr));
+    //     AssertThat(uiState, Is().Not().EqualTo(nullptr));
+    //     AssertThat(node, Is().Not().EqualTo(nullptr));
 
-        // 🎨 Draw all child elements (except tooltips & alerts)
-        // Draw the box's child elements, not the ui root's. The ui hierarchy is stored in the ui root's children, so these would be special-case.
-        if (node)
-        {
-            ZoneScopedN("UIBox::DrawUIBOXChildren(notRoot)");
-            for (auto childEntry : node->children)
-            {
-                auto &entryName = childEntry.first;
-                auto child = childEntry.second;
-                auto *childUIElement = registry.try_get<UIElementComponent>(child);
-                auto *childUIBox = registry.try_get<UIBoxComponent>(child);
+    //     // 🎨 Draw all child elements (except tooltips & alerts)
+    //     // Draw the box's child elements, not the ui root's. The ui hierarchy is stored in the ui root's children, so these would be special-case.
+    //     if (node)
+    //     {
+    //         ZoneScopedN("UIBox::DrawUIBOXChildren(notRoot)");
+    //         for (auto childEntry : node->children)
+    //         {
+    //             auto &entryName = childEntry.first;
+    //             auto child = childEntry.second;
+    //             auto *childUIElement = registry.try_get<UIElementComponent>(child);
+    //             auto *childUIBox = registry.try_get<UIBoxComponent>(child);
 
-                // TODO: use these identifiers later?
-                if (registry.valid(child) && childUIElement && entryName != "h_popup" && entryName != "alert")
-                {
-                    SPDLOG_DEBUG("drawing uibox child {}", entryName);
-                    // this is a ui element, not a ui box, draw the element itself, then the children
-                    ui::element::DrawSelf(layerPtr, registry, child);
-                    ui::element::DrawChildren(layerPtr, registry, child);
-                }
-                else if (childUIBox)
-                {
-                    SPDLOG_DEBUG("drawing uibox child {}", entryName);
-                    // this is a ui box, recursive draw
-                    box::Draw(layerPtr, registry, child);
-                }
-                // TODO: add alternative rendering if necessary for the uibox children. Not sure why this is necessary
-            }
-        }
+    //             // TODO: use these identifiers later?
+    //             if (registry.valid(child) && childUIElement && entryName != "h_popup" && entryName != "alert")
+    //             {
+    //                 SPDLOG_DEBUG("drawing uibox child {}", entryName);
+    //                 // this is a ui element, not a ui box, draw the element itself, then the children
+    //                 ui::element::DrawSelf(layerPtr, registry, child);
+    //                 ui::element::DrawChildren(layerPtr, registry, child);
+    //             }
+    //             else if (childUIBox)
+    //             {
+    //                 SPDLOG_DEBUG("drawing uibox child {}", entryName);
+    //                 // this is a ui box, recursive draw
+    //                 box::Draw(layerPtr, registry, child);
+    //             }
+    //             // TODO: add alternative rendering if necessary for the uibox children. Not sure why this is necessary
+    //         }
+    //     }
 
-        // ✅ Only draw if visible
-        // draw the ui root's children. this is different from the uibox's children.
-        if (node->state.visible)
-        {
-            // LATER: not using draw hash
-            //  addToDrawHash(entity);  // Adds UI element to draw batch (optimization)
+    //     // ✅ Only draw if visible
+    //     // draw the ui root's children. this is different from the uibox's children.
+    //     if (node->state.visible)
+    //     {
+    //         // LATER: not using draw hash
+    //         //  addToDrawHash(entity);  // Adds UI element to draw batch (optimization)
 
-            // 🎨 Draw the root UI element
-            if (uiBox->uiRoot)
-            {
-                ZoneScopedN("UIBox::Draw::RootElement");
-                // TODO: are child nodes in defs added to root's children, or to the ui box as children?
-                element::DrawSelf(layerPtr, registry, uiBox->uiRoot.value());
-                element::DrawChildren(layerPtr, registry, uiBox->uiRoot.value());
-            }
+    //         // 🎨 Draw the root UI element
+    //         if (uiBox->uiRoot)
+    //         {
+    //             ZoneScopedN("UIBox::Draw::RootElement");
+    //             // TODO: are child nodes in defs added to root's children, or to the ui box as children?
+    //             element::DrawSelf(layerPtr, registry, uiBox->uiRoot.value());
+    //             element::DrawChildren(layerPtr, registry, uiBox->uiRoot.value());
+    //         }
 
-            // 🖌 Draw elements in layers (ordered rendering)
-            // TODO: should elements in layers be excluded from other drawing like above? figure out
-            for (auto layerEntry : uiBox->drawLayers)
-            {
-                ZoneScopedN("UIBox::DrawIfLayer");
-                auto layerEntity = layerEntry.second;
-                if (registry.valid(layerEntity))
-                {
-                    auto *element = registry.try_get<UIElementComponent>(layerEntity);
-                    auto *uiBox = registry.try_get<UIBoxComponent>(layerEntity);
-                    // if not a UIelement, then call the draw self method for the component
-                    if (element)
-                    {
-                        ui::element::DrawSelf(layerPtr, registry, layerEntity);
-                        ui::element::DrawChildren(layerPtr, registry, layerEntity);
-                    }
-                    else if (uiBox)
-                    {
-                        box::Draw(layerPtr, registry, layerEntity);
-                    }
-                }
-            }
-        }
+    //         // 🖌 Draw elements in layers (ordered rendering)
+    //         // TODO: should elements in layers be excluded from other drawing like above? figure out
+    //         for (auto layerEntry : uiBox->drawLayers)
+    //         {
+    //             ZoneScopedN("UIBox::DrawIfLayer");
+    //             auto layerEntity = layerEntry.second;
+    //             if (registry.valid(layerEntity))
+    //             {
+    //                 auto *element = registry.try_get<UIElementComponent>(layerEntity);
+    //                 auto *uiBox = registry.try_get<UIBoxComponent>(layerEntity);
+    //                 // if not a UIelement, then call the draw self method for the component
+    //                 if (element)
+    //                 {
+    //                     ui::element::DrawSelf(layerPtr, registry, layerEntity);
+    //                     ui::element::DrawChildren(layerPtr, registry, layerEntity);
+    //                 }
+    //                 else if (uiBox)
+    //                 {
+    //                     box::Draw(layerPtr, registry, layerEntity);
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        // REVIEW: alerts are the red pips on the top right. alerts can also be popups?
-        if (node->children.find("alert") != node->children.end())
-        {
-            ZoneScopedN("UIBox::Draw::Alert");
-            auto alert = node->children["alert"];
-            if (registry.valid(alert))
-            {
-                ui::element::DrawSelf(layerPtr, registry, alert);
-                ui::element::DrawChildren(layerPtr, registry, alert);
-            }
-        }
+    //     // REVIEW: alerts are the red pips on the top right. alerts can also be popups?
+    //     if (node->children.find("alert") != node->children.end())
+    //     {
+    //         ZoneScopedN("UIBox::Draw::Alert");
+    //         auto alert = node->children["alert"];
+    //         if (registry.valid(alert))
+    //         {
+    //             ui::element::DrawSelf(layerPtr, registry, alert);
+    //             ui::element::DrawChildren(layerPtr, registry, alert);
+    //         }
+    //     }
 
-        if (globals::drawDebugInfo)
-            transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
-    }
+    //     if (globals::drawDebugInfo)
+    //         transform::DrawBoundingBoxAndDebugInfo(&registry, entity, layerPtr);
+    // }
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)
     {
@@ -1728,6 +1728,155 @@ namespace ui
             globals::REFRESH_FRAME_MASTER_CACHE.reset();
         }
     }
+
+    void box::drawAllBoxes(entt::registry &registry,
+                      std::shared_ptr<layer::Layer> layerPtr)
+    {
+        // 1) Build a flat list in the exact order your old box::Draw would have used.
+        std::vector<entt::entity> drawOrder;
+        drawOrder.reserve(200); // or an estimate of your total UI element count
+        //TODO call for all ui boxes
+        auto view = registry.view<UIBoxComponent>();
+        for (auto ent : view)
+        {
+            //TODO: probably sort these with layer order
+            buildUIBoxDrawList(registry, ent, drawOrder);
+        }
+
+        // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
+        //    of the “always‐present” components every drawable element needs:
+        static auto uiGroup = registry.group<UIElementComponent,
+                                             UIConfig,
+                                             UIState,
+                                             transform::GameObject,
+                                             transform::Transform>();
+
+        // 3) Loop in our flattened order:
+        for (auto ent : drawOrder)
+        {
+            if (!registry.valid(ent))
+                continue;
+
+            // Pull the five group‐components by reference (O(1)):
+            auto &elemComp = uiGroup.get<UIElementComponent>(ent);
+            auto &cfg = uiGroup.get<UIConfig>(ent);
+            auto &st = uiGroup.get<UIState>(ent);
+            auto &node = uiGroup.get<transform::GameObject>(ent);
+            auto &xf = uiGroup.get<transform::Transform>(ent);
+
+            // Finally call your lean DrawSelf that only does `try_get`
+            // for optional pieces (RoundedRectangleVerticesCache, etc.).
+            element::DrawSelf(layerPtr, ent, elemComp, cfg, st, node, xf);
+        }
+
+        // 4) If you still want to draw bounding boxes for each UIBox itself:
+        if (globals::drawDebugInfo)
+        {
+            for (auto box : view)
+            {
+                transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
+            }            
+        }
+        
+    }
+
+    void box::buildUIBoxDrawList(
+        entt::registry &registry,
+        entt::entity        boxEntity,
+        std::vector<entt::entity> &out)
+    {
+        // Fetch the UIBox and its GameObject. If either is missing, bail.
+        auto *uiBox    = registry.try_get<UIBoxComponent>(boxEntity);
+        auto *boxNode  = registry.try_get<transform::GameObject>(boxEntity);
+        if (!uiBox || !boxNode) 
+            return;
+    
+        // 1) Draw all direct children of this box (except tooltips & alerts)
+        //    This matches exactly your first loop in box::Draw:
+        for (auto const &entry : boxNode->children)
+        {
+            // entry.first is the name (string), entry.second is the entity
+            const auto &entryName = entry.first;
+            entt::entity child    = entry.second;
+    
+            auto *childUIElement = registry.try_get<UIElementComponent>(child);
+            auto *childUIBox     = registry.try_get<UIBoxComponent>(child);
+            auto *childNode      = registry.try_get<transform::GameObject>(child);
+    
+            // Skip if not a valid entity or not visible
+            if (!registry.valid(child) || !childNode || !childNode->state.visible)
+                continue;
+    
+            // If it’s a UIElement (and not “h_popup”/“alert”), push that element + its subtree:
+            if (childUIElement 
+                && entryName != "h_popup" 
+                && entryName != "alert")
+            {
+                // DrawSelf + DrawChildren are replaced by a flattening of the element subtree:
+                element::buildUIDrawList(registry, child, out);
+            }
+            // If it’s another UIBox, recurse fully into that box:
+            else if (childUIBox)
+            {
+                buildUIBoxDrawList(registry, child, out);
+            }
+            // else: skip everything else
+        }
+    
+        // 2) If this box’s node is visible, draw its uiRoot first:
+        if (boxNode->state.visible && uiBox->uiRoot)
+        {
+            
+            entt::entity rootElem = uiBox->uiRoot.value();
+            // 1) draw the root itself (same as element::DrawSelf(root))  
+            out.push_back(rootElem);
+            // rootElem might itself have children; flatten them as well
+            element::buildUIDrawList(registry, rootElem, out);
+        }
+    
+        // 3) Iterate drawLayers in insertion order:
+        //    for each layerEntity: if it’s a UIElement → flatten its subtree;
+        //                         if it’s a UIBox     → recurse on that box.
+        for (auto const &layerEntry : uiBox->drawLayers)
+        {
+            entt::entity layerEnt = layerEntry.second;
+            if (!registry.valid(layerEnt))
+                continue;
+    
+            auto *layerElemBox = registry.try_get<UIBoxComponent>(layerEnt);
+            auto *layerElemEl  = registry.try_get<UIElementComponent>(layerEnt);
+            auto *layerNode    = registry.try_get<transform::GameObject>(layerEnt);
+    
+            // Skip if it’s not visible or no GameObject
+            if (!layerNode || !layerNode->state.visible)
+                continue;
+    
+            if (layerElemEl)
+            {
+                element::buildUIDrawList(registry, layerEnt, out);
+            }
+            else if (layerElemBox)
+            {
+                buildUIBoxDrawList(registry, layerEnt, out);
+            }
+        }
+    
+        // 4) Finally, if there’s an “alert” child, draw it last:
+        auto alertIt = boxNode->children.find("alert");
+        if (alertIt != boxNode->children.end())
+        {
+            entt::entity alertEnt = alertIt->second;
+            auto *alertNode       = registry.try_get<transform::GameObject>(alertEnt);
+            auto *alertConfig     = registry.try_get<UIConfig>(alertEnt);
+    
+            if (registry.valid(alertEnt) && alertNode && alertNode->state.visible && alertConfig)
+            {
+                element::buildUIDrawList(registry, alertEnt, out);
+            }
+        }
+    
+    }
+    
 
     void box::Move(entt::registry &registry, entt::entity self, float dt)
     {

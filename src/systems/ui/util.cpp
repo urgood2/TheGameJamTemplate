@@ -752,6 +752,8 @@ namespace ui
         {
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow fill");
             
+            
+            
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             
             util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false);
@@ -768,14 +770,14 @@ namespace ui
             Color colorToUse{};
 
             // if a shadow override exists, use it
-            if (colorOverrides.find("shadow") != colorOverrides.end())
-            {
-                colorToUse = colorOverrides.at("shadow");
-            }
-            else
-            {
+            // if (colorOverrides.find("shadow") != colorOverrides.end())
+            // {
+            //     colorToUse = colorOverrides.at("shadow");
+            // }
+            // else
+            // {
                 colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
-            }
+            // }
             
             // filled shadow
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
@@ -809,16 +811,15 @@ namespace ui
             Color colorToUse{};
 
             // if an outline shadow override exists, use it
-            if (colorOverrides.find("outline_shadow") != colorOverrides.end())
-            {
-                colorToUse = colorOverrides.at("outline_shadow");
-            }
-            else
-            {
+            // if (colorOverrides.find("outline_shadow") != colorOverrides.end())
+            // {
+            //     colorToUse = colorOverrides.at("outline_shadow");
+            // }
+            // else
+            // {
                 colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
-            }
+            // }
 
-            ::util::Profiler profiler("RenderRectVerticlesOutlineLayer");
             // outline shadow
 
             layer::QueueCommand<layer::CmdRenderRectVerticesOutlineLayer>(layerPtr, [entity, colorToUse](layer::CmdRenderRectVerticesOutlineLayer *cmd) {
@@ -845,17 +846,17 @@ namespace ui
             Color colorToUse{};
 
             // if an filled emboss override exists, use it
-            if (colorOverrides.find("emboss") != colorOverrides.end())
-            {
+            // if (colorOverrides.find("emboss") != colorOverrides.end())
+            // {
                 colorToUse = colorOverrides.at("emboss");
-            }
-            else
-            {
+            // }
+            // else
+            // {
                 colorToUse = (uiConfig->color.value_or(GRAY));
                 // colorToUse = ColorBrightness(colorToUse, -0.5f);
                 colorToUse = ColorTint(colorToUse, BLACK);
                 colorToUse = BLACK;
-            }
+            // }
 
             // not shadow, ensure color is not translucent
             // AssertTh at(colorToUse.a, Is().EqualTo(255));
@@ -892,17 +893,17 @@ namespace ui
             Color colorToUse{};
 
             // if an outline emboss override exists, use it
-            if (colorOverrides.find("outline_emboss") != colorOverrides.end())
-            {
+            // if (colorOverrides.find("outline_emboss") != colorOverrides.end())
+            // {
                 colorToUse = colorOverrides.at("outline_emboss");
-            }
-            else
-            {
-                colorToUse = (uiConfig->outlineColor.value_or(GRAY));
-                // colorToUse = ColorBrightness(colorToUse, -0.5f);
-                colorToUse = ColorTint(colorToUse, BLACK);
-                colorToUse = BLACK;
-            }
+            // }
+            // else
+            // {
+            //     colorToUse = (uiConfig->outlineColor.value_or(GRAY));
+            //     // colorToUse = ColorBrightness(colorToUse, -0.5f);
+            //     colorToUse = ColorTint(colorToUse, BLACK);
+            //     colorToUse = BLACK;
+            // }
 
             // not shadow, ensure color is not translucent
             AssertThat(colorToUse.a, Is().EqualTo(255));
@@ -936,14 +937,14 @@ namespace ui
             Color colorToUse{};
 
             // if an fill override exists, use it
-            if (colorOverrides.find("fill") != colorOverrides.end())
-            {
-                colorToUse = colorOverrides.at("fill");
-            }
-            else
-            {
+            // if (colorOverrides.find("fill") != colorOverrides.end())
+            // {
+            //     colorToUse = colorOverrides.at("fill");
+            // }
+            // else
+            // {
                 colorToUse = (uiConfig->color.value_or(WHITE));
-            }
+            // }
 
             // not shadow, ensure color is not translucent
             // AssertThat(colorToUse.a, Is().EqualTo(255));
@@ -1047,14 +1048,14 @@ namespace ui
             Color colorToUse{};
 
             // if an outline override exists, use it
-            if (colorOverrides.find("outline") != colorOverrides.end())
-            {
-                colorToUse = colorOverrides.at("outline");
-            }
-            else
-            {
+            // if (colorOverrides.find("outline") != colorOverrides.end())
+            // {
+            //     colorToUse = colorOverrides.at("outline");
+            // }
+            // else
+            // {
                 colorToUse = (uiConfig->outlineColor.value_or(WHITE));
-            }
+            // }
 
             // not shadow, ensure color is not translucent
             AssertThat(colorToUse.a, Is().EqualTo(255));

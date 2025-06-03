@@ -1427,11 +1427,11 @@ namespace ui
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
             if (config->shadow && globals::settings.shadowsOn)
             {
-                layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
+                // layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
                     
-                    cmd->scaleX = 0.98f;
-                    cmd->scaleY = 0.98f;
-                });
+                //     cmd->scaleX = 0.98f;
+                //     cmd->scaleY = 0.98f;
+                // });
 
                 Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
                 if (config->shadowColor)
@@ -1446,29 +1446,33 @@ namespace ui
                     // util::DrawNPatchUIElement(layerPtr, registry, entity, shadowColor, parallaxDist);
                     ;
                     
-                layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
-                    cmd->scaleX = 1 / 0.98f;
-                    cmd->scaleY = 1 / 0.98f;
-                });
+                // layer::QueueCommand<layer::CmdScale>(layerPtr, [](layer::CmdScale *cmd) {
+                //     cmd->scaleX = 1 / 0.98f;
+                //     cmd->scaleY = 1 / 0.98f;
+                // });
             }
             
-            auto collidedButton = config->button_UIE.value_or(entity);
+            // auto collidedButton = config->button_UIE.value_or(entity);
             
-            // if self is a button itself, ignore button UIE
-            if (globals::registry.get<UIConfig>(entity).buttonCallback) {
-                collidedButton = entity;
-            }
+            // // if self is a button itself, ignore button UIE
+            // if (globals::registry.get<UIConfig>(entity).buttonCallback) {
+            //     collidedButton = entity;
+            // }
             
               
             
-            auto &collidedButtonConfig = globals::registry.get<UIConfig>(collidedButton);
-            auto &collidedButtonNode = globals::registry.get<transform::GameObject>(collidedButton);
-            auto &collidedButtonUIState = globals::registry.get<UIState>(collidedButton);
+            // auto &collidedButtonConfig = globals::registry.get<UIConfig>(collidedButton);
+            // auto &collidedButtonNode = globals::registry.get<transform::GameObject>(collidedButton);
+            // auto &collidedButtonUIState = globals::registry.get<UIState>(collidedButton);
+            
+            // auto collidedButtonConfig = *config;
+            // auto collidedButtonNode = *node;
+            // auto collidedButtonUIState = *state;
             
             // draw embossed rectangle
             if (config->emboss)
             {
-                Color c = ColorBrightness(config->color.value(), collidedButtonNode.state.isBeingHovered ? -0.8f : -0.5f);
+                Color c = ColorBrightness(config->color.value(), node->state.isBeingHovered ? -0.8f : -0.5f);
                 
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
@@ -1480,15 +1484,15 @@ namespace ui
             
             // darken if button is on cooldown
             Color buttonColor = config->buttonDelay ? util::MixColours(config->color.value(), BLACK, 0.5f) : config->color.value();
-            bool collidedButtonHovered = collidedButtonConfig.hover && collidedButtonNode.state.isBeingHovered; 
+            bool collidedButtonHovered = config->hover && node->state.isBeingHovered; 
 
-            if (collidedButtonNode.state.isBeingHovered && (entity == (entt::entity)85)) {
+            if (node->state.isBeingHovered && (entity == (entt::entity)85)) {
                 // SPDLOG_DEBUG("DrawSelf(): Button is being hovered: {}", collidedButtonNode.state.isBeingHovered);
             }
 
             //DONE: hover over container applies hover to all child entities. Why? THe hover state itself doesn't propagate to children. ANSWER: button UIE enabled for parents who are buttons.
 
-            bool clickedRecently = collidedButtonUIState.last_clicked && collidedButtonUIState.last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f;
+            bool clickedRecently = state->last_clicked && state->last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f;
             
 
             std::optional<Color> specialColor;

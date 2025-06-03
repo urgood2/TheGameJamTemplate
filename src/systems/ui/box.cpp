@@ -1880,31 +1880,30 @@ namespace ui
 
     void box::Move(entt::registry &registry, entt::entity self, float dt)
     {
-        //FIXME: 
-        // auto *transform = registry.try_get<transform::Transform>(self);
-        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
+        auto *transform = registry.try_get<transform::Transform>(self);
+        auto *uiBox = registry.try_get<UIBoxComponent>(self);
 
-        // AssertThat(transform, Is().Not().EqualTo(nullptr));
-        // AssertThat(uiBox, Is().Not().EqualTo(nullptr));
+        AssertThat(transform, Is().Not().EqualTo(nullptr));
+        AssertThat(uiBox, Is().Not().EqualTo(nullptr));
 
-        // transform::UpdateTransform(&registry, self, dt);
-        // transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
+        transform::UpdateTransform(&registry, self, dt);
+        transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
     }
 
     void box::Drag(entt::registry &registry, entt::entity self, Vector2 offset, float dt)
     {
-        // auto *transform = registry.try_get<transform::Transform>(self);
-        // auto *node = registry.try_get<transform::GameObject>(self);
-        // auto *uiBox = registry.try_get<UIBoxComponent>(self);
+        auto *transform = registry.try_get<transform::Transform>(self);
+        auto *node = registry.try_get<transform::GameObject>(self);
+        auto *uiBox = registry.try_get<UIBoxComponent>(self);
 
-        // AssertThat(transform, Is().Not().EqualTo(nullptr));
-        // AssertThat(uiBox, Is().Not().EqualTo(nullptr));
-        // AssertThat(node, Is().Not().EqualTo(nullptr));
+        AssertThat(transform, Is().Not().EqualTo(nullptr));
+        AssertThat(uiBox, Is().Not().EqualTo(nullptr));
+        AssertThat(node, Is().Not().EqualTo(nullptr));
 
-        // // TODO: fill out missing transform functions in node component
-        // if (node->methods->onDrag)
-        //     node->methods->onDrag(registry, self);
-        // transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
+        // TODO: fill out missing transform functions in node component
+        if (node->methods->onDrag)
+            node->methods->onDrag(registry, self);
+        transform::UpdateTransform(&registry, uiBox->uiRoot.value(), dt);
     }
 
     void box::AddChild(entt::registry &registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent)

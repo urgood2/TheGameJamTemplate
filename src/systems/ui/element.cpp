@@ -1135,7 +1135,6 @@ namespace ui
         auto *objectState = registry.try_get<UIState>(config->object.value());
         auto *objectNode = registry.try_get<transform::GameObject>(config->object.value());
         auto *objectTransform = registry.try_get<transform::Transform>(config->object.value());
-        
 
         if (!objectConfig) {
             //FIXME: just emplace once

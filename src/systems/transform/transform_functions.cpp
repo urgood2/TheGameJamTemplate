@@ -25,7 +25,7 @@ namespace transform
         {TransformMethod::CreateGameWorldContainerEntity, std::function<entt::entity(entt::registry *, float, float, float, float)>(CreateGameWorldContainerEntity)},
         {TransformMethod::UpdateTransformSmoothingFactors, std::function<void(entt::registry *, entt::entity, float)>(UpdateTransformSmoothingFactors)},
         {TransformMethod::AlignToMaster, std::function<void(entt::registry *, entt::entity, bool)>(AlignToMaster)},
-        {TransformMethod::MoveWithMaster, std::function<void(entt::entity, float, Transform *, InheritedProperties *, GameObject *, Transform *, InheritedProperties *, GameObject *)>(MoveWithMaster)},
+        {TransformMethod::MoveWithMaster, std::function<void(entt::entity, float, Transform &, InheritedProperties &, GameObject &, Transform &, InheritedProperties &, GameObject &)>(MoveWithMaster)},
         {TransformMethod::UpdateLocation, std::function<void(entt::registry *, entt::entity, float)>(UpdateLocation)},
         {TransformMethod::UpdateSize, std::function<void(entt::registry *, entt::entity, float)>(UpdateSize)},
         {TransformMethod::UpdateRotation, std::function<void(entt::registry *, entt::entity, float)>(UpdateRotation)},
@@ -356,7 +356,7 @@ namespace transform
     }
 
     // not exposed
-    auto MoveWithMaster(entt::entity e, float dt, Transform *selfTransform, InheritedProperties *selfRole, GameObject *selfNode, Transform *parentTransform, InheritedProperties *parentRole, GameObject *parentNode) -> void
+    auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform &parentTransform, InheritedProperties &parentRole, GameObject &parentNode) -> void
     {
         ZoneScopedN("MoveWithMaster");
         Vector2 tempRotatedOffset{};
@@ -366,7 +366,7 @@ namespace transform
         float tempWidth = 0.0f;
         float tempHeight = 0.0f;
 
-        if (globals::registry.valid(selfRole->master) == false)
+        if (globals::registry.valid(selfRole.master) == false)
         {
             return; // no parent to move with
         }
@@ -381,11 +381,11 @@ namespace transform
         // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
         bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 
-        if (isUIElementObject) //FIXME: is this enough?
-        {
-            parentTransform = registry->try_get<Transform>(selfRole->master);
-            parentRole = registry->try_get<InheritedProperties>(selfRole->master);
-        }
+        // if (isUIElementObject) //FIXME: is this enough?
+        // {
+        //     parentTransform = registry->try_get<Transform>(selfRole.master);
+        //     parentRole = registry->try_get<InheritedProperties>(selfRole.master);
+        // }
 
         // auto emptyRole = InheritedProperties{};
         // if (parent == parentRole->master)
@@ -402,7 +402,7 @@ namespace transform
         
         // auto &parentNode = registry->get<GameObject>(parent);
         // auto &selfNode = registry->get<GameObject>(e);
-        Vector2 layeredDisplacement = selfNode->layerDisplacement.value_or(Vector2{0, 0});
+        Vector2 layeredDisplacement = selfNode.layerDisplacement.value_or(Vector2{0, 0});
         
         // print layered displacement if entity == 235
         if (static_cast<int>(e) == 235)
@@ -414,26 +414,26 @@ namespace transform
             // SPDLOG_DEBUG("Layered displacement: x: {}, y: {}", layeredDisplacement.x, layeredDisplacement.y);
         }
 
-        if (selfRole->location_bond == InheritedProperties::Sync::Weak)
+        if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
-            tempRotatedOffset.x = selfRole->offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
-            tempRotatedOffset.y = selfRole->offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y;
+            tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole.offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
+            tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole.offset->y) + layeredDisplacement.y;
         }
         else
         {
-            if (parentTransform->getVisualR() < 0.0001f && parentTransform->getVisualR() > -0.0001f)
+            if (parentTransform.getVisualR() < 0.0001f && parentTransform.getVisualR() > -0.0001f)
             {
-                tempRotatedOffset.x = selfRole->offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; //TODO: selfRole.offset not initialized
-                tempRotatedOffset.y = selfRole->offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y;
+                tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole.offset->x) + layeredDisplacement.x; //TODO: selfRole.offset not initialized
+                tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole.offset->x) + layeredDisplacement.y;
             }
             else
             {
-                tempAngleCos = cos(parentTransform->getVisualR());
-                tempAngleSin = sin(parentTransform->getVisualR());
-                tempWidth = -selfTransform->getActualW() / 2 + parentTransform->getActualW() / 2;
-                tempHeight = -selfTransform->getActualH() / 2 + parentTransform->getActualH() / 2;
-                tempIntermediateOffsets.x = selfRole->offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x - tempWidth;
-                tempIntermediateOffsets.y = selfRole->offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y - tempHeight;
+                tempAngleCos = cos(parentTransform.getVisualR());
+                tempAngleSin = sin(parentTransform.getVisualR());
+                tempWidth = -selfTransform.getActualW() / 2 + parentTransform.getActualW() / 2;
+                tempHeight = -selfTransform.getActualH() / 2 + parentTransform.getActualH() / 2;
+                tempIntermediateOffsets.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole.offset->x) + layeredDisplacement.x - tempWidth;
+                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole.offset->x) + layeredDisplacement.y - tempHeight;
                 tempRotatedOffset.x = tempIntermediateOffsets.x * tempAngleCos - tempIntermediateOffsets.y * tempAngleSin + tempWidth;
                 tempRotatedOffset.y = tempIntermediateOffsets.x * tempAngleSin + tempIntermediateOffsets.y * tempAngleCos + tempHeight;
             }
@@ -441,63 +441,63 @@ namespace transform
     
     
         //TODO: these two lines cause issues. why?
-        selfTransform->getXSpring().targetValue = parentTransform->getXSpring().value + tempRotatedOffset.x;
-        selfTransform->getYSpring().targetValue = parentTransform->getYSpring().value + tempRotatedOffset.y;
+        selfTransform.getXSpring().targetValue = parentTransform.getXSpring().value + tempRotatedOffset.x;
+        selfTransform.getYSpring().targetValue = parentTransform.getYSpring().value + tempRotatedOffset.y;
         // SPDLOG_DEBUG("Moving with master set to targets: x: {}, y: {}", selfTransform.getXSpring().targetValue, selfTransform.getYSpring().targetValue);
 
-        if (selfRole->location_bond == InheritedProperties::Sync::Strong)
+        if (selfRole.location_bond == InheritedProperties::Sync::Strong)
         {
-            selfTransform->getXSpring().value = selfTransform->getXSpring().targetValue;
-            selfTransform->getYSpring().value = selfTransform->getYSpring().targetValue;
+            selfTransform.getXSpring().value = selfTransform.getXSpring().targetValue;
+            selfTransform.getYSpring().value = selfTransform.getYSpring().targetValue;
         }
-        else if (selfRole->location_bond == InheritedProperties::Sync::Weak)
+        else if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
             UpdateLocation(registry, e, dt);
         }
 
-        if (selfRole->rotation_bond == InheritedProperties::Sync::Strong)
+        if (selfRole.rotation_bond == InheritedProperties::Sync::Strong)
         {
             float juiceFactor = 0;
-            if (selfTransform->dynamicMotion.has_value())
+            if (selfTransform.dynamicMotion.has_value())
             {
-                juiceFactor = selfTransform->dynamicMotion->rotation;
+                juiceFactor = selfTransform.dynamicMotion->rotation;
             }
             else
             {
                 juiceFactor = 0;
             }
-            selfTransform->setVisualRotation(selfTransform->getActualRotation() + parentTransform->rotationOffset + (juiceFactor));
+            selfTransform.setVisualRotation(selfTransform.getActualRotation() + parentTransform.rotationOffset + (juiceFactor));
         }
-        else if (selfRole->rotation_bond == InheritedProperties::Sync::Weak)
+        else if (selfRole.rotation_bond == InheritedProperties::Sync::Weak)
         {
             UpdateRotation(registry, e, dt);
         }
 
-        if (selfRole->scale_bond == InheritedProperties::Sync::Strong)
+        if (selfRole.scale_bond == InheritedProperties::Sync::Strong)
         {
             float juiceFactor = 0;
-            if (selfTransform->dynamicMotion.has_value())
+            if (selfTransform.dynamicMotion.has_value())
             {
-                juiceFactor = selfTransform->dynamicMotion->scale;
+                juiceFactor = selfTransform.dynamicMotion->scale;
             }
             else
             {
                 juiceFactor = 0;
             }
-            selfTransform->setVisualScale(selfTransform->getActualScale() * (parentTransform->getVisualScale() / parentTransform->getActualScale()) + juiceFactor);
+            selfTransform.setVisualScale(selfTransform.getActualScale() * (parentTransform.getVisualScale() / parentTransform.getActualScale()) + juiceFactor);
         }
-        else if (selfRole->scale_bond == InheritedProperties::Sync::Weak)
+        else if (selfRole.scale_bond == InheritedProperties::Sync::Weak)
         {
             UpdateScale(registry, e, dt);
         }
 
-        if (selfRole->size_bond == InheritedProperties::Sync::Strong)
+        if (selfRole.size_bond == InheritedProperties::Sync::Strong)
         {
-            selfTransform->setVisualX(selfTransform->getVisualX() + (0.5f * (1 - parentTransform->getVisualW() / parentTransform->getActualW()) * selfTransform->getActualW()));
-            selfTransform->setVisualW(selfTransform->getActualW() * (parentTransform->getVisualW() / parentTransform->getActualW()));
-            selfTransform->setVisualH(selfTransform->getActualH() * (parentTransform->getActualH() / parentTransform->getActualH()));
+            selfTransform.setVisualX(selfTransform.getVisualX() + (0.5f * (1 - parentTransform.getVisualW() / parentTransform.getActualW()) * selfTransform.getActualW()));
+            selfTransform.setVisualW(selfTransform.getActualW() * (parentTransform.getVisualW() / parentTransform.getActualW()));
+            selfTransform.setVisualH(selfTransform.getActualH() * (parentTransform.getActualH() / parentTransform.getActualH()));
         }
-        else if (selfRole->size_bond == InheritedProperties::Sync::Weak)
+        else if (selfRole.size_bond == InheritedProperties::Sync::Weak)
         {
             UpdateSize(registry, e, dt);
         }
@@ -1025,7 +1025,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                     || role.rotation_bond == InheritedProperties::Sync::Weak)
                 {
                     node.debug.calculationsInProgress = true;
-                    MoveWithMaster(e, dt, &transform, &role, &node, &pTransform, &pRole, &pNode);
+                    MoveWithMaster(e, dt, transform, role, node, pTransform, pRole, pNode);
                 }
             }
             

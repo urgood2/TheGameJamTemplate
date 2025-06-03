@@ -497,26 +497,15 @@ namespace ui
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *uiState = registry.try_get<UIState>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);
-        auto *role = registry.try_get<transform::InheritedProperties>(entity);
-        
-        
 
         // Ensure required components exist
         AssertThat(uiElement, Is().Not().EqualTo(nullptr));
         AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
         AssertThat(transform, Is().Not().EqualTo(nullptr));
         AssertThat(uiState, Is().Not().EqualTo(nullptr));
-        
-        auto *parentNode = registry.try_get<transform::GameObject>(role->master);
-        auto *parentRole = registry.try_get<transform::InheritedProperties>(role->master);
-        auto *parentTransform = registry.try_get<transform::Transform>(role->master);
-        
-        AssertThat(parentNode, Is().Not().EqualTo(nullptr));
-        AssertThat(parentRole, Is().Not().EqualTo(nullptr));
-        AssertThat(parentTransform, Is().Not().EqualTo(nullptr));
 
         // STEP 1: Align with major parent
-        transform::MoveWithMaster(entity, 0, transform, role, node, parentTransform, parentRole, parentNode);
+        transform::MoveWithMaster(&registry, entity, 0);
         transform::UpdateParallaxCalculations(&registry, entity);
 
         // STEP 3: Recursively initialize all child elements
@@ -544,16 +533,12 @@ namespace ui
             auto *objectTransform = registry.try_get<transform::Transform>(objectEntity);
             auto *objectRole = registry.try_get<transform::InheritedProperties>(objectEntity);
             auto *objectNode = registry.try_get<transform::GameObject>(objectEntity);
-            
-            auto *objectParentTransform = registry.try_get<transform::Transform>(objectRole->master);
-            auto *objectParentRole = registry.try_get<transform::InheritedProperties>(objectRole->master);
-            auto *objectParentNode = registry.try_get<transform::GameObject>(objectRole->master);
 
             // TODO: so objects have node parents to be the ui element it is associated with?
             if (!uiConfig->noRole)
             {
                 transform::SnapTransformValues(&registry, objectEntity, transform->getActualX(), transform->getActualY(), transform->getActualW(), transform->getActualH());
-                transform::MoveWithMaster(objectEntity, 0, objectTransform, objectRole, objectNode, objectParentTransform, objectParentRole, objectParentNode);
+                transform::MoveWithMaster(&registry, objectEntity, 0);
                 objectRole->flags->prevAlignment = transform::InheritedProperties::Alignment::NONE;
                 transform::AlignToMaster(&registry, objectEntity);
             }
@@ -1151,12 +1136,6 @@ namespace ui
         auto *objectNode = registry.try_get<transform::GameObject>(config->object.value());
         auto *objectTransform = registry.try_get<transform::Transform>(config->object.value());
         
-        
-        auto *objectRole = registry.try_get<transform::InheritedProperties>(config->object.value());
-        
-        auto *objectParentTransform = registry.try_get<transform::Transform>(objectRole->master);
-        auto *objectParentRole = registry.try_get<transform::InheritedProperties>(objectRole->master);
-        auto *objectParentNode = registry.try_get<transform::GameObject>(objectRole->master);
 
         if (!objectConfig) {
             //FIXME: just emplace once
@@ -1201,7 +1180,7 @@ namespace ui
             }
 
             // Move object relative to parent
-            transform::MoveWithMaster(entity, 0, objectTransform, objectRole, objectNode, objectParentTransform, objectParentRole, objectParentNode);
+            transform::MoveWithMaster(&registry, config->object.value(), 0);
 
             // Adjust parent dimensions & alignments
             if (objectConfig->non_recalc)

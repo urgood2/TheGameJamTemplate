@@ -113,7 +113,7 @@ namespace transform
      * Update the position of a child entity to move with its parent entity.
      * Handles both weak and strong bonds.
      */
-    auto MoveWithMaster(entt::entity e, float dt, Transform *selfTransform, InheritedProperties *selfRole, GameObject *selfNode, Transform *parentTransform, InheritedProperties *parentRole, GameObject *parentNode) -> void;
+    auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform &parentTransform, InheritedProperties &parentRole, GameObject &parentNode) -> void;
 
     /**
      * Update X and Y springs for smooth transformations.

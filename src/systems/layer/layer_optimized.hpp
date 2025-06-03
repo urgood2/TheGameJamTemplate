@@ -92,7 +92,10 @@ namespace layer
         RenderRectVerticlesOutlineLayer, 
         Polygon, 
         RenderNPatchRect, 
-        Triangle
+        Triangle,
+        
+        
+        Count // <--- always last
     };
 
     // ===========================

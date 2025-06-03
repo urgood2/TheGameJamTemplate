@@ -96,7 +96,7 @@ namespace layer
         bool isSorted = true;
 
         // New:
-        std::unordered_map<std::type_index, std::unique_ptr<IDynamicPool>> commandPools;
+        std::array<IDynamicPool*, static_cast<size_t>(DrawCommandType::Count)> commandPoolsArray = {};
     };
 
     extern std::vector<std::shared_ptr<Layer>> layers;
@@ -104,7 +104,7 @@ namespace layer
     
 
     inline void ClearPools(Layer& layer) {
-        for (auto& [_, pool] : layer.commandPools)
+        for (auto& pool : layer.commandPoolsArray)
             pool->delete_all();
     }
 

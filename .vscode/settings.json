@@ -107,6 +107,7 @@
         "syncstream": "cpp",
         "barrier": "cpp",
         "latch": "cpp",
-        "scoped_allocator": "cpp"
+        "scoped_allocator": "cpp",
+        "__config": "cpp"
     }
 }

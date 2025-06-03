@@ -770,14 +770,14 @@ namespace ui
             Color colorToUse{};
 
             // if a shadow override exists, use it
-            // if (colorOverrides.find("shadow") != colorOverrides.end())
-            // {
-            //     colorToUse = colorOverrides.at("shadow");
-            // }
-            // else
-            // {
+            if (colorOverrides.find("shadow") != colorOverrides.end())
+            {
+                colorToUse = colorOverrides.at("shadow");
+            }
+            else
+            {
                 colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
-            // }
+            }
             
             // filled shadow
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
@@ -846,17 +846,17 @@ namespace ui
             Color colorToUse{};
 
             // if an filled emboss override exists, use it
-            // if (colorOverrides.find("emboss") != colorOverrides.end())
-            // {
+            if (colorOverrides.find("emboss") != colorOverrides.end())
+            {
                 colorToUse = colorOverrides.at("emboss");
-            // }
-            // else
-            // {
+            }
+            else
+            {
                 colorToUse = (uiConfig->color.value_or(GRAY));
                 // colorToUse = ColorBrightness(colorToUse, -0.5f);
                 colorToUse = ColorTint(colorToUse, BLACK);
                 colorToUse = BLACK;
-            // }
+            }
 
             // not shadow, ensure color is not translucent
             // AssertTh at(colorToUse.a, Is().EqualTo(255));
@@ -937,14 +937,14 @@ namespace ui
             Color colorToUse{};
 
             // if an fill override exists, use it
-            // if (colorOverrides.find("fill") != colorOverrides.end())
-            // {
-            //     colorToUse = colorOverrides.at("fill");
-            // }
-            // else
-            // {
+            if (colorOverrides.find("fill") != colorOverrides.end())
+            {
+                colorToUse = colorOverrides.at("fill");
+            }
+            else
+            {
                 colorToUse = (uiConfig->color.value_or(WHITE));
-            // }
+            }
 
             // not shadow, ensure color is not translucent
             // AssertThat(colorToUse.a, Is().EqualTo(255));

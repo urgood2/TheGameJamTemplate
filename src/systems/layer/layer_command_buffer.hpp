@@ -147,34 +147,48 @@ namespace layer
 
         template<typename T>
         T* AddExplicit(std::shared_ptr<Layer>& layer, DrawCommandType type, int z = 0) {
+            // 1) Pool lookup in O(1)
             T* cmd = GetDrawCommandPool<T>(*layer).new_object();
-            if (!cmd) {
-                assert(false && "Draw command allocation failed");
-                return nullptr;
-            }
+            assert(cmd && "Draw command allocation failed");
 
-            layer->commands.push_back({type, cmd, z});
-            if (z != 0) layer->isSorted = false;
+            // 2) Append to vector
+            layer->commands.push_back({ type, cmd, z });
+            if (z != 0) {
+                layer->isSorted = false;
+            }
             return cmd;
         }
-    
+
         template<typename T>
-        T* Add(std::shared_ptr<Layer>& layer, int z = 0) {
+        inline T* Add(std::shared_ptr<Layer>& layer, int z = 0) {
             return AddExplicit<T>(layer, GetDrawCommandType<T>(), z);
         }
 
-        template <typename T>
-        DynamicObjectPoolWrapper<T>& GetDrawCommandPool(Layer& layer) {
-            auto typeIdx = std::type_index(typeid(T));
-            auto it = layer.commandPools.find(typeIdx);
-            if (it == layer.commandPools.end()) {
-                constexpr ::detail::index_t default_block_size = 128;
-                auto pool = std::make_unique<DynamicObjectPoolWrapper<T>>(PoolBlockSize<T>::value);
-                auto* rawPtr = pool.get();
-                layer.commandPools[typeIdx] = std::move(pool);
-                return *rawPtr;
+
+        // --------------------------------------------------------------------------------------
+        //  GetDrawCommandPool<T>(layer)
+        //  --------------------------------
+        //  - Uses a preallocated array slot: index = static_cast<size_t>(GetDrawCommandType<T>())
+        //  - If slot is null, allocate a new DynamicObjectPoolWrapper<T>, store pointer there.
+        //  - Always returns a reference to the pool for type T.
+        //
+        // layer_command_buffer.hpp (excerpt)
+        template<typename T>    
+        inline DynamicObjectPoolWrapper<T>& GetDrawCommandPool(Layer& layer) {
+            size_t idx = static_cast<size_t>(GetDrawCommandType<T>());
+            assert(
+                idx < static_cast<size_t>(DrawCommandType::Count)
+                && "GetDrawCommandType<T>() returned out‐of‐range DrawCommandType"
+            );
+
+            IDynamicPool*& slot = layer.commandPoolsArray[idx];
+            if (!slot) {
+                // create a new templated pool, but store it in a PoolBase* slot
+                auto poolPtr = new DynamicObjectPoolWrapper<T>(PoolBlockSize<T>::value);
+                slot = poolPtr; // implicit upcast to PoolBase*
+                return *poolPtr;
             }
-            return *static_cast<DynamicObjectPoolWrapper<T>*>(layer.commandPools[typeIdx].get());
+            return *static_cast<DynamicObjectPoolWrapper<T>*>(slot);
         }
     
         inline const std::vector<DrawCommandV2>& GetCommandsSorted(const std::shared_ptr<Layer>& layer) {
@@ -189,10 +203,12 @@ namespace layer
         
     } // namespace CommandBufferNS
     
-    template<typename T>
-    T* QueueCommand(std::shared_ptr<layer::Layer> layer, std::function<void(T*)> initializer, int z = 0) {
+    // Inline, header‐only. Takes any callable (lambda, function, struct) that can be invoked as init(cmd).
+    template<typename T, typename Initializer>
+    inline T* QueueCommand(std::shared_ptr<Layer> layer, Initializer&& init, int z = 0) {
         T* cmd = layer_command_buffer::Add<T>(layer, z);
-        initializer(cmd);
+        // inlined call, no std::function
+        init(cmd);
         return cmd;
     }
     

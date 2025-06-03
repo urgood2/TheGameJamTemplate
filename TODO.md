@@ -8,15 +8,12 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] optimize updatesystems with this; https://chatgpt.com/c/683ef4e3-bc90-800a-8478-9788d51b3d6f  Also consider optimizing by caching parent components when recursing by frame?
 - [ ] broaden initial area for collison bounds with quad tree
 - [ ] use cached variables for transform values? single-component groups don't work.
 - [ ] rewire get() methods in transform to be namespace level, and to use a reference to an owning group
 - [ ] transform cache which updates once per frame upon access, has a dirty bit?
-- [ ] widths and heights for all transforms at zero. why?
 - [ ] make drawAllBoxes respect layer ordering later.
-- [ ] use groups in transform updates & text too.
-- [ ] pass in group to drawself to minimize registry get() calls
-- [ ] ui performance unacceptable. optimize using: https://chatgpt.com/share/683b1920-da0c-800a-b0bb-d876802974cf
 - [ ] collision bug where dragging something out of bounds disables collision entirely
 - [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable)
 ```cpp

@@ -358,7 +358,7 @@ namespace transform
     // not exposed
     auto MoveWithMaster(entt::registry *registry, entt::entity e, float dt) -> void
     {
-        
+        ZoneScopedN("MoveWithMaster");
         Vector2 tempRotatedOffset{};
         Vector2 tempIntermediateOffsets{};
         float tempAngleCos = 0.0f;
@@ -701,6 +701,7 @@ namespace transform
 
     auto SyncPerfectlyToMaster(entt::registry *registry, entt::entity e, entt::entity parent) -> void
     {
+        ZoneScopedN("SyncPerfectlyToMaster");
         auto &selfRole = registry->get<InheritedProperties>(e);
         auto &parentRole = registry->get<InheritedProperties>(parent);
         auto &selfTransform = registry->get<Transform>(e);
@@ -953,6 +954,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     // };
     auto UpdateTransform(entt::registry *registry, entt::entity e, float dt) -> void
     {
+        ZoneScopedN("UpdateTransform");
         // SPDLOG_DEBUG("Updating transform for entity {}", static_cast<int>(e));
         // debug break
         if (registry->any_of<ui::UIBoxComponent>(e))

@@ -29,7 +29,7 @@ namespace transform
         {TransformMethod::UpdateLocation, std::function<void(entt::entity, float, Transform &, spring::Spring &, spring::Spring &)>(UpdateLocation)},
         {TransformMethod::UpdateRotation, std::function<void(entt::entity, float, Transform &, spring::Spring &, spring::Spring &)>(UpdateRotation)},
         {TransformMethod::UpdateScale, std::function<void(entt::entity, float, Transform &, spring::Spring &)>(UpdateScale)},
-        {TransformMethod::GetMaster, std::function<Transform::FrameCalculation::MasterCache(entt::entity, Transform &, InheritedProperties &, GameObject &, Transform *, InheritedProperties *)>(GetMaster)},
+        {TransformMethod::GetMaster, std::function<Transform::FrameCalculation::MasterCache(entt::entity, Transform &, InheritedProperties &, GameObject &, Transform*&, InheritedProperties*& )>(GetMaster)},
         {TransformMethod::SyncPerfectlyToMaster, std::function<void( entt::entity, entt::entity, Transform &, InheritedProperties &, Transform &, InheritedProperties &)>(SyncPerfectlyToMaster)},
         {TransformMethod::UpdateDynamicMotion, std::function<void(entt::entity, float, Transform &)>(UpdateDynamicMotion)},
         {TransformMethod::InjectDynamicMotion, std::function<void(entt::registry *, entt::entity, float, float)>(InjectDynamicMotion)},
@@ -45,7 +45,7 @@ namespace transform
         {TransformMethod::HandleClick, std::function<void(entt::registry *, entt::entity)>(HandleClick)},
         {TransformMethod::HandleClickReleased, std::function<void(entt::registry *, entt::entity)>(HandleClickReleased)},
         {TransformMethod::SetClickOffset, std::function<void(entt::registry *, entt::entity, Vector2, bool)>(SetClickOffset)},
-        {TransformMethod::GetObjectToDrag, std::function<std::optional<entt::entity>(entt::registry *, entt::entity)>(GetObjectToDrag)},
+        {TransformMethod::GetObjectToDrag, std::function<entt::entity(entt::registry *, entt::entity)>(GetObjectToDrag)},
         {TransformMethod::Draw, std::function<void(std::shared_ptr<layer::Layer>, entt::registry *, entt::entity)>(Draw)},
         {TransformMethod::StartDrag, std::function<void(entt::registry *, entt::entity, bool)>(StartDrag)},
         {TransformMethod::StopDragging, std::function<void(entt::registry *, entt::entity)>(StopDragging)},
@@ -380,11 +380,11 @@ namespace transform
         InheritedProperties *parentRole = nullptr;
         
         auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode, parentTransform, parentRole);
-        auto parent = parentRetVal.master.value_or(entt::null);
-        // auto *parentTransform = registry->try_get<Transform>(parent);
-        // auto *parentRole = registry->try_get<InheritedProperties>(parent);
+        auto parent = parentRetVal.master.value();
+        parentTransform = registry->try_get<Transform>(parent);
+        parentRole = registry->try_get<InheritedProperties>(parent);
 
-        // // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
+        // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
         bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 
         if (isUIElementObject) //FIXME: is this enough?
@@ -636,7 +636,7 @@ namespace transform
 
     //TODO: get master might be the problem
     // observation: this does not take container coordinates into account. Only node methods do.
-    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform *parentTransform, InheritedProperties *parentRole) -> Transform::FrameCalculation::MasterCache
+    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*&                  parentTransform, InheritedProperties*& parentRole) -> Transform::FrameCalculation::MasterCache
     {
         Transform::FrameCalculation::MasterCache toReturn{};
         toReturn.master = e;             // self is its own parent
@@ -692,13 +692,15 @@ namespace transform
         toReturn.master = selfTransform.frameCalculation.currentMasterCache->master;
         toReturn.offset = selfTransform.frameCalculation.currentMasterCache->offset;
         
-        bool isUIElementObject = globals::registry.any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
+            // bool isUIElementObject = globals::registry.any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 
-        if (isUIElementObject)
-        {
-            toReturn.master = selfRole.master; // if this is a UI element object, we need to use the immediate master
-            
-        }
+            // if (isUIElementObject)
+            // {
+            //     toReturn.master = selfRole.master; // if this is a UI element object, we need to use the immediate master
+                
+            // }
+        parentTransform = globals::registry.try_get<Transform>(toReturn.master.value());
+        parentRole = globals::registry.try_get<InheritedProperties>(toReturn.master.value());
 
         return toReturn;
     }

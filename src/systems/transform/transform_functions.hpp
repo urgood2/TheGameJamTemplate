@@ -139,7 +139,7 @@ namespace transform
     /**
      * Retrieve the parent entity of the given entity.
      */
-    auto GetMaster(entt::registry *registry, entt::entity e) -> Transform::FrameCalculation::MasterCache;
+    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) ->  Transform::FrameCalculation::MasterCache;
 
     /**
      * Glue a child entity to its parent, forcing alignment of all transformations.

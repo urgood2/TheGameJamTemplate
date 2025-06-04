@@ -30,7 +30,7 @@ namespace transform
         {TransformMethod::UpdateSize, std::function<void(entt::registry *, entt::entity, float)>(UpdateSize)},
         {TransformMethod::UpdateRotation, std::function<void(entt::registry *, entt::entity, float)>(UpdateRotation)},
         {TransformMethod::UpdateScale, std::function<void(entt::registry *, entt::entity, float)>(UpdateScale)},
-        {TransformMethod::GetMaster, std::function<Transform::FrameCalculation::MasterCache(entt::registry *, entt::entity)>(GetMaster)},
+        {TransformMethod::GetMaster, std::function<Transform::FrameCalculation::MasterCache(entt::entity, Transform &, InheritedProperties &, GameObject &)>(GetMaster)},
         {TransformMethod::SyncPerfectlyToMaster, std::function<void(entt::registry *, entt::entity, entt::entity)>(SyncPerfectlyToMaster)},
         {TransformMethod::UpdateDynamicMotion, std::function<void(entt::registry *, entt::entity, float)>(UpdateDynamicMotion)},
         {TransformMethod::InjectDynamicMotion, std::function<void(entt::registry *, entt::entity, float, float)>(InjectDynamicMotion)},
@@ -368,6 +368,7 @@ namespace transform
 
         auto &selfRole = registry->get<InheritedProperties>(e);
         auto &selfTransform = registry->get<Transform>(e);
+        auto &selfNode = registry->get<GameObject>(e);
 
         if (registry->valid(selfRole.master) == false)
         {
@@ -377,8 +378,8 @@ namespace transform
 
         //REVIEW: getmaster allows multi-level master-slave trees.
         //FIXME: the offset it returns isn't used at the moment. Using it breaks the system for some reason
-        auto parentRetVal = GetMaster(registry, e);
-        auto parent = parentRetVal.master.value();
+        auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode);
+        auto parent = parentRetVal.master.value_or(entt::null);
         auto *parentTransform = registry->try_get<Transform>(parent);
         auto *parentRole = registry->try_get<InheritedProperties>(parent);
 
@@ -396,8 +397,6 @@ namespace transform
 
         UpdateDynamicMotion(registry, e, dt);
         
-        auto &parentNode = registry->get<GameObject>(parent);
-        auto &selfNode = registry->get<GameObject>(e);
         Vector2 layeredDisplacement = selfNode.layerDisplacement.value_or(Vector2{0, 0});
         
         // print layered displacement if entity == 235
@@ -634,12 +633,8 @@ namespace transform
 
     //TODO: get master might be the problem
     // observation: this does not take container coordinates into account. Only node methods do.
-    auto GetMaster(entt::registry *registry, entt::entity e) -> Transform::FrameCalculation::MasterCache
+    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> Transform::FrameCalculation::MasterCache
     {
-        auto &selfRole = registry->get<InheritedProperties>(e);
-        auto &selfTransform = registry->get<Transform>(e);
-        auto &selfNode = registry->get<GameObject>(e);
-
         Transform::FrameCalculation::MasterCache toReturn{};
         toReturn.master = e;             // self is its own parent
         toReturn.offset = Vector2{0, 0}; // fallback values
@@ -675,8 +670,10 @@ namespace transform
             }
 
             selfTransform.frameCalculation.tempOffsets = Vector2{0, 0};
+            
+            auto [parentTransform, parentRole, parentNode] = globals::registry.get<Transform, InheritedProperties, GameObject>(selfRole.master);
 
-            auto parentResults = GetMaster(registry, selfRole.master); // recursively get offsets, add them all
+            auto parentResults = GetMaster(selfRole.master, parentTransform, parentRole, parentNode); // recursive call to get parent master and offset
 
             selfTransform.frameCalculation.currentMasterCache->master = parentResults.master;
             selfTransform.frameCalculation.currentMasterCache->offset = parentResults.offset.value_or(selfTransform.frameCalculation.tempOffsets.value());
@@ -688,7 +685,7 @@ namespace transform
         toReturn.master = selfTransform.frameCalculation.currentMasterCache->master;
         toReturn.offset = selfTransform.frameCalculation.currentMasterCache->offset;
         
-        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
+        bool isUIElementObject = globals::registry.any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 
         if (isUIElementObject)
         {

@@ -113,7 +113,7 @@ namespace transform
      * Update the position of a child entity to move with its parent entity.
      * Handles both weak and strong bonds.
      */
-    auto MoveWithMaster(entt::registry *registry, entt::entity e, float dt) -> void;
+    auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> void;
 
     /**
      * Update X and Y springs for smooth transformations.
@@ -149,7 +149,7 @@ namespace transform
     /**
      * Update the "dynamicMotion" effect for an entity, applying springy animations.
      */
-    auto UpdateDynamicMotion(entt::registry *registry, entt::entity e, float dt) -> void;
+    auto UpdateDynamicMotion(entt::entity e, float dt, Transform &selfTransform) -> void;
 
     /**
      * Apply a "dynamicMotion" animation to an entity with specified intensity and rotation.

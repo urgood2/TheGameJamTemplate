@@ -355,8 +355,10 @@ namespace transform
     }
 
     // not exposed
-    auto MoveWithMaster(entt::registry *registry, entt::entity e, float dt) -> void
+    auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> void
     {
+        auto registry = &globals::registry;
+        
         ZoneScopedN("MoveWithMaster");
         Vector2 tempRotatedOffset{};
         Vector2 tempIntermediateOffsets{};
@@ -364,10 +366,6 @@ namespace transform
         float tempAngleSin = 0.0f;
         float tempWidth = 0.0f;
         float tempHeight = 0.0f;
-
-        auto &selfRole = registry->get<InheritedProperties>(e);
-        auto &selfTransform = registry->get<Transform>(e);
-        auto &selfNode = registry->get<GameObject>(e);
 
         if (registry->valid(selfRole.master) == false)
         {
@@ -377,10 +375,14 @@ namespace transform
 
         //REVIEW: getmaster allows multi-level master-slave trees.
         //FIXME: the offset it returns isn't used at the moment. Using it breaks the system for some reason
-        auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode);
+        
+        Transform *parentTransform = nullptr;
+        InheritedProperties *parentRole = nullptr;
+        
+        auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode, parentTransform, parentRole);
         auto parent = parentRetVal.master.value_or(entt::null);
-        auto *parentTransform = registry->try_get<Transform>(parent);
-        auto *parentRole = registry->try_get<InheritedProperties>(parent);
+        // auto *parentTransform = registry->try_get<Transform>(parent);
+        // auto *parentRole = registry->try_get<InheritedProperties>(parent);
 
         // // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
         bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
@@ -634,7 +636,7 @@ namespace transform
 
     //TODO: get master might be the problem
     // observation: this does not take container coordinates into account. Only node methods do.
-    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> Transform::FrameCalculation::MasterCache
+    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform *parentTransform, InheritedProperties *parentRole) -> Transform::FrameCalculation::MasterCache
     {
         Transform::FrameCalculation::MasterCache toReturn{};
         toReturn.master = e;             // self is its own parent
@@ -672,7 +674,10 @@ namespace transform
 
             selfTransform.frameCalculation.tempOffsets = Vector2{0, 0};
             
-            auto [parentTransform, parentRole, parentNode] = globals::registry.get<Transform, InheritedProperties, GameObject>(selfRole.master);
+            // auto [parentTransform, parentRole, parentNode] = globals::registry.try_get<Transform, InheritedProperties, GameObject>(selfRole.master);
+            parentTransform = globals::registry.try_get<Transform>(selfRole.master);
+            parentRole = globals::registry.try_get<InheritedProperties>(selfRole.master);
+            parentNode = globals::registry.try_get<GameObject>(selfRole.master);
 
             auto parentResults = GetMaster(selfRole.master, parentTransform, parentRole, parentNode); // recursive call to get parent master and offset
 
@@ -734,10 +739,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 }
 
 
-    auto UpdateDynamicMotion(entt::registry *registry, entt::entity e, float dt) -> void
+    auto UpdateDynamicMotion(entt::entity e, float dt, Transform &selfTransform) -> void
     {
 
-        auto &selfTransform = registry->get<Transform>(e);
         auto &dynamicMotion = selfTransform.dynamicMotion;
 
         if (!selfTransform.dynamicMotion) // LATER: handle no updating if dynamicMotion is not active? Selective disabling for children, for example
@@ -1017,19 +1021,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                     transform.frameCalculation.stationary = false;
                 }
                 
-                if (static_cast<int>(role.master) == 235)
-                {
-                    // SPDLOG_DEBUG("Entity 235 stationary state: {}", transform.frameCalculation.stationary);
-                }
 
                 if ((transform.frameCalculation.stationary == false) || (transform.frameCalculation.alignmentChanged) || (transform.dynamicMotion) || (role.location_bond == InheritedProperties::Sync::Weak) || (role.rotation_bond == InheritedProperties::Sync::Weak))
                 {
 
                     node.debug.calculationsInProgress = true;
                     MoveWithMaster(registry, e, dt);
-                    if (static_cast<int>(e) == 235) {
-                        // SPDLOG_DEBUG("Entity 235 moving with master");
-                    }
                 }
             }
             

@@ -382,21 +382,13 @@ namespace transform
         auto *parentTransform = registry->try_get<Transform>(parent);
         auto *parentRole = registry->try_get<InheritedProperties>(parent);
 
-        // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
+        // // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
         bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 
-        if (isUIElementObject) //FIXME: is this enough?
-        {
-            parentTransform = registry->try_get<Transform>(selfRole.master);
-            parentRole = registry->try_get<InheritedProperties>(selfRole.master);
-        }
-
-        // auto emptyRole = InheritedProperties{};
-        // if (parent == parentRole->master)
+        // if (isUIElementObject) //FIXME: is this enough?
         // {
-        //     return;
-        //     // point to an empty role
-        //     parentRole = &emptyRole;
+        //     parentTransform = registry->try_get<Transform>(selfRole.master);
+        //     parentRole = registry->try_get<InheritedProperties>(selfRole.master);
         // }
 
         //REVIEW: parentRole's offset is always zero. Why?
@@ -695,6 +687,14 @@ namespace transform
         // save values in return value
         toReturn.master = selfTransform.frameCalculation.currentMasterCache->master;
         toReturn.offset = selfTransform.frameCalculation.currentMasterCache->offset;
+        
+        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
+
+        if (isUIElementObject)
+        {
+            toReturn.master = selfRole.master; // if this is a UI element object, we need to use the immediate master
+            
+        }
 
         return toReturn;
     }

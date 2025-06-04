@@ -25,13 +25,13 @@ namespace transform
         {TransformMethod::CreateGameWorldContainerEntity, std::function<entt::entity(entt::registry *, float, float, float, float)>(CreateGameWorldContainerEntity)},
         {TransformMethod::UpdateTransformSmoothingFactors, std::function<void(entt::registry *, entt::entity, float)>(UpdateTransformSmoothingFactors)},
         {TransformMethod::AlignToMaster, std::function<void(entt::registry *, entt::entity, bool)>(AlignToMaster)},
-        {TransformMethod::MoveWithMaster, std::function<void(entt::registry *, entt::entity, float)>(MoveWithMaster)},
+        {TransformMethod::MoveWithMaster, std::function<void(entt::entity, float, transform::Transform &, transform::InheritedProperties &, transform::GameObject &)>(MoveWithMaster)},
         {TransformMethod::UpdateLocation, std::function<void(entt::entity, float, Transform &, spring::Spring &, spring::Spring &)>(UpdateLocation)},
         {TransformMethod::UpdateRotation, std::function<void(entt::entity, float, Transform &, spring::Spring &, spring::Spring &)>(UpdateRotation)},
         {TransformMethod::UpdateScale, std::function<void(entt::entity, float, Transform &, spring::Spring &)>(UpdateScale)},
-        {TransformMethod::GetMaster, std::function<Transform::FrameCalculation::MasterCache(entt::entity, Transform &, InheritedProperties &, GameObject &)>(GetMaster)},
+        {TransformMethod::GetMaster, std::function<Transform::FrameCalculation::MasterCache(entt::entity, Transform &, InheritedProperties &, GameObject &, Transform *, InheritedProperties *)>(GetMaster)},
         {TransformMethod::SyncPerfectlyToMaster, std::function<void( entt::entity, entt::entity, Transform &, InheritedProperties &, Transform &, InheritedProperties &)>(SyncPerfectlyToMaster)},
-        {TransformMethod::UpdateDynamicMotion, std::function<void(entt::registry *, entt::entity, float)>(UpdateDynamicMotion)},
+        {TransformMethod::UpdateDynamicMotion, std::function<void(entt::entity, float, Transform &)>(UpdateDynamicMotion)},
         {TransformMethod::InjectDynamicMotion, std::function<void(entt::registry *, entt::entity, float, float)>(InjectDynamicMotion)},
         {TransformMethod::UpdateParallaxCalculations, std::function<void(entt::registry *, entt::entity)>(UpdateParallaxCalculations)},
         {TransformMethod::ConfigureAlignment, std::function<void(entt::registry *, entt::entity, bool, entt::entity, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<int>, std::optional<Vector2>)>(ConfigureAlignment)},
@@ -387,16 +387,16 @@ namespace transform
         // // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
         bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 
-        // if (isUIElementObject) //FIXME: is this enough?
-        // {
-        //     parentTransform = registry->try_get<Transform>(selfRole.master);
-        //     parentRole = registry->try_get<InheritedProperties>(selfRole.master);
-        // }
+        if (isUIElementObject) //FIXME: is this enough?
+        {
+            parentTransform = registry->try_get<Transform>(selfRole.master);
+            parentRole = registry->try_get<InheritedProperties>(selfRole.master);
+        }
 
         //REVIEW: parentRole's offset is always zero. Why?
         //REVIEW: actual immediate parent (selfRole.master) is never the same as GetMaster's master.
 
-        UpdateDynamicMotion(registry, e, dt);
+        UpdateDynamicMotion(e, dt, selfTransform);
         
         Vector2 layeredDisplacement = selfNode.layerDisplacement.value_or(Vector2{0, 0});
         
@@ -677,9 +677,10 @@ namespace transform
             // auto [parentTransform, parentRole, parentNode] = globals::registry.try_get<Transform, InheritedProperties, GameObject>(selfRole.master);
             parentTransform = globals::registry.try_get<Transform>(selfRole.master);
             parentRole = globals::registry.try_get<InheritedProperties>(selfRole.master);
-            parentNode = globals::registry.try_get<GameObject>(selfRole.master);
-
-            auto parentResults = GetMaster(selfRole.master, parentTransform, parentRole, parentNode); // recursive call to get parent master and offset
+            auto parentNode = globals::registry.try_get<GameObject>(selfRole.master);
+            auto parentOfParentRole = globals::registry.try_get<InheritedProperties>(parentRole->master);
+            auto parentOfParentTransform = globals::registry.try_get<Transform>(parentRole->master);
+            auto parentResults = GetMaster(selfRole.master, *parentTransform, *parentRole, *parentNode, parentOfParentTransform,parentOfParentRole); // recursive call to get parent master and offset
 
             selfTransform.frameCalculation.currentMasterCache->master = parentResults.master;
             selfTransform.frameCalculation.currentMasterCache->offset = parentResults.offset.value_or(selfTransform.frameCalculation.tempOffsets.value());
@@ -1025,8 +1026,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 if ((transform.frameCalculation.stationary == false) || (transform.frameCalculation.alignmentChanged) || (transform.dynamicMotion) || (role.location_bond == InheritedProperties::Sync::Weak) || (role.rotation_bond == InheritedProperties::Sync::Weak))
                 {
 
-                    node.debug.calculationsInProgress = true;
-                    MoveWithMaster(registry, e, dt);
+                    node.debug.calculationsInProgress = true; 
+
+                    MoveWithMaster(e, dt, transform, role, node);
                 }
             }
             
@@ -1088,7 +1090,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         {
             ZoneScopedN("RoleRoot");
             transform.frameCalculation.stationary = true;
-            UpdateDynamicMotion(registry, e, dt);
+            UpdateDynamicMotion(e, dt, transform);
             
             
             UpdateLocation(e, dt, transform, selfXSpring, selfYSpring);

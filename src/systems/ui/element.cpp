@@ -505,7 +505,7 @@ namespace ui
         AssertThat(uiState, Is().Not().EqualTo(nullptr));
 
         // STEP 1: Align with major parent
-        transform::MoveWithMaster(&registry, entity, 0);
+        transform::MoveWithMaster(entity, 0, *transform, registry.get<transform::InheritedProperties>(entity), *node);
         transform::UpdateParallaxCalculations(&registry, entity);
 
         // STEP 3: Recursively initialize all child elements
@@ -538,7 +538,7 @@ namespace ui
             if (!uiConfig->noRole)
             {
                 transform::SnapTransformValues(&registry, objectEntity, transform->getActualX(), transform->getActualY(), transform->getActualW(), transform->getActualH());
-                transform::MoveWithMaster(&registry, objectEntity, 0);
+                transform::MoveWithMaster(objectEntity, 0, *objectTransform, *objectRole, *objectNode);
                 objectRole->flags->prevAlignment = transform::InheritedProperties::Alignment::NONE;
                 transform::AlignToMaster(&registry, objectEntity);
             }
@@ -1134,6 +1134,7 @@ namespace ui
         auto *objectConfig = registry.try_get<UIConfig>(config->object.value());
         auto *objectState = registry.try_get<UIState>(config->object.value());
         auto *objectNode = registry.try_get<transform::GameObject>(config->object.value());
+        auto *objectRole = registry.try_get<transform::InheritedProperties>(config->object.value());
         auto *objectTransform = registry.try_get<transform::Transform>(config->object.value());
 
         if (!objectConfig) {
@@ -1179,7 +1180,7 @@ namespace ui
             }
 
             // Move object relative to parent
-            transform::MoveWithMaster(&registry, config->object.value(), 0);
+            transform::MoveWithMaster(config->object.value(), 0, *objectTransform, *objectRole, *objectNode);
 
             // Adjust parent dimensions & alignments
             if (objectConfig->non_recalc)

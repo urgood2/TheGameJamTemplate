@@ -37,7 +37,7 @@ namespace transform
         {TransformMethod::UpdateParallaxCalculations, std::function<void(entt::registry *, entt::entity)>(UpdateParallaxCalculations)},
         {TransformMethod::ConfigureAlignment, std::function<void(entt::registry *, entt::entity, bool, entt::entity, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<int>, std::optional<Vector2>)>(ConfigureAlignment)},
         {TransformMethod::AssignRole, std::function<void(entt::registry *, entt::entity, std::optional<InheritedProperties::Type>, entt::entity, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<InheritedProperties::Sync>, std::optional<Vector2>)>(AssignRole)},
-        {TransformMethod::UpdateTransform, std::function<void(entt::registry *, entt::entity, float)>(UpdateTransform)},
+        {TransformMethod::UpdateTransform, std::function<void(entt::entity, float, Transform &, InheritedProperties &, GameObject &)>(UpdateTransform)},
         {TransformMethod::SnapTransformValues, std::function<void(entt::registry *, entt::entity, float, float, float, float)>(SnapTransformValues)},
         {TransformMethod::SnapVisualTransformValues, std::function<void(entt::registry *, entt::entity)>(SnapVisualTransformValues)},
         {TransformMethod::DrawBoundingBoxAndDebugInfo, std::function<void(entt::registry *, entt::entity, std::shared_ptr<layer::Layer>)>(DrawBoundingBoxAndDebugInfo)},
@@ -930,13 +930,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         // updateTransformCacheForAllTransforms();
         
+        static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>);
         
+        group.each([registry, dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
+            UpdateTransform(e, dt, transform, role, node);
+        });
         
-        auto view = registry->view<Transform, InheritedProperties, GameObject>();
-        for (auto e : view)
-        {
-            UpdateTransform(registry, e, dt);
-        }
         
         // auto test = GetActualX(transformSpringGroup, registry->get<Transform>(globals::gameWorldContainerEntity));
         // SPDLOG_DEBUG("Game world container actual X: {}", test);
@@ -952,21 +951,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     //     bool stationary = false; // if true, the transform will not move
     //     bool alignmentChanged = false; // if true, the alignment has changed
     // };
-    auto UpdateTransform(entt::registry *registry, entt::entity e, float dt) -> void
+    auto UpdateTransform(entt::entity e, float dt, Transform &transform, InheritedProperties &role, GameObject &node) -> void
     {
         ZoneScopedN("UpdateTransform");
-        // SPDLOG_DEBUG("Updating transform for entity {}", static_cast<int>(e));
-        // debug break
-        if (registry->any_of<ui::UIBoxComponent>(e))
-        {
-            // SPDLOG_DEBUG("UIBoxComponent found in UpdateTransform");
-            
-        }
         
-        //  use main_loop::mainLoop.frame
-        auto &transform = registry->get<Transform>(e);
-        auto &role = registry->get<InheritedProperties>(e);
-        auto &node = registry->get<GameObject>(e);
+        auto registry = &globals::registry;
 
         if (transform.frameCalculation.lastUpdatedFrame >= main_loop::mainLoop.frame && transform.frameCalculation.alignmentChanged == false)
         {
@@ -1005,11 +994,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             ZoneScopedN("RoleInheritor");
             if (registry->valid(role.master))
             {
-                auto &parentTransform = registry->get<Transform>(role.master);
+                auto [parentTransform, parentRole, parentNode] = registry->get<Transform, InheritedProperties, GameObject>(role.master);
+                
                 // recursively move on parent
                 if (parentTransform.frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame ||transform.frameCalculation.alignmentChanged == true)
                 {
-                    UpdateTransform(registry, role.master, dt);
+                    UpdateTransform(role.master, dt, parentTransform, parentRole, parentNode);
                 }
                 
                 
@@ -1047,13 +1037,14 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         {
             ZoneScopedN("RolePermanentAttachment");
             // ignore sync bonds
-            auto &parentTransform = registry->get<Transform>(role.master);
+            auto [parentTransform, parentRole, parentNode] = registry->get<Transform, InheritedProperties, GameObject>(role.master);
+            
             if (registry->valid(role.master))
             {
                 // recursively move on parent
                 if (parentTransform.frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame)
                 {
-                    UpdateTransform(registry, role.master, dt);
+                    UpdateTransform(role.master, dt, parentTransform, parentRole, parentNode);
                 }
             }
 

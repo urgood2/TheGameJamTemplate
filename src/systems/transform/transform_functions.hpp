@@ -177,7 +177,7 @@ namespace transform
     /**
      * Move the entity based on its role and parent-child relationship.
      */
-    auto UpdateTransform(entt::registry *registry, entt::entity e, float dt) -> void;
+    auto UpdateTransform(entt::entity e, float dt, Transform &transform, InheritedProperties &role, GameObject &node) -> void;
 
     /**
      * Hard-set the transform of an entity to specific values.

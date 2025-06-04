@@ -26,12 +26,11 @@ namespace transform
         {TransformMethod::UpdateTransformSmoothingFactors, std::function<void(entt::registry *, entt::entity, float)>(UpdateTransformSmoothingFactors)},
         {TransformMethod::AlignToMaster, std::function<void(entt::registry *, entt::entity, bool)>(AlignToMaster)},
         {TransformMethod::MoveWithMaster, std::function<void(entt::registry *, entt::entity, float)>(MoveWithMaster)},
-        {TransformMethod::UpdateLocation, std::function<void(entt::registry *, entt::entity, float)>(UpdateLocation)},
-        {TransformMethod::UpdateSize, std::function<void(entt::registry *, entt::entity, float)>(UpdateSize)},
-        {TransformMethod::UpdateRotation, std::function<void(entt::registry *, entt::entity, float)>(UpdateRotation)},
-        {TransformMethod::UpdateScale, std::function<void(entt::registry *, entt::entity, float)>(UpdateScale)},
+        {TransformMethod::UpdateLocation, std::function<void(entt::entity, float, Transform &, spring::Spring &, spring::Spring &)>(UpdateLocation)},
+        {TransformMethod::UpdateRotation, std::function<void(entt::entity, float, Transform &, spring::Spring &, spring::Spring &)>(UpdateRotation)},
+        {TransformMethod::UpdateScale, std::function<void(entt::entity, float, Transform &, spring::Spring &)>(UpdateScale)},
         {TransformMethod::GetMaster, std::function<Transform::FrameCalculation::MasterCache(entt::entity, Transform &, InheritedProperties &, GameObject &)>(GetMaster)},
-        {TransformMethod::SyncPerfectlyToMaster, std::function<void(entt::registry *, entt::entity, entt::entity)>(SyncPerfectlyToMaster)},
+        {TransformMethod::SyncPerfectlyToMaster, std::function<void( entt::entity, entt::entity, Transform &, InheritedProperties &, Transform &, InheritedProperties &)>(SyncPerfectlyToMaster)},
         {TransformMethod::UpdateDynamicMotion, std::function<void(entt::registry *, entt::entity, float)>(UpdateDynamicMotion)},
         {TransformMethod::InjectDynamicMotion, std::function<void(entt::registry *, entt::entity, float, float)>(InjectDynamicMotion)},
         {TransformMethod::UpdateParallaxCalculations, std::function<void(entt::registry *, entt::entity)>(UpdateParallaxCalculations)},
@@ -436,19 +435,36 @@ namespace transform
     
     
         //TODO: these two lines cause issues. why?
-        selfTransform.getXSpring().targetValue = parentTransform->getXSpring().value + tempRotatedOffset.x;
-        selfTransform.getYSpring().targetValue = parentTransform->getYSpring().value + tempRotatedOffset.y;
+        
+        auto &selfXSpring = selfTransform.getXSpring();
+        auto &selfYSpring = selfTransform.getYSpring();
+        auto &selfRSpring = selfTransform.getRSpring();
+        auto &selfSSpring = selfTransform.getSSpring();
+        auto &selfWSpring = selfTransform.getWSpring();
+        auto &selfHSpring = selfTransform.getHSpring();
+        
+        auto &parentXSpring = parentTransform->getXSpring();
+        auto &parentYSpring = parentTransform->getYSpring();
+        
+        selfXSpring.targetValue = parentXSpring.value + tempRotatedOffset.x;
+        selfYSpring.targetValue = parentYSpring.value + tempRotatedOffset.y;
         // SPDLOG_DEBUG("Moving with master set to targets: x: {}, y: {}", selfTransform.getXSpring().targetValue, selfTransform.getYSpring().targetValue);
 
         if (selfRole.location_bond == InheritedProperties::Sync::Strong)
         {
-            selfTransform.getXSpring().value = selfTransform.getXSpring().targetValue;
-            selfTransform.getYSpring().value = selfTransform.getYSpring().targetValue;
+            selfXSpring.value = selfXSpring.targetValue;
+            selfYSpring.value = selfYSpring.targetValue;
         }
         else if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
-            UpdateLocation(registry, e, dt);
+
+            UpdateLocation(e, dt, selfTransform, selfXSpring, selfYSpring);
         }
+        
+        
+        // force spring update
+        selfTransform.updateCachedValues(true);
+        parentTransform->updateCachedValues(true);
 
         if (selfRole.rotation_bond == InheritedProperties::Sync::Strong)
         {
@@ -465,7 +481,7 @@ namespace transform
         }
         else if (selfRole.rotation_bond == InheritedProperties::Sync::Weak)
         {
-            UpdateRotation(registry, e, dt);
+            UpdateRotation(e, dt, selfTransform, selfRSpring, selfXSpring);
         }
 
         if (selfRole.scale_bond == InheritedProperties::Sync::Strong)
@@ -483,7 +499,7 @@ namespace transform
         }
         else if (selfRole.scale_bond == InheritedProperties::Sync::Weak)
         {
-            UpdateScale(registry, e, dt);
+            UpdateScale(e, dt, selfTransform, selfSSpring);
         }
 
         if (selfRole.size_bond == InheritedProperties::Sync::Strong)
@@ -494,20 +510,16 @@ namespace transform
         }
         else if (selfRole.size_bond == InheritedProperties::Sync::Weak)
         {
-            UpdateSize(registry, e, dt);
+            UpdateSize(e, dt, selfTransform, selfWSpring, selfHSpring);
         }
 
         UpdateParallaxCalculations(registry, e);
     }
 
     // not exposed
-    auto UpdateLocation(entt::registry *registry, entt::entity e, float dt) -> void
+    auto UpdateLocation(entt::entity e, float dt, Transform &transform, spring::Spring &springX, spring::Spring &springY) -> void
     {
         // nothing to do here, springs will update on their own
-
-        auto &transform = registry->get<Transform>(e);
-        auto &springX = transform.getXSpring();
-        auto &springY = transform.getYSpring();
         if (springX.velocity > 0.0001f || springY.velocity > 0.0001f)
         {
             transform.frameCalculation.stationary = false;
@@ -515,13 +527,9 @@ namespace transform
     }
 
     // not exposed
-    auto UpdateSize(entt::registry *registry, entt::entity e, float dt) -> void
+    auto UpdateSize(entt::entity e, float dt, Transform &transform, spring::Spring &springW, spring::Spring springH) -> void
     {
         // nothing to do here, springs will update on their own
-
-        auto &transform = registry->get<Transform>(e);
-        auto &springW = transform.getWSpring();
-        auto &springH = transform.getHSpring();
 
         // disable updates on the WH springs while pinch is active
         if (transform.reduceXToZero)
@@ -564,14 +572,9 @@ namespace transform
     }
 
     // not exposed
-    auto UpdateRotation(entt::registry *registry, entt::entity e, float dt) -> void
+    auto UpdateRotation(entt::entity e, float dt, Transform &transform, spring::Spring &springR, spring::Spring &springX) -> void
     {
         // nothing to do here, springs will update on their own
-
-        auto &transform = registry->get<Transform>(e);
-        auto &springR = transform.getRSpring();
-        auto &springX = transform.getXSpring();
-
         float dynamicMotionAddedR = 0;
 
         if (transform.dynamicMotion)
@@ -620,12 +623,10 @@ namespace transform
     }
 
     // not exposed
-    auto UpdateScale(entt::registry *registry, entt::entity e, float dt) -> void
+    auto UpdateScale(entt::entity e, float dt, Transform &transform, spring::Spring &springS) -> void
     {
         // nothing to do here, springs will update on their own
-        auto &transform = registry->get<Transform>(e);
-        auto &springScale = transform.getSSpring();
-        if (springScale.velocity > 0.0001f)
+        if (springS.velocity > 0.0001f)
         {
             transform.frameCalculation.stationary = false;
         }
@@ -696,13 +697,11 @@ namespace transform
         return toReturn;
     }
 
-    auto SyncPerfectlyToMaster(entt::registry *registry, entt::entity e, entt::entity parent) -> void
+    auto SyncPerfectlyToMaster(entt::entity e, entt::entity parent, Transform &selfTransform, InheritedProperties &selfRole, Transform &parentTransform, InheritedProperties &parentRole) -> void
     {
+        auto registry = &globals::registry;
+        
         ZoneScopedN("SyncPerfectlyToMaster");
-        auto &selfRole = registry->get<InheritedProperties>(e);
-        auto &parentRole = registry->get<InheritedProperties>(parent);
-        auto &selfTransform = registry->get<Transform>(e);
-        auto &parentTransform = registry->get<Transform>(parent);
 
         // copy all actual values from parent
         selfTransform.setActualX(parentTransform.getActualX());
@@ -929,7 +928,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>);
         
-        group.each([registry, dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
+        group.each([dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
             UpdateTransform(e, dt, transform, role, node);
         });
         
@@ -971,7 +970,14 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         //     return; // don't move if paused
         // }
         
+        auto [parentTransform, parentRole, parentNode] = registry->try_get<Transform, InheritedProperties, GameObject>(role.master);
         
+        auto selfXSpring = transform.getXSpring();
+        auto selfYSpring = transform.getYSpring();
+        auto selfRSpring = transform.getRSpring();
+        auto selfSSpring = transform.getSSpring();
+        auto selfWSpring = transform.getWSpring();
+        auto selfHSpring = transform.getHSpring();
 
         AlignToMaster(registry, e);
 
@@ -982,7 +988,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             ZoneScopedN("RoleCarbonCopy");
             if (registry->valid(role.master))
             {
-                SyncPerfectlyToMaster(registry, e, role.master);
+                SyncPerfectlyToMaster(e, role.master, transform, role, *parentTransform, *parentRole);
             }
         }
 
@@ -991,17 +997,16 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             ZoneScopedN("RoleInheritor");
             if (registry->valid(role.master))
             {
-                auto [parentTransform, parentRole, parentNode] = registry->get<Transform, InheritedProperties, GameObject>(role.master);
                 
                 // recursively move on parent
-                if (parentTransform.frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame ||transform.frameCalculation.alignmentChanged == true)
+                if (parentTransform->frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame ||transform.frameCalculation.alignmentChanged == true)
                 {
-                    UpdateTransform(role.master, dt, parentTransform, parentRole, parentNode);
+                    UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
                 }
                 
                 
                 
-                transform.frameCalculation.stationary = parentTransform.frameCalculation.stationary;
+                transform.frameCalculation.stationary = parentTransform->frameCalculation.stationary;
                 
                 // if layered displacement is different, update it, set stationary to false
                 if (node.layerDisplacement &&
@@ -1034,32 +1039,31 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         {
             ZoneScopedN("RolePermanentAttachment");
             // ignore sync bonds
-            auto [parentTransform, parentRole, parentNode] = registry->get<Transform, InheritedProperties, GameObject>(role.master);
             
             if (registry->valid(role.master))
             {
                 // recursively move on parent
-                if (parentTransform.frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame)
+                if (parentTransform->frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame)
                 {
-                    UpdateTransform(role.master, dt, parentTransform, parentRole, parentNode);
+                    UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
                 }
             }
 
             // Fully inherit parent's stationary state
-            transform.frameCalculation.stationary = parentTransform.frameCalculation.stationary;
+            transform.frameCalculation.stationary = parentTransform->frameCalculation.stationary;
 
-            float parentRotationAngle = parentTransform.getVisualRWithDynamicMotionAndXLeaning();
+            float parentRotationAngle = parentTransform->getVisualRWithDynamicMotionAndXLeaning();
 
             // convert to radians
             float angle = parentRotationAngle * DEG2RAD;
 
             // parent center
-            float parentCenterX = parentTransform.getVisualX() + parentTransform.getVisualW() * 0.5;
-            float parentCenterY = parentTransform.getVisualY() + parentTransform.getVisualH() * 0.5;
+            float parentCenterX = parentTransform->getVisualX() + parentTransform->getVisualW() * 0.5;
+            float parentCenterY = parentTransform->getVisualY() + parentTransform->getVisualH() * 0.5;
 
             // child's offset relative to the parent's center
-            float childOffsetX = role.offset->x - parentTransform.getVisualW() * 0.5 + transform.getVisualW() * 0.5;
-            float childOffsetY = role.offset->y - parentTransform.getVisualH() * 0.5 + transform.getVisualH() * 0.5;
+            float childOffsetX = role.offset->x - parentTransform->getVisualW() * 0.5 + transform.getVisualW() * 0.5;
+            float childOffsetY = role.offset->y - parentTransform->getVisualH() * 0.5 + transform.getVisualH() * 0.5;
 
             // apply rotation around the parent's center
             float rotatedX = childOffsetX * cos(angle) - childOffsetY * sin(angle);
@@ -1088,10 +1092,13 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             ZoneScopedN("RoleRoot");
             transform.frameCalculation.stationary = true;
             UpdateDynamicMotion(registry, e, dt);
-            UpdateLocation(registry, e, dt);
-            UpdateSize(registry, e, dt);
-            UpdateRotation(registry, e, dt);
-            UpdateScale(registry, e, dt);
+            
+            
+            UpdateLocation(e, dt, transform, selfXSpring, selfYSpring);
+            UpdateSize(e, dt, transform, selfWSpring, selfHSpring);
+            
+            UpdateRotation(e, dt, transform, selfRSpring, selfXSpring);
+            UpdateScale(e, dt, transform, selfSSpring);
             UpdateParallaxCalculations(registry, e);
         }
 

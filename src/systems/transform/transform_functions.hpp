@@ -118,23 +118,23 @@ namespace transform
     /**
      * Update X and Y springs for smooth transformations.
      */
-    auto UpdateLocation(entt::registry *registry, entt::entity e, float dt) -> void;
+    auto UpdateLocation(entt::entity e, float dt, Transform &transform, spring::Spring &springX, spring::Spring &springY) -> void;
 
     /**
      * Update width and height springs for smooth size transformations.
      */
-    auto UpdateSize(entt::registry *registry, entt::entity e, float dt) -> void;
+    auto UpdateSize(entt::entity e, float dt, Transform &transform, spring::Spring &springW, spring::Spring springH) -> void;
 
     /**
      * Update rotation spring for smooth rotation transformations.
      */
-    auto UpdateRotation(entt::registry *registry, entt::entity e, float dt) -> void;
+    auto UpdateRotation(entt::entity e, float dt, Transform &transform, spring::Spring &springR, spring::Spring &springX) -> void;
 
 
     /**
      * Update scale spring for smooth scaling transformations.
      */
-    auto UpdateScale(entt::registry *registry, entt::entity e, float dt) -> void;
+    auto UpdateScale(entt::entity e, float dt, Transform &transform, spring::Spring &springS) -> void;
 
     /**
      * Retrieve the parent entity of the given entity.
@@ -144,7 +144,7 @@ namespace transform
     /**
      * Glue a child entity to its parent, forcing alignment of all transformations.
      */
-    auto SyncPerfectlyToMaster(entt::registry *registry, entt::entity e, entt::entity parent) -> void;
+    auto SyncPerfectlyToMaster(entt::entity e, entt::entity parent, Transform &selfTransform, InheritedProperties &selfRole, Transform &parentTransform, InheritedProperties &parentRole) -> void;
 
     /**
      * Update the "dynamicMotion" effect for an entity, applying springy animations.

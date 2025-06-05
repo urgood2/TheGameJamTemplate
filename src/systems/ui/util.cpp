@@ -669,9 +669,7 @@ namespace ui
         if (node.state.visible == false)
             return;
 
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-
-        std::optional<float> &emboss = uiConfig->emboss;
+        // AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
         
         bool needFullRegen = false;
         bool needClipRegen = false;
@@ -838,10 +836,10 @@ namespace ui
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss fill");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
-            if (!emboss)
+            if (!uiConfig->emboss)
                 SPDLOG_DEBUG("Emboss value not provided for emboss fill rectangle render flag");
                 
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
 
             Color colorToUse{};
 
@@ -876,14 +874,14 @@ namespace ui
             ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss outline");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
 
-            if (!emboss)
+            if (!uiConfig->emboss)
                 SPDLOG_DEBUG("Emboss value not provided for emboss outline rectangle render flag");
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
             //     cmd->y = y;
             // }); // shift y down for emboss effect
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
+            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false);
 // 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
             //     cmd->x = x;

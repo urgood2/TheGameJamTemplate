@@ -1745,11 +1745,18 @@ namespace ui
 
         // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
         //    of the “always‐present” components every drawable element needs:
-        static auto uiGroup = registry.group<UIElementComponent,
+        if (uiGroupInitialized == false)
+        {
+            // This is a static group that will be reused for all draws.
+            // It contains the five components we need to draw any UI element.
+            uiGroupInitialized = true;
+
+            globalUIGroup = registry.group<UIElementComponent,
                                              UIConfig,
                                              UIState,
                                              transform::GameObject,
                                              transform::Transform>();
+        }
 
         // 3) Loop in our flattened order:
         for (auto ent : drawOrder)
@@ -1758,11 +1765,11 @@ namespace ui
                 continue;
 
             // Pull the five group‐components by reference (O(1)):
-            auto &elemComp = uiGroup.get<UIElementComponent>(ent);
-            auto &cfg = uiGroup.get<UIConfig>(ent);
-            auto &st = uiGroup.get<UIState>(ent);
-            auto &node = uiGroup.get<transform::GameObject>(ent);
-            auto &xf = uiGroup.get<transform::Transform>(ent);
+            auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
+            auto &cfg = globalUIGroup.get<UIConfig>(ent);
+            auto &st = globalUIGroup.get<UIState>(ent);
+            auto &node = globalUIGroup.get<transform::GameObject>(ent);
+            auto &xf = globalUIGroup.get<transform::Transform>(ent);
 
             // Finally call your lean DrawSelf that only does `try_get`
             // for optional pieces (RoundedRectangleVerticesCache, etc.).

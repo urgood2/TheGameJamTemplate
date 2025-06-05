@@ -522,7 +522,7 @@ namespace ui
         // STEP 5: If this is a TEXT UI element, update its text
         if (uiElement->UIT == UITypeEnum::TEXT)
         {
-            UpdateText(registry, entity);
+            UpdateText(registry, entity, uiConfig, uiState);
         }
 
         // STEP 6: Sync the transform of an associated object (if any)
@@ -1060,13 +1060,8 @@ namespace ui
         }
     }
 
-    void element::UpdateText(entt::registry &registry, entt::entity entity)
+    void element::UpdateText(entt::registry &registry, entt::entity entity, UIConfig *config, UIState *state)
     {
-        auto *config = registry.try_get<UIConfig>(entity);
-        auto *state = registry.try_get<UIState>(entity);
-
-        AssertThat(config, Is().Not().EqualTo(nullptr));
-        AssertThat(state, Is().Not().EqualTo(nullptr));
 
         if (!config->text.has_value())
             return;
@@ -1109,46 +1104,46 @@ namespace ui
         }
     }
 
-    void element::UpdateObject(entt::registry &registry, entt::entity entity)
+    void element::UpdateObject(entt::registry &registry, entt::entity entity, UIConfig *elementConfig, transform::GameObject *elementNode, UIConfig *objectConfig, transform::Transform *objectTransform, transform::InheritedProperties *objectRole, 
+                               transform::GameObject *objectNode)
     {
-        auto *config = registry.try_get<UIConfig>(entity);
+        ZoneScopedN("UI Element: UpdateObject");
+        // auto *config = registry.try_get<UIConfig>(entity);
 
-        AssertThat(config, Is().Not().EqualTo(nullptr));
+        // AssertThat(config, Is().Not().EqualTo(nullptr));
 
         // Step 1: Update the object reference if it has changed
-        if (config->ref_component && config->ref_value)
+        if (elementConfig->ref_component && elementConfig->ref_value)
         {
-            auto comp = reflection::retrieveComponent(&registry, config->ref_entity.value(), config->ref_component.value());
-            auto value = reflection::retrieveFieldByString(comp, config->ref_component.value(), config->ref_value.value());
-            if (value != config->prev_ref_value)
+            auto comp = reflection::retrieveComponent(&registry, elementConfig->ref_entity.value(), elementConfig->ref_component.value());
+            auto value = reflection::retrieveFieldByString(comp, elementConfig->ref_component.value(), elementConfig->ref_value.value());
+            if (value != elementConfig->prev_ref_value)
             {
-                config->object = value.cast<entt::entity>();
+                elementConfig->object = value.cast<entt::entity>();
                 ui::box::Recalculate(registry, entity);
             }
         }
 
         // Step 2: Ensure object exists before proceeding
-        if (!config->object)
+        if (!elementConfig->object)
             return;
 
-        auto *objectConfig = registry.try_get<UIConfig>(config->object.value());
-        auto *objectState = registry.try_get<UIState>(config->object.value());
-        auto *objectNode = registry.try_get<transform::GameObject>(config->object.value());
-        auto *objectRole = registry.try_get<transform::InheritedProperties>(config->object.value());
-        auto *objectTransform = registry.try_get<transform::Transform>(config->object.value());
+        // auto *objectConfig = registry.try_get<UIConfig>(config->object.value());
+        // auto *objectNode = registry.try_get<transform::GameObject>(config->object.value());
+        // auto *objectRole = registry.try_get<transform::InheritedProperties>(config->object.value());
+        // auto *objectTransform = registry.try_get<transform::Transform>(config->object.value());
 
-        if (!objectConfig) {
-            //FIXME: just emplace once
-            objectConfig = &registry.emplace<UIConfig>(config->object.value());
-            // SPDLOG_ERROR("Object {} does not exist or is missing components.", static_cast<int>(config->object.value()));
-        }
+        // if (!objectConfig) {
+        //     //FIXME: just emplace once
+        //     objectConfig = &registry.emplace<UIConfig>(elementConfig->object.value());
+        //     // SPDLOG_ERROR("Object {} does not exist or is missing components.", static_cast<int>(config->object.value()));
+        // }
 
         // Step 3: Refresh object movement state
         objectConfig->refreshMovement = true;
 
         // Step 4: Handle hover state synchronization
-        auto *elementState = registry.try_get<UIState>(entity);
-        auto *elementNode = registry.try_get<transform::GameObject>(entity);
+        // auto *elementNode = registry.try_get<transform::GameObject>(entity);
 
         if (objectNode->state.isBeingHovered && !elementNode->state.isBeingHovered)
         {
@@ -1164,27 +1159,29 @@ namespace ui
         // Step 5: Handle object updates
         if (objectConfig->ui_object_updated)
         {
+            ZoneScopedN("UI Element: UpdateObject - Object Updated");
             objectConfig->ui_object_updated = false;
 
             objectConfig->parent = entity;
 
             // Assign role
-            if (config->role)
+            if (elementConfig->role)
             {
                 // this is probably not called usually
-                transform::AssignRole(&registry, config->object.value(), config->role->role_type, config->role->master, config->role->location_bond, config->role->size_bond, config->role->rotation_bond, config->role->scale_bond, config->role->offset);
+                transform::AssignRole(&registry, elementConfig->object.value(), elementConfig->role->role_type, elementConfig->role->master, elementConfig->role->location_bond, elementConfig->role->size_bond, elementConfig->role->rotation_bond, elementConfig->role->scale_bond, elementConfig->role->offset);
             }
             else
             {
-                transform::AssignRole(&registry, config->object.value(), transform::InheritedProperties::Type::RoleInheritor, entity);
+                transform::AssignRole(&registry, elementConfig->object.value(), transform::InheritedProperties::Type::RoleInheritor, entity);
             }
 
             // Move object relative to parent
-            transform::MoveWithMaster(config->object.value(), 0, *objectTransform, *objectRole, *objectNode);
+            transform::MoveWithMaster(elementConfig->object.value(), 0, *objectTransform, *objectRole, *objectNode);
 
             // Adjust parent dimensions & alignments
             if (objectConfig->non_recalc)
             { // TODO: there is also no_recalc. what is the difference?
+                ZoneScopedN("UI Element: UpdateObject - Non Recalc");
                 auto *uiElement = registry.try_get<UIElementComponent>(entity);
                 auto *node = registry.try_get<transform::GameObject>(entity);
                 auto parent = node->parent.value();
@@ -1204,6 +1201,7 @@ namespace ui
             }
             else
             {
+                ZoneScopedN("UI Element: UpdateObject - Recalculate");
                 auto *uiElement = registry.try_get<UIElementComponent>(entity);
 
                 ui::box::RenewAlignment(registry, uiElement->uiBox);
@@ -1729,21 +1727,9 @@ namespace ui
     }
     
 
-    void element::Update(entt::registry &registry, entt::entity entity, float dt)
+    void element::Update(entt::registry &registry, entt::entity entity, float dt,  UIConfig *uiConfig, transform::Transform *transform, UIElementComponent *uiElement, transform::GameObject *node)
     {
-        // Retrieve components
-        auto *uiConfig = registry.try_get<UIConfig>(entity);
-        auto *transform = registry.try_get<transform::Transform>(entity);
-        auto *uiElement = registry.try_get<UIElementComponent>(entity);
-        auto *node = registry.try_get<transform::GameObject>(entity);
-
-        AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
-        AssertThat(transform, Is().Not().EqualTo(nullptr));
-        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
-        AssertThat(node, Is().Not().EqualTo(nullptr));
-
-        // REVIEW: not tracking fucntion calls
-        
+        ZoneScopedN("UI Element: Update");
         // if button is disabled, set clickable to false
         if (uiConfig->disable_button)
         {
@@ -1794,13 +1780,31 @@ namespace ui
         // Handle text update
         if (uiElement->UIT == UITypeEnum::TEXT)
         {
-            UpdateText(registry, entity);
+            UpdateText(registry, entity, &globalUIGroup.get<ui::UIConfig>(entity), &globalUIGroup.get<UIState>(entity));
         }
 
         // Handle object update
         if (uiElement->UIT == UITypeEnum::OBJECT)
         {
-            UpdateObject(registry, entity);
+            // void ui::element::UpdateObject(entt::registry &registry, entt::entity entity, ui::UIConfig *elementConfig, transform::GameObject *elementNode, ui::UIConfig *objectConfig, transform::Transform *objectTransform, transform::InheritedProperties *objectRole, transform::GameObject *objectNode)
+
+            // uiConfig
+
+            auto object = uiConfig->object.value();
+            auto roleView = registry.view<transform::InheritedProperties>();
+     
+
+            if (registry.any_of<ui::UIConfig>(object) == false){
+                // no uiconfig entity. emplace one.
+                registry.emplace_or_replace<ui::UIConfig>(object);
+            }
+
+            UpdateObject(registry, entity, &globalUIGroup.get<ui::UIConfig>(entity), 
+                         &globalUIGroup.get<transform::GameObject>(entity), 
+                         &globalUIGroup.get<ui::UIConfig>(object), 
+                         &globalUIGroup.get<transform::Transform>(object), 
+                         &roleView.get<transform::InheritedProperties>(object), 
+                         &globalUIGroup.get<transform::GameObject>(object));
         }
 
         // Call Node update (assuming it exists)
@@ -1992,6 +1996,7 @@ namespace ui
 
     void element::ApplyHover(entt::registry &registry, entt::entity entity)
     {
+        
         auto *uiConfig = registry.try_get<UIConfig>(entity);
         auto *transform = registry.try_get<transform::Transform>(entity);
         auto *node = registry.try_get<transform::GameObject>(entity);

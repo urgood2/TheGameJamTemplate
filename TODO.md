@@ -8,6 +8,7 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] need to optimize, in order: drawsteppedroundedrectangle (self time), movewithmaster
 - [ ] inventory drag & drop broken
 - [ ] disabling box::move and box::drag for now, not in use
 - [ ] do optimization for quad tree

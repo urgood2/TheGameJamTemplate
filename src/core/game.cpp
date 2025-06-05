@@ -777,12 +777,28 @@ namespace game
         
 
         {
+
+            // void ui::element::Update(entt::registry &registry, entt::entity entity, float dt, ui::UIConfig *uiConfig, transform::Transform *transform, ui::UIElementComponent *uiElement, transform::GameObject *node)
+
+            // static auto group = registry->group<InheritedProperties>(entt::get<Transform, GameObject>);
+            // static auto uiGroup = registry.group<UIElementComponent,
+            //                                  UIConfig,
+            //                                  UIState,
+            //                                  transform::GameObject,
+            //                                  transform::Transform>();
+
             ZoneScopedN("UIElement Update");
-            auto viewUIElement = globals::registry.view<ui::UIElementComponent>();
-            for (auto e : viewUIElement)
-            {
-                ui::element::Update(globals::registry, e, delta);
-            }
+            // static auto uiElementGroup = globals::registry.group
+
+            ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
+                // update the UI element
+                ui::element::Update(globals::registry, e, delta, &uiConfig, &transform, &uiElement, &node);
+            });
+            // auto viewUIElement = globals::registry.view<ui::UIElementComponent>();
+            // for (auto e : viewUIElement)
+            // {
+            //     ui::element::Update(globals::registry, e, delta);
+            // }
         }
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));

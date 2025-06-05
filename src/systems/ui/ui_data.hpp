@@ -863,4 +863,14 @@ namespace ui
 
     };
 
+    extern bool uiGroupInitialized; // Flag to check if the UI group has been initialized
+    extern decltype(std::declval<entt::registry&>()
+                 .group<
+                   UIElementComponent,
+                   UIConfig,
+                   UIState,
+                   transform::GameObject,
+                   transform::Transform
+                 >()) globalUIGroup;
+
 }

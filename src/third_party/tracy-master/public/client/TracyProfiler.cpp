@@ -1511,7 +1511,7 @@ void Profiler::InstallCrashHandler()
 #if defined _WIN32 && !defined TRACY_UWP && !defined TRACY_NO_CRASH_HANDLER
     // We cannot use Vectored Exception handling because it catches application-wide frame-based SEH blocks. We only
     // want to catch unhandled exceptions.
-    m_prevHandler = (void*)(uintptr_t)SetUnhandledExceptionFilter( CrashFilter );
+    m_prevHandler = SetUnhandledExceptionFilter( CrashFilter );
 #endif
 
 #ifndef TRACY_NO_CRASH_HANDLER
@@ -3121,8 +3121,7 @@ char* Profiler::SafeCopyProlog( const char* data, size_t size )
 
     if( size > SafeSendBufferSize ) buf = (char*)tracy_malloc( size );
 
-#if defined(_WIN32) 
-    #if !defined(TRACY_NO_CRASH_HANDLER)
+#if defined(_WIN32) && defined(_MSC_VER)
     __try
     {
         memcpy( buf, data, size );
@@ -3131,27 +3130,9 @@ char* Profiler::SafeCopyProlog( const char* data, size_t size )
     {
         success = false;
     }
-    #endif
 #else
-    // Send through the pipe to ensure safe reads
-    for( size_t offset = 0; offset != size; /*in loop*/ )
-    {
-        size_t sendsize = size - offset;
-        ssize_t result1, result2;
-        while( ( result1 = write( m_pipe[1], data + offset, sendsize ) ) < 0 && errno == EINTR ) { /* retry */ }
-        if( result1 < 0 )
-        {
-            success = false;
-            break;
-        }
-        while( ( result2 = read( m_pipe[0], buf + offset, result1 ) ) < 0 && errno == EINTR ) { /* retry */ }
-        if( result2 != result1 )
-        {
-            success = false;
-            break;
-        }
-        offset += result1;
-    }
+    // No Windows‐SEH here; just perform a normal memcpy.
+    memcpy( buf, data, size );
 #endif
 
     if( success ) return buf;

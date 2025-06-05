@@ -1566,7 +1566,7 @@ To mark that a separate memory pool is to be tracked you should use the named ve
 \subsection{GPU profiling}
 \label{gpuprofiling}
 
-Tracy provides bindings for profiling OpenGL, Vulkan, Direct3D 11, Direct3D 12, Metal and OpenCL execution time on GPU.
+Tracy provides bindings for profiling OpenGL, Vulkan, Direct3D 11, Direct3D 12, Metal, OpenCL and CUDA execution time on GPU.
 
 Note that the CPU and GPU timers may be unsynchronized unless you create a calibrated context, but the availability of calibrated contexts is limited. You can try to correct the desynchronization of uncalibrated contexts in the profiler's options (section~\ref{options}).
 
@@ -1691,6 +1691,20 @@ To mark an OpenCL zone one must make sure that a valid OpenCL \texttt{cl\_event}
 OpenCL zones can be created with the \texttt{TracyCLZone(ctx, name)} where \texttt{name} will usually be a descriptive name for the operation represented by the \texttt{cl\_event}. Within the scope of the zone, you must call \texttt{TracyCLSetEvent(event)} for the event to be registered in Tracy.
 
 Similar to Vulkan and OpenGL, you also need to periodically collect the OpenCL events using the \texttt{TracyCLCollect(ctx)} macro. An excellent place to perform this operation is after a \texttt{clFinish} since this will ensure that any previously queued OpenCL commands will have finished by this point.
+
+\subsubsection{CUDA}
+
+CUDA support is enabled by including the \texttt{public/tracy/TracyCUDA.hpp} header file. To use it, the NVIDIA CUPTI library is required. This library comes with the NVIDIA CUDA Toolkit and is located at \texttt{CUDA\_INSTALLATION\_PATH/extras/CUPTI}.
+
+Tracing CUDA requires the creation of a Tracy CUDA context using the macro \texttt{TracyCUDAContext()}, which returns an instance of a \texttt{tracy::CUDACtx} object. TracyCUDA allows only a single \texttt{tracy::CUDACtx} object at any given time. Subsequent calls to \texttt{TracyCUDAContext()} will return the same reference-counted object. There is no need for clients to instantiate multiple \texttt{tracy::CUDACtx} objects, as a single context is capable of instrumenting all CUDA contexts and streams.
+
+Cleanup is handled using the \texttt{TracyCUDAContextDestroy(ctx)} macro. To assign a custom name to the context, use the \texttt{TracyCUDAContextName(ctx, name, size)} macro.
+
+To begin instrumentation of all CUDA API calls, use the \texttt{TracyCUDAStartProfiling(ctx)} macro. This initiates the profiling of CUDA events, including relevant GPU activity such as kernel execution, memory transfers, and synchronization. This instrumentation is automatic and requires no code annotation\footnote{CUDA does not provide an API to retrieve timestamps associated with events. Therefore, the typical GPU instrumentation design of Tracy cannot be applied.}.
+
+Unlike other GPU backends in Tracy, there is no need to call \texttt{TracyCUDACollect(ctx)} periodically, since a background collector thread is enabled by default. This behavior can be disabled by defining \texttt{TRACY\_CUDA\_ENABLE\_COLLECTOR\_THREAD} as \texttt{0} prior to including \texttt{TracyCUDA.hpp}.
+
+To stop profiling, call the \texttt{TracyCUDAStopProfiling(ctx)} macro.
 
 \subsubsection{Multiple zones in one scope}
 
@@ -3221,7 +3235,7 @@ The control menu (top row of buttons) provides access to various profiler featur
 \item \emph{\faRuler{}~Limits} -- Displays time range limits window (section~\ref{timeranges}).
 \item \emph{\faHourglassHalf{}~Wait stacks} -- If sampling was performed, an option to display wait stacks may be available. See chapter~\ref{waitstacks} for more details.
 \end{itemize}
-\item \emph{\faSearchPlus{}~Display scale} -- Enables run-time resizing of the displayed content. This may be useful in environments with potentially reduced visibility, e.g. during a presentation. Note that this setting is independent to the UI scaling coming from the system DPI settings.
+\item \emph{\faSearchPlus{}~Display scale} -- Enables run-time resizing of the displayed content. This may be useful in environments with potentially reduced visibility, e.g. during a presentation. Note that this setting is independent to the UI scaling coming from the system DPI settings. The scale will be preserved across multiple profiler sessions if the \emph{Save UI scale} option is selected in global settings.
 \end{itemize}
 
 The frame information block\footnote{Visible only if frame instrumentation was included in the capture.} consists of four elements: the current frame set name along with the number of captured frames (click on it with the \LMB{}~left mouse button to go to a specified frame), the two navigational buttons \faCaretLeft{} and \faCaretRight{}, which allow you to focus the timeline view on the previous or next frame, and the frame set selection button \faCaretDown{}, which is used to switch to another frame set\footnote{See section~\ref{framesets} for another way to change the active frame set.}. For more information about marking frames, see section~\ref{markingframes}.
@@ -3544,9 +3558,46 @@ Each line in the thread execution display represents a separate logical CPU thre
 \item \emph{Gray} -- Threads assigned to other programs running in the system.
 \end{itemize}
 
-When the \faMousePointer{}~mouse pointer is hovered over either the CPU data zone or the thread timeline label, Tracy will display a line connecting all zones associated with the selected thread. This can be used to quickly see how the thread migrated across the CPU cores.
+When the \faMousePointer{}~mouse pointer is hovered over either the CPU data zone or the thread timeline label, Tracy will display a line connecting all zones associated with the selected thread. This can be used to quickly see how the thread migrated across the CPU cores. 
 
-Clicking the \LMB{}~left mouse button on a tracked thread will make it visible on the timeline if it was either hidden or collapsed before.
+It will also add lines starting with a filed circle to denote wake up events. Those are useful to pinpoint the origin of a thread waking up, especially when holding locks. It may also start from an empty region, denoting the time at which the kernel chose to schedule or boost the priority of your thread. Wake ups will have a different color based on the reason for which the thread was waiting to be scheduled.
+
+\begin{figure}[h]
+	\centering\begin{tikzpicture}
+\draw(3,14) node[anchor=east] {Core 0};
+\draw(3,13.5) node[anchor=east] {Core 1};
+\draw(3,13) node[anchor=east] {Core 2};
+\draw(3,12.5) node[anchor=east] {Core 3};
+\draw(3,12) node[anchor=east] {Core 4};
+
+\draw  (3,14.25) rectangle (10,13.75)  node[midway]{Thread A};
+\draw  (10,14.25) rectangle (13,13.75)  node[midway]{Thread C};
+
+\draw  (6,13.75) rectangle (9,13.25)  node[midway]{Thread D};
+\draw  (14,13.75) rectangle (16,13.25) node[midway]{Thread B};
+
+\draw  (7.5,13.25) rectangle (17,12.75) node[midway]{Thread E};
+
+\draw  (5.75,12.75) rectangle (3.5,12.25) node[midway]{Thread B};
+
+\draw  (10.5,12.25) rectangle (12,11.75) node[midway]{Thread B};
+
+\draw (9.25,14) circle (0.15cm) [ fill={rgb,255:red,0; green,0; blue,0} ] ;
+\draw (9.25,14) -- (10.5,12);
+\draw[very thick,double] (10.5,12.25) -- (10.5,11.75);
+
+\draw (5.75,12.5) -- (10.5,12);
+
+\draw (12,12) -- (14,13.5);
+	\end{tikzpicture}
+	\caption{Thread migration and wake up.}
+	\label{plot}
+\end{figure}
+
+In the above picture, \emph{Thread B} migrates from \emph{Core 3} to \emph{Core 4} due to a wake up from \emph{Thread A}. Then it migrates from \emph{Core 4} to \emph{Core 1}.
+
+Clicking the \LMB{}~left mouse button on a tracked thread will make it visible on the timeline if it was either hidden or collapsed before. It will also lock the selected thread so that you may pan and explore data while retaining the visualization of thread migrations and wake up events. 
+Clicking again somewhere empty on the timeline with the \LMB{}~left mouse button will unlock the selection.
 
 Careful examination of the data presented on this graph may allow you to determine areas where the profiled application was fighting for system resources with other programs (see section~\ref{checkenvironmentos}) or give you a hint to add more instrumentation macros.
 
@@ -3748,7 +3799,7 @@ If the \emph{\faSitemap{}~Inlines} option is enabled, the list will show all fun
 
 The \emph{Location} column displays the corresponding source file name and line number. Depending on the \emph{Location} option selection, it can either show the function entry address or the instruction at which the sampling was performed. The \emph{Entry} mode points at the beginning of a non-inlined function or at the place where the compiler inserted an inlined function in its parent function. The \emph{Sample} mode is not useful for non-inlined functions, as it points to one randomly selected sampling point out of many that were captured. However, in the case of inlined functions, this random sampling point is within the inlined function body. Using these options in tandem lets you look at both the inlined function code and the place where it was inserted. If the \emph{Smart} location is selected, the profiler will display the entry point position for non-inlined functions and sample location for inlined functions. Selecting the \emph{\faAt{}~Address} option will instead print the symbol address.
 
-The location data is complemented by the originating executable image name, contained in the \emph{Image} column.
+The location data is complemented by the originating executable image name, contained in the \emph{Image} column. If the \emph{Short image} (scissors icon) option is selected, the image path will be shortened to just the image file name, with the full path available in the tooltip.
 
 The profiler may not find some function locations due to insufficient debugging data available on the client-side. To filter out such entries, use the \emph{\faEyeSlash{}~Hide unknown} option.
 
@@ -4211,7 +4262,7 @@ Nevertheless, \textbf{the displayed source files might still not reflect the cod
 
 A much more capable symbol view mode is available if the inspected source location has an associated symbol context (i.e., if it comes from a call stack capture, from call stack sampling, etc.). A symbol is a unit of machine code, basically a callable function. It may be generated using multiple source files and may consist of numerous inlined functions. A list of all captured symbols is available in the statistics window, as described in chapter~\ref{statisticssampling}.
 
-The header of symbol view window contains a name of the selected \emph{\faPuzzlePiece{}~symbol}, a list of \emph{\faSitemap{}~functions} that contribute to the symbol, and information such as count of probed \emph{\faEyeDropper{}~Samples}.
+The header of symbol view window contains a name of the selected \emph{\faPuzzlePiece{}~symbol}, a list of \emph{\faSitemap{}~functions} that contribute to the symbol, and information such as count of probed \emph{\faEyeDropper{}~Samples}. The entry stacks (section~\ref{sampleparents}) of the symbol can be viewed by clicking on the \emph{Entry stacks} button.
 
 Additionally, you may use the \emph{Mode} selector to decide what content should be displayed in the panels below:
 

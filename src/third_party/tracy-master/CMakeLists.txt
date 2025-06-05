@@ -130,7 +130,7 @@ set_option(TRACY_PATCHABLE_NOPSLEDS  "Enable nopsleds for efficient patching by 
 set_option(TRACY_DELAYED_INIT "Enable delayed initialization of the library (init on first call)" OFF)
 set_option(TRACY_MANUAL_LIFETIME "Enable the manual lifetime management of the profile" OFF)
 set_option(TRACY_FIBERS "Enable fibers support" OFF)
-set_option(TRACY_NO_CRASH_HANDLER "Disable crash handling" ON)
+set_option(TRACY_NO_CRASH_HANDLER "Disable crash handling" OFF)
 set_option(TRACY_TIMER_FALLBACK "Use lower resolution timers" OFF)
 set_option(TRACY_LIBUNWIND_BACKTRACE "Use libunwind backtracing where supported" OFF)
 set_option(TRACY_SYMBOL_OFFLINE_RESOLVE "Instead of full runtime symbol resolution, only resolve the image path and offset to enable offline symbol resolution" OFF)

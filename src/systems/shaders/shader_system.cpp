@@ -135,6 +135,7 @@ namespace shaders {
 }
 
     auto hotReloadShaders() -> void {
+        ZoneScopedN("HotReloadShaders"); // custom label
         for (auto& [shaderName, shader] : loadedShaders) {
             // Retrieve shader paths from the map
             if (shaderPaths.find(shaderName) == shaderPaths.end()) {
@@ -240,8 +241,10 @@ namespace shaders {
     // Called every frame to update shader system
     auto update(float dt) -> void {
         ZoneScopedN("Shaders update");
+        
         updateAllShaderUniforms();
-        hotReloadShaders(); // Check for shader file modifications
+        //FIXME: perforamnce intensive on windows, commenting out for now
+        // hotReloadShaders(); // Check for shader file modifications
     }
 
     // call this before suing beginImGUIWindowWithCallback

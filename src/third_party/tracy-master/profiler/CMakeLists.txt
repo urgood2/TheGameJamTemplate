@@ -183,22 +183,38 @@ else()
     add_executable(${PROJECT_NAME} ${PROFILER_FILES} ${COMMON_FILES} ${SERVER_FILES})
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE TracyServer TracyImGui)
+find_package(Threads REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE TracyServer TracyImGui Threads::Threads)
 
 if(NOT DEFINED GIT_REV)
     set(GIT_REV "HEAD")
 endif()
 
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
-add_custom_target(git-ref
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/../extra/git-ref.py ${GIT_REV}
-    BYPRODUCTS GitRef.hpp
-)
-add_dependencies(${PROJECT_NAME} git-ref)
+find_package(Git)
+if(Git_FOUND)
+    add_custom_target(git-ref
+        COMMAND ${GIT_EXECUTABLE} log -1 "--format=#pragma once %nnamespace tracy { static inline const char* GitRef = %x22%h%x22; }" ${GIT_REV} > GitRef.hpp.tmp
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different GitRef.hpp.tmp GitRef.hpp
+        BYPRODUCTS GitRef.hpp GitRef.hpp.tmp
+        VERBATIM
+    )
+    add_dependencies(${PROJECT_NAME} git-ref)
+else()
+    message(WARNING "git not found, using 'unknown' as git ref.")
+    add_custom_command(
+        OUTPUT GitRef.hpp
+        COMMAND ${CMAKE_COMMAND} -E echo "#pragma once" > GitRef.hpp
+        COMMAND ${CMAKE_COMMAND} -E echo "namespace tracy { static inline const char* GitRef = \"unknown\"; }" >> GitRef.hpp
+        VERBATIM
+    )
+    target_sources(${PROJECT_NAME} PUBLIC GitRef.hpp)
+endif()
 
 if(NOT EMSCRIPTEN)
-    target_link_libraries(${PROJECT_NAME} PRIVATE TracyNfd)
-    if (NOT USE_WAYLAND)
+    if(NOT NO_FILESELECTOR)
+        target_link_libraries(${PROJECT_NAME} PRIVATE nfd::nfd)
+    endif()
+    if(NOT USE_WAYLAND)
         target_link_libraries(${PROJECT_NAME} PRIVATE TracyGlfw3)
     endif()
 endif()

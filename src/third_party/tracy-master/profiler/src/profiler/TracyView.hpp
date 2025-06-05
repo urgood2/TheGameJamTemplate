@@ -40,7 +40,8 @@ constexpr const char* GpuContextNames[] = {
     "Direct3D 12",
     "Direct3D 11",
     "Metal",
-    "Custom"
+    "Custom",
+    "CUDA"
 };
 
 struct MemoryPage;
@@ -151,6 +152,8 @@ public:
     }
 
     void HighlightThread( uint64_t thread );
+    void SelectThread( uint64_t thread );
+    uint64_t GetSelectThread() { return m_selectedThread; }
     void ZoomToRange( int64_t start, int64_t end, bool pause = true );
     bool DrawPlot( const TimelineContext& ctx, PlotData& plot, const std::vector<uint32_t>& plotDraw, int& offset, bool rightEnd );
     void DrawThread( const TimelineContext& ctx, const ThreadData& thread, const std::vector<TimelineDraw>& draw, const std::vector<ContextSwitchDraw>& ctxDraw, const std::vector<SamplesDraw>& samplesDraw, const std::vector<std::unique_ptr<LockDraw>>& lockDraw, int& offset, int depth, bool hasCtxSwitches, bool hasSamples );
@@ -158,6 +161,7 @@ public:
     void DrawThreadOverlays( const ThreadData& thread, const ImVec2& ul, const ImVec2& dr );
     bool DrawGpu( const TimelineContext& ctx, const GpuCtxData& gpu, int& offset );
     bool DrawCpuData( const TimelineContext& ctx, const std::vector<CpuUsageDraw>& cpuDraw, const std::vector<std::vector<CpuCtxDraw>>& ctxDraw, int& offset, bool hasCpuData );
+    void DrawThreadMigrations( const TimelineContext& ctx, const int origOffset, uint64_t thread );
 
     bool IsBackgroundDone() const { return m_worker.IsBackgroundDone(); }
 
@@ -486,6 +490,7 @@ private:
     bool m_messagesShowCallstack = false;
     Vector<uint32_t> m_msgList;
     bool m_disconnectIssued = false;
+    uint64_t m_selectedThread = 0;
     DecayValue<uint64_t> m_drawThreadMigrations = 0;
     DecayValue<uint64_t> m_drawThreadHighlight = 0;
     Annotation* m_selectedAnnotation = nullptr;
@@ -518,7 +523,7 @@ private:
     AccumulationMode m_statAccumulationMode = AccumulationMode::SelfOnly;
     bool m_statSampleTime = true;
     int m_statMode = 0;
-    bool m_shortImageNames = false;
+    bool m_shortImageNames = true;
     int m_flameMode = 0;
     bool m_flameSort = false;
     bool m_flameRunningTime = false;

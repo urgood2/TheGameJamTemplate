@@ -7,58 +7,17 @@
 
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
-- [ ] use iterative versin of getmaster
+- [ ] this part is the pborlem, using fillParentTransformAndRole instead ruins it for some reason
 ```cpp
-auto GetMaster_Iterative(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, 
-                         Transform *& parentTransform, InheritedProperties *& parentRole) -> Transform::FrameCalculation::MasterCache
-{
-    auto &registry = globals::registry;
 
-    Vector2 cumulativeOffset = {0, 0};
-    entt::entity currentEntity = e;
-    InheritedProperties *currentRole = &selfRole;
-    Transform *currentTransform = &selfTransform;
-    GameObject *currentNode = &selfNode;
-
-    while (true)
-    {
-        // add current offset and layered displacement
-        cumulativeOffset.x += currentRole->offset->x + currentNode->layerDisplacement->x;
-        cumulativeOffset.y += currentRole->offset->y + currentNode->layerDisplacement->y;
-
-        if (currentRole->role_type == InheritedProperties::Type::RoleRoot ||
-            currentRole->master == currentEntity ||
-            (currentRole->location_bond == InheritedProperties::Sync::Weak &&
-             currentRole->rotation_bond == InheritedProperties::Sync::Weak))
+        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
+        if (isUIElementObject) 
         {
-            // reached ultimate ancestor or invalid parent
-            break;
+            // if this is a UI element object, we need to use the immediate master
+            parent = selfRole.master;
+            parentTransform = globals::registry.try_get<Transform>(parent);
+            parentRole = globals::registry.try_get<InheritedProperties>(parent);
         }
-
-        // climb up
-        currentEntity = currentRole->master;
-        currentTransform = registry.try_get<Transform>(currentEntity);
-        currentRole = registry.try_get<InheritedProperties>(currentEntity);
-        currentNode = registry.try_get<GameObject>(currentEntity);
-
-        if (!currentTransform || !currentRole || !currentNode)
-        {
-            // broken chain, stop climbing
-            break;
-        }
-    }
-
-    // return final result
-    Transform::FrameCalculation::MasterCache result;
-    result.master = currentEntity;
-    result.offset = cumulativeOffset;
-
-    // fill output pointers
-    parentTransform = currentTransform;
-    parentRole = currentRole;
-
-    return result;
-}
 ```
 - [ ] modal layers for ui
 - [ ] need to optimize, in order: drawsteppedroundedrectangle (self time), movewithmaster

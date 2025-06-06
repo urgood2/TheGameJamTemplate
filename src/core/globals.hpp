@@ -78,8 +78,15 @@ namespace input
     struct InputState;
 }
 
+namespace transform
+{
+    struct MasterCacheEntry;
+}
+
 namespace globals
 {
+    extern std::unordered_map<entt::entity, transform::MasterCacheEntry> frameMasterCache;
+
     extern float globalUIScaleFactor; // scale factor for UI elements
     
     extern bool drawDebugInfo; // set to true to allow debug drawing of transforms

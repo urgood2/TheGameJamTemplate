@@ -30,6 +30,8 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
 
+    std::unordered_map<entt::entity, transform::MasterCacheEntry> frameMasterCache{};
+
     float globalUIScaleFactor =1.f; // scale factor for UI elements
 
     bool drawDebugInfo = false; // set to true to allow debug drawing of transforms

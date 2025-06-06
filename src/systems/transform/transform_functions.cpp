@@ -381,16 +381,64 @@ namespace transform
         
         auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode, parentTransform, parentRole);
         auto parent = parentRetVal.master.value();
-        parentTransform = registry->try_get<Transform>(parent);
-        parentRole = registry->try_get<InheritedProperties>(parent);
 
-        // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
-        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
-
-        if (isUIElementObject) //FIXME: is this enough?
+        static auto fillParentTransformAndRole = [](entt::entity parent, Transform *&parentTransform, InheritedProperties *&parentRole)
         {
-            parentTransform = registry->try_get<Transform>(selfRole.master);
-            parentRole = registry->try_get<InheritedProperties>(selfRole.master);
+            auto &registry = globals::registry;
+            auto it = globals::frameMasterCache.find(parent);
+
+            if (it != globals::frameMasterCache.end())
+            {
+                auto &entry = it->second;
+
+                if (entry.parentTransform == nullptr)
+                    entry.parentTransform = registry.try_get<Transform>(parent);
+
+                if (entry.parentRole == nullptr)
+                    entry.parentRole = registry.try_get<InheritedProperties>(parent);
+
+                parentTransform = entry.parentTransform;
+                parentRole = entry.parentRole;
+            }
+            else
+            {
+                parentTransform = registry.try_get<Transform>(parent);
+                parentRole = registry.try_get<InheritedProperties>(parent);
+            }
+        }; 
+
+        // if (globals::frameMasterCache.find(parent) != globals::frameMasterCache.end())
+        // {
+        //     // if the master is already cached, use it
+        //     // but if they are null, fetch them 
+        //     if (globals::frameMasterCache[parent].parentTransform == nullptr) {
+        //         globals::frameMasterCache[parent].parentTransform = registry->try_get<Transform>(parent);
+
+        //     }
+        //     if (globals::frameMasterCache[parent].parentRole == nullptr) {
+        //         globals::frameMasterCache[parent].parentRole = registry->try_get<InheritedProperties>(parent);
+        //     }
+        //     parentTransform = globals::frameMasterCache[parent].parentTransform;
+        //     parentRole = globals::frameMasterCache[parent].parentRole;
+        // }
+        // else {
+        //     parentTransform = globals::registry.try_get<Transform>(parent);
+        //     parentRole = globals::registry.try_get<InheritedProperties>(parent);
+        // }
+
+        
+        // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
+        
+
+        fillParentTransformAndRole(parent, parentTransform, parentRole);
+
+        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
+        if (isUIElementObject) 
+        {
+            // if this is a UI element object, we need to use the immediate master
+            parent = selfRole.master;
+            parentTransform = globals::registry.try_get<Transform>(parent);
+            parentRole = globals::registry.try_get<InheritedProperties>(parent);
         }
 
         //REVIEW: parentRole's offset is always zero. Why?
@@ -634,73 +682,66 @@ namespace transform
         }
     }
 
-    //TODO: get master might be the problem
-    // observation: this does not take container coordinates into account. Only node methods do.
-    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*&                  parentTransform, InheritedProperties*& parentRole) -> Transform::FrameCalculation::MasterCache
+    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*& parentTransform, InheritedProperties*& parentRole) -> Transform::FrameCalculation::MasterCache
     {
-        Transform::FrameCalculation::MasterCache toReturn{};
-        toReturn.master = e;             // self is its own parent
-        toReturn.offset = Vector2{0, 0}; // fallback values
-
-        if (selfRole.master == globals::gameWorldContainerEntity)
+        // Check the global cache first
+        auto it = globals::frameMasterCache.find(e);
+        if (it != globals::frameMasterCache.end())
         {
-            SPDLOG_DEBUG("Master is game world container");
+            // Cache hit
+            const auto &entry = it->second;
+            Transform::FrameCalculation::MasterCache toReturn;
+            toReturn.master = entry.master;
+            toReturn.offset = entry.offset;
+
+            parentTransform = entry.parentTransform;
+            parentRole = entry.parentRole;
+
+            return toReturn;
         }
 
-        // checks
-        if (selfRole.role_type == InheritedProperties::Type::RoleRoot)
-        {
-            return toReturn; // parents have no parent
-        }
+        // Default fallback
+        Transform::FrameCalculation::MasterCache toReturn;
+        toReturn.master = e;
+        toReturn.offset = Vector2{0, 0};
 
-        if (selfRole.master == e)
+        if (selfRole.master == globals::gameWorldContainerEntity || selfRole.role_type == InheritedProperties::Type::RoleRoot || selfRole.master == e)
         {
-            return toReturn; // it is its own parent (prob shouldn't happen)
+            // no parent logic
+            globals::frameMasterCache[e] = {e, toReturn.offset.value(), nullptr, nullptr};
+            return toReturn;
         }
 
         if (selfRole.location_bond == InheritedProperties::Sync::Weak && selfRole.rotation_bond == InheritedProperties::Sync::Weak)
         {
-            return toReturn; // rotation and X must be strong, treat like no parent
+            // no valid parent logic
+            globals::frameMasterCache[e] = {e, toReturn.offset.value(), nullptr, nullptr};
+            return toReturn;
         }
 
-        // recalculate parent details and offsets
-        if (!selfTransform.frameCalculation.currentMasterCache || globals::REFRESH_FRAME_MASTER_CACHE)
+        // Recurse to parent
+        parentTransform = globals::registry.try_get<Transform>(selfRole.master);
+        parentRole = globals::registry.try_get<InheritedProperties>(selfRole.master);
+        auto parentNode = globals::registry.try_get<GameObject>(selfRole.master);
+
+        Transform *parentOfParentTransform = nullptr;
+        InheritedProperties *parentOfParentRole = nullptr;
+        auto parentResults = GetMaster(selfRole.master, *parentTransform, *parentRole, *parentNode, parentOfParentTransform, parentOfParentRole);
+
+        // Compute new offset
+        Vector2 offset{};
+        if (parentResults.offset.has_value())
         {
-            // reset parent cache if empty
-            if (!selfTransform.frameCalculation.currentMasterCache)
-            {
-                selfTransform.frameCalculation.currentMasterCache = Transform::FrameCalculation::MasterCache{};
-            }
-
-            selfTransform.frameCalculation.tempOffsets = Vector2{0, 0};
-            
-            // auto [parentTransform, parentRole, parentNode] = globals::registry.try_get<Transform, InheritedProperties, GameObject>(selfRole.master);
-            parentTransform = globals::registry.try_get<Transform>(selfRole.master);
-            parentRole = globals::registry.try_get<InheritedProperties>(selfRole.master);
-            auto parentNode = globals::registry.try_get<GameObject>(selfRole.master);
-            auto parentOfParentRole = globals::registry.try_get<InheritedProperties>(parentRole->master);
-            auto parentOfParentTransform = globals::registry.try_get<Transform>(parentRole->master);
-            auto parentResults = GetMaster(selfRole.master, *parentTransform, *parentRole, *parentNode, parentOfParentTransform,parentOfParentRole); // recursive call to get parent master and offset
-
-            selfTransform.frameCalculation.currentMasterCache->master = parentResults.master;
-            selfTransform.frameCalculation.currentMasterCache->offset = parentResults.offset.value_or(selfTransform.frameCalculation.tempOffsets.value());
-            selfTransform.frameCalculation.currentMasterCache->offset->x = parentResults.offset->x + selfRole.offset->x + selfNode.layerDisplacement->x;
-            selfTransform.frameCalculation.currentMasterCache->offset->y = parentResults.offset->y + selfRole.offset->y + selfNode.layerDisplacement->y;
+            offset.x = parentResults.offset->x + selfRole.offset->x + selfNode.layerDisplacement->x;
+            offset.y = parentResults.offset->y + selfRole.offset->y + selfNode.layerDisplacement->y;
         }
 
-        // save values in return value
-        toReturn.master = selfTransform.frameCalculation.currentMasterCache->master;
-        toReturn.offset = selfTransform.frameCalculation.currentMasterCache->offset;
-        
-            // bool isUIElementObject = globals::registry.any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
+        // Store in cache
+        globals::frameMasterCache[e] = {parentResults.master.value(), offset, parentTransform, parentRole};
 
-            // if (isUIElementObject)
-            // {
-            //     toReturn.master = selfRole.master; // if this is a UI element object, we need to use the immediate master
-                
-            // }
-        parentTransform = globals::registry.try_get<Transform>(toReturn.master.value());
-        parentRole = globals::registry.try_get<InheritedProperties>(toReturn.master.value());
+        // Fill return
+        toReturn.master = parentResults.master;
+        toReturn.offset = offset;
 
         return toReturn;
     }

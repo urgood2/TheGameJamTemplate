@@ -768,5 +768,13 @@ namespace transform
         registry.on_destroy<Transform>().connect<&onTransformDestroyed>();
     }
 
+    // used to cache master lookups in a global map.
+    struct MasterCacheEntry
+    {
+        entt::entity master = entt::null;
+        Vector2 offset = {0, 0};
+        Transform *parentTransform = nullptr;
+        InheritedProperties *parentRole = nullptr;
+    };
 
 }

@@ -354,7 +354,7 @@ namespace transform
         role.prevOffset->y = role.offset->y;
     }
 
-    // not exposed
+    
     auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> void
     {
         auto registry = &globals::registry;
@@ -437,8 +437,28 @@ namespace transform
         {
             // if this is a UI element object, we need to use the immediate master
             parent = selfRole.master;
-            parentTransform = globals::registry.try_get<Transform>(parent);
-            parentRole = globals::registry.try_get<InheritedProperties>(parent);
+            // parentTransform = globals::registry.try_get<Transform>(parent);
+            // parentRole = globals::registry.try_get<InheritedProperties>(parent);
+            auto it = globals::frameMasterCache.find(parent);
+
+            if (it != globals::frameMasterCache.end())
+            {
+                auto &entry = it->second;
+
+                if (entry.parentTransform == nullptr)
+                    entry.parentTransform = globals::registry.try_get<Transform>(parent);
+
+                if (entry.parentRole == nullptr)
+                    entry.parentRole = globals::registry.try_get<InheritedProperties>(parent);
+
+                parentTransform = entry.parentTransform;
+                parentRole = entry.parentRole;
+            }
+            else
+            {
+                parentTransform = globals::registry.try_get<Transform>(parent);
+                parentRole = globals::registry.try_get<InheritedProperties>(parent);
+            }
         }
 
         //REVIEW: parentRole's offset is always zero. Why?

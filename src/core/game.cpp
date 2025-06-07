@@ -740,7 +740,7 @@ namespace game
 
     auto update(float delta) -> void
     {
-        globals::frameMasterCache.clear();
+        globals::getMasterCacheEntityToParentCompMap.clear();
         ZoneScopedN("game::update"); // custom label
         if (gameStarted == false)
             gameStarted = true;

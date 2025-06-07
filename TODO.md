@@ -7,17 +7,9 @@
 
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
-- [ ] this part is the pborlem, using fillParentTransformAndRole instead ruins it for some reason
+- [ ] cache this somehow?
 ```cpp
-
-        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
-        if (isUIElementObject) 
-        {
-            // if this is a UI element object, we need to use the immediate master
-            parent = selfRole.master;
-            parentTransform = globals::registry.try_get<Transform>(parent);
-            parentRole = globals::registry.try_get<InheritedProperties>(parent);
-        }
+bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
 ```
 - [ ] modal layers for ui
 - [ ] need to optimize, in order: drawsteppedroundedrectangle (self time), movewithmaster

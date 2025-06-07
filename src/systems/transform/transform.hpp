@@ -484,6 +484,56 @@ namespace transform
             // Finally, mark that we updated for this frame:
             lastCacheFrame = currentFrame;
         }
+        
+        void updateCachedValues(const Spring& springX, const Spring& springY, const Spring& springW, const Spring& springH, const Spring& springR, const Spring& springS, bool forceUpdate = false)
+        {
+            int currentFrame = main_loop::mainLoop.frame;
+
+            if (lastCacheFrame == currentFrame && !forceUpdate)
+                return;
+
+            // Fill “actual” values straight from targetValue:
+            cache.actualX = springX.targetValue;
+            cache.actualY = springY.targetValue;
+            cache.actualW = springW.targetValue;
+            cache.actualH = springH.targetValue;
+            cache.actualR = springR.targetValue;
+            cache.actualS = springS.targetValue;
+
+            // Fill “visual” values straight from current value:
+            cache.visualX = springX.value;
+            cache.visualY = springY.value;
+            cache.visualW = springW.value;
+            cache.visualH = springH.value;
+            cache.visualR = springR.value;
+            cache.visualS = springS.value;
+
+            // Visual rotation with dynamic motion and rotation offset
+            cache.visualRWithDynamicMotionAndXLeaning = cache.visualR + rotationOffset;
+
+            // Scale with hover/drag: Only query GameObject once
+            float baseScale = cache.visualS;
+            if (registry->any_of<GameObject>(self))
+            {
+                GameObject& go = registry->get<GameObject>(self);
+
+                if (go.state.isBeingHovered && go.state.enlargeOnHover)
+                {
+                    baseScale *= 1.f + COLLISION_BUFFER_ON_HOVER_PERCENTAGE;
+                }
+                if (go.state.isBeingDragged && go.state.enlargeOnDrag)
+                {
+                    baseScale += COLLISION_BUFFER_ON_HOVER_PERCENTAGE * 2.f;
+                }
+            }
+
+            float addedScale = (dynamicMotion ? dynamicMotion->scale : 0.f);
+            cache.visualSWithHoverAndDynamicMotionReflected = baseScale + addedScale;
+
+            // Mark update
+            lastCacheFrame = currentFrame;
+        }
+
 
         bool reduceXToZero = false; // set to true if the w value should interpolate to 0 instead of the target value
         bool reduceYToZero = false; // set to true if the h value should interpolate to 0 instead of the target value

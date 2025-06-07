@@ -85,7 +85,7 @@ namespace transform
 
 namespace globals
 {
-    extern std::unordered_map<entt::entity, transform::MasterCacheEntry> frameMasterCache;
+    extern std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap;
 
     extern float globalUIScaleFactor; // scale factor for UI elements
     

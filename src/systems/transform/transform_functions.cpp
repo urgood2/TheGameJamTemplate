@@ -385,9 +385,9 @@ namespace transform
         static auto fillParentTransformAndRole = [](entt::entity parent, Transform *&parentTransform, InheritedProperties *&parentRole)
         {
             auto &registry = globals::registry;
-            auto it = globals::frameMasterCache.find(parent);
+            auto it = globals::getMasterCacheEntityToParentCompMap.find(parent);
 
-            if (it != globals::frameMasterCache.end())
+            if (it != globals::getMasterCacheEntityToParentCompMap.end())
             {
                 auto &entry = it->second;
 
@@ -432,33 +432,13 @@ namespace transform
 
         fillParentTransformAndRole(parent, parentTransform, parentRole);
 
+        // an object that is attached to a UI element (of type OBJECT) should use the immediate master
         bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
         if (isUIElementObject) 
         {
             // if this is a UI element object, we need to use the immediate master
             parent = selfRole.master;
-            // parentTransform = globals::registry.try_get<Transform>(parent);
-            // parentRole = globals::registry.try_get<InheritedProperties>(parent);
-            auto it = globals::frameMasterCache.find(parent);
-
-            if (it != globals::frameMasterCache.end())
-            {
-                auto &entry = it->second;
-
-                if (entry.parentTransform == nullptr)
-                    entry.parentTransform = globals::registry.try_get<Transform>(parent);
-
-                if (entry.parentRole == nullptr)
-                    entry.parentRole = globals::registry.try_get<InheritedProperties>(parent);
-
-                parentTransform = entry.parentTransform;
-                parentRole = entry.parentRole;
-            }
-            else
-            {
-                parentTransform = globals::registry.try_get<Transform>(parent);
-                parentRole = globals::registry.try_get<InheritedProperties>(parent);
-            }
+            fillParentTransformAndRole(e, parentTransform, parentRole);
         }
 
         //REVIEW: parentRole's offset is always zero. Why?
@@ -467,44 +447,6 @@ namespace transform
         UpdateDynamicMotion(e, dt, selfTransform);
         
         Vector2 layeredDisplacement = selfNode.layerDisplacement.value_or(Vector2{0, 0});
-        
-        // print layered displacement if entity == 235
-        if (static_cast<int>(e) == 235)
-        {
-            // SPDLOG_DEBUG("Layered displacement: x: {}, y: {}", layeredDisplacement.x, layeredDisplacement.y);
-        }
-        
-        if (layeredDisplacement.x != 0 && layeredDisplacement.y != 0) {
-            // SPDLOG_DEBUG("Layered displacement: x: {}, y: {}", layeredDisplacement.x, layeredDisplacement.y);
-        }
-
-        if (selfRole.location_bond == InheritedProperties::Sync::Weak)
-        {
-            tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
-            tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y;
-        }
-        else
-        {
-            if (parentTransform->getVisualR() < 0.0001f && parentTransform->getVisualR() > -0.0001f)
-            {
-                tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; //TODO: selfRole.offset not initialized
-                tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y;
-            }
-            else
-            {
-                tempAngleCos = cos(parentTransform->getVisualR());
-                tempAngleSin = sin(parentTransform->getVisualR());
-                tempWidth = -selfTransform.getActualW() / 2 + parentTransform->getActualW() / 2;
-                tempHeight = -selfTransform.getActualH() / 2 + parentTransform->getActualH() / 2;
-                tempIntermediateOffsets.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x - tempWidth;
-                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y - tempHeight;
-                tempRotatedOffset.x = tempIntermediateOffsets.x * tempAngleCos - tempIntermediateOffsets.y * tempAngleSin + tempWidth;
-                tempRotatedOffset.y = tempIntermediateOffsets.x * tempAngleSin + tempIntermediateOffsets.y * tempAngleCos + tempHeight;
-            }
-        }
-    
-    
-        //TODO: these two lines cause issues. why?
         
         auto &selfXSpring = selfTransform.getXSpring();
         auto &selfYSpring = selfTransform.getYSpring();
@@ -515,6 +457,46 @@ namespace transform
         
         auto &parentXSpring = parentTransform->getXSpring();
         auto &parentYSpring = parentTransform->getYSpring();
+        
+        
+        auto selfActualW = selfWSpring.targetValue;
+        auto selfActualH = selfHSpring.targetValue;
+        auto selfVisualX = selfXSpring.value;
+        auto selfVisualY = selfYSpring.value;
+        auto selfVisualW = selfWSpring.value;
+        auto selfVisualH = selfHSpring.value;
+        auto parentActualW = parentTransform->getActualW();
+        auto parentActualH = parentTransform->getActualH();
+        auto parentVisualX = parentTransform->getVisualX();
+        auto parentVisualY = parentTransform->getVisualY();
+        auto parentVisualW = parentTransform->getVisualW();
+        auto parentVisualH = parentTransform->getVisualH();
+        auto parentVisualR = parentTransform->getVisualR();
+
+        if (selfRole.location_bond == InheritedProperties::Sync::Weak)
+        {
+            tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
+            tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y;
+        }
+        else
+        {
+            if (parentVisualR < 0.0001f && parentVisualR > -0.0001f)
+            {
+                tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; //TODO: selfRole.offset not initialized
+                tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y;
+            }
+            else
+            {
+                tempAngleCos = cos(parentVisualR);
+                tempAngleSin = sin(parentVisualR);
+                tempWidth = -selfActualW / 2 + parentActualW / 2;
+                tempHeight = -selfActualH / 2 + parentActualH / 2;
+                tempIntermediateOffsets.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x - tempWidth;
+                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y - tempHeight;
+                tempRotatedOffset.x = tempIntermediateOffsets.x * tempAngleCos - tempIntermediateOffsets.y * tempAngleSin + tempWidth;
+                tempRotatedOffset.y = tempIntermediateOffsets.x * tempAngleSin + tempIntermediateOffsets.y * tempAngleCos + tempHeight;
+            }
+        }
         
         selfXSpring.targetValue = parentXSpring.value + tempRotatedOffset.x;
         selfYSpring.targetValue = parentYSpring.value + tempRotatedOffset.y;
@@ -533,8 +515,36 @@ namespace transform
         
         
         // force spring update
-        selfTransform.updateCachedValues(true);
+        // selfTransform.updateCachedValues( true);
+        selfTransform.updateCachedValues(selfXSpring, selfYSpring, selfWSpring, selfHSpring, selfRSpring, selfSSpring, true);
         parentTransform->updateCachedValues(true);
+        
+        selfActualW = selfTransform.getActualW();
+        selfActualH = selfTransform.getActualH();
+        selfVisualX = selfTransform.getVisualX();
+        selfVisualY = selfTransform.getVisualY();
+        selfVisualW = selfTransform.getVisualW();
+        selfVisualH = selfTransform.getVisualH();
+        auto selfActualR = selfTransform.getActualRotation();
+        auto selfActualS = selfTransform.getActualScale();
+        auto selfVisualS = selfTransform.getVisualScale();
+        parentActualW = parentTransform->getActualW();
+        parentActualH = parentTransform->getActualH();
+        parentVisualX = parentTransform->getVisualX();
+        parentVisualY = parentTransform->getVisualY();
+        parentVisualW = parentTransform->getVisualW();
+        parentVisualH = parentTransform->getVisualH();
+        parentVisualR = parentTransform->getVisualR();
+        auto parentActualS = parentTransform->getActualScale();
+        auto parentVisualS = parentTransform->getVisualScale();
+        // if (selfRole.rotation_bond == InheritedProperties::Sync::Weak)
+        
+        auto setSelfVisualX = [&](float v) { selfXSpring.value = v; };
+        auto setSelfVisualY = [&](float v) { selfYSpring.value = v; };
+        auto setSelfVisualW = [&](float v) { selfWSpring.value = v; };
+        auto setSelfVisualH = [&](float v) { selfHSpring.value = v; };
+        auto setSelfVisualR = [&](float v) { selfRSpring.value = v; };
+        auto setSelfVisualS = [&](float v) { selfSSpring.value = v; };
 
         if (selfRole.rotation_bond == InheritedProperties::Sync::Strong)
         {
@@ -547,7 +557,7 @@ namespace transform
             {
                 juiceFactor = 0;
             }
-            selfTransform.setVisualRotation(selfTransform.getActualRotation() + parentTransform->rotationOffset + (juiceFactor));
+            setSelfVisualR(selfActualR + parentTransform->rotationOffset + (juiceFactor));
         }
         else if (selfRole.rotation_bond == InheritedProperties::Sync::Weak)
         {
@@ -565,7 +575,7 @@ namespace transform
             {
                 juiceFactor = 0;
             }
-            selfTransform.setVisualScale(selfTransform.getActualScale() * (parentTransform->getVisualScale() / parentTransform->getActualScale()) + juiceFactor);
+            setSelfVisualS(selfActualS * (parentVisualS / parentActualS) + juiceFactor);
         }
         else if (selfRole.scale_bond == InheritedProperties::Sync::Weak)
         {
@@ -574,9 +584,9 @@ namespace transform
 
         if (selfRole.size_bond == InheritedProperties::Sync::Strong)
         {
-            selfTransform.setVisualX(selfTransform.getVisualX() + (0.5f * (1 - parentTransform->getVisualW() / parentTransform->getActualW()) * selfTransform.getActualW()));
-            selfTransform.setVisualW(selfTransform.getActualW() * (parentTransform->getVisualW() / parentTransform->getActualW()));
-            selfTransform.setVisualH(selfTransform.getActualH() * (parentTransform->getActualH() / parentTransform->getActualH()));
+            setSelfVisualX(selfVisualX + (0.5f * (1 - parentVisualW / parentActualW) * selfVisualW));
+            setSelfVisualW(selfActualW * (parentVisualW / parentActualW));
+            setSelfVisualH(selfActualH * (parentVisualH / parentActualH));
         }
         else if (selfRole.size_bond == InheritedProperties::Sync::Weak)
         {
@@ -702,51 +712,69 @@ namespace transform
         }
     }
 
-    auto GetMaster(entt::entity e, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*& parentTransform, InheritedProperties*& parentRole) -> Transform::FrameCalculation::MasterCache
+    auto GetMaster(entt::entity selfEntity, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*& parentTransformStorage, InheritedProperties*& parentRoleStorage) -> Transform::FrameCalculation::MasterCache
     {
         // Check the global cache first
-        auto it = globals::frameMasterCache.find(e);
-        if (it != globals::frameMasterCache.end())
+        auto it = globals::getMasterCacheEntityToParentCompMap.find(selfEntity);
+        if (it != globals::getMasterCacheEntityToParentCompMap.end())
         {
-            // Cache hit
             const auto &entry = it->second;
+
+            // SPDLOG_DEBUG("CACHE HIT for entity {}: parentTransform={}, parentRole={}",
+                        // static_cast<int>(selfEntity),
+                        // (void*)entry.parentTransform,
+                        // (void*)entry.parentRole);
+
             Transform::FrameCalculation::MasterCache toReturn;
             toReturn.master = entry.master;
             toReturn.offset = entry.offset;
 
-            parentTransform = entry.parentTransform;
-            parentRole = entry.parentRole;
+            parentTransformStorage = entry.parentTransform;
+            parentRoleStorage = entry.parentRole;
 
             return toReturn;
         }
 
         // Default fallback
         Transform::FrameCalculation::MasterCache toReturn;
-        toReturn.master = e;
+        toReturn.master = selfEntity;
         toReturn.offset = Vector2{0, 0};
 
-        if (selfRole.master == globals::gameWorldContainerEntity || selfRole.role_type == InheritedProperties::Type::RoleRoot || selfRole.master == e)
+        if (selfRole.master == globals::gameWorldContainerEntity || selfRole.role_type == InheritedProperties::Type::RoleRoot || selfRole.master == selfEntity)
         {
-            // no parent logic
-            globals::frameMasterCache[e] = {e, toReturn.offset.value(), nullptr, nullptr};
+            // SPDLOG_DEBUG("NO PARENT for entity {}: storing null parentTransform and parentRole",
+            //             static_cast<int>(selfEntity));
+
+            globals::getMasterCacheEntityToParentCompMap[selfEntity] = {selfEntity, toReturn.offset.value(), nullptr, nullptr};
             return toReturn;
         }
 
         if (selfRole.location_bond == InheritedProperties::Sync::Weak && selfRole.rotation_bond == InheritedProperties::Sync::Weak)
         {
-            // no valid parent logic
-            globals::frameMasterCache[e] = {e, toReturn.offset.value(), nullptr, nullptr};
+            // SPDLOG_DEBUG("WEAK BOND for entity {}: storing null parentTransform and parentRole",
+            //             static_cast<int>(selfEntity));
+
+            globals::getMasterCacheEntityToParentCompMap[selfEntity] = {selfEntity, toReturn.offset.value(), nullptr, nullptr};
             return toReturn;
         }
 
         // Recurse to parent
-        parentTransform = globals::registry.try_get<Transform>(selfRole.master);
-        parentRole = globals::registry.try_get<InheritedProperties>(selfRole.master);
+        parentTransformStorage = globals::registry.try_get<Transform>(selfRole.master);
+        parentRoleStorage = globals::registry.try_get<InheritedProperties>(selfRole.master);
         auto parentNode = globals::registry.try_get<GameObject>(selfRole.master);
+
+        if (!parentTransformStorage || !parentRoleStorage)
+        {
+            // SPDLOG_WARN("WARNING: entity {}'s parent {} has missing components (parentTransform={}, parentRole={})",
+            //             static_cast<int>(selfEntity),
+            //             static_cast<int>(selfRole.master),
+            //             (void*)parentTransformStorage,
+            //             (void*)parentRoleStorage);
+        }
 
         Transform *parentOfParentTransform = nullptr;
         InheritedProperties *parentOfParentRole = nullptr;
-        auto parentResults = GetMaster(selfRole.master, *parentTransform, *parentRole, *parentNode, parentOfParentTransform, parentOfParentRole);
+        auto parentResults = GetMaster(selfRole.master, *parentTransformStorage, *parentRoleStorage, *parentNode, parentOfParentTransform, parentOfParentRole);
 
         // Compute new offset
         Vector2 offset{};
@@ -757,7 +785,13 @@ namespace transform
         }
 
         // Store in cache
-        globals::frameMasterCache[e] = {parentResults.master.value(), offset, parentTransform, parentRole};
+        globals::getMasterCacheEntityToParentCompMap[selfEntity] = {parentResults.master.value(), offset, parentTransformStorage, parentRoleStorage};
+
+        // SPDLOG_DEBUG("CACHE STORE for entity {}: parentEntity={}, parentTransform={}, parentRole={}",
+        //             static_cast<int>(selfEntity),
+        //             static_cast<int>(selfRole.master),
+        //             (void*)parentTransformStorage,
+        //             (void*)parentRoleStorage);
 
         // Fill return
         toReturn.master = parentResults.master;
@@ -765,6 +799,7 @@ namespace transform
 
         return toReturn;
     }
+
 
     auto SyncPerfectlyToMaster(entt::entity e, entt::entity parent, Transform &selfTransform, InheritedProperties &selfRole, Transform &parentTransform, InheritedProperties &parentRole) -> void
     {

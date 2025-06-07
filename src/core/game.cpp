@@ -760,8 +760,18 @@ namespace game
         
         // tag all objects attached to UI so we don't have to check later
         globals::registry.clear<ui::ObjectAttachedToUITag>();
-        globals::registry.view<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>()
-            .each([](entt::entity e, TextSystem::Text &text, AnimationQueueComponent &anim, ui::InventoryGrid &inv) {
+        globals::registry.view<TextSystem::Text>()
+            .each([](entt::entity e, TextSystem::Text &text) {
+                // attach tag
+                globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+            });
+        globals::registry.view<AnimationQueueComponent>()
+            .each([](entt::entity e, AnimationQueueComponent &anim) {
+                // attach tag
+                globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+            });
+        globals::registry.view<ui::InventoryGrid>()
+            .each([](entt::entity e, ui::InventoryGrid &inv) {
                 // attach tag
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });

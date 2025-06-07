@@ -826,5 +826,14 @@ namespace transform
         Transform *parentTransform = nullptr;
         InheritedProperties *parentRole = nullptr;
     };
+    
+    struct SpringCacheBundle {
+        Spring* x;
+        Spring* y;
+        Spring* r;
+        Spring* s;
+        Spring* w;
+        Spring* h;
+    };
 
 }

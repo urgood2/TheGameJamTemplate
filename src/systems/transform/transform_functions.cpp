@@ -353,6 +353,25 @@ namespace transform
         role.prevOffset->x = role.offset->x;
         role.prevOffset->y = role.offset->y;
     }
+    
+    // Fetch—or build and cache—a SpringBundle for entity 'e'
+    SpringCacheBundle& getSpringBundleCached(entt::entity e, Transform &t) {
+        auto it = globals::g_springCache.find(e);
+        if ( it == globals::g_springCache.end() ) {
+            // first time this frame → pull all six springs once
+            SpringCacheBundle b {
+                &t.getXSpring(),
+                &t.getYSpring(),
+                &t.getRSpring(),
+                &t.getSSpring(),
+                &t.getWSpring(),
+                &t.getHSpring()
+            };
+            auto ins = globals::g_springCache.emplace(e, b);
+            return ins.first->second;
+        }
+        return it->second;
+    }
 
     
     auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> void
@@ -407,71 +426,38 @@ namespace transform
             }
         }; 
 
-        // if (globals::frameMasterCache.find(parent) != globals::frameMasterCache.end())
-        // {
-        //     // if the master is already cached, use it
-        //     // but if they are null, fetch them 
-        //     if (globals::frameMasterCache[parent].parentTransform == nullptr) {
-        //         globals::frameMasterCache[parent].parentTransform = registry->try_get<Transform>(parent);
-
-        //     }
-        //     if (globals::frameMasterCache[parent].parentRole == nullptr) {
-        //         globals::frameMasterCache[parent].parentRole = registry->try_get<InheritedProperties>(parent);
-        //     }
-        //     parentTransform = globals::frameMasterCache[parent].parentTransform;
-        //     parentRole = globals::frameMasterCache[parent].parentRole;
-        // }
-        // else {
-        //     parentTransform = globals::registry.try_get<Transform>(parent);
-        //     parentRole = globals::registry.try_get<InheritedProperties>(parent);
-        // }
-
-        
-        // FIXME: hacky fix: if this is a ui element's object (UIType::OBJECT), we need to use the immediate master
-        
-
         fillParentTransformAndRole(parent, parentTransform, parentRole);
 
         // an object that is attached to a UI element (of type OBJECT) should use the immediate master
-        bool isUIElementObject = registry->any_of<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>(e);
+        bool isUIElementObject = registry->any_of<ui::ObjectAttachedToUITag>(e);
         if (isUIElementObject) 
         {
             // if this is a UI element object, we need to use the immediate master
             parent = selfRole.master;
             fillParentTransformAndRole(e, parentTransform, parentRole);
         }
-
-        //REVIEW: parentRole's offset is always zero. Why?
-        //REVIEW: actual immediate parent (selfRole.master) is never the same as GetMaster's master.
-
+        
         UpdateDynamicMotion(e, dt, selfTransform);
         
         Vector2 layeredDisplacement = selfNode.layerDisplacement.value_or(Vector2{0, 0});
         
-        auto &selfXSpring = selfTransform.getXSpring();
-        auto &selfYSpring = selfTransform.getYSpring();
-        auto &selfRSpring = selfTransform.getRSpring();
-        auto &selfSSpring = selfTransform.getSSpring();
-        auto &selfWSpring = selfTransform.getWSpring();
-        auto &selfHSpring = selfTransform.getHSpring();
+        auto selfSprings = getSpringBundleCached(e, selfTransform);
+        auto parentSprings = getSpringBundleCached(parent, *parentTransform);
         
-        auto &parentXSpring = parentTransform->getXSpring();
-        auto &parentYSpring = parentTransform->getYSpring();
+        auto selfActualW = selfSprings.w->targetValue;
+        auto selfActualH = selfSprings.h->targetValue;
+        auto selfVisualX = selfSprings.x->value;
+        auto selfVisualY = selfSprings.y->value;
+        auto selfVisualW = selfSprings.w->value;
+        auto selfVisualH = selfSprings.h->value;
         
-        
-        auto selfActualW = selfWSpring.targetValue;
-        auto selfActualH = selfHSpring.targetValue;
-        auto selfVisualX = selfXSpring.value;
-        auto selfVisualY = selfYSpring.value;
-        auto selfVisualW = selfWSpring.value;
-        auto selfVisualH = selfHSpring.value;
-        auto parentActualW = parentTransform->getActualW();
-        auto parentActualH = parentTransform->getActualH();
-        auto parentVisualX = parentTransform->getVisualX();
-        auto parentVisualY = parentTransform->getVisualY();
-        auto parentVisualW = parentTransform->getVisualW();
-        auto parentVisualH = parentTransform->getVisualH();
-        auto parentVisualR = parentTransform->getVisualR();
+        auto parentActualW = parentSprings.w->targetValue;
+        auto parentActualH = parentSprings.h->targetValue;
+        auto parentVisualX = parentSprings.x->value;
+        auto parentVisualY = parentSprings.y->value;
+        auto parentVisualW = parentSprings.w->value;
+        auto parentVisualH = parentSprings.h->value;
+        auto parentVisualR = parentSprings.r->value;
 
         if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
@@ -498,53 +484,54 @@ namespace transform
             }
         }
         
-        selfXSpring.targetValue = parentXSpring.value + tempRotatedOffset.x;
-        selfYSpring.targetValue = parentYSpring.value + tempRotatedOffset.y;
+        selfSprings.x->targetValue = parentSprings.x->value + tempRotatedOffset.x;
+        selfSprings.y->targetValue = parentSprings.y->value + tempRotatedOffset.y;
         // SPDLOG_DEBUG("Moving with master set to targets: x: {}, y: {}", selfTransform.getXSpring().targetValue, selfTransform.getYSpring().targetValue);
 
         if (selfRole.location_bond == InheritedProperties::Sync::Strong)
         {
-            selfXSpring.value = selfXSpring.targetValue;
-            selfYSpring.value = selfYSpring.targetValue;
+            selfSprings.x->value = selfSprings.x->targetValue;
+            selfSprings.y->value = selfSprings.y->targetValue;
         }
         else if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
 
-            UpdateLocation(e, dt, selfTransform, selfXSpring, selfYSpring);
+            UpdateLocation(e, dt, selfTransform, *selfSprings.x, *selfSprings.y);
         }
         
         
         // force spring update
         // selfTransform.updateCachedValues( true);
-        selfTransform.updateCachedValues(selfXSpring, selfYSpring, selfWSpring, selfHSpring, selfRSpring, selfSSpring, true);
+        selfTransform.updateCachedValues(*selfSprings.x, *selfSprings.y, *selfSprings.w, *selfSprings.h, *selfSprings.r, *selfSprings.s, true);
         parentTransform->updateCachedValues(true);
         
-        selfActualW = selfTransform.getActualW();
-        selfActualH = selfTransform.getActualH();
-        selfVisualX = selfTransform.getVisualX();
-        selfVisualY = selfTransform.getVisualY();
-        selfVisualW = selfTransform.getVisualW();
-        selfVisualH = selfTransform.getVisualH();
-        auto selfActualR = selfTransform.getActualRotation();
-        auto selfActualS = selfTransform.getActualScale();
-        auto selfVisualS = selfTransform.getVisualScale();
-        parentActualW = parentTransform->getActualW();
-        parentActualH = parentTransform->getActualH();
-        parentVisualX = parentTransform->getVisualX();
-        parentVisualY = parentTransform->getVisualY();
-        parentVisualW = parentTransform->getVisualW();
-        parentVisualH = parentTransform->getVisualH();
-        parentVisualR = parentTransform->getVisualR();
-        auto parentActualS = parentTransform->getActualScale();
-        auto parentVisualS = parentTransform->getVisualScale();
-        // if (selfRole.rotation_bond == InheritedProperties::Sync::Weak)
+        selfActualW = selfSprings.w->targetValue;
+        selfActualH = selfSprings.h->targetValue;
+        selfVisualX = selfSprings.x->value;
+        selfVisualY = selfSprings.y->value;
+        selfVisualW = selfSprings.w->value;
+        selfVisualH = selfSprings.h->value;
+        auto selfActualR = selfSprings.r->targetValue;
+        auto selfVisualR = selfSprings.r->value;
+        auto selfVisualS = selfSprings.s->value;
+        auto selfActualS = selfSprings.s->targetValue;
         
-        auto setSelfVisualX = [&](float v) { selfXSpring.value = v; };
-        auto setSelfVisualY = [&](float v) { selfYSpring.value = v; };
-        auto setSelfVisualW = [&](float v) { selfWSpring.value = v; };
-        auto setSelfVisualH = [&](float v) { selfHSpring.value = v; };
-        auto setSelfVisualR = [&](float v) { selfRSpring.value = v; };
-        auto setSelfVisualS = [&](float v) { selfSSpring.value = v; };
+        parentActualW = parentSprings.w->targetValue;
+        parentActualH = parentSprings.h->targetValue;
+        parentVisualX = parentSprings.x->value;
+        parentVisualY = parentSprings.y->value;
+        parentVisualW = parentSprings.w->value;
+        parentVisualH = parentSprings.h->value;
+        parentVisualR = parentSprings.r->value;
+        auto parentActualS = parentSprings.s->targetValue;
+        auto parentVisualS = parentSprings.s->value;
+        
+        auto setSelfVisualX = [&](float v) { selfSprings.x->value = v; };
+        auto setSelfVisualY = [&](float v) { selfSprings.y->value = v; };
+        auto setSelfVisualW = [&](float v) { selfSprings.w->value = v; };
+        auto setSelfVisualH = [&](float v) { selfSprings.h->value = v; };
+        auto setSelfVisualR = [&](float v) { selfSprings.r->value = v; };
+        auto setSelfVisualS = [&](float v) { selfSprings.s->value = v; };
 
         if (selfRole.rotation_bond == InheritedProperties::Sync::Strong)
         {
@@ -561,7 +548,7 @@ namespace transform
         }
         else if (selfRole.rotation_bond == InheritedProperties::Sync::Weak)
         {
-            UpdateRotation(e, dt, selfTransform, selfRSpring, selfXSpring);
+            UpdateRotation(e, dt, selfTransform, *selfSprings.r, *selfSprings.x);
         }
 
         if (selfRole.scale_bond == InheritedProperties::Sync::Strong)
@@ -579,7 +566,7 @@ namespace transform
         }
         else if (selfRole.scale_bond == InheritedProperties::Sync::Weak)
         {
-            UpdateScale(e, dt, selfTransform, selfSSpring);
+            UpdateScale(e, dt, selfTransform, *selfSprings.s);
         }
 
         if (selfRole.size_bond == InheritedProperties::Sync::Strong)
@@ -590,7 +577,7 @@ namespace transform
         }
         else if (selfRole.size_bond == InheritedProperties::Sync::Weak)
         {
-            UpdateSize(e, dt, selfTransform, selfWSpring, selfHSpring);
+            UpdateSize(e, dt, selfTransform, *selfSprings.w, *selfSprings.h);
         }
 
         UpdateParallaxCalculations(registry, e);

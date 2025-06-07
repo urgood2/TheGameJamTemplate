@@ -30,6 +30,9 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 namespace globals {
 
+    
+    std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
+
     std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap{};
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements

@@ -18,6 +18,10 @@
 // Each ui element can have a parent (root ui element or some other element below that)
 namespace ui
 {
+    
+    // this marks objects like text, animations, etc. which are attached to a UI element. For optimization purposes.
+    struct ObjectAttachedToUITag {};
+    
     enum class UITypeEnum
     {           
         NONE,   // no type, for error checking

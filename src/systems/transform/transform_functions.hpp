@@ -188,6 +188,8 @@ namespace transform
      * Hard-set the visual transform of an entity.
      */
     auto SnapVisualTransformValues(entt::registry *registry, entt::entity e) -> void;
+    
+    SpringCacheBundle& getSpringBundleCached(entt::entity e, Transform &t) ;
 
     /**
      * Draw the bounding rectangle of an entity for debugging purposes.

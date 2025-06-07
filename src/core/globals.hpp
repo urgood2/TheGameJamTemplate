@@ -81,10 +81,13 @@ namespace input
 namespace transform
 {
     struct MasterCacheEntry;
+    struct SpringCacheBundle;
 }
 
 namespace globals
 {
+    extern std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
+    
     extern std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap;
 
     extern float globalUIScaleFactor; // scale factor for UI elements

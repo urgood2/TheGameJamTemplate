@@ -131,6 +131,13 @@ namespace game
         "bounce",
         "scramble"
     };
+    
+    decltype(std::declval<entt::registry&>()
+        .group<
+        TextSystem::Text,
+        AnimationQueueComponent,
+        ui::InventoryGrid
+        >()) objectsAttachedToUIGroup;
 
     bool gameStarted{false}; // if game state has begun (not in menu )
 
@@ -736,11 +743,29 @@ namespace game
             ui::box::RenewAlignment(globals::registry, uiBox);
         };
         
+        // create group
+        
+        // objectsAttachedToUIGroup = globals::registry.group<TextSystem::Text,
+        // AnimationQueueComponent,
+        // ui::InventoryGrid>();
+        
     }
+    
+    
 
     auto update(float delta) -> void
     {
         globals::getMasterCacheEntityToParentCompMap.clear();
+        globals::g_springCache.clear();
+        
+        // tag all objects attached to UI so we don't have to check later
+        globals::registry.clear<ui::ObjectAttachedToUITag>();
+        globals::registry.view<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>()
+            .each([](entt::entity e, TextSystem::Text &text, AnimationQueueComponent &anim, ui::InventoryGrid &inv) {
+                // attach tag
+                globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+            });
+        
         ZoneScopedN("game::update"); // custom label
         if (gameStarted == false)
             gameStarted = true;

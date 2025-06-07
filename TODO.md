@@ -7,23 +7,10 @@
 
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
-- [ ] optimize this:
-```
-fillParentTransformAndRole
-```
-- [ ] try this optimization https://chatgpt.com/share/68444854-ba0c-800a-aa4f-e91c616c7ee1
 - [ ] modal layers for ui
-- [ ] need to optimize, in order: drawsteppedroundedrectangle (self time), movewithmaster
 - [ ] inventory drag & drop broken
-- [ ] disabling box::move and box::drag for now, not in use
-- [ ] do optimization for quad tree
-- [ ] optimize updatesystems with this; https://chatgpt.com/c/683ef4e3-bc90-800a-8478-9788d51b3d6f  Also consider optimizing by caching parent components when recursing by frame?
 - [ ] broaden initial area for collison bounds with quad tree
-- [ ] use cached variables for transform values? single-component groups don't work.
-- [ ] rewire get() methods in transform to be namespace level, and to use a reference to an owning group
-- [ ] transform cache which updates once per frame upon access, has a dirty bit?
-- [ ] make drawAllBoxes respect layer ordering later.
-- [ ] collision bug where dragging something out of bounds disables collision entirely
+- [ ] make drawAllBoxes respect layer ordering
 - [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable)
 ```cpp
 std::sort(drawCommands.begin(), drawCommands.end(), [&](const DrawCommand& a, const DrawCommand& b) {
@@ -42,36 +29,14 @@ std::sort(drawCommands.begin(), drawCommands.end(), [&](const DrawCommand& a, co
 });
 
 ```
-
-- [ ] use FindTopEntityAtPoint and FindAllEntitiesAtPoint for point collision
-- [ ] integrate broadphase collision & collision sort based on order layer
 - [ ] apply layer order based rendering to all rendering relevant
 - [ ] not sure if object pool is being discarded upon game exit.
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] how to disable collision for invisible ui boxes??
 - [ ] z-layer based rendering for ui:
   - [ ] make all ui draw calls respect this z layer index (see below)
-- [ ] all objects, including ui tree elements, need a layerorder object:
-```
-Sort all draw commands by:
-- LayerOrder first (lowest to highest, so higher layers draw later and appear on top).
-- TreeOrder second (within the same LayerOrder, children draw in natural hierarchical order).
-```
-```cpp
-// Pseudocode: assume each entity has a `LayerOrderComponent`
-std::vector<entt::entity> entities;
-registry.view<Transform, LayerOrderComponent>().each([&](auto entity, auto& transform, auto& layer) {
-    entities.push_back(entity);
-});
-
-// Sort by layer.z ascending (lower layers checked first)
-std::sort(entities.begin(), entities.end(), [&](entt::entity a, entt::entity b) {
-    return registry.get<LayerOrderComponent>(a).z < registry.get<LayerOrderComponent>(b).z;
-});
-```
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard
 - [ ] how to do z-layer based collision detection for ui:
-- [ ] rect caching - just store in a map based on values? Otherwise just generate new one & add to map
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers
@@ -205,3 +170,10 @@ Suggestions for Gloss/Shine Shader Variations
 # Done
 
 - [x] adding animations for static text types (not for dynamic text)
+
+- [ ] need to optimize, in order: drawsteppedroundedrectangle (self time), movewithmaster
+- [ ] try this optimization https://chatgpt.com/share/68444854-ba0c-800a-aa4f-e91c616c7ee1
+- [ ] disabling box::move and box::drag for now, not in use
+- [ ] do optimization for quad tree
+- [ ] optimize updatesystems with this; https://chatgpt.com/c/683ef4e3-bc90-800a-8478-9788d51b3d6f  Also consider optimizing by caching parent components when recursing by frame?
+- [ ] use cached variables for transform values? single-component groups don't work.

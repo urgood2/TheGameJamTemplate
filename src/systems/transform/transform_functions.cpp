@@ -502,8 +502,8 @@ namespace transform
         
         // force spring update
         // selfTransform.updateCachedValues( true);
-        selfTransform.updateCachedValues(*selfSprings.x, *selfSprings.y, *selfSprings.w, *selfSprings.h, *selfSprings.r, *selfSprings.s, true);
-        parentTransform->updateCachedValues(true);
+        // selfTransform.updateCachedValues(*selfSprings.x, *selfSprings.y, *selfSprings.w, *selfSprings.h, *selfSprings.r, *selfSprings.s, true);
+        // parentTransform->updateCachedValues(true);
         
         selfActualW = selfSprings.w->targetValue;
         selfActualH = selfSprings.h->targetValue;

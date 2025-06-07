@@ -11,14 +11,7 @@
 ```
 fillParentTransformAndRole
 ```
-- [ ] this part broken rn, need "any" view
-```cpp
-globals::registry.view<TextSystem::Text, AnimationQueueComponent, ui::InventoryGrid>()
-            .each([](entt::entity e, TextSystem::Text &text, AnimationQueueComponent &anim, ui::InventoryGrid &inv) {
-                // attach tag
-                globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
-            });
-```
+- [ ] try this optimization https://chatgpt.com/share/68444854-ba0c-800a-aa4f-e91c616c7ee1
 - [ ] modal layers for ui
 - [ ] need to optimize, in order: drawsteppedroundedrectangle (self time), movewithmaster
 - [ ] inventory drag & drop broken

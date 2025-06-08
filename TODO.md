@@ -8,9 +8,10 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] legible way to see tree/layer order in debug mode
 - [ ] inventory drag & drop broken
-- [ ] make drawAllBoxes respect layer ordering
-- [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable)
+- [ ] make drawAllBoxes respect layer ordering -> maybe don't apply tree order, unnecessary sorting overhead
+- [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable) -> for ui, text, and animations -> start with text
 - [ ] how to make sure every ui element has a layer/tree order?
 - [ ] need to order by treeorder & layer order for both layer rendering and collision checking
 - [ ] apply layer order based rendering to all rendering relevant
@@ -51,6 +52,7 @@
 - [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
 - [ ] Participate in game jam or do a little test game jam on my own to make everything ready
 - [ ] make everything compile for web
+- [ ] overall pruning pass to delete code that isn't used/outdated
 
 ---
 

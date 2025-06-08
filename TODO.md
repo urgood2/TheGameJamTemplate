@@ -28,6 +28,7 @@ std::sort(drawCommands.begin(), drawCommands.end(), [&](const DrawCommand& a, co
 });
 
 ```
+- [ ] need to order by treeorder & layer order for both layer rendering and collision checking
 - [ ] apply layer order based rendering to all rendering relevant
 - [ ] not sure if object pool is being discarded upon game exit.
 - [ ] highlight outline size is wrong. how to fix?
@@ -35,7 +36,6 @@ std::sort(drawCommands.begin(), drawCommands.end(), [&](const DrawCommand& a, co
 - [ ] z-layer based rendering for ui:
   - [ ] make all ui draw calls respect this z layer index (see below)
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard
-- [ ] how to do z-layer based collision detection for ui:
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
 - [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers

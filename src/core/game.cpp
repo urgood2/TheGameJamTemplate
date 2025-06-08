@@ -161,15 +161,27 @@ namespace game
     {
         using namespace quadtree;
         
-        // reset the quadtree for the current frame
-        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(globals::worldBounds, globals::getBox);
+        constexpr float buffer = 200.f;
 
-        // TODO: probably need a heuristic to determine when all transforms are within bounds
+        // 1) build an expanded bounds rectangle
+        //    (assumes worldBounds.x,y is the top-left and width/height are positive)
+        Box<float> expandedBounds;
+        expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;
+        expandedBounds.left = globals::worldBounds.getTopLeft().x - buffer;
+        expandedBounds.width = globals::worldBounds.getSize().x + 2 * buffer;
+        expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
+
+        // 2) reset the quadtree using the bigger area
+        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
+            expandedBounds,
+            globals::getBox
+        );
+
         // Populate the Quadtree Per Frame
         globals::registry.view<transform::Transform>().each([&](entt::entity e, transform::Transform& transform) {
-            if (transform.getActualX() >= 0 && transform.getActualY() >= 0 &&
-                transform.getActualX() + transform.getActualW() <= globals::screenWidth &&
-                transform.getActualY() + transform.getActualH() <= globals::screenHeight) 
+            if (transform.getActualX() >= expandedBounds.left && transform.getActualY() >= expandedBounds.top &&
+                            transform.getActualX() + transform.getActualW() <= expandedBounds.left + expandedBounds.width &&
+                            transform.getActualY() + transform.getActualH() <= expandedBounds.top + expandedBounds.height) 
             {
                 globals::quadtree.add(e);
             }
@@ -1023,18 +1035,17 @@ namespace game
             }
             
             {
-                // ZoneScopedN("Debug UI");
-                // rlImGuiBegin(); // Required: starts ImGui frame
+                ZoneScopedN("Debug UI");
+                rlImGuiBegin(); // Required: starts ImGui frame
 
-                // // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
-                // ShowDebugUI();
+                // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
+                ShowDebugUI();
 
-                // rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+                rlImGuiEnd(); // Required: renders ImGui on top of Raylib
             }
             
 
             // Display UPS and FPS
-            const int fps = GetFPS(); // Get the current FPS
             DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
 
             {

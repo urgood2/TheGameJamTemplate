@@ -9,7 +9,6 @@
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
 - [ ] inventory drag & drop broken
-- [ ] broaden initial area for collison bounds with quad tree
 - [ ] make drawAllBoxes respect layer ordering
 - [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable)
 ```cpp

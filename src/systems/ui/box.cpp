@@ -300,7 +300,7 @@ namespace ui
 
         ui::element::InitializeVisualTransform(registry, uiRoot);
         
-        AssignLayerOrderComponents(registry, uiRoot);
+        AssignLayerOrderComponents(registry, self);
         
         AssignTreeOrderComponents(registry, uiRoot);
 

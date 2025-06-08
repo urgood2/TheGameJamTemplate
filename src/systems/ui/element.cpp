@@ -459,21 +459,31 @@ namespace ui
                         static_cast<int>(objectRole->master));
                 }
                 
-                if (registry.try_get<transform::TreeOrderComponent>(*uiConfig->object))
-                    boxStr += fmt::format(" TreeOrder: {}",
-                    registry.get<transform::TreeOrderComponent>(*uiConfig->object).order);
+                
                     
                 // else if (registry.try_get<Particles>(*uiConfig->object)) objectType = "Particles";
                 // else if (registry.try_get<AnimatedSprite>(*uiConfig->object)) objectType = "AnimatedSprite";
             }
+            
+            
 
             boxStr += " OBJ: " + objectType;
+            
+            
         }
         // If this is a Text UI element (UIT == "T"), include the text content
         else if (uiElement->UIT == UITypeEnum::TEXT)
         {
             boxStr += " TEXT: " + (uiConfig->text ? *uiConfig->text : "REF");
         }
+        
+        if (registry.try_get<transform::TreeOrderComponent>(*uiConfig->object))
+            boxStr += fmt::format(" TreeOrder: {}",
+            registry.get<transform::TreeOrderComponent>(*uiConfig->object).order);
+            
+        if (registry.try_get<layer::LayerOrderComponent>(*uiConfig->object))
+            boxStr += fmt::format(" LayerOrder: {}",
+            registry.get<layer::LayerOrderComponent>(*uiConfig->object).zIndex);
 
         //  Recursively print child elements with increased indentation
         for (auto childEntry : node->orderedChildren)

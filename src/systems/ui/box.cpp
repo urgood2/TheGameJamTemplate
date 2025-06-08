@@ -1,6 +1,7 @@
 #include "box.hpp"
 
 #include "systems/text/textVer2.hpp"
+#include "systems/layer/layer_order_system.hpp"
 #include "components/graphics.hpp"
 #include "inventory_ui.hpp"
 namespace ui
@@ -130,21 +131,16 @@ namespace ui
     void box::RenewAlignment(entt::registry &registry, entt::entity self)
     {
         
-        auto &definition = registry.get<UIElementTemplateNode>(self);
-        auto &config = registry.get<UIConfig>(self);
-
         // Initialize transform component
         auto &transform = registry.get<transform::Transform>(self);
 
         // Setup Role component already done
         
         // Initialize node component (handles interaction state)
-        auto &node = registry.get<transform::GameObject>(self);
         auto &uiBox = registry.get<UIBoxComponent>(self);
         auto &uiBoxRole = registry.get<transform::InheritedProperties>(self);
         auto uiRoot = uiBox.uiRoot.value();
         auto &uiRootRole = registry.get<transform::InheritedProperties>(uiRoot);
-        auto &uiRootConfig = registry.get<UIConfig>(uiRoot);
         
         // First, set parent-child relationships to create the tree structure
         
@@ -175,7 +171,6 @@ namespace ui
         uiRootRole.offset = uiBoxRole.offset;
 
         // start with root entity.
-        auto &uiElementComp = registry.get<UIElementComponent>(uiRoot);
         // start with uibox's offset values so we align to that, w and h are unused.
         ui::LocalTransform runningTransform{uiBoxRole.offset->x, uiBoxRole.offset->y, 0.f, 0.f};
 
@@ -194,7 +189,13 @@ namespace ui
 
         ui::element::InitializeVisualTransform(registry, uiRoot);
         
+        // probably need to assign layer order components as well
+        // to box first (next available one)  and then give the same one to all children
+        
+        
+        AssignLayerOrderComponents(registry, self);
         AssignTreeOrderComponents(registry, uiRoot);
+
     }
 
     entt::entity box::Initialize(entt::registry &registry, const TransformConfig &transformData,
@@ -299,6 +300,8 @@ namespace ui
 
         ui::element::InitializeVisualTransform(registry, uiRoot);
         
+        AssignLayerOrderComponents(registry, uiRoot);
+        
         AssignTreeOrderComponents(registry, uiRoot);
 
         // If this is a root UIBox, store it in an instance list
@@ -312,6 +315,67 @@ namespace ui
         }
 
         return self;
+    }
+    
+    auto box::AssignLayerOrderComponents(entt::registry& registry, entt::entity uiBox) -> void {
+        struct StackEntry { entt::entity uiElement{entt::null}; };
+    
+        // 1) Update the z‐indexes on ALL LayerOrderComponents if your
+        //    global system says they need it:
+        layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
+    
+        // 2) Read the root box’s layer index once:
+        auto const& rootLayer = registry.get<layer::LayerOrderComponent>(uiBox).zIndex;
+    
+        // 3) Grab the tree root under that box:
+        auto const& uiBoxComp = registry.get<UIBoxComponent>(uiBox);
+        entt::entity root = uiBoxComp.uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
+    
+        // 4) DFS stack:
+        std::stack<StackEntry> stack;
+        stack.push({root});
+    
+        SPDLOG_DEBUG("=== Begin AssignLayerOrderComponents for box {} (zIndex={}) ===",
+                     static_cast<int>(uiBox), rootLayer);
+    
+        while (!stack.empty()) {
+            auto entry = stack.top(); stack.pop();
+            auto e = entry.uiElement;
+            if (!registry.valid(e)) continue;
+    
+            // 5) assign or replace the same LayerOrderComponent:
+            registry.emplace_or_replace<layer::LayerOrderComponent>(
+                e,
+                layer::LayerOrderComponent{ rootLayer }
+            );
+    
+            // 6) if this element “owns” an object, give it the same layer too:
+            if (auto cfg = registry.try_get<UIConfig>(e)) {
+                if (cfg->object) {
+                    entt::entity obj = cfg->object.value();
+                    if (registry.valid(obj)) {
+                        registry.emplace_or_replace<layer::LayerOrderComponent>(
+                            obj,
+                            layer::LayerOrderComponent{ rootLayer }
+                        );
+                    }
+                }
+            }
+    
+            // 7) push children in reverse so they come out in the intended order:
+            if (auto node = registry.try_get<transform::GameObject>(e)) {
+                for (auto it = node->orderedChildren.rbegin();
+                          it != node->orderedChildren.rend();
+                        ++it)
+                {
+                    if (registry.valid(*it))
+                        stack.push({ *it });
+                }
+            }
+        }
+    
+        SPDLOG_DEBUG("=== Done AssignLayerOrderComponents for box {} ===", static_cast<int>(uiBox));
     }
 
     auto box::handleAlignment(entt::registry &registry, entt::entity root) -> void

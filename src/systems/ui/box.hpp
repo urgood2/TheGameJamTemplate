@@ -49,6 +49,7 @@ namespace ui {
         auto Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) -> void;
         auto Recalculate(entt::registry &registry, entt::entity entity) -> void;
         void AssignTreeOrderComponents(entt::registry& registry, entt::entity rootUIElement);
+        auto AssignLayerOrderComponents(entt::registry& registry, entt::entity uiBox) -> void;
         auto Move(entt::registry &registry, entt::entity self, float dt) -> void;
         auto Drag(entt::registry &registry, entt::entity self, Vector2 offset, float dt) -> void;
         auto AddChild(entt::registry& registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent) -> void;

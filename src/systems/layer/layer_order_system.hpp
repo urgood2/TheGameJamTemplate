@@ -10,7 +10,7 @@ namespace layer
 {
     namespace layer_order_system
     {
-        int newZIndex = 0; // Global variable to hold the running Z-index value. 0 is the bottom, and higher values are on top.
+        extern int newZIndex; // Global variable to hold the running Z-index value. 0 is the bottom, and higher values are on top.
         
         
         inline void SetToTopZIndex(entt::entity entity, bool incrementIndexAfterwards = true) {

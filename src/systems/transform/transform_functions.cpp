@@ -1611,43 +1611,75 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      */
     std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& point) {
         using namespace quadtree;
-        // Make a tiny AABB around the point for the quadtree broadphase
         constexpr float pointBoxSize = 1.0f;
-        Box<float> queryBox = {
-            {point.x - pointBoxSize * 0.5f, point.y - pointBoxSize * 0.5f},
-            {pointBoxSize, pointBoxSize}
+        Box<float> queryBox{ 
+            {point.x - pointBoxSize*0.5f, point.y - pointBoxSize*0.5f}, 
+            {pointBoxSize, pointBoxSize} 
         };
+        if (!globals::worldBounds.contains(queryBox)) return {};
     
-        if (!globals::worldBounds.contains(queryBox)) {
-            return {};
-        }
+        // 1) broadphase
+        auto candidates = globals::quadtree.query(queryBox);
     
-        // Broadphase query to get possible candidates
-        auto results = globals::quadtree.query(queryBox);
-    
-        // Filter results using precise point check
+        // 2) precise filter
         std::vector<entt::entity> filtered;
-        filtered.reserve(results.size());
-    
-        for (entt::entity e : results) {
+        filtered.reserve(candidates.size());
+        for (auto e : candidates) {
             if (e == globals::cursor) continue;
             if (transform::CheckCollisionWithPoint(&globals::registry, e, point)) {
                 filtered.push_back(e);
             }
         }
     
-        // Sort from lowest to highest zIndex
-        std::sort(filtered.begin(), filtered.end(), [](entt::entity a, entt::entity b) {
-            bool hasA = globals::registry.any_of<layer::LayerOrderComponent>(a);
-            bool hasB = globals::registry.any_of<layer::LayerOrderComponent>(b);
+        // 3) pre‐compute order info so the comparator is fast
+        struct CollisionOrderInfo { bool hasCollisionOrder=false; entt::entity parentBox=entt::null; int treeOrder=0; int layerOrder=0; };
+        auto GetInfo = [&](entt::entity e){
+            CollisionOrderInfo info{};
+            auto &r = globals::registry;
+            if (!r.valid(e)) return info;
+            if (!r.all_of<transform::GameObject, transform::InheritedProperties>(e))
+                return info;
     
-            if (hasA && hasB) {
-                return globals::registry.get<layer::LayerOrderComponent>(a).zIndex <
-                       globals::registry.get<layer::LayerOrderComponent>(b).zIndex;
-            }
+            auto uiElem = r.try_get<ui::UIElementComponent>(e);
+            bool hasAny = r.any_of<transform::TreeOrderComponent, layer::LayerOrderComponent>(e);
+            if (!hasAny) return info;
+            info.hasCollisionOrder = true;
     
-            return hasA < hasB; // put things with a zIndex after things without
-        });
+            if (uiElem) info.parentBox = uiElem->uiBox;
+            if (!r.valid(info.parentBox)) return info;
+    
+            if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
+                info.treeOrder = toc->order;
+            if (auto loc = r.try_get<layer::LayerOrderComponent>(info.parentBox))
+                info.layerOrder = loc->zIndex;
+            return info;
+        };
+    
+        // 4) stash them in a map to avoid recomputing in the sort
+        std::unordered_map<entt::entity, CollisionOrderInfo> infoMap;
+        infoMap.reserve(filtered.size());
+        for (auto e : filtered) {
+            infoMap.emplace(e, GetInfo(e));
+        }
+    
+        // 5) sort by (layerOrder, treeOrder)
+        std::sort(filtered.begin(), filtered.end(),
+          [&](entt::entity a, entt::entity b){
+            const auto &ia = infoMap[a];
+            const auto &ib = infoMap[b];
+    
+            // entities without any collision‐order info go last
+            if (ia.hasCollisionOrder != ib.hasCollisionOrder)
+                return ia.hasCollisionOrder;  
+    
+            // then by layerOrder
+            if (ia.layerOrder != ib.layerOrder)
+                return ia.layerOrder < ib.layerOrder;
+    
+            // then by treeOrder
+            return ia.treeOrder < ib.treeOrder;
+          }
+        );
     
         return filtered;
     }
@@ -1659,9 +1691,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
         if (!registry.all_of<transform::GameObject, transform::InheritedProperties>(e)) return info;
     
-        const auto& node = registry.get<transform::GameObject>(e);
-        const auto& role = registry.get<transform::InheritedProperties>(e);
-        auto collisionOrderComponent = registry.try_get<transform::TreeOrderComponent>(e);
+        // const auto& node = registry.get<transform::GameObject>(e);
+        // const auto& role = registry.get<transform::InheritedProperties>(e);
+        // auto collisionOrderComponent = registry.try_get<transform::TreeOrderComponent>(e);
         auto uiElementComponent = registry.try_get<ui::UIElementComponent>(e);
         
         if (registry.any_of<transform::TreeOrderComponent, layer::LayerOrderComponent>(e)) {

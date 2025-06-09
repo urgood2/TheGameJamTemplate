@@ -7,23 +7,13 @@
 
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
-- [ ] modal layers for ui
 - [ ] legible way to see tree/layer order in debug mode
 - [ ] inventory drag & drop broken
-- [ ] make drawAllBoxes respect layer ordering -> maybe don't apply tree order, unnecessary sorting overhead
-- [ ] unify all entity sorting for render & collision, make them respect both layer + treeorder (if applicable) -> for ui, text, and animations -> start with text
-- [ ] how to make sure every ui element has a layer/tree order?
-- [ ] need to order by treeorder & layer order for both layer rendering and collision checking
-- [ ] apply layer order based rendering to all rendering relevant
 - [ ] not sure if object pool is being discarded upon game exit.
 - [ ] highlight outline size is wrong. how to fix?
-- [ ] how to disable collision for invisible ui boxes??
-- [ ] z-layer based rendering for ui:
-  - [ ] make all ui draw calls respect this z layer index (see below)
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
-- [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 
@@ -39,10 +29,8 @@
     - Supports keyboard/controller interaction and shoulder button overlays
   - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
-
-- [ ] Utilize controller focus interactivity focus funneling in the above ui
-    - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
-    - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
+- [ ] make particle system a little easier to use on the go
+- [ ] convert shaders for web format.
 - [ ] Text input (with cursor displayed, etc, software keyboard)
 
 ### MISC. RENDERING
@@ -57,7 +45,10 @@
 ---
 
 ## Immediate laters
-
+- [ ] Utilize controller focus interactivity focus funneling in the above ui
+    - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."
+    - [ ] claim_focus_from: "I'm a proxy node, but real input focus is handled by the node I'm representing."
+- [ ] Context handling for modal dialogs (controller focus saving between windows) & controller run-through for the various ui types implemented (support for shoulder buttons, dpad, etc. when relevant) -> maybe do controller later, just implement modality / layers
 - [ ] shake not working, scramble not working. Slight stall when the app loads on windows, not sure why.
 - [ ] some new text effects https://chatgpt.com/share/6809c567-486c-800a-a0db-e2dd955643aa
 - Function to expand only a part of the ninepatch image (left corner for text, etc.). For use with kenney ui

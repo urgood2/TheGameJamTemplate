@@ -908,19 +908,24 @@ namespace game
             auto spriteView = globals::registry.view<AnimationQueueComponent>();
             for (auto e : spriteView)
             {
+                //TODO: maybe optimize later
+                //TODO: what about treeorder? 
+                auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
+                auto zIndex = layerOrder ? layerOrder->zIndex : 0;
+                
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
-                    });
+                    }, zIndex);
                 }
                 else
                 {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
-                    });
+                    }, zIndex);
                 }            
             }
         }

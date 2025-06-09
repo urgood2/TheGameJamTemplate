@@ -126,7 +126,7 @@ namespace ui {
         // add custom draw function to draw a debug grid
         
         auto &gameObjectArea = registry.get<transform::GameObject>(newAreaEntity);
-        gameObjectArea.drawFunction = [areaWidth, areaHeight, cellW, cellH, rows, columns, padding](std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) {
+        gameObjectArea.drawFunction = [areaWidth, areaHeight, cellW, cellH, rows, columns, padding](std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, int zIndex) {
             auto &transform = registry.get<transform::Transform>(entity);
             
             //TODO: only draw in debug mode

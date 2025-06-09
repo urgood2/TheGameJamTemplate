@@ -1799,6 +1799,8 @@ namespace ui
         // 1) Build a flat list in the exact order your old box::Draw would have used.
         std::vector<entt::entity> drawOrder;
         drawOrder.reserve(200); // or an estimate of your total UI element count
+        
+        
         //TODO call for all ui boxes
         auto view = registry.view<UIBoxComponent>();
         for (auto ent : view)
@@ -1821,10 +1823,14 @@ namespace ui
                                              transform::GameObject,
                                              transform::Transform>();
         }
+        
+        entt::entity uiBoxEntity{entt::null};
+        int drawOrderZIndex = 0;
 
         // 3) Loop in our flattened order:
         for (auto ent : drawOrder)
         {
+            
             if (!registry.valid(ent))
                 continue;
 
@@ -1834,10 +1840,17 @@ namespace ui
             auto &st = globalUIGroup.get<UIState>(ent);
             auto &node = globalUIGroup.get<transform::GameObject>(ent);
             auto &xf = globalUIGroup.get<transform::Transform>(ent);
+            
+            if (elemComp.uiBox != uiBoxEntity)
+            {
+                // If this is a new UIBox, set the current box entity.
+                uiBoxEntity = elemComp.uiBox;
+                drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+            }
 
             // Finally call your lean DrawSelf that only does `try_get`
             // for optional pieces (RoundedRectangleVerticesCache, etc.).
-            element::DrawSelf(layerPtr, ent, elemComp, cfg, st, node, xf);
+            element::DrawSelf(layerPtr, ent, elemComp, cfg, st, node, xf, drawOrderZIndex);
         }
 
         // 4) If you still want to draw bounding boxes for each UIBox itself:

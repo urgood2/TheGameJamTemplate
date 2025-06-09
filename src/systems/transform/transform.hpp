@@ -158,7 +158,7 @@ namespace transform
 
         // TODO: probably need to go through all files and replace references which were originally v.draw(), v.drawself(), and so on
         std::function<void(entt::registry &registry, entt::entity e, float dt)> updateFunction;          // call every frame for the node
-        std::function<void(std::shared_ptr<layer::Layer>, entt::registry &, entt::entity)> drawFunction; // called every frame on top of the object's own draw method (so object's own draw method executes, then this one). NOT CALLED AUTOMATICALLY, NEED TO BE CALLED MANUALLY IN THE DRAW LOOP
+        std::function<void(std::shared_ptr<layer::Layer>, entt::registry &, entt::entity, int)> drawFunction; // called every frame on top of the object's own draw method (so object's own draw method executes, then this one). NOT CALLED AUTOMATICALLY, NEED TO BE CALLED MANUALLY IN THE DRAW LOOP
 
         struct State
         {

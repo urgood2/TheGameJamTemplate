@@ -11,7 +11,7 @@
 - [ ] inventory drag & drop broken
 - [ ] not sure if object pool is being discarded upon game exit.
 - [ ] highlight outline size is wrong. how to fix?
-- [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard
+- [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui
 - [ ] Need to test pipeline rendering w/ scaling for animations 
 - [ ] New localization system needs to be tested.
 - [ ] make variations of texture shaders based on voucher sheen/polychrome

@@ -38,6 +38,7 @@ namespace TextSystem
             auto &transform = globals::registry.get<transform::Transform>(entity);
             auto &gameObject = globals::registry.get<transform::GameObject>(entity);
             auto &textComp = globals::registry.emplace<Text>(entity, text);
+            auto &layerOrder = globals::registry.emplace<layer::LayerOrderComponent>(entity);
 
             // update the text if there is a callback
             if (textComp.get_value_callback)
@@ -1265,7 +1266,7 @@ namespace TextSystem
                             cmd->rotationCenter = {0, 0};
                             cmd->rotation = 0;
                             cmd->color = Fade(BLACK, 0.7f);
-                        }, layerZIndex;
+                        }, layerZIndex);
                         
                     }
                     else {

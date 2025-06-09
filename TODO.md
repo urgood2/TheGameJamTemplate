@@ -8,6 +8,15 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] modal layers for ui
+- [ ] try simple lighting? https://godotshaders.com/shader/custom-2d-light/
+- [ ] Add this, this is great https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
+- [ ] https://godotshaders.com/shader/outline-for-atlas-texture-region/ outline for texture atlas
+- [ ] texture water https://godotshaders.com/shader/texture-based-liquid-effects/
+- [ ] screen-wide fireworks https://godotshaders.com/shader/2dfireworks/
+- [ ] bottom radial sihne https://godotshaders.com/shader/2dradial-shine-2/
+- [ ] fire at screen edges https://godotshaders.com/shader/radial-fire-2d/
+- [ ]
+- [ ]
 - [ ] legible way to see tree/layer order in debug mode
 - [ ] inventory drag & drop broken
 - [ ] make drawAllBoxes respect layer ordering -> maybe don't apply tree order, unnecessary sorting overhead

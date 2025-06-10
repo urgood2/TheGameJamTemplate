@@ -78,6 +78,7 @@ using json = nlohmann::json;
 #include "systems/timer/timer.hpp"
 #include "systems/sound/sound_system.hpp"
 #include "systems/layer/layer_optimized.hpp"
+#include "systems/localization/localization.hpp"
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;

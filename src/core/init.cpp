@@ -10,6 +10,7 @@
 
 #include "../systems/shaders/shader_system.hpp"
 #include "../systems/sound/sound_system.hpp"
+#include "../systems/localization/localization.hpp"
 
 #include <chrono>
 
@@ -529,6 +530,8 @@ namespace init {
             // init camera
             globals::camera.zoom = 2.5;
             globals::camera.offset = {globals::screenWidth / 2.0f, globals::screenHeight / 2.0f};
+            localization::setFallbackLanguage("en_us");
+            localization::loadLanguage("en_us", util::getRawAssetPathNoUUID("localization/"));
 
             // moved over from next task to see if this helps with crash
             Random::seed(globals::configJSON.at("seed").get<unsigned>());

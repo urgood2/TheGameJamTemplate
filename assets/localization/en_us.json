@@ -1,8 +1,15 @@
 {
     "ui": {
-      "start_game": "Start Game",
-      "exit": "Exit"
+      "slider_text": "Slider (click or drag)",
+      "text_input": "Enter Name:",
+      "disabled_button": "Button (disabled)",
+      "cycle_text": "Cycle",
+      "alert_button_text": "Alert on top right corner",      
+      "tooltip_title": "Tooltip Title",
+      "tooltip_text": "This is a tooltip,\n{text_type} text at\nthe moment",
+      "tooltip_text_hover": "Hover for tooltip"
     },
+
     "errors": {
       "network": "Network error. Please try again."
     }

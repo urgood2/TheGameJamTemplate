@@ -518,7 +518,7 @@ namespace ui_defs
 
     inline auto getButtonDisabledExample() -> ui::UIElementTemplateNode
     {
-        auto buttonDynamicText = getNewDynamicTextEntry("Button (disabled)", 20.f, std::nullopt, "pulse=0.9,1.1");
+        auto buttonDynamicText = getNewDynamicTextEntry(localization::get("ui.disabled_button"), 20.f, std::nullopt, "pulse=0.9,1.1");
         
         auto buttonDisabled = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
@@ -609,8 +609,8 @@ namespace ui_defs
         // slider
         // ======================================
         // ======================================
-
-        auto sliderTextMoving = getNewDynamicTextEntry("Slider (click or drag)", 20.f, std::nullopt, "pulse=0.9,1.1");
+        
+        auto sliderTextMoving = getNewDynamicTextEntry(localization::get("ui.slider_text"), 20.f, std::nullopt, "pulse=0.9,1.1");
         auto slider = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -681,7 +681,7 @@ namespace ui_defs
         // ======================================
         // ======================================
         
-        auto textInputTextMoving = getNewDynamicTextEntry("Enter Name:", 20.f, std::nullopt, "pulse=0.9,1.1");
+        auto textInputTextMoving = getNewDynamicTextEntry(localization::get("ui.text_input"), 20.f, std::nullopt, "pulse=0.9,1.1");
         auto textInput = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -737,7 +737,7 @@ namespace ui_defs
         // TODO: cycle (how to do pips?)
         // ======================================
         // ======================================
-        auto cycleText = getNewTextEntry("Cycle");
+        auto cycleText = getNewTextEntry(localization::get("ui.cycle_text"));
         auto cycleImageLeft = animation_system::createAnimatedObjectWithTransform("left.png", true, 0, 0, nullptr, false); // no shadow
         auto cycleImageRight = animation_system::createAnimatedObjectWithTransform("right.png", true, 0, 0, nullptr, false); // no shadow
         animation_system::resizeAnimationObjectsInEntityToFit(cycleImageLeft, 40.f, 40.f);
@@ -956,7 +956,7 @@ namespace ui_defs
         // TODO: new row with an alert on the top right corner
         // ======================================
         // ======================================
-        auto buttonAlertText = getNewDynamicTextEntry("Alert on top right corner", 20.f, std::nullopt, "wave");
+        auto buttonAlertText = getNewDynamicTextEntry(localization::get("ui.alert_button_text"), 20.f, std::nullopt, "wave");
         auto buttonAlert = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -989,9 +989,9 @@ namespace ui_defs
         static entt::entity tooltipBox{entt::null};
         
         //TODO: use backgrounds & images for the tooltip text
-        auto tooltipTitle = getNewDynamicTextEntry("Tooltip Title", 20.f, std::nullopt, "pulse=0.9,1.1");
+        auto tooltipTitle = getNewDynamicTextEntry(localization::get("ui.tooltip_title"), 20.f, std::nullopt, "pulse=0.9,1.1");
         
-        auto tooltipText = getNewDynamicTextEntry("This is a tooltip,\ndynamic text at\nthe moment", 10.f, std::nullopt, "pulse=0.9,1.1");
+        auto tooltipText = getNewDynamicTextEntry(localization::get("ui.tooltip_text", fmt::arg("text_type", "dynamic")), 10.f, std::nullopt, "pulse=0.9,1.1");
         
         auto tooltipRow = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
@@ -1022,7 +1022,7 @@ namespace ui_defs
         // TODO: a button with a tooltip
         // ======================================
         // ======================================
-        auto tooltipButtonText = getNewDynamicTextEntry("Hover for tooltip", 20.f, std::nullopt, "rainbow");
+        auto tooltipButtonText = getNewDynamicTextEntry(localization::get("ui.tooltip_text_hover"), 20.f, std::nullopt, "rainbow");
         auto buttonForTooltip = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(

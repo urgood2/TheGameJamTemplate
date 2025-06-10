@@ -1,5 +1,7 @@
 #include "localization.hpp"
 
+#include "core/globals.hpp"
+
 namespace localization
 {
     // ==========================
@@ -8,6 +10,10 @@ namespace localization
     std::string currentLang{};
     std::string fallbackLang = "en";
     std::unordered_map<std::string, nlohmann::json> languageData{};
+    std::unordered_map<std::string, FlatMap> flatLanguageData{};
+    std::vector<LangChangedCb> langChangedCallbacks{};
+    std::unordered_map<std::string, globals::FontData> languageFontData{};
+
     std::string resolveKey(const json& data, const std::string& key) {
         std::istringstream stream(key);
         std::string segment;
@@ -45,6 +51,20 @@ namespace localization
         } catch (const std::exception& e) {
             std::cerr << "JSON parse error in " << langCode << ": " << e.what() << '\n';
         }
+
+        // after parsing languageData[langCode]:
+        std::unordered_map<std::string,std::string> flat;
+        std::function<void(const json&,const std::string&)> walk = [&](auto &node, auto prefix){
+            for (auto &item : node.items()) {
+                auto full = prefix.empty() ? item.key() : prefix + "." + item.key();
+                if (item.value().is_string())
+                    flat[full] = item.value().get<std::string>();
+                else
+                    walk(item.value(), full);
+            }
+        };
+        walk(languageData[langCode], "");
+        flatLanguageData[langCode] = std::move(flat);
     }
     
     void setFallbackLanguage(const std::string& langCode) {

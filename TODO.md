@@ -12,7 +12,7 @@
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui
 - [ ] Need to test pipeline rendering w/ scaling for animations 
-- [ ] New localization system needs to be tested.
+- [ ] New localization system needs to be tested. -> handle switching font usage as well -> turn globals::fontData into a map? -> use localization::languageFontData, load fonts based on this, also need to somehow / use loadFontData / what if I want to mix languages? / try using Korean, too / use the onchange calls as well
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 

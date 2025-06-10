@@ -4,84 +4,179 @@
         "fragment": "flash_fragment.fs",
 
         "web": {
-            "vertex": "flash_vertex_web.vs",
-            "fragment": "flash_fragment_web.fs"
+            "vertex": "web/flash_vertex.vs",
+            "fragment": "web/flash_fragment.fs"
         }
     },
     "screen_tone_transition": {
         "vertex": "screen_tone_transition_vertex.vs",
-        "fragment": "screen_tone_transition_fragment.fs"
+        "fragment": "screen_tone_transition_fragment.fs",
+
+        "web": {
+            "vertex": "web/screen_tone_transition_vertex.vs",
+            "fragment": "web/screen_tone_transition_fragment.fs"
+        }
     },
     "balatro_background": {
         "vertex": "balatro_background_vertex.vs",
-        "fragment": "balatro_background_fragment_v3.fs"
+        "fragment": "balatro_background_fragment_v3.fs",
+
+        "web": {
+            "vertex": "web/balatro_background_vertex.vs",
+            "fragment": "web/balatro_background_fragment_v3.fs"
+        }
     },
     "crt": {
         "vertex": "crt_vertex.vs",
-        "fragment": "crt_fragment.fs"
+        "fragment": "crt_fragment.fs",
+
+        "web": {
+            "vertex": "web/crt_vertex.vs",
+            "fragment": "web/crt_fragment.fs"
+        }
     },
     "shockwave": {
         "vertex": "shockwave_vertex.vs",
-        "fragment": "shockwave_fragment.fs"
+        "fragment": "shockwave_fragment.fs",
+
+        "web": {
+            "vertex": "web/shockwave_vertex.vs",
+            "fragment": "web/shockwave_fragment.fs"
+        }
     },
     "glitch": {
         "vertex": "glitch_vertex.vs",
-        "fragment": "glitch_fragment.fs"
+        "fragment": "glitch_fragment.fs",
+
+        "web": {
+            "vertex": "web/glitch_vertex.vs",
+            "fragment": "web/glitch_fragment.fs"
+        }
     },
     "wind": {
         "vertex": "wind_vertex.vs",
-        "fragment": "wind_fragment.fs"
+        "fragment": "wind_fragment.fs",
+
+        "web": {
+            "vertex": "web/wind_vertex.vs",
+            "fragment": "web/wind_fragment.fs"
+        }
     },
     "3d_skew": {
         "vertex": "3d_skew_vertex.vs",
-        "fragment": "3d_skew_fragment.fs"
+        "fragment": "3d_skew_fragment.fs",
+
+        "web": {
+            "vertex": "web/3d_skew_vertex.vs",
+            "fragment": "web/3d_skew_fragment.fs"
+        }
     },
     "squish": {
         "vertex": "squish_vertex.vs",
-        "fragment": "squish_fragment.fs"
+        "fragment": "squish_fragment.fs",
+
+        "web": {
+            "vertex": "web/squish_vertex.vs",
+            "fragment": "web/squish_fragment.fs"
+        }
     },
     "peaches_background": {
         "vertex": "peaches_background_vertex.vs",
-        "fragment": "peaches_background_fragment.fs"
+        "fragment": "peaches_background_fragment.fs",
+
+        "web": {
+            "vertex": "web/peaches_background_vertex.vs",
+            "fragment": "web/peaches_background_fragment.fs"
+        }
     },
     "fade_zoom": {
         "vertex": "fade_zoom_vertex.vs",
-        "fragment": "fade_zoom_fragment.fs"
+        "fragment": "fade_zoom_fragment.fs",
+
+        "web": {
+            "vertex": "web/fade_zoom_vertex.vs",
+            "fragment": "web/fade_zoom_fragment.fs"
+        }
     },
     "fade": {
         "vertex": "fade_vertex.vs",
-        "fragment": "fade_fragment.fs"
+        "fragment": "fade_fragment.fs",
+
+        "web": {
+            "vertex": "web/fade_vertex.vs",
+            "fragment": "web/fade_fragment.fs"
+        }
     },
     "foil": {
         "vertex": "foil_vertex.vs",
-        "fragment": "foil_fragment.fs"
+        "fragment": "foil_fragment.fs",
+
+        "web": {
+            "vertex": "web/foil_vertex.vs",
+            "fragment": "web/foil_fragment.fs"
+        }
     },
     "holo": {
         "vertex": "holo_vertex.vs",
-        "fragment": "holo_fragment.fs"
+        "fragment": "holo_fragment.fs",
+
+        "web": {
+            "vertex": "web/holo_vertex.vs",
+            "fragment": "web/holo_fragment.fs"
+        }
     },
     "polychrome": {
         "vertex": "polychrome_vertex.vs",
-        "fragment": "polychrome_fragment.fs"
+        "fragment": "polychrome_fragment.fs",
+
+        "web": {
+            "vertex": "web/polychrome_vertex.vs",
+            "fragment": "web/polychrome_fragment.fs"
+        }
     },
     "negative_shine": {
         "vertex": "negative_shine_vertex.vs",
-        "fragment": "negative_shine_fragment.fs"
+        "fragment": "negative_shine_fragment.fs",
+
+        "web": {
+            "vertex": "web/negative_shine_vertex.vs",
+            "fragment": "web/negative_shine_fragment.fs"
+        }
     },
     "negative": {
         "vertex": "negative_vertex.vs",
-        "fragment": "negative_fragment.fs"
+        "fragment": "negative_fragment.fs",
+
+        "web": {
+            "vertex": "web/negative_vertex.vs",
+            "fragment": "web/negative_fragment.fs"
+        }
     },
     "spectrum_circle": {
         "vertex": "spectrum_circle_vertex.vs",
-        "fragment": "spectrum_circle_fragment.fs"
+        "fragment": "spectrum_circle_fragment.fs",
+
+        "web": {
+            "vertex": "web/spectrum_circle_vertex.vs",
+            "fragment": "web/spectrum_circle_fragment.fs"
+        }
     },
     "spectrum_line_background": {
         "vertex": "spectrum_line_background_vertex.vs",
-        "fragment": "spectrum_line_background_fragment.fs"
+        "fragment": "spectrum_line_background_fragment.fs",
+
+        "web": {
+            "vertex": "web/spectrum_line_background_vertex.vs",
+            "fragment": "web/spectrum_line_background_fragment.fs"
+        }
     },
     "voucher_sheen": {
         "vertex": "voucher_sheen_vertex.vs",
-        "fragment": "voucher_sheen_fragment.fs"
+        "fragment": "voucher_sheen_fragment.fs",
+
+        "web": {
+            "vertex": "web/voucher_sheen_vertex.vs",
+            "fragment": "web/voucher_sheen_fragment.fs"
+        }
     }
 }

@@ -181,14 +181,14 @@ namespace layer
                 && "GetDrawCommandType<T>() returned out‐of‐range DrawCommandType"
             );
 
-            IDynamicPool*& slot = layer.commandPoolsArray[idx];
+            auto& slot = layer.commandPoolsArray[idx];
             if (!slot) {
-                // create a new templated pool, but store it in a PoolBase* slot
-                auto poolPtr = new DynamicObjectPoolWrapper<T>(PoolBlockSize<T>::value);
-                slot = poolPtr; // implicit upcast to PoolBase*
-                return *poolPtr;
+                // Allocate and store the unique_ptr
+                slot = std::make_unique<DynamicObjectPoolWrapper<T>>(PoolBlockSize<T>::value);
             }
-            return *static_cast<DynamicObjectPoolWrapper<T>*>(slot);
+
+            // Cast back to the derived pool type
+            return *static_cast<DynamicObjectPoolWrapper<T>*>(slot.get());
         }
     
         inline const std::vector<DrawCommandV2>& GetCommandsSorted(const std::shared_ptr<Layer>& layer) {

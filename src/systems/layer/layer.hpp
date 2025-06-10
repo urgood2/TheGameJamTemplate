@@ -96,7 +96,7 @@ namespace layer
         bool isSorted = true;
 
         // New:
-        std::array<IDynamicPool*, static_cast<size_t>(DrawCommandType::Count)> commandPoolsArray = {};
+        std::array<std::unique_ptr<IDynamicPool>, static_cast<size_t>(DrawCommandType::Count)> commandPoolsArray = {};
     };
 
     extern std::vector<std::shared_ptr<Layer>> layers;

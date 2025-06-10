@@ -17,15 +17,6 @@
             "fragment": "web/screen_tone_transition_fragment.fs"
         }
     },
-    "balatro_background": {
-        "vertex": "balatro_background_vertex.vs",
-        "fragment": "balatro_background_fragment_v3.fs",
-
-        "web": {
-            "vertex": "web/balatro_background_vertex.vs",
-            "fragment": "web/balatro_background_fragment_v3.fs"
-        }
-    },
     "crt": {
         "vertex": "crt_vertex.vs",
         "fragment": "crt_fragment.fs",

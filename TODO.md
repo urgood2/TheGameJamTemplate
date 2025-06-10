@@ -9,7 +9,6 @@
 - [ ] use backgrounds & images for the tooltip text
 - [ ] legible way to see tree/layer order in debug mode
 - [ ] inventory drag & drop broken
-- [ ] not sure if object pool is being discarded upon game exit.
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui
 - [ ] Need to test pipeline rendering w/ scaling for animations 
@@ -30,7 +29,6 @@
   - [ ] Alerts -> just ui boxes with a dynamic text component that has a moving exclamation mark.
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
 - [ ] make particle system a little easier to use on the go
-- [ ] convert shaders for web format.
 - [ ] Text input (with cursor displayed, etc, software keyboard)
 
 ### MISC. RENDERING

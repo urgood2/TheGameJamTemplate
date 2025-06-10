@@ -100,14 +100,7 @@ namespace localization
   }
 
   // in localization.cpp
-  inline const globals::FontData& getFontData() {
-      if (auto it = languageFontData.find(currentLang); it != languageFontData.end())
-          return it->second;
-      if (auto it2 = languageFontData.find(fallbackLang); it2 != languageFontData.end())
-          return it2->second;
-      static globals::FontData defaultFD{};
-      return defaultFD;
-  }
+  extern const globals::FontData& getFontData();
 
   // Register a listener:
   inline void onLanguageChanged(LangChangedCb cb)
@@ -115,39 +108,7 @@ namespace localization
     langChangedCallbacks.push_back(std::move(cb));
   }
 
-  inline void loadFontData(const std::string& jsonPath)
-  {
-      std::ifstream f(jsonPath);
-      if (!f.is_open()) {
-          SPDLOG_ERROR("Could not open fonts.json at '{}'", jsonPath);
-          return;
-      }
-
-      json j;
-      try { f >> j; }
-      catch (const std::exception& e) {
-          SPDLOG_ERROR("Failed to parse {}: {}", jsonPath, e.what());
-          return;
-      }
-
-      for (auto& [langCode, fontJ] : j.items()) {
-          globals::FontData fd;
-          fd.fontLoadedSize   = fontJ.value("loadedSize", 32.f);
-          fd.fontScale        = fontJ.value("scale",       1.f);
-          fd.spacing          = fontJ.value("spacing",     1.f);
-          auto off = fontJ.value("offset", std::vector<float>{0,0});
-          fd.fontRenderOffset = { off[0], off[1] };
-
-          std::string file    = fontJ.value("file", std::string{});
-          if (!file.empty()) {
-              fd.font = LoadFont(file.c_str());
-              if (fd.font.texture.id == 0) {
-                  SPDLOG_ERROR("Failed to load font '{}' for '{}'", file, langCode);
-              }
-          }
-          languageFontData[langCode] = fd;
-      }
-  }
+  extern  void loadFontData(const std::string& jsonPath);
 
   // Call this from your setter:
   // Suppose you have a Label class that you want to re-text whenever the lang changes:

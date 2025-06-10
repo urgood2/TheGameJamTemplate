@@ -87,7 +87,7 @@ namespace ui_defs
             // .rawText = fmt::format("[안녕하세요](color=red;rotate=2.0,5;float). Here's a UID: [{}](color=red;pulse=0.9,1.1,3.0,4.0)", testUID),
             
             .rawText = text,
-            .fontData = globals::fontData,
+            .fontData = localization::getFontData(),
             .fontSize = fontSize,
             .wrapEnabled = wrapWidth ? true : false,
             .wrapWidth = wrapWidth.value_or(0.0f),

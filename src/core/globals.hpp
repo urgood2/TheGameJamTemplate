@@ -30,6 +30,7 @@
 #include "../systems/layer/layer.hpp"
 #include "../systems/collision/Quadtree.h"
 #include "../systems/shaders/shader_system.hpp"
+#include "../systems/localization/localization.hpp"
 
 #include "third_party/rlImGui/imgui.h" // raylib imGUI binding
 
@@ -304,8 +305,6 @@ namespace globals
         float spacing = 1.0f;              // the horizontal spacing for the font
         Vector2 fontRenderOffset = {2, 0}; // the offset of the font when rendered, applied to ensure text is centered correctly in ui, it is multiplied by scale when applied
     };
-
-    extern FontData fontData; // the main font for the game
 
     extern float uiPadding;
 

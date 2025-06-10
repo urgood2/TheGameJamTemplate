@@ -4,6 +4,7 @@
 #include "systems/layer/layer_order_system.hpp"
 #include "components/graphics.hpp"
 #include "inventory_ui.hpp"
+#include "core/globals.hpp"
 namespace ui
 {
     // TODO: update function registry for methods that replace transform-provided methods
@@ -75,8 +76,8 @@ namespace ui
             // If text, pre-calculate text bounds
             if (def->type == UITypeEnum::TEXT && config && config->text) {
                 float scale = config->scale.value_or(1.0f);
-                float fontSize = globals::fontData.fontLoadedSize * scale * globals::fontData.fontScale;
-                auto [w, h] = MeasureTextEx(globals::fontData.font, config->text->c_str(), fontSize, globals::fontData.spacing);
+                float fontSize = localization::getFontData().fontLoadedSize * scale * localization::getFontData().fontScale;
+                auto [w, h] = MeasureTextEx(localization::getFontData().font, config->text->c_str(), fontSize, localization::getFontData().spacing);
                 if (config->verticalText.value_or(false)) std::swap(w, h);
                 //FIXME: testing, commenting out
                 // config->minWidth = w;
@@ -1445,8 +1446,8 @@ namespace ui
                 uiConfig.language = globals::language;
 
             //TODO: respect font size from config
-            float fontSize = globals::fontData.fontLoadedSize * scaleFactor * globals::fontData.fontScale;
-            auto [measuredWidth, measuredHeight] = MeasureTextEx(globals::fontData.font, uiConfig.text.value().c_str(), fontSize, globals::fontData.spacing);
+            float fontSize = localization::getFontData().fontLoadedSize * scaleFactor * localization::getFontData().fontScale;
+            auto [measuredWidth, measuredHeight] = MeasureTextEx(localization::getFontData().font, uiConfig.text.value().c_str(), fontSize, localization::getFontData().spacing);
 
             calcCurrentNodeTransform.w = measuredWidth;
                 calcCurrentNodeTransform.h = measuredHeight;

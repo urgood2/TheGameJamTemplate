@@ -1222,7 +1222,7 @@ namespace TextSystem
                     float scaleFactor = std::clamp(rawScale * rawScale, 0.01f, 1.0f);
 
                     // Adjust for font size (reduce shadow effect when font size < 30)
-                    float fontSize = static_cast<float>(globals::fontData.fontLoadedSize);
+                    float fontSize = static_cast<float>(text.fontData.fontLoadedSize);
                     float fontFactor = std::clamp(fontSize / 60.0f, 0.05f, 1.0f); // Tunable lower bound, higher denominator = less shadow
 
                     // Final combined scale factor

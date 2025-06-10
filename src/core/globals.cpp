@@ -9,6 +9,7 @@
 #include "systems/input/input_function_data.hpp"
 #include "systems/shaders/shader_system.hpp"
 #include "systems/collision/Quadtree.h"
+#include "systems/localization/localization.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -208,8 +209,6 @@ namespace globals {
  
     Settings settings{};
 
-    //TODO: load font in
-    FontData fontData{}; // the main font for the game 
     
     float uiPadding = 4.0f; // padding for UI elements
     

@@ -15962,6 +15962,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\ko"
     ],
+    "font_localization": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\fonts.json"
+    ],
     "forest_green": [
         "FOREST GREEN"
     ],

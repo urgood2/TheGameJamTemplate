@@ -58,7 +58,7 @@ namespace localization
             for (auto &item : node.items()) {
                 auto full = prefix.empty() ? item.key() : prefix + "." + item.key();
                 if (item.value().is_string())
-                    flat[full] = item.value().get<std::string>();
+                    flat[full] = item.value().template get<std::string>();
                 else
                     walk(item.value(), full);
             }

@@ -5,5 +5,13 @@
       "scale": 1.0,
       "spacing": 1.2,
       "offset": [2, 0]
+    },
+
+    "ko_kr": {
+      "file": "nanum-gothic.ttf",
+      "loadedSize": 32.0,
+      "scale": 1.0,
+      "spacing": 1.2,
+      "offset": [2, 0]
     }
 }

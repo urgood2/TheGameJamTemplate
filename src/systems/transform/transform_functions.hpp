@@ -271,7 +271,7 @@ namespace transform
 
     auto setJiggleOnHover(entt::registry *registry, entt::entity e, float jiggleAmount) -> void;
     
-    
+    extern auto exposeToLua(sol::state &lua) -> void;
     
 
 } // namespace transform

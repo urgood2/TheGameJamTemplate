@@ -161,7 +161,7 @@ namespace shaders
                     SPDLOG_WARN("Could not get write time for {}: {}", p, ec.message());
                     return uint64_t{0};
                 }
-                return uint64_t{ft.time_since_epoch().count()};
+                return uint64_t{(uint64_t) ft.time_since_epoch().count()};
             };
 
             shaderFileModificationTimes[shaderName] = {

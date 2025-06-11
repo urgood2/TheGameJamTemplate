@@ -8,6 +8,10 @@
 #include "../tutorial/tutorial_system_v2.hpp"
 #include "../sound/sound_system.hpp" 
 
+#include "meta_helper.hpp"
+#include "registry_bond.hpp"
+#include "scripting_system.hpp"
+
 #include "../../core/game.hpp"
 
 /*
@@ -57,9 +61,9 @@
     
     TODO: script hookups should be done as follows:
 
-    auto behavior_script = lua.load_file("lua/behavior_script.lua");
+    auto behavior_script = lua.load_file("scripts/behavior_script.lua");
     ...
-    registry.emplace<ScriptComponent>(e, behavior_script.call());
+    registry.emplace<scripting::ScriptComponent>(e, behavior_script.call());
 
 
 */

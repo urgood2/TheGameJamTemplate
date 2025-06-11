@@ -11,7 +11,6 @@
 #include "entt/fwd.hpp"
 #include <vector>
 #include <string>
-#include "scripting_system.hpp"
 
 namespace scripting {
 

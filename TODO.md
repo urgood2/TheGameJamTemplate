@@ -8,12 +8,14 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] Register my ui & transform components & event queue system bindings in lua & Set up registry bond (scripting_functions.cpp) / also set up the basic lua scripts in the [folder here](src/systems/scripting/scripts_move_later_to_assets)
+- [ ] need to expose: layer, localization, particles, random, shaders, sound, timer, text, transform ( + functions), ui, utilities.cpp
+- [ ] need to hook up main.lua 
 - [ ] expose ui system to lua https://chatgpt.com/share/6849470b-6e80-800a-a17b-b5095053fe98
 - [ ] inventory drag & drop broken
+- [ ] localization - apply update lamnda on locale change to all necessary ui components
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui
 - [ ] Need to test pipeline rendering w/ scaling for animations 
-- [ ] New localization system needs to be tested. -> handle switching font usage as well -> turn globals::fontData into a map? -> use localization::languageFontData, load fonts based on this, also need to somehow / use loadFontData/ try using Korean, too / use the onchange calls as well / get all references to localization or fontdata to update when locale changes 
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 

@@ -35,7 +35,7 @@ namespace ui {
             bool forceRecalculateLayout = false, std::optional<float> scale = std::nullopt) -> std::pair<float, float>;
         auto TreeCalcSubNonContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                                      bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform) -> Vector2;
-        void ClampUsingMinDimensionsIfPresent(ui::UIConfig &uiConfig, ui::LocalTransform &calcCurrentNodeTransform);
+        // void ClampUsingMinDimensionsIfPresent(ui::UIConfig &uiConfig, ui::LocalTransform &calcCurrentNodeTransform);
         void RenewAlignment(entt::registry &registry, entt::entity self);
         auto TreeCalcSubContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                 bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform, std::unordered_map<entt::entity, Vector2> &contentSizes) -> Vector2;
@@ -46,7 +46,7 @@ namespace ui {
         auto RemoveGroup(entt::registry &registry, entt::entity entity, const std::string &group) -> bool;
         auto GetGroup(entt::registry &registry, entt::entity entity, const std::string &group) -> std::vector<entt::entity>;
         auto Remove(entt::registry &registry, entt::entity entity) -> void;
-        auto Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) -> void;
+        // auto Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) -> void;
         auto Recalculate(entt::registry &registry, entt::entity entity) -> void;
         void AssignTreeOrderComponents(entt::registry& registry, entt::entity rootUIElement);
         auto AssignLayerOrderComponents(entt::registry& registry, entt::entity uiBox) -> void;

@@ -35,7 +35,7 @@ namespace ui {
         auto InitializeVisualTransform(entt::registry &registry, entt::entity entity) -> void;
         auto JuiceUp(entt::registry &registry, entt::entity entity, float amount, float rot_amt) -> void;
         auto CanBeDragged(entt::registry &registry, entt::entity entity) -> std::optional<entt::entity>;
-        auto DrawChildren(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) -> void;
+        // auto DrawChildren(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity) -> void;
         auto SetWH(entt::registry &registry, entt::entity entity) -> std::pair<float, float>;
         auto ApplyAlignment(entt::registry &registry, entt::entity entity, float x, float y) -> void;
         auto SetAlignments(entt::registry &registry, entt::entity entity, std::optional<Vector2> uiBoxOffset = std::nullopt, bool rootEntity = false) -> void;

@@ -8,6 +8,7 @@
 #include "../tutorial/tutorial_system_v2.hpp"
 #include "../sound/sound_system.hpp" 
 #include "../transform/transform_functions.hpp"
+#include "../ui/ui.hpp"
 
 #include "meta_helper.hpp"
 #include "registry_bond.hpp"
@@ -147,6 +148,11 @@ namespace scripting {
         // methods and data from transform system. These can be called from lua
         //---------------------------------------------------------
         transform::exposeToLua(stateToInit);
+        
+        //---------------------------------------------------------
+        // methods from ui system. These can be called from lua
+        //---------------------------------------------------------
+        ui::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
         // methods for entity registry access

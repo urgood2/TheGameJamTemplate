@@ -8,9 +8,8 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] Register my ui & transform components & event queue system bindings in lua & Set up registry bond (scripting_functions.cpp) / also set up the basic lua scripts in the [folder here](src/systems/scripting/scripts_move_later_to_assets)
-- [ ] need to expose: layer, localization, particles, random, shaders, sound, timer, text, ui, utilities.cpp, animation system
+- [ ] need to expose: layer, localization, particles, random, shaders, sound, timer, text, utilities.cpp, animation system
 - [ ] need to hook up main.lua 
-- [ ] expose ui system to lua https://chatgpt.com/share/6849470b-6e80-800a-a17b-b5095053fe98
 - [ ] inventory drag & drop broken
 - [ ] localization - apply update lamnda on locale change to all necessary ui components
 - [ ] highlight outline size is wrong. how to fix?

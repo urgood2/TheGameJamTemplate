@@ -534,7 +534,7 @@ namespace init {
             localization::setFallbackLanguage("en_us");
             localization::loadLanguage("en_us", util::getRawAssetPathNoUUID("localization/"));
             localization::loadLanguage("ko_kr", util::getRawAssetPathNoUUID("localization/"));
-            localization::setCurrentLanguage("en_us");
+            localization::setCurrentLanguage("ko_kr");
             localization::loadFontData(util::getRawAssetPathNoUUID("localization/fonts.json"));
 
             // moved over from next task to see if this helps with crash

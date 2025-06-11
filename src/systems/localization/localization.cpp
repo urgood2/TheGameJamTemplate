@@ -41,49 +41,49 @@ namespace localization
         return "";
     }
 
-    void loadFontData(const std::string &jsonPath)
-    {
+    void loadFontData(const std::string &jsonPath) {
         std::ifstream f(jsonPath);
-        if (!f.is_open())
-        {
-            SPDLOG_ERROR("Could not open fonts.json at '{}'", jsonPath);
-            return;
-        }
+        json j; f >> j;
 
-        json j;
-        try
-        {
-            f >> j;
-        }
-        catch (const std::exception &e)
-        {
-            SPDLOG_ERROR("Failed to parse {}: {}", jsonPath, e.what());
-            return;
-        }
-
-        for (auto &[langCode, fontJ] : j.items())
-        {
+        for (auto& [lang, fontJ] : j.items()) {
             globals::FontData fd;
-            fd.fontLoadedSize = fontJ.value("loadedSize", 32.f);
-            fd.fontScale = fontJ.value("scale", 1.f);
-            fd.spacing = fontJ.value("spacing", 1.f);
-            auto off = fontJ.value("offset", std::vector<float>{0, 0});
-            fd.fontRenderOffset = {off[0], off[1]};
+            // … copy loadedSize, scale, spacing, offset exactly as before …
 
-            std::string file = fontJ.value("file", std::string{});
-            file = util::getRawAssetPathNoUUID(file);
-            if (!file.empty())
-            {
-                fd.font = LoadFont(file.c_str());
-                if (fd.font.texture.id == 0)
-                {
-                    SPDLOG_ERROR("Failed to load font '{}' for '{}'", file, langCode);
+            // 1) Gather ranges from JSON (or fall back to ASCII)
+            std::vector<std::pair<int,int>> ranges;
+            if (auto it = fontJ.find("ranges"); it != fontJ.end()) {
+                for (auto& pair : *it) {
+                    int lo = pair[0].get<int>();
+                    int hi = pair[1].get<int>();
+                    ranges.emplace_back(lo, hi);
+                }
+            } else {
+                ranges.emplace_back(0x0020, 0x007E);
+            }
+
+            // 2) Flatten into a single codepoint list
+            auto& cps = fd.codepoints;
+            for (auto [lo,hi] : ranges) {
+                for (int cp = lo; cp <= hi; ++cp) {
+                    cps.push_back(cp);
                 }
             }
-            // print debug content
-            SPDLOG_DEBUG("Loaded font for language '{}': loadedSize={}, scale={}, spacing={}, offset=({}, {})",
-                langCode, fd.fontLoadedSize, fd.fontScale, fd.spacing, fd.fontRenderOffset.x, fd.fontRenderOffset.y);
-            languageFontData[langCode] = fd;
+
+            // 3) Load with LoadFontEx
+            std::string file = util::getRawAssetPathNoUUID(fontJ["file"].get<std::string>());
+            if (!file.empty()) {
+                fd.font = LoadFontEx(
+                    file.c_str(),
+                    static_cast<int>(fd.fontLoadedSize),
+                    cps.data(),
+                    static_cast<int>(cps.size())
+                );
+                if (fd.font.texture.id == 0) {
+                    SPDLOG_ERROR("Failed to LoadFontEx '{}' for '{}'", file, lang);
+                }
+            }
+
+            languageFontData[lang] = std::move(fd);
         }
     }
 

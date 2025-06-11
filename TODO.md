@@ -8,6 +8,7 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 - [ ] legible way to see tree/layer order in debug mode
+- [ ] lua monobeavior + other features from this repo. put game logic in lua? https://github.com/skaarj1989/entt-meets-sol2/tree/master
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui

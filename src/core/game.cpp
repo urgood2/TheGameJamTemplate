@@ -31,6 +31,7 @@
 #include "../systems/localization/localization.hpp"
 #include "../systems/collision/broad_phase.hpp"
 #include "../systems/collision/Quadtree.h"
+#include "../systems/scripting/scripting_functions.hpp"
 #include "rlgl.h"
 
 using std::pair;

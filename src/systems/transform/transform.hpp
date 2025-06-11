@@ -13,11 +13,6 @@
 
 #include "raylib.h"
 
-// dependency injection for the system that should allow replacing of a system function with a custom one, or addition of a fucntio to the existing function.
-
-// Implementation TODOs:
-// TODO: test layer parallax in input, node, and ui.
-
 // Containers: used for ui
 namespace transform
 {

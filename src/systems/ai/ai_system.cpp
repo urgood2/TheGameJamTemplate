@@ -396,7 +396,7 @@ namespace ai_system
         getLuaFilesFromDirectory(tutorialDir, luaFiles);
 
         // run default initialization function
-        initLuaMasterState(masterStateLua, luaFiles);
+        scripting::initLuaMasterState(masterStateLua, luaFiles);
 
     }
 

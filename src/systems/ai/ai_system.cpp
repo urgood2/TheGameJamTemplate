@@ -47,6 +47,89 @@ namespace ai_system
         return match;
     }
 
+    /**
+     * @brief  Converts a GOAP plan (array of action names) into a runnable queue of Lua-backed Actions.
+     *
+     * This function clears any previously enqueued actions on the specified entity’s GOAPComponent,
+     * then—for each action name in the provided plan—looks up the corresponding Lua table
+     * (which must have been loaded into `masterStateLua` at init), wraps its `start`/`update`/`finish`
+     * functions into a C++ `Action` struct, and pushes it onto the queue.  Finally, it immediately
+     * invokes the first action’s `start` callback so that execution can begin on the very next frame.
+     *
+     * @pre  
+     *   - `globals::registry` must contain a valid `GOAPComponent` for entity `e`.  
+     *   - `masterStateLua` must already have been populated via `require`-ing each action’s Lua file, 
+     *     so that `masterStateLua[actionName]` returns a table with keys `"start"`, `"update"`, and `"finish"`.  
+     *
+     * @param e  
+     *   The `entt::entity` whose GOAPComponent’s `actionQueue` will be populated.
+     *
+     * @param plan  
+     *   A pointer to an array of C‐strings; each string is an action name produced by the GOAP planner
+     *   (i.e., the contents of `goapStruct.plan`).  The array is _not_ required to be null-terminated; its
+     *   length is given by `planSize`.
+     *
+     * @param planSize  
+     *   The number of entries in `plan`.  Only indices `[0 .. planSize-1]` will be read.
+     *
+     * @behavior  
+     *   1. **Clear previous queue**: Pops every remaining `Action` from `cmp.actionQueue`.  
+     *   2. **Iterate over plan**: For each index `i` in `[0 .. planSize-1]`:  
+     *      - Read `plan[i]` into `actionName`.  
+     *      - Fetch `sol::table tbl = masterStateLua[actionName];`.  
+     *      - Construct an `Action a` with `a.start = tbl["start"]; a.update = tbl["update"]; a.finish = tbl["finish"];`.  
+     *      - Push `a` onto `cmp.actionQueue`.  
+     *   3. **Kick off first action**: If the queue is non-empty, call `start(e)` on the front action and mark it `is_running = true`.  
+     *
+     * @sideeffects  
+     *   - Modifies `GOAPComponent::actionQueue` for entity `e`.  
+     *   - Immediately invokes one Lua function (`start`) on the same frame you call this.  
+     *
+     * @example
+     * @code{.cpp}
+     * // After replanning:
+     * auto &goapComp = globals::registry.get<GOAPComponent>(myEntity);
+     * replan(myEntity);  // fills goapComp.plan[] and goapComp.planSize
+     * fill_action_queue_based_on_plan(myEntity,
+     *                                  goapComp.plan,
+     *                                  goapComp.planSize);
+     * // Next frame, behavior_system::update(myEntity, dt) will resume the first action’s coroutine.
+     * @endcode
+     */
+    void fill_action_queue_based_on_plan(entt::entity e, const char** plan, int planSize) {
+        auto &cmp = globals::registry.get<GOAPComponent>(e);
+
+        // 1) Clear any previously enqueued actions so we start fresh
+        while (!cmp.actionQueue.empty()) {
+            cmp.actionQueue.pop();
+        }
+
+        // 2) For each action name in the GOAP plan…
+        for (int i = 0; i < planSize; i++) {
+            std::string actionName = plan[i];
+
+            // 3) Look up the Lua table for this action (must have start/update/finish)
+            sol::table tbl = masterStateLua[actionName];
+
+            // 4) Build a C++ Action from the Lua callbacks
+            Action a;
+            a.start      = tbl["start"];
+            a.update     = tbl["update"];   // expected to be a coroutine
+            a.finish     = tbl["finish"];
+            a.is_running = false;
+
+            // 5) Enqueue it for sequential execution
+            cmp.actionQueue.push(a);
+        }
+
+        // 6) Immediately invoke the first action’s start() so execution begins next frame
+        if (!cmp.actionQueue.empty()) {
+            cmp.actionQueue.front().start(e);
+            cmp.actionQueue.front().is_running = true;
+        }
+    }
+
+
     /*
     * @brief Clears the action planner by resetting atom and action counts and data.
     * This function resets the action planner's atoms, actions, and world states,

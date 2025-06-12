@@ -40,6 +40,7 @@ namespace ai_system
     extern auto resetAllGOAPComponentsAndScripting() -> void;
 
     // goap methodse
+    extern void fill_action_queue_based_on_plan(entt::entity e, const char** plan, int planSize);
     extern auto initGOAPComponent(entt::entity entity) -> void;
     extern auto requestAISystemReset() -> void;
     extern auto runBlackboardInitFunction(entt::entity entity, std::string identifier) -> void;

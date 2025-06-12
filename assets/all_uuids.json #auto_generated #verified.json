@@ -15513,7 +15513,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/drop_shadow_final_vertex.vs"
     ],
     "dump_global_lua_script": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\lua_globals_dump.txt"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\lua_globals_dump.txt",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/lua_globals_dump.txt"
     ],
     "dusky_mauve_palette_resurrect": [
         "RESURRECT_PALETTE_DUSKY_MAUVE"
@@ -17040,7 +17041,8 @@
         "LINEN"
     ],
     "localization_localization": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\localization.babel"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\localization.babel",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/localization.babel"
     ],
     "localization_localization_note": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/localization/LOCALIZATION_NOTES.md",

@@ -108,6 +108,7 @@
         "barrier": "cpp",
         "latch": "cpp",
         "scoped_allocator": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "*.hpp11": "cpp"
     }
 }

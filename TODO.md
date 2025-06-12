@@ -9,6 +9,7 @@
 - [ ] use backgrounds & images for the tooltip text
 - [ ] Register my ui & transform components & event queue system bindings in lua & Set up registry bond (scripting_functions.cpp) / also set up the basic lua scripts in the [folder here](src/systems/scripting/scripts_move_later_to_assets)
 - [ ] need to hook up main.lua 
+- [ ] lua dump needs to export deep nested index so I can refer to it while coding.
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui

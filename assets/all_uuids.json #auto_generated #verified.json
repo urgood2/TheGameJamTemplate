@@ -15512,6 +15512,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\drop_shadow_final_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/drop_shadow_final_vertex.vs"
     ],
+    "dump_global_lua_script": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\lua_globals_dump.txt"
+    ],
     "dusky_mauve_palette_resurrect": [
         "RESURRECT_PALETTE_DUSKY_MAUVE"
     ],

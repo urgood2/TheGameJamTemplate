@@ -479,9 +479,26 @@ namespace scripting {
     #include <string>
 
     void dump_lua_globals(sol::state& lua, std::string const& out_path) {
+
+        lua.open_libraries(sol::lib::base,
+                     sol::lib::package,
+                     sol::lib::table,
+                     sol::lib::string);
+
+        // 2) Capture all debug() calls into a C++ std::string
+        std::string capture;
+
+        // 1) install your capture hook under a fresh name
+        lua["capture_debug"] = [&](std::string s) {
+        capture += s + "\n";
+        };
+
         // 1) Load your helper chunk (either from a file or from a raw string)
         //    Here I'm using your raw string literal:
         static char const* chunk = R"(
+
+                -- alias the real `debug` name *inside* this chunk
+                local debug = capture_debug
                 -- Helper function to get sorted keys
                 local function get_sorted_keys(tbl)
                     local keys = {}
@@ -653,26 +670,15 @@ namespace scripting {
             return;
         }
         // execute it, defining the functions in the global table
-        load_result();
+        load_result(); 
 
-        // 2) Capture all debug() calls into a C++ std::string
-        std::string capture;
-        // override `debug` in Lua _before_ we call print_filtered_globals
-        lua["debug"] = [&](std::string s) {
-            capture += s;
-            capture += "\n";
-        };
+
+
 
         // 3) Call the printer
-        sol::optional<sol::function> maybe_printer = lua["print_filtered_globals"];
-        if (!maybe_printer) {
-            spdlog::error("print_filtered_globals() not defined in Lua!");
-            return;
-        }
-        sol::function printer = *maybe_printer;
-        printer();  // run it; all debug(...) calls will append into `capture`
+        lua["print_filtered_globals"]();
 
-        // 4) Write out to a file
+        // 5) Write out to a file
         std::ofstream out(out_path, std::ios::trunc);
         if (!out) {
             spdlog::error("Could not open {} for writing", out_path);
@@ -680,6 +686,8 @@ namespace scripting {
         }
         out << capture;
         spdlog::info("Lua globals dumped to {}", out_path);
+
+
     }
 
     

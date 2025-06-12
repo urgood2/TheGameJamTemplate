@@ -14,6 +14,8 @@
 #include <limits>
 #include <map>
 
+#include "sol/sol.hpp"
+
 
 #include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
@@ -699,6 +701,8 @@ namespace timer
             Event event{};
         };
 
-    }
+    } // namespace EventQueueSystem
 
+
+    extern void exposeToLua(sol::state &lua); // Function to expose the timer system to Lua
 }

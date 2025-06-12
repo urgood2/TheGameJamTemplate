@@ -11,6 +11,8 @@
 #include "third_party/rlImGui/rlImGui.h"
 #include "third_party/rlImGui/imgui.h"
 
+#include "sol/sol.hpp"
+
 using ShaderUniformValue = std::variant<
         float,
         Vector2,
@@ -166,4 +168,6 @@ namespace shaders {
     extern auto update(float dt) -> void;
 
     extern void ShowShaderEditorUI(ShaderUniformComponent& component);
+
+    extern auto exposeToLua(sol::state& lua) -> void;
 }

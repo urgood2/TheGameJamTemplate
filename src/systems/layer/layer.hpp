@@ -15,6 +15,7 @@
 #include <typeindex>
 
 #include "layer_optimized.hpp"
+#include "sol/sol.hpp"
 
 #include "entt/fwd.hpp"
 
@@ -23,6 +24,10 @@
 
 namespace layer
 {
+    //------------------------------------------------------------------------------------
+    // lua exposure
+    //------------------------------------------------------------------------------------
+    extern void exposeToLua(sol::state &lua);
 
     //------------------------------------------------------------------------------------
     // Data Structures Definition

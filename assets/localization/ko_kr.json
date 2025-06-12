@@ -1,16 +1,12 @@
 {
-  "ui": {
-    "slider_text": "슬라이더 (클릭 또는 드래그)",
-    "text_input": "이름을 입력하세요:",
-    "disabled_button": "버튼 (비활성화됨)",
-    "cycle_text": "사이클",
-    "alert_button_text": "오른쪽 위 알림",
-    "tooltip_title": "툴팁 제목",
-    "tooltip_text": "툴팁입니다.\n현재 {text_type} 텍스트입니다",
-    "tooltip_text_hover": "툴팁을 보려면 마우스를 올려주세요"
-  },
-
-  "errors": {
-    "network": "네트워크 오류가 발생했습니다. 다시 시도해주세요."
-  }
+	"ui": {
+		"alert_button_text": "오른쪽 위 알림",
+		"cycle_text": "사이클",
+		"disabled_button": "버튼 (비활성화됨)",
+		"slider_text": "슬라이더 (클릭 또는 드래그)",
+		"text_input": "이름을 입력하세요:",
+		"tooltip_text": "툴팁입니다.\n현재 {text_type} 텍스트입니다",
+		"tooltip_text_hover": "툴팁을 보려면 마우스를 올려주세요",
+		"tooltip_title": "툴팁 제목"
+	}
 }

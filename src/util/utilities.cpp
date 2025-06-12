@@ -7,6 +7,8 @@
 
 #include "../components/components.hpp"
 
+#include "sol/sol.hpp"
+
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
 using json = nlohmann::json;
 
@@ -85,6 +87,19 @@ namespace util {
         //  Replace all backslashes with forward slashes for consistency
         std::replace(path.begin(), path.end(), '\\', '/');
         return path;
+    }
+
+    auto exposeToLua(sol::state &lua) -> void {
+        // Create (or fetch) the top‐level `util` table:
+        sol::table util_tbl = lua.create_named_table("util");
+
+        // Bind only the requested functions:
+        util_tbl.set_function("getRawAssetPathNoUUID",  &util::getRawAssetPathNoUUID);
+        util_tbl.set_function("getColor",               &util::getColor);
+        util_tbl.set_function("getAssetPathUUIDVersion",&util::getAssetPathUUIDVersion);
+        util_tbl.set_function("raylibColorToImVec",     &util::raylibColorToImVec);
+        util_tbl.set_function("getRandomSynonymFor",    &util::getRandomSynonymFor);
+        util_tbl.set_function("toUnsignedChar",         &util::toUnsignedChar);
     }
 
     auto getRawAssetPathNoUUID(const string assetName) -> string {

@@ -15,6 +15,8 @@
 #include "../../util/utilities.hpp"
 #include "util/common_headers.hpp"
 
+#include "sol/sol.hpp"
+
 using json = nlohmann::json;
 #include <unordered_map>
 #include <functional>
@@ -22,6 +24,57 @@ using json = nlohmann::json;
 
 namespace shaders
 {
+    auto exposeToLua(sol::state& lua) -> void {
+        // 1) Create the top‐level shaders table
+        sol::table sh = lua.create_table();
+        lua["shaders"] = sh;
+
+        // 2) ShaderUniformSet
+        sh.new_usertype<shaders::ShaderUniformSet>("ShaderUniformSet",
+            sol::constructors<>(),
+            "set", [](shaders::ShaderUniformSet& s, const std::string& name, sol::object value) {
+                // We need to accept a Lua value and convert it into ShaderUniformValue:
+                // Try each type in turn:
+                if (value.is<float>()) {
+                    s.set(name, value.as<float>());
+                } else if (value.is<sol::table>()) {
+                    // Assuming Vector2/3/4 got bound to/from tables automatically
+                    // Or you can explicitly handle Vector2, Vector3, Vector4
+                    // ...
+                } else if (value.is<bool>()) {
+                    s.set(name, value.as<bool>());
+                } else if (value.is<Texture2D>()) {
+                    s.set(name, value.as<Texture2D>());
+                } else {
+                    SPDLOG_ERROR("Unsupported uniform value type for uniform '{}'", name);
+                }
+            },
+            "get", &shaders::ShaderUniformSet::get
+        );
+
+        // 3) ShaderUniformComponent
+        sh.new_usertype<shaders::ShaderUniformComponent>("ShaderUniformComponent",
+            sol::constructors<>(),
+            "set", &shaders::ShaderUniformComponent::set,
+            "registerEntityUniformCallback", &shaders::ShaderUniformComponent::registerEntityUniformCallback,
+            "getSet", &shaders::ShaderUniformComponent::getSet,
+            "applyToShaderForEntity", &shaders::ShaderUniformComponent::applyToShaderForEntity
+        );
+
+        // 4) Free‐functions
+        sh.set_function("ApplyUniformsToShader", &shaders::ApplyUniformsToShader);
+        sh.set_function("loadShadersFromJSON",    &shaders::loadShadersFromJSON);
+        sh.set_function("unloadShaders",          &shaders::unloadShaders);
+        sh.set_function("disableAllShadersViaOverride", &shaders::disableAllShadersViaOverride);
+        sh.set_function("hotReloadShaders",       &shaders::hotReloadShaders);
+        sh.set_function("setShaderMode",          &shaders::setShaderMode);
+        sh.set_function("unsetShaderMode",        &shaders::unsetShaderMode);
+        sh.set_function("getShader",              &shaders::getShader);
+        sh.set_function("registerUniformUpdate",  &shaders::registerUniformUpdate);
+        sh.set_function("updateAllShaderUniforms",&shaders::updateAllShaderUniforms);
+        sh.set_function("updateShaders",          &shaders::update);
+        sh.set_function("ShowShaderEditorUI",     &shaders::ShowShaderEditorUI);
+    }
 
     // Map to store loaded shaders, keyed by their name
     static std::unordered_map<std::string, Shader> loadedShaders;

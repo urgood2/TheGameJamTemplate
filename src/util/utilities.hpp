@@ -96,24 +96,29 @@ namespace util {
         // store pairs of integers that represent the start and end of the substring that should be colored
         std::vector<std::pair<int, int>> colorRanges;
     };
+
+    // expose relevant functions to lua
+    extern auto exposeToLua(sol::state &lua) -> void;
 	
 	// convenience methods
 	extern auto getRawAssetPathNoUUID(const string assetName) -> string;
 	extern auto getColor(string colorName) -> Color;
-	extern auto getColorImVec(const string& colorName) -> ImVec4;
-	extern auto replaceAllTokensInString(const std::string& templateStr, const std::map<std::string, std::string>& tokens) -> std::string;
-	extern auto surroundWithColorTags(const std::string& text, const std::string& color) -> std::string;
-	extern auto rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect, ImVec4 tintColor) -> void;
-    extern auto drawColorCodedTextUnformatted(const std::string& text) -> void;
     extern std::string getAssetPathUUIDVersion(const std::string path_uuid_or_raw_identifier);
 	extern auto raylibColorToImVec(const Color &c) -> ImVec4;
 	extern auto getRandomSynonymFor(const string &word) -> string;
 	extern auto toUnsignedChar(string value) -> unsigned char;
+
+
+	extern auto getColorImVec(const string& colorName) -> ImVec4;
+	extern auto replaceAllTokensInString(const std::string& templateStr, const std::map<std::string, std::string>& tokens) -> std::string;
+	extern auto surroundWithColorTags(const std::string& text, const std::string& color) -> std::string;
+	extern auto rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect, ImVec4 tintColor) -> void;
 	extern auto getTileCoordsAtMousePos() -> Vector2;
 	extern auto isTileWithinBounds(const Vector2 &tileLoc) -> bool;
 	extern auto getDistance(float x1, float y1, float x2, float y2) -> float;
 	extern float easeOutExpo(float x);
     extern Texture2D GeneratePaletteTexture(const std::vector<Color>& colors);
+    extern auto drawColorCodedTextUnformatted(const std::string& text) -> void;
 
 	// text processing
 	extern auto processText(const std::string& input) -> TextLogEntry;

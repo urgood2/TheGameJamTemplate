@@ -24,8 +24,170 @@
 
 #include "systems/layer/layer_command_buffer.hpp"
 
+#include "sol/sol.hpp"
+
 namespace TextSystem
 {
+
+    auto exposeToLua(sol::state &lua) -> void {
+        //
+        // 1) Create the top-level TextSystem table
+        //
+        sol::table ts = lua.create_table();
+        lua["TextSystem"] = ts;
+        
+        //
+        // 2) ParsedEffectArguments
+        //
+        ts.new_usertype<TextSystem::ParsedEffectArguments>("ParsedEffectArguments",
+            sol::constructors<>(),
+            "arguments", &TextSystem::ParsedEffectArguments::arguments
+        );
+        
+        //
+        // 3) Character
+        //
+        ts.new_usertype<TextSystem::Character>("Character",
+            sol::constructors<>(),
+            "value",                    &TextSystem::Character::value,
+            "overrideCodepoint",        &TextSystem::Character::overrideCodepoint,
+            "rotation",                 &TextSystem::Character::rotation,
+            "scale",                    &TextSystem::Character::scale,
+            "size",                     &TextSystem::Character::size,
+            "shadowDisplacement",       &TextSystem::Character::shadowDisplacement,
+            "shadowHeight",             &TextSystem::Character::shadowHeight,
+            "scaleXModifier",           &TextSystem::Character::scaleXModifier,
+            "scaleYModifier",           &TextSystem::Character::scaleYModifier,
+            "color",                    &TextSystem::Character::color,
+            "offsets",                  &TextSystem::Character::offsets,
+            "shadowDisplacementOffsets",&TextSystem::Character::shadowDisplacementOffsets,
+            "scaleModifiers",           &TextSystem::Character::scaleModifiers,
+            "customData",               &TextSystem::Character::customData,
+            "offset",                   &TextSystem::Character::offset,
+            "effects",                  &TextSystem::Character::effects,
+            "parsedEffectArguments",    &TextSystem::Character::parsedEffectArguments,
+            "index",                    &TextSystem::Character::index,
+            "lineNumber",               &TextSystem::Character::lineNumber,
+            "firstFrame",               &TextSystem::Character::firstFrame,
+            "tags",                     &TextSystem::Character::tags,
+            "pop_in",                   &TextSystem::Character::pop_in,
+            "pop_in_delay",             &TextSystem::Character::pop_in_delay,
+            "createdTime",              &TextSystem::Character::createdTime,
+            "parentText",               &TextSystem::Character::parentText,
+            "isFinalCharacterInText",   &TextSystem::Character::isFinalCharacterInText,
+            "effectFinished",           &TextSystem::Character::effectFinished,
+            "isImage",                  &TextSystem::Character::isImage,
+            "imageShadowEnabled",       &TextSystem::Character::imageShadowEnabled,
+            "spriteUUID",               &TextSystem::Character::spriteUUID,
+            "imageScale",               &TextSystem::Character::imageScale,
+            "fgTint",                   &TextSystem::Character::fgTint,
+            "bgTint",                   &TextSystem::Character::bgTint
+        );
+        
+        //
+        // 4) effectFunctions map
+        //
+        // We expose it as a read/write table in Lua:
+        sol::table ef = lua.create_table();
+        for (auto& [name, fn] : TextSystem::effectFunctions) {
+            ef[name] = fn;
+        }
+        ts["effectFunctions"] = ef;
+        
+        //
+        // 5) Text struct + nested enums
+        //
+        ts.new_usertype<TextSystem::Text>("Text",
+            sol::constructors<>(),
+            // callbacks & settings
+            "get_value_callback",              &TextSystem::Text::get_value_callback,
+            "onStringContentUpdatedOrChangedViaCallback",
+                                            &TextSystem::Text::onStringContentUpdatedOrChangedViaCallback,
+            "effectStringsToApplyGloballyOnTextChange",
+                                            &TextSystem::Text::effectStringsToApplyGloballyOnTextChange,
+            "onFinishedEffect",                &TextSystem::Text::onFinishedEffect,
+            "pop_in_enabled",                  &TextSystem::Text::pop_in_enabled,
+            "shadow_enabled",                  &TextSystem::Text::shadow_enabled,
+            "width",                           &TextSystem::Text::width,
+            "height",                          &TextSystem::Text::height,
+            // enums as raw ints; see below for nicer enum binding
+            "rawText",                         &TextSystem::Text::rawText,
+            "characters",                      &TextSystem::Text::characters,
+            "fontData",                        &TextSystem::Text::fontData,
+            "fontSize",                        &TextSystem::Text::fontSize,
+            "wrapEnabled",                     &TextSystem::Text::wrapEnabled,
+            "wrapWidth",                       &TextSystem::Text::wrapWidth,
+            "prevRenderScale",                 &TextSystem::Text::prevRenderScale,
+            "renderScale",                     &TextSystem::Text::renderScale,
+            "createdTime",                     &TextSystem::Text::createdTime,
+            "effectStartTime",                 &TextSystem::Text::effectStartTime,
+            "applyTransformRotationAndScale",  &TextSystem::Text::applyTransformRotationAndScale
+        );
+        
+        // TextAlignment
+        ts["TextAlignment"] = lua.create_table_with(
+            "LEFT",      TextSystem::Text::Alignment::LEFT,
+            "CENTER",    TextSystem::Text::Alignment::CENTER,
+            "RIGHT",     TextSystem::Text::Alignment::RIGHT,
+            "JUSTIFIED", TextSystem::Text::Alignment::JUSTIFIED
+        );
+
+        // TextWrapMode
+        ts["TextWrapMode"] = lua.create_table_with(
+            "WORD",      TextSystem::Text::WrapMode::WORD,
+            "CHARACTER", TextSystem::Text::WrapMode::CHARACTER
+        );
+        
+        //
+        // 6) Builders subtable
+        //
+        sol::table builders = lua.create_table();
+        ts["Builders"] = builders;
+        builders.new_usertype<TextSystem::Builders::TextBuilder>("TextBuilder",
+            sol::constructors<>(),
+            "setRawText",     &TextSystem::Builders::TextBuilder::setRawText,
+            "setFontData",    &TextSystem::Builders::TextBuilder::setFontData,
+            "setOnFinishedEffect", &TextSystem::Builders::TextBuilder::setOnFinishedEffect,
+            "setFontSize",    &TextSystem::Builders::TextBuilder::setFontSize,
+            "setWrapWidth",   &TextSystem::Builders::TextBuilder::setWrapWidth,
+            "setAlignment",   &TextSystem::Builders::TextBuilder::setAlignment,
+            "setWrapMode",    &TextSystem::Builders::TextBuilder::setWrapMode,
+            "setCreatedTime", &TextSystem::Builders::TextBuilder::setCreatedTime,
+            "setPopInEnabled",&TextSystem::Builders::TextBuilder::setPopInEnabled,
+            "build",          &TextSystem::Builders::TextBuilder::build
+        );
+        
+        //
+        // 7) Functions subtable
+        //
+        sol::table funcs = lua.create_table();
+        ts["Functions"] = funcs;
+        funcs.set_function("adjustAlignment",&TextSystem::Functions::adjustAlignment);
+        funcs.set_function("splitEffects",   &TextSystem::Functions::splitEffects);
+        funcs.set_function("createTextEntity",&TextSystem::Functions::createTextEntity);
+        funcs.set_function("calculateBoundingBox",&TextSystem::Functions::calculateBoundingBox);
+        funcs.set_function("CodepointToString",&TextSystem::Functions::CodepointToString);
+        funcs.set_function("parseText",      &TextSystem::Functions::parseText);
+        funcs.set_function("handleEffectSegment",
+            [](entt::entity e, sol::table lineWidthsTbl, sol::object cxObj, sol::object cyObj,
+            sol::this_state s) {
+                // You’ll need a small wrapper here if you really need that raw-pointer overload—
+                // otherwise skip or expose a simpler variant.
+                // For now we leave it unbound or throw.
+                return;
+            }
+        );
+        funcs.set_function("updateText",     &TextSystem::Functions::updateText);
+        funcs.set_function("renderText",     &TextSystem::Functions::renderText);
+        funcs.set_function("clearAllEffects",&TextSystem::Functions::clearAllEffects);
+        funcs.set_function("applyGlobalEffects",&TextSystem::Functions::applyGlobalEffects);
+        funcs.set_function("debugPrintText",&TextSystem::Functions::debugPrintText);
+        funcs.set_function("resizeTextToFit",&TextSystem::Functions::resizeTextToFit);
+        funcs.set_function("setTextScaleAndRecenter",&TextSystem::Functions::setTextScaleAndRecenter);
+        funcs.set_function("resetTextScaleAndLayout",&TextSystem::Functions::resetTextScaleAndLayout);
+        funcs.set_function("setText",        &TextSystem::Functions::setText);
+    }
+
     std::map<std::string, std::function<void(float, Character &, const std::vector<std::string> &)>> effectFunctions;
 
     namespace Functions
@@ -930,6 +1092,9 @@ namespace TextSystem
             clearAllEffects(textEntity);
             deleteCharacters(textEntity);
             parseText(textEntity);
+
+            if (textComponent.onStringContentUpdatedOrChangedViaCallback)
+                textComponent.onStringContentUpdatedOrChangedViaCallback(textEntity);
         }
 
         void updateText(entt::entity textEntity, float dt)
@@ -971,9 +1136,9 @@ namespace TextSystem
                     }
 
                     // call callback
-                    if (text.onStringContentUpdatedViaCallback)
+                    if (text.onStringContentUpdatedOrChangedViaCallback)
                     {
-                        text.onStringContentUpdatedViaCallback(textEntity);
+                        text.onStringContentUpdatedOrChangedViaCallback(textEntity);
                     }
                 }
             }

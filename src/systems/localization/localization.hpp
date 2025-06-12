@@ -62,6 +62,8 @@ namespace localization
   // Localization System API
   // ==========================
 
+  extern void exposeToLua(sol::state &lua);
+
   extern void loadLanguage(const std::string &langCode, const std::string &path);
   extern void setFallbackLanguage(const std::string &langCode);
 
@@ -119,6 +121,16 @@ namespace localization
           myLabel.setText( localization::get("menu.start") );
           myLabel.setFontData( localization::languageFontData[newLang] );
         });
+  ```
+
+  Example with a uitemplateNode:
+
+  ```
+    tooltipButtonText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.tooltip_text_hover"));
+            });
+        };
   ```
   */
   inline bool setCurrentLanguage(const std::string &langCode)

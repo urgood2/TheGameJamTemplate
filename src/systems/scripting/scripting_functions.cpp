@@ -9,6 +9,19 @@
 #include "../sound/sound_system.hpp" 
 #include "../transform/transform_functions.hpp"
 #include "../ui/ui.hpp"
+#include "../text/textVer2.hpp"
+#include "../shaders/shader_system.hpp"
+#include "../shaders/shader_pipeline.hpp"
+#include "../localization/localization.hpp"
+#include "../particles/particle.hpp"
+#include "../random/random.hpp"
+#include "../timer/timer.hpp"
+
+#include "../layer/layer.hpp"
+
+#include "systems/anim_system.hpp"
+
+#include "util/utilities.hpp"
 
 #include "meta_helper.hpp"
 #include "registry_bond.hpp"
@@ -127,10 +140,55 @@ namespace scripting {
         //---------------------------------------------------------
         event_system::exposeEventSystemToLua(stateToInit);
 
+        //---------------------------------------------------------
+        // methods from textVer2.cpp. These can be called from lua
+        //---------------------------------------------------------
+        TextSystem::exposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // methods from anim_system.cpp. These can be called from lua
+        //---------------------------------------------------------
+        animation_system::exposeToLua(stateToInit);
+
         // ------------------------------------------------------
         // methods from tutorial_system_v2.cpp. These can be called from lua
         // ------------------------------------------------------
         tutorial_system_v2::exposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // methods from particle system. These can be called from lua
+        //---------------------------------------------------------
+        particle::exposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // methods from shader_pipeline.cpp. These can be called from lua
+        //---------------------------------------------------------
+        shader_pipeline::exposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // methods from random.cpp. These can be called from lua
+        //---------------------------------------------------------
+        random_utils::exposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // methods from system/layer folder. These can be called from lua
+        //---------------------------------------------------------
+        layer::exposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // methods from shader_system.cpp. These can be called from lua
+        //---------------------------------------------------------
+        shaders::exposeToLua(stateToInit);
+
+        // ---------------------------------------------------------
+        // methods from localization.cpp. These can be called from lua
+        //---------------------------------------------------------
+        localization::exposeToLua(stateToInit);
+
+        // ---------------------------------------------------------
+        // methods from timer.cpp. These can be called from lua
+        //---------------------------------------------------------
+        timer::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
         // methods from ai_system.cpp. These can be called from lua
@@ -143,6 +201,13 @@ namespace scripting {
         // methods from sound_system.cpp. These can be called from lua
         //---------------------------------------------------------
         sound_system::ExposeToLua(stateToInit);
+
+        //---------------------------------------------------------
+        // methods from utilities.cpp. These can be called from lua
+        //---------------------------------------------------------
+        util::exposeToLua(stateToInit);
+
+
         
         //---------------------------------------------------------
         // methods and data from transform system. These can be called from lua

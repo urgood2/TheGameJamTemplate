@@ -11,6 +11,7 @@
 #include "../systems/shaders/shader_system.hpp"
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/localization/localization.hpp"
+#include "../systems/ai/ai_system.hpp"
 
 #include <chrono>
 
@@ -67,9 +68,9 @@ namespace init {
 
         //TODO: add all asset folder items to uuids
 
-        auto path  = util::getAssetPathUUIDVersion("localization/ui_strings.json");
-        jsonStream.open(util::getAssetPathUUIDVersion("localization/ui_strings.json"));
-        globals::uiStringsJSON = json::parse(jsonStream);
+        // auto path  = util::getAssetPathUUIDVersion("localization/ui_strings.json");
+        // jsonStream.open(util::getAssetPathUUIDVersion("localization/ui_strings.json"));
+        // globals::uiStringsJSON = json::parse(jsonStream);
 
         jsonStream.close();
 
@@ -87,6 +88,22 @@ namespace init {
         globals::configJSON = json::parse(jsonStream);
         
         jsonStream.close();
+
+        jsonStream.open(util::getAssetPathUUIDVersion("scripts/scripting_config.json"));
+        globals::aiConfigJSON = json::parse(jsonStream);
+        
+        jsonStream.close();
+
+        jsonStream.open(util::getAssetPathUUIDVersion("scripts/ai_worldstate.json"));
+        globals::aiWorldstateJSON = json::parse(jsonStream);
+        
+        jsonStream.close();
+
+        jsonStream.open(util::getAssetPathUUIDVersion("scripts/ai_actions.json"));
+        globals::aiActionsJSON = json::parse(jsonStream);
+        
+        jsonStream.close();
+
 
         // create map for fast draw access of sprites
         // map filename to frame rectangle
@@ -510,7 +527,7 @@ namespace init {
     // Initializes the necessary systems for the application to run.
     // This includes initializing the Lua state shared by all systems and calling name_gen::init().
     auto initSystems() -> void {
-        
+        ai_system::init();
         graphics::init();
         shaders::loadShadersFromJSON("shaders/shaders.json");
         sound_system::LoadFromJSON(util::getAssetPathUUIDVersion("sounds/sounds.json"));
@@ -522,7 +539,7 @@ namespace init {
      * @param loadingDone A boolean reference that will be set to true when loading is done.
      */
     auto startInit() -> void {
-        try {
+        // try {
             SPDLOG_DEBUG("Starting taskflow task INIT.");
             initSystems();
             globals::loadingStateIndex++;
@@ -541,20 +558,20 @@ namespace init {
             Random::seed(globals::configJSON.at("seed").get<unsigned>());
             // initWorld(worldGenCurrentStep); 
             globals::loadingStateIndex++;
-        }
-        catch(const std::exception& e) {
-            SPDLOG_ERROR("Error in taskflow INIT task: {}", e.what());
-        }
-        try {
-            // Random::seed(configJSON.at("seed").get<unsigned>());
-            SPDLOG_DEBUG("Starting taskflow task WORLD_GEN.");\
-            globals::loadingStateIndex++;
-        }
-        catch(const std::exception& e) {
-            SPDLOG_ERROR("Error in taskflow WORLD_GEN task: {}", e.what());
-        }
+        // }
+        // catch(const std::exception& e) {
+        //     SPDLOG_ERROR("Error in taskflow INIT task: {}", e.what());
+        // }
+        // try {
+        //     // Random::seed(configJSON.at("seed").get<unsigned>());
+        //     SPDLOG_DEBUG("Starting taskflow task WORLD_GEN.");\
+        //     globals::loadingStateIndex++;
+        // }
+        // catch(const std::exception& e) {
+        //     SPDLOG_ERROR("Error in taskflow WORLD_GEN task: {}", e.what());
+        // }
 
-        SPDLOG_DEBUG("Loading + worldgen finished.");
+        SPDLOG_DEBUG("Loading finished.");
         globals::currentGameState = GameState::MAIN_MENU;
     }
 

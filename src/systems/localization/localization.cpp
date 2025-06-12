@@ -163,4 +163,28 @@ namespace localization
         return "[MISSING: " + key + "]";
     }
 
+    void exposeToLua(sol::state &lua) {
+        // 1) Make the top-level table
+        sol::table loc = lua.create_table();
+        lua["localization"] = loc;
+
+        // 2) Core API
+        loc.set_function("loadLanguage",        &localization::loadLanguage);
+        loc.set_function("setFallbackLanguage", &localization::setFallbackLanguage);
+
+        // Bind only the non-templated get(key) overload
+        loc.set_function("get", 
+            static_cast<std::string(*)(const std::string&)>(&localization::get)
+        );
+        loc.set_function("getRaw", &localization::getRaw);
+
+        // 3) Font data
+        loc.set_function("getFontData", &localization::getFontData);
+        loc.set_function("loadFontData", &localization::loadFontData);
+
+        // 4) Language change notifications
+        loc.set_function("onLanguageChanged", &localization::onLanguageChanged);
+        loc.set_function("setCurrentLanguage", &localization::setCurrentLanguage);
+    }
+
 }

@@ -30,6 +30,272 @@
 // Graphics namespace for rendering functions
 namespace layer
 {
+    void exposeToLua(sol::state &lua) {
+        // 1) Get (or make) the top‐level layer table
+
+        sol::state_view luaView{lua};
+        auto layerTbl = luaView["layer"].get_or_create<sol::table>();
+
+        // sol::table layerTbl = lua.get_or("layer", lua.create_table());
+        if (!layerTbl.valid()) {
+            layerTbl = lua.create_table();
+            lua["layer"] = layerTbl;
+        }
+
+        
+        // 2) LayerOrderComponent
+        layerTbl.new_usertype<layer::LayerOrderComponent>("LayerOrderComponent",
+            sol::constructors<>(),
+            "zIndex", &layer::LayerOrderComponent::zIndex
+        );
+
+        // 3) Layer
+        layerTbl.new_usertype<layer::Layer>("Layer",
+            sol::constructors<>(),
+            // Properties
+            "canvases",       &layer::Layer::canvases,
+            "drawCommands",   &layer::Layer::drawCommands,
+            "fixed",          &layer::Layer::fixed,
+            "zIndex",         &layer::Layer::zIndex,
+            "backgroundColor",&layer::Layer::backgroundColor,
+            "commands",       &layer::Layer::commands,
+            "isSorted",       &layer::Layer::isSorted
+            // skip internal pools array
+        );
+
+        // 4) Global layers vector
+        layerTbl["layers"] = &layer::layers;
+
+        // 5) Overloads helpers
+        using LPtr = std::shared_ptr<layer::Layer>;
+
+        // 6) Functions
+        layerTbl.set_function("SortLayers", &layer::SortLayers);
+        layerTbl.set_function("UpdateLayerZIndex", &layer::UpdateLayerZIndex);
+        layerTbl.set_function("CreateLayer", &layer::CreateLayer);
+        layerTbl.set_function("CreateLayerWithSize", &layer::CreateLayerWithSize);
+        layerTbl.set_function("RemoveLayerFromCanvas", &layer::RemoveLayerFromCanvas);
+
+        // ResizeCanvasInLayer has two overloads: (layer,name,w,h) and (layer,name)
+        layerTbl.set_function("ResizeCanvasInLayer", static_cast<void(*)(LPtr, const std::string&,int,int)>(&layer::ResizeCanvasInLayer));
+
+        // AddCanvasToLayer overloads
+        layerTbl.set_function("AddCanvasToLayer", sol::overload(
+            static_cast<void(*)(LPtr,const std::string&,int,int)>(&layer::AddCanvasToLayer),
+            static_cast<void(*)(LPtr,const std::string&)>(&layer::AddCanvasToLayer)
+        ));
+
+        layerTbl.set_function("RemoveCanvas",    &layer::RemoveCanvas);
+        layerTbl.set_function("UnloadAllLayers", &layer::UnloadAllLayers);
+        layerTbl.set_function("ClearDrawCommands", &layer::ClearDrawCommands);
+        layerTbl.set_function("ClearAllDrawCommands", &layer::ClearAllDrawCommands);
+        layerTbl.set_function("Begin", &layer::Begin);
+        layerTbl.set_function("End",   &layer::End);
+
+        layerTbl.set_function("RenderAllLayersToCurrentRenderTarget", &layer::RenderAllLayersToCurrentRenderTarget);
+        layerTbl.set_function("DrawLayerCommandsToSpecificCanvas", sol::overload(
+            static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvas),
+            static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion)
+        ));
+        layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithTransform", &layer::DrawCanvasToCurrentRenderTargetWithTransform);
+        layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
+        layerTbl.set_function("DrawCanvasOntoOtherLayer",            &layer::DrawCanvasOntoOtherLayer);
+        layerTbl.set_function("DrawCanvasOntoOtherLayerWithShader",  &layer::DrawCanvasOntoOtherLayerWithShader);
+
+        layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithDestRect", &layer::DrawCanvasToCurrentRenderTargetWithDestRect);
+        layerTbl.set_function("DrawCustomLamdaToSpecificCanvas", &layer::DrawCustomLamdaToSpecificCanvas);
+        layerTbl.set_function("DrawTransformEntityWithAnimation", &layer::DrawTransformEntityWithAnimation);
+        layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
+        layerTbl.set_function("RenderNPatchRect", &layer::RenderNPatchRect);
+
+        // 1) Bind DrawCommandType enum as a plain table:
+        layerTbl["DrawCommandType"] = lua.create_table_with(
+            "BeginDrawing",                             layer::DrawCommandType::BeginDrawing,
+            "EndDrawing",                               layer::DrawCommandType::EndDrawing,
+            "ClearBackground",                          layer::DrawCommandType::ClearBackground,
+            "Translate",                                layer::DrawCommandType::Translate,
+            "Scale",                                    layer::DrawCommandType::Scale,
+            "Rotate",                                   layer::DrawCommandType::Rotate,
+            "AddPush",                                  layer::DrawCommandType::AddPush,
+            "AddPop",                                   layer::DrawCommandType::AddPop,
+            "PushMatrix",                               layer::DrawCommandType::PushMatrix,
+            "PopMatrix",                                layer::DrawCommandType::PopMatrix,
+            "DrawCircle",                               layer::DrawCommandType::Circle,
+            "DrawRectangle",                            layer::DrawCommandType::Rectangle,
+            "DrawRectanglePro",                         layer::DrawCommandType::RectanglePro,
+            "DrawRectangleLinesPro",                    layer::DrawCommandType::RectangleLinesPro,
+            "DrawLine",                                 layer::DrawCommandType::Line,
+            "DrawDashedLine",                           layer::DrawCommandType::DashedLine,
+            "DrawText",                                 layer::DrawCommandType::Text,
+            "DrawTextCentered",                         layer::DrawCommandType::DrawTextCentered,
+            "TextPro",                                  layer::DrawCommandType::TextPro,
+            "DrawImage",                                layer::DrawCommandType::DrawImage,
+            "TexturePro",                               layer::DrawCommandType::TexturePro,
+            "DrawEntityAnimation",                      layer::DrawCommandType::DrawEntityAnimation,
+            "DrawTransformEntityAnimation",             layer::DrawCommandType::DrawTransformEntityAnimation,
+            "DrawTransformEntityAnimationPipeline",     layer::DrawCommandType::DrawTransformEntityAnimationPipeline,
+            "SetShader",                                layer::DrawCommandType::SetShader,
+            "ResetShader",                              layer::DrawCommandType::ResetShader,
+            "SetBlendMode",                             layer::DrawCommandType::SetBlendMode,
+            "UnsetBlendMode",                           layer::DrawCommandType::UnsetBlendMode,
+            "SendUniformFloat",                         layer::DrawCommandType::SendUniformFloat,
+            "SendUniformInt",                           layer::DrawCommandType::SendUniformInt,
+            "SendUniformVec2",                          layer::DrawCommandType::SendUniformVec2,
+            "SendUniformVec3",                          layer::DrawCommandType::SendUniformVec3,
+            "SendUniformVec4",                          layer::DrawCommandType::SendUniformVec4,
+            "SendUniformFloatArray",                    layer::DrawCommandType::SendUniformFloatArray,
+            "SendUniformIntArray",                      layer::DrawCommandType::SendUniformIntArray,
+            "Vertex",                                   layer::DrawCommandType::Vertex,
+            "BeginOpenGLMode",                          layer::DrawCommandType::BeginOpenGLMode,
+            "EndOpenGLMode",                            layer::DrawCommandType::EndOpenGLMode,
+            "SetColor",                                 layer::DrawCommandType::SetColor,
+            "SetLineWidth",                             layer::DrawCommandType::SetLineWidth,
+            "SetTexture",                               layer::DrawCommandType::SetTexture,
+            "RenderRectVerticesFilledLayer",            layer::DrawCommandType::RenderRectVerticesFilledLayer,
+            "RenderRectVerticesOutlineLayer",           layer::DrawCommandType::RenderRectVerticlesOutlineLayer,
+            "DrawPolygon",                              layer::DrawCommandType::Polygon,
+            "RenderNPatchRect",                         layer::DrawCommandType::RenderNPatchRect,
+            "DrawTriangle",                             layer::DrawCommandType::Triangle
+        );
+
+        // Helper macro to reduce boilerplate
+        #define BIND_CMD(name, ...) \
+        layerTbl.new_usertype<layer::Cmd##name>("Cmd" #name, sol::constructors<>(), __VA_ARGS__);
+
+        // 2) Register every Cmd* struct:
+        BIND_CMD(BeginDrawing,           "dummy", &layer::CmdBeginDrawing::dummy)
+        BIND_CMD(EndDrawing,             "dummy", &layer::CmdEndDrawing::dummy)
+        BIND_CMD(ClearBackground,        "color", &layer::CmdClearBackground::color)
+        BIND_CMD(Translate,              "x", &layer::CmdTranslate::x, "y", &layer::CmdTranslate::y)
+        BIND_CMD(Scale,                  "scaleX", &layer::CmdScale::scaleX, "scaleY", &layer::CmdScale::scaleY)
+        BIND_CMD(Rotate,                 "angle", &layer::CmdRotate::angle)
+        BIND_CMD(AddPush,                "camera", &layer::CmdAddPush::camera)
+        BIND_CMD(AddPop,                 "dummy", &layer::CmdAddPop::dummy)
+        BIND_CMD(PushMatrix,             "dummy", &layer::CmdPushMatrix::dummy)
+        BIND_CMD(PopMatrix,              "dummy", &layer::CmdPopMatrix::dummy)
+        BIND_CMD(DrawCircle,             "x", &layer::CmdDrawCircle::x, "y", &layer::CmdDrawCircle::y, "radius", &layer::CmdDrawCircle::radius, "color", &layer::CmdDrawCircle::color)
+        BIND_CMD(DrawRectangle,          "x", &layer::CmdDrawRectangle::x, "y", &layer::CmdDrawRectangle::y, "width", &layer::CmdDrawRectangle::width, "height", &layer::CmdDrawRectangle::height, "color", &layer::CmdDrawRectangle::color, "lineWidth", &layer::CmdDrawRectangle::lineWidth)
+        BIND_CMD(DrawRectanglePro,       "offsetX", &layer::CmdDrawRectanglePro::offsetX, "offsetY", &layer::CmdDrawRectanglePro::offsetY, "size", &layer::CmdDrawRectanglePro::size, "rotationCenter", &layer::CmdDrawRectanglePro::rotationCenter, "rotation", &layer::CmdDrawRectanglePro::rotation, "color", &layer::CmdDrawRectanglePro::color)
+        BIND_CMD(DrawRectangleLinesPro,  "offsetX", &layer::CmdDrawRectangleLinesPro::offsetX, "offsetY", &layer::CmdDrawRectangleLinesPro::offsetY, "size", &layer::CmdDrawRectangleLinesPro::size, "lineThickness", &layer::CmdDrawRectangleLinesPro::lineThickness, "color", &layer::CmdDrawRectangleLinesPro::color)
+        BIND_CMD(DrawLine,               "x1", &layer::CmdDrawLine::x1, "y1", &layer::CmdDrawLine::y1, "x2", &layer::CmdDrawLine::x2, "y2", &layer::CmdDrawLine::y2, "color", &layer::CmdDrawLine::color, "lineWidth", &layer::CmdDrawLine::lineWidth)
+        BIND_CMD(DrawDashedLine,         "x1", &layer::CmdDrawDashedLine::x1, "y1", &layer::CmdDrawDashedLine::y1, "x2", &layer::CmdDrawDashedLine::x2, "y2", &layer::CmdDrawDashedLine::y2, "dashSize", &layer::CmdDrawDashedLine::dashSize, "gapSize", &layer::CmdDrawDashedLine::gapSize, "color", &layer::CmdDrawDashedLine::color, "lineWidth", &layer::CmdDrawDashedLine::lineWidth)
+        BIND_CMD(DrawText,               "text", &layer::CmdDrawText::text, "font", &layer::CmdDrawText::font, "x", &layer::CmdDrawText::x, "y", &layer::CmdDrawText::y, "color", &layer::CmdDrawText::color, "fontSize", &layer::CmdDrawText::fontSize)
+        BIND_CMD(DrawTextCentered,       "text", &layer::CmdDrawTextCentered::text, "font", &layer::CmdDrawTextCentered::font, "x", &layer::CmdDrawTextCentered::x, "y", &layer::CmdDrawTextCentered::y, "color", &layer::CmdDrawTextCentered::color, "fontSize", &layer::CmdDrawTextCentered::fontSize)
+        BIND_CMD(TextPro,                "text", &layer::CmdTextPro::text, "font", &layer::CmdTextPro::font, "x", &layer::CmdTextPro::x, "y", &layer::CmdTextPro::y, "origin", &layer::CmdTextPro::origin, "rotation", &layer::CmdTextPro::rotation, "fontSize", &layer::CmdTextPro::fontSize, "spacing", &layer::CmdTextPro::spacing, "color", &layer::CmdTextPro::color)
+        BIND_CMD(DrawImage,              "image", &layer::CmdDrawImage::image, "x", &layer::CmdDrawImage::x, "y", &layer::CmdDrawImage::y, "rotation", &layer::CmdDrawImage::rotation, "scaleX", &layer::CmdDrawImage::scaleX, "scaleY", &layer::CmdDrawImage::scaleY, "color", &layer::CmdDrawImage::color)
+        BIND_CMD(TexturePro,             "texture", &layer::CmdTexturePro::texture, "source", &layer::CmdTexturePro::source, "offsetX", &layer::CmdTexturePro::offsetX, "offsetY", &layer::CmdTexturePro::offsetY, "size", &layer::CmdTexturePro::size, "rotationCenter", &layer::CmdTexturePro::rotationCenter, "rotation", &layer::CmdTexturePro::rotation, "color", &layer::CmdTexturePro::color)
+        BIND_CMD(DrawEntityAnimation,    "e", &layer::CmdDrawEntityAnimation::e, "registry", &layer::CmdDrawEntityAnimation::registry, "x", &layer::CmdDrawEntityAnimation::x, "y", &layer::CmdDrawEntityAnimation::y)
+        BIND_CMD(DrawTransformEntityAnimation, "e", &layer::CmdDrawTransformEntityAnimation::e, "registry", &layer::CmdDrawTransformEntityAnimation::registry)
+        BIND_CMD(DrawTransformEntityAnimationPipeline, "e", &layer::CmdDrawTransformEntityAnimationPipeline::e, "registry", &layer::CmdDrawTransformEntityAnimationPipeline::registry)
+        BIND_CMD(SetShader,              "shader", &layer::CmdSetShader::shader)
+        // instead of BIND_CMD(ResetShader /*no fields*/)
+        layerTbl.new_usertype< ::layer::CmdResetShader >(
+            "CmdResetShader", 
+            sol::constructors<>()
+        );
+        BIND_CMD(SetBlendMode,           "blendMode", &layer::CmdSetBlendMode::blendMode)
+        BIND_CMD(UnsetBlendMode,         "dummy", &layer::CmdUnsetBlendMode::dummy)
+        BIND_CMD(SendUniformFloat,       "shader", &layer::CmdSendUniformFloat::shader, "uniform", &layer::CmdSendUniformFloat::uniform, "value", &layer::CmdSendUniformFloat::value)
+        BIND_CMD(SendUniformInt,         "shader", &layer::CmdSendUniformInt::shader, "uniform", &layer::CmdSendUniformInt::uniform, "value", &layer::CmdSendUniformInt::value)
+        BIND_CMD(SendUniformVec2,        "shader", &layer::CmdSendUniformVec2::shader, "uniform", &layer::CmdSendUniformVec2::uniform, "value", &layer::CmdSendUniformVec2::value)
+        BIND_CMD(SendUniformVec3,        "shader", &layer::CmdSendUniformVec3::shader, "uniform", &layer::CmdSendUniformVec3::uniform, "value", &layer::CmdSendUniformVec3::value)
+        BIND_CMD(SendUniformVec4,        "shader", &layer::CmdSendUniformVec4::shader, "uniform", &layer::CmdSendUniformVec4::uniform, "value", &layer::CmdSendUniformVec4::value)
+        BIND_CMD(SendUniformFloatArray,  "shader", &layer::CmdSendUniformFloatArray::shader, "uniform", &layer::CmdSendUniformFloatArray::uniform, "values", &layer::CmdSendUniformFloatArray::values)
+        BIND_CMD(SendUniformIntArray,    "shader", &layer::CmdSendUniformIntArray::shader, "uniform", &layer::CmdSendUniformIntArray::uniform, "values", &layer::CmdSendUniformIntArray::values)
+        BIND_CMD(Vertex,                 "v", &layer::CmdVertex::v, "color", &layer::CmdVertex::color)
+        BIND_CMD(BeginOpenGLMode,        "mode", &layer::CmdBeginOpenGLMode::mode)
+        BIND_CMD(EndOpenGLMode,          "dummy", &layer::CmdEndOpenGLMode::dummy)
+        BIND_CMD(SetColor,               "color", &layer::CmdSetColor::color)
+        BIND_CMD(SetLineWidth,           "lineWidth", &layer::CmdSetLineWidth::lineWidth)
+        BIND_CMD(SetTexture,             "texture", &layer::CmdSetTexture::texture)
+        BIND_CMD(RenderRectVerticesFilledLayer, "outerRec", &layer::CmdRenderRectVerticesFilledLayer::outerRec, "progressOrFullBackground", &layer::CmdRenderRectVerticesFilledLayer::progressOrFullBackground, "cache", &layer::CmdRenderRectVerticesFilledLayer::cache, "color", &layer::CmdRenderRectVerticesFilledLayer::color)
+        BIND_CMD(RenderRectVerticesOutlineLayer, "cache", &layer::CmdRenderRectVerticesOutlineLayer::cache, "color", &layer::CmdRenderRectVerticesOutlineLayer::color, "useFullVertices", &layer::CmdRenderRectVerticesOutlineLayer::useFullVertices)
+        BIND_CMD(DrawPolygon,            "vertices", &layer::CmdDrawPolygon::vertices, "color", &layer::CmdDrawPolygon::color, "lineWidth", &layer::CmdDrawPolygon::lineWidth)
+        BIND_CMD(RenderNPatchRect,       "sourceTexture", &layer::CmdRenderNPatchRect::sourceTexture, "info", &layer::CmdRenderNPatchRect::info, "dest", &layer::CmdRenderNPatchRect::dest, "origin", &layer::CmdRenderNPatchRect::origin, "rotation", &layer::CmdRenderNPatchRect::rotation, "tint", &layer::CmdRenderNPatchRect::tint)
+        BIND_CMD(DrawTriangle,           "p1", &layer::CmdDrawTriangle::p1, "p2", &layer::CmdDrawTriangle::p2, "p3", &layer::CmdDrawTriangle::p3, "color", &layer::CmdDrawTriangle::color)
+
+        #undef BIND_CMD
+
+        // 3) DrawCommandV2
+        layerTbl.new_usertype<layer::DrawCommandV2>("DrawCommandV2",
+            sol::constructors<>(),
+            "type", &layer::DrawCommandV2::type,
+            "data", &layer::DrawCommandV2::data,
+            "z",    &layer::DrawCommandV2::z
+        );
+
+        // 2) Create the command_buffer sub‐table
+        sol::table cb = layerTbl["command_buffer"];
+        if (!cb.valid()) {
+            cb = lua.create_table();
+            layerTbl["command_buffer"] = cb;
+        }
+
+        // 3) For each CmdXXX, expose a queueXXX helper
+        //    Pattern: queueCmdName(layer, init_fn, z)
+        #define QUEUE_CMD(cmd)                                                       \
+        cb.set_function("queue" #cmd,                                              \
+            [](std::shared_ptr<layer::Layer> lyr, sol::function init, int z) {       \
+            return ::layer::QueueCommand<                    \
+                            ::layer::Cmd##cmd                                       \
+                    >(                                                               \
+                lyr,                                                                 \
+                [&](::layer::Cmd##cmd* c) { init(c); },                              \
+                z                                                                    \
+            );                                                                     \
+            }                                                                        \
+        );
+
+
+        QUEUE_CMD(BeginDrawing)
+        QUEUE_CMD(EndDrawing)
+        QUEUE_CMD(ClearBackground)
+        QUEUE_CMD(Translate)
+        QUEUE_CMD(Scale)
+        QUEUE_CMD(Rotate)
+        QUEUE_CMD(AddPush)
+        QUEUE_CMD(AddPop)
+        QUEUE_CMD(PushMatrix)
+        QUEUE_CMD(PopMatrix)
+        QUEUE_CMD(DrawCircle)
+        QUEUE_CMD(DrawRectangle)
+        QUEUE_CMD(DrawRectanglePro)
+        QUEUE_CMD(DrawRectangleLinesPro)
+        QUEUE_CMD(DrawLine)
+        QUEUE_CMD(DrawDashedLine)
+        QUEUE_CMD(DrawText)
+        QUEUE_CMD(DrawTextCentered)
+        QUEUE_CMD(TextPro)
+        QUEUE_CMD(DrawImage)
+        QUEUE_CMD(TexturePro)
+        QUEUE_CMD(DrawEntityAnimation)
+        QUEUE_CMD(DrawTransformEntityAnimation)
+        QUEUE_CMD(DrawTransformEntityAnimationPipeline)
+        QUEUE_CMD(SetShader)
+        QUEUE_CMD(ResetShader)
+        QUEUE_CMD(SetBlendMode)
+        QUEUE_CMD(UnsetBlendMode)
+        QUEUE_CMD(SendUniformFloat)
+        QUEUE_CMD(SendUniformInt)
+        QUEUE_CMD(SendUniformVec2)
+        QUEUE_CMD(SendUniformVec3)
+        QUEUE_CMD(SendUniformVec4)
+        QUEUE_CMD(SendUniformFloatArray)
+        QUEUE_CMD(SendUniformIntArray)
+        QUEUE_CMD(Vertex)
+        QUEUE_CMD(BeginOpenGLMode)
+        QUEUE_CMD(EndOpenGLMode)
+        QUEUE_CMD(SetColor)
+        QUEUE_CMD(SetLineWidth)
+        QUEUE_CMD(SetTexture)
+        QUEUE_CMD(RenderRectVerticesFilledLayer)
+        QUEUE_CMD(RenderRectVerticesOutlineLayer)
+        QUEUE_CMD(DrawPolygon)
+        QUEUE_CMD(RenderNPatchRect)
+        QUEUE_CMD(DrawTriangle)
+
+        #undef QUEUE_CMD
+    }
 
     std::vector<std::shared_ptr<Layer>> layers;
 

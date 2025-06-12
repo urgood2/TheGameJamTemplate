@@ -454,7 +454,7 @@ namespace ai_system
     auto init() -> void
     {
         // debug message indicating that ai_system::init() was called
-        SPDLOG_DEBUG("ai_system::init() called - doing nothing (goap inits on individual basis)");
+        // SPDLOG_DEBUG("ai_system::init() called - doing nothing (goap inits on individual basis)");
         
         // get value of ai_tick_rate_seconds from config json and store it in aiUpdateTickInSeconds
         aiUpdateTickInSeconds = globals::configJSON["global_tick_settings"]["ai_tick_rate_seconds"];
@@ -583,55 +583,6 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         }
 
         return true; // actions are running as intended
-    }
-
-    //LATER: make it possible for lua functions to be coroutines
-
-    void fill_action_queue_based_on_plan(entt::entity e, const char** plan, int planSize) {
-        auto &goapComponent = globals::registry.get<GOAPComponent>(e);
-        
-        // Clear the previous action queue
-        while (!goapComponent.actionQueue.empty()) {
-            goapComponent.actionQueue = std::queue<Action>();
-        }
-        
-        // get the action name 
-        // get the corresponding name of the lua file
-        // read it in, store action sol::functions
-
-        // Add actions to the queue using lua functions defined in ai_actions.json
-        
-        for (int i = 0; i < planSize; i++) {
-            std::string actionName = plan[i];
-            
-            if (masterStateLua[actionName].valid() && masterStateLua[actionName].get_type() == sol::type::table) {
-                // The table exists and is valid
-            } else {
-                // The table does not exist or is not a table
-                SPDLOG_ERROR("Action {} not found in master state lua", actionName);
-                continue;
-            }
-            
-            sol::table action_table = masterStateLua[actionName]; // get the lua table for the action, defined in action_name.lua
-            
-            Action action{};
-            
-            // Define the start behavior
-            action.start = action_table["start"];
-            action.update = action_table["update"];
-            action.finish = action_table["finish"];
-
-            action.is_running = false;
-
-            // Push the action into the queue
-            goapComponent.actionQueue.push(action);
-        }
-
-        // Start the first action if the queue is not empty
-        if (!goapComponent.actionQueue.empty()) {
-            goapComponent.actionQueue.front().start(e);
-            goapComponent.actionQueue.front().is_running = true;
-        }
     }
 
     

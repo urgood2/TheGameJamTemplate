@@ -13,7 +13,38 @@
 #include "systems/uuid/uuid.hpp"
 #include "core/init.hpp"
 
+#include "sol/sol.hpp"
+
 namespace animation_system {
+
+    auto exposeToLua(sol::state &lua) -> void {
+        // 1) Ensure the top‐level table
+        sol::table anim = lua.create_named_table("animation_system");
+
+        // 2) Bind each free function
+        anim.set_function("update", &animation_system::update);
+
+        // returns (NPatchInfo, Texture2D)
+        anim.set_function("getNinepatchUIBorderInfo", &animation_system::getNinepatchUIBorderInfo);
+
+        // full‐signature binding; Lua will need to pass all args or use nil for defaults
+        anim.set_function("createAnimatedObjectWithTransform",
+            &animation_system::createAnimatedObjectWithTransform);
+
+        // convenience still‐animation factory
+        anim.set_function("createStillAnimationFromSpriteUUID",
+            &animation_system::createStillAnimationFromSpriteUUID);
+
+        // resizing helpers
+        anim.set_function("resizeAnimationObjectsInEntityToFit",
+            &animation_system::resizeAnimationObjectsInEntityToFit);
+        anim.set_function("resizeAnimationObjectsInEntityToFitAndCenterUI",
+            &animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI);
+        anim.set_function("resetAnimationUIRenderScale",
+            &animation_system::resetAnimationUIRenderScale);
+        anim.set_function("resizeAnimationObjectToFit",
+            &animation_system::resizeAnimationObjectToFit);
+    }
     
     auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg, std::optional<Color> bg) -> AnimationObject {
         

@@ -9,8 +9,15 @@
 #include <effolkronium/random.hpp>
 #include <thread>
 
+#include <raylib.h>
+
+#include "sol/sol.hpp"
+#include "entt/fwd.hpp"
+
 namespace random_utils {
     using RandomEngine = effolkronium::random_static;
+
+
 
     /** Sets the seed for deterministic random number generation. */
     inline void set_seed(unsigned int seed) {
@@ -41,14 +48,20 @@ namespace random_utils {
     template <typename T>
     inline T random_element(const std::vector<T>& container) {
         if (container.empty()) throw std::runtime_error("random_element: Empty container");
-        return container[RandomEngine::get(0, static_cast<int>(container.size()) - 1)];
+        int max_index = static_cast<int>(container.size()) - 1;
+        int idx       = RandomEngine::get(0, max_index);
+        // now idx is an int in [0..max_index], safe to use
+        return container[static_cast<size_t>(idx)];
     }
 
     /** Selects and removes a random element from a vector. */
     template <typename T>
     inline T random_element_remove(std::vector<T>& container) {
         if (container.empty()) throw std::runtime_error("random_element_remove: Empty container");
-        size_t index = RandomEngine::get(0, container.size() - 1);
+        // cast container.size()-1 to int so both args to get() are int
+        int max_index = static_cast<int>(container.size()) - 1;
+        int idx       = RandomEngine::get(0, max_index);
+        size_t index  = static_cast<size_t>(idx);
         T value = container[index];
         container.erase(container.begin() + index);
         return value;
@@ -98,19 +111,18 @@ namespace random_utils {
     }
 
     /** Returns a random 2D unit vector. */
-    struct Vec2 { double x, y; };
-    struct Vec3 { double x, y, z; };
-
-    inline Vec2 random_unit_vector_2D() {
-        double angle = random_angle();
-        return {std::cos(angle), std::sin(angle)};
+    inline Vector2 random_unit_vector_2D() {
+        float a = float(random_angle());
+        return { cosf(a), sinf(a) };
     }
-
-    /** Returns a random 3D unit vector. */
-    inline Vec3 random_unit_vector_3D() {
-        double theta = random_angle();
-        double phi = random_float(0, PI);
-        return {std::sin(phi) * std::cos(theta), std::sin(phi) * std::sin(theta), std::cos(phi)};
+    inline Vector3 random_unit_vector_3D() {
+        float theta = float(random_angle());
+        float phi   = float(random_float(0, PI));
+        return {
+            sinf(phi)*cosf(theta),
+            sinf(phi)*sinf(theta),
+            cosf(phi)
+        };
     }
 
     /** Returns a random delay between `min_ms` and `max_ms` milliseconds. */
@@ -119,16 +131,101 @@ namespace random_utils {
     }
 
     /** Returns a random RGB color. */
-    struct Color { int r, g, b; };
 
     inline Color random_color() {
-        return {random_int(0, 255), random_int(0, 255), random_int(0, 255)};
+        return Color{
+            (unsigned char)random_int(0,255),
+            (unsigned char)random_int(0,255),
+            (unsigned char)random_int(0,255),
+            255
+        };
     }
 
     /** Returns a biased random number, favoring low or high values based on `bias_factor`. */
     inline double random_biased(double bias_factor) {
         double rnd = random_float();
         return std::pow(rnd, bias_factor);
+    }
+
+    
+    inline void exposeToLua(sol::state &lua) {
+        // 1) Create (or fetch) the random_utils table
+        // sol::table ru = lua.get_or("random_utils", lua.create_table());
+        sol::state_view luaView{lua};
+        auto ru = luaView["random_utils"].get_or_create<sol::table>();
+        if (!ru.valid()) {
+            ru = lua.create_table();
+            lua["random_utils"] = ru;
+        }
+
+        // 2) Vec2
+        ru.new_usertype<Vector2>("Vector2",
+            sol::constructors<Vector2(), Vector2(float, float)>(),
+            "x", &Vector2::x,
+            "y", &Vector2::y
+        );
+
+        // 3) Vec3
+        ru.new_usertype<Vector3>("Vector3",
+            sol::constructors<Vector3(), Vector3(float, float, float)>(),
+            "x", &Vector3::x,
+            "y", &Vector3::y,
+            "z", &Vector3::z
+        );
+
+        // 4) Color
+        ru.new_usertype<Color>("Color",
+            sol::constructors<Color(), Color(char, char, char)>(),
+            "r", &Color::r,
+            "g", &Color::g,
+            "b", &Color::b
+        );
+
+        // 5) Core functions
+        ru.set_function("set_seed",        &random_utils::set_seed);
+        ru.set_function("random_bool",     &random_utils::random_bool);
+        ru.set_function("random_float",    &random_utils::random_float);
+        ru.set_function("random_int",      &random_utils::random_int);
+        ru.set_function("random_normal",   &random_utils::random_normal);
+        ru.set_function("random_sign",     &random_utils::random_sign);
+        ru.set_function("random_uid",      &random_utils::random_uid);
+        ru.set_function("random_angle",    &random_utils::random_angle);
+        ru.set_function("random_biased",   &random_utils::random_biased);
+
+        // 6) Delay (returns chrono::milliseconds)
+        ru.set_function("random_delay",    &random_utils::random_delay);
+
+        // 7) Unit‐vector generators
+        ru.set_function("random_unit_vector_2D", &random_utils::random_unit_vector_2D);
+        ru.set_function("random_unit_vector_3D", &random_utils::random_unit_vector_3D);
+
+        // 8) Color picker
+        ru.set_function("random_color",    &random_utils::random_color);
+
+        // --- random_element<T> ---
+        ru.set_function("random_element_int",      &random_utils::random_element<int>);
+        ru.set_function("random_element_double",   &random_utils::random_element<double>);
+        ru.set_function("random_element_string",   &random_utils::random_element<std::string>);
+        ru.set_function("random_element_color",    &random_utils::random_element<Color>);
+        ru.set_function("random_element_vec2",     &random_utils::random_element<Vector2>);
+        ru.set_function("random_element_entity",   &random_utils::random_element<entt::entity>);
+
+        // --- random_element_remove<T> ---
+        ru.set_function("random_element_remove_int",    &random_utils::random_element_remove<int>);
+        ru.set_function("random_element_remove_double", &random_utils::random_element_remove<double>);
+        ru.set_function("random_element_remove_string", &random_utils::random_element_remove<std::string>);
+        ru.set_function("random_element_remove_color",  &random_utils::random_element_remove<Color>);
+        ru.set_function("random_element_remove_vec2",   &random_utils::random_element_remove<Vector2>);
+        ru.set_function("random_element_remove_entity", &random_utils::random_element_remove<entt::entity>);
+
+        // --- random_weighted_pick: vector<double> → int index ---
+        ru.set_function("random_weighted_pick_int", &random_utils::random_weighted_pick<int>);
+
+        // --- random_weighted_pick<T> for value picks ---
+        ru.set_function("random_weighted_pick_string", &random_utils::random_weighted_pick<std::string>);
+        ru.set_function("random_weighted_pick_color",  &random_utils::random_weighted_pick<Color>);
+        ru.set_function("random_weighted_pick_vec2",   &random_utils::random_weighted_pick<Vector2>);
+        ru.set_function("random_weighted_pick_entity",&random_utils::random_weighted_pick<entt::entity>);
     }
 
     /**

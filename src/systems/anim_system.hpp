@@ -4,8 +4,12 @@
 #include <tuple>
 #include "core/globals.hpp"
 
+#include "sol/sol.hpp"
+
 
 namespace animation_system {
+    
+    extern auto exposeToLua(sol::state &lua) -> void;
 
     extern auto update(float dt) -> void;
     extern auto getNinepatchUIBorderInfo(std::string uuid_or_raw_identifier) -> std::tuple<NPatchInfo, Texture2D>;
@@ -19,6 +23,5 @@ namespace animation_system {
     extern auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth, float targetHeight) -> void;
     extern void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally = true, bool centerVertically = true);
     extern void resetAnimationUIRenderScale(entt::entity e);
-    
     extern auto resizeAnimationObjectToFit(AnimationObject &animObj, float targetWidth, float targetHeight) -> void;
 }

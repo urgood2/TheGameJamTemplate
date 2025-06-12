@@ -6,6 +6,186 @@
 
 namespace timer
 {
+    /*
+    local ed = EventQueueSystem.EaseDataBuilder()
+                  :Type(EaseType.QUAD_OUT)
+                  :StartValue(0)
+                  :EndValue(100)
+                  :StartTime(0)
+                  :EndTime(2)
+                  :SetCallback(function(v) myValue = v end)
+                  :Build()
+
+    EventQueueSystem.add_event({
+        eventTrigger = TriggerType.EASE,
+        delaySeconds = 0,
+        ease = ed,
+        func = function(t) return true end,
+        tag  = "myEasedEvent"
+    })
+    */
+    void exposeToLua(sol::state &lua) {
+        // 1) Get or create the `timer` table
+        sol::state_view luaView{lua};
+        auto t = luaView["timer"].get_or_create<sol::table>();
+
+        // sol::table t = lua.get_or("timer", lua.create_table());
+        if (!t.valid()) {
+            t = lua.create_table();
+            lua["timer"] = t;
+        }
+
+        // 2) timer.math
+        auto m = luaView["math"].get_or_create<sol::table>();
+        // sol::table m = lua.get_or("math", lua.create_table());
+        if (!m.valid()) {
+            m = t.create_named("math");
+        }
+        m.set_function("remap", &timer::math::remap);
+        m.set_function("lerp",  &timer::math::lerp);
+
+        // 3) TimerType enum
+        t.new_enum<timer::TimerType>("TimerType", {
+            {"RUN",        timer::TimerType::RUN},
+            {"AFTER",      timer::TimerType::AFTER},
+            {"COOLDOWN",   timer::TimerType::COOLDOWN},
+            {"EVERY",      timer::TimerType::EVERY},
+            {"EVERY_STEP", timer::TimerType::EVERY_STEP},
+            {"FOR",        timer::TimerType::FOR},
+            {"TWEEN",      timer::TimerType::TWEEN}
+        });
+
+        // 4) Core control/query
+        t.set_function("cancel",               &timer::TimerSystem::cancel_timer);
+        t.set_function("get_every_index",     &timer::TimerSystem::timer_get_every_index);
+        t.set_function("reset",                &timer::TimerSystem::timer_reset);
+        t.set_function("get_delay",           &timer::TimerSystem::timer_get_delay);
+        t.set_function("set_multiplier",      &timer::TimerSystem::timer_set_multiplier);
+        t.set_function("get_multiplier",      &timer::TimerSystem::timer_get_multiplier);
+        t.set_function("get_for_elapsed",     &timer::TimerSystem::timer_get_for_elapsed_time);
+        t.set_function("get_timer_and_delay",&timer::TimerSystem::timer_get_timer_and_delay);
+
+        // 5) Ticking
+        t.set_function("update", &timer::TimerSystem::update_timers);
+
+        // 6) Creation APIs
+        t.set_function("run",         &timer::TimerSystem::timer_run);
+        t.set_function("after",       &timer::TimerSystem::timer_after);
+        t.set_function("cooldown",    &timer::TimerSystem::timer_cooldown);
+        t.set_function("every",       &timer::TimerSystem::timer_every);
+        t.set_function("every_step",  &timer::TimerSystem::timer_every_step);
+        t.set_function("for",         &timer::TimerSystem::timer_for);
+        t.set_function("tween",       &timer::TimerSystem::timer_tween);
+
+        // 1) Get or create the table
+        auto eq = luaView["EventQueueSystem"].get_or_create<sol::table>();
+        // sol::table eq = lua.get_or("EventQueueSystem", lua.create_table());
+        if (!eq.valid()) {
+            eq = lua.create_table();
+            lua["EventQueueSystem"] = eq;
+        }
+
+        // 2) Enums
+        eq.new_enum<timer::EventQueueSystem::EaseType>("EaseType", {
+            {"LERP",        timer::EventQueueSystem::EaseType::LERP},
+            {"ELASTIC_IN",  timer::EventQueueSystem::EaseType::ELASTIC_IN},
+            {"ELASTIC_OUT", timer::EventQueueSystem::EaseType::ELASTIC_OUT},
+            {"QUAD_IN",     timer::EventQueueSystem::EaseType::QUAD_IN},
+            {"QUAD_OUT",    timer::EventQueueSystem::EaseType::QUAD_OUT}
+        });
+
+        eq.new_enum<timer::EventQueueSystem::TriggerType>("TriggerType", {
+            {"IMMEDIATE", timer::EventQueueSystem::TriggerType::IMMEDIATE},
+            {"AFTER",     timer::EventQueueSystem::TriggerType::AFTER},
+            {"BEFORE",    timer::EventQueueSystem::TriggerType::BEFORE},
+            {"EASE",      timer::EventQueueSystem::TriggerType::EASE},
+            {"CONDITION", timer::EventQueueSystem::TriggerType::CONDITION}
+        });
+
+        eq.new_enum<timer::EventQueueSystem::TimerType>("TimerType", {
+            {"REAL_TIME",                 timer::EventQueueSystem::TimerType::REAL_TIME},
+            {"TOTAL_TIME_EXCLUDING_PAUSE",timer::EventQueueSystem::TimerType::TOTAL_TIME_EXCLUDING_PAUSE}
+        });
+
+        // 3) Plain‐old structs
+        eq.new_usertype<timer::EventQueueSystem::EaseData>(
+            "EaseData",
+            "type",               &timer::EventQueueSystem::EaseData::type,
+            "startValue",         &timer::EventQueueSystem::EaseData::startValue,
+            "endValue",           &timer::EventQueueSystem::EaseData::endValue,
+            "startTime",          &timer::EventQueueSystem::EaseData::startTime,
+            "endTime",            &timer::EventQueueSystem::EaseData::endTime,
+            // for callbacks, we accept Lua functions:
+            "setValueCallback",   &timer::EventQueueSystem::EaseData::set_value_callback,
+            "getValueCallback",   &timer::EventQueueSystem::EaseData::get_value_callback
+        );
+
+        eq.new_usertype<timer::EventQueueSystem::ConditionData>(
+            "ConditionData",
+            "check", &timer::EventQueueSystem::ConditionData::checkConditionCallback
+        );
+
+        eq.new_usertype<timer::EventQueueSystem::Event>(
+            "Event",
+            "eventTrigger",              &timer::EventQueueSystem::Event::eventTrigger,
+            "blocksQueue",               &timer::EventQueueSystem::Event::blocksQueue,
+            "canBeBlocked",              &timer::EventQueueSystem::Event::canBeBlocked,
+            "complete",                  &timer::EventQueueSystem::Event::complete,
+            "timerStarted",              &timer::EventQueueSystem::Event::timerStarted,
+            "delaySeconds",              &timer::EventQueueSystem::Event::delaySeconds,
+            "retainAfterCompletion",     &timer::EventQueueSystem::Event::retainInQueueAfterCompletion,
+            "createdWhilePaused",        &timer::EventQueueSystem::Event::createdWhileGamePaused,
+            "func",                      &timer::EventQueueSystem::Event::func,
+            "timerType",                 &timer::EventQueueSystem::Event::timerTypeToUse,
+            "time",                      &timer::EventQueueSystem::Event::time,
+            "ease",                      &timer::EventQueueSystem::Event::ease,
+            "condition",                 &timer::EventQueueSystem::Event::condition,
+            "tag",                       &timer::EventQueueSystem::Event::tag,
+            "debugID",                   &timer::EventQueueSystem::Event::debug_string_id,
+            "deleteNextCycleImmediately",&timer::EventQueueSystem::Event::deleteNextCycleImmediately
+        );
+
+        // 4) Builder types
+        eq.new_usertype<timer::EventQueueSystem::EaseDataBuilder>(
+            "EaseDataBuilder",
+            sol::constructors<timer::EventQueueSystem::EaseDataBuilder()>(),
+            "Type",    &timer::EventQueueSystem::EaseDataBuilder::Type,
+            "StartValue", &timer::EventQueueSystem::EaseDataBuilder::StartValue,
+            "EndValue",   &timer::EventQueueSystem::EaseDataBuilder::EndValue,
+            "StartTime",  &timer::EventQueueSystem::EaseDataBuilder::StartTime,
+            "EndTime",    &timer::EventQueueSystem::EaseDataBuilder::EndTime,
+            "SetCallback",&timer::EventQueueSystem::EaseDataBuilder::SetCallback,
+            "GetCallback",&timer::EventQueueSystem::EaseDataBuilder::GetCallback,
+            "Build",      &timer::EventQueueSystem::EaseDataBuilder::Build
+        );
+
+        eq.new_usertype<timer::EventQueueSystem::EventBuilder>(
+            "EventBuilder",
+            sol::constructors<timer::EventQueueSystem::EventBuilder()>(),
+            "Trigger",                    &timer::EventQueueSystem::EventBuilder::Trigger,
+            "BlocksQueue",                &timer::EventQueueSystem::EventBuilder::BlocksQueue,
+            "CanBeBlocked",               &timer::EventQueueSystem::EventBuilder::CanBeBlocked,
+            "Delay",                      &timer::EventQueueSystem::EventBuilder::Delay,
+            "Func",                       &timer::EventQueueSystem::EventBuilder::Func,
+            "Ease",                       &timer::EventQueueSystem::EventBuilder::Ease,
+            "Condition",                  &timer::EventQueueSystem::EventBuilder::Condition,
+            "Tag",                        &timer::EventQueueSystem::EventBuilder::Tag,
+            "DebugID",                    &timer::EventQueueSystem::EventBuilder::DebugID,
+            "RetainAfterCompletion",      &timer::EventQueueSystem::EventBuilder::RetainAfterCompletion,
+            "CreatedWhilePaused",         &timer::EventQueueSystem::EventBuilder::CreatedWhilePaused,
+            "TimerType",                  &timer::EventQueueSystem::EventBuilder::TimerType,
+            "StartTimer",                 &timer::EventQueueSystem::EventBuilder::StartTimer,
+            "DeleteNextCycleImmediately", &timer::EventQueueSystem::EventBuilder::DeleteNextCycleImmediately,
+            "Build",                      &timer::EventQueueSystem::EventBuilder::Build,
+            "AddToQueue",                 &timer::EventQueueSystem::EventBuilder::AddToQueue
+        );
+
+        // 5) Core API
+        eq.set_function("add_event",           &timer::EventQueueSystem::EventManager::add_event);
+        eq.set_function("get_event_by_tag",    &timer::EventQueueSystem::EventManager::get_event_by_tag);
+        eq.set_function("clear_queue",         &timer::EventQueueSystem::EventManager::clear_queue);
+        eq.set_function("update",              &timer::EventQueueSystem::EventManager::update);
+    }
 
     namespace TimerSystem
     {

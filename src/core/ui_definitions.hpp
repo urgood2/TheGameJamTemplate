@@ -95,11 +95,26 @@ namespace ui_defs
             .wrapMode = TextSystem::Text::WrapMode::WORD
         };
 
+        // resize when text is updated (applies to ui)
+        textData.onStringContentUpdatedOrChangedViaCallback = [](entt::entity textEntity) {
+            // get master
+            auto &role = globals::registry.get<transform::InheritedProperties>(textEntity);
+
+            if (!globals::registry.valid(role.master)) return;
+
+            auto &masterTransform = globals::registry.get<transform::Transform>(role.master);
+            
+            TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
+        };
+
         auto textEntity = TextSystem::Functions::createTextEntity(textData, 0, 0);
 
         if (textEffect) {
             TextSystem::Functions::applyGlobalEffects(textEntity, textEffect.value_or(""));
         }
+
+
+        
 
         auto configBuilder = ui::UIConfig::Builder::create()
             .addObject(textEntity)
@@ -519,6 +534,11 @@ namespace ui_defs
     inline auto getButtonDisabledExample() -> ui::UIElementTemplateNode
     {
         auto buttonDynamicText = getNewDynamicTextEntry(localization::get("ui.disabled_button"), 20.f, std::nullopt, "pulse=0.9,1.1");
+        buttonDynamicText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.disabled_button"));
+            });
+        }; 
         
         auto buttonDisabled = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
@@ -611,6 +631,12 @@ namespace ui_defs
         // ======================================
         
         auto sliderTextMoving = getNewDynamicTextEntry(localization::get("ui.slider_text"), 20.f, std::nullopt, "pulse=0.9,1.1");
+        sliderTextMoving.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.slider_text"));
+            });
+        }; 
+        
         auto slider = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -682,6 +708,11 @@ namespace ui_defs
         // ======================================
         
         auto textInputTextMoving = getNewDynamicTextEntry(localization::get("ui.text_input"), 20.f, std::nullopt, "pulse=0.9,1.1");
+        textInputTextMoving.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.text_input"));
+            });
+        }; 
         auto textInput = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -738,6 +769,11 @@ namespace ui_defs
         // ======================================
         // ======================================
         auto cycleText = getNewTextEntry(localization::get("ui.cycle_text"));
+        cycleText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.cycle_text"));
+            });
+        }; 
         auto cycleImageLeft = animation_system::createAnimatedObjectWithTransform("left.png", true, 0, 0, nullptr, false); // no shadow
         auto cycleImageRight = animation_system::createAnimatedObjectWithTransform("right.png", true, 0, 0, nullptr, false); // no shadow
         animation_system::resizeAnimationObjectsInEntityToFit(cycleImageLeft, 40.f, 40.f);
@@ -957,6 +993,11 @@ namespace ui_defs
         // ======================================
         // ======================================
         auto buttonAlertText = getNewDynamicTextEntry(localization::get("ui.alert_button_text"), 20.f, std::nullopt, "wave");
+        buttonAlertText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.alert_button_text"));
+            });
+        };
         auto buttonAlert = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -990,8 +1031,18 @@ namespace ui_defs
         
         //TODO: use backgrounds & images for the tooltip text
         auto tooltipTitle = getNewDynamicTextEntry(localization::get("ui.tooltip_title"), 20.f, std::nullopt, "pulse=0.9,1.1");
+        tooltipTitle.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.tooltip_title"));
+            });
+        };
         
         auto tooltipText = getNewDynamicTextEntry(localization::get("ui.tooltip_text", fmt::arg("text_type", "dynamic")), 10.f, std::nullopt, "pulse=0.9,1.1");
+        tooltipText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.tooltip_text", fmt::arg("text_type", "dynamic")));
+            });
+        };
         
         auto tooltipRow = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
@@ -1023,6 +1074,11 @@ namespace ui_defs
         // ======================================
         // ======================================
         auto tooltipButtonText = getNewDynamicTextEntry(localization::get("ui.tooltip_text_hover"), 20.f, std::nullopt, "rainbow");
+        tooltipButtonText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+            localization::onLanguageChanged([&](auto newLang){
+                TextSystem::Functions::setText(e, localization::get("ui.tooltip_text_hover"));
+            });
+        };
         auto buttonForTooltip = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(

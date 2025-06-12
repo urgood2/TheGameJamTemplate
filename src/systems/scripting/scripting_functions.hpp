@@ -88,6 +88,8 @@ namespace scripting {
     extern auto getGoalWorldStateValue(entt::entity entity, std::string key) -> bool;
     extern auto clearGoalWorldState(entt::entity entity) -> void;
 
+
+
     /**
         -- Lua script subscribing to an event
     EventDispatcher:subscribe("OnEnemyDefeated", function(enemy)
@@ -95,4 +97,8 @@ namespace scripting {
         -- Additional Lua logic
     end)
     */
+
+
+
+    void dump_lua_globals(sol::state& lua, std::string const& out_path);
 }

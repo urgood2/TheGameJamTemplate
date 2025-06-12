@@ -225,7 +225,7 @@ namespace layer
         );
 
         // 2) Create the command_buffer sub‐table
-        sol::table cb = layerTbl["command_buffer"];
+        auto cb = luaView["command_buffer"].get_or_create<sol::table>();
         if (!cb.valid()) {
             cb = lua.create_table();
             layerTbl["command_buffer"] = cb;

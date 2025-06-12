@@ -481,6 +481,9 @@ namespace ai_system
         // run default initialization function
         scripting::initLuaMasterState(masterStateLua, luaFiles);
 
+        //TODO: debugging
+        scripting::dump_lua_globals(masterStateLua, util::getRawAssetPathNoUUID("scripts/lua_globals_dump.txt"));
+
     }
 
 void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::string> &luaFiles)

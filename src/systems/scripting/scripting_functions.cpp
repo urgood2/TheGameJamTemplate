@@ -469,4 +469,218 @@ namespace scripting {
         SPDLOG_DEBUG("{}: Getting blackboard string \"{}\": {}", static_cast<int>(entity), key, value);
         return value;
     }
+
+    /**
+     * ------------------------------------------------------
+     * Utility functions
+     * ------------------------------------------------------
+     */
+    #include <fstream>
+    #include <string>
+
+    void dump_lua_globals(sol::state& lua, std::string const& out_path) {
+        // 1) Load your helper chunk (either from a file or from a raw string)
+        //    Here I'm using your raw string literal:
+        static char const* chunk = R"(
+                -- Helper function to get sorted keys
+                local function get_sorted_keys(tbl)
+                    local keys = {}
+                    for k in pairs(tbl) do
+                        table.insert(keys, k)
+                    end
+                    table.sort(keys, function(a, b)
+                        return tostring(a) < tostring(b)  -- Ensure keys are compared as strings
+                    end)
+                    return keys
+                end
+
+                function print_filtered_globals()
+                    -- Define a set of excluded keys (tables and functions you want to ignore)
+                    local excluded_keys = {
+                        ["sol.entt::entity.♻"] = true,
+                        ["table"] = true,
+                        ["getEventOccurred"] = true,
+                        ["ipairs"] = true,
+                        ["next"] = true,
+                        ["assert"] = true,
+                        ["tostring"] = true,
+                        ["getmetatable"] = true,
+                        ["dofile"] = true,
+                        ["rawget"] = true,
+                        ["select"] = true,
+                        ["os"] = true,
+                        ["ActionResult"] = true,
+                        ["rawequal"] = true,
+                        ["warn"] = true,
+                        ["wait"] = true,
+                        ["pairs"] = true,
+                        ["Entity"] = true,
+                        ["sol.☢☢"] = true,
+                        ["logic"] = true,
+                        ["rawset"] = true,
+                        ["collectgarbage"] = true,
+                        ["load"] = true,
+                        ["_VERSION"] = true,
+                        ["rawlen"] = true,
+                        ["pcall"] = true,
+                        ["package"] = true,
+                        ["_G"] = true,
+                        ["conditions"] = true,
+                        ["require"] = true,
+                        ["xpcall"] = true,
+                        ["base"] = true,
+                        ["print_table"] = true,
+                        ["coroutine"] = true,
+                        ["loadfile"] = true,
+                        ["setmetatable"] = true,
+                        ["sol.🔩"] = true,
+                        ["string"] = true,
+                        ["tonumber"] = true,
+                        ["type"] = true
+                    }
+
+                    -- Helper function to accumulate functions inside tables into a string
+                    local function accumulate_functions_in_table(tbl, table_name, result_str)
+                        for k, v in pairs(tbl) do
+                            if type(v) == 'function' then
+                                local key_str = (type(k) == 'number') and tostring(k) or '"'..tostring(k)..'"'
+                                result_str = result_str .. '  ['..table_name..'.'..key_str..'] = function: ' .. tostring(v) .. '\n'
+                            end
+                        end
+                        return result_str
+                    end
+
+                    -- Initialize an empty string to accumulate the output
+                    local result_str = ""
+
+                    -- Get sorted top-level keys
+                    local sorted_keys = get_sorted_keys(_G)
+
+                    -- Loop through the global environment (_G) using sorted keys
+                    for _, k in ipairs(sorted_keys) do
+                        local v = _G[k]
+                        -- Convert key to string (quote it if it's not a number)
+                        local key_str = (type(k) == 'number') and tostring(k) or '"'..tostring(k)..'"'
+
+                        -- Check if the key is in the excluded set
+                        if not excluded_keys[k] then
+                            -- Convert value to string
+                            if type(v) == 'table' then
+                                result_str = result_str .. '['..key_str..'] = {...}\n'  -- Indicate it's a table
+                                -- Check if the table contains any functions and accumulate them
+                                result_str = accumulate_functions_in_table(v, key_str, result_str)
+                            else
+                                local value_str = tostring(v)  -- Convert non-table types to string
+                                result_str = result_str .. '['..key_str..'] = ' .. value_str .. '\n'
+                            end
+                        end
+                    end
+
+                    -- Print the accumulated result as a block of text
+                    debug(result_str)
+                end
+
+                function print_flat_globals()
+                    -- Initialize an empty string to accumulate the output
+                    local result_str = ""
+
+                    -- Get sorted top-level keys
+                    local sorted_keys = get_sorted_keys(_G)
+
+                    for _, k in ipairs(sorted_keys) do
+                        local v = _G[k]
+                        -- Convert key to string (quote it if it's not a number)
+                        local key_str = (type(k) == 'number') and tostring(k) or '"'..tostring(k)..'"'
+
+                        -- Convert value to string
+                        local value_str
+                        if type(v) == 'table' then
+                            value_str = '{...}'  -- Indicate it's a table without printing its contents
+                        else
+                            value_str = tostring(v)  -- Convert other types to string
+                        end
+
+                        -- Accumulate the key-value pair in the result string
+                        result_str = result_str .. '['..key_str..'] = ' .. value_str .. '\n'
+                    end
+
+                    -- Print the accumulated result as a block of text
+                    print(result_str)
+                end
+
+                -- Helper function to avoid infinite recursion and accumulate table content
+                function accumulate_table(tbl, indent, visited, result_str)
+                    indent = indent or 0
+                    local indent_str = string.rep("  ", indent)
+                    visited = visited or {}
+
+                    if visited[tbl] then
+                        result_str = result_str .. indent_str .. "*recursion detected*\n"
+                        return result_str
+                    end
+
+                    visited[tbl] = true  -- Mark this table as visited
+
+                    -- Get sorted keys for the table
+                    local sorted_keys = get_sorted_keys(tbl)
+
+                    for _, key in ipairs(sorted_keys) do
+                        local value = tbl[key]
+                        if type(value) == "table" then
+                            if key ~= "_G" then  -- Avoid infinite recursion on _G
+                                result_str = result_str .. indent_str .. key .. ": table\n"
+                                result_str = accumulate_table(value, indent + 1, visited, result_str)
+                            end
+                        else
+                            result_str = result_str .. indent_str .. key .. ": " .. type(value) .. '\n'
+                        end
+                    end
+                    return result_str
+                end
+
+                -- Function to print all globals with accumulated output and sorted top-level keys
+                function print_globals()
+                    local result_str = accumulate_table(_G, 0, {}, "")
+                    debug(result_str)
+                end
+
+            )";
+
+        auto load_result = lua.load(chunk, "print_globals_chunk");
+        if (!load_result.valid()) {
+            sol::error err = load_result;
+            spdlog::error("Failed to load globals‐dump chunk: {}", err.what());
+            return;
+        }
+        // execute it, defining the functions in the global table
+        load_result();
+
+        // 2) Capture all debug() calls into a C++ std::string
+        std::string capture;
+        // override `debug` in Lua _before_ we call print_filtered_globals
+        lua["debug"] = [&](std::string s) {
+            capture += s;
+            capture += "\n";
+        };
+
+        // 3) Call the printer
+        sol::optional<sol::function> maybe_printer = lua["print_filtered_globals"];
+        if (!maybe_printer) {
+            spdlog::error("print_filtered_globals() not defined in Lua!");
+            return;
+        }
+        sol::function printer = *maybe_printer;
+        printer();  // run it; all debug(...) calls will append into `capture`
+
+        // 4) Write out to a file
+        std::ofstream out(out_path, std::ios::trunc);
+        if (!out) {
+            spdlog::error("Could not open {} for writing", out_path);
+            return;
+        }
+        out << capture;
+        spdlog::info("Lua globals dumped to {}", out_path);
+    }
+
+    
 }

@@ -27,55 +27,7 @@ using json = nlohmann::json;
 namespace shaders
 {
     auto exposeToLua(sol::state& lua) -> void {
-        // // 1) Create the top‐level shaders table
-        // sol::table sh = lua.create_table();
-        // lua["shaders"] = sh;
-
-        // // 2) ShaderUniformSet
-        // sh.new_usertype<shaders::ShaderUniformSet>("ShaderUniformSet",
-        //     sol::constructors<>(),
-        //     "set", [](shaders::ShaderUniformSet& s, const std::string& name, sol::object value) {
-        //         // We need to accept a Lua value and convert it into ShaderUniformValue:
-        //         // Try each type in turn:
-        //         if (value.is<float>()) {
-        //             s.set(name, value.as<float>());
-        //         } else if (value.is<sol::table>()) {
-        //             // Assuming Vector2/3/4 got bound to/from tables automatically
-        //             // Or you can explicitly handle Vector2, Vector3, Vector4
-        //             // ...
-        //         } else if (value.is<bool>()) {
-        //             s.set(name, value.as<bool>());
-        //         } else if (value.is<Texture2D>()) {
-        //             s.set(name, value.as<Texture2D>());
-        //         } else {
-        //             SPDLOG_ERROR("Unsupported uniform value type for uniform '{}'", name);
-        //         }
-        //     },
-        //     "get", &shaders::ShaderUniformSet::get
-        // );
-
-        // // 3) ShaderUniformComponent
-        // sh.new_usertype<shaders::ShaderUniformComponent>("ShaderUniformComponent",
-        //     sol::constructors<>(),
-        //     "set", &shaders::ShaderUniformComponent::set,
-        //     "registerEntityUniformCallback", &shaders::ShaderUniformComponent::registerEntityUniformCallback,
-        //     "getSet", &shaders::ShaderUniformComponent::getSet,
-        //     "applyToShaderForEntity", &shaders::ShaderUniformComponent::applyToShaderForEntity
-        // );
-
-        // // 4) Free‐functions
-        // sh.set_function("ApplyUniformsToShader", &shaders::ApplyUniformsToShader);
-        // sh.set_function("loadShadersFromJSON",    &shaders::loadShadersFromJSON);
-        // sh.set_function("unloadShaders",          &shaders::unloadShaders);
-        // sh.set_function("disableAllShadersViaOverride", &shaders::disableAllShadersViaOverride);
-        // sh.set_function("hotReloadShaders",       &shaders::hotReloadShaders);
-        // sh.set_function("setShaderMode",          &shaders::setShaderMode);
-        // sh.set_function("unsetShaderMode",        &shaders::unsetShaderMode);
-        // sh.set_function("getShader",              &shaders::getShader);
-        // sh.set_function("registerUniformUpdate",  &shaders::registerUniformUpdate);
-        // sh.set_function("updateAllShaderUniforms",&shaders::updateAllShaderUniforms);
-        // sh.set_function("updateShaders",          &shaders::update);
-        // sh.set_function("ShowShaderEditorUI",     &shaders::ShowShaderEditorUI);
+        
 
         // BindingRecorder instance
         auto& rec = BindingRecorder::instance();
@@ -110,19 +62,20 @@ namespace shaders
         // 2b) Document with BindingRecorder
         auto& sus_type = rec.add_type("shaders.ShaderUniformSet");
         sus_type.doc = "A collection of uniform values to be applied to a shader.";
+
         rec.record_method("shaders.ShaderUniformSet", {
             "set",
-            "---@param name string # The name of the uniform to set\n"
-            "---@param value number|boolean|Texture2D|Vector2|Vector3|Vector4 # The value to set",
-            "Sets a uniform value by name. The value can be a number, boolean, Texture, or Vector."
-        });
-        rec.record_method("shaders.ShaderUniformSet", {
-            "get",
-            "---@param name string # The name of the uniform to retrieve\n"
-            "---@return any # The value of the uniform",
-            "Gets a uniform value by its name."
+            "---@param name string # The name of the uniform to set.\n"
+            "---@param value any # The value to set (e.g., number, boolean, Vector2, Texture2D, etc.).",
+            "Sets or updates a uniform value by name within the set."
         });
 
+        rec.record_method("shaders.ShaderUniformSet", {
+            "get",
+            "---@param name string # The name of the uniform to retrieve.\n"
+            "---@return any|nil # The value of the uniform, or nil if not found.",
+            "Gets a uniform's value by its name."
+        });
 
         // --- ShaderUniformComponent ---
 
@@ -138,29 +91,37 @@ namespace shaders
         // 3b) Document with BindingRecorder
         auto& suc_type = rec.add_type("shaders.ShaderUniformComponent");
         suc_type.doc = "An entity component for managing per-entity shader uniforms.";
+
         rec.record_method("shaders.ShaderUniformComponent", {
             "set",
-            "---@param name string\n"
-            "---@param value any",
-            "Sets a uniform value within this component's set."
+            "---@param shaderName string # The name of the shader this uniform belongs to.\n"
+            "---@param uniformName string # The name of the uniform to set.\n"
+            "---@param value any # The value to assign to the uniform.",
+            "Sets a static uniform value for a specific shader within this component."
         });
+
         rec.record_method("shaders.ShaderUniformComponent", {
             "registerEntityUniformCallback",
-            "---@param uniformName string # The name of the uniform\n"
-            "---@param callback fun(entity: Entity):any # A function that takes an entity and returns the uniform value",
-            "Registers a callback to dynamically compute a uniform's value for an entity."
+            "---@param shaderName string # The shader this callback applies to.\n"
+            "---@param callback fun(shader: Shader, entity: Entity) # A function called just before rendering the entity.",
+            "Registers a callback to dynamically compute and apply uniforms for an entity."
         });
+
         rec.record_method("shaders.ShaderUniformComponent", {
             "getSet",
-            "---@return shaders.ShaderUniformSet",
-            "Returns the underlying ShaderUniformSet managed by this component."
+            "---@param shaderName string # The name of the shader.\n"
+            "---@return shaders.ShaderUniformSet|nil",
+            "Returns the underlying ShaderUniformSet for a specific shader, or nil if not found."
         });
+
         rec.record_method("shaders.ShaderUniformComponent", {
             "applyToShaderForEntity",
-            "---@param shader Shader # The target shader\n"
-            "---@param entity Entity # The entity to source uniform values from",
-            "Applies this component's uniforms to a given shader for a specific entity."
+            "---@param shader Shader # The target shader.\n"
+            "---@param shaderName string # The name of the shader configuration to apply.\n"
+            "---@param entity Entity # The entity to source dynamic uniform values from.",
+            "Applies this component's static uniforms and executes its dynamic callbacks for a given entity."
         });
+
 
 
         // --- Free Functions ---
@@ -179,52 +140,87 @@ namespace shaders
         sh.set_function("updateShaders",         &shaders::update);
         sh.set_function("ShowShaderEditorUI",    &shaders::ShowShaderEditorUI);
 
+        
         // 4b) Document with BindingRecorder
         rec.record_free_function({"shaders"}, {
             "ApplyUniformsToShader",
-            "---@param shader Shader\n---@param uniforms shaders.ShaderUniformSet",
-            "Applies a set of uniforms to a shader."
+            "---@param shader Shader\n"
+            "---@param uniforms shaders.ShaderUniformSet # A table of uniform names to values.\n"
+            "---@return nil",
+            "Applies a set of uniforms to a specific shader instance."
         });
+
         rec.record_free_function({"shaders"}, {
             "loadShadersFromJSON",
-            "---@param path string # Filepath to the JSON definition",
+            "---@param path string # Filepath to the JSON definition file.\n"
+            "---@return nil",
             "Loads and compiles shaders from a JSON file."
         });
+
         rec.record_free_function({"shaders"}, {
-            "unloadShaders", "---@return void", "Unloads all shaders, freeing their resources."
+            "unloadShaders",
+            "---@return nil",
+            "Unloads all shaders, freeing their GPU resources."
         });
+
         rec.record_free_function({"shaders"}, {
             "disableAllShadersViaOverride",
-            "---@param disabled boolean # True to disable all shaders, false to re-enable",
-            "Globally forces all shader effects off or on."
+            "---@param disabled boolean # True to disable all shaders, false to re-enable them.\n"
+            "---@return nil",
+            "Globally forces all shader effects off or on, overriding individual settings."
         });
+
         rec.record_free_function({"shaders"}, {
-            "hotReloadShaders", "---@return void", "Checks all loaded shaders for changes on disk and reloads them if necessary."
+            "hotReloadShaders",
+            "---@return nil",
+            "Checks all loaded shaders for changes on disk and reloads them if necessary."
         });
+
         rec.record_free_function({"shaders"}, {
-            "setShaderMode", "---@param mode any # The shader mode to activate", "Begins a shader mode, e.g., for post-processing effects."
+            "setShaderMode",
+            "---@param shaderName string # The name of the shader to begin as a full-screen effect.\n"
+            "---@return nil",
+            "Begins a full-screen shader mode, e.g., for post-processing effects."
         });
+
         rec.record_free_function({"shaders"}, {
-            "unsetShaderMode", "---@return void", "Ends the current shader mode."
+            "unsetShaderMode",
+            "---@return nil",
+            "Ends the current full-screen shader mode."
         });
+
         rec.record_free_function({"shaders"}, {
             "getShader",
-            "---@param name string # The name of the shader to find\n---@return Shader",
+            "---@param name string # The unique name of the shader.\n"
+            "---@return Shader|nil # The shader object, or nil if not found.",
             "Retrieves a loaded shader by its unique name."
         });
+
         rec.record_free_function({"shaders"}, {
             "registerUniformUpdate",
-            "---@param uniformName string # The uniform to target\n---@param callback function # A function to call to get the latest value",
-            "Registers a global callback to update a specific uniform across all shaders."
+            "---@param uniformName string # The uniform to target (e.g., 'time').\n"
+            "---@param callback fun():any # A function that returns the latest value for the uniform.\n"
+            "---@return nil",
+            "Registers a global callback to update a specific uniform's value across all shaders that use it."
         });
+
         rec.record_free_function({"shaders"}, {
-            "updateAllShaderUniforms", "---@return void", "Invokes all registered global uniform update callbacks."
+            "updateAllShaderUniforms",
+            "---@return nil",
+            "Invokes all registered global uniform update callbacks immediately."
         });
+
         rec.record_free_function({"shaders"}, {
-            "updateShaders", "---@param dt number # Delta time", "Updates internal shader state, such as timers for 'time' uniforms."
+            "updateShaders",
+            "---@param dt number # Delta time since the last frame.\n"
+            "---@return nil",
+            "Updates internal shader state, such as timers for built-in 'time' uniforms."
         });
+
         rec.record_free_function({"shaders"}, {
-            "ShowShaderEditorUI", "---@return void", "Displays the ImGui-based shader editor window for debugging."
+            "ShowShaderEditorUI",
+            "---@return nil",
+            "Displays the ImGui-based shader editor window for real-time debugging and uniform tweaking."
         });
         
     }

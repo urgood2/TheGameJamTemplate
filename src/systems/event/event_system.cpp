@@ -145,7 +145,7 @@ namespace event_system {
         // subscribeToCppEvent
         rec.bind_function(
             lua,
-            /*path=*/{},  
+            /*path=*/{},
             /*name=*/"subscribeToCppEvent",
             /*callable=*/
             [](const std::string& eventType, sol::function listener) {
@@ -165,8 +165,8 @@ namespace event_system {
                 }
             },
             /*signature=*/
-            "---@param eventType string # The C++ event name\n"
-            "---@param listener fun(...) # Lua callback invoked with event fields\n"
+            "---@param eventType 'player_jumped'|'player_died' # The C++ event name.\n"
+            "---@param listener CppEvent_PlayerJumped|CppEvent_PlayerDied # Lua callback. Signature depends on eventType.\n"
             "---@return nil",
             /*doc=*/
             "Subscribes a Lua listener to named C++ events.",
@@ -176,7 +176,7 @@ namespace event_system {
         // publishCppEvent
         rec.bind_function(
             lua,
-            /*path=*/{},  
+            /*path=*/{},
             /*name=*/"publishCppEvent",
             /*callable=*/
             [](const std::string& eventType, sol::table data) {
@@ -189,8 +189,8 @@ namespace event_system {
                 }
             },
             /*signature=*/
-            "---@param eventType string # The C++ event name\n"
-            "---@param data table    # Payload fields as a Lua table\n"
+            "---@param eventType string # The C++ event name.\n"
+            "---@param data table       # Payload fields as a Lua table.\n"
             "---@return nil",
             /*doc=*/
             "Publishes a Lua table as a C++ event and records its occurrence.",
@@ -207,8 +207,8 @@ namespace event_system {
                 luaEventListeners[eventType].push_back(listener);
             },
             /*signature=*/
-            "---@param eventType string # The Lua event name\n"
-            "---@param listener fun(...)    # Callback invoked when that event fires\n"
+            "---@param eventType string # The Lua event name.\n"
+            "---@param listener LuaEventListener # Callback invoked when the event fires.\n"
             "---@return nil",
             /*doc=*/
             "Subscribes a Lua listener to a Lua-defined event."
@@ -222,8 +222,8 @@ namespace event_system {
             [](const std::string& eventType, sol::table data) {
                 publishLuaEvent(eventType, data);
             },
-            "---@param eventType string # The Lua event name\n"
-            "---@param data table       # Payload table passed to listeners\n"
+            "---@param eventType string # The Lua event name.\n"
+            "---@param data table       # Payload table passed to listeners.\n"
             "---@return nil",
             "Publishes a Lua-defined event with a data table."
         );
@@ -237,7 +237,7 @@ namespace event_system {
                 sol::table data = sol::lua_nil;
                 publishLuaEvent(eventType, data);
             },
-            "---@param eventType string # The Lua event name\n"
+            "---@param eventType string # The Lua event name.\n"
             "---@return nil",
             "Publishes a Lua-defined event with no arguments."
         );
@@ -248,7 +248,7 @@ namespace event_system {
             {},
             "resetListenersForLuaEvent",
             &resetListenersForLuaEvent,
-            "---@param eventType string # The Lua event name\n"
+            "---@param eventType string # The Lua event name.\n"
             "---@return nil",
             "Clears all listeners for the specified Lua-defined event."
         );
@@ -267,7 +267,7 @@ namespace event_system {
                 }
                 // …other C++ event types…
             },
-            "---@param eventType string # The C++ event type name\n"
+            "---@param eventType string # The C++ event type name.\n"
             "---@return nil",
             "Clears all listeners for the specified C++ event type."
         );
@@ -285,14 +285,15 @@ namespace event_system {
         );
 
         // getEventOccurred
+        // Corrected to show both return values from the std::tuple.
         rec.bind_function(
             lua,
             {},
             "getEventOccurred",
             &getEventOccurred,
-            "---@param eventType string # The event name\n"
-            "---@return boolean occurred # True if that event has fired since last reset\n",
-            "Returns whether the given event has occurred."
+            "---@param eventType string # The event name.\n"
+            "---@return boolean occurred, table|nil payload # True if the event has fired, and its payload.",
+            "Returns whether the given event has occurred and its data."
         );
 
         // setEventOccurred
@@ -301,8 +302,8 @@ namespace event_system {
             {},
             "setEventOccurred",
             &setEventOccurred,
-            "---@param eventType string  # The event name\n"
-            "---@param occurred boolean  # Whether to mark it occurred or not\n"
+            "---@param eventType string  # The event name.\n"
+            "---@param occurred boolean # Whether to mark it occurred or not.\n"
             "---@return nil",
             "Manually marks an event as occurred (or not)."
         );

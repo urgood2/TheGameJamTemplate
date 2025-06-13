@@ -199,239 +199,195 @@ namespace random_utils {
 
         // 5) Core functions
         rec.bind_function(lua, {"random_utils"}, "set_seed", &random_utils::set_seed,
-            "---@param seed number # Seed for the RNG\n"
-            "---@return void",
-            "Sets the seed for deterministic random behavior");
+            "---@param seed integer # The seed for the random number generator.\n"
+            "---@return nil",
+            "Sets the seed for deterministic random behavior."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_bool", &random_utils::random_bool,
-            "---@return boolean # A random boolean value",
-            "Returns a random boolean value");
+            "---@param chance? number # Optional: A percentage chance (0-100) for the result to be true. Defaults to 50.\n"
+            "---@return boolean",
+            "Returns a random boolean value, with an optional probability."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_float", &random_utils::random_float,
-            "---@param min number\n"
-            "---@param max number\n"
-            "---@return number # A random float between min and max",
-            "Returns a random float between min and max");
+            "---@param min? number # The minimum value (inclusive). Defaults to 0.0.\n"
+            "---@param max? number # The maximum value (inclusive). Defaults to 1.0.\n"
+            "---@return number",
+            "Returns a random float between min and max."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_int", &random_utils::random_int,
-            "---@param min number\n"
-            "---@param max number\n"
-            "---@return number # A random integer within the range",
-            "Returns a random integer within a range");
+            "---@param min? integer # The minimum value (inclusive). Defaults to 0.\n"
+            "---@param max? integer # The maximum value (inclusive). Defaults to 1.\n"
+            "---@return integer",
+            "Returns a random integer within a range."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_normal", &random_utils::random_normal,
-            "---@param mean number\n"
-            "---@param stdev number\n"
-            "---@return number # A float sampled from a normal distribution",
-            "Returns a float sampled from a normal distribution");
+            "---@param mean number # The mean of the distribution.\n"
+            "---@param stdev number # The standard deviation of the distribution.\n"
+            "---@return number",
+            "Returns a float sampled from a normal (Gaussian) distribution."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_sign", &random_utils::random_sign,
-            "---@return number # Either +1 or -1",
-            "Returns +1 or -1 randomly");
+            "---@param chance? number # Optional: A percentage chance (0-100) for the result to be +1. Defaults to 50.\n"
+            "---@return integer # Either +1 or -1.",
+            "Returns +1 or -1 randomly, with an optional probability."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_uid", &random_utils::random_uid,
-            "---@return string # A random UID string",
-            "Generates a random UID string");
+            "---@return integer # A random unique integer ID.",
+            "Generates a random unique integer ID."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_angle", &random_utils::random_angle,
-            "---@return number # A random angle in radians",
-            "Returns a random angle in radians");
+            "---@return number # A random angle in radians (0 to 2*pi).",
+            "Returns a random angle in radians."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_biased", &random_utils::random_biased,
-            "---@param bias number\n"
-            "---@return number # A biased random float",
-            "Returns a biased random float skewed toward an end");
+            "---@param biasFactor number # A factor to skew the result. <1.0 favors higher values, >1.0 favors lower values.\n"
+            "---@return number",
+            "Returns a biased random float between 0 and 1."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_delay", &random_utils::random_delay,
-            "---@param min number\n"
-            "---@param max number\n"
-            "---@return number # Random delay in milliseconds",
-            "Returns a random delay in milliseconds");
+            "---@param minMs integer # The minimum delay in milliseconds.\n"
+            "---@param maxMs integer # The maximum delay in milliseconds.\n"
+            "---@return number",
+            "Returns a random delay in milliseconds."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_unit_vector_2D", &random_utils::random_unit_vector_2D,
-            "---@return Vector2 # A normalized 2D vector",
-            "Returns a normalized 2D vector");
+            "---@return Vector2",
+            "Returns a random, normalized 2D vector."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_unit_vector_3D", &random_utils::random_unit_vector_3D,
-            "---@return Vector3 # A normalized 3D vector",
-            "Returns a normalized 3D vector");
+            "---@return Vector3",
+            "Returns a random, normalized 3D vector."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_color", &random_utils::random_color,
-            "---@return Color # A random color",
-            "Returns a randomly generated color");
+            "---@return Color",
+            "Returns a randomly generated color."
+        );
 
 
         // --- random_element<T> ---
         rec.bind_function(lua, {"random_utils"}, "random_element_int", &random_utils::random_element<int>,
-            "---@param list integer[]\n"
+            "---@param items integer[] # A table of integers.\n"
             "---@return integer",
-            "Random element from int vector");
+            "Selects a random element from a table of integers."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_double", &random_utils::random_element<double>,
-            "---@param list number[]\n"
+            "---@param items number[] # A table of numbers.\n"
             "---@return number",
-            "Random element from double vector");
+            "Selects a random element from a table of numbers."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_string", &random_utils::random_element<std::string>,
-            "---@param list string[]\n"
+            "---@param items string[] # A table of strings.\n"
             "---@return string",
-            "Random element from string vector");
+            "Selects a random element from a table of strings."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_color", &random_utils::random_element<Color>,
-            "---@param list Color[]\n"
+            "---@param items Color[] # A table of Colors.\n"
             "---@return Color",
-            "Random element from Color vector");
+            "Selects a random element from a table of Colors."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_vec2", &random_utils::random_element<Vector2>,
-            "---@param list Vector2[]\n"
+            "---@param items Vector2[] # A table of Vector2s.\n"
             "---@return Vector2",
-            "Random element from Vector2 vector");
+            "Selects a random element from a table of Vector2s."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_entity", &random_utils::random_element<entt::entity>,
-            "---@param list entity[]\n"
-            "---@return entity",
-            "Random element from entity vector");
+            "---@param items Entity[] # A table of Entities.\n"
+            "---@return Entity",
+            "Selects a random element from a table of Entities."
+        );
 
 
         // --- random_element_remove<T> ---
         rec.bind_function(lua, {"random_utils"}, "random_element_remove_int", &random_utils::random_element_remove<int>,
-            "---@param list integer[]\n"
+            "---@param items integer[] # The table to modify.\n"
             "---@return integer",
-            "Removes and returns a random int");
+            "Selects, removes, and returns a random element from a table of integers."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_remove_double", &random_utils::random_element_remove<double>,
-            "---@param list number[]\n"
+            "---@param items number[] # The table to modify.\n"
             "---@return number",
-            "Removes and returns a random double");
+            "Selects, removes, and returns a random element from a table of numbers."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_remove_string", &random_utils::random_element_remove<std::string>,
-            "---@param list string[]\n"
+            "---@param items string[] # The table to modify.\n"
             "---@return string",
-            "Removes and returns a random string");
+            "Selects, removes, and returns a random element from a table of strings."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_remove_color", &random_utils::random_element_remove<Color>,
-            "---@param list Color[]\n"
+            "---@param items Color[] # The table to modify.\n"
             "---@return Color",
-            "Removes and returns a random color");
+            "Selects, removes, and returns a random element from a table of Colors."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_remove_vec2", &random_utils::random_element_remove<Vector2>,
-            "---@param list Vector2[]\n"
+            "---@param items Vector2[] # The table to modify.\n"
             "---@return Vector2",
-            "Removes and returns a random Vector2");
+            "Selects, removes, and returns a random element from a table of Vector2s."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_element_remove_entity", &random_utils::random_element_remove<entt::entity>,
-            "---@param list entity[]\n"
-            "---@return entity",
-            "Removes and returns a random entity");
+            "---@param items Entity[] # The table to modify.\n"
+            "---@return Entity",
+            "Selects, removes, and returns a random element from a table of Entities."
+        );
 
 
         // --- random_weighted_pick ---
         rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_int", &random_utils::random_weighted_pick<int>,
-            "---@param weights number[]\n"
-            "---@return integer",
-            "Index based on weight vector");
+            "---@param weights number[] # A table of weights.\n"
+            "---@return integer # A 1-based index corresponding to the chosen weight.",
+            "Performs a weighted random pick and returns the chosen index."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_string", &random_utils::random_weighted_pick<std::string>,
-            "---@param values string[]\n"
-            "---@param weights number[]\n"
+            "---@param values string[] # A table of string values.\n"
+            "---@param weights number[] # A table of corresponding weights.\n"
             "---@return string",
-            "Weighted pick of string");
+            "Performs a weighted random pick from a table of strings."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_color", &random_utils::random_weighted_pick<Color>,
-            "---@param values Color[]\n"
-            "---@param weights number[]\n"
+            "---@param values Color[] # A table of Color values.\n"
+            "---@param weights number[] # A table of corresponding weights.\n"
             "---@return Color",
-            "Weighted pick of color");
+            "Performs a weighted random pick from a table of Colors."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_vec2", &random_utils::random_weighted_pick<Vector2>,
-            "---@param values Vector2[]\n"
-            "---@param weights number[]\n"
+            "---@param values Vector2[] # A table of Vector2 values.\n"
+            "---@param weights number[] # A table of corresponding weights.\n"
             "---@return Vector2",
-            "Weighted pick of Vector2");
+            "Performs a weighted random pick from a table of Vector2s."
+        );
 
         rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_entity", &random_utils::random_weighted_pick<entt::entity>,
-            "---@param values entity[]\n"
-            "---@param weights number[]\n"
-            "---@return entity",
-            "Weighted pick of entity");
-        // // 1) Create (or fetch) the random_utils table
-        // // sol::table ru = lua.get_or("random_utils", lua.create_table());
-        // sol::state_view luaView{lua};
-        // auto ru = luaView["random_utils"].get_or_create<sol::table>();
-        // if (!ru.valid()) {
-        //     ru = lua.create_table();
-        //     lua["random_utils"] = ru;
-        // }
+            "---@param values Entity[] # A table of Entity values.\n"
+            "---@param weights number[] # A table of corresponding weights.\n"
+            "---@return Entity",
+            "Performs a weighted random pick from a table of Entities."
+        );
 
-        // // 2) Vec2
-        // ru.new_usertype<Vector2>("Vector2",
-        //     sol::constructors<Vector2(), Vector2(float, float)>(),
-        //     "x", &Vector2::x,
-        //     "y", &Vector2::y
-        // );
-
-        // // 3) Vec3
-
-        // ru.new_usertype<Vector3>("Vector3",
-        //     sol::constructors<Vector3(), Vector3(float, float, float)>(),
-        //     "x", &Vector3::x,
-        //     "y", &Vector3::y,
-        //     "z", &Vector3::z
-        // );
-
-        // // 4) Color
-        // ru.new_usertype<Color>("Color",
-        //     sol::constructors<Color(), Color(char, char, char)>(),
-        //     "r", &Color::r,
-        //     "g", &Color::g,
-        //     "b", &Color::b
-        // );
-
-        // // 5) Core functions
-        // ru.set_function("set_seed",        &random_utils::set_seed);
-        // ru.set_function("random_bool",     &random_utils::random_bool);
-        // ru.set_function("random_float",    &random_utils::random_float);
-        // ru.set_function("random_int",      &random_utils::random_int);
-        // ru.set_function("random_normal",   &random_utils::random_normal);
-        // ru.set_function("random_sign",     &random_utils::random_sign);
-        // ru.set_function("random_uid",      &random_utils::random_uid);
-        // ru.set_function("random_angle",    &random_utils::random_angle);
-        // ru.set_function("random_biased",   &random_utils::random_biased);
-
-        // // 6) Delay (returns chrono::milliseconds)
-        // ru.set_function("random_delay",    &random_utils::random_delay);
-
-        // // 7) Unit‐vector generators
-        // ru.set_function("random_unit_vector_2D", &random_utils::random_unit_vector_2D);
-        // ru.set_function("random_unit_vector_3D", &random_utils::random_unit_vector_3D);
-
-        // // 8) Color picker
-        // ru.set_function("random_color",    &random_utils::random_color);
-
-        // // --- random_element<T> ---
-        // ru.set_function("random_element_int",      &random_utils::random_element<int>);
-        // ru.set_function("random_element_double",   &random_utils::random_element<double>);
-        // ru.set_function("random_element_string",   &random_utils::random_element<std::string>);
-        // ru.set_function("random_element_color",    &random_utils::random_element<Color>);
-        // ru.set_function("random_element_vec2",     &random_utils::random_element<Vector2>);
-        // ru.set_function("random_element_entity",   &random_utils::random_element<entt::entity>);
-
-        // // --- random_element_remove<T> ---
-        // ru.set_function("random_element_remove_int",    &random_utils::random_element_remove<int>);
-        // ru.set_function("random_element_remove_double", &random_utils::random_element_remove<double>);
-        // ru.set_function("random_element_remove_string", &random_utils::random_element_remove<std::string>);
-        // ru.set_function("random_element_remove_color",  &random_utils::random_element_remove<Color>);
-        // ru.set_function("random_element_remove_vec2",   &random_utils::random_element_remove<Vector2>);
-        // ru.set_function("random_element_remove_entity", &random_utils::random_element_remove<entt::entity>);
-
-        // // --- random_weighted_pick: vector<double> → int index ---
-        // ru.set_function("random_weighted_pick_int", &random_utils::random_weighted_pick<int>);
-
-        // // --- random_weighted_pick<T> for value picks ---
-        // ru.set_function("random_weighted_pick_string", &random_utils::random_weighted_pick<std::string>);
-        // ru.set_function("random_weighted_pick_color",  &random_utils::random_weighted_pick<Color>);
-        // ru.set_function("random_weighted_pick_vec2",   &random_utils::random_weighted_pick<Vector2>);
-        // ru.set_function("random_weighted_pick_entity",&random_utils::random_weighted_pick<entt::entity>);
+        
     }
 
     /**

@@ -27,58 +27,7 @@ namespace timer
     })
     */
     void exposeToLua(sol::state &lua) {
-        // // 1) Get or create the `timer` table
-        // sol::state_view luaView{lua};
-        // auto t = luaView["timer"].get_or_create<sol::table>();
-
-        // // sol::table t = lua.get_or("timer", lua.create_table());
-        // if (!t.valid()) {
-        //     t = lua.create_table();
-        //     lua["timer"] = t;
-        // }
-
-        // // 2) timer.math
-        // auto m = luaView["math"].get_or_create<sol::table>();
-        // // sol::table m = lua.get_or("math", lua.create_table());
-        // if (!m.valid()) {
-        //     m = t.create_named("math");
-        // }
-        // m.set_function("remap", &timer::math::remap);
-        // m.set_function("lerp",  &timer::math::lerp);
-
-        // // 3) TimerType enum
-        // t.new_enum<timer::TimerType>("TimerType", {
-        //     {"RUN",        timer::TimerType::RUN},
-        //     {"AFTER",      timer::TimerType::AFTER},
-        //     {"COOLDOWN",   timer::TimerType::COOLDOWN},
-        //     {"EVERY",      timer::TimerType::EVERY},
-        //     {"EVERY_STEP", timer::TimerType::EVERY_STEP},
-        //     {"FOR",        timer::TimerType::FOR},
-        //     {"TWEEN",      timer::TimerType::TWEEN}
-        // });
-
-        // // 4) Core control/query
-        // t.set_function("cancel",               &timer::TimerSystem::cancel_timer);
-        // t.set_function("get_every_index",     &timer::TimerSystem::timer_get_every_index);
-        // t.set_function("reset",                &timer::TimerSystem::timer_reset);
-        // t.set_function("get_delay",           &timer::TimerSystem::timer_get_delay);
-        // t.set_function("set_multiplier",      &timer::TimerSystem::timer_set_multiplier);
-        // t.set_function("get_multiplier",      &timer::TimerSystem::timer_get_multiplier);
-        // t.set_function("get_for_elapsed",     &timer::TimerSystem::timer_get_for_elapsed_time);
-        // t.set_function("get_timer_and_delay",&timer::TimerSystem::timer_get_timer_and_delay);
-
-        // // 5) Ticking
-        // t.set_function("update", &timer::TimerSystem::update_timers);
-
-        // // 6) Creation APIs
-        // t.set_function("run",         &timer::TimerSystem::timer_run);
-        // t.set_function("after",       &timer::TimerSystem::timer_after);
-        // t.set_function("cooldown",    &timer::TimerSystem::timer_cooldown);
-        // t.set_function("every",       &timer::TimerSystem::timer_every);
-        // t.set_function("every_step",  &timer::TimerSystem::timer_every_step);
-        // t.set_function("for",         &timer::TimerSystem::timer_for);
-        // t.set_function("tween",       &timer::TimerSystem::timer_tween);
-
+        
         // BindingRecorder instance
         auto& rec = BindingRecorder::instance();
 
@@ -144,15 +93,73 @@ namespace timer
         t.set_function("get_multiplier",    &timer::TimerSystem::timer_get_multiplier);
         t.set_function("get_for_elapsed",   &timer::TimerSystem::timer_get_for_elapsed_time);
         t.set_function("get_timer_and_delay",&timer::TimerSystem::timer_get_timer_and_delay);
+        
         // Recorder: control/query functions
-        rec.record_free_function({"timer"}, {"cancel", "---@param timerHandle integer\n---@return nil", "Cancels and destroys an active timer.", true, false});
-        rec.record_free_function({"timer"}, {"get_every_index", "---@param timerHandle integer\n---@return integer", "Gets the current invocation count for an 'every' timer.", true, false});
-        rec.record_free_function({"timer"}, {"reset", "---@param timerHandle integer\n---@return nil", "Resets a timer, such as a 'cooldown'.", true, false});
-        rec.record_free_function({"timer"}, {"get_delay", "---@param timerHandle integer\n---@return number", "Gets the remaining time on a timer.", true, false});
-        rec.record_free_function({"timer"}, {"set_multiplier", "---@param multiplier number\n---@return nil", "Sets the global speed multiplier for all timers.", true, false});
-        rec.record_free_function({"timer"}, {"get_multiplier", "---@return number", "Gets the global timer speed multiplier.", true, false});
-        rec.record_free_function({"timer"}, {"get_for_elapsed", "---@param timerHandle integer\n---@return number", "Gets the elapsed time for a 'for' timer.", true, false});
-        rec.record_free_function({"timer"}, {"get_timer_and_delay", "---@param timerHandle integer\n---@return table, number", "Returns the timer object and its remaining delay.", true, false});
+        rec.record_free_function({"timer"}, {
+            "cancel",
+            "---@param timerHandle integer # The handle of the timer to cancel.\n"
+            "---@return nil",
+            "Cancels and destroys an active timer.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "get_every_index",
+            "---@param timerHandle integer # The handle of an 'every' timer.\n"
+            "---@return integer|nil # The current invocation count, or nil if not found.",
+            "Gets the current invocation count for an 'every' timer.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "reset",
+            "---@param timerHandle integer # The handle of the timer to reset.\n"
+            "---@return nil",
+            "Resets a timer's elapsed time, such as for a 'cooldown'.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "get_delay",
+            "---@param timerHandle integer # The handle of the timer.\n"
+            "---@return number|nil # The timer's current delay, or nil if not found.",
+            "Gets the configured delay time for a timer.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "set_multiplier",
+            // This Lua binding appears to set a global multiplier,
+            // whereas the C++ header shows a per-timer setter. The doc reflects the global intent.
+            "---@param multiplier number # The new global speed multiplier.\n"
+            "---@return nil",
+            "Sets the global speed multiplier for all timers.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "get_multiplier",
+            "---@return number",
+            "Gets the global timer speed multiplier.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "get_for_elapsed",
+            "---@param timerHandle integer # The handle of a 'for' timer.\n"
+            "---@return number|nil # The normalized elapsed time (0.0 to 1.0), or nil if not found.",
+            "Gets the elapsed time for a 'for' timer.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "get_timer_and_delay",
+            "---@param timerHandle integer # The handle of the timer.\n"
+            "---@return number, number # Returns two values: the elapsed time and the total delay. Returns a single nil if not found.",
+            "Returns the timer object's elapsed time and its configured delay.",
+            true, false
+        });
+
 
         // 5) Ticking
         t.set_function("update", &timer::TimerSystem::update_timers);
@@ -167,124 +174,162 @@ namespace timer
         t.set_function("every_step", &timer::TimerSystem::timer_every_step);
         t.set_function("for_time",        &timer::TimerSystem::timer_for);
         t.set_function("tween",      &timer::TimerSystem::timer_tween);
+        
+
         // Recorder: creation functions
-        rec.record_free_function({"timer"}, {"run", "---@param callback function\n---@return integer # timerHandle", "Create a timer that runs once immediately.", true, false});
-        rec.record_free_function({"timer"}, {"after", "---@param delay number\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs once after a delay.", true, false});
-        rec.record_free_function({"timer"}, {"cooldown", "---@param duration number\n---@param callback function\n---@return integer # timerHandle", "Create a resettable one-shot timer.", true, false});
-        rec.record_free_function({"timer"}, {"every", "---@param interval number\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs repeatedly.", true, false});
-        rec.record_free_function({"timer"}, {"every_step", "---@param frames integer\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs every N frames.", true, false});
-        rec.record_free_function({"timer"}, {"for_time", "---@param duration number\n---@param callback fun(elapsedTime:number)\n---@return integer # timerHandle", "Create a timer that runs every frame for a set duration.", true, false});
-        rec.record_free_function({"timer"}, {"tween", "---@param duration number\n---@param callback fun(value:number)\n---@return integer # timerHandle", "Create a timer that interpolates a value from 0 to 1 over a duration.", true, false});
+        rec.record_free_function({"timer"}, {
+            "run",
+            "---@param action fun()\n"
+            "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@return integer # timerHandle",
+            "Creates a timer that runs an action once immediately.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "after",
+            "---@param delay number|{number, number} # A fixed delay or a {min, max} range in seconds.\n"
+            "---@param action fun()\n"
+            "---@param tag? string\n"
+            "---@return integer # timerHandle",
+            "Creates a timer that runs an action once after a delay.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "cooldown",
+            "---@param delay number|{number, number} # Cooldown duration in seconds or a {min, max} range.\n"
+            "---@param condition fun():boolean # A function that must return true for the action to fire.\n"
+            "---@param action fun()\n"
+            "---@param times? integer # Number of times to run. 0 for infinite.\n"
+            "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@return integer # timerHandle",
+            "Creates a resettable timer that fires an action when a condition is met after a cooldown.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "every",
+            "---@param interval number|{number, number} # Interval in seconds or a {min, max} range.\n"
+            "---@param action fun()\n"
+            "---@param times? integer # Number of times to run. 0 for infinite.\n"
+            "---@param immediate? boolean # If true, the action runs immediately on creation.\n"
+            "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@return integer # timerHandle",
+            "Creates a timer that runs an action repeatedly at a given interval.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "every_step",
+            "---@param start_delay number\n"
+            "---@param end_delay number\n"
+            "---@param times integer # Total number of steps.\n"
+            "---@param action fun()\n"
+            "---@param immediate? boolean\n"
+            "---@param step_method? fun(t:number):number # Easing function for delay interpolation.\n"
+            "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@return integer # timerHandle",
+            "Creates a timer that runs for a set number of steps, interpolating the delay between a start and end value.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "for_time",
+            "---@param duration number|{number, number} # Total duration in seconds or a {min, max} range.\n"
+            "---@param action fun(dt:number)\n"
+            "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@return integer # timerHandle",
+            "Creates a timer that runs an action every frame for a set duration, passing delta time to the action.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "tween",
+            "---@param duration number|{number, number} # Duration of the tween in seconds or a {min, max} range.\n"
+            "---@param getter fun():number # Function to get the current value.\n"
+            "---@param setter fun(value:number) # Function to set the new value.\n"
+            "---@param target_value number # The final value for the tween.\n"
+            "---@param easing_method? fun(t:number):number # Optional easing function (0.0-1.0).\n"
+            "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@return integer # timerHandle",
+            "Creates a timer that interpolates a value towards a target over a duration.",
+            true, false
+        });
 
 
-        // 1) Get or create the table
-        // auto eq = luaView["EventQueueSystem"].get_or_create<sol::table>();
-        // // sol::table eq = lua.get_or("EventQueueSystem", lua.create_table());
-        // if (!eq.valid()) {
-        //     eq = lua.create_table();
-        //     lua["EventQueueSystem"] = eq;
-        // }
+        // Recorder: control/query functions
+        rec.record_free_function({"timer"}, {
+            "cancel",
+            "---@param timerHandle integer # The handle of the timer to cancel.\n"
+            "---@return nil",
+            "Cancels and destroys an active timer.",
+            true, false
+        });
 
-        // // 2) Enums
-        // eq.new_enum<timer::EventQueueSystem::EaseType>("EaseType", {
-        //     {"LERP",        timer::EventQueueSystem::EaseType::LERP},
-        //     {"ELASTIC_IN",  timer::EventQueueSystem::EaseType::ELASTIC_IN},
-        //     {"ELASTIC_OUT", timer::EventQueueSystem::EaseType::ELASTIC_OUT},
-        //     {"QUAD_IN",     timer::EventQueueSystem::EaseType::QUAD_IN},
-        //     {"QUAD_OUT",    timer::EventQueueSystem::EaseType::QUAD_OUT}
-        // });
+        rec.record_free_function({"timer"}, {
+            "get_every_index",
+            "---@param timerHandle integer # The handle of an 'every' timer.\n"
+            "---@return integer|nil # The current invocation count, or nil if not found.",
+            "Gets the current invocation count for an 'every' timer.",
+            true, false
+        });
 
-        // eq.new_enum<timer::EventQueueSystem::TriggerType>("TriggerType", {
-        //     {"IMMEDIATE", timer::EventQueueSystem::TriggerType::IMMEDIATE},
-        //     {"AFTER",     timer::EventQueueSystem::TriggerType::AFTER},
-        //     {"BEFORE",    timer::EventQueueSystem::TriggerType::BEFORE},
-        //     {"EASE",      timer::EventQueueSystem::TriggerType::EASE},
-        //     {"CONDITION", timer::EventQueueSystem::TriggerType::CONDITION}
-        // });
+        rec.record_free_function({"timer"}, {
+            "reset",
+            "---@param timerHandle integer # The handle of the timer to reset.\n"
+            "---@return nil",
+            "Resets a timer's elapsed time, such as for a 'cooldown'.",
+            true, false
+        });
 
-        // eq.new_enum<timer::EventQueueSystem::TimerType>("TimerType", {
-        //     {"REAL_TIME",                 timer::EventQueueSystem::TimerType::REAL_TIME},
-        //     {"TOTAL_TIME_EXCLUDING_PAUSE",timer::EventQueueSystem::TimerType::TOTAL_TIME_EXCLUDING_PAUSE}
-        // });
+        rec.record_free_function({"timer"}, {
+            "get_delay",
+            "---@param timerHandle integer # The handle of the timer.\n"
+            "---@return number|nil # The timer's current delay, or nil if not found.",
+            "Gets the configured delay time for a timer.",
+            true, false
+        });
 
-        // // 3) Plain‐old structs
-        // eq.new_usertype<timer::EventQueueSystem::EaseData>(
-        //     "EaseData",
-        //     "type",               &timer::EventQueueSystem::EaseData::type,
-        //     "startValue",         &timer::EventQueueSystem::EaseData::startValue,
-        //     "endValue",           &timer::EventQueueSystem::EaseData::endValue,
-        //     "startTime",          &timer::EventQueueSystem::EaseData::startTime,
-        //     "endTime",            &timer::EventQueueSystem::EaseData::endTime,
-        //     // for callbacks, we accept Lua functions:
-        //     "setValueCallback",   &timer::EventQueueSystem::EaseData::set_value_callback,
-        //     "getValueCallback",   &timer::EventQueueSystem::EaseData::get_value_callback
-        // );
+        rec.record_free_function({"timer"}, {
+            "set_multiplier",
+            // This Lua binding appears to set a global multiplier,
+            // whereas the C++ header shows a per-timer setter. The doc reflects the global intent.
+            "---@param multiplier number # The new global speed multiplier.\n"
+            "---@return nil",
+            "Sets the global speed multiplier for all timers.",
+            true, false
+        });
 
-        // eq.new_usertype<timer::EventQueueSystem::ConditionData>(
-        //     "ConditionData",
-        //     "check", &timer::EventQueueSystem::ConditionData::checkConditionCallback
-        // );
+        rec.record_free_function({"timer"}, {
+            "get_multiplier",
+            "---@return number",
+            "Gets the global timer speed multiplier.",
+            true, false
+        });
 
-        // eq.new_usertype<timer::EventQueueSystem::Event>(
-        //     "Event",
-        //     "eventTrigger",              &timer::EventQueueSystem::Event::eventTrigger,
-        //     "blocksQueue",               &timer::EventQueueSystem::Event::blocksQueue,
-        //     "canBeBlocked",              &timer::EventQueueSystem::Event::canBeBlocked,
-        //     "complete",                  &timer::EventQueueSystem::Event::complete,
-        //     "timerStarted",              &timer::EventQueueSystem::Event::timerStarted,
-        //     "delaySeconds",              &timer::EventQueueSystem::Event::delaySeconds,
-        //     "retainAfterCompletion",     &timer::EventQueueSystem::Event::retainInQueueAfterCompletion,
-        //     "createdWhilePaused",        &timer::EventQueueSystem::Event::createdWhileGamePaused,
-        //     "func",                      &timer::EventQueueSystem::Event::func,
-        //     "timerType",                 &timer::EventQueueSystem::Event::timerTypeToUse,
-        //     "time",                      &timer::EventQueueSystem::Event::time,
-        //     "ease",                      &timer::EventQueueSystem::Event::ease,
-        //     "condition",                 &timer::EventQueueSystem::Event::condition,
-        //     "tag",                       &timer::EventQueueSystem::Event::tag,
-        //     "debugID",                   &timer::EventQueueSystem::Event::debug_string_id,
-        //     "deleteNextCycleImmediately",&timer::EventQueueSystem::Event::deleteNextCycleImmediately
-        // );
+        rec.record_free_function({"timer"}, {
+            "get_for_elapsed",
+            "---@param timerHandle integer # The handle of a 'for' timer.\n"
+            "---@return number|nil # The normalized elapsed time (0.0 to 1.0), or nil if not found.",
+            "Gets the elapsed time for a 'for' timer.",
+            true, false
+        });
 
-        // // 4) Builder types
-        // eq.new_usertype<timer::EventQueueSystem::EaseDataBuilder>(
-        //     "EaseDataBuilder",
-        //     sol::constructors<timer::EventQueueSystem::EaseDataBuilder()>(),
-        //     "Type",    &timer::EventQueueSystem::EaseDataBuilder::Type,
-        //     "StartValue", &timer::EventQueueSystem::EaseDataBuilder::StartValue,
-        //     "EndValue",   &timer::EventQueueSystem::EaseDataBuilder::EndValue,
-        //     "StartTime",  &timer::EventQueueSystem::EaseDataBuilder::StartTime,
-        //     "EndTime",    &timer::EventQueueSystem::EaseDataBuilder::EndTime,
-        //     "SetCallback",&timer::EventQueueSystem::EaseDataBuilder::SetCallback,
-        //     "GetCallback",&timer::EventQueueSystem::EaseDataBuilder::GetCallback,
-        //     "Build",      &timer::EventQueueSystem::EaseDataBuilder::Build
-        // );
+        rec.record_free_function({"timer"}, {
+            "get_timer_and_delay",
+            "---@param timerHandle integer # The handle of the timer.\n"
+            "---@return number, number # Returns two values: the elapsed time and the total delay. Returns a single nil if not found.",
+            "Returns the timer object's elapsed time and its configured delay.",
+            true, false
+        });
 
-        // eq.new_usertype<timer::EventQueueSystem::EventBuilder>(
-        //     "EventBuilder",
-        //     sol::constructors<timer::EventQueueSystem::EventBuilder()>(),
-        //     "Trigger",                    &timer::EventQueueSystem::EventBuilder::Trigger,
-        //     "BlocksQueue",                &timer::EventQueueSystem::EventBuilder::BlocksQueue,
-        //     "CanBeBlocked",               &timer::EventQueueSystem::EventBuilder::CanBeBlocked,
-        //     "Delay",                      &timer::EventQueueSystem::EventBuilder::Delay,
-        //     "Func",                       &timer::EventQueueSystem::EventBuilder::Func,
-        //     "Ease",                       &timer::EventQueueSystem::EventBuilder::Ease,
-        //     "Condition",                  &timer::EventQueueSystem::EventBuilder::Condition,
-        //     "Tag",                        &timer::EventQueueSystem::EventBuilder::Tag,
-        //     "DebugID",                    &timer::EventQueueSystem::EventBuilder::DebugID,
-        //     "RetainAfterCompletion",      &timer::EventQueueSystem::EventBuilder::RetainAfterCompletion,
-        //     "CreatedWhilePaused",         &timer::EventQueueSystem::EventBuilder::CreatedWhilePaused,
-        //     "TimerType",                  &timer::EventQueueSystem::EventBuilder::TimerType,
-        //     "StartTimer",                 &timer::EventQueueSystem::EventBuilder::StartTimer,
-        //     "DeleteNextCycleImmediately", &timer::EventQueueSystem::EventBuilder::DeleteNextCycleImmediately,
-        //     "Build",                      &timer::EventQueueSystem::EventBuilder::Build,
-        //     "AddToQueue",                 &timer::EventQueueSystem::EventBuilder::AddToQueue
-        // );
-
-        // // 5) Core API
-        // eq.set_function("add_event",           &timer::EventQueueSystem::EventManager::add_event);
-        // eq.set_function("get_event_by_tag",    &timer::EventQueueSystem::EventManager::get_event_by_tag);
-        // eq.set_function("clear_queue",         &timer::EventQueueSystem::EventManager::clear_queue);
-        // eq.set_function("update",              &timer::EventQueueSystem::EventManager::update);
 
         // 1) Get or create the `EventQueueSystem` table
         auto eq = luaView["EventQueueSystem"].get_or_create<sol::table>();
@@ -465,11 +510,43 @@ namespace timer
         eq.set_function("get_event_by_tag", &timer::EventQueueSystem::EventManager::get_event_by_tag);
         eq.set_function("clear_queue",      &timer::EventQueueSystem::EventManager::clear_queue);
         eq.set_function("update",           &timer::EventQueueSystem::EventManager::update);
+       
+
         // Recorder: core API functions
-        rec.record_free_function({"EventQueueSystem"}, {"add_event", "---@param event EventQueueSystem.Event\n---@return nil", "Adds a pre-built event to the queue.", true, false});
-        rec.record_free_function({"EventQueueSystem"}, {"get_event_by_tag", "---@param tag string\n---@return EventQueueSystem.Event|nil", "Finds an active event by its tag.", true, false});
-        rec.record_free_function({"EventQueueSystem"}, {"clear_queue", "---@return nil", "Removes all events from the queue.", true, false});
-        rec.record_free_function({"EventQueueSystem"}, {"update", "---@param dt number # Delta time.\n---@return nil", "Updates the event queue, processing active events.", true, false});
+        rec.record_free_function({"EventQueueSystem"}, {
+            "add_event",
+            "---@param event EventQueueSystem.Event\n"
+            "---@param queue? string # Optional: The name of the queue to add to (defaults to 'base').\n"
+            "---@param front? boolean # Optional: If true, adds the event to the front of the queue.\n"
+            "---@return nil",
+            "Adds a pre-built event to the queue.",
+            true, false
+        });
+
+        rec.record_free_function({"EventQueueSystem"}, {
+            "get_event_by_tag",
+            "---@param tag string # The tag of the event to find.\n"
+            "---@param queue? string # Optional: The specific queue to search in. Searches all if omitted.\n"
+            "---@return EventQueueSystem.Event|nil",
+            "Finds an active event by its tag.",
+            true, false
+        });
+
+        rec.record_free_function({"EventQueueSystem"}, {
+            "clear_queue",
+            "---@param queue? string # Optional: The queue to clear. Clears all if omitted.\n"
+            "---@return nil",
+            "Removes all events from one or all queues.",
+            true, false
+        });
+
+        rec.record_free_function({"EventQueueSystem"}, {
+            "update",
+            "---@param forced? boolean # Optional: If true, forces an update step.\n"
+            "---@return nil",
+            "Updates the event queue, processing active events.",
+            true, false
+        });
 
     }
 

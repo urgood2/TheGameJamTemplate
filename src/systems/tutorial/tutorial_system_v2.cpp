@@ -245,56 +245,7 @@ namespace tutorial_system_v2 {
      * This must be called to expose the tutorial system to Lua.
      */
     auto exposeToLua(sol::state &lua) -> void {
-        // Expose the tutorial system to Lua TODO:
-
-        // lua.set_function("setTutorialModeActive", &setTutorialModeActive);
-        // lua.set_function("resetTutorialSystem", &resetTutorialSystem);
-        // lua.set_function("showTutorialWindow", [](const std::string &tutorialText) {
-        //     setShowTutorialWindow("Tutorial window", tutorialText, true);
-        // });
-        // lua.set_function("showTutorialWindowWithOptions", [](const std::string &tutorialText, sol::table options) {
-        //     // convert table to vector
-        //     std::vector<std::string> optionsVector;
-        //     for (auto &option : options) {
-        //         optionsVector.push_back(option.second.as<std::string>());
-        //         SPDLOG_DEBUG("Option: {}", option.second.as<std::string>());
-        //     }
-        //     setShowTutorialWindowWithOptions("Tutorial window", tutorialText, optionsVector, true);
-        // });
-        // lua.set_function("startTutorial", [](const std::string &tutorialName) {
-        //     // check that it exists
-        //     if (ai_system::masterStateLua["tutorials"][tutorialName] == sol::lua_nil) {
-        //         SPDLOG_ERROR("Tutorial name {} is not valid", tutorialName);
-        //         return;
-        //     }
-        //     currentTutorialCoroutine = ai_system::masterStateLua["tutorials"][tutorialName];
-        //     setTutorialModeActive(true);
-        // });
         
-        // lua.set_function("lockControls", &lockControls);
-        // lua.set_function("unlockControls", &unlockControls);
-        
-        // lua.set_function("addGameAnnouncement", &addGameAnnouncement);
-
-        // lua.set_function("registerTutorialToEvent", &registerTutorialToEvent);
-
-        // lua.set_function("moveCameraTo", &moveCameraTo);
-        // lua.set_function("moveCameraToEntity", &moveCameraToEntity);
-        
-
-        // lua.set_function("fadeOutScreen", &fadeOutScreen);
-        // lua.set_function("fadeInScreen", &fadeInScreen);
-
-        // lua.set_function("displayIndicatorAroundEntity", sol::overload(
-        //     static_cast<void(*)(entt::entity, std::string)>(&displayIndicatorAroundEntity),
-        //     static_cast<void(*)(entt::entity)>(&displayIndicatorAroundEntity)
-        // ));
-
-        // // register tutorials (run once), if it exists
-        // if (lua["tutorials"]["register"] != sol::lua_nil) 
-        //     lua.script("tutorials.register()");
-
-
         auto& rec = BindingRecorder::instance();
 
         auto tutorialPath = std::vector<std::string>{}; // global-level bindings
@@ -324,8 +275,9 @@ namespace tutorial_system_v2 {
             [](const std::string& tutorialText) {
                 setShowTutorialWindow("Tutorial window", tutorialText, true);
             },
-            "---@param text string # Tutorial content text\n---@return nil",
-            "Displays a tutorial window with provided text."
+            "---@param text string # Tutorial content text to display.\n"
+            "---@return nil",
+            "Displays a tutorial window with the provided text."
         );
 
         rec.bind_function(
@@ -340,8 +292,8 @@ namespace tutorial_system_v2 {
                 }
                 setShowTutorialWindowWithOptions("Tutorial window", tutorialText, optionsVector, true);
             },
-            "---@param text string # Tutorial content\n"
-            "---@param options table # Array-style Lua table of option strings\n"
+            "---@param text string # Tutorial content to display.\n"
+            "---@param options string[] # An array-style table of button labels.\n"
             "---@return nil",
             "Displays a tutorial window with selectable options."
         );
@@ -358,8 +310,9 @@ namespace tutorial_system_v2 {
                 currentTutorialCoroutine = ai_system::masterStateLua["tutorials"][tutorialName];
                 setTutorialModeActive(true);
             },
-            "---@param tutorialName string # The name of the tutorial to start\n---@return nil",
-            "Begins the specified tutorial coroutine if defined."
+            "---@param tutorialName string # The name of the tutorial coroutine to start.\n"
+            "---@return nil",
+            "Begins the specified tutorial coroutine if it is defined."
         );
 
         rec.bind_function(
@@ -385,7 +338,8 @@ namespace tutorial_system_v2 {
             tutorialPath,
             "addGameAnnouncement",
             &addGameAnnouncement,
-            "---@param message string # Announcement message\n---@return nil",
+            "---@param message string # The announcement message.\n"
+            "---@return nil",
             "Adds a new game announcement to the log."
         );
 
@@ -394,8 +348,10 @@ namespace tutorial_system_v2 {
             tutorialPath,
             "registerTutorialToEvent",
             &registerTutorialToEvent,
-            "---@param eventType string # Event type to listen for\n---@param tutorialName string # Tutorial name to trigger\n---@return nil",
-            "Registers a tutorial to activate on a specific event."
+            "---@param eventType string # The event to listen for.\n"
+            "---@param tutorialName string # The name of the tutorial to trigger.\n"
+            "---@return nil",
+            "Registers a tutorial to activate on a specific game event."
         );
 
         rec.bind_function(
@@ -403,7 +359,9 @@ namespace tutorial_system_v2 {
             tutorialPath,
             "moveCameraTo",
             &moveCameraTo,
-            "---@param x number # X position\n---@param y number # Y position\n---@return nil",
+            "---@param x number # The target X position.\n"
+            "---@param y number # The target Y position.\n"
+            "---@return nil",
             "Moves the camera instantly to the specified position."
         );
 
@@ -412,8 +370,9 @@ namespace tutorial_system_v2 {
             tutorialPath,
             "moveCameraToEntity",
             &moveCameraToEntity,
-            "---@param entity Entity # Entity to focus camera on\n---@return nil",
-            "Moves the camera to center on a given entity."
+            "---@param entity Entity # The entity to focus the camera on.\n"
+            "---@return nil",
+            "Moves the camera to center on the given entity."
         );
 
         rec.bind_function(
@@ -421,8 +380,9 @@ namespace tutorial_system_v2 {
             tutorialPath,
             "fadeOutScreen",
             &fadeOutScreen,
+            "---@param duration number # The duration of the fade in seconds.\n"
             "---@return nil",
-            "Fades the screen to black."
+            "Fades the screen to black over a specified duration."
         );
 
         rec.bind_function(
@@ -430,29 +390,32 @@ namespace tutorial_system_v2 {
             tutorialPath,
             "fadeInScreen",
             &fadeInScreen,
+            "---@param duration number # The duration of the fade in seconds.\n"
             "---@return nil",
-            "Fades the screen in from black."
+            "Fades the screen in from black over a specified duration."
         );
 
-        // Overloaded version
-        rec.bind_function(
-            lua,
-            tutorialPath,
-            "displayIndicatorAroundEntity",
-            static_cast<void(*)(entt::entity, std::string)>(&displayIndicatorAroundEntity),
-            "---@param entity Entity\n---@param colorName string\n---@return nil",
-            "Displays a visual indicator around the entity with a color.",
-            true
-        );
-
+        // Base function signature for displayIndicatorAroundEntity
         rec.bind_function(
             lua,
             tutorialPath,
             "displayIndicatorAroundEntity",
             static_cast<void(*)(entt::entity)>(&displayIndicatorAroundEntity),
-            "---@param entity Entity\n---@return nil",
+            "---@param entity Entity # The entity to display the indicator around.\n"
+            "---@return nil",
             "Displays a visual indicator around the entity.",
-            true
+            /*is_overload=*/false // This is the base function
+        );
+
+        // Overloaded version with indicatorTypeID
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "displayIndicatorAroundEntity",
+            static_cast<void(*)(entt::entity, std::string)>(&displayIndicatorAroundEntity),
+            "---@overload fun(entity: Entity, indicatorTypeID: string):nil",
+            "Displays a visual indicator of a specific type around the entity.",
+            /*is_overload=*/true // This is the overload
         );
 
         // Run tutorials.register() if it exists

@@ -404,23 +404,26 @@ namespace particle {
         rec.bind_usertype<particle::ParticleAnimationConfig>(lua, "particle.ParticleAnimationConfig", "0.1", "Configuration for animated particle appearance");
 
         // 6) Free functions
-
         rec.bind_function(
             lua,
             particlePath,
             "CreateParticle",
-            &particle::CreateParticle,
-            "---@param entity Entity\n---@param emitter ParticleEmitter\n---@return nil",
-            "Creates and attaches a particle system to an entity"
+            &particle::CreateParticle, // Note: This likely wraps a different C++ function than the header's CreateParticle.
+            "---@param entity Entity # The entity to attach the particle system to.\n"
+            "---@param emitter ParticleEmitter # A pre-configured particle emitter data object.\n"
+            "---@return nil",
+            "Creates and attaches a particle system to an entity using an emitter's properties."
         );
 
         rec.bind_function(
             lua,
             particlePath,
-            "EmitParticles",
+            "EmitParticles", // Note: This is a burst emission, unlike the C++ version.
             &particle::EmitParticles,
-            "---@param emitter ParticleEmitter\n---@param count integer\n---@return nil",
-            "Emits a burst of particles from the emitter"
+            "---@param emitterEntity Entity # The entity that has the particle emitter component.\n"
+            "---@param count integer # The number of particles to emit in a single burst.\n"
+            "---@return nil",
+            "Emits a burst of particles from the specified emitter entity."
         );
 
         rec.bind_function(
@@ -428,8 +431,8 @@ namespace particle {
             particlePath,
             "CreateParticleEmitter",
             &particle::CreateParticleEmitter,
-            "---@return ParticleEmitter",
-            "Returns a new ParticleEmitter with default values"
+            "---@return ParticleEmitter # A new ParticleEmitter data object.",
+            "Creates and returns a new ParticleEmitter data object with default values."
         );
 
         rec.bind_function(
@@ -437,8 +440,9 @@ namespace particle {
             particlePath,
             "UpdateParticles",
             &particle::UpdateParticles,
-            "---@param dt number\n---@return nil",
-            "Updates all particle systems by delta time"
+            "---@param dt number # The delta time since the last frame.\n"
+            "---@return nil",
+            "Updates all active particle systems."
         );
 
         rec.bind_function(
@@ -446,83 +450,10 @@ namespace particle {
             particlePath,
             "DrawParticles",
             &particle::DrawParticles,
+            "---@param layerPtr Layer # The layer to draw the particles on.\n"
             "---@return nil",
-            "Draws all active particle systems"
+            "Draws all active particles."
         );
 
-        // // 1) particle table
-        // // This will either fetch the existing table or create-and-assign a new one.
-        // // sol::table p = lua.get_or("particle", lua.create_table());
-        // sol::state_view luaView{lua};
-        // auto p = luaView["particle"].get_or_create<sol::table>();
-
-        // if (!p.valid()) {
-        //     p = lua.create_table();
-        //     lua["particle"] = p;
-        // }
-
-        // // 2) ParticleRenderType enum
-        // p["ParticleRenderType"] = lua.create_table_with(
-        //     "TEXTURE",   particle::ParticleRenderType::TEXTURE,
-        //     "RECTANGLE", particle::ParticleRenderType::RECTANGLE,
-        //     "CIRCLE",    particle::ParticleRenderType::CIRCLE
-        // );
-
-        // // 3) Particle struct
-        // p.new_usertype<particle::Particle>("Particle",
-        //     sol::constructors<>(),
-        //     "renderType",    &particle::Particle::renderType,
-        //     "velocity",      &particle::Particle::velocity,
-        //     "rotation",      &particle::Particle::rotation,
-        //     "rotationSpeed", &particle::Particle::rotationSpeed,
-        //     "scale",         &particle::Particle::scale,
-        //     "lifespan",      &particle::Particle::lifespan,
-        //     "age",           &particle::Particle::age,
-        //     "color",         &particle::Particle::color,
-        //     "gravity",       &particle::Particle::gravity,
-        //     "acceleration",  &particle::Particle::acceleration,
-        //     "startColor",    &particle::Particle::startColor,
-        //     "endColor",      &particle::Particle::endColor
-        // );
-
-        // // 4) ParticleEmitter struct
-        // p.new_usertype<particle::ParticleEmitter>("ParticleEmitter",
-        //     sol::constructors<>(),
-        //     "size",                  &particle::ParticleEmitter::size,
-        //     "emissionRate",          &particle::ParticleEmitter::emissionRate,
-        //     "lastEmitTime",          &particle::ParticleEmitter::lastEmitTime,
-        //     "particleLifespan",      &particle::ParticleEmitter::particleLifespan,
-        //     "particleSpeed",         &particle::ParticleEmitter::particleSpeed,
-        //     "fillArea",              &particle::ParticleEmitter::fillArea,
-        //     "oneShot",               &particle::ParticleEmitter::oneShot,
-        //     "oneShotParticleCount",  &particle::ParticleEmitter::oneShotParticleCount,
-        //     "prewarm",               &particle::ParticleEmitter::prewarm,
-        //     "prewarmParticleCount",  &particle::ParticleEmitter::prewarmParticleCount,
-        //     "useGlobalCoords",       &particle::ParticleEmitter::useGlobalCoords,
-        //     "speedScale",            &particle::ParticleEmitter::speedScale,
-        //     "explosiveness",         &particle::ParticleEmitter::explosiveness,
-        //     "randomness",            &particle::ParticleEmitter::randomness,
-        //     "emissionSpread",        &particle::ParticleEmitter::emissionSpread,
-        //     "gravityStrength",       &particle::ParticleEmitter::gravityStrength,
-        //     "emissionDirection",     &particle::ParticleEmitter::emissionDirection,
-        //     "acceleration",          &particle::ParticleEmitter::acceleration,
-        //     "blendMode",             &particle::ParticleEmitter::blendMode,
-        //     "colors",                &particle::ParticleEmitter::colors
-        // );
-
-        // // 5) ParticleAnimationConfig struct
-        // p.new_usertype<particle::ParticleAnimationConfig>("ParticleAnimationConfig",
-        //     sol::constructors<>(),
-        //     "loop",          &particle::ParticleAnimationConfig::loop,
-        //     "animationName", &particle::ParticleAnimationConfig::animationName
-        // );
-
-        // // 6) Free functions
-        // //    Note: you must already have bound 'entt::registry&', 'entt::entity', and 'layer::Layer' usertypes
-        // p.set_function("CreateParticle",          &particle::CreateParticle);
-        // p.set_function("EmitParticles",           &particle::EmitParticles);
-        // p.set_function("CreateParticleEmitter",   &particle::CreateParticleEmitter);
-        // p.set_function("UpdateParticles",         &particle::UpdateParticles);
-        // p.set_function("DrawParticles",           &particle::DrawParticles);
     }
 }

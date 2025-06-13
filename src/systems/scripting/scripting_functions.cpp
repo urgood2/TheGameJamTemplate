@@ -157,57 +157,57 @@ namespace scripting {
 
 
         //---------------------------------------------------------
-        // methods from event_system.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from event_system.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         event_system::exposeEventSystemToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from textVer2.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from textVer2.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         TextSystem::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from anim_system.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from anim_system.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         animation_system::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
-        // methods from tutorial_system_v2.cpp. These can be called from lua ✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from tutorial_system_v2.cpp. These can be called from lua ✅
         // ------------------------------------------------------
         tutorial_system_v2::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from particle system. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from particle system. These can be called from lua✅ 
         //---------------------------------------------------------
         particle::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from shader_pipeline.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from shader_pipeline.cpp. These can be called from lua✅ TODO: type registration not done properly
         //---------------------------------------------------------
         shader_pipeline::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from random.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from random.cpp. These can be called from lua✅
         //---------------------------------------------------------
         random_utils::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from system/layer folder. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from system/layer folder. These can be called from lua✅ 
         //---------------------------------------------------------
         layer::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from shader_system.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from shader_system.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         shaders::exposeToLua(stateToInit);
 
         // ---------------------------------------------------------
-        // methods from localization.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from localization.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         localization::exposeToLua(stateToInit);
 
         // ---------------------------------------------------------
-        // methods from timer.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
+        // methods from timer.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         timer::exposeToLua(stateToInit);
 
@@ -250,39 +250,93 @@ namespace scripting {
         stateToInit.set_function("getEntityByAlias", getEntityByAlias);
         stateToInit.set_function("setEntityAlias", setEntityAlias);
         rec.record_free_function({}, {"getEntityByAlias", "---@param alias string\n---@return Entity|nil", "Retrieves an entity by its string alias.", true, false});
-        rec.record_free_function({}, {"setEntityAlias", "---@param entity Entity\n---@param alias string\n---@return nil", "Assigns a string alias to an entity.", true, false});
+        rec.record_free_function({}, {"setEntityAlias", "---@param alias string\n---@param entity Entity\n---@return nil", "Assigns a string alias to an entity.", true, false});
 
         //---------------------------------------------------------
         // methods from scripting_functions.cpp. These can be called from lua
         //---------------------------------------------------------
+        // --- Logging Functions ---
         stateToInit.set_function("debug", sol::overload(
             static_cast<void(*)(entt::entity, std::string)>(&luaDebugLogWrapper),
             static_cast<void(*)(std::string)>(&luaDebugLogWrapperNoEntity)
         ));
-        rec.record_free_function({}, {"debug", "---@param entity Entity\n---@param message string\n---@return nil", "Logs a debug message associated with an entity.", true, false});
-        rec.record_free_function({}, {"debug", "---(message: string):nil", "Logs a general debug message.", true, true});
+        // Main signature
+        rec.record_free_function({}, {"debug",
+            "---@param entity Entity # The entity to associate the log with.\n"
+            "---@param message string # The message to log.\n"
+            "---@return nil",
+            "Logs a debug message associated with an entity.", true, false});
+        // Overload for no entity
+        rec.record_free_function({}, {"debug",
+            "---@overload fun(message: string):nil", // Correct overload syntax
+            "Logs a general debug message.", true, true});
+
 
         stateToInit.set_function("error", sol::overload(
             static_cast<void(*)(entt::entity, std::string)>(&luaErrorLogWrapper),
             static_cast<void(*)(std::string)>(&luaErrorLogWrapperNoEntity)
         ));
-        rec.record_free_function({}, {"error", "---@param entity Entity\n---@param message string\n---@return nil", "Logs an error message associated with an entity.", true, false});
-        rec.record_free_function({}, {"error", "---(message: string):nil", "Logs a general error message.", true, true});
+        // Main signature
+        rec.record_free_function({}, {"error",
+            "---@param entity Entity # The entity to associate the error with.\n"
+            "---@param message string # The error message.\n"
+            "---@return nil",
+            "Logs an error message associated with an entity.", true, false});
+        // Overload for no entity
+        rec.record_free_function({}, {"error",
+            "---@overload fun(message: string):nil", // Correct overload syntax
+            "Logs a general error message.", true, true});
 
+
+        // --- Current World State ---
         stateToInit.set_function("setCurrentWorldStateValue", setCurrentWorldStateValue);
         stateToInit.set_function("getCurrentWorldStateValue", getCurrentWorldStateValue);
         stateToInit.set_function("clearCurrentWorldState", clearCurrentWorldState);
-        rec.record_free_function({}, {"setCurrentWorldStateValue", "---@param key string\n---@param value any\n---@return nil", "Sets a value in the current world state.", true, false});
-        rec.record_free_function({}, {"getCurrentWorldStateValue", "---@param key string\n---@return any|nil", "Gets a value from the current world state.", true, false});
-        rec.record_free_function({}, {"clearCurrentWorldState", "---@return nil", "Clears the current world state.", true, false});
-        
+
+        rec.record_free_function({}, {"setCurrentWorldStateValue",
+            "---@param entity Entity\n"
+            "---@param key string\n"
+            "---@param value boolean\n" // Changed from 'any' to 'boolean'
+            "---@return nil",
+            "Sets a value in the entity's current world state.", true, false});
+
+        rec.record_free_function({}, {"getCurrentWorldStateValue",
+            "---@param entity Entity\n"
+            "---@param key string\n"
+            "---@return boolean|nil", // Changed from 'any' to 'boolean'
+            "Gets a value from the entity's current world state.", true, false});
+
+        rec.record_free_function({}, {"clearCurrentWorldState",
+            "---@param entity Entity\n" // Added missing entity parameter
+            "---@return nil",
+            "Clears the entity's current world state.", true, false});
+
+
+        // --- Goal World State ---
         stateToInit.set_function("setGoalWorldStateValue", setGoalWorldStateValue);
         stateToInit.set_function("getGoalWorldStateValue", getGoalWorldStateValue);
         stateToInit.set_function("clearGoalWorldState", clearGoalWorldState);
-        rec.record_free_function({}, {"setGoalWorldStateValue", "---@param key string\n---@param value any\n---@return nil", "Sets a value in the goal world state.", true, false});
-        rec.record_free_function({}, {"getGoalWorldStateValue", "---@param key string\n---@return any|nil", "Gets a value from the goal world state.", true, false});
-        rec.record_free_function({}, {"clearGoalWorldState", "---@return nil", "Clears the goal world state.", true, false});
 
+        rec.record_free_function({}, {"setGoalWorldStateValue",
+            "---@param entity Entity\n" // Added missing entity parameter
+            "---@param key string\n"
+            "---@param value boolean\n" // Changed from 'any' to 'boolean'
+            "---@return nil",
+            "Sets a value in the entity's goal world state.", true, false});
+
+        rec.record_free_function({}, {"getGoalWorldStateValue",
+            "---@param entity Entity\n" // Added missing entity parameter
+            "---@param key string\n"
+            "---@return boolean|nil", // Changed from 'any' to 'boolean'
+            "Gets a value from the entity's goal world state.", true, false});
+
+        rec.record_free_function({}, {"clearGoalWorldState",
+            "---@param entity Entity\n" // Added missing entity parameter
+            "---@return nil",
+            "Clears the entity's goal world state.", true, false});
+
+
+        // --- Blackboard Functions (your existing ones were correct) ---
         stateToInit.set_function("setBlackboardFloat", setBlackboardFloat);
         stateToInit.set_function("getBlackboardFloat", getBlackboardFloat);
         rec.record_free_function({}, {"setBlackboardFloat", "---@param entity Entity\n---@param key string\n---@param value number\n---@return nil", "Sets a float value on an entity's blackboard.", true, false});
@@ -297,12 +351,14 @@ namespace scripting {
         stateToInit.set_function("getBlackboardInt", getBlackboardInt);
         rec.record_free_function({}, {"setBlackboardInt", "---@param entity Entity\n---@param key string\n---@param value integer\n---@return nil", "Sets an integer value on an entity's blackboard.", true, false});
         rec.record_free_function({}, {"getBlackboardInt", "---@param entity Entity\n---@param key string\n---@return integer", "Gets an integer value from an entity's blackboard.", true, false});
-        
+
         stateToInit.set_function("setBlackboardString", setBlackboardString);
         stateToInit.set_function("getBlackboardString", getBlackboardString);
         rec.record_free_function({}, {"setBlackboardString", "---@param entity Entity\n---@param key string\n---@param value string\n---@return nil", "Sets a string value on an entity's blackboard.", true, false});
         rec.record_free_function({}, {"getBlackboardString", "---@param entity Entity\n---@param key string\n---@return string", "Gets a string value from an entity's blackboard.", true, false});
 
+
+        // --- Input ---
         stateToInit.set_function("isKeyPressed", isKeyPressed);
         rec.record_free_function({}, {"isKeyPressed", "---@param key string\n---@return boolean", "Checks if a specific keyboard key is currently pressed.", true, false});
         

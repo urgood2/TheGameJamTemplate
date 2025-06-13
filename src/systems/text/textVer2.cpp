@@ -81,46 +81,6 @@ namespace TextSystem
             );
         }
 
-        // //
-        // // 3) Character
-        // //
-        // ts.new_usertype<TextSystem::Character>("Character",
-        //     sol::constructors<>(),
-        //     "value",                    &TextSystem::Character::value,
-        //     "overrideCodepoint",        &TextSystem::Character::overrideCodepoint,
-        //     "rotation",                 &TextSystem::Character::rotation,
-        //     "scale",                    &TextSystem::Character::scale,
-        //     "size",                     &TextSystem::Character::size,
-        //     "shadowDisplacement",       &TextSystem::Character::shadowDisplacement,
-        //     "shadowHeight",             &TextSystem::Character::shadowHeight,
-        //     "scaleXModifier",           &TextSystem::Character::scaleXModifier,
-        //     "scaleYModifier",           &TextSystem::Character::scaleYModifier,
-        //     "color",                    &TextSystem::Character::color,
-        //     "offsets",                  &TextSystem::Character::offsets,
-        //     "shadowDisplacementOffsets",&TextSystem::Character::shadowDisplacementOffsets,
-        //     "scaleModifiers",           &TextSystem::Character::scaleModifiers,
-        //     "customData",               &TextSystem::Character::customData,
-        //     "offset",                   &TextSystem::Character::offset,
-        //     "effects",                  &TextSystem::Character::effects,
-        //     "parsedEffectArguments",    &TextSystem::Character::parsedEffectArguments,
-        //     "index",                    &TextSystem::Character::index,
-        //     "lineNumber",               &TextSystem::Character::lineNumber,
-        //     "firstFrame",               &TextSystem::Character::firstFrame,
-        //     "tags",                     &TextSystem::Character::tags,
-        //     "pop_in",                   &TextSystem::Character::pop_in,
-        //     "pop_in_delay",             &TextSystem::Character::pop_in_delay,
-        //     "createdTime",              &TextSystem::Character::createdTime,
-        //     "parentText",               &TextSystem::Character::parentText,
-        //     "isFinalCharacterInText",   &TextSystem::Character::isFinalCharacterInText,
-        //     "effectFinished",           &TextSystem::Character::effectFinished,
-        //     "isImage",                  &TextSystem::Character::isImage,
-        //     "imageShadowEnabled",       &TextSystem::Character::imageShadowEnabled,
-        //     "spriteUUID",               &TextSystem::Character::spriteUUID,
-        //     "imageScale",               &TextSystem::Character::imageScale,
-        //     "fgTint",                   &TextSystem::Character::fgTint,
-        //     "bgTint",                   &TextSystem::Character::bgTint
-        // );
-
         //
         // 3) Character
         //
@@ -217,109 +177,6 @@ namespace TextSystem
         }
 
         
-        // //
-        // // 4) effectFunctions map
-        // //
-        // // We expose it as a read/write table in Lua:
-        // sol::table ef = lua.create_table();
-        // for (auto& [name, fn] : TextSystem::effectFunctions) {
-        //     ef[name] = fn;
-        // }
-        // ts["effectFunctions"] = ef;
-        
-        // //
-        // // 5) Text struct + nested enums
-        // //
-        // ts.new_usertype<TextSystem::Text>("Text",
-        //     sol::constructors<>(),
-        //     // callbacks & settings
-        //     "get_value_callback",              &TextSystem::Text::get_value_callback,
-        //     "onStringContentUpdatedOrChangedViaCallback",
-        //                                     &TextSystem::Text::onStringContentUpdatedOrChangedViaCallback,
-        //     "effectStringsToApplyGloballyOnTextChange",
-        //                                     &TextSystem::Text::effectStringsToApplyGloballyOnTextChange,
-        //     "onFinishedEffect",                &TextSystem::Text::onFinishedEffect,
-        //     "pop_in_enabled",                  &TextSystem::Text::pop_in_enabled,
-        //     "shadow_enabled",                  &TextSystem::Text::shadow_enabled,
-        //     "width",                           &TextSystem::Text::width,
-        //     "height",                          &TextSystem::Text::height,
-        //     // enums as raw ints; see below for nicer enum binding
-        //     "rawText",                         &TextSystem::Text::rawText,
-        //     "characters",                      &TextSystem::Text::characters,
-        //     "fontData",                        &TextSystem::Text::fontData,
-        //     "fontSize",                        &TextSystem::Text::fontSize,
-        //     "wrapEnabled",                     &TextSystem::Text::wrapEnabled,
-        //     "wrapWidth",                       &TextSystem::Text::wrapWidth,
-        //     "prevRenderScale",                 &TextSystem::Text::prevRenderScale,
-        //     "renderScale",                     &TextSystem::Text::renderScale,
-        //     "createdTime",                     &TextSystem::Text::createdTime,
-        //     "effectStartTime",                 &TextSystem::Text::effectStartTime,
-        //     "applyTransformRotationAndScale",  &TextSystem::Text::applyTransformRotationAndScale
-        // );
-        
-        // // TextAlignment
-        // ts["TextAlignment"] = lua.create_table_with(
-        //     "LEFT",      TextSystem::Text::Alignment::LEFT,
-        //     "CENTER",    TextSystem::Text::Alignment::CENTER,
-        //     "RIGHT",     TextSystem::Text::Alignment::RIGHT,
-        //     "JUSTIFIED", TextSystem::Text::Alignment::JUSTIFIED
-        // );
-
-        // // TextWrapMode
-        // ts["TextWrapMode"] = lua.create_table_with(
-        //     "WORD",      TextSystem::Text::WrapMode::WORD,
-        //     "CHARACTER", TextSystem::Text::WrapMode::CHARACTER
-        // );
-        
-        // //
-        // // 6) Builders subtable
-        // //
-        // sol::table builders = lua.create_table();
-        // ts["Builders"] = builders;
-        // builders.new_usertype<TextSystem::Builders::TextBuilder>("TextBuilder",
-        //     sol::constructors<>(),
-        //     "setRawText",     &TextSystem::Builders::TextBuilder::setRawText,
-        //     "setFontData",    &TextSystem::Builders::TextBuilder::setFontData,
-        //     "setOnFinishedEffect", &TextSystem::Builders::TextBuilder::setOnFinishedEffect,
-        //     "setFontSize",    &TextSystem::Builders::TextBuilder::setFontSize,
-        //     "setWrapWidth",   &TextSystem::Builders::TextBuilder::setWrapWidth,
-        //     "setAlignment",   &TextSystem::Builders::TextBuilder::setAlignment,
-        //     "setWrapMode",    &TextSystem::Builders::TextBuilder::setWrapMode,
-        //     "setCreatedTime", &TextSystem::Builders::TextBuilder::setCreatedTime,
-        //     "setPopInEnabled",&TextSystem::Builders::TextBuilder::setPopInEnabled,
-        //     "build",          &TextSystem::Builders::TextBuilder::build
-        // );
-        
-        // //
-        // // 7) Functions subtable
-        // //
-        // sol::table funcs = lua.create_table();
-        // ts["Functions"] = funcs;
-        // funcs.set_function("adjustAlignment",&TextSystem::Functions::adjustAlignment);
-        // funcs.set_function("splitEffects",   &TextSystem::Functions::splitEffects);
-        // funcs.set_function("createTextEntity",&TextSystem::Functions::createTextEntity);
-        // funcs.set_function("calculateBoundingBox",&TextSystem::Functions::calculateBoundingBox);
-        // funcs.set_function("CodepointToString",&TextSystem::Functions::CodepointToString);
-        // funcs.set_function("parseText",      &TextSystem::Functions::parseText);
-        // funcs.set_function("handleEffectSegment",
-        //     [](entt::entity e, sol::table lineWidthsTbl, sol::object cxObj, sol::object cyObj,
-        //     sol::this_state s) {
-        //         // You’ll need a small wrapper here if you really need that raw-pointer overload—
-        //         // otherwise skip or expose a simpler variant.
-        //         // For now we leave it unbound or throw.
-        //         return;
-        //     }
-        // );
-        // funcs.set_function("updateText",     &TextSystem::Functions::updateText);
-        // funcs.set_function("renderText",     &TextSystem::Functions::renderText);
-        // funcs.set_function("clearAllEffects",&TextSystem::Functions::clearAllEffects);
-        // funcs.set_function("applyGlobalEffects",&TextSystem::Functions::applyGlobalEffects);
-        // funcs.set_function("debugPrintText",&TextSystem::Functions::debugPrintText);
-        // funcs.set_function("resizeTextToFit",&TextSystem::Functions::resizeTextToFit);
-        // funcs.set_function("setTextScaleAndRecenter",&TextSystem::Functions::setTextScaleAndRecenter);
-        // funcs.set_function("resetTextScaleAndLayout",&TextSystem::Functions::resetTextScaleAndLayout);
-        // funcs.set_function("setText",        &TextSystem::Functions::setText);
-
         
         //
         // 4) effectFunctions map
@@ -479,98 +336,145 @@ namespace TextSystem
             Rb("setWrapMode"); Rb("setCreatedTime"); Rb("setPopInEnabled");
             Rb("build");
         }
-
-        //
         // 7) Functions subtable
-        //
         sol::table funcs = lua.create_table();
         ts["Functions"] = funcs;
 
-        // make sure the dumper emits:
-        // local TextSystem = {}
+        // make sure the dumper emits: local TextSystem.Functions = {}
         rec.add_type("TextSystem.Functions").doc = "Container for text system utility functions";
 
         rec.bind_function(lua, {"TextSystem","Functions"}, "adjustAlignment",
             &TextSystem::Functions::adjustAlignment,
-            "---@param t TextSystem.Text # text object to adjust\n---@return nil",
-            "Adjusts text alignment"
+            "---@param textEntity Entity # The text entity to adjust.\n"
+            "---@return nil",
+            "Adjusts text alignment based on calculated line widths."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "splitEffects",
             &TextSystem::Functions::splitEffects,
-            "---@param s string # combined effect string\n---@return std::vector<std::string>",
-            "Splits a combined effect string into segments"
+            "---@param effects string # The combined effect string (e.g., '{shake}{color=red}').\n"
+            "---@return table # A structured table of parsed effect arguments.",
+            "Splits a combined effect string into segments."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "createTextEntity",
             &TextSystem::Functions::createTextEntity,
-            "---@param txt TextSystem.Text # text object\n---@return entt::entity",
-            "Creates a new text entity in the world"
+            "---@param text TextSystem.Text # The text configuration object.\n"
+            "---@param x number # The initial x-position.\n"
+            "---@param y number # The initial y-position.\n"
+            "---@return Entity",
+            "Creates a new text entity in the world."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "calculateBoundingBox",
             &TextSystem::Functions::calculateBoundingBox,
-            "---@param txt TextSystem.Text\n---@return Rectangle # bounding box",
-            "Calculates the text's bounding box"
+            "---@param textEntity Entity # The text entity to measure.\n"
+            "---@return Vector2 # The calculated bounding box (width, height).",
+            "Calculates the text's bounding box."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "CodepointToString",
             &TextSystem::Functions::CodepointToString,
-            "---@param cp int # Unicode codepoint\n---@return string",
-            "Converts a codepoint to a UTF-8 string"
+            "---@param codepoint integer # The Unicode codepoint.\n"
+            "---@return string",
+            "Converts a codepoint to a UTF-8 string."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "parseText",
             &TextSystem::Functions::parseText,
-            "---@param s string # raw string to parse\n---@return TextSystem.Text",
-            "Parses raw string into a TextSystem.Text"
+            "---@param textEntity Entity # The entity whose text component should be parsed.\n"
+            "---@return nil",
+            "Parses the raw string of a text entity into characters and applies effects."
         );
+
+        // This lambda's documentation correctly matches its simplified signature for Lua.
         rec.bind_function(lua, {"TextSystem","Functions"}, "handleEffectSegment",
             [](entt::entity e, sol::table lineWidthsTbl, sol::object cxObj, sol::object cyObj, sol::this_state s){
                 // stub: wrap or drop
             },
-            "---@param e entt::entity\n---@param lineWidths table\n---@param cx? any\n---@param cy? any\n---@return nil",
-            "Handles a single effect segment"
+            "---@param e Entity\n"
+            "---@param lineWidths table\n"
+            "---@param cx? any\n"
+            "---@param cy? any\n"
+            "---@return nil",
+            "Handles a single effect segment during parsing."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "updateText",
             &TextSystem::Functions::updateText,
-            "---@param txt TextSystem.Text\n---@param dt float # delta time\n---@return nil",
-            "Updates text state"
+            "---@param textEntity Entity\n"
+            "---@param dt number # Delta time.\n"
+            "---@return nil",
+            "Updates text state (e.g., for animated effects)."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "renderText",
             &TextSystem::Functions::renderText,
-            "---@param txt TextSystem.Text\n---@return nil",
-            "Renders text to screen"
+            "---@param textEntity Entity # The text entity to render.\n"
+            "---@param layerPtr Layer # The rendering layer.\n"
+            "---@param debug? boolean # Optionally draw debug info.\n"
+            "---@return nil",
+            "Renders text to the screen."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "clearAllEffects",
             &TextSystem::Functions::clearAllEffects,
-            "---@param txt TextSystem.Text\n---@return nil",
-            "Clears all effects on text"
+            "---@param textEntity Entity\n"
+            "---@return nil",
+            "Clears all effects on a text entity."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "applyGlobalEffects",
             &TextSystem::Functions::applyGlobalEffects,
-            "---@param txt TextSystem.Text\n---@return nil",
-            "Applies global effects to text"
+            "---@param textEntity Entity\n"
+            "---@param effectString string # The effect string to apply to all characters.\n"
+            "---@return nil",
+            "Applies global effects to text."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "debugPrintText",
             &TextSystem::Functions::debugPrintText,
-            "---@param txt TextSystem.Text\n---@return nil",
-            "Prints internal debug info for text"
+            "---@param textEntity Entity\n"
+            "---@return nil",
+            "Prints internal debug info for a text entity."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "resizeTextToFit",
             &TextSystem::Functions::resizeTextToFit,
-            "---@param txt TextSystem.Text\n---@return nil",
-            "Resizes text to fit its container"
+            "---@param textEntity Entity\n"
+            "---@param targetWidth number\n"
+            "---@param targetHeight number\n"
+            "---@param centerLaterally? boolean\n"
+            "---@param centerVertically? boolean\n"
+            "---@return nil",
+            "Resizes text to fit its container."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "setTextScaleAndRecenter",
             &TextSystem::Functions::setTextScaleAndRecenter,
-            "---@param txt TextSystem.Text\n---@return nil",
-            "Sets text scale and recenters origin"
+            "---@param textEntity Entity\n"
+            "---@param renderScale number\n"
+            "---@param targetWidth number\n"
+            "---@param targetHeight number\n"
+            "---@param centerLaterally boolean\n"
+            "---@param centerVertically boolean\n"
+            "---@return nil",
+            "Sets text scale and recenters its origin."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "resetTextScaleAndLayout",
             &TextSystem::Functions::resetTextScaleAndLayout,
-            "---@param txt TextSystem.Text\n---@return nil",
-            "Resets text scale and layout"
+            "---@param textEntity Entity\n"
+            "---@return nil",
+            "Resets text scale and layout to its original parsed state."
         );
+
         rec.bind_function(lua, {"TextSystem","Functions"}, "setText",
             &TextSystem::Functions::setText,
-            "---@param txt TextSystem.Text\n---@param newText string\n---@return nil",
-            "Updates the raw text string"
+            "---@param textEntity Entity # The entity to modify.\n"
+            "---@param newText string # The new raw text string.\n"
+            "---@return nil",
+            "Updates the raw text string and reparses the entity."
         );
     }
 

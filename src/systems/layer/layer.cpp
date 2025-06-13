@@ -33,40 +33,6 @@
 namespace layer
 {
     void exposeToLua(sol::state &lua) {
-        // // 1) Get (or make) the top‐level layer table
-
-        // sol::state_view luaView{lua};
-        // auto layerTbl = luaView["layer"].get_or_create<sol::table>();
-
-        // // sol::table layerTbl = lua.get_or("layer", lua.create_table());
-        // if (!layerTbl.valid()) {
-        //     layerTbl = lua.create_table();
-        //     lua["layer"] = layerTbl;
-        // }
-
-        
-        // // 2) LayerOrderComponent
-        // layerTbl.new_usertype<layer::LayerOrderComponent>("LayerOrderComponent",
-        //     sol::constructors<>(),
-        //     "zIndex", &layer::LayerOrderComponent::zIndex
-        // );
-
-        // // 3) Layer
-        // layerTbl.new_usertype<layer::Layer>("Layer",
-        //     sol::constructors<>(),
-        //     // Properties
-        //     "canvases",       &layer::Layer::canvases,
-        //     "drawCommands",   &layer::Layer::drawCommands,
-        //     "fixed",          &layer::Layer::fixed,
-        //     "zIndex",         &layer::Layer::zIndex,
-        //     "backgroundColor",&layer::Layer::backgroundColor,
-        //     "commands",       &layer::Layer::commands,
-        //     "isSorted",       &layer::Layer::isSorted
-        //     // skip internal pools array
-        // );
-
-        // // 4) Global layers vector
-        // layerTbl["layers"] = &layer::layers;
 
         sol::state_view luaView{lua};
         auto layerTbl = luaView["layer"].get_or_create<sol::table>();
@@ -108,7 +74,6 @@ namespace layer
         layerTbl["layers"] = &layer::layers;
         rec.record_property("layer", {"layers", "table", "Global list of layers"});
 
-
         // 5) Overloads helpers
         using LPtr = std::shared_ptr<layer::Layer>;
 
@@ -121,110 +86,125 @@ namespace layer
 
         rec.bind_function(lua, {"layer"}, "SortLayers", &layer::SortLayers,
             "---@return nil",
-            "---Sorts the layers");
+            "Sorts all layers by their Z-index."
+        );
+
         rec.bind_function(lua, {"layer"}, "UpdateLayerZIndex", &layer::UpdateLayerZIndex,
-            "---@param layer layer.Layer\n---@param newZIndex integer\n---@return nil",
-            "---Updates the Z index of a layer");
+            "---@param layer layer.Layer\n"
+            "---@param newZIndex integer\n"
+            "---@return nil",
+            "Updates the Z-index of a layer and resorts the layer list."
+        );
+
         rec.bind_function(lua, {"layer"}, "CreateLayer", &layer::CreateLayer,
             "---@return layer.Layer",
-            "---Creates a new layer and returns it");
-        rec.bind_function(lua, {"layer"}, "CreateLayerWithSize", &layer::CreateLayerWithSize,
-            "---@param width integer\n---@param height integer\n---@return layer.Layer",
-            "---Creates a layer with a specified canvas size");
-        rec.bind_function(lua, {"layer"}, "RemoveLayerFromCanvas", &layer::RemoveLayerFromCanvas,
-            "---@param layer layer.Layer\n---@return nil",
-            "---Removes a layer and unloads its canvases");
+            "Creates a new layer with a default-sized main canvas and returns it."
+        );
 
-        // // ResizeCanvasInLayer has two overloads: (layer,name,w,h) and (layer,name)
-        // layerTbl.set_function("ResizeCanvasInLayer", static_cast<void(*)(LPtr, const std::string&,int,int)>(&layer::ResizeCanvasInLayer));
+        rec.bind_function(lua, {"layer"}, "CreateLayerWithSize", &layer::CreateLayerWithSize,
+            "---@param width integer\n"
+            "---@param height integer\n"
+            "---@return layer.Layer",
+            "Creates a layer with a main canvas of a specified size."
+        );
+
+        rec.bind_function(lua, {"layer"}, "RemoveLayerFromCanvas", &layer::RemoveLayerFromCanvas,
+            "---@param layer layer.Layer\n"
+            "---@return nil",
+            "Removes a layer and unloads its canvases."
+        );
 
         rec.bind_function(lua, {"layer"}, "ResizeCanvasInLayer", &layer::ResizeCanvasInLayer,
-            "---@param layer layer.Layer\n---@param canvasName string\n---@param newWidth integer\n---@param newHeight integer\n---@return nil",
-            "---Resizes the canvas of a layer");
+            "---@param layer layer.Layer\n"
+            "---@param canvasName string\n"
+            "---@param newWidth integer\n"
+            "---@param newHeight integer\n"
+            "---@return nil",
+            "Resizes a specific canvas within a layer."
+        );
 
-        // // AddCanvasToLayer overloads
-        // layerTbl.set_function("AddCanvasToLayer", sol::overload(
-        //     static_cast<void(*)(LPtr,const std::string&,int,int)>(&layer::AddCanvasToLayer),
-        //     static_cast<void(*)(LPtr,const std::string&)>(&layer::AddCanvasToLayer)
-        // ));
-
-        rec.bind_function(lua, {"layer"}, "AddCanvasToLayer", sol::overload(
+        // --- Corrected Overload Handling for AddCanvasToLayer ---
+        // Base function
+        rec.bind_function(lua, {"layer"}, "AddCanvasToLayer",
+            static_cast<void(*)(LPtr,const std::string&)>(&layer::AddCanvasToLayer),
+            "---@param layer layer.Layer\n"
+            "---@param canvasName string\n"
+            "---@return nil",
+            "Adds a canvas to the layer, matching the layer's default size.",
+            /*is_overload=*/false
+        );
+        // Overload with size
+        rec.bind_function(lua, {"layer"}, "AddCanvasToLayer",
             static_cast<void(*)(LPtr,const std::string&,int,int)>(&layer::AddCanvasToLayer),
-            static_cast<void(*)(LPtr,const std::string&)>(&layer::AddCanvasToLayer)
-        ),
-            "---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer)\n"
-            "---@overload fun(layer: layer.Layer, canvasName: string)\n"
-            "---Adds a canvas to the layer. Will create if needed."
+            "---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil",
+            "Adds a canvas of a specific size to the layer.",
+            /*is_overload=*/true
         );
 
 
-        // layerTbl.set_function("RemoveCanvas",    &layer::RemoveCanvas);
-        // layerTbl.set_function("UnloadAllLayers", &layer::UnloadAllLayers);
-        // layerTbl.set_function("ClearDrawCommands", &layer::ClearDrawCommands);
-        // layerTbl.set_function("ClearAllDrawCommands", &layer::ClearAllDrawCommands);
-        // layerTbl.set_function("Begin", &layer::Begin);
-        // layerTbl.set_function("End",   &layer::End);
-
         rec.bind_function(lua, {"layer"}, "RemoveCanvas", &layer::RemoveCanvas,
-            "---@param layer layer.Layer\n---@param canvasName string\n---@return nil",
-            "---Removes a canvas by name");
+            "---@param layer layer.Layer\n"
+            "---@param canvasName string\n"
+            "---@return nil",
+            "Removes a canvas by name from a specific layer."
+        );
+
         rec.bind_function(lua, {"layer"}, "UnloadAllLayers", &layer::UnloadAllLayers,
             "---@return nil",
-            "---Destroys all layers and their contents");
+            "Destroys all layers and their contents."
+        );
+
         rec.bind_function(lua, {"layer"}, "ClearDrawCommands", &layer::ClearDrawCommands,
-            "---@param layer layer.Layer\n---@return nil",
-            "---Clears draw commands for a specific layer");
+            "---@param layer layer.Layer\n"
+            "---@return nil",
+            "Clears draw commands for a specific layer."
+        );
+
         rec.bind_function(lua, {"layer"}, "ClearAllDrawCommands", &layer::ClearAllDrawCommands,
             "---@return nil",
-            "---Clears all draw commands from all layers");
+            "Clears all draw commands from all layers."
+        );
+
         rec.bind_function(lua, {"layer"}, "Begin", &layer::Begin,
             "---@return nil",
-            "---Begins drawing to all canvases");
+            "Begins drawing to all canvases. (Calls BeginTextureMode on all)."
+        );
+
         rec.bind_function(lua, {"layer"}, "End", &layer::End,
             "---@return nil",
-            "---Ends drawing to all canvases");
-
-        // layerTbl.set_function("RenderAllLayersToCurrentRenderTarget", &layer::RenderAllLayersToCurrentRenderTarget);
-        // layerTbl.set_function("DrawLayerCommandsToSpecificCanvas", sol::overload(
-        //     static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvas),
-        //     static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion)
-        // ));
+            "Ends drawing to all canvases. (Calls EndTextureMode on all)."
+        );
 
         rec.bind_function(lua, {"layer"}, "RenderAllLayersToCurrentRenderTarget", &layer::RenderAllLayersToCurrentRenderTarget,
-            "---@param camera Camera2D?\n---@return nil",
-            "---Renders all layers to the current render target");
+            "---@param camera? Camera2D # Optional camera for rendering.\n"
+            "---@return nil",
+            "Renders all layers to the current render target."
+        );
+
         rec.bind_function(lua, {"layer"}, "DrawLayerCommandsToSpecificCanvas",
             static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion),
             "---@param layer layer.Layer\n"
             "---@param canvasName string\n"
-            "---@param camera Camera2D?\n"
-            "---@return nil\n"
-            "---Draws commands to a specific canvas, optionally using a camera");
-
-
-        // layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithTransform", &layer::DrawCanvasToCurrentRenderTargetWithTransform);
-        // layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
-        // layerTbl.set_function("DrawCanvasOntoOtherLayer",            &layer::DrawCanvasOntoOtherLayer);
-        // layerTbl.set_function("DrawCanvasOntoOtherLayerWithShader",  &layer::DrawCanvasOntoOtherLayerWithShader);
+            "---@param camera Camera2D # The camera to use for rendering.\n"
+            "---@return nil",
+            "Draws a layer's queued commands to a specific canvas within that layer."
+        );
 
         rec.bind_function(lua, {"layer"}, "DrawCanvasToCurrentRenderTargetWithTransform", &layer::DrawCanvasToCurrentRenderTargetWithTransform,
             "---@param layer layer.Layer\n"
             "---@param canvasName string\n"
-            "---@param x number\n"
-            "---@param y number\n"
-            "---@param rotation number\n"
-            "---@param scaleX number\n"
-            "---@param scaleY number\n"
-            "---@param color Color\n"
-            "---@param shader Shader\n"
-            "---@param flat boolean\n"
-            "---@return nil\n"
-            "---Draws a canvas to the current render target with transform, color, and optional shader");
-        rec.bind_function(lua, {"layer"}, "DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline,
-            "---@param registry Registry\n"
-            "---@param entity Entity\n"
-            "---@return nil\n"
-            "---Draws a transform entity with animation using a specific pipeline");
+            "---@param x? number\n"
+            "---@param y? number\n"
+            "---@param rotation? number\n"
+            "---@param scaleX? number\n"
+            "---@param scaleY? number\n"
+            "---@param color? Color\n"
+            "---@param shader? Shader\n"
+            "---@param flat? boolean\n"
+            "---@return nil",
+            "Draws a canvas to the current render target with transform, color, and an optional shader."
+        );
+
         rec.bind_function(lua, {"layer"}, "DrawCanvasOntoOtherLayer", &layer::DrawCanvasOntoOtherLayer,
             "---@param sourceLayer layer.Layer\n"
             "---@param sourceCanvasName string\n"
@@ -236,8 +216,10 @@ namespace layer
             "---@param scaleX number\n"
             "---@param scaleY number\n"
             "---@param tint Color\n"
-            "---@return nil\n"
-            "---Draws a canvas from one layer onto another");
+            "---@return nil",
+            "Draws a canvas from one layer onto a canvas in another layer."
+        );
+
         rec.bind_function(lua, {"layer"}, "DrawCanvasOntoOtherLayerWithShader", &layer::DrawCanvasOntoOtherLayerWithShader,
             "---@param sourceLayer layer.Layer\n"
             "---@param sourceCanvasName string\n"
@@ -250,32 +232,41 @@ namespace layer
             "---@param scaleY number\n"
             "---@param tint Color\n"
             "---@param shader Shader\n"
-            "---@return nil\n"
-            "---Draws a canvas from one layer onto another with an optional shader");
+            "---@return nil",
+            "Draws a canvas from one layer onto another with a shader."
+        );
 
-        // layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithDestRect", &layer::DrawCanvasToCurrentRenderTargetWithDestRect);
-        // layerTbl.set_function("DrawCustomLamdaToSpecificCanvas", &layer::DrawCustomLamdaToSpecificCanvas);
-        // layerTbl.set_function("DrawTransformEntityWithAnimation", &layer::DrawTransformEntityWithAnimation);
-        // layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
-        // layerTbl.set_function("RenderNPatchRect", &layer::RenderNPatchRect);
-        // layerTbl.set_function("DrawTexturePro", &layer::DrawTexturePro);
-        // layerTbl.set_function("DrawRectangleLinesPro", &layer::DrawRectangleLinesPro);
         rec.bind_function(lua, {"layer"}, "DrawCanvasToCurrentRenderTargetWithDestRect", &layer::DrawCanvasToCurrentRenderTargetWithDestRect,
-            "---@param redo"
-            "---@return nil\n"
-            "---Draws a canvas to the current render target with a destination rectangle");
+            "---@param layer layer.Layer\n"
+            "---@param canvasName string\n"
+            "---@param destRect Rectangle\n"
+            "---@param color Color\n"
+            "---@param shader Shader\n"
+            "---@return nil",
+            "Draws a canvas to the current render target, fitting it to a destination rectangle."
+        );
+
         rec.bind_function(lua, {"layer"}, "DrawCustomLamdaToSpecificCanvas", &layer::DrawCustomLamdaToSpecificCanvas,
-            "---@param redo"
-            "---@return nil\n"
-            "---Draws a custom lambda function to a specific canvas");
+            "---@param layer layer.Layer\n"
+            "---@param canvasName? string\n"
+            "---@param drawActions fun():void\n"
+            "---@return nil",
+            "Executes a custom drawing function that renders to a specific canvas."
+        );
+
         rec.bind_function(lua, {"layer"}, "DrawTransformEntityWithAnimation", &layer::DrawTransformEntityWithAnimation,
-            "---@param redo"
-            "---@return nil\n"
-            "---Draws a transform entity with animation");
+            "---@param registry Registry\n"
+            "---@param entity Entity\n"
+            "---@return nil",
+            "Draws an entity with a Transform and Animation component directly."
+        );
+
         rec.bind_function(lua, {"layer"}, "DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline,
-            "---@param redo"
-            "---@return nil\n"
-            "---Draws a transform entity with animation using a specific pipeline");
+            "---@param registry Registry\n"
+            "---@param entity Entity\n"
+            "---@return nil",
+            "Draws an entity with a Transform and Animation component using the rendering pipeline."
+        );
 
         // 1) Bind DrawCommandType enum as a plain table:
         layerTbl["DrawCommandType"] = lua.create_table_with(

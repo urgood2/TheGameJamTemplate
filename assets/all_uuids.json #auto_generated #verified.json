@@ -12480,6 +12480,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\customizable_spectrum_beam_overlay_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/customizable_spectrum_beam_overlay_fragment.fs"
     ],
+    "behavior_monobehavior_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script.lua"
+    ],
     "beige": [
         "BEIGE"
     ],
@@ -13157,6 +13160,9 @@
     "chocolate": [
         "CHOCOLATE"
     ],
+    "chugget_code_definition_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget_code_definitions.lua"
+    ],
     "chugget_script": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\chugget.lua_defs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget.lua_defs"
@@ -13293,6 +13299,15 @@
     ],
     "coral_light": [
         "LIGHT CORAL"
+    ],
+    "core_global": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/globals.lua"
+    ],
+    "core_main": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/main.lua"
+    ],
+    "core_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core"
     ],
     "cornsilk": [
         "CORNSILK"
@@ -16213,6 +16228,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\glitch_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glitch_vertex.vs"
     ],
+    "global_init": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init/globals.lua"
+    ],
     "glow_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glow.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\glow.vs",
@@ -17118,6 +17136,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\MomentumGain.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MomentumGain.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MomentumGain.wav"
+    ],
+    "monobehavior_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior"
     ],
     "mouse": [
         "mouse.png"

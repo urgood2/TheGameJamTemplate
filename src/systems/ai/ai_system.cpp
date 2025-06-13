@@ -468,6 +468,8 @@ namespace ai_system
         std::string logicDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["logicDirectory"].get<std::string>()));
         std::string initBlackboardDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["blackboardInitDirectory"].get<std::string>()));
         std::string tutorialDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["tutorialDirectory"].get<std::string>()));
+        std::string coreDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["coreDirectory"].get<std::string>()));
+        std::string monoBehaviorDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["monoBehaviorDirectory"].get<std::string>()));
 
         std::vector<std::string> luaFiles{};
 
@@ -477,6 +479,9 @@ namespace ai_system
         getLuaFilesFromDirectory(logicDir, luaFiles);
         getLuaFilesFromDirectory(initBlackboardDir, luaFiles);
         getLuaFilesFromDirectory(tutorialDir, luaFiles);
+        getLuaFilesFromDirectory(coreDir, luaFiles);
+        getLuaFilesFromDirectory(monoBehaviorDir, luaFiles);
+        
 
         // run default initialization function
         scripting::initLuaMasterState(masterStateLua, luaFiles);

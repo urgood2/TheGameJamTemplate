@@ -32,23 +32,6 @@
 #include "../../core/game.hpp"
 
 /*
-    TODO: Register my ui & transform components & event queue system bindings in lua
-    e.g.,
-
-    void register_transform(sol::state &lua) {
-        lua.new_usertype<Transform>("Transform",
-            "type_id", &entt::type_hash<Transform>::value,
-
-            sol::call_constructor,
-            sol::factories([](int x, int y) {
-            return Transform{ x, y };
-            }),
-            "x", &Transform::x,
-            "y", &Transform::y,
-
-            sol::meta_function::to_string, &Transform::to_string
-        );
-    }
     
 
     TODO: Set up registry bond
@@ -104,6 +87,21 @@ namespace scripting {
         
         // basic lua state initialization
         stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string);
+        
+        std::string base1 = util::getRawAssetPathNoUUID("scripts/");
+        std::string base2 = util::getRawAssetPathNoUUID("scripts/core");
+        std::string base3 = util::getRawAssetPathNoUUID("scripts/init");
+        std::string base4 = util::getRawAssetPathNoUUID("scripts/monobehavior");
+        
+        std::string lua_path_cmd =
+            "package.path = '"
+            + base1 + "?.lua;" 
+            + base2 + "?.lua;" 
+            + base3 + "?.lua;" 
+            + base4 + "?.lua;"
+            "' .. package.path";
+
+        lua.script(lua_path_cmd);
         
         // read all the script files and load them into the lua state
         for (auto &filename : scriptFilesToRead) {

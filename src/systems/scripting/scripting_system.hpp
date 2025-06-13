@@ -117,6 +117,7 @@ namespace scripting
         inline auto init(entt::registry &registry, sol::state &lua) -> void
         {
             //TODO: call register_meta_component<Component>(); for all components that need to be usable within script with registry
+            register_meta_component<ScriptComponent>();
 
             registry.on_construct<ScriptComponent>().connect<&init_script>();
             registry.on_destroy<ScriptComponent>().connect<&release_script>();

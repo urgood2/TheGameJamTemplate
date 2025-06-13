@@ -1,4 +1,6 @@
 {
+    "coreDirectory": "core",
+    "monoBehaviorDirectory": "monobehavior",
     "actionsDirectory": "actions",
     "conditionsDirectory": "conditions",
     "logicDirectory": "logic",

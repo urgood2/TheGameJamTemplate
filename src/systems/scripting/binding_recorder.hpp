@@ -17,16 +17,16 @@
 
 struct MethodDef {
     std::string name;
-    std::string signature;   // e.g. "---@return number x # description"
-    std::string doc;         // free-form description text
+    std::string signature;
+    std::string doc;
     bool        is_static;
-    bool        is_overload;   // if part of @overload annotation
+    bool        is_overload;
 };
 
 struct PropDef {
     std::string name;
-    std::string value;       // e.g. "0", "1", or a type like "number"
-    std::string doc;         // optional comment
+    std::string value;
+    std::string doc;
 };
 
 struct TypeDef {
@@ -36,7 +36,7 @@ struct TypeDef {
     std::vector<std::string> base_classes;
     std::vector<MethodDef>   methods;
     std::vector<PropDef>     properties;
-    bool is_data_class = false; // Flag to indicate if this is a data-only class for @field output
+    bool is_data_class = false;
 };
 
 struct ModuleNode {
@@ -51,18 +51,10 @@ public:
         return I;
     }
 
-    //--- Module‐level metadata
     void set_module_version(const std::string& version) { module_version_ = version; }
     void set_module_doc    (const std::string& doc)     { module_doc_     = doc;     }
     void set_module_name   (const std::string& name)    { module_name_    = name;    }
 
-    //--- Types, methods, properties
-    /**
-     * @brief Adds a new type definition.
-     * @param name The fully qualified name of the type (e.g., "MySystem.MyType").
-     * @param is_data_class Set to true to generate definitions with '@field' annotations, suitable for data structures. Defaults to false, generating a table of constants suitable for enums.
-     * @return A reference to the newly created TypeDef.
-     */
     TypeDef& add_type(const std::string& name, bool is_data_class = false) {
         std::lock_guard<std::mutex> _(mtx_);
         types_.push_back(TypeDef{ name });
@@ -78,19 +70,11 @@ public:
         std::lock_guard<std::mutex> _(mtx_);
         if (auto* t = find_type(type)) t->properties.emplace_back(std::move(p));
     }
-
-    //--- Free functions (global & modules)
     void record_free_function(const std::vector<std::string>& path, MethodDef m) {
         std::lock_guard<std::mutex> _(mtx_);
-        if (path.empty()) {
-            free_functions_.emplace_back(std::move(m));
-        } else {
-            ModuleNode& node = ensure_module(path);
-            node.functions.emplace_back(std::move(m));
-        }
+        if (path.empty()) free_functions_.emplace_back(std::move(m));
+        else ensure_module(path).functions.emplace_back(std::move(m));
     }
-
-    //--- Combined bind & record helpers
 
     template <typename Func>
     void bind_function(sol::state& lua,
@@ -101,11 +85,9 @@ public:
                        const std::string& doc = "",
                        bool is_overload = false)
     {
-        // always safe: get_or_create_table(lua, {}) == globals()
         sol::table tbl = get_or_create_table(lua, path);
         tbl.set_function(name, std::forward<Func>(f));
-        record_free_function(path,
-            MethodDef{ name, signature, doc, /*is_static=*/true, is_overload });
+        record_free_function(path, MethodDef{ name, signature, doc, true, is_overload });
     }
 
     template <typename T>
@@ -116,7 +98,7 @@ public:
                        const std::vector<std::string>& bases = {})
     {
         lua.new_usertype<T>(name);
-        auto& td = add_type(name); // is_data_class defaults to false, which is correct for usertypes
+        auto& td = add_type(name);
         td.version      = version;
         td.doc          = doc;
         td.base_classes = bases;
@@ -124,13 +106,9 @@ public:
 
     inline std::string join_path(const std::vector<std::string>& path, const std::string& name) {
         std::string out;
-        for (const auto& s : path) {
-            if (!out.empty()) out += ".";
-            out += s;
-        }
+        for (auto& s : path) { if (!out.empty()) out += "."; out += s; }
         if (!out.empty()) out += ".";
-        out += name;
-        return out;
+        return out + name;
     }
 
     template <typename T, typename... Args>
@@ -144,8 +122,7 @@ public:
     {
         sol::table tbl = get_or_create_table(lua, path);
         tbl.new_usertype<T>(name, std::forward<Args>(args)...);
-
-        auto& td = add_type(join_path(path, name)); // is_data_class defaults to false
+        auto& td = add_type(join_path(path, name));
         td.version      = version;
         td.doc          = doc;
         td.base_classes = bases;
@@ -163,114 +140,70 @@ public:
     {
         sol::table ut = lua[type];
         ut.set_function(name, std::forward<Func>(f));
-        record_method(type,
-            MethodDef{ name, signature, doc, is_static, is_overload });
+        record_method(type, MethodDef{ name, signature, doc, is_static, is_overload });
     }
 
-    //--- Emit .lua_defs
     void dump_lua_defs(const std::string& path) const {
         std::lock_guard<std::mutex> lock(mtx_);
         spdlog::info("dump_lua_defs: writing '{}'", path);
 
         std::ofstream out(path);
-        if (!out.is_open()) {
-            spdlog::error("dump_lua_defs: failed to open '{}'", path);
-            return;
-        }
+        if (!out.is_open()) { spdlog::error("failed to open '{}'", path); return; }
 
-        // header
         out << "---@meta\n\n";
-        out << "---\n";
-        out << "--- " << module_doc_ << "\n";
-        out << "---\n";
+        out << "---\n--- " << module_doc_ << "\n---\n";
         out << "-- version: " << module_version_ << "\n";
         out << "---@class " << module_name_ << "\n\n";
 
-        // 1) Emit truly global functions:
         for (auto& m : free_functions_) {
-            out << "---\n";
-            out << "--- " << m.doc << "\n";
-            out << "---\n";
+            out << "---\n--- " << m.doc << "\n---\n";
             out << m.signature << "\n";
             out << "function " << m.name << "(...) end\n\n";
         }
 
-        // 3) Emit types with real-value tables + methods:
         for (auto& t : types_) {
-            out << "\n";
-            out << "---\n";
-            out << "--- " << t.doc << "\n";
-            out << "---\n";
+            out << "\n---\n--- " << t.doc << "\n---\n";
             out << "---@class " << t.name;
             if (!t.base_classes.empty()) {
                 out << ":" << t.base_classes.front();
-                for (size_t i = 1; i < t.base_classes.size(); ++i)
-                    out << "," << t.base_classes[i];
+                for (size_t i = 1; i < t.base_classes.size(); ++i) out << "," << t.base_classes[i];
             }
             out << "\n";
 
-            // --- MODIFIED SECTION ---
-            // Based on the flag, choose the output format.
             if (t.is_data_class) {
-                // NEW FORMAT: Use @field for data-class properties
-                for (const auto& prop : t.properties) {
-                    out << "---@field " << prop.name << " " << prop.value;
-                    if (!prop.doc.empty()) {
-                        out << " " << prop.doc;
-                    }
+                // Emit as initialized table with nil fields + comments
+                out << t.name << " = {\n";
+                for (auto& prop : t.properties) {
+                    out << "    " << prop.name << " = nil";
+                    out << ", -- " << prop.value;
+                    if (!prop.doc.empty()) out << " " << prop.doc;
                     out << "\n";
                 }
-                out << "\n";
-                out << t.name << " = {}\n\n";
+                out << "}\n\n";
             } else {
-                // ORIGINAL FORMAT: Create a table with key-value pairs for enums/constants
-                if (t.name.find('.') != std::string::npos) {
-                    // nested name, e.g. TextSystem.Character
-                    out << t.name << " = {\n";
-                } else {
-                    out << "" << t.name << " = {\n";
-                }
+                // Enums/constants
+                out << t.name << " = {\n";
                 for (size_t i = 0; i < t.properties.size(); ++i) {
-                    const auto& prop = t.properties[i];
+                    auto& prop = t.properties[i];
                     out << "    " << prop.name << " = " << prop.value;
-
-                    // Add comma if not the last property
-                    if (i < t.properties.size() - 1)
-                        out << ",";
-
-                    // Optional comment
-                    if (!prop.doc.empty())
-                        out << "  -- " << prop.doc;
-
+                    if (!prop.doc.empty()) out << "  -- " << prop.doc;
                     out << "\n";
                 }
                 out << "}\n\n";
             }
-            // --- END MODIFIED SECTION ---
 
-
-            // stub out each method:
             for (auto& m : t.methods) {
-                out << "---\n";
-                out << "--- " << m.doc << "\n";
-                out << "---\n";
-                if (m.is_overload)
-                    out << "---@overload fun" << m.signature << "\n";
-                else
-                    out << m.signature << "\n";
+                out << "---\n--- " << m.doc << "\n---\n";
+                if (m.is_overload) out << "---@overload fun" << m.signature << "\n";
+                else out << m.signature << "\n";
                 out << "function " << t.name
-                    << (m.is_static ? "." : ":")
-                    << m.name << "(...) end\n\n";
+                    << (m.is_static ? "." : ":") << m.name << "(...) end\n\n";
             }
         }
 
-        // 2) Emit named modules (nested tables):
-        for (auto& [modname, node] : modules_) {
-            dump_module(out, { modname }, node);
-        }
-
+        for (auto& [modname, node] : modules_) dump_module(out, {modname}, node);
         out.close();
-        spdlog::info("dump_lua_defs: finished '{}'", path);
+        spdlog::info("finished '{}'", path);
     }
 
 private:
@@ -283,8 +216,7 @@ private:
     std::map<std::string, ModuleNode> modules_;
 
     TypeDef* find_type(const std::string& name) {
-        for (auto& t : types_)
-            if (t.name == name) return &t;
+        for (auto& t : types_) if (t.name == name) return &t;
         return nullptr;
     }
 
@@ -292,47 +224,31 @@ private:
                                    const std::vector<std::string>& path) {
         sol::table tbl = lua.globals();
         for (auto& p : path) {
-            // grab whatever is at tbl[p]
             sol::object child = tbl[p];
-
-            // if it's not already a table, make & insert a new one
             if (child.get_type() != sol::type::table) {
                 sol::table new_tbl = lua.create_table();
                 tbl[p] = new_tbl;
                 tbl = new_tbl;
-            }
-            else {
-                // safe to cast–we know it's a table
-                tbl = child.as<sol::table>();
-            }
+            } else tbl = child.as<sol::table>();
         }
         return tbl;
     }
 
     ModuleNode& ensure_module(const std::vector<std::string>& path) {
-        if (path.empty()) {
-            spdlog::error("ensure_module: empty path");
-            throw std::invalid_argument("path must not be empty");
-        }
+        if (path.empty()) throw std::invalid_argument("path empty");
         ModuleNode* cur = &modules_[path[0]];
-        for (size_t i = 1; i < path.size(); ++i) {
-            cur = &cur->children[path[i]];
-        }
+        for (size_t i = 1; i < path.size(); ++i) cur = &cur->children[path[i]];
         return *cur;
     }
 
     void dump_module(std::ofstream& out,
-                     const std::vector<std::string>& path,
+                     std::vector<std::string> path,
                      const ModuleNode& node) const
     {
         std::string full = path[0];
-        for (size_t i = 1; i < path.size(); ++i)
-            full += "." + path[i];
-
+        for (size_t i = 1; i < path.size(); ++i) full += "." + path[i];
         for (auto& m : node.functions) {
-            out << "---\n";
-            out << "--- " << m.doc << "\n";
-            out << "---\n";
+            out << "---\n--- " << m.doc << "\n---\n";
             out << m.signature << "\n";
             out << "function " << full << "." << m.name << "(...) end\n\n";
         }
@@ -343,6 +259,7 @@ private:
         }
     }
 };
+
 
 
 /*

@@ -7,15 +7,16 @@
 
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
-- [ ] Register my ui & transform components & event queue system bindings in lua & Set up registry bond (scripting_functions.cpp) / also set up the basic lua scripts in the [folder here](src/systems/scripting/scripts_move_later_to_assets)
+
+- [ ] need to get lua_path_cmd working
+- [ ] load globals.lua module separately?
 - [ ] need to hook up main.lua 
-- [ ] need to hook up defs to the language server, debug lua defs
+- [ ] hook up scripting system
+- [ ] got to registery registry lua methods in scripting_system.hpp with binding system
+- [ ] set up registry hook & script component hook
 - [ ]  type registration not done properly for shader_pipeline
-- [ ] rec.add_type("shader_pipeline.ShaderOverlayDraw", /*is_data_class=*/true).doc = "Defines a shader overlay draw operation."; - some like this are missing parmeter info
 - [ ] shader_pipeline.createShaderPass is registered as a type, not a method
-- [ ] might have to redo some lua binding defs because they don't have proper method param info
-- [ ] lua autocomplete https://chatgpt.com/share/684ae2bb-0fc4-800a-b960-825041059ae5
-- [ ] lua dump needs to export deep nested index so I can refer to it while coding.
+
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui

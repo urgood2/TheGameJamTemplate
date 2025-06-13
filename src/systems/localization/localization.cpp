@@ -5,6 +5,8 @@
 
 #include "systems/scripting/binding_recorder.hpp"
 
+#include <fmt/args.h>
+
 namespace localization
 {
     // ==========================
@@ -192,13 +194,47 @@ namespace localization
         );
 
         // get
-        // This binding points to the version that takes variable arguments for string formatting.
         rec.bind_function(lua, path, "get",
-            static_cast<std::string(*)(const std::string&, sol::variadic_args)>(&localization::get),
+            // Use a lambda to capture the variadic arguments from Lua.
+            [](const std::string& key, sol::variadic_args args) -> std::string {
+                std::string raw = localization::getRaw(key);
+
+                // If there are no extra arguments, just return the raw string.
+                if (args.size() == 0) {
+                    return raw;
+                }
+
+                try {
+                    // This is the argument store for fmt::format at runtime.
+                    fmt::dynamic_format_arg_store<fmt::format_context> store;
+
+                    // Iterate over the arguments passed from Lua.
+                    for (auto arg : args) {
+                        // Check the type of each Lua argument and add it to the fmt store.
+                        if (arg.is<std::string>()) {
+                            store.push_back(arg.as<std::string>());
+                        } else if (arg.is<double>()) { // Lua numbers are doubles
+                            store.push_back(arg.as<double>());
+                        } else if (arg.is<int>()) {
+                            store.push_back(arg.as<int>());
+                        } else if (arg.is<bool>()) {
+                            store.push_back(arg.as<bool>());
+                        }
+                        // Add more types here if needed.
+                    }
+
+                    // Use fmt::vformat to format the string with the runtime arguments.
+                    return fmt::vformat(raw, store);
+                }
+                catch (const fmt::format_error& e) {
+                    return "[FORMAT ERROR: " + std::string(e.what()) + "]";
+                }
+            },
+            // The documentation for Lua
             "---@param key string # The localization key.\n"
             "---@param ... any # Optional arguments for formatting the string.\n"
             "---@return string # The localized and formatted string.",
-            "Gets the localized string for a key, with optional fmt::format style arguments."
+            "Gets the localized string for a key, with optional fmt-style arguments."
         );
 
         // getRaw

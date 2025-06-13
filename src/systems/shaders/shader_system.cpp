@@ -27,34 +27,106 @@ using json = nlohmann::json;
 namespace shaders
 {
     auto exposeToLua(sol::state& lua) -> void {
-        // 1) Create the top‐level shaders table
-        sol::table sh = lua.create_table();
-        lua["shaders"] = sh;
+        // // 1) Create the top‐level shaders table
+        // sol::table sh = lua.create_table();
+        // lua["shaders"] = sh;
 
-        // 2) ShaderUniformSet
+        // // 2) ShaderUniformSet
+        // sh.new_usertype<shaders::ShaderUniformSet>("ShaderUniformSet",
+        //     sol::constructors<>(),
+        //     "set", [](shaders::ShaderUniformSet& s, const std::string& name, sol::object value) {
+        //         // We need to accept a Lua value and convert it into ShaderUniformValue:
+        //         // Try each type in turn:
+        //         if (value.is<float>()) {
+        //             s.set(name, value.as<float>());
+        //         } else if (value.is<sol::table>()) {
+        //             // Assuming Vector2/3/4 got bound to/from tables automatically
+        //             // Or you can explicitly handle Vector2, Vector3, Vector4
+        //             // ...
+        //         } else if (value.is<bool>()) {
+        //             s.set(name, value.as<bool>());
+        //         } else if (value.is<Texture2D>()) {
+        //             s.set(name, value.as<Texture2D>());
+        //         } else {
+        //             SPDLOG_ERROR("Unsupported uniform value type for uniform '{}'", name);
+        //         }
+        //     },
+        //     "get", &shaders::ShaderUniformSet::get
+        // );
+
+        // // 3) ShaderUniformComponent
+        // sh.new_usertype<shaders::ShaderUniformComponent>("ShaderUniformComponent",
+        //     sol::constructors<>(),
+        //     "set", &shaders::ShaderUniformComponent::set,
+        //     "registerEntityUniformCallback", &shaders::ShaderUniformComponent::registerEntityUniformCallback,
+        //     "getSet", &shaders::ShaderUniformComponent::getSet,
+        //     "applyToShaderForEntity", &shaders::ShaderUniformComponent::applyToShaderForEntity
+        // );
+
+        // // 4) Free‐functions
+        // sh.set_function("ApplyUniformsToShader", &shaders::ApplyUniformsToShader);
+        // sh.set_function("loadShadersFromJSON",    &shaders::loadShadersFromJSON);
+        // sh.set_function("unloadShaders",          &shaders::unloadShaders);
+        // sh.set_function("disableAllShadersViaOverride", &shaders::disableAllShadersViaOverride);
+        // sh.set_function("hotReloadShaders",       &shaders::hotReloadShaders);
+        // sh.set_function("setShaderMode",          &shaders::setShaderMode);
+        // sh.set_function("unsetShaderMode",        &shaders::unsetShaderMode);
+        // sh.set_function("getShader",              &shaders::getShader);
+        // sh.set_function("registerUniformUpdate",  &shaders::registerUniformUpdate);
+        // sh.set_function("updateAllShaderUniforms",&shaders::updateAllShaderUniforms);
+        // sh.set_function("updateShaders",          &shaders::update);
+        // sh.set_function("ShowShaderEditorUI",     &shaders::ShowShaderEditorUI);
+
+        // BindingRecorder instance
+        auto& rec = BindingRecorder::instance();
+
+        // Create the top-level shaders table if it doesn't exist
+        sol::table sh = lua["shaders"].get_or_create<sol::table>();
+
+        // 1) Recorder: Top-level namespace documentation
+        rec.add_type("shaders").doc = "Manages shaders, their uniforms, and rendering modes.";
+
+        // --- ShaderUniformSet ---
+
+        // 2a) Bind with sol2
         sh.new_usertype<shaders::ShaderUniformSet>("ShaderUniformSet",
             sol::constructors<>(),
             "set", [](shaders::ShaderUniformSet& s, const std::string& name, sol::object value) {
-                // We need to accept a Lua value and convert it into ShaderUniformValue:
-                // Try each type in turn:
                 if (value.is<float>()) {
                     s.set(name, value.as<float>());
-                } else if (value.is<sol::table>()) {
-                    // Assuming Vector2/3/4 got bound to/from tables automatically
-                    // Or you can explicitly handle Vector2, Vector3, Vector4
-                    // ...
                 } else if (value.is<bool>()) {
                     s.set(name, value.as<bool>());
                 } else if (value.is<Texture2D>()) {
                     s.set(name, value.as<Texture2D>());
-                } else {
+                }
+                // ... add other type checks (Vector2, etc.)
+                else {
                     SPDLOG_ERROR("Unsupported uniform value type for uniform '{}'", name);
                 }
             },
             "get", &shaders::ShaderUniformSet::get
         );
 
-        // 3) ShaderUniformComponent
+        // 2b) Document with BindingRecorder
+        auto& sus_type = rec.add_type("shaders.ShaderUniformSet");
+        sus_type.doc = "A collection of uniform values to be applied to a shader.";
+        rec.record_method("shaders.ShaderUniformSet", {
+            "set",
+            "---@param name string # The name of the uniform to set\n"
+            "---@param value number|boolean|Texture2D|Vector2|Vector3|Vector4 # The value to set",
+            "Sets a uniform value by name. The value can be a number, boolean, Texture, or Vector."
+        });
+        rec.record_method("shaders.ShaderUniformSet", {
+            "get",
+            "---@param name string # The name of the uniform to retrieve\n"
+            "---@return any # The value of the uniform",
+            "Gets a uniform value by its name."
+        });
+
+
+        // --- ShaderUniformComponent ---
+
+        // 3a) Bind with sol2 (as you provided)
         sh.new_usertype<shaders::ShaderUniformComponent>("ShaderUniformComponent",
             sol::constructors<>(),
             "set", &shaders::ShaderUniformComponent::set,
@@ -63,19 +135,98 @@ namespace shaders
             "applyToShaderForEntity", &shaders::ShaderUniformComponent::applyToShaderForEntity
         );
 
-        // 4) Free‐functions
+        // 3b) Document with BindingRecorder
+        auto& suc_type = rec.add_type("shaders.ShaderUniformComponent");
+        suc_type.doc = "An entity component for managing per-entity shader uniforms.";
+        rec.record_method("shaders.ShaderUniformComponent", {
+            "set",
+            "---@param name string\n"
+            "---@param value any",
+            "Sets a uniform value within this component's set."
+        });
+        rec.record_method("shaders.ShaderUniformComponent", {
+            "registerEntityUniformCallback",
+            "---@param uniformName string # The name of the uniform\n"
+            "---@param callback fun(entity: Entity):any # A function that takes an entity and returns the uniform value",
+            "Registers a callback to dynamically compute a uniform's value for an entity."
+        });
+        rec.record_method("shaders.ShaderUniformComponent", {
+            "getSet",
+            "---@return shaders.ShaderUniformSet",
+            "Returns the underlying ShaderUniformSet managed by this component."
+        });
+        rec.record_method("shaders.ShaderUniformComponent", {
+            "applyToShaderForEntity",
+            "---@param shader Shader # The target shader\n"
+            "---@param entity Entity # The entity to source uniform values from",
+            "Applies this component's uniforms to a given shader for a specific entity."
+        });
+
+
+        // --- Free Functions ---
+
+        // 4a) Bind with sol2
         sh.set_function("ApplyUniformsToShader", &shaders::ApplyUniformsToShader);
-        sh.set_function("loadShadersFromJSON",    &shaders::loadShadersFromJSON);
-        sh.set_function("unloadShaders",          &shaders::unloadShaders);
+        sh.set_function("loadShadersFromJSON",   &shaders::loadShadersFromJSON);
+        sh.set_function("unloadShaders",         &shaders::unloadShaders);
         sh.set_function("disableAllShadersViaOverride", &shaders::disableAllShadersViaOverride);
-        sh.set_function("hotReloadShaders",       &shaders::hotReloadShaders);
-        sh.set_function("setShaderMode",          &shaders::setShaderMode);
-        sh.set_function("unsetShaderMode",        &shaders::unsetShaderMode);
-        sh.set_function("getShader",              &shaders::getShader);
-        sh.set_function("registerUniformUpdate",  &shaders::registerUniformUpdate);
+        sh.set_function("hotReloadShaders",      &shaders::hotReloadShaders);
+        sh.set_function("setShaderMode",         &shaders::setShaderMode);
+        sh.set_function("unsetShaderMode",       &shaders::unsetShaderMode);
+        sh.set_function("getShader",             &shaders::getShader);
+        sh.set_function("registerUniformUpdate", &shaders::registerUniformUpdate);
         sh.set_function("updateAllShaderUniforms",&shaders::updateAllShaderUniforms);
-        sh.set_function("updateShaders",          &shaders::update);
-        sh.set_function("ShowShaderEditorUI",     &shaders::ShowShaderEditorUI);
+        sh.set_function("updateShaders",         &shaders::update);
+        sh.set_function("ShowShaderEditorUI",    &shaders::ShowShaderEditorUI);
+
+        // 4b) Document with BindingRecorder
+        rec.record_free_function({"shaders"}, {
+            "ApplyUniformsToShader",
+            "---@param shader Shader\n---@param uniforms shaders.ShaderUniformSet",
+            "Applies a set of uniforms to a shader."
+        });
+        rec.record_free_function({"shaders"}, {
+            "loadShadersFromJSON",
+            "---@param path string # Filepath to the JSON definition",
+            "Loads and compiles shaders from a JSON file."
+        });
+        rec.record_free_function({"shaders"}, {
+            "unloadShaders", "---@return void", "Unloads all shaders, freeing their resources."
+        });
+        rec.record_free_function({"shaders"}, {
+            "disableAllShadersViaOverride",
+            "---@param disabled boolean # True to disable all shaders, false to re-enable",
+            "Globally forces all shader effects off or on."
+        });
+        rec.record_free_function({"shaders"}, {
+            "hotReloadShaders", "---@return void", "Checks all loaded shaders for changes on disk and reloads them if necessary."
+        });
+        rec.record_free_function({"shaders"}, {
+            "setShaderMode", "---@param mode any # The shader mode to activate", "Begins a shader mode, e.g., for post-processing effects."
+        });
+        rec.record_free_function({"shaders"}, {
+            "unsetShaderMode", "---@return void", "Ends the current shader mode."
+        });
+        rec.record_free_function({"shaders"}, {
+            "getShader",
+            "---@param name string # The name of the shader to find\n---@return Shader",
+            "Retrieves a loaded shader by its unique name."
+        });
+        rec.record_free_function({"shaders"}, {
+            "registerUniformUpdate",
+            "---@param uniformName string # The uniform to target\n---@param callback function # A function to call to get the latest value",
+            "Registers a global callback to update a specific uniform across all shaders."
+        });
+        rec.record_free_function({"shaders"}, {
+            "updateAllShaderUniforms", "---@return void", "Invokes all registered global uniform update callbacks."
+        });
+        rec.record_free_function({"shaders"}, {
+            "updateShaders", "---@param dt number # Delta time", "Updates internal shader state, such as timers for 'time' uniforms."
+        });
+        rec.record_free_function({"shaders"}, {
+            "ShowShaderEditorUI", "---@return void", "Displays the ImGui-based shader editor window for debugging."
+        });
+        
     }
 
     // Map to store loaded shaders, keyed by their name

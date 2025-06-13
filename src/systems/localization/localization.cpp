@@ -166,27 +166,89 @@ namespace localization
     }
 
     void exposeToLua(sol::state &lua) {
-        // 1) Make the top-level table
-        sol::table loc = lua.create_table();
-        lua["localization"] = loc;
+        // // 1) Make the top-level table
+        // sol::table loc = lua.create_table();
+        // lua["localization"] = loc;
 
-        // 2) Core API
-        loc.set_function("loadLanguage",        &localization::loadLanguage);
-        loc.set_function("setFallbackLanguage", &localization::setFallbackLanguage);
+        // // 2) Core API
+        // loc.set_function("loadLanguage",        &localization::loadLanguage);
+        // loc.set_function("setFallbackLanguage", &localization::setFallbackLanguage);
 
-        // Bind only the non-templated get(key) overload
-        loc.set_function("get", 
-            static_cast<std::string(*)(const std::string&)>(&localization::get)
+        // // Bind only the non-templated get(key) overload
+        // loc.set_function("get", 
+        //     static_cast<std::string(*)(const std::string&)>(&localization::get)
+        // );
+        // loc.set_function("getRaw", &localization::getRaw);
+
+        // // 3) Font data
+        // loc.set_function("getFontData", &localization::getFontData);
+        // loc.set_function("loadFontData", &localization::loadFontData);
+
+        // // 4) Language change notifications
+        // loc.set_function("onLanguageChanged", &localization::onLanguageChanged);
+        // loc.set_function("setCurrentLanguage", &localization::setCurrentLanguage);
+
+        auto& rec = BindingRecorder::instance();
+        const std::vector<std::string> path = {"localization"};
+
+        // 1) Bind the functions and record their metadata simultaneously.
+        // The get_or_create_table logic is now handled inside bind_function.
+
+        // loadLanguage
+        rec.bind_function(lua, path, "loadLanguage", &localization::loadLanguage,
+            "---@param languageCode string # The language to load (e.g., \"en_US\").\n"
+            "---@return nil",
+            "Loads a language file for the given language code."
         );
-        loc.set_function("getRaw", &localization::getRaw);
 
-        // 3) Font data
-        loc.set_function("getFontData", &localization::getFontData);
-        loc.set_function("loadFontData", &localization::loadFontData);
+        // setFallbackLanguage
+        rec.bind_function(lua, path, "setFallbackLanguage", &localization::setFallbackLanguage,
+            "---@param languageCode string # The language to use as a fallback.\n"
+            "---@return nil",
+            "Sets a fallback language if a key isn't found in the current one."
+        );
 
-        // 4) Language change notifications
-        loc.set_function("onLanguageChanged", &localization::onLanguageChanged);
-        loc.set_function("setCurrentLanguage", &localization::setCurrentLanguage);
+        // get
+        rec.bind_function(lua, path, "get",
+            static_cast<std::string(*)(const std::string&)>(&localization::get),
+            "---@param key string # The localization key.\n"
+            "---@return string # The localized string.",
+            "Gets the localized string for the given key, using the fallback if needed."
+        );
+
+        // getRaw
+        rec.bind_function(lua, path, "getRaw", &localization::getRaw,
+            "---@param key string # The localization key.\n"
+            "---@return string # The raw, untransformed string.",
+            "Gets the raw string from the language file, ignoring fallbacks."
+        );
+
+        // getFontData
+        rec.bind_function(lua, path, "getFontData", &localization::getFontData,
+            "---@return FontData # A handle to the font data for the current language.",
+            "Retrieves font data associated with the current language."
+        );
+
+        // loadFontData
+        rec.bind_function(lua, path, "loadFontData", &localization::loadFontData,
+            "---@param path string # The file path to the font data.\n"
+            "---@return nil",
+            "Loads font data from the specified path."
+        );
+        
+        // onLanguageChanged
+        rec.bind_function(lua, path, "onLanguageChanged", &localization::onLanguageChanged,
+            "---@param callback fun() # A function to call when the language is changed.\n"
+            "---@return nil",
+            "Registers a callback that executes after the current language changes."
+        );
+
+        // setCurrentLanguage
+        rec.bind_function(lua, path, "setCurrentLanguage", &localization::setCurrentLanguage,
+            "---@param languageCode string # The language to make active.\n"
+            "---@return nil",
+            "Sets the current language for all subsequent 'get' calls."
+        );
     }
 
 }

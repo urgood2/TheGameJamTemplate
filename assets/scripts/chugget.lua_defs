@@ -712,6 +712,740 @@ particle.ParticleEmitter = {
 particle.ParticleAnimationConfig = {
 }
 
+
+---
+--- Root table for shader pipeline helpers and types.
+---
+---@class shader_pipeline
+local shader_pipeline = {
+    front = RenderTexture2D,  -- Current front render texture
+    back = RenderTexture2D,  -- Current back render texture
+    width = 0,  -- Current render width
+    height = 0  -- Current render height
+}
+
+
+---
+--- Defines a single shader pass with configurable uniforms.
+---
+---@class shader_pipeline.ShaderPass
+shader_pipeline.ShaderPass = {
+}
+
+
+---
+--- Source input for shader overlay drawing.
+---
+---@class shader_pipeline.OverlayInputSource
+shader_pipeline.OverlayInputSource = {
+    BaseSprite = 0,  -- Use the base sprite
+    PostPassResult = 1  -- Use the result from previous pass
+}
+
+
+---
+--- Defines a shader overlay draw operation.
+---
+---@class shader_pipeline.ShaderOverlayDraw
+shader_pipeline.ShaderOverlayDraw = {
+}
+
+
+---
+--- Holds a set of shader passes and overlays for rendering.
+---
+---@class shader_pipeline.ShaderPipelineComponent
+shader_pipeline.ShaderPipelineComponent = {
+}
+
+
+---
+--- Create a new ShaderPass and populate uniforms.
+---
+---@class shader_pipeline.createShaderPass
+shader_pipeline.createShaderPass = {
+}
+
+
+---
+--- Random number generation utilities and helper functions
+---
+---@class random_utils
+local random_utils = {
+}
+
+
+---
+--- Stores Z-index for layer sorting
+---
+---@class layer.LayerOrderComponent
+layer.LayerOrderComponent = {
+    zIndex = integer  -- Z sort order
+}
+
+
+---
+--- Represents a drawing layer and its properties.
+---
+---@class layer.Layer
+layer.Layer = {
+    canvases = table,  -- Map of canvas names to textures
+    drawCommands = table,  -- Command list
+    fixed = boolean,  -- Whether layer is fixed
+    zIndex = integer,  -- Z-index
+    backgroundColor = Color,  -- Background fill color
+    commands = table,  -- Draw commands list
+    isSorted = boolean  -- True if layer is sorted
+}
+
+
+---
+--- Drawing instruction types used by Layer system
+---
+---@class layer.DrawCommandType
+layer.DrawCommandType = {
+    BeginDrawing = 0,  -- Start drawing a layer frame
+    EndDrawing = 1,  -- End drawing a layer frame
+    ClearBackground = 2,  -- Clear background with color
+    Translate = 3,  -- Translate coordinate system
+    Scale = 4,  -- Scale coordinate system
+    Rotate = 5,  -- Rotate coordinate system
+    AddPush = 6,  -- Push transform matrix
+    AddPop = 7,  -- Pop transform matrix
+    PushMatrix = 8,  -- Explicit push matrix command
+    PopMatrix = 9,  -- Explicit pop matrix command
+    DrawCircle = 10,  -- Draw a filled circle
+    DrawRectangle = 11,  -- Draw a filled rectangle
+    DrawRectanglePro = 12,  -- Draw a scaled and rotated rectangle
+    DrawRectangleLinesPro = 13,  -- Draw rectangle outline
+    DrawLine = 14,  -- Draw a line
+    DrawDashedLine = 15,  -- Draw a dashed line
+    DrawText = 16,  -- Draw plain text
+    DrawTextCentered = 17,  -- Draw text centered
+    TextPro = 18,  -- Draw stylized/proportional text
+    DrawImage = 19,  -- Draw a texture/image
+    TexturePro = 20,  -- Draw transformed texture
+    DrawEntityAnimation = 21,  -- Draw animation of an entity
+    DrawTransformEntityAnimation = 22,  -- Draw transform-aware animation
+    DrawTransformEntityAnimationPipeline = 23,  -- Draw pipelined animation with transform
+    SetShader = 24,  -- Set active shader
+    ResetShader = 25,  -- Reset to default shader
+    SetBlendMode = 26,  -- Set blend mode
+    UnsetBlendMode = 27,  -- Reset blend mode
+    SendUniformFloat = 28,  -- Send float uniform to shader
+    SendUniformInt = 29,  -- Send int uniform to shader
+    SendUniformVec2 = 30,  -- Send vec2 uniform to shader
+    SendUniformVec3 = 31,  -- Send vec3 uniform to shader
+    SendUniformVec4 = 32,  -- Send vec4 uniform to shader
+    SendUniformFloatArray = 33,  -- Send float array uniform to shader
+    SendUniformIntArray = 34,  -- Send int array uniform to shader
+    Vertex = 35,  -- Draw raw vertex
+    BeginOpenGLMode = 36,  -- Begin native OpenGL mode
+    EndOpenGLMode = 37,  -- End native OpenGL mode
+    SetColor = 38,  -- Set current draw color
+    SetLineWidth = 39,  -- Set width of lines
+    SetTexture = 40,  -- Bind texture to use
+    RenderRectVerticesFilledLayer = 41,  -- Draw filled rects from vertex list
+    RenderRectVerticesOutlineLayer = 42,  -- Draw outlined rects from vertex list
+    DrawPolygon = 43,  -- Draw a polygon
+    RenderNPatchRect = 44,  -- Draw a 9-patch rectangle
+    DrawTriangle = 45  -- Draw a triangle
+}
+
+
+---
+--- 
+---
+---@class layer.CmdBeginDrawing
+layer.CmdBeginDrawing = {
+    dummy = false  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdEndDrawing
+layer.CmdEndDrawing = {
+    dummy = false  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdClearBackground
+layer.CmdClearBackground = {
+    color = Color  -- Background color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdTranslate
+layer.CmdTranslate = {
+    x = number,  -- X offset
+    y = number  -- Y offset
+}
+
+
+---
+--- 
+---
+---@class layer.CmdScale
+layer.CmdScale = {
+    scaleX = number,  -- Scale in X
+    scaleY = number  -- Scale in Y
+}
+
+
+---
+--- 
+---
+---@class layer.CmdRotate
+layer.CmdRotate = {
+    angle = number  -- Rotation angle in degrees
+}
+
+
+---
+--- 
+---
+---@class layer.CmdAddPush
+layer.CmdAddPush = {
+    camera = table  -- Camera parameters
+}
+
+
+---
+--- 
+---
+---@class layer.CmdAddPop
+layer.CmdAddPop = {
+    dummy = false  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdPushMatrix
+layer.CmdPushMatrix = {
+    dummy = false  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdPopMatrix
+layer.CmdPopMatrix = {
+    dummy = false  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawCircle
+layer.CmdDrawCircle = {
+    x = number,  -- Center X
+    y = number,  -- Center Y
+    radius = number,  -- Radius
+    color = Color  -- Fill color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawRectangle
+layer.CmdDrawRectangle = {
+    x = number,  -- Top-left X
+    y = number,  -- Top-left Y
+    width = number,  -- Width
+    height = number,  -- Height
+    color = Color,  -- Fill color
+    lineWidth = number  -- Line width
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawRectanglePro
+layer.CmdDrawRectanglePro = {
+    offsetX = number,  -- Offset X
+    offsetY = number,  -- Offset Y
+    size = Vector2,  -- Size
+    rotationCenter = Vector2,  -- Rotation center
+    rotation = number,  -- Rotation
+    color = Color  -- Color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawRectangleLinesPro
+layer.CmdDrawRectangleLinesPro = {
+    offsetX = number,  -- Offset X
+    offsetY = number,  -- Offset Y
+    size = Vector2,  -- Size
+    lineThickness = number,  -- Line thickness
+    color = Color  -- Color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawLine
+layer.CmdDrawLine = {
+    x1 = number,  -- Start X
+    y1 = number,  -- Start Y
+    x2 = number,  -- End X
+    y2 = number,  -- End Y
+    color = Color,  -- Line color
+    lineWidth = number  -- Line width
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawDashedLine
+layer.CmdDrawDashedLine = {
+    x1 = number,  -- Start X
+    y1 = number,  -- Start Y
+    x2 = number,  -- End X
+    y2 = number,  -- End Y
+    dashSize = number,  -- Dash size
+    gapSize = number,  -- Gap size
+    color = Color,  -- Color
+    lineWidth = number  -- Line width
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawText
+layer.CmdDrawText = {
+    text = string,  -- Text
+    font = Font,  -- Font
+    x = number,  -- X
+    y = number,  -- Y
+    color = Color,  -- Color
+    fontSize = number  -- Font size
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawTextCentered
+layer.CmdDrawTextCentered = {
+    text = string,  -- Text
+    font = Font,  -- Font
+    x = number,  -- X
+    y = number,  -- Y
+    color = Color,  -- Color
+    fontSize = number  -- Font size
+}
+
+
+---
+--- 
+---
+---@class layer.CmdTextPro
+layer.CmdTextPro = {
+    text = string,  -- Text
+    font = Font,  -- Font
+    x = number,  -- X
+    y = number,  -- Y
+    origin = Vector2,  -- Origin
+    rotation = number,  -- Rotation
+    fontSize = number,  -- Font size
+    spacing = number,  -- Spacing
+    color = Color  -- Color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawImage
+layer.CmdDrawImage = {
+    image = Texture2D,  -- Image
+    x = number,  -- X
+    y = number,  -- Y
+    rotation = number,  -- Rotation
+    scaleX = number,  -- Scale X
+    scaleY = number,  -- Scale Y
+    color = Color  -- Tint color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdTexturePro
+layer.CmdTexturePro = {
+    texture = Texture2D,  -- Texture
+    source = Rectangle,  -- Source rect
+    offsetX = number,  -- Offset X
+    offsetY = number,  -- Offset Y
+    size = Vector2,  -- Size
+    rotationCenter = Vector2,  -- Rotation center
+    rotation = number,  -- Rotation
+    color = Color  -- Color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawEntityAnimation
+layer.CmdDrawEntityAnimation = {
+    e = Entity,  -- entt::entity
+    registry = Registry,  -- EnTT registry
+    x = number,  -- X
+    y = number  -- Y
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawTransformEntityAnimation
+layer.CmdDrawTransformEntityAnimation = {
+    e = Entity,  -- entt::entity
+    registry = Registry  -- EnTT registry
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawTransformEntityAnimationPipeline
+layer.CmdDrawTransformEntityAnimationPipeline = {
+    e = Entity,  -- entt::entity
+    registry = Registry  -- EnTT registry
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSetShader
+layer.CmdSetShader = {
+    shader = Shader  -- Shader object
+}
+
+
+---
+--- 
+---
+---@class layer.CmdResetShader
+layer.CmdResetShader = {
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSetBlendMode
+layer.CmdSetBlendMode = {
+    blendMode = number  -- Blend mode
+}
+
+
+---
+--- 
+---
+---@class layer.CmdUnsetBlendMode
+layer.CmdUnsetBlendMode = {
+    dummy = false  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSendUniformFloat
+layer.CmdSendUniformFloat = {
+    shader = Shader,  -- Shader
+    uniform = string,  -- Uniform name
+    value = number  -- Float value
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSendUniformInt
+layer.CmdSendUniformInt = {
+    shader = Shader,  -- Shader
+    uniform = string,  -- Uniform name
+    value = number  -- Int value
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSendUniformVec2
+layer.CmdSendUniformVec2 = {
+    shader = Shader,  -- Shader
+    uniform = string,  -- Uniform name
+    value = Vector2  -- Vec2 value
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSendUniformVec3
+layer.CmdSendUniformVec3 = {
+    shader = Shader,  -- Shader
+    uniform = string,  -- Uniform name
+    value = Vector3  -- Vec3 value
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSendUniformVec4
+layer.CmdSendUniformVec4 = {
+    shader = Shader,  -- Shader
+    uniform = string,  -- Uniform name
+    value = Vector4  -- Vec4 value
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSendUniformFloatArray
+layer.CmdSendUniformFloatArray = {
+    shader = Shader,  -- Shader
+    uniform = string,  -- Uniform name
+    values = table  -- Float array
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSendUniformIntArray
+layer.CmdSendUniformIntArray = {
+    shader = Shader,  -- Shader
+    uniform = string,  -- Uniform name
+    values = table  -- Int array
+}
+
+
+---
+--- 
+---
+---@class layer.CmdVertex
+layer.CmdVertex = {
+    v = Vector3,  -- Position
+    color = Color  -- Vertex color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdBeginOpenGLMode
+layer.CmdBeginOpenGLMode = {
+    mode = number  -- GL mode enum
+}
+
+
+---
+--- 
+---
+---@class layer.CmdEndOpenGLMode
+layer.CmdEndOpenGLMode = {
+    dummy = false  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSetColor
+layer.CmdSetColor = {
+    color = Color  -- Draw color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSetLineWidth
+layer.CmdSetLineWidth = {
+    lineWidth = number  -- Line width
+}
+
+
+---
+--- 
+---
+---@class layer.CmdSetTexture
+layer.CmdSetTexture = {
+    texture = Texture2D  -- Texture to bind
+}
+
+
+---
+--- 
+---
+---@class layer.CmdRenderRectVerticesFilledLayer
+layer.CmdRenderRectVerticesFilledLayer = {
+    outerRec = Rectangle,  -- Outer rectangle
+    progressOrFullBackground = bool,  -- Mode
+    cache = table,  -- Vertex cache
+    color = Color  -- Fill color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdRenderRectVerticesOutlineLayer
+layer.CmdRenderRectVerticesOutlineLayer = {
+    cache = table,  -- Vertex cache
+    color = Color,  -- Outline color
+    useFullVertices = bool  -- Use full vertices
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawPolygon
+layer.CmdDrawPolygon = {
+    vertices = table,  -- Vertex array
+    color = Color,  -- Polygon color
+    lineWidth = number  -- Line width
+}
+
+
+---
+--- 
+---
+---@class layer.CmdRenderNPatchRect
+layer.CmdRenderNPatchRect = {
+    sourceTexture = Texture2D,  -- Source texture
+    info = NPatchInfo,  -- Nine-patch info
+    dest = Rectangle,  -- Destination
+    origin = Vector2,  -- Origin
+    rotation = number,  -- Rotation
+    tint = Color  -- Tint color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawTriangle
+layer.CmdDrawTriangle = {
+    p1 = Vector2,  -- Point 1
+    p2 = Vector2,  -- Point 2
+    p3 = Vector2,  -- Point 3
+    color = Color  -- Triangle color
+}
+
+
+---
+--- A single draw command with type, data payload, and z-order.
+---
+---@class layer.DrawCommandV2
+layer.DrawCommandV2 = {
+    type = number,  -- The draw command type enum
+    data = any,  -- The actual command data (CmdX struct)
+    z = number  -- Z-order depth value for sorting
+}
+
+
+---
+--- 
+---
+---@class command_buffer
+local command_buffer = {
+}
+
+
+---
+--- Manages shaders, their uniforms, and rendering modes.
+---
+---@class shaders
+local shaders = {
+}
+
+
+---
+--- A collection of uniform values to be applied to a shader.
+---
+---@class shaders.ShaderUniformSet
+shaders.ShaderUniformSet = {
+}
+
+---
+--- Sets a uniform value by name. The value can be a number, boolean, Texture, or Vector.
+---
+---@param name string # The name of the uniform to set
+---@param value number|boolean|Texture2D|Vector2|Vector3|Vector4 # The value to set
+function shaders.ShaderUniformSet:set(...) end
+
+---
+--- Gets a uniform value by its name.
+---
+---@param name string # The name of the uniform to retrieve
+---@return any # The value of the uniform
+function shaders.ShaderUniformSet:get(...) end
+
+
+---
+--- An entity component for managing per-entity shader uniforms.
+---
+---@class shaders.ShaderUniformComponent
+shaders.ShaderUniformComponent = {
+}
+
+---
+--- Sets a uniform value within this component's set.
+---
+---@param name string
+---@param value any
+function shaders.ShaderUniformComponent:set(...) end
+
+---
+--- Registers a callback to dynamically compute a uniform's value for an entity.
+---
+---@param uniformName string # The name of the uniform
+---@param callback fun(entity: Entity):any # A function that takes an entity and returns the uniform value
+function shaders.ShaderUniformComponent:registerEntityUniformCallback(...) end
+
+---
+--- Returns the underlying ShaderUniformSet managed by this component.
+---
+---@return shaders.ShaderUniformSet
+function shaders.ShaderUniformComponent:getSet(...) end
+
+---
+--- Applies this component's uniforms to a given shader for a specific entity.
+---
+---@param shader Shader # The target shader
+---@param entity Entity # The entity to source uniform values from
+function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
+
 ---
 --- Adjusts text alignment
 ---
@@ -902,6 +1636,618 @@ function animation_system.resetAnimationUIRenderScale(...) end
 function animation_system.resizeAnimationObjectToFit(...) end
 
 ---
+--- Sorts the layers
+---
+---@return nil
+function layer.SortLayers(...) end
+
+---
+--- Updates the Z index of a layer
+---
+---@param layer layer.Layer
+---@param newZIndex integer
+---@return nil
+function layer.UpdateLayerZIndex(...) end
+
+---
+--- Creates a new layer and returns it
+---
+---@return layer.Layer
+function layer.CreateLayer(...) end
+
+---
+--- Creates a layer with a specified canvas size
+---
+---@param width integer
+---@param height integer
+---@return layer.Layer
+function layer.CreateLayerWithSize(...) end
+
+---
+--- Removes a layer and unloads its canvases
+---
+---@param layer layer.Layer
+---@return nil
+function layer.RemoveLayerFromCanvas(...) end
+
+---
+--- Resizes the canvas of a layer
+---
+---@param layer layer.Layer
+---@param canvasName string
+---@param newWidth integer
+---@param newHeight integer
+---@return nil
+function layer.ResizeCanvasInLayer(...) end
+
+---
+--- 
+---
+---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer)
+---@overload fun(layer: layer.Layer, canvasName: string)
+Adds a canvas to the layer. Will create if needed.
+function layer.AddCanvasToLayer(...) end
+
+---
+--- Removes a canvas by name
+---
+---@param layer layer.Layer
+---@param canvasName string
+---@return nil
+function layer.RemoveCanvas(...) end
+
+---
+--- Destroys all layers and their contents
+---
+---@return nil
+function layer.UnloadAllLayers(...) end
+
+---
+--- Clears draw commands for a specific layer
+---
+---@param layer layer.Layer
+---@return nil
+function layer.ClearDrawCommands(...) end
+
+---
+--- Clears all draw commands from all layers
+---
+---@return nil
+function layer.ClearAllDrawCommands(...) end
+
+---
+--- Begins drawing to all canvases
+---
+---@return nil
+function layer.Begin(...) end
+
+---
+--- Ends drawing to all canvases
+---
+---@return nil
+function layer.End(...) end
+
+---
+--- Renders all layers to the current render target
+---
+---@param camera Camera2D?
+---@return nil
+function layer.RenderAllLayersToCurrentRenderTarget(...) end
+
+---
+--- 
+---
+---@param layer layer.Layer
+---@param canvasName string
+---@param camera Camera2D?
+---@return nil
+Draws commands to a specific canvas, optionally using a camera
+function layer.DrawLayerCommandsToSpecificCanvas(...) end
+
+---
+--- 
+---
+---@param layer layer.Layer
+---@param canvasName string
+---@param x number
+---@param y number
+---@param rotation number
+---@param scaleX number
+---@param scaleY number
+---@param color Color
+---@param shader Shader
+---@param flat boolean
+---@return nil
+Draws a canvas to the current render target with transform, color, and optional shader
+function layer.DrawCanvasToCurrentRenderTargetWithTransform(...) end
+
+---
+--- 
+---
+---@param registry Registry
+---@param entity Entity
+---@return nil
+Draws a transform entity with animation using a specific pipeline
+function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
+
+---
+--- 
+---
+---@param sourceLayer layer.Layer
+---@param sourceCanvasName string
+---@param destLayer layer.Layer
+---@param destCanvasName string
+---@param x number
+---@param y number
+---@param rotation number
+---@param scaleX number
+---@param scaleY number
+---@param tint Color
+---@return nil
+Draws a canvas from one layer onto another
+function layer.DrawCanvasOntoOtherLayer(...) end
+
+---
+--- 
+---
+---@param sourceLayer layer.Layer
+---@param sourceCanvasName string
+---@param destLayer layer.Layer
+---@param destCanvasName string
+---@param x number
+---@param y number
+---@param rotation number
+---@param scaleX number
+---@param scaleY number
+---@param tint Color
+---@param shader Shader
+---@return nil
+Draws a canvas from one layer onto another with an optional shader
+function layer.DrawCanvasOntoOtherLayerWithShader(...) end
+
+---
+--- 
+---
+---@param redo---@return nil
+Draws a canvas to the current render target with a destination rectangle
+function layer.DrawCanvasToCurrentRenderTargetWithDestRect(...) end
+
+---
+--- 
+---
+---@param redo---@return nil
+Draws a custom lambda function to a specific canvas
+function layer.DrawCustomLamdaToSpecificCanvas(...) end
+
+---
+--- 
+---
+---@param redo---@return nil
+Draws a transform entity with animation
+function layer.DrawTransformEntityWithAnimation(...) end
+
+---
+--- 
+---
+---@param redo---@return nil
+Draws a transform entity with animation using a specific pipeline
+function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
+
+---
+--- Queues a CmdBeginDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginDrawing) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueBeginDrawing(...) end
+
+---
+--- Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndDrawing) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueEndDrawing(...) end
+
+---
+--- Queues a CmdClearBackground into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdClearBackground) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueClearBackground(...) end
+
+---
+--- Queues a CmdTranslate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdTranslate) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueTranslate(...) end
+
+---
+--- Queues a CmdScale into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdScale) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueScale(...) end
+
+---
+--- Queues a CmdRotate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRotate) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueRotate(...) end
+
+---
+--- Queues a CmdAddPush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAddPush) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueAddPush(...) end
+
+---
+--- Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAddPop) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueAddPop(...) end
+
+---
+--- Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPushMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queuePushMatrix(...) end
+
+---
+--- Queues a CmdPopMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPopMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queuePopMatrix(...) end
+
+---
+--- Queues a CmdDrawCircle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawCircle) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawCircle(...) end
+
+---
+--- Queues a CmdDrawRectangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawRectangle) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawRectangle(...) end
+
+---
+--- Queues a CmdDrawRectanglePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawRectanglePro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawRectanglePro(...) end
+
+---
+--- Queues a CmdDrawRectangleLinesPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawRectangleLinesPro(...) end
+
+---
+--- Queues a CmdDrawLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawLine) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawLine(...) end
+
+---
+--- Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawDashedLine(...) end
+
+---
+--- Queues a CmdDrawText into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawText) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawText(...) end
+
+---
+--- Queues a CmdDrawTextCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTextCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawTextCentered(...) end
+
+---
+--- Queues a CmdTextPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdTextPro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueTextPro(...) end
+
+---
+--- Queues a CmdDrawImage into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawImage) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawImage(...) end
+
+---
+--- Queues a CmdTexturePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdTexturePro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueTexturePro(...) end
+
+---
+--- Queues a CmdDrawEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawEntityAnimation) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawEntityAnimation(...) end
+
+---
+--- Queues a CmdDrawTransformEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawTransformEntityAnimation(...) end
+
+---
+--- Queues a CmdDrawTransformEntityAnimationPipeline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawTransformEntityAnimationPipeline(...) end
+
+---
+--- Queues a CmdSetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetShader) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSetShader(...) end
+
+---
+--- Queues a CmdResetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdResetShader) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueResetShader(...) end
+
+---
+--- Queues a CmdSetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetBlendMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSetBlendMode(...) end
+
+---
+--- Queues a CmdUnsetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdUnsetBlendMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueUnsetBlendMode(...) end
+
+---
+--- Queues a CmdSendUniformFloat into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformFloat) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSendUniformFloat(...) end
+
+---
+--- Queues a CmdSendUniformInt into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformInt) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSendUniformInt(...) end
+
+---
+--- Queues a CmdSendUniformVec2 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformVec2) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSendUniformVec2(...) end
+
+---
+--- Queues a CmdSendUniformVec3 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformVec3) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSendUniformVec3(...) end
+
+---
+--- Queues a CmdSendUniformVec4 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformVec4) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSendUniformVec4(...) end
+
+---
+--- Queues a CmdSendUniformFloatArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformFloatArray) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSendUniformFloatArray(...) end
+
+---
+--- Queues a CmdSendUniformIntArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformIntArray) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSendUniformIntArray(...) end
+
+---
+--- Queues a CmdVertex into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdVertex) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueVertex(...) end
+
+---
+--- Queues a CmdBeginOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginOpenGLMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueBeginOpenGLMode(...) end
+
+---
+--- Queues a CmdEndOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndOpenGLMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueEndOpenGLMode(...) end
+
+---
+--- Queues a CmdSetColor into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetColor) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSetColor(...) end
+
+---
+--- Queues a CmdSetLineWidth into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetLineWidth) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSetLineWidth(...) end
+
+---
+--- Queues a CmdSetTexture into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetTexture) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueSetTexture(...) end
+
+---
+--- Queues a CmdRenderRectVerticesFilledLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueRenderRectVerticesFilledLayer(...) end
+
+---
+--- Queues a CmdRenderRectVerticesOutlineLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueRenderRectVerticesOutlineLayer(...) end
+
+---
+--- Queues a CmdDrawPolygon into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawPolygon) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawPolygon(...) end
+
+---
+--- Queues a CmdRenderNPatchRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderNPatchRect) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueRenderNPatchRect(...) end
+
+---
+--- Queues a CmdDrawTriangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTriangle) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void
+function layer.queueDrawTriangle(...) end
+
+---
 --- Creates and attaches a particle system to an entity
 ---
 ---@param entity Entity
@@ -935,4 +2281,290 @@ function particle.UpdateParticles(...) end
 ---
 ---@return nil
 function particle.DrawParticles(...) end
+
+---
+--- Sets the seed for deterministic random behavior
+---
+---@param seed number # Seed for the RNG
+---@return void
+function random_utils.set_seed(...) end
+
+---
+--- Returns a random boolean value
+---
+---@return boolean # A random boolean value
+function random_utils.random_bool(...) end
+
+---
+--- Returns a random float between min and max
+---
+---@param min number
+---@param max number
+---@return number # A random float between min and max
+function random_utils.random_float(...) end
+
+---
+--- Returns a random integer within a range
+---
+---@param min number
+---@param max number
+---@return number # A random integer within the range
+function random_utils.random_int(...) end
+
+---
+--- Returns a float sampled from a normal distribution
+---
+---@param mean number
+---@param stdev number
+---@return number # A float sampled from a normal distribution
+function random_utils.random_normal(...) end
+
+---
+--- Returns +1 or -1 randomly
+---
+---@return number # Either +1 or -1
+function random_utils.random_sign(...) end
+
+---
+--- Generates a random UID string
+---
+---@return string # A random UID string
+function random_utils.random_uid(...) end
+
+---
+--- Returns a random angle in radians
+---
+---@return number # A random angle in radians
+function random_utils.random_angle(...) end
+
+---
+--- Returns a biased random float skewed toward an end
+---
+---@param bias number
+---@return number # A biased random float
+function random_utils.random_biased(...) end
+
+---
+--- Returns a random delay in milliseconds
+---
+---@param min number
+---@param max number
+---@return number # Random delay in milliseconds
+function random_utils.random_delay(...) end
+
+---
+--- Returns a normalized 2D vector
+---
+---@return Vector2 # A normalized 2D vector
+function random_utils.random_unit_vector_2D(...) end
+
+---
+--- Returns a normalized 3D vector
+---
+---@return Vector3 # A normalized 3D vector
+function random_utils.random_unit_vector_3D(...) end
+
+---
+--- Returns a randomly generated color
+---
+---@return Color # A random color
+function random_utils.random_color(...) end
+
+---
+--- Random element from int vector
+---
+---@param list integer[]
+---@return integer
+function random_utils.random_element_int(...) end
+
+---
+--- Random element from double vector
+---
+---@param list number[]
+---@return number
+function random_utils.random_element_double(...) end
+
+---
+--- Random element from string vector
+---
+---@param list string[]
+---@return string
+function random_utils.random_element_string(...) end
+
+---
+--- Random element from Color vector
+---
+---@param list Color[]
+---@return Color
+function random_utils.random_element_color(...) end
+
+---
+--- Random element from Vector2 vector
+---
+---@param list Vector2[]
+---@return Vector2
+function random_utils.random_element_vec2(...) end
+
+---
+--- Random element from entity vector
+---
+---@param list entity[]
+---@return entity
+function random_utils.random_element_entity(...) end
+
+---
+--- Removes and returns a random int
+---
+---@param list integer[]
+---@return integer
+function random_utils.random_element_remove_int(...) end
+
+---
+--- Removes and returns a random double
+---
+---@param list number[]
+---@return number
+function random_utils.random_element_remove_double(...) end
+
+---
+--- Removes and returns a random string
+---
+---@param list string[]
+---@return string
+function random_utils.random_element_remove_string(...) end
+
+---
+--- Removes and returns a random color
+---
+---@param list Color[]
+---@return Color
+function random_utils.random_element_remove_color(...) end
+
+---
+--- Removes and returns a random Vector2
+---
+---@param list Vector2[]
+---@return Vector2
+function random_utils.random_element_remove_vec2(...) end
+
+---
+--- Removes and returns a random entity
+---
+---@param list entity[]
+---@return entity
+function random_utils.random_element_remove_entity(...) end
+
+---
+--- Index based on weight vector
+---
+---@param weights number[]
+---@return integer
+function random_utils.random_weighted_pick_int(...) end
+
+---
+--- Weighted pick of string
+---
+---@param values string[]
+---@param weights number[]
+---@return string
+function random_utils.random_weighted_pick_string(...) end
+
+---
+--- Weighted pick of color
+---
+---@param values Color[]
+---@param weights number[]
+---@return Color
+function random_utils.random_weighted_pick_color(...) end
+
+---
+--- Weighted pick of Vector2
+---
+---@param values Vector2[]
+---@param weights number[]
+---@return Vector2
+function random_utils.random_weighted_pick_vec2(...) end
+
+---
+--- Weighted pick of entity
+---
+---@param values entity[]
+---@param weights number[]
+---@return entity
+function random_utils.random_weighted_pick_entity(...) end
+
+---
+--- Applies a set of uniforms to a shader.
+---
+---@param shader Shader
+---@param uniforms shaders.ShaderUniformSet
+function shaders.ApplyUniformsToShader(...) end
+
+---
+--- Loads and compiles shaders from a JSON file.
+---
+---@param path string # Filepath to the JSON definition
+function shaders.loadShadersFromJSON(...) end
+
+---
+--- Unloads all shaders, freeing their resources.
+---
+---@return void
+function shaders.unloadShaders(...) end
+
+---
+--- Globally forces all shader effects off or on.
+---
+---@param disabled boolean # True to disable all shaders, false to re-enable
+function shaders.disableAllShadersViaOverride(...) end
+
+---
+--- Checks all loaded shaders for changes on disk and reloads them if necessary.
+---
+---@return void
+function shaders.hotReloadShaders(...) end
+
+---
+--- Begins a shader mode, e.g., for post-processing effects.
+---
+---@param mode any # The shader mode to activate
+function shaders.setShaderMode(...) end
+
+---
+--- Ends the current shader mode.
+---
+---@return void
+function shaders.unsetShaderMode(...) end
+
+---
+--- Retrieves a loaded shader by its unique name.
+---
+---@param name string # The name of the shader to find
+---@return Shader
+function shaders.getShader(...) end
+
+---
+--- Registers a global callback to update a specific uniform across all shaders.
+---
+---@param uniformName string # The uniform to target
+---@param callback function # A function to call to get the latest value
+function shaders.registerUniformUpdate(...) end
+
+---
+--- Invokes all registered global uniform update callbacks.
+---
+---@return void
+function shaders.updateAllShaderUniforms(...) end
+
+---
+--- Updates internal shader state, such as timers for 'time' uniforms.
+---
+---@param dt number # Delta time
+function shaders.updateShaders(...) end
+
+---
+--- Displays the ImGui-based shader editor window for debugging.
+---
+---@return void
+function shaders.ShowShaderEditorUI(...) end
 

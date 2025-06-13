@@ -27,24 +27,92 @@ namespace timer
     })
     */
     void exposeToLua(sol::state &lua) {
+        // // 1) Get or create the `timer` table
+        // sol::state_view luaView{lua};
+        // auto t = luaView["timer"].get_or_create<sol::table>();
+
+        // // sol::table t = lua.get_or("timer", lua.create_table());
+        // if (!t.valid()) {
+        //     t = lua.create_table();
+        //     lua["timer"] = t;
+        // }
+
+        // // 2) timer.math
+        // auto m = luaView["math"].get_or_create<sol::table>();
+        // // sol::table m = lua.get_or("math", lua.create_table());
+        // if (!m.valid()) {
+        //     m = t.create_named("math");
+        // }
+        // m.set_function("remap", &timer::math::remap);
+        // m.set_function("lerp",  &timer::math::lerp);
+
+        // // 3) TimerType enum
+        // t.new_enum<timer::TimerType>("TimerType", {
+        //     {"RUN",        timer::TimerType::RUN},
+        //     {"AFTER",      timer::TimerType::AFTER},
+        //     {"COOLDOWN",   timer::TimerType::COOLDOWN},
+        //     {"EVERY",      timer::TimerType::EVERY},
+        //     {"EVERY_STEP", timer::TimerType::EVERY_STEP},
+        //     {"FOR",        timer::TimerType::FOR},
+        //     {"TWEEN",      timer::TimerType::TWEEN}
+        // });
+
+        // // 4) Core control/query
+        // t.set_function("cancel",               &timer::TimerSystem::cancel_timer);
+        // t.set_function("get_every_index",     &timer::TimerSystem::timer_get_every_index);
+        // t.set_function("reset",                &timer::TimerSystem::timer_reset);
+        // t.set_function("get_delay",           &timer::TimerSystem::timer_get_delay);
+        // t.set_function("set_multiplier",      &timer::TimerSystem::timer_set_multiplier);
+        // t.set_function("get_multiplier",      &timer::TimerSystem::timer_get_multiplier);
+        // t.set_function("get_for_elapsed",     &timer::TimerSystem::timer_get_for_elapsed_time);
+        // t.set_function("get_timer_and_delay",&timer::TimerSystem::timer_get_timer_and_delay);
+
+        // // 5) Ticking
+        // t.set_function("update", &timer::TimerSystem::update_timers);
+
+        // // 6) Creation APIs
+        // t.set_function("run",         &timer::TimerSystem::timer_run);
+        // t.set_function("after",       &timer::TimerSystem::timer_after);
+        // t.set_function("cooldown",    &timer::TimerSystem::timer_cooldown);
+        // t.set_function("every",       &timer::TimerSystem::timer_every);
+        // t.set_function("every_step",  &timer::TimerSystem::timer_every_step);
+        // t.set_function("for",         &timer::TimerSystem::timer_for);
+        // t.set_function("tween",       &timer::TimerSystem::timer_tween);
+
+        // BindingRecorder instance
+        auto& rec = BindingRecorder::instance();
+
         // 1) Get or create the `timer` table
         sol::state_view luaView{lua};
         auto t = luaView["timer"].get_or_create<sol::table>();
-
-        // sol::table t = lua.get_or("timer", lua.create_table());
         if (!t.valid()) {
             t = lua.create_table();
             lua["timer"] = t;
         }
+        // Recorder: Top-level namespace
+        rec.add_type("timer").doc = "A system for creating, managing, and updating timers.";
 
-        // 2) timer.math
-        auto m = luaView["math"].get_or_create<sol::table>();
-        // sol::table m = lua.get_or("math", lua.create_table());
+        // 2) timer.math sub-table
+        auto m = t["math"].get_or_create<sol::table>();
         if (!m.valid()) {
             m = t.create_named("math");
         }
         m.set_function("remap", &timer::math::remap);
         m.set_function("lerp",  &timer::math::lerp);
+        // Recorder: Sub-module and its functions
+        rec.add_type("timer.math").doc = "Mathematical utility functions for timers.";
+        rec.record_free_function({"timer", "math"}, {
+            "remap",
+            "---@param value number\n---@param from1 number\n---@param to1 number\n---@param from2 number\n---@param to2 number\n---@return number",
+            "Re-maps a number from one range to another.",
+            true, false
+        });
+        rec.record_free_function({"timer", "math"}, {
+            "lerp",
+            "---@param a number\n---@param b number\n---@param t number\n---@return number",
+            "Linearly interpolates between two points.",
+            true, false
+        });
 
         // 3) TimerType enum
         t.new_enum<timer::TimerType>("TimerType", {
@@ -56,36 +124,176 @@ namespace timer
             {"FOR",        timer::TimerType::FOR},
             {"TWEEN",      timer::TimerType::TWEEN}
         });
+        // Recorder: Enum definition as a documented class with properties
+        auto& timerType = rec.add_type("timer.TimerType");
+        timerType.doc = "Specifies the behavior of a timer.";
+        rec.record_property("timer.TimerType", {"RUN",        std::to_string(static_cast<int>(timer::TimerType::RUN)), "Runs once immediately."});
+        rec.record_property("timer.TimerType", {"AFTER",      std::to_string(static_cast<int>(timer::TimerType::AFTER)), "Runs once after a delay."});
+        rec.record_property("timer.TimerType", {"COOLDOWN",   std::to_string(static_cast<int>(timer::TimerType::COOLDOWN)), "A resettable one-shot timer."});
+        rec.record_property("timer.TimerType", {"EVERY",      std::to_string(static_cast<int>(timer::TimerType::EVERY)), "Runs repeatedly at an interval."});
+        rec.record_property("timer.TimerType", {"EVERY_STEP", std::to_string(static_cast<int>(timer::TimerType::EVERY_STEP)), "Runs repeatedly every N frames."});
+        rec.record_property("timer.TimerType", {"FOR",        std::to_string(static_cast<int>(timer::TimerType::FOR)), "Runs every frame for a duration."});
+        rec.record_property("timer.TimerType", {"TWEEN",      std::to_string(static_cast<int>(timer::TimerType::TWEEN)), "Interpolates a value over a duration."});
 
         // 4) Core control/query
-        t.set_function("cancel",               &timer::TimerSystem::cancel_timer);
-        t.set_function("get_every_index",     &timer::TimerSystem::timer_get_every_index);
-        t.set_function("reset",                &timer::TimerSystem::timer_reset);
-        t.set_function("get_delay",           &timer::TimerSystem::timer_get_delay);
-        t.set_function("set_multiplier",      &timer::TimerSystem::timer_set_multiplier);
-        t.set_function("get_multiplier",      &timer::TimerSystem::timer_get_multiplier);
-        t.set_function("get_for_elapsed",     &timer::TimerSystem::timer_get_for_elapsed_time);
+        t.set_function("cancel",            &timer::TimerSystem::cancel_timer);
+        t.set_function("get_every_index",   &timer::TimerSystem::timer_get_every_index);
+        t.set_function("reset",             &timer::TimerSystem::timer_reset);
+        t.set_function("get_delay",         &timer::TimerSystem::timer_get_delay);
+        t.set_function("set_multiplier",    &timer::TimerSystem::timer_set_multiplier);
+        t.set_function("get_multiplier",    &timer::TimerSystem::timer_get_multiplier);
+        t.set_function("get_for_elapsed",   &timer::TimerSystem::timer_get_for_elapsed_time);
         t.set_function("get_timer_and_delay",&timer::TimerSystem::timer_get_timer_and_delay);
+        // Recorder: control/query functions
+        rec.record_free_function({"timer"}, {"cancel", "---@param timerHandle integer\n---@return nil", "Cancels and destroys an active timer.", true, false});
+        rec.record_free_function({"timer"}, {"get_every_index", "---@param timerHandle integer\n---@return integer", "Gets the current invocation count for an 'every' timer.", true, false});
+        rec.record_free_function({"timer"}, {"reset", "---@param timerHandle integer\n---@return nil", "Resets a timer, such as a 'cooldown'.", true, false});
+        rec.record_free_function({"timer"}, {"get_delay", "---@param timerHandle integer\n---@return number", "Gets the remaining time on a timer.", true, false});
+        rec.record_free_function({"timer"}, {"set_multiplier", "---@param multiplier number\n---@return nil", "Sets the global speed multiplier for all timers.", true, false});
+        rec.record_free_function({"timer"}, {"get_multiplier", "---@return number", "Gets the global timer speed multiplier.", true, false});
+        rec.record_free_function({"timer"}, {"get_for_elapsed", "---@param timerHandle integer\n---@return number", "Gets the elapsed time for a 'for' timer.", true, false});
+        rec.record_free_function({"timer"}, {"get_timer_and_delay", "---@param timerHandle integer\n---@return table, number", "Returns the timer object and its remaining delay.", true, false});
 
         // 5) Ticking
         t.set_function("update", &timer::TimerSystem::update_timers);
+        // Recorder: ticking function
+        rec.record_free_function({"timer"}, {"update", "---@param dt number # Delta time.\n---@return nil", "Updates all active timers, should be called once per frame.", true, false});
 
         // 6) Creation APIs
-        t.set_function("run",         &timer::TimerSystem::timer_run);
-        t.set_function("after",       &timer::TimerSystem::timer_after);
-        t.set_function("cooldown",    &timer::TimerSystem::timer_cooldown);
-        t.set_function("every",       &timer::TimerSystem::timer_every);
-        t.set_function("every_step",  &timer::TimerSystem::timer_every_step);
-        t.set_function("for",         &timer::TimerSystem::timer_for);
-        t.set_function("tween",       &timer::TimerSystem::timer_tween);
+        t.set_function("run",        &timer::TimerSystem::timer_run);
+        t.set_function("after",      &timer::TimerSystem::timer_after);
+        t.set_function("cooldown",   &timer::TimerSystem::timer_cooldown);
+        t.set_function("every",      &timer::TimerSystem::timer_every);
+        t.set_function("every_step", &timer::TimerSystem::timer_every_step);
+        t.set_function("for",        &timer::TimerSystem::timer_for);
+        t.set_function("tween",      &timer::TimerSystem::timer_tween);
+        // Recorder: creation functions
+        rec.record_free_function({"timer"}, {"run", "---@param callback function\n---@return integer # timerHandle", "Create a timer that runs once immediately.", true, false});
+        rec.record_free_function({"timer"}, {"after", "---@param delay number\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs once after a delay.", true, false});
+        rec.record_free_function({"timer"}, {"cooldown", "---@param duration number\n---@param callback function\n---@return integer # timerHandle", "Create a resettable one-shot timer.", true, false});
+        rec.record_free_function({"timer"}, {"every", "---@param interval number\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs repeatedly.", true, false});
+        rec.record_free_function({"timer"}, {"every_step", "---@param frames integer\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs every N frames.", true, false});
+        rec.record_free_function({"timer"}, {"for", "---@param duration number\n---@param callback fun(elapsedTime:number)\n---@return integer # timerHandle", "Create a timer that runs every frame for a set duration.", true, false});
+        rec.record_free_function({"timer"}, {"tween", "---@param duration number\n---@param callback fun(value:number)\n---@return integer # timerHandle", "Create a timer that interpolates a value from 0 to 1 over a duration.", true, false});
+
 
         // 1) Get or create the table
+        // auto eq = luaView["EventQueueSystem"].get_or_create<sol::table>();
+        // // sol::table eq = lua.get_or("EventQueueSystem", lua.create_table());
+        // if (!eq.valid()) {
+        //     eq = lua.create_table();
+        //     lua["EventQueueSystem"] = eq;
+        // }
+
+        // // 2) Enums
+        // eq.new_enum<timer::EventQueueSystem::EaseType>("EaseType", {
+        //     {"LERP",        timer::EventQueueSystem::EaseType::LERP},
+        //     {"ELASTIC_IN",  timer::EventQueueSystem::EaseType::ELASTIC_IN},
+        //     {"ELASTIC_OUT", timer::EventQueueSystem::EaseType::ELASTIC_OUT},
+        //     {"QUAD_IN",     timer::EventQueueSystem::EaseType::QUAD_IN},
+        //     {"QUAD_OUT",    timer::EventQueueSystem::EaseType::QUAD_OUT}
+        // });
+
+        // eq.new_enum<timer::EventQueueSystem::TriggerType>("TriggerType", {
+        //     {"IMMEDIATE", timer::EventQueueSystem::TriggerType::IMMEDIATE},
+        //     {"AFTER",     timer::EventQueueSystem::TriggerType::AFTER},
+        //     {"BEFORE",    timer::EventQueueSystem::TriggerType::BEFORE},
+        //     {"EASE",      timer::EventQueueSystem::TriggerType::EASE},
+        //     {"CONDITION", timer::EventQueueSystem::TriggerType::CONDITION}
+        // });
+
+        // eq.new_enum<timer::EventQueueSystem::TimerType>("TimerType", {
+        //     {"REAL_TIME",                 timer::EventQueueSystem::TimerType::REAL_TIME},
+        //     {"TOTAL_TIME_EXCLUDING_PAUSE",timer::EventQueueSystem::TimerType::TOTAL_TIME_EXCLUDING_PAUSE}
+        // });
+
+        // // 3) Plain‐old structs
+        // eq.new_usertype<timer::EventQueueSystem::EaseData>(
+        //     "EaseData",
+        //     "type",               &timer::EventQueueSystem::EaseData::type,
+        //     "startValue",         &timer::EventQueueSystem::EaseData::startValue,
+        //     "endValue",           &timer::EventQueueSystem::EaseData::endValue,
+        //     "startTime",          &timer::EventQueueSystem::EaseData::startTime,
+        //     "endTime",            &timer::EventQueueSystem::EaseData::endTime,
+        //     // for callbacks, we accept Lua functions:
+        //     "setValueCallback",   &timer::EventQueueSystem::EaseData::set_value_callback,
+        //     "getValueCallback",   &timer::EventQueueSystem::EaseData::get_value_callback
+        // );
+
+        // eq.new_usertype<timer::EventQueueSystem::ConditionData>(
+        //     "ConditionData",
+        //     "check", &timer::EventQueueSystem::ConditionData::checkConditionCallback
+        // );
+
+        // eq.new_usertype<timer::EventQueueSystem::Event>(
+        //     "Event",
+        //     "eventTrigger",              &timer::EventQueueSystem::Event::eventTrigger,
+        //     "blocksQueue",               &timer::EventQueueSystem::Event::blocksQueue,
+        //     "canBeBlocked",              &timer::EventQueueSystem::Event::canBeBlocked,
+        //     "complete",                  &timer::EventQueueSystem::Event::complete,
+        //     "timerStarted",              &timer::EventQueueSystem::Event::timerStarted,
+        //     "delaySeconds",              &timer::EventQueueSystem::Event::delaySeconds,
+        //     "retainAfterCompletion",     &timer::EventQueueSystem::Event::retainInQueueAfterCompletion,
+        //     "createdWhilePaused",        &timer::EventQueueSystem::Event::createdWhileGamePaused,
+        //     "func",                      &timer::EventQueueSystem::Event::func,
+        //     "timerType",                 &timer::EventQueueSystem::Event::timerTypeToUse,
+        //     "time",                      &timer::EventQueueSystem::Event::time,
+        //     "ease",                      &timer::EventQueueSystem::Event::ease,
+        //     "condition",                 &timer::EventQueueSystem::Event::condition,
+        //     "tag",                       &timer::EventQueueSystem::Event::tag,
+        //     "debugID",                   &timer::EventQueueSystem::Event::debug_string_id,
+        //     "deleteNextCycleImmediately",&timer::EventQueueSystem::Event::deleteNextCycleImmediately
+        // );
+
+        // // 4) Builder types
+        // eq.new_usertype<timer::EventQueueSystem::EaseDataBuilder>(
+        //     "EaseDataBuilder",
+        //     sol::constructors<timer::EventQueueSystem::EaseDataBuilder()>(),
+        //     "Type",    &timer::EventQueueSystem::EaseDataBuilder::Type,
+        //     "StartValue", &timer::EventQueueSystem::EaseDataBuilder::StartValue,
+        //     "EndValue",   &timer::EventQueueSystem::EaseDataBuilder::EndValue,
+        //     "StartTime",  &timer::EventQueueSystem::EaseDataBuilder::StartTime,
+        //     "EndTime",    &timer::EventQueueSystem::EaseDataBuilder::EndTime,
+        //     "SetCallback",&timer::EventQueueSystem::EaseDataBuilder::SetCallback,
+        //     "GetCallback",&timer::EventQueueSystem::EaseDataBuilder::GetCallback,
+        //     "Build",      &timer::EventQueueSystem::EaseDataBuilder::Build
+        // );
+
+        // eq.new_usertype<timer::EventQueueSystem::EventBuilder>(
+        //     "EventBuilder",
+        //     sol::constructors<timer::EventQueueSystem::EventBuilder()>(),
+        //     "Trigger",                    &timer::EventQueueSystem::EventBuilder::Trigger,
+        //     "BlocksQueue",                &timer::EventQueueSystem::EventBuilder::BlocksQueue,
+        //     "CanBeBlocked",               &timer::EventQueueSystem::EventBuilder::CanBeBlocked,
+        //     "Delay",                      &timer::EventQueueSystem::EventBuilder::Delay,
+        //     "Func",                       &timer::EventQueueSystem::EventBuilder::Func,
+        //     "Ease",                       &timer::EventQueueSystem::EventBuilder::Ease,
+        //     "Condition",                  &timer::EventQueueSystem::EventBuilder::Condition,
+        //     "Tag",                        &timer::EventQueueSystem::EventBuilder::Tag,
+        //     "DebugID",                    &timer::EventQueueSystem::EventBuilder::DebugID,
+        //     "RetainAfterCompletion",      &timer::EventQueueSystem::EventBuilder::RetainAfterCompletion,
+        //     "CreatedWhilePaused",         &timer::EventQueueSystem::EventBuilder::CreatedWhilePaused,
+        //     "TimerType",                  &timer::EventQueueSystem::EventBuilder::TimerType,
+        //     "StartTimer",                 &timer::EventQueueSystem::EventBuilder::StartTimer,
+        //     "DeleteNextCycleImmediately", &timer::EventQueueSystem::EventBuilder::DeleteNextCycleImmediately,
+        //     "Build",                      &timer::EventQueueSystem::EventBuilder::Build,
+        //     "AddToQueue",                 &timer::EventQueueSystem::EventBuilder::AddToQueue
+        // );
+
+        // // 5) Core API
+        // eq.set_function("add_event",           &timer::EventQueueSystem::EventManager::add_event);
+        // eq.set_function("get_event_by_tag",    &timer::EventQueueSystem::EventManager::get_event_by_tag);
+        // eq.set_function("clear_queue",         &timer::EventQueueSystem::EventManager::clear_queue);
+        // eq.set_function("update",              &timer::EventQueueSystem::EventManager::update);
+
+        // 1) Get or create the `EventQueueSystem` table
         auto eq = luaView["EventQueueSystem"].get_or_create<sol::table>();
-        // sol::table eq = lua.get_or("EventQueueSystem", lua.create_table());
         if (!eq.valid()) {
             eq = lua.create_table();
             lua["EventQueueSystem"] = eq;
         }
+        // Recorder: Top-level namespace
+        rec.add_type("EventQueueSystem").doc = "A system for managing and processing sequential and timed events.";
 
         // 2) Enums
         eq.new_enum<timer::EventQueueSystem::EaseType>("EaseType", {
@@ -95,6 +303,13 @@ namespace timer
             {"QUAD_IN",     timer::EventQueueSystem::EaseType::QUAD_IN},
             {"QUAD_OUT",    timer::EventQueueSystem::EaseType::QUAD_OUT}
         });
+        auto& easeType = rec.add_type("EventQueueSystem.EaseType");
+        easeType.doc = "Collection of easing functions for tweening.";
+        rec.record_property("EventQueueSystem.EaseType", {"LERP",        std::to_string(static_cast<int>(timer::EventQueueSystem::EaseType::LERP)), "Linear interpolation."});
+        rec.record_property("EventQueueSystem.EaseType", {"ELASTIC_IN",  std::to_string(static_cast<int>(timer::EventQueueSystem::EaseType::ELASTIC_IN)), "Elastic in."});
+        rec.record_property("EventQueueSystem.EaseType", {"ELASTIC_OUT", std::to_string(static_cast<int>(timer::EventQueueSystem::EaseType::ELASTIC_OUT)), "Elastic out."});
+        rec.record_property("EventQueueSystem.EaseType", {"QUAD_IN",     std::to_string(static_cast<int>(timer::EventQueueSystem::EaseType::QUAD_IN)), "Quadratic in."});
+        rec.record_property("EventQueueSystem.EaseType", {"QUAD_OUT",    std::to_string(static_cast<int>(timer::EventQueueSystem::EaseType::QUAD_OUT)), "Quadratic out."});
 
         eq.new_enum<timer::EventQueueSystem::TriggerType>("TriggerType", {
             {"IMMEDIATE", timer::EventQueueSystem::TriggerType::IMMEDIATE},
@@ -103,32 +318,51 @@ namespace timer
             {"EASE",      timer::EventQueueSystem::TriggerType::EASE},
             {"CONDITION", timer::EventQueueSystem::TriggerType::CONDITION}
         });
+        auto& triggerType = rec.add_type("EventQueueSystem.TriggerType");
+        triggerType.doc = "Defines when an event in the queue should be triggered.";
+        rec.record_property("EventQueueSystem.TriggerType", {"IMMEDIATE", std::to_string(static_cast<int>(timer::EventQueueSystem::TriggerType::IMMEDIATE)), "Triggers immediately."});
+        rec.record_property("EventQueueSystem.TriggerType", {"AFTER",     std::to_string(static_cast<int>(timer::EventQueueSystem::TriggerType::AFTER)), "Triggers after a delay."});
+        rec.record_property("EventQueueSystem.TriggerType", {"BEFORE",    std::to_string(static_cast<int>(timer::EventQueueSystem::TriggerType::BEFORE)), "Triggers before a delay."});
+        rec.record_property("EventQueueSystem.TriggerType", {"EASE",      std::to_string(static_cast<int>(timer::EventQueueSystem::TriggerType::EASE)), "Triggers as part of an ease/tween."});
+        rec.record_property("EventQueueSystem.TriggerType", {"CONDITION", std::to_string(static_cast<int>(timer::EventQueueSystem::TriggerType::CONDITION)), "Triggers when a condition is met."});
 
         eq.new_enum<timer::EventQueueSystem::TimerType>("TimerType", {
-            {"REAL_TIME",                 timer::EventQueueSystem::TimerType::REAL_TIME},
-            {"TOTAL_TIME_EXCLUDING_PAUSE",timer::EventQueueSystem::TimerType::TOTAL_TIME_EXCLUDING_PAUSE}
+            {"REAL_TIME",                   timer::EventQueueSystem::TimerType::REAL_TIME},
+            {"TOTAL_TIME_EXCLUDING_PAUSE",  timer::EventQueueSystem::TimerType::TOTAL_TIME_EXCLUDING_PAUSE}
         });
+        auto& eqTimerType = rec.add_type("EventQueueSystem.TimerType");
+        eqTimerType.doc = "Defines which clock an event timer uses.";
+        rec.record_property("EventQueueSystem.TimerType", {"REAL_TIME", std::to_string(static_cast<int>(timer::EventQueueSystem::TimerType::REAL_TIME)), "Uses the real-world clock, unaffected by game pause."});
+        rec.record_property("EventQueueSystem.TimerType", {"TOTAL_TIME_EXCLUDING_PAUSE", std::to_string(static_cast<int>(timer::EventQueueSystem::TimerType::TOTAL_TIME_EXCLUDING_PAUSE)), "Uses the game clock, which may be paused."});
 
-        // 3) Plain‐old structs
-        eq.new_usertype<timer::EventQueueSystem::EaseData>(
-            "EaseData",
+        // 3) Plain-old structs (as usertypes)
+        eq.new_usertype<timer::EventQueueSystem::EaseData>("EaseData",
             "type",               &timer::EventQueueSystem::EaseData::type,
             "startValue",         &timer::EventQueueSystem::EaseData::startValue,
             "endValue",           &timer::EventQueueSystem::EaseData::endValue,
             "startTime",          &timer::EventQueueSystem::EaseData::startTime,
             "endTime",            &timer::EventQueueSystem::EaseData::endTime,
-            // for callbacks, we accept Lua functions:
             "setValueCallback",   &timer::EventQueueSystem::EaseData::set_value_callback,
             "getValueCallback",   &timer::EventQueueSystem::EaseData::get_value_callback
         );
+        auto& easeData = rec.add_type("EventQueueSystem.EaseData");
+        easeData.doc = "Data for an easing/tweening operation.";
+        rec.record_property("EventQueueSystem.EaseData", {"type", "EventQueueSystem.EaseType", "The easing function to use."});
+        rec.record_property("EventQueueSystem.EaseData", {"startValue", "number", "The starting value of the tween."});
+        rec.record_property("EventQueueSystem.EaseData", {"endValue", "number", "The ending value of the tween."});
+        rec.record_property("EventQueueSystem.EaseData", {"startTime", "number", "The start time of the tween."});
+        rec.record_property("EventQueueSystem.EaseData", {"endTime", "number", "The end time of the tween."});
+        rec.record_property("EventQueueSystem.EaseData", {"setValueCallback", "fun(value:number)", "Callback to apply the tweened value."});
+        rec.record_property("EventQueueSystem.EaseData", {"getValueCallback", "fun():number", "Callback to get the current value."});
 
-        eq.new_usertype<timer::EventQueueSystem::ConditionData>(
-            "ConditionData",
+        eq.new_usertype<timer::EventQueueSystem::ConditionData>("ConditionData",
             "check", &timer::EventQueueSystem::ConditionData::checkConditionCallback
         );
+        auto& condData = rec.add_type("EventQueueSystem.ConditionData");
+        condData.doc = "A condition that must be met for an event to trigger.";
+        rec.record_property("EventQueueSystem.ConditionData", {"check", "fun():boolean", "A function that returns true when the condition is met."});
 
-        eq.new_usertype<timer::EventQueueSystem::Event>(
-            "Event",
+        eq.new_usertype<timer::EventQueueSystem::Event>("Event",
             "eventTrigger",              &timer::EventQueueSystem::Event::eventTrigger,
             "blocksQueue",               &timer::EventQueueSystem::Event::blocksQueue,
             "canBeBlocked",              &timer::EventQueueSystem::Event::canBeBlocked,
@@ -146,12 +380,29 @@ namespace timer
             "debugID",                   &timer::EventQueueSystem::Event::debug_string_id,
             "deleteNextCycleImmediately",&timer::EventQueueSystem::Event::deleteNextCycleImmediately
         );
-
+        auto& event = rec.add_type("EventQueueSystem.Event");
+        event.doc = "A single event in the event queue.";
+        rec.record_property("EventQueueSystem.Event", {"eventTrigger", "EventQueueSystem.TriggerType", "When the event should trigger."});
+        rec.record_property("EventQueueSystem.Event", {"blocksQueue", "boolean", "If true, no other events will process until this one completes."});
+        rec.record_property("EventQueueSystem.Event", {"canBeBlocked", "boolean", "If true, this event can be blocked by another."});
+        rec.record_property("EventQueueSystem.Event", {"complete", "boolean", "True if the event has finished processing."});
+        rec.record_property("EventQueueSystem.Event", {"timerStarted", "boolean", "Internal flag for timed events."});
+        rec.record_property("EventQueueSystem.Event", {"delaySeconds", "number", "The delay in seconds for 'AFTER' triggers."});
+        rec.record_property("EventQueueSystem.Event", {"retainAfterCompletion", "boolean", "If true, the event remains in the queue after completion."});
+        rec.record_property("EventQueueSystem.Event", {"createdWhilePaused", "boolean", "If true, the event was created while the game was paused."});
+        rec.record_property("EventQueueSystem.Event", {"func", "function", "The callback function to execute."});
+        rec.record_property("EventQueueSystem.Event", {"timerType", "EventQueueSystem.TimerType", "The clock type to use for this event's timer."});
+        rec.record_property("EventQueueSystem.Event", {"time", "number", "Internal time tracking for the event."});
+        rec.record_property("EventQueueSystem.Event", {"ease", "EventQueueSystem.EaseData", "Easing data for tweening events."});
+        rec.record_property("EventQueueSystem.Event", {"condition", "EventQueueSystem.ConditionData", "Condition data for conditional events."});
+        rec.record_property("EventQueueSystem.Event", {"tag", "string", "An optional tag for finding the event later."});
+        rec.record_property("EventQueueSystem.Event", {"debugID", "string", "A debug identifier for the event."});
+        rec.record_property("EventQueueSystem.Event", {"deleteNextCycleImmediately", "boolean", "If true, deletes the event on the next update cycle."});
+        
         // 4) Builder types
-        eq.new_usertype<timer::EventQueueSystem::EaseDataBuilder>(
-            "EaseDataBuilder",
+        eq.new_usertype<timer::EventQueueSystem::EaseDataBuilder>("EaseDataBuilder",
             sol::constructors<timer::EventQueueSystem::EaseDataBuilder()>(),
-            "Type",    &timer::EventQueueSystem::EaseDataBuilder::Type,
+            "Type",       &timer::EventQueueSystem::EaseDataBuilder::Type,
             "StartValue", &timer::EventQueueSystem::EaseDataBuilder::StartValue,
             "EndValue",   &timer::EventQueueSystem::EaseDataBuilder::EndValue,
             "StartTime",  &timer::EventQueueSystem::EaseDataBuilder::StartTime,
@@ -160,33 +411,66 @@ namespace timer
             "GetCallback",&timer::EventQueueSystem::EaseDataBuilder::GetCallback,
             "Build",      &timer::EventQueueSystem::EaseDataBuilder::Build
         );
+        auto& easeBuilder = rec.add_type("EventQueueSystem.EaseDataBuilder");
+        easeBuilder.doc = "A builder for creating EaseData objects.";
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"Type", "---@param type EventQueueSystem.EaseType\n---@return EventQueueSystem.EaseDataBuilder", "Sets the ease type.", false, false});
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"StartValue", "---@param value number\n---@return EventQueueSystem.EaseDataBuilder", "Sets the starting value.", false, false});
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"EndValue", "---@param value number\n---@return EventQueueSystem.EaseDataBuilder", "Sets the ending value.", false, false});
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"StartTime", "---@param time number\n---@return EventQueueSystem.EaseDataBuilder", "Sets the start time.", false, false});
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"EndTime", "---@param time number\n---@return EventQueueSystem.EaseDataBuilder", "Sets the end time.", false, false});
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"SetCallback", "---@param cb fun(value:number)\n---@return EventQueueSystem.EaseDataBuilder", "Sets the 'set value' callback.", false, false});
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"GetCallback", "---@param cb fun():number\n---@return EventQueueSystem.EaseDataBuilder", "Sets the 'get value' callback.", false, false});
+        rec.record_method("EventQueueSystem.EaseDataBuilder", {"Build", "---@return EventQueueSystem.EaseData", "Builds the final EaseData object.", false, false});
 
-        eq.new_usertype<timer::EventQueueSystem::EventBuilder>(
-            "EventBuilder",
+        eq.new_usertype<timer::EventQueueSystem::EventBuilder>("EventBuilder",
             sol::constructors<timer::EventQueueSystem::EventBuilder()>(),
-            "Trigger",                    &timer::EventQueueSystem::EventBuilder::Trigger,
-            "BlocksQueue",                &timer::EventQueueSystem::EventBuilder::BlocksQueue,
-            "CanBeBlocked",               &timer::EventQueueSystem::EventBuilder::CanBeBlocked,
-            "Delay",                      &timer::EventQueueSystem::EventBuilder::Delay,
-            "Func",                       &timer::EventQueueSystem::EventBuilder::Func,
-            "Ease",                       &timer::EventQueueSystem::EventBuilder::Ease,
-            "Condition",                  &timer::EventQueueSystem::EventBuilder::Condition,
-            "Tag",                        &timer::EventQueueSystem::EventBuilder::Tag,
-            "DebugID",                    &timer::EventQueueSystem::EventBuilder::DebugID,
-            "RetainAfterCompletion",      &timer::EventQueueSystem::EventBuilder::RetainAfterCompletion,
-            "CreatedWhilePaused",         &timer::EventQueueSystem::EventBuilder::CreatedWhilePaused,
-            "TimerType",                  &timer::EventQueueSystem::EventBuilder::TimerType,
-            "StartTimer",                 &timer::EventQueueSystem::EventBuilder::StartTimer,
-            "DeleteNextCycleImmediately", &timer::EventQueueSystem::EventBuilder::DeleteNextCycleImmediately,
-            "Build",                      &timer::EventQueueSystem::EventBuilder::Build,
-            "AddToQueue",                 &timer::EventQueueSystem::EventBuilder::AddToQueue
+            "Trigger",                   &timer::EventQueueSystem::EventBuilder::Trigger,
+            "BlocksQueue",               &timer::EventQueueSystem::EventBuilder::BlocksQueue,
+            "CanBeBlocked",              &timer::EventQueueSystem::EventBuilder::CanBeBlocked,
+            "Delay",                     &timer::EventQueueSystem::EventBuilder::Delay,
+            "Func",                      &timer::EventQueueSystem::EventBuilder::Func,
+            "Ease",                      &timer::EventQueueSystem::EventBuilder::Ease,
+            "Condition",                 &timer::EventQueueSystem::EventBuilder::Condition,
+            "Tag",                       &timer::EventQueueSystem::EventBuilder::Tag,
+            "DebugID",                   &timer::EventQueueSystem::EventBuilder::DebugID,
+            "RetainAfterCompletion",     &timer::EventQueueSystem::EventBuilder::RetainAfterCompletion,
+            "CreatedWhilePaused",        &timer::EventQueueSystem::EventBuilder::CreatedWhilePaused,
+            "TimerType",                 &timer::EventQueueSystem::EventBuilder::TimerType,
+            "StartTimer",                &timer::EventQueueSystem::EventBuilder::StartTimer,
+            "DeleteNextCycleImmediately",&timer::EventQueueSystem::EventBuilder::DeleteNextCycleImmediately,
+            "Build",                     &timer::EventQueueSystem::EventBuilder::Build,
+            "AddToQueue",                &timer::EventQueueSystem::EventBuilder::AddToQueue
         );
+        auto& eventBuilder = rec.add_type("EventQueueSystem.EventBuilder");
+        eventBuilder.doc = "A builder for creating and queuing events.";
+        rec.record_method("EventQueueSystem.EventBuilder", {"Trigger", "---@param type EventQueueSystem.TriggerType\n---@return EventQueueSystem.EventBuilder", "Sets the event trigger type.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"BlocksQueue", "---@param blocks boolean\n---@return EventQueueSystem.EventBuilder", "Sets if the event blocks the queue.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"CanBeBlocked", "---@param can_be_blocked boolean\n---@return EventQueueSystem.EventBuilder", "Sets if the event can be blocked.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"Delay", "---@param seconds number\n---@return EventQueueSystem.EventBuilder", "Sets the delay for an 'AFTER' trigger.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"Func", "---@param cb function\n---@return EventQueueSystem.EventBuilder", "Sets the main callback function.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"Ease", "---@param easeData EventQueueSystem.EaseData\n---@return EventQueueSystem.EventBuilder", "Attaches ease data to the event.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"Condition", "---@param condData EventQueueSystem.ConditionData\n---@return EventQueueSystem.EventBuilder", "Attaches a condition to the event.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"Tag", "---@param tag string\n---@return EventQueueSystem.EventBuilder", "Assigns a string tag to the event.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"DebugID", "---@param id string\n---@return EventQueueSystem.EventBuilder", "Assigns a debug ID to the event.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"RetainAfterCompletion", "---@param retain boolean\n---@return EventQueueSystem.EventBuilder", "Sets if the event is kept after completion.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"CreatedWhilePaused", "---@param was_paused boolean\n---@return EventQueueSystem.EventBuilder", "Marks the event as created while paused.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"TimerType", "---@param type EventQueueSystem.TimerType\n---@return EventQueueSystem.EventBuilder", "Sets the timer clock type for the event.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"StartTimer", "---@return EventQueueSystem.EventBuilder", "Starts the timer immediately.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"DeleteNextCycleImmediately", "---@param delete_next boolean\n---@return EventQueueSystem.EventBuilder", "Flags the event for deletion on the next cycle.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"Build", "---@return EventQueueSystem.Event", "Builds the final Event object.", false, false});
+        rec.record_method("EventQueueSystem.EventBuilder", {"AddToQueue", "---@return nil", "Builds the event and adds it directly to the queue.", false, false});
 
         // 5) Core API
-        eq.set_function("add_event",           &timer::EventQueueSystem::EventManager::add_event);
-        eq.set_function("get_event_by_tag",    &timer::EventQueueSystem::EventManager::get_event_by_tag);
-        eq.set_function("clear_queue",         &timer::EventQueueSystem::EventManager::clear_queue);
-        eq.set_function("update",              &timer::EventQueueSystem::EventManager::update);
+        eq.set_function("add_event",        &timer::EventQueueSystem::EventManager::add_event);
+        eq.set_function("get_event_by_tag", &timer::EventQueueSystem::EventManager::get_event_by_tag);
+        eq.set_function("clear_queue",      &timer::EventQueueSystem::EventManager::clear_queue);
+        eq.set_function("update",           &timer::EventQueueSystem::EventManager::update);
+        // Recorder: core API functions
+        rec.record_free_function({"EventQueueSystem"}, {"add_event", "---@param event EventQueueSystem.Event\n---@return nil", "Adds a pre-built event to the queue.", true, false});
+        rec.record_free_function({"EventQueueSystem"}, {"get_event_by_tag", "---@param tag string\n---@return EventQueueSystem.Event|nil", "Finds an active event by its tag.", true, false});
+        rec.record_free_function({"EventQueueSystem"}, {"clear_queue", "---@return nil", "Removes all events from the queue.", true, false});
+        rec.record_free_function({"EventQueueSystem"}, {"update", "---@param dt number # Delta time.\n---@return nil", "Updates the event queue, processing active events.", true, false});
+
     }
 
     namespace TimerSystem

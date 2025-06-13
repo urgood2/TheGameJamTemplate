@@ -113,6 +113,35 @@ public:
         td.base_classes = bases;
     }
 
+    inline std::string join_path(const std::vector<std::string>& path, const std::string& name) {
+        std::string out;
+        for (const auto& s : path) {
+            if (!out.empty()) out += ".";
+            out += s;
+        }
+        if (!out.empty()) out += ".";
+        out += name;
+        return out;
+    }
+
+    template <typename T, typename... Args>
+    void bind_usertype(sol::state& lua,
+                    const std::vector<std::string>& path,
+                    const std::string& name,
+                    const std::string& version = "",
+                    const std::string& doc = "",
+                    const std::vector<std::string>& bases = {},
+                    Args&&... args)
+    {
+        sol::table tbl = get_or_create_table(lua, path);
+        tbl.new_usertype<T>(name, std::forward<Args>(args)...);
+
+        auto& td = add_type(join_path(path, name));
+        td.version      = version;
+        td.doc          = doc;
+        td.base_classes = bases;
+    }
+
     template <typename Func>
     void bind_method(sol::state& lua,
                      const std::string& type,
@@ -395,6 +424,16 @@ Binding styles:
             "Wraps an EnTT entity handle for Lua scripts."
         );
     } 
+
+    // types with properties
+    // Vector3
+    {
+        auto& vec3 = rec.add_type("random_utils.Vector3");
+        vec3.doc = "3D vector with x, y, and z coordinates.";
+        rec.record_property("random_utils.Vector3", { "x", "number", "X coordinate" });
+        rec.record_property("random_utils.Vector3", { "y", "number", "Y coordinate" });
+        rec.record_property("random_utils.Vector3", { "z", "number", "Z coordinate" });
+    }
 
 
 

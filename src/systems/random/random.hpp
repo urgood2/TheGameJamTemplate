@@ -151,8 +151,10 @@ namespace random_utils {
 
     
     inline void exposeToLua(sol::state &lua) {
+        // BindingRecorder instance
+        auto& rec = BindingRecorder::instance();
+
         // 1) Create (or fetch) the random_utils table
-        // sol::table ru = lua.get_or("random_utils", lua.create_table());
         sol::state_view luaView{lua};
         auto ru = luaView["random_utils"].get_or_create<sol::table>();
         if (!ru.valid()) {
@@ -160,20 +162,28 @@ namespace random_utils {
             lua["random_utils"] = ru;
         }
 
-        // 2) Vec2
+        // Recorder: Top-level namespace
+        rec.add_type("random_utils").doc = "Random number generation utilities and helper functions";
+
+        // 2) Vector2
         ru.new_usertype<Vector2>("Vector2",
             sol::constructors<Vector2(), Vector2(float, float)>(),
             "x", &Vector2::x,
             "y", &Vector2::y
         );
+        rec.record_property("random_utils.Vector2", { "x", "0", "X coordinate" });
+        rec.record_property("random_utils.Vector2", { "y", "0", "Y coordinate" });
 
-        // 3) Vec3
+        // 3) Vector3
         ru.new_usertype<Vector3>("Vector3",
             sol::constructors<Vector3(), Vector3(float, float, float)>(),
             "x", &Vector3::x,
             "y", &Vector3::y,
             "z", &Vector3::z
         );
+        rec.record_property("random_utils.Vector3", { "x", "0", "X coordinate" });
+        rec.record_property("random_utils.Vector3", { "y", "0", "Y coordinate" });
+        rec.record_property("random_utils.Vector3", { "z", "0", "Z coordinate" });
 
         // 4) Color
         ru.new_usertype<Color>("Color",
@@ -182,52 +192,246 @@ namespace random_utils {
             "g", &Color::g,
             "b", &Color::b
         );
+        rec.record_property("random_utils.Color", { "r", "0", "Red channel" });
+        rec.record_property("random_utils.Color", { "g", "0", "Green channel" });
+        rec.record_property("random_utils.Color", { "b", "0", "Blue channel" });
+
 
         // 5) Core functions
-        ru.set_function("set_seed",        &random_utils::set_seed);
-        ru.set_function("random_bool",     &random_utils::random_bool);
-        ru.set_function("random_float",    &random_utils::random_float);
-        ru.set_function("random_int",      &random_utils::random_int);
-        ru.set_function("random_normal",   &random_utils::random_normal);
-        ru.set_function("random_sign",     &random_utils::random_sign);
-        ru.set_function("random_uid",      &random_utils::random_uid);
-        ru.set_function("random_angle",    &random_utils::random_angle);
-        ru.set_function("random_biased",   &random_utils::random_biased);
+        rec.bind_function(lua, {"random_utils"}, "set_seed", &random_utils::set_seed,
+            "---@param seed number # Seed for the RNG\n"
+            "---@return void",
+            "Sets the seed for deterministic random behavior");
 
-        // 6) Delay (returns chrono::milliseconds)
-        ru.set_function("random_delay",    &random_utils::random_delay);
+        rec.bind_function(lua, {"random_utils"}, "random_bool", &random_utils::random_bool,
+            "---@return boolean # A random boolean value",
+            "Returns a random boolean value");
 
-        // 7) Unit‐vector generators
-        ru.set_function("random_unit_vector_2D", &random_utils::random_unit_vector_2D);
-        ru.set_function("random_unit_vector_3D", &random_utils::random_unit_vector_3D);
+        rec.bind_function(lua, {"random_utils"}, "random_float", &random_utils::random_float,
+            "---@param min number\n"
+            "---@param max number\n"
+            "---@return number # A random float between min and max",
+            "Returns a random float between min and max");
 
-        // 8) Color picker
-        ru.set_function("random_color",    &random_utils::random_color);
+        rec.bind_function(lua, {"random_utils"}, "random_int", &random_utils::random_int,
+            "---@param min number\n"
+            "---@param max number\n"
+            "---@return number # A random integer within the range",
+            "Returns a random integer within a range");
+
+        rec.bind_function(lua, {"random_utils"}, "random_normal", &random_utils::random_normal,
+            "---@param mean number\n"
+            "---@param stdev number\n"
+            "---@return number # A float sampled from a normal distribution",
+            "Returns a float sampled from a normal distribution");
+
+        rec.bind_function(lua, {"random_utils"}, "random_sign", &random_utils::random_sign,
+            "---@return number # Either +1 or -1",
+            "Returns +1 or -1 randomly");
+
+        rec.bind_function(lua, {"random_utils"}, "random_uid", &random_utils::random_uid,
+            "---@return string # A random UID string",
+            "Generates a random UID string");
+
+        rec.bind_function(lua, {"random_utils"}, "random_angle", &random_utils::random_angle,
+            "---@return number # A random angle in radians",
+            "Returns a random angle in radians");
+
+        rec.bind_function(lua, {"random_utils"}, "random_biased", &random_utils::random_biased,
+            "---@param bias number\n"
+            "---@return number # A biased random float",
+            "Returns a biased random float skewed toward an end");
+
+        rec.bind_function(lua, {"random_utils"}, "random_delay", &random_utils::random_delay,
+            "---@param min number\n"
+            "---@param max number\n"
+            "---@return number # Random delay in milliseconds",
+            "Returns a random delay in milliseconds");
+
+        rec.bind_function(lua, {"random_utils"}, "random_unit_vector_2D", &random_utils::random_unit_vector_2D,
+            "---@return Vector2 # A normalized 2D vector",
+            "Returns a normalized 2D vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_unit_vector_3D", &random_utils::random_unit_vector_3D,
+            "---@return Vector3 # A normalized 3D vector",
+            "Returns a normalized 3D vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_color", &random_utils::random_color,
+            "---@return Color # A random color",
+            "Returns a randomly generated color");
+
 
         // --- random_element<T> ---
-        ru.set_function("random_element_int",      &random_utils::random_element<int>);
-        ru.set_function("random_element_double",   &random_utils::random_element<double>);
-        ru.set_function("random_element_string",   &random_utils::random_element<std::string>);
-        ru.set_function("random_element_color",    &random_utils::random_element<Color>);
-        ru.set_function("random_element_vec2",     &random_utils::random_element<Vector2>);
-        ru.set_function("random_element_entity",   &random_utils::random_element<entt::entity>);
+        rec.bind_function(lua, {"random_utils"}, "random_element_int", &random_utils::random_element<int>,
+            "---@param list integer[]\n"
+            "---@return integer",
+            "Random element from int vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_double", &random_utils::random_element<double>,
+            "---@param list number[]\n"
+            "---@return number",
+            "Random element from double vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_string", &random_utils::random_element<std::string>,
+            "---@param list string[]\n"
+            "---@return string",
+            "Random element from string vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_color", &random_utils::random_element<Color>,
+            "---@param list Color[]\n"
+            "---@return Color",
+            "Random element from Color vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_vec2", &random_utils::random_element<Vector2>,
+            "---@param list Vector2[]\n"
+            "---@return Vector2",
+            "Random element from Vector2 vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_entity", &random_utils::random_element<entt::entity>,
+            "---@param list entity[]\n"
+            "---@return entity",
+            "Random element from entity vector");
+
 
         // --- random_element_remove<T> ---
-        ru.set_function("random_element_remove_int",    &random_utils::random_element_remove<int>);
-        ru.set_function("random_element_remove_double", &random_utils::random_element_remove<double>);
-        ru.set_function("random_element_remove_string", &random_utils::random_element_remove<std::string>);
-        ru.set_function("random_element_remove_color",  &random_utils::random_element_remove<Color>);
-        ru.set_function("random_element_remove_vec2",   &random_utils::random_element_remove<Vector2>);
-        ru.set_function("random_element_remove_entity", &random_utils::random_element_remove<entt::entity>);
+        rec.bind_function(lua, {"random_utils"}, "random_element_remove_int", &random_utils::random_element_remove<int>,
+            "---@param list integer[]\n"
+            "---@return integer",
+            "Removes and returns a random int");
 
-        // --- random_weighted_pick: vector<double> → int index ---
-        ru.set_function("random_weighted_pick_int", &random_utils::random_weighted_pick<int>);
+        rec.bind_function(lua, {"random_utils"}, "random_element_remove_double", &random_utils::random_element_remove<double>,
+            "---@param list number[]\n"
+            "---@return number",
+            "Removes and returns a random double");
 
-        // --- random_weighted_pick<T> for value picks ---
-        ru.set_function("random_weighted_pick_string", &random_utils::random_weighted_pick<std::string>);
-        ru.set_function("random_weighted_pick_color",  &random_utils::random_weighted_pick<Color>);
-        ru.set_function("random_weighted_pick_vec2",   &random_utils::random_weighted_pick<Vector2>);
-        ru.set_function("random_weighted_pick_entity",&random_utils::random_weighted_pick<entt::entity>);
+        rec.bind_function(lua, {"random_utils"}, "random_element_remove_string", &random_utils::random_element_remove<std::string>,
+            "---@param list string[]\n"
+            "---@return string",
+            "Removes and returns a random string");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_remove_color", &random_utils::random_element_remove<Color>,
+            "---@param list Color[]\n"
+            "---@return Color",
+            "Removes and returns a random color");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_remove_vec2", &random_utils::random_element_remove<Vector2>,
+            "---@param list Vector2[]\n"
+            "---@return Vector2",
+            "Removes and returns a random Vector2");
+
+        rec.bind_function(lua, {"random_utils"}, "random_element_remove_entity", &random_utils::random_element_remove<entt::entity>,
+            "---@param list entity[]\n"
+            "---@return entity",
+            "Removes and returns a random entity");
+
+
+        // --- random_weighted_pick ---
+        rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_int", &random_utils::random_weighted_pick<int>,
+            "---@param weights number[]\n"
+            "---@return integer",
+            "Index based on weight vector");
+
+        rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_string", &random_utils::random_weighted_pick<std::string>,
+            "---@param values string[]\n"
+            "---@param weights number[]\n"
+            "---@return string",
+            "Weighted pick of string");
+
+        rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_color", &random_utils::random_weighted_pick<Color>,
+            "---@param values Color[]\n"
+            "---@param weights number[]\n"
+            "---@return Color",
+            "Weighted pick of color");
+
+        rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_vec2", &random_utils::random_weighted_pick<Vector2>,
+            "---@param values Vector2[]\n"
+            "---@param weights number[]\n"
+            "---@return Vector2",
+            "Weighted pick of Vector2");
+
+        rec.bind_function(lua, {"random_utils"}, "random_weighted_pick_entity", &random_utils::random_weighted_pick<entt::entity>,
+            "---@param values entity[]\n"
+            "---@param weights number[]\n"
+            "---@return entity",
+            "Weighted pick of entity");
+        // // 1) Create (or fetch) the random_utils table
+        // // sol::table ru = lua.get_or("random_utils", lua.create_table());
+        // sol::state_view luaView{lua};
+        // auto ru = luaView["random_utils"].get_or_create<sol::table>();
+        // if (!ru.valid()) {
+        //     ru = lua.create_table();
+        //     lua["random_utils"] = ru;
+        // }
+
+        // // 2) Vec2
+        // ru.new_usertype<Vector2>("Vector2",
+        //     sol::constructors<Vector2(), Vector2(float, float)>(),
+        //     "x", &Vector2::x,
+        //     "y", &Vector2::y
+        // );
+
+        // // 3) Vec3
+
+        // ru.new_usertype<Vector3>("Vector3",
+        //     sol::constructors<Vector3(), Vector3(float, float, float)>(),
+        //     "x", &Vector3::x,
+        //     "y", &Vector3::y,
+        //     "z", &Vector3::z
+        // );
+
+        // // 4) Color
+        // ru.new_usertype<Color>("Color",
+        //     sol::constructors<Color(), Color(char, char, char)>(),
+        //     "r", &Color::r,
+        //     "g", &Color::g,
+        //     "b", &Color::b
+        // );
+
+        // // 5) Core functions
+        // ru.set_function("set_seed",        &random_utils::set_seed);
+        // ru.set_function("random_bool",     &random_utils::random_bool);
+        // ru.set_function("random_float",    &random_utils::random_float);
+        // ru.set_function("random_int",      &random_utils::random_int);
+        // ru.set_function("random_normal",   &random_utils::random_normal);
+        // ru.set_function("random_sign",     &random_utils::random_sign);
+        // ru.set_function("random_uid",      &random_utils::random_uid);
+        // ru.set_function("random_angle",    &random_utils::random_angle);
+        // ru.set_function("random_biased",   &random_utils::random_biased);
+
+        // // 6) Delay (returns chrono::milliseconds)
+        // ru.set_function("random_delay",    &random_utils::random_delay);
+
+        // // 7) Unit‐vector generators
+        // ru.set_function("random_unit_vector_2D", &random_utils::random_unit_vector_2D);
+        // ru.set_function("random_unit_vector_3D", &random_utils::random_unit_vector_3D);
+
+        // // 8) Color picker
+        // ru.set_function("random_color",    &random_utils::random_color);
+
+        // // --- random_element<T> ---
+        // ru.set_function("random_element_int",      &random_utils::random_element<int>);
+        // ru.set_function("random_element_double",   &random_utils::random_element<double>);
+        // ru.set_function("random_element_string",   &random_utils::random_element<std::string>);
+        // ru.set_function("random_element_color",    &random_utils::random_element<Color>);
+        // ru.set_function("random_element_vec2",     &random_utils::random_element<Vector2>);
+        // ru.set_function("random_element_entity",   &random_utils::random_element<entt::entity>);
+
+        // // --- random_element_remove<T> ---
+        // ru.set_function("random_element_remove_int",    &random_utils::random_element_remove<int>);
+        // ru.set_function("random_element_remove_double", &random_utils::random_element_remove<double>);
+        // ru.set_function("random_element_remove_string", &random_utils::random_element_remove<std::string>);
+        // ru.set_function("random_element_remove_color",  &random_utils::random_element_remove<Color>);
+        // ru.set_function("random_element_remove_vec2",   &random_utils::random_element_remove<Vector2>);
+        // ru.set_function("random_element_remove_entity", &random_utils::random_element_remove<entt::entity>);
+
+        // // --- random_weighted_pick: vector<double> → int index ---
+        // ru.set_function("random_weighted_pick_int", &random_utils::random_weighted_pick<int>);
+
+        // // --- random_weighted_pick<T> for value picks ---
+        // ru.set_function("random_weighted_pick_string", &random_utils::random_weighted_pick<std::string>);
+        // ru.set_function("random_weighted_pick_color",  &random_utils::random_weighted_pick<Color>);
+        // ru.set_function("random_weighted_pick_vec2",   &random_utils::random_weighted_pick<Vector2>);
+        // ru.set_function("random_weighted_pick_entity",&random_utils::random_weighted_pick<entt::entity>);
     }
 
     /**

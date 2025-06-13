@@ -33,82 +33,246 @@
 namespace layer
 {
     void exposeToLua(sol::state &lua) {
-        // 1) Get (or make) the top‐level layer table
+        // // 1) Get (or make) the top‐level layer table
+
+        // sol::state_view luaView{lua};
+        // auto layerTbl = luaView["layer"].get_or_create<sol::table>();
+
+        // // sol::table layerTbl = lua.get_or("layer", lua.create_table());
+        // if (!layerTbl.valid()) {
+        //     layerTbl = lua.create_table();
+        //     lua["layer"] = layerTbl;
+        // }
+
+        
+        // // 2) LayerOrderComponent
+        // layerTbl.new_usertype<layer::LayerOrderComponent>("LayerOrderComponent",
+        //     sol::constructors<>(),
+        //     "zIndex", &layer::LayerOrderComponent::zIndex
+        // );
+
+        // // 3) Layer
+        // layerTbl.new_usertype<layer::Layer>("Layer",
+        //     sol::constructors<>(),
+        //     // Properties
+        //     "canvases",       &layer::Layer::canvases,
+        //     "drawCommands",   &layer::Layer::drawCommands,
+        //     "fixed",          &layer::Layer::fixed,
+        //     "zIndex",         &layer::Layer::zIndex,
+        //     "backgroundColor",&layer::Layer::backgroundColor,
+        //     "commands",       &layer::Layer::commands,
+        //     "isSorted",       &layer::Layer::isSorted
+        //     // skip internal pools array
+        // );
+
+        // // 4) Global layers vector
+        // layerTbl["layers"] = &layer::layers;
 
         sol::state_view luaView{lua};
         auto layerTbl = luaView["layer"].get_or_create<sol::table>();
-
-        // sol::table layerTbl = lua.get_or("layer", lua.create_table());
         if (!layerTbl.valid()) {
             layerTbl = lua.create_table();
             lua["layer"] = layerTbl;
         }
 
-        
-        // 2) LayerOrderComponent
+        auto& rec = BindingRecorder::instance();
+        rec.add_type("layer.LayerOrderComponent").doc = "Stores Z-index for layer sorting";
         layerTbl.new_usertype<layer::LayerOrderComponent>("LayerOrderComponent",
             sol::constructors<>(),
             "zIndex", &layer::LayerOrderComponent::zIndex
         );
+        rec.record_property("layer.LayerOrderComponent", {"zIndex", "integer", "Z sort order"});
 
-        // 3) Layer
+        rec.add_type("layer.Layer").doc = "Represents a drawing layer and its properties.";
         layerTbl.new_usertype<layer::Layer>("Layer",
             sol::constructors<>(),
-            // Properties
-            "canvases",       &layer::Layer::canvases,
-            "drawCommands",   &layer::Layer::drawCommands,
-            "fixed",          &layer::Layer::fixed,
-            "zIndex",         &layer::Layer::zIndex,
-            "backgroundColor",&layer::Layer::backgroundColor,
-            "commands",       &layer::Layer::commands,
-            "isSorted",       &layer::Layer::isSorted
-            // skip internal pools array
+            "canvases",        &layer::Layer::canvases,
+            "drawCommands",    &layer::Layer::drawCommands,
+            "fixed",           &layer::Layer::fixed,
+            "zIndex",          &layer::Layer::zIndex,
+            "backgroundColor", &layer::Layer::backgroundColor,
+            "commands",        &layer::Layer::commands,
+            "isSorted",        &layer::Layer::isSorted
         );
+        rec.record_property("layer.Layer", {"canvases", "table", "Map of canvas names to textures"});
+        rec.record_property("layer.Layer", {"drawCommands", "table", "Command list"});
+        rec.record_property("layer.Layer", {"fixed", "boolean", "Whether layer is fixed"});
+        rec.record_property("layer.Layer", {"zIndex", "integer", "Z-index"});
+        rec.record_property("layer.Layer", {"backgroundColor", "Color", "Background fill color"});
+        rec.record_property("layer.Layer", {"commands", "table", "Draw commands list"});
+        rec.record_property("layer.Layer", {"isSorted", "boolean", "True if layer is sorted"});
 
-        // 4) Global layers vector
         layerTbl["layers"] = &layer::layers;
+        rec.record_property("layer", {"layers", "table", "Global list of layers"});
+
 
         // 5) Overloads helpers
         using LPtr = std::shared_ptr<layer::Layer>;
 
-        // 6) Functions
+        // // 6) Functions
         layerTbl.set_function("SortLayers", &layer::SortLayers);
         layerTbl.set_function("UpdateLayerZIndex", &layer::UpdateLayerZIndex);
         layerTbl.set_function("CreateLayer", &layer::CreateLayer);
         layerTbl.set_function("CreateLayerWithSize", &layer::CreateLayerWithSize);
         layerTbl.set_function("RemoveLayerFromCanvas", &layer::RemoveLayerFromCanvas);
 
-        // ResizeCanvasInLayer has two overloads: (layer,name,w,h) and (layer,name)
-        layerTbl.set_function("ResizeCanvasInLayer", static_cast<void(*)(LPtr, const std::string&,int,int)>(&layer::ResizeCanvasInLayer));
+        rec.bind_function(lua, {"layer"}, "SortLayers", &layer::SortLayers,
+            "---@return nil",
+            "---Sorts the layers");
+        rec.bind_function(lua, {"layer"}, "UpdateLayerZIndex", &layer::UpdateLayerZIndex,
+            "---@param layer layer.Layer\n---@param newZIndex integer\n---@return nil",
+            "---Updates the Z index of a layer");
+        rec.bind_function(lua, {"layer"}, "CreateLayer", &layer::CreateLayer,
+            "---@return layer.Layer",
+            "---Creates a new layer and returns it");
+        rec.bind_function(lua, {"layer"}, "CreateLayerWithSize", &layer::CreateLayerWithSize,
+            "---@param width integer\n---@param height integer\n---@return layer.Layer",
+            "---Creates a layer with a specified canvas size");
+        rec.bind_function(lua, {"layer"}, "RemoveLayerFromCanvas", &layer::RemoveLayerFromCanvas,
+            "---@param layer layer.Layer\n---@return nil",
+            "---Removes a layer and unloads its canvases");
 
-        // AddCanvasToLayer overloads
-        layerTbl.set_function("AddCanvasToLayer", sol::overload(
+        // // ResizeCanvasInLayer has two overloads: (layer,name,w,h) and (layer,name)
+        // layerTbl.set_function("ResizeCanvasInLayer", static_cast<void(*)(LPtr, const std::string&,int,int)>(&layer::ResizeCanvasInLayer));
+
+        rec.bind_function(lua, {"layer"}, "ResizeCanvasInLayer", &layer::ResizeCanvasInLayer,
+            "---@param layer layer.Layer\n---@param canvasName string\n---@param newWidth integer\n---@param newHeight integer\n---@return nil",
+            "---Resizes the canvas of a layer");
+
+        // // AddCanvasToLayer overloads
+        // layerTbl.set_function("AddCanvasToLayer", sol::overload(
+        //     static_cast<void(*)(LPtr,const std::string&,int,int)>(&layer::AddCanvasToLayer),
+        //     static_cast<void(*)(LPtr,const std::string&)>(&layer::AddCanvasToLayer)
+        // ));
+
+        rec.bind_function(lua, {"layer"}, "AddCanvasToLayer", sol::overload(
             static_cast<void(*)(LPtr,const std::string&,int,int)>(&layer::AddCanvasToLayer),
             static_cast<void(*)(LPtr,const std::string&)>(&layer::AddCanvasToLayer)
-        ));
+        ),
+            "---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer)\n"
+            "---@overload fun(layer: layer.Layer, canvasName: string)\n"
+            "---Adds a canvas to the layer. Will create if needed."
+        );
 
-        layerTbl.set_function("RemoveCanvas",    &layer::RemoveCanvas);
-        layerTbl.set_function("UnloadAllLayers", &layer::UnloadAllLayers);
-        layerTbl.set_function("ClearDrawCommands", &layer::ClearDrawCommands);
-        layerTbl.set_function("ClearAllDrawCommands", &layer::ClearAllDrawCommands);
-        layerTbl.set_function("Begin", &layer::Begin);
-        layerTbl.set_function("End",   &layer::End);
 
-        layerTbl.set_function("RenderAllLayersToCurrentRenderTarget", &layer::RenderAllLayersToCurrentRenderTarget);
-        layerTbl.set_function("DrawLayerCommandsToSpecificCanvas", sol::overload(
-            static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvas),
-            static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion)
-        ));
-        layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithTransform", &layer::DrawCanvasToCurrentRenderTargetWithTransform);
-        layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
-        layerTbl.set_function("DrawCanvasOntoOtherLayer",            &layer::DrawCanvasOntoOtherLayer);
-        layerTbl.set_function("DrawCanvasOntoOtherLayerWithShader",  &layer::DrawCanvasOntoOtherLayerWithShader);
+        // layerTbl.set_function("RemoveCanvas",    &layer::RemoveCanvas);
+        // layerTbl.set_function("UnloadAllLayers", &layer::UnloadAllLayers);
+        // layerTbl.set_function("ClearDrawCommands", &layer::ClearDrawCommands);
+        // layerTbl.set_function("ClearAllDrawCommands", &layer::ClearAllDrawCommands);
+        // layerTbl.set_function("Begin", &layer::Begin);
+        // layerTbl.set_function("End",   &layer::End);
 
-        layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithDestRect", &layer::DrawCanvasToCurrentRenderTargetWithDestRect);
-        layerTbl.set_function("DrawCustomLamdaToSpecificCanvas", &layer::DrawCustomLamdaToSpecificCanvas);
-        layerTbl.set_function("DrawTransformEntityWithAnimation", &layer::DrawTransformEntityWithAnimation);
-        layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
-        layerTbl.set_function("RenderNPatchRect", &layer::RenderNPatchRect);
+        rec.bind_function(lua, {"layer"}, "RemoveCanvas", &layer::RemoveCanvas,
+            "---@param layer layer.Layer\n---@param canvasName string\n---@return nil",
+            "---Removes a canvas by name");
+        rec.bind_function(lua, {"layer"}, "UnloadAllLayers", &layer::UnloadAllLayers,
+            "---@return nil",
+            "---Destroys all layers and their contents");
+        rec.bind_function(lua, {"layer"}, "ClearDrawCommands", &layer::ClearDrawCommands,
+            "---@param layer layer.Layer\n---@return nil",
+            "---Clears draw commands for a specific layer");
+        rec.bind_function(lua, {"layer"}, "ClearAllDrawCommands", &layer::ClearAllDrawCommands,
+            "---@return nil",
+            "---Clears all draw commands from all layers");
+        rec.bind_function(lua, {"layer"}, "Begin", &layer::Begin,
+            "---@return nil",
+            "---Begins drawing to all canvases");
+        rec.bind_function(lua, {"layer"}, "End", &layer::End,
+            "---@return nil",
+            "---Ends drawing to all canvases");
+
+        // layerTbl.set_function("RenderAllLayersToCurrentRenderTarget", &layer::RenderAllLayersToCurrentRenderTarget);
+        // layerTbl.set_function("DrawLayerCommandsToSpecificCanvas", sol::overload(
+        //     static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvas),
+        //     static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion)
+        // ));
+
+        rec.bind_function(lua, {"layer"}, "RenderAllLayersToCurrentRenderTarget", &layer::RenderAllLayersToCurrentRenderTarget,
+            "---@param camera Camera2D?\n---@return nil",
+            "---Renders all layers to the current render target");
+        rec.bind_function(lua, {"layer"}, "DrawLayerCommandsToSpecificCanvas",
+            static_cast<void(*)(LPtr,const std::string&,Camera2D*)>(&layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion),
+            "---@param layer layer.Layer\n"
+            "---@param canvasName string\n"
+            "---@param camera Camera2D?\n"
+            "---@return nil\n"
+            "---Draws commands to a specific canvas, optionally using a camera");
+
+
+        // layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithTransform", &layer::DrawCanvasToCurrentRenderTargetWithTransform);
+        // layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
+        // layerTbl.set_function("DrawCanvasOntoOtherLayer",            &layer::DrawCanvasOntoOtherLayer);
+        // layerTbl.set_function("DrawCanvasOntoOtherLayerWithShader",  &layer::DrawCanvasOntoOtherLayerWithShader);
+
+        rec.bind_function(lua, {"layer"}, "DrawCanvasToCurrentRenderTargetWithTransform", &layer::DrawCanvasToCurrentRenderTargetWithTransform,
+            "---@param layer layer.Layer\n"
+            "---@param canvasName string\n"
+            "---@param x number\n"
+            "---@param y number\n"
+            "---@param rotation number\n"
+            "---@param scaleX number\n"
+            "---@param scaleY number\n"
+            "---@param color Color\n"
+            "---@param shader Shader\n"
+            "---@param flat boolean\n"
+            "---@return nil\n"
+            "---Draws a canvas to the current render target with transform, color, and optional shader");
+        rec.bind_function(lua, {"layer"}, "DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline,
+            "---@param registry Registry\n"
+            "---@param entity Entity\n"
+            "---@return nil\n"
+            "Draws a transform entity with animation using a specific pipeline");
+        rec.bind_function(lua, {"layer"}, "DrawCanvasOntoOtherLayer", &layer::DrawCanvasOntoOtherLayer,
+            "---@param sourceLayer layer.Layer\n"
+            "---@param sourceCanvasName string\n"
+            "---@param destLayer layer.Layer\n"
+            "---@param destCanvasName string\n"
+            "---@param x number\n"
+            "---@param y number\n"
+            "---@param rotation number\n"
+            "---@param scaleX number\n"
+            "---@param scaleY number\n"
+            "---@param tint Color\n"
+            "---@return nil\n"
+            "---Draws a canvas from one layer onto another");
+        rec.bind_function(lua, {"layer"}, "DrawCanvasOntoOtherLayerWithShader", &layer::DrawCanvasOntoOtherLayerWithShader,
+            "---@param sourceLayer layer.Layer\n"
+            "---@param sourceCanvasName string\n"
+            "---@param destLayer layer.Layer\n"
+            "---@param destCanvasName string\n"
+            "---@param x number\n"
+            "---@param y number\n"
+            "---@param rotation number\n"
+            "---@param scaleX number\n"
+            "---@param scaleY number\n"
+            "---@param tint Color\n"
+            "---@param shader Shader\n"
+            "---@return nil\n"
+            "---Draws a canvas from one layer onto another with an optional shader");
+
+        // layerTbl.set_function("DrawCanvasToCurrentRenderTargetWithDestRect", &layer::DrawCanvasToCurrentRenderTargetWithDestRect);
+        // layerTbl.set_function("DrawCustomLamdaToSpecificCanvas", &layer::DrawCustomLamdaToSpecificCanvas);
+        // layerTbl.set_function("DrawTransformEntityWithAnimation", &layer::DrawTransformEntityWithAnimation);
+        // layerTbl.set_function("DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline);
+        // layerTbl.set_function("RenderNPatchRect", &layer::RenderNPatchRect);
+        // layerTbl.set_function("DrawTexturePro", &layer::DrawTexturePro);
+        // layerTbl.set_function("DrawRectangleLinesPro", &layer::DrawRectangleLinesPro);
+        rec.bind_function(lua, {"layer"}, "DrawCanvasToCurrentRenderTargetWithDestRect", &layer::DrawCanvasToCurrentRenderTargetWithDestRect,
+            "---@param redo"
+            "---@return nil\n"
+            "---Draws a canvas to the current render target with a destination rectangle");
+        rec.bind_function(lua, {"layer"}, "DrawCustomLamdaToSpecificCanvas", &layer::DrawCustomLamdaToSpecificCanvas,
+            "---@param redo"
+            "---@return nil\n"
+            "---Draws a custom lambda function to a specific canvas");
+        rec.bind_function(lua, {"layer"}, "DrawTransformEntityWithAnimation", &layer::DrawTransformEntityWithAnimation,
+            "---@param redo"
+            "---@return nil\n"
+            "---Draws a transform entity with animation");
+        rec.bind_function(lua, {"layer"}, "DrawTransformEntityWithAnimationWithPipeline", &layer::DrawTransformEntityWithAnimationWithPipeline,
+            "---@param redo"
+            "---@return nil\n"
+            "---Draws a transform entity with animation using a specific pipeline");
 
         // 1) Bind DrawCommandType enum as a plain table:
         layerTbl["DrawCommandType"] = lua.create_table_with(
@@ -159,6 +323,57 @@ namespace layer
             "RenderNPatchRect",                         layer::DrawCommandType::RenderNPatchRect,
             "DrawTriangle",                             layer::DrawCommandType::Triangle
         );
+
+        // 1b) EmmyLua docs via BindingRecorder
+        rec.add_type("layer.DrawCommandType").doc = "Drawing instruction types used by Layer system";
+
+        rec.record_property("layer.DrawCommandType", { "BeginDrawing", "0", "Start drawing a layer frame" });
+        rec.record_property("layer.DrawCommandType", { "EndDrawing", "1", "End drawing a layer frame" });
+        rec.record_property("layer.DrawCommandType", { "ClearBackground", "2", "Clear background with color" });
+        rec.record_property("layer.DrawCommandType", { "Translate", "3", "Translate coordinate system" });
+        rec.record_property("layer.DrawCommandType", { "Scale", "4", "Scale coordinate system" });
+        rec.record_property("layer.DrawCommandType", { "Rotate", "5", "Rotate coordinate system" });
+        rec.record_property("layer.DrawCommandType", { "AddPush", "6", "Push transform matrix" });
+        rec.record_property("layer.DrawCommandType", { "AddPop", "7", "Pop transform matrix" });
+        rec.record_property("layer.DrawCommandType", { "PushMatrix", "8", "Explicit push matrix command" });
+        rec.record_property("layer.DrawCommandType", { "PopMatrix", "9", "Explicit pop matrix command" });
+        rec.record_property("layer.DrawCommandType", { "DrawCircle", "10", "Draw a filled circle" });
+        rec.record_property("layer.DrawCommandType", { "DrawRectangle", "11", "Draw a filled rectangle" });
+        rec.record_property("layer.DrawCommandType", { "DrawRectanglePro", "12", "Draw a scaled and rotated rectangle" });
+        rec.record_property("layer.DrawCommandType", { "DrawRectangleLinesPro", "13", "Draw rectangle outline" });
+        rec.record_property("layer.DrawCommandType", { "DrawLine", "14", "Draw a line" });
+        rec.record_property("layer.DrawCommandType", { "DrawDashedLine", "15", "Draw a dashed line" });
+        rec.record_property("layer.DrawCommandType", { "DrawText", "16", "Draw plain text" });
+        rec.record_property("layer.DrawCommandType", { "DrawTextCentered", "17", "Draw text centered" });
+        rec.record_property("layer.DrawCommandType", { "TextPro", "18", "Draw stylized/proportional text" });
+        rec.record_property("layer.DrawCommandType", { "DrawImage", "19", "Draw a texture/image" });
+        rec.record_property("layer.DrawCommandType", { "TexturePro", "20", "Draw transformed texture" });
+        rec.record_property("layer.DrawCommandType", { "DrawEntityAnimation", "21", "Draw animation of an entity" });
+        rec.record_property("layer.DrawCommandType", { "DrawTransformEntityAnimation", "22", "Draw transform-aware animation" });
+        rec.record_property("layer.DrawCommandType", { "DrawTransformEntityAnimationPipeline", "23", "Draw pipelined animation with transform" });
+        rec.record_property("layer.DrawCommandType", { "SetShader", "24", "Set active shader" });
+        rec.record_property("layer.DrawCommandType", { "ResetShader", "25", "Reset to default shader" });
+        rec.record_property("layer.DrawCommandType", { "SetBlendMode", "26", "Set blend mode" });
+        rec.record_property("layer.DrawCommandType", { "UnsetBlendMode", "27", "Reset blend mode" });
+        rec.record_property("layer.DrawCommandType", { "SendUniformFloat", "28", "Send float uniform to shader" });
+        rec.record_property("layer.DrawCommandType", { "SendUniformInt", "29", "Send int uniform to shader" });
+        rec.record_property("layer.DrawCommandType", { "SendUniformVec2", "30", "Send vec2 uniform to shader" });
+        rec.record_property("layer.DrawCommandType", { "SendUniformVec3", "31", "Send vec3 uniform to shader" });
+        rec.record_property("layer.DrawCommandType", { "SendUniformVec4", "32", "Send vec4 uniform to shader" });
+        rec.record_property("layer.DrawCommandType", { "SendUniformFloatArray", "33", "Send float array uniform to shader" });
+        rec.record_property("layer.DrawCommandType", { "SendUniformIntArray", "34", "Send int array uniform to shader" });
+        rec.record_property("layer.DrawCommandType", { "Vertex", "35", "Draw raw vertex" });
+        rec.record_property("layer.DrawCommandType", { "BeginOpenGLMode", "36", "Begin native OpenGL mode" });
+        rec.record_property("layer.DrawCommandType", { "EndOpenGLMode", "37", "End native OpenGL mode" });
+        rec.record_property("layer.DrawCommandType", { "SetColor", "38", "Set current draw color" });
+        rec.record_property("layer.DrawCommandType", { "SetLineWidth", "39", "Set width of lines" });
+        rec.record_property("layer.DrawCommandType", { "SetTexture", "40", "Bind texture to use" });
+        rec.record_property("layer.DrawCommandType", { "RenderRectVerticesFilledLayer", "41", "Draw filled rects from vertex list" });
+        rec.record_property("layer.DrawCommandType", { "RenderRectVerticesOutlineLayer", "42", "Draw outlined rects from vertex list" });
+        rec.record_property("layer.DrawCommandType", { "DrawPolygon", "43", "Draw a polygon" });
+        rec.record_property("layer.DrawCommandType", { "RenderNPatchRect", "44", "Draw a 9-patch rectangle" });
+        rec.record_property("layer.DrawCommandType", { "DrawTriangle", "45", "Draw a triangle" });
+        
 
         // Helper macro to reduce boilerplate
         #define BIND_CMD(name, ...) \
@@ -218,6 +433,241 @@ namespace layer
 
         #undef BIND_CMD
 
+        rec.add_type("layer.CmdBeginDrawing");
+        rec.record_property("layer.CmdBeginDrawing", { "dummy", "false", "Unused field" });
+
+        rec.add_type("layer.CmdEndDrawing");
+        rec.record_property("layer.CmdEndDrawing", { "dummy", "false", "Unused field" });
+
+        rec.add_type("layer.CmdClearBackground");
+        rec.record_property("layer.CmdClearBackground", { "color", "Color", "Background color" });
+
+        rec.add_type("layer.CmdTranslate");
+        rec.record_property("layer.CmdTranslate", { "x", "number", "X offset" });
+        rec.record_property("layer.CmdTranslate", { "y", "number", "Y offset" });
+
+        rec.add_type("layer.CmdScale");
+        rec.record_property("layer.CmdScale", { "scaleX", "number", "Scale in X" });
+        rec.record_property("layer.CmdScale", { "scaleY", "number", "Scale in Y" });
+
+        rec.add_type("layer.CmdRotate");
+        rec.record_property("layer.CmdRotate", { "angle", "number", "Rotation angle in degrees" });
+
+        rec.add_type("layer.CmdAddPush");
+        rec.record_property("layer.CmdAddPush", { "camera", "table", "Camera parameters" });
+
+        rec.add_type("layer.CmdAddPop");
+        rec.record_property("layer.CmdAddPop", { "dummy", "false", "Unused field" });
+
+        rec.add_type("layer.CmdPushMatrix");
+        rec.record_property("layer.CmdPushMatrix", { "dummy", "false", "Unused field" });
+
+        rec.add_type("layer.CmdPopMatrix");
+        rec.record_property("layer.CmdPopMatrix", { "dummy", "false", "Unused field" });
+
+        rec.add_type("layer.CmdDrawCircle");
+        rec.record_property("layer.CmdDrawCircle", { "x", "number", "Center X" });
+        rec.record_property("layer.CmdDrawCircle", { "y", "number", "Center Y" });
+        rec.record_property("layer.CmdDrawCircle", { "radius", "number", "Radius" });
+        rec.record_property("layer.CmdDrawCircle", { "color", "Color", "Fill color" });
+
+        rec.add_type("layer.CmdDrawRectangle");
+        rec.record_property("layer.CmdDrawRectangle", { "x", "number", "Top-left X" });
+        rec.record_property("layer.CmdDrawRectangle", { "y", "number", "Top-left Y" });
+        rec.record_property("layer.CmdDrawRectangle", { "width", "number", "Width" });
+        rec.record_property("layer.CmdDrawRectangle", { "height", "number", "Height" });
+        rec.record_property("layer.CmdDrawRectangle", { "color", "Color", "Fill color" });
+        rec.record_property("layer.CmdDrawRectangle", { "lineWidth", "number", "Line width" });
+
+        rec.add_type("layer.CmdDrawRectanglePro");
+        rec.record_property("layer.CmdDrawRectanglePro", { "offsetX", "number", "Offset X" });
+        rec.record_property("layer.CmdDrawRectanglePro", { "offsetY", "number", "Offset Y" });
+        rec.record_property("layer.CmdDrawRectanglePro", { "size", "Vector2", "Size" });
+        rec.record_property("layer.CmdDrawRectanglePro", { "rotationCenter", "Vector2", "Rotation center" });
+        rec.record_property("layer.CmdDrawRectanglePro", { "rotation", "number", "Rotation" });
+        rec.record_property("layer.CmdDrawRectanglePro", { "color", "Color", "Color" });
+
+        rec.add_type("layer.CmdDrawRectangleLinesPro");
+        rec.record_property("layer.CmdDrawRectangleLinesPro", { "offsetX", "number", "Offset X" });
+        rec.record_property("layer.CmdDrawRectangleLinesPro", { "offsetY", "number", "Offset Y" });
+        rec.record_property("layer.CmdDrawRectangleLinesPro", { "size", "Vector2", "Size" });
+        rec.record_property("layer.CmdDrawRectangleLinesPro", { "lineThickness", "number", "Line thickness" });
+        rec.record_property("layer.CmdDrawRectangleLinesPro", { "color", "Color", "Color" });
+
+        rec.add_type("layer.CmdDrawLine");
+        rec.record_property("layer.CmdDrawLine", { "x1", "number", "Start X" });
+        rec.record_property("layer.CmdDrawLine", { "y1", "number", "Start Y" });
+        rec.record_property("layer.CmdDrawLine", { "x2", "number", "End X" });
+        rec.record_property("layer.CmdDrawLine", { "y2", "number", "End Y" });
+        rec.record_property("layer.CmdDrawLine", { "color", "Color", "Line color" });
+        rec.record_property("layer.CmdDrawLine", { "lineWidth", "number", "Line width" });
+
+        rec.add_type("layer.CmdDrawDashedLine");
+        rec.record_property("layer.CmdDrawDashedLine", { "x1", "number", "Start X" });
+        rec.record_property("layer.CmdDrawDashedLine", { "y1", "number", "Start Y" });
+        rec.record_property("layer.CmdDrawDashedLine", { "x2", "number", "End X" });
+        rec.record_property("layer.CmdDrawDashedLine", { "y2", "number", "End Y" });
+        rec.record_property("layer.CmdDrawDashedLine", { "dashSize", "number", "Dash size" });
+        rec.record_property("layer.CmdDrawDashedLine", { "gapSize", "number", "Gap size" });
+        rec.record_property("layer.CmdDrawDashedLine", { "color", "Color", "Color" });
+        rec.record_property("layer.CmdDrawDashedLine", { "lineWidth", "number", "Line width" });
+
+        rec.add_type("layer.CmdDrawText");
+        rec.record_property("layer.CmdDrawText", { "text", "string", "Text" });
+        rec.record_property("layer.CmdDrawText", { "font", "Font", "Font" });
+        rec.record_property("layer.CmdDrawText", { "x", "number", "X" });
+        rec.record_property("layer.CmdDrawText", { "y", "number", "Y" });
+        rec.record_property("layer.CmdDrawText", { "color", "Color", "Color" });
+        rec.record_property("layer.CmdDrawText", { "fontSize", "number", "Font size" });
+
+        rec.add_type("layer.CmdDrawTextCentered");
+        rec.record_property("layer.CmdDrawTextCentered", { "text", "string", "Text" });
+        rec.record_property("layer.CmdDrawTextCentered", { "font", "Font", "Font" });
+        rec.record_property("layer.CmdDrawTextCentered", { "x", "number", "X" });
+        rec.record_property("layer.CmdDrawTextCentered", { "y", "number", "Y" });
+        rec.record_property("layer.CmdDrawTextCentered", { "color", "Color", "Color" });
+        rec.record_property("layer.CmdDrawTextCentered", { "fontSize", "number", "Font size" });
+
+        rec.add_type("layer.CmdTextPro");
+        rec.record_property("layer.CmdTextPro", { "text", "string", "Text" });
+        rec.record_property("layer.CmdTextPro", { "font", "Font", "Font" });
+        rec.record_property("layer.CmdTextPro", { "x", "number", "X" });
+        rec.record_property("layer.CmdTextPro", { "y", "number", "Y" });
+        rec.record_property("layer.CmdTextPro", { "origin", "Vector2", "Origin" });
+        rec.record_property("layer.CmdTextPro", { "rotation", "number", "Rotation" });
+        rec.record_property("layer.CmdTextPro", { "fontSize", "number", "Font size" });
+        rec.record_property("layer.CmdTextPro", { "spacing", "number", "Spacing" });
+        rec.record_property("layer.CmdTextPro", { "color", "Color", "Color" });
+
+        rec.add_type("layer.CmdDrawImage");
+        rec.record_property("layer.CmdDrawImage", { "image", "Texture2D", "Image" });
+        rec.record_property("layer.CmdDrawImage", { "x", "number", "X" });
+        rec.record_property("layer.CmdDrawImage", { "y", "number", "Y" });
+        rec.record_property("layer.CmdDrawImage", { "rotation", "number", "Rotation" });
+        rec.record_property("layer.CmdDrawImage", { "scaleX", "number", "Scale X" });
+        rec.record_property("layer.CmdDrawImage", { "scaleY", "number", "Scale Y" });
+        rec.record_property("layer.CmdDrawImage", { "color", "Color", "Tint color" });
+
+        rec.add_type("layer.CmdTexturePro");
+        rec.record_property("layer.CmdTexturePro", { "texture", "Texture2D", "Texture" });
+        rec.record_property("layer.CmdTexturePro", { "source", "Rectangle", "Source rect" });
+        rec.record_property("layer.CmdTexturePro", { "offsetX", "number", "Offset X" });
+        rec.record_property("layer.CmdTexturePro", { "offsetY", "number", "Offset Y" });
+        rec.record_property("layer.CmdTexturePro", { "size", "Vector2", "Size" });
+        rec.record_property("layer.CmdTexturePro", { "rotationCenter", "Vector2", "Rotation center" });
+        rec.record_property("layer.CmdTexturePro", { "rotation", "number", "Rotation" });
+        rec.record_property("layer.CmdTexturePro", { "color", "Color", "Color" });
+
+        rec.add_type("layer.CmdDrawEntityAnimation");
+        rec.record_property("layer.CmdDrawEntityAnimation", { "e", "Entity", "entt::entity" });
+        rec.record_property("layer.CmdDrawEntityAnimation", { "registry", "Registry", "EnTT registry" });
+        rec.record_property("layer.CmdDrawEntityAnimation", { "x", "number", "X" });
+        rec.record_property("layer.CmdDrawEntityAnimation", { "y", "number", "Y" });
+
+        rec.add_type("layer.CmdDrawTransformEntityAnimation");
+        rec.record_property("layer.CmdDrawTransformEntityAnimation", { "e", "Entity", "entt::entity" });
+        rec.record_property("layer.CmdDrawTransformEntityAnimation", { "registry", "Registry", "EnTT registry" });
+
+        rec.add_type("layer.CmdDrawTransformEntityAnimationPipeline");
+        rec.record_property("layer.CmdDrawTransformEntityAnimationPipeline", { "e", "Entity", "entt::entity" });
+        rec.record_property("layer.CmdDrawTransformEntityAnimationPipeline", { "registry", "Registry", "EnTT registry" });
+
+        rec.add_type("layer.CmdSetShader");
+        rec.record_property("layer.CmdSetShader", { "shader", "Shader", "Shader object" });
+
+        rec.add_type("layer.CmdResetShader");
+
+        rec.add_type("layer.CmdSetBlendMode");
+        rec.record_property("layer.CmdSetBlendMode", { "blendMode", "number", "Blend mode" });
+
+        rec.add_type("layer.CmdUnsetBlendMode");
+        rec.record_property("layer.CmdUnsetBlendMode", { "dummy", "false", "Unused field" });
+
+        rec.add_type("layer.CmdSendUniformFloat");
+        rec.record_property("layer.CmdSendUniformFloat", { "shader", "Shader", "Shader" });
+        rec.record_property("layer.CmdSendUniformFloat", { "uniform", "string", "Uniform name" });
+        rec.record_property("layer.CmdSendUniformFloat", { "value", "number", "Float value" });
+
+        rec.add_type("layer.CmdSendUniformInt");
+        rec.record_property("layer.CmdSendUniformInt", { "shader", "Shader", "Shader" });
+        rec.record_property("layer.CmdSendUniformInt", { "uniform", "string", "Uniform name" });
+        rec.record_property("layer.CmdSendUniformInt", { "value", "number", "Int value" });
+
+        rec.add_type("layer.CmdSendUniformVec2");
+        rec.record_property("layer.CmdSendUniformVec2", { "shader", "Shader", "Shader" });
+        rec.record_property("layer.CmdSendUniformVec2", { "uniform", "string", "Uniform name" });
+        rec.record_property("layer.CmdSendUniformVec2", { "value", "Vector2", "Vec2 value" });
+
+        rec.add_type("layer.CmdSendUniformVec3");
+        rec.record_property("layer.CmdSendUniformVec3", { "shader", "Shader", "Shader" });
+        rec.record_property("layer.CmdSendUniformVec3", { "uniform", "string", "Uniform name" });
+        rec.record_property("layer.CmdSendUniformVec3", { "value", "Vector3", "Vec3 value" });
+
+        rec.add_type("layer.CmdSendUniformVec4");
+        rec.record_property("layer.CmdSendUniformVec4", { "shader", "Shader", "Shader" });
+        rec.record_property("layer.CmdSendUniformVec4", { "uniform", "string", "Uniform name" });
+        rec.record_property("layer.CmdSendUniformVec4", { "value", "Vector4", "Vec4 value" });
+
+        rec.add_type("layer.CmdSendUniformFloatArray");
+        rec.record_property("layer.CmdSendUniformFloatArray", { "shader", "Shader", "Shader" });
+        rec.record_property("layer.CmdSendUniformFloatArray", { "uniform", "string", "Uniform name" });
+        rec.record_property("layer.CmdSendUniformFloatArray", { "values", "table", "Float array" });
+
+        rec.add_type("layer.CmdSendUniformIntArray");
+        rec.record_property("layer.CmdSendUniformIntArray", { "shader", "Shader", "Shader" });
+        rec.record_property("layer.CmdSendUniformIntArray", { "uniform", "string", "Uniform name" });
+        rec.record_property("layer.CmdSendUniformIntArray", { "values", "table", "Int array" });
+
+        rec.add_type("layer.CmdVertex");
+        rec.record_property("layer.CmdVertex", { "v", "Vector3", "Position" });
+        rec.record_property("layer.CmdVertex", { "color", "Color", "Vertex color" });
+
+        rec.add_type("layer.CmdBeginOpenGLMode");
+        rec.record_property("layer.CmdBeginOpenGLMode", { "mode", "number", "GL mode enum" });
+
+        rec.add_type("layer.CmdEndOpenGLMode");
+        rec.record_property("layer.CmdEndOpenGLMode", { "dummy", "false", "Unused field" });
+
+        rec.add_type("layer.CmdSetColor");
+        rec.record_property("layer.CmdSetColor", { "color", "Color", "Draw color" });
+
+        rec.add_type("layer.CmdSetLineWidth");
+        rec.record_property("layer.CmdSetLineWidth", { "lineWidth", "number", "Line width" });
+
+        rec.add_type("layer.CmdSetTexture");
+        rec.record_property("layer.CmdSetTexture", { "texture", "Texture2D", "Texture to bind" });
+
+        rec.add_type("layer.CmdRenderRectVerticesFilledLayer");
+        rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "outerRec", "Rectangle", "Outer rectangle" });
+        rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "progressOrFullBackground", "bool", "Mode" });
+        rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "cache", "table", "Vertex cache" });
+        rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "color", "Color", "Fill color" });
+
+        rec.add_type("layer.CmdRenderRectVerticesOutlineLayer");
+        rec.record_property("layer.CmdRenderRectVerticesOutlineLayer", { "cache", "table", "Vertex cache" });
+        rec.record_property("layer.CmdRenderRectVerticesOutlineLayer", { "color", "Color", "Outline color" });
+        rec.record_property("layer.CmdRenderRectVerticesOutlineLayer", { "useFullVertices", "bool", "Use full vertices" });
+
+        rec.add_type("layer.CmdDrawPolygon");
+        rec.record_property("layer.CmdDrawPolygon", { "vertices", "table", "Vertex array" });
+        rec.record_property("layer.CmdDrawPolygon", { "color", "Color", "Polygon color" });
+        rec.record_property("layer.CmdDrawPolygon", { "lineWidth", "number", "Line width" });
+
+        rec.add_type("layer.CmdRenderNPatchRect");
+        rec.record_property("layer.CmdRenderNPatchRect", { "sourceTexture", "Texture2D", "Source texture" });
+        rec.record_property("layer.CmdRenderNPatchRect", { "info", "NPatchInfo", "Nine-patch info" });
+        rec.record_property("layer.CmdRenderNPatchRect", { "dest", "Rectangle", "Destination" });
+        rec.record_property("layer.CmdRenderNPatchRect", { "origin", "Vector2", "Origin" });
+        rec.record_property("layer.CmdRenderNPatchRect", { "rotation", "number", "Rotation" });
+        rec.record_property("layer.CmdRenderNPatchRect", { "tint", "Color", "Tint color" });
+
+        rec.add_type("layer.CmdDrawTriangle");
+        rec.record_property("layer.CmdDrawTriangle", { "p1", "Vector2", "Point 1" });
+        rec.record_property("layer.CmdDrawTriangle", { "p2", "Vector2", "Point 2" });
+        rec.record_property("layer.CmdDrawTriangle", { "p3", "Vector2", "Point 3" });
+        rec.record_property("layer.CmdDrawTriangle", { "color", "Color", "Triangle color" });
+
+
         // 3) DrawCommandV2
         layerTbl.new_usertype<layer::DrawCommandV2>("DrawCommandV2",
             sol::constructors<>(),
@@ -226,12 +676,21 @@ namespace layer
             "z",    &layer::DrawCommandV2::z
         );
 
+        rec.add_type("layer.DrawCommandV2").doc = "A single draw command with type, data payload, and z-order.";
+        rec.record_property("layer.DrawCommandV2", { "type", "number", "The draw command type enum" });
+        rec.record_property("layer.DrawCommandV2", { "data", "any",    "The actual command data (CmdX struct)" });
+        rec.record_property("layer.DrawCommandV2", { "z",    "number", "Z-order depth value for sorting" });
+
         // 2) Create the command_buffer sub‐table
         auto cb = luaView["command_buffer"].get_or_create<sol::table>();
         if (!cb.valid()) {
             cb = lua.create_table();
             layerTbl["command_buffer"] = cb;
         }
+
+        // Recorder: Top-level namespace
+        rec.add_type("command_buffer");
+
 
         // 3) For each CmdXXX, expose a queueXXX helper
         //    Pattern: queueCmdName(layer, init_fn, z)
@@ -296,7 +755,514 @@ namespace layer
         QUEUE_CMD(RenderNPatchRect)
         QUEUE_CMD(DrawTriangle)
 
-        #undef QUEUE_CMD
+        #undef QUEUE_CMD  
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueBeginDrawing",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginDrawing) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdBeginDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueEndDrawing",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndDrawing) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueClearBackground",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdClearBackground) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdClearBackground into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueTranslate",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdTranslate) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdTranslate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueScale",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdScale) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdScale into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueRotate",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRotate) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdRotate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueAddPush",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAddPush) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdAddPush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueAddPop",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdAddPop) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queuePushMatrix",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPushMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queuePopMatrix",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPopMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdPopMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawCircle",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawCircle) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawCircle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawRectangle",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawRectangle) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawRectangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawRectanglePro",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawRectanglePro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawRectanglePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawRectangleLinesPro",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawRectangleLinesPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawLine",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawLine) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawDashedLine",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawText",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawText) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawText into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawTextCentered",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTextCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawTextCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueTextPro",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdTextPro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdTextPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawImage",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawImage) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawImage into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueTexturePro",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdTexturePro) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdTexturePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawEntityAnimation",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawEntityAnimation) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawTransformEntityAnimation",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawTransformEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawTransformEntityAnimationPipeline",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawTransformEntityAnimationPipeline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSetShader",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetShader) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueResetShader",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdResetShader) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdResetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSetBlendMode",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetBlendMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueUnsetBlendMode",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdUnsetBlendMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdUnsetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSendUniformFloat",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformFloat) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSendUniformFloat into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSendUniformInt",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformInt) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSendUniformInt into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSendUniformVec2",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformVec2) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSendUniformVec2 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSendUniformVec3",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformVec3) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSendUniformVec3 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSendUniformVec4",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformVec4) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSendUniformVec4 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSendUniformFloatArray",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformFloatArray) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSendUniformFloatArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSendUniformIntArray",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSendUniformIntArray) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSendUniformIntArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueVertex",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdVertex) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdVertex into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueBeginOpenGLMode",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginOpenGLMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdBeginOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueEndOpenGLMode",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndOpenGLMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdEndOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSetColor",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetColor) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSetColor into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSetLineWidth",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetLineWidth) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSetLineWidth into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueSetTexture",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdSetTexture) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdSetTexture into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueRenderRectVerticesFilledLayer",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdRenderRectVerticesFilledLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueRenderRectVerticesOutlineLayer",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdRenderRectVerticesOutlineLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawPolygon",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawPolygon) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawPolygon into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueRenderNPatchRect",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdRenderNPatchRect) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdRenderNPatchRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer"}, MethodDef{
+            .name = "queueDrawTriangle",
+            .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTriangle) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@return void)",
+            .doc = R"(Queues a CmdDrawTriangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
     }
 
     std::vector<std::shared_ptr<Layer>> layers;
@@ -1576,16 +2542,33 @@ namespace layer
             BeginShaderMode(shader);
             ApplyUniformsToShader(shader, pass.uniforms);
             if (pass.customPrePassFunction) pass.customPrePassFunction();
-            DrawTextureRec(front().texture, {0, 0, (float)width * xFlipModifier, (float)-height * yFlipModifier}, {0, 0}, WHITE);
+            DrawTextureRec(front().texture, {0, 0, (float)width * xFlipModifier, (float)-height * yFlipModifier}, {0, 0}, WHITE); // invert Y 
+    
             EndShaderMode();
             render_stack_switch_internal::Pop();
             Swap();
     
+            // DEBUG: Show result of each pass visually
+            
+
             int debugOffsetX = 10;
             int debugOffsetY = 10 + debugPassIndex * (int)(renderHeight + 10);
-            DrawTextureRec(front().texture, {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, { (float)debugOffsetX, (float)debugOffsetY }, WHITE);
+
+            DrawTextureRec(
+                front().texture,
+                { 0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier},  // negative Y to flip
+                { (float)debugOffsetX, (float)debugOffsetY },
+                WHITE
+            );
             DrawRectangleLines(debugOffsetX, debugOffsetY, (int)renderWidth, (int)renderHeight, RED);
-            DrawText(fmt::format("Pass {}: {}", debugPassIndex, pass.shaderName).c_str(), debugOffsetX + 5, debugOffsetY + 5, 10, WHITE);
+            DrawText(
+                fmt::format("Pass {}: {}", debugPassIndex, pass.shaderName).c_str(),
+                debugOffsetX + 5,
+                debugOffsetY + 5,
+                10,
+                WHITE
+            );
+
             debugPassIndex++;
         }
     
@@ -1606,14 +2589,14 @@ namespace layer
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
     
             RenderTexture2D& source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite) ? baseSpriteRender : postPassRender;
-            DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, {0, 0}, WHITE);
+            DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
     
             EndShaderMode();
             EndTextureMode();
     
             render_stack_switch_internal::Push(front());
             BeginBlendMode((int)overlay.blendMode);
-            DrawTextureRec(back().texture, {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, {0, 0}, WHITE);
+            DrawTextureRec(back().texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
             EndBlendMode();
             render_stack_switch_internal::Pop();
         }
@@ -1751,7 +2734,6 @@ namespace layer
         {
             SPDLOG_DEBUG("DrawTransformEntityWithAnimationWithPipeline > Entity ID: {}, getVisualY: {}, getVisualX: {}, getVisualW: {}, getVisualH: {}", static_cast<int>(e), transform.getVisualY(), transform.getVisualX(), transform.getVisualW(), transform.getVisualH());
         }
-        
         
         PushMatrix();
         

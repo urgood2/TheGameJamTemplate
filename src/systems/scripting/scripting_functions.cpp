@@ -182,41 +182,36 @@ namespace scripting {
         particle::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from shader_pipeline.cpp. These can be called from lua
+        // methods from shader_pipeline.cpp. These can be called from lua✅
         //---------------------------------------------------------
         shader_pipeline::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from random.cpp. These can be called from lua
+        // methods from random.cpp. These can be called from lua✅
         //---------------------------------------------------------
         random_utils::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from system/layer folder. These can be called from lua
+        // methods from system/layer folder. These can be called from lua✅
         //---------------------------------------------------------
         layer::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from shader_system.cpp. These can be called from lua
+        // methods from shader_system.cpp. These can be called from lua✅
         //---------------------------------------------------------
         shaders::exposeToLua(stateToInit);
 
         // ---------------------------------------------------------
-        // methods from localization.cpp. These can be called from lua
+        // methods from localization.cpp. These can be called from lua✅
         //---------------------------------------------------------
         localization::exposeToLua(stateToInit);
 
         // ---------------------------------------------------------
-        // methods from timer.cpp. These can be called from lua
+        // methods from timer.cpp. These can be called from lua✅
         //---------------------------------------------------------
         timer::exposeToLua(stateToInit);
 
-        //---------------------------------------------------------
-        // methods from ai_system.cpp. These can be called from lua
-        //---------------------------------------------------------
-        stateToInit.set_function("hardReset", []() {
-            ai_system::requestAISystemReset();
-        });
+        
 
         //---------------------------------------------------------
         // methods from sound_system.cpp. These can be called from lua
@@ -240,12 +235,23 @@ namespace scripting {
         //---------------------------------------------------------
         ui::exposeToLua(stateToInit);
 
+
+        //---------------------------------------------------------
+        // methods from ai_system.cpp. These can be called from lua
+        //---------------------------------------------------------
+        stateToInit.set_function("hardReset", []() {
+            ai_system::requestAISystemReset();
+        });
+        rec.record_free_function({}, {"hardReset", "---@return nil", "Requests a full reset of the AI system state.", true, false});
+
         // ------------------------------------------------------
         // methods for entity registry access
         // ------------------------------------------------------
         stateToInit.set_function("getEntityByAlias", getEntityByAlias);
         stateToInit.set_function("setEntityAlias", setEntityAlias);
-        
+        rec.record_free_function({}, {"getEntityByAlias", "---@param alias string\n---@return Entity|nil", "Retrieves an entity by its string alias.", true, false});
+        rec.record_free_function({}, {"setEntityAlias", "---@param entity Entity\n---@param alias string\n---@return nil", "Assigns a string alias to an entity.", true, false});
+
         //---------------------------------------------------------
         // methods from scripting_functions.cpp. These can be called from lua
         //---------------------------------------------------------
@@ -253,33 +259,57 @@ namespace scripting {
             static_cast<void(*)(entt::entity, std::string)>(&luaDebugLogWrapper),
             static_cast<void(*)(std::string)>(&luaDebugLogWrapperNoEntity)
         ));
+        rec.record_free_function({}, {"debug", "---@param entity Entity\n---@param message string\n---@return nil", "Logs a debug message associated with an entity.", true, false});
+        rec.record_free_function({}, {"debug", "(message: string):nil", "Logs a general debug message.", true, true});
+
         stateToInit.set_function("error", sol::overload(
             static_cast<void(*)(entt::entity, std::string)>(&luaErrorLogWrapper),
             static_cast<void(*)(std::string)>(&luaErrorLogWrapperNoEntity)
         ));
-        // stateToInit.set_function("debug", luaDebugLogWrapper);
-        // stateToInit.set_function("error", luaErrorLogWrapper);
+        rec.record_free_function({}, {"error", "---@param entity Entity\n---@param message string\n---@return nil", "Logs an error message associated with an entity.", true, false});
+        rec.record_free_function({}, {"error", "(message: string):nil", "Logs a general error message.", true, true});
 
         stateToInit.set_function("setCurrentWorldStateValue", setCurrentWorldStateValue);
         stateToInit.set_function("getCurrentWorldStateValue", getCurrentWorldStateValue);
         stateToInit.set_function("clearCurrentWorldState", clearCurrentWorldState);
+        rec.record_free_function({}, {"setCurrentWorldStateValue", "---@param key string\n---@param value any\n---@return nil", "Sets a value in the current world state.", true, false});
+        rec.record_free_function({}, {"getCurrentWorldStateValue", "---@param key string\n---@return any|nil", "Gets a value from the current world state.", true, false});
+        rec.record_free_function({}, {"clearCurrentWorldState", "---@return nil", "Clears the current world state.", true, false});
+        
         stateToInit.set_function("setGoalWorldStateValue", setGoalWorldStateValue);
         stateToInit.set_function("getGoalWorldStateValue", getGoalWorldStateValue);
         stateToInit.set_function("clearGoalWorldState", clearGoalWorldState);
+        rec.record_free_function({}, {"setGoalWorldStateValue", "---@param key string\n---@param value any\n---@return nil", "Sets a value in the goal world state.", true, false});
+        rec.record_free_function({}, {"getGoalWorldStateValue", "---@param key string\n---@return any|nil", "Gets a value from the goal world state.", true, false});
+        rec.record_free_function({}, {"clearGoalWorldState", "---@return nil", "Clears the goal world state.", true, false});
 
         stateToInit.set_function("setBlackboardFloat", setBlackboardFloat);
         stateToInit.set_function("getBlackboardFloat", getBlackboardFloat);
+        rec.record_free_function({}, {"setBlackboardFloat", "---@param entity Entity\n---@param key string\n---@param value number\n---@return nil", "Sets a float value on an entity's blackboard.", true, false});
+        rec.record_free_function({}, {"getBlackboardFloat", "---@param entity Entity\n---@param key string\n---@return number", "Gets a float value from an entity's blackboard.", true, false});
+
         stateToInit.set_function("setBlackboardBool", setBlackboardBool);
         stateToInit.set_function("getBlackboardBool", getBlackboardBool);
+        rec.record_free_function({}, {"setBlackboardBool", "---@param entity Entity\n---@param key string\n---@param value boolean\n---@return nil", "Sets a boolean value on an entity's blackboard.", true, false});
+        rec.record_free_function({}, {"getBlackboardBool", "---@param entity Entity\n---@param key string\n---@return boolean", "Gets a boolean value from an entity's blackboard.", true, false});
+
         stateToInit.set_function("setBlackboardInt", setBlackboardInt);
         stateToInit.set_function("getBlackboardInt", getBlackboardInt);
+        rec.record_free_function({}, {"setBlackboardInt", "---@param entity Entity\n---@param key string\n---@param value integer\n---@return nil", "Sets an integer value on an entity's blackboard.", true, false});
+        rec.record_free_function({}, {"getBlackboardInt", "---@param entity Entity\n---@param key string\n---@return integer", "Gets an integer value from an entity's blackboard.", true, false});
+        
         stateToInit.set_function("setBlackboardString", setBlackboardString);
         stateToInit.set_function("getBlackboardString", getBlackboardString);
+        rec.record_free_function({}, {"setBlackboardString", "---@param entity Entity\n---@param key string\n---@param value string\n---@return nil", "Sets a string value on an entity's blackboard.", true, false});
+        rec.record_free_function({}, {"getBlackboardString", "---@param entity Entity\n---@param key string\n---@return string", "Gets a string value from an entity's blackboard.", true, false});
 
         stateToInit.set_function("isKeyPressed", isKeyPressed);
-
+        rec.record_free_function({}, {"isKeyPressed", "---@param key string\n---@return boolean", "Checks if a specific keyboard key is currently pressed.", true, false});
+        
         stateToInit.set_function("pauseGame", pauseGame);
         stateToInit.set_function("unpauseGame", unpauseGame);
+        rec.record_free_function({}, {"pauseGame", "---@return nil", "Pauses the game.", true, false});
+        rec.record_free_function({}, {"unpauseGame", "---@return nil", "Unpauses the game.", true, false});
 
         // 5) Finally dump out your definitions:
         rec.dump_lua_defs(util::getRawAssetPathNoUUID("scripts/chugget.lua_defs")); 

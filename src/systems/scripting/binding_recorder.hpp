@@ -221,11 +221,22 @@ private:
     }
 
     sol::table get_or_create_table(sol::state& lua,
-                                   const std::vector<std::string>& path) {
+                               const std::vector<std::string>& path) {
         sol::table tbl = lua.globals();
         for (auto& p : path) {
-            if (!tbl[p]) tbl[p] = lua.create_table();
-            tbl = tbl[p];
+            // grab whatever is at tbl[p]
+            sol::object child = tbl[p];
+
+            // if it's not already a table, make & insert a new one
+            if (child.get_type() != sol::type::table) {
+                sol::table new_tbl = lua.create_table();
+                tbl[p] = new_tbl;
+                tbl = new_tbl;
+            }
+            else {
+                // safe to cast–we know it's a table
+                tbl = child.as<sol::table>();
+            }
         }
         return tbl;
     }
@@ -368,6 +379,32 @@ Binding styles:
             "0.1",
             "Wraps an EnTT entity handle for Lua scripts."
         );
-    }
+    } 
+
+
+
+    // --------------- for enums within tables:
+
+    // 5b) TextWrapMode sub‐enum
+    ts["TextWrapMode"] = lua.create_table_with(
+        "WORD",      TextSystem::Text::WrapMode::WORD,
+        "CHARACTER", TextSystem::Text::WrapMode::CHARACTER
+    );
+
+    // Declare the enum as its own type so the dumper emits `local TextSystem.TextWrapMode = {}`
+    auto& tdWrap = rec.add_type("TextSystem.TextWrapMode");
+    tdWrap.doc = "Enum of text wrap modes";
+
+    // Record each enum member as a real constant field
+    rec.record_property("TextSystem.TextWrapMode", PropDef{
+        "WORD",
+        std::to_string(static_cast<int>(TextSystem::Text::WrapMode::WORD)),
+        "Wrap on word boundaries"
+    });
+    rec.record_property("TextSystem.TextWrapMode", PropDef{
+        "CHARACTER",
+        std::to_string(static_cast<int>(TextSystem::Text::WrapMode::CHARACTER)),
+        "Wrap on individual characters"
+    });
 
 */

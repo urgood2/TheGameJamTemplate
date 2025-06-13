@@ -81,6 +81,123 @@ function getEventOccurred(...) end
 ---@return nil
 function setEventOccurred(...) end
 
+---
+--- Adjusts text alignment
+---
+---@param t TextSystem.Text # text object to adjust
+---@return nil
+function TextSystem.Functions.adjustAlignment(...) end
+
+---
+--- Splits a combined effect string into segments
+---
+---@param s string # combined effect string
+---@return std::vector<std::string>
+function TextSystem.Functions.splitEffects(...) end
+
+---
+--- Creates a new text entity in the world
+---
+---@param txt TextSystem.Text # text object
+---@return entt::entity
+function TextSystem.Functions.createTextEntity(...) end
+
+---
+--- Calculates the text's bounding box
+---
+---@param txt TextSystem.Text
+---@return Rectangle # bounding box
+function TextSystem.Functions.calculateBoundingBox(...) end
+
+---
+--- Converts a codepoint to a UTF-8 string
+---
+---@param cp int # Unicode codepoint
+---@return string
+function TextSystem.Functions.CodepointToString(...) end
+
+---
+--- Parses raw string into a TextSystem.Text
+---
+---@param s string # raw string to parse
+---@return TextSystem.Text
+function TextSystem.Functions.parseText(...) end
+
+---
+--- Handles a single effect segment
+---
+---@param e entt::entity
+---@param lineWidths table
+---@param cx? any
+---@param cy? any
+---@return nil
+function TextSystem.Functions.handleEffectSegment(...) end
+
+---
+--- Updates text state
+---
+---@param txt TextSystem.Text
+---@param dt float # delta time
+---@return nil
+function TextSystem.Functions.updateText(...) end
+
+---
+--- Renders text to screen
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.renderText(...) end
+
+---
+--- Clears all effects on text
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.clearAllEffects(...) end
+
+---
+--- Applies global effects to text
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.applyGlobalEffects(...) end
+
+---
+--- Prints internal debug info for text
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.debugPrintText(...) end
+
+---
+--- Resizes text to fit its container
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.resizeTextToFit(...) end
+
+---
+--- Sets text scale and recenters origin
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.setTextScaleAndRecenter(...) end
+
+---
+--- Resets text scale and layout
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.resetTextScaleAndLayout(...) end
+
+---
+--- Updates the raw text string
+---
+---@param txt TextSystem.Text
+---@param newText string
+---@return nil
+function TextSystem.Functions.setText(...) end
+
 
 ---
 --- Results of an action
@@ -99,4 +216,445 @@ local ActionResult = {
 ---@class Entity
 local Entity = {
 }
+
+
+---
+--- Container for all text‐system types
+---
+---@class TextSystem
+local TextSystem = {
+    effectFunctions = {}  -- Map of effect names to C++ functions
+}
+
+
+---
+--- Holds parsed arguments for text effects
+---
+---@class TextSystem.ParsedEffectArguments
+local TextSystem.ParsedEffectArguments = {
+}
+
+---
+--- Returns the list of raw effect arguments
+---
+---@return std::vector<std::string> arguments # The parsed effect arguments
+function TextSystem.ParsedEffectArguments:arguments(...) end
+
+
+---
+--- Represents one rendered character in the text system
+---
+---@class TextSystem.Character
+local TextSystem.Character = {
+}
+
+---
+--- Gets the character value
+---
+---@return any value # character value
+function TextSystem.Character:value(...) end
+
+---
+--- Gets the override codepoint
+---
+---@return any overrideCodepoint # override codepoint
+function TextSystem.Character:overrideCodepoint(...) end
+
+---
+--- Gets the rotation angle
+---
+---@return any rotation # rotation angle
+function TextSystem.Character:rotation(...) end
+
+---
+--- Gets the scale factor
+---
+---@return any scale # scale factor
+function TextSystem.Character:scale(...) end
+
+---
+--- Gets the glyph size
+---
+---@return any size # glyph size
+function TextSystem.Character:size(...) end
+
+---
+--- Gets the shadow displacement
+---
+---@return any shadowDisplacement # shadow displacement
+function TextSystem.Character:shadowDisplacement(...) end
+
+---
+--- Gets the shadow height
+---
+---@return any shadowHeight # shadow height
+function TextSystem.Character:shadowHeight(...) end
+
+---
+--- Gets the X-axis scale modifier
+---
+---@return any scaleXModifier # X-axis scale modifier
+function TextSystem.Character:scaleXModifier(...) end
+
+---
+--- Gets the Y-axis scale modifier
+---
+---@return any scaleYModifier # Y-axis scale modifier
+function TextSystem.Character:scaleYModifier(...) end
+
+---
+--- Gets the tint color
+---
+---@return any color # tint color
+function TextSystem.Character:color(...) end
+
+---
+--- Gets the per-glyph offsets
+---
+---@return any offsets # per-glyph offsets
+function TextSystem.Character:offsets(...) end
+
+---
+--- Gets the per-glyph shadow offsets
+---
+---@return any shadowDisplacementOffsets # per-glyph shadow offsets
+function TextSystem.Character:shadowDisplacementOffsets(...) end
+
+---
+--- Gets the per-glyph scale modifiers
+---
+---@return any scaleModifiers # per-glyph scale modifiers
+function TextSystem.Character:scaleModifiers(...) end
+
+---
+--- Gets the user-defined data
+---
+---@return any customData # user-defined data
+function TextSystem.Character:customData(...) end
+
+---
+--- Gets the global offset
+---
+---@return any offset # global offset
+function TextSystem.Character:offset(...) end
+
+---
+--- Gets the applied effects list
+---
+---@return any effects # applied effects list
+function TextSystem.Character:effects(...) end
+
+---
+--- Gets the parsed effect arguments
+---
+---@return any parsedEffectArguments # parsed effect arguments
+function TextSystem.Character:parsedEffectArguments(...) end
+
+---
+--- Gets the character index
+---
+---@return any index # character index
+function TextSystem.Character:index(...) end
+
+---
+--- Gets the line number
+---
+---@return any lineNumber # line number
+function TextSystem.Character:lineNumber(...) end
+
+---
+--- Gets the first frame timestamp
+---
+---@return any firstFrame # first frame timestamp
+function TextSystem.Character:firstFrame(...) end
+
+---
+--- Gets the attached tags
+---
+---@return any tags # attached tags
+function TextSystem.Character:tags(...) end
+
+---
+--- Gets the pop-in flag
+---
+---@return any pop_in # pop-in flag
+function TextSystem.Character:pop_in(...) end
+
+---
+--- Gets the pop-in delay time
+---
+---@return any pop_in_delay # pop-in delay time
+function TextSystem.Character:pop_in_delay(...) end
+
+---
+--- Gets the creation timestamp
+---
+---@return any createdTime # creation timestamp
+function TextSystem.Character:createdTime(...) end
+
+---
+--- Gets the parent text object
+---
+---@return any parentText # parent text object
+function TextSystem.Character:parentText(...) end
+
+---
+--- Gets the is final character in its text
+---
+---@return any isFinalCharacterInText # is final character in its text
+function TextSystem.Character:isFinalCharacterInText(...) end
+
+---
+--- Gets the effect finished flag
+---
+---@return any effectFinished # effect finished flag
+function TextSystem.Character:effectFinished(...) end
+
+---
+--- Gets the is an image glyph
+---
+---@return any isImage # is an image glyph
+function TextSystem.Character:isImage(...) end
+
+---
+--- Gets the image shadow enabled
+---
+---@return any imageShadowEnabled # image shadow enabled
+function TextSystem.Character:imageShadowEnabled(...) end
+
+---
+--- Gets the sprite UUID
+---
+---@return any spriteUUID # sprite UUID
+function TextSystem.Character:spriteUUID(...) end
+
+---
+--- Gets the image scale factor
+---
+---@return any imageScale # image scale factor
+function TextSystem.Character:imageScale(...) end
+
+---
+--- Gets the foreground tint
+---
+---@return any fgTint # foreground tint
+function TextSystem.Character:fgTint(...) end
+
+---
+--- Gets the background tint
+---
+---@return any bgTint # background tint
+function TextSystem.Character:bgTint(...) end
+
+
+---
+--- Main text object with content, layout, and effects
+---
+---@class TextSystem.Text
+local TextSystem.Text = {
+}
+
+---
+--- Gets the raw get_value_callback
+---
+---@return any get_value_callback # raw value
+function TextSystem.Text:get_value_callback(...) end
+
+---
+--- Gets the raw onStringContentUpdatedOrChangedViaCallback
+---
+---@return any onStringContentUpdatedOrChangedViaCallback # raw value
+function TextSystem.Text:onStringContentUpdatedOrChangedViaCallback(...) end
+
+---
+--- Gets the raw effectStringsToApplyGloballyOnTextChange
+---
+---@return any effectStringsToApplyGloballyOnTextChange # raw value
+function TextSystem.Text:effectStringsToApplyGloballyOnTextChange(...) end
+
+---
+--- Gets the raw onFinishedEffect
+---
+---@return any onFinishedEffect # raw value
+function TextSystem.Text:onFinishedEffect(...) end
+
+---
+--- Gets the raw pop_in_enabled
+---
+---@return any pop_in_enabled # raw value
+function TextSystem.Text:pop_in_enabled(...) end
+
+---
+--- Gets the raw shadow_enabled
+---
+---@return any shadow_enabled # raw value
+function TextSystem.Text:shadow_enabled(...) end
+
+---
+--- Gets the raw width
+---
+---@return any width # raw value
+function TextSystem.Text:width(...) end
+
+---
+--- Gets the raw height
+---
+---@return any height # raw value
+function TextSystem.Text:height(...) end
+
+---
+--- Gets the raw rawText
+---
+---@return any rawText # raw value
+function TextSystem.Text:rawText(...) end
+
+---
+--- Gets the raw characters
+---
+---@return any characters # raw value
+function TextSystem.Text:characters(...) end
+
+---
+--- Gets the raw fontData
+---
+---@return any fontData # raw value
+function TextSystem.Text:fontData(...) end
+
+---
+--- Gets the raw fontSize
+---
+---@return any fontSize # raw value
+function TextSystem.Text:fontSize(...) end
+
+---
+--- Gets the raw wrapEnabled
+---
+---@return any wrapEnabled # raw value
+function TextSystem.Text:wrapEnabled(...) end
+
+---
+--- Gets the raw wrapWidth
+---
+---@return any wrapWidth # raw value
+function TextSystem.Text:wrapWidth(...) end
+
+---
+--- Gets the raw prevRenderScale
+---
+---@return any prevRenderScale # raw value
+function TextSystem.Text:prevRenderScale(...) end
+
+---
+--- Gets the raw renderScale
+---
+---@return any renderScale # raw value
+function TextSystem.Text:renderScale(...) end
+
+---
+--- Gets the raw createdTime
+---
+---@return any createdTime # raw value
+function TextSystem.Text:createdTime(...) end
+
+---
+--- Gets the raw effectStartTime
+---
+---@return any effectStartTime # raw value
+function TextSystem.Text:effectStartTime(...) end
+
+---
+--- Gets the raw applyTransformRotationAndScale
+---
+---@return any applyTransformRotationAndScale # raw value
+function TextSystem.Text:applyTransformRotationAndScale(...) end
+
+
+---
+--- Enum of text alignment values
+---
+---@class TextSystem.TextAlignment
+local TextSystem.TextAlignment = {
+    LEFT = 0  -- Left-aligned text
+    CENTER = 1  -- Centered text
+    RIGHT = 2  -- Right-aligned text
+    JUSTIFIED = 3  -- Justified text
+}
+
+
+---
+--- Enum of text wrap modes
+---
+---@class TextSystem.TextWrapMode
+local TextSystem.TextWrapMode = {
+    WORD = 0  -- Wrap on word boundaries
+    CHARACTER = 1  -- Wrap on individual characters
+}
+
+
+---
+--- Fluent builder for creating TextSystem.Text objects
+---
+---@class TextSystem.Builders.TextBuilder
+local TextSystem.Builders.TextBuilder = {
+}
+
+---
+--- Builder method setRawText
+---
+---@param v any # argument for setRawText
+function TextSystem.Builders.TextBuilder:setRawText(...) end
+
+---
+--- Builder method setFontData
+---
+---@param v any # argument for setFontData
+function TextSystem.Builders.TextBuilder:setFontData(...) end
+
+---
+--- Builder method setOnFinishedEffect
+---
+---@param v any # argument for setOnFinishedEffect
+function TextSystem.Builders.TextBuilder:setOnFinishedEffect(...) end
+
+---
+--- Builder method setFontSize
+---
+---@param v any # argument for setFontSize
+function TextSystem.Builders.TextBuilder:setFontSize(...) end
+
+---
+--- Builder method setWrapWidth
+---
+---@param v any # argument for setWrapWidth
+function TextSystem.Builders.TextBuilder:setWrapWidth(...) end
+
+---
+--- Builder method setAlignment
+---
+---@param v any # argument for setAlignment
+function TextSystem.Builders.TextBuilder:setAlignment(...) end
+
+---
+--- Builder method setWrapMode
+---
+---@param v any # argument for setWrapMode
+function TextSystem.Builders.TextBuilder:setWrapMode(...) end
+
+---
+--- Builder method setCreatedTime
+---
+---@param v any # argument for setCreatedTime
+function TextSystem.Builders.TextBuilder:setCreatedTime(...) end
+
+---
+--- Builder method setPopInEnabled
+---
+---@param v any # argument for setPopInEnabled
+function TextSystem.Builders.TextBuilder:setPopInEnabled(...) end
+
+---
+--- Builder method build
+---
+---@param v any # argument for build
+function TextSystem.Builders.TextBuilder:build(...) end
 

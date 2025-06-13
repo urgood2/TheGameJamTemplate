@@ -81,123 +81,6 @@ function getEventOccurred(...) end
 ---@return nil
 function setEventOccurred(...) end
 
----
---- Adjusts text alignment
----
----@param t TextSystem.Text # text object to adjust
----@return nil
-function TextSystem.Functions.adjustAlignment(...) end
-
----
---- Splits a combined effect string into segments
----
----@param s string # combined effect string
----@return std::vector<std::string>
-function TextSystem.Functions.splitEffects(...) end
-
----
---- Creates a new text entity in the world
----
----@param txt TextSystem.Text # text object
----@return entt::entity
-function TextSystem.Functions.createTextEntity(...) end
-
----
---- Calculates the text's bounding box
----
----@param txt TextSystem.Text
----@return Rectangle # bounding box
-function TextSystem.Functions.calculateBoundingBox(...) end
-
----
---- Converts a codepoint to a UTF-8 string
----
----@param cp int # Unicode codepoint
----@return string
-function TextSystem.Functions.CodepointToString(...) end
-
----
---- Parses raw string into a TextSystem.Text
----
----@param s string # raw string to parse
----@return TextSystem.Text
-function TextSystem.Functions.parseText(...) end
-
----
---- Handles a single effect segment
----
----@param e entt::entity
----@param lineWidths table
----@param cx? any
----@param cy? any
----@return nil
-function TextSystem.Functions.handleEffectSegment(...) end
-
----
---- Updates text state
----
----@param txt TextSystem.Text
----@param dt float # delta time
----@return nil
-function TextSystem.Functions.updateText(...) end
-
----
---- Renders text to screen
----
----@param txt TextSystem.Text
----@return nil
-function TextSystem.Functions.renderText(...) end
-
----
---- Clears all effects on text
----
----@param txt TextSystem.Text
----@return nil
-function TextSystem.Functions.clearAllEffects(...) end
-
----
---- Applies global effects to text
----
----@param txt TextSystem.Text
----@return nil
-function TextSystem.Functions.applyGlobalEffects(...) end
-
----
---- Prints internal debug info for text
----
----@param txt TextSystem.Text
----@return nil
-function TextSystem.Functions.debugPrintText(...) end
-
----
---- Resizes text to fit its container
----
----@param txt TextSystem.Text
----@return nil
-function TextSystem.Functions.resizeTextToFit(...) end
-
----
---- Sets text scale and recenters origin
----
----@param txt TextSystem.Text
----@return nil
-function TextSystem.Functions.setTextScaleAndRecenter(...) end
-
----
---- Resets text scale and layout
----
----@param txt TextSystem.Text
----@return nil
-function TextSystem.Functions.resetTextScaleAndLayout(...) end
-
----
---- Updates the raw text string
----
----@param txt TextSystem.Text
----@param newText string
----@return nil
-function TextSystem.Functions.setText(...) end
-
 
 ---
 --- Results of an action
@@ -231,7 +114,7 @@ local TextSystem = {
 --- Holds parsed arguments for text effects
 ---
 ---@class TextSystem.ParsedEffectArguments
-local TextSystem.ParsedEffectArguments = {
+TextSystem.ParsedEffectArguments = {
 }
 
 ---
@@ -245,7 +128,7 @@ function TextSystem.ParsedEffectArguments:arguments(...) end
 --- Represents one rendered character in the text system
 ---
 ---@class TextSystem.Character
-local TextSystem.Character = {
+TextSystem.Character = {
 }
 
 ---
@@ -451,7 +334,7 @@ function TextSystem.Character:bgTint(...) end
 --- Main text object with content, layout, and effects
 ---
 ---@class TextSystem.Text
-local TextSystem.Text = {
+TextSystem.Text = {
 }
 
 ---
@@ -573,7 +456,7 @@ function TextSystem.Text:applyTransformRotationAndScale(...) end
 --- Enum of text alignment values
 ---
 ---@class TextSystem.TextAlignment
-local TextSystem.TextAlignment = {
+TextSystem.TextAlignment = {
     LEFT = 0  -- Left-aligned text
     CENTER = 1  -- Centered text
     RIGHT = 2  -- Right-aligned text
@@ -585,7 +468,7 @@ local TextSystem.TextAlignment = {
 --- Enum of text wrap modes
 ---
 ---@class TextSystem.TextWrapMode
-local TextSystem.TextWrapMode = {
+TextSystem.TextWrapMode = {
     WORD = 0  -- Wrap on word boundaries
     CHARACTER = 1  -- Wrap on individual characters
 }
@@ -595,7 +478,7 @@ local TextSystem.TextWrapMode = {
 --- Fluent builder for creating TextSystem.Text objects
 ---
 ---@class TextSystem.Builders.TextBuilder
-local TextSystem.Builders.TextBuilder = {
+TextSystem.Builders.TextBuilder = {
 }
 
 ---
@@ -657,4 +540,209 @@ function TextSystem.Builders.TextBuilder:setPopInEnabled(...) end
 ---
 ---@param v any # argument for build
 function TextSystem.Builders.TextBuilder:build(...) end
+
+
+---
+--- Container for text system utility functions
+---
+---@class TextSystem.Functions
+TextSystem.Functions = {
+}
+
+
+---
+--- Animation system functions
+---
+---@class animation_system
+local animation_system = {
+}
+
+---
+--- Adjusts text alignment
+---
+---@param t TextSystem.Text # text object to adjust
+---@return nil
+function TextSystem.Functions.adjustAlignment(...) end
+
+---
+--- Splits a combined effect string into segments
+---
+---@param s string # combined effect string
+---@return std::vector<std::string>
+function TextSystem.Functions.splitEffects(...) end
+
+---
+--- Creates a new text entity in the world
+---
+---@param txt TextSystem.Text # text object
+---@return entt::entity
+function TextSystem.Functions.createTextEntity(...) end
+
+---
+--- Calculates the text's bounding box
+---
+---@param txt TextSystem.Text
+---@return Rectangle # bounding box
+function TextSystem.Functions.calculateBoundingBox(...) end
+
+---
+--- Converts a codepoint to a UTF-8 string
+---
+---@param cp int # Unicode codepoint
+---@return string
+function TextSystem.Functions.CodepointToString(...) end
+
+---
+--- Parses raw string into a TextSystem.Text
+---
+---@param s string # raw string to parse
+---@return TextSystem.Text
+function TextSystem.Functions.parseText(...) end
+
+---
+--- Handles a single effect segment
+---
+---@param e entt::entity
+---@param lineWidths table
+---@param cx? any
+---@param cy? any
+---@return nil
+function TextSystem.Functions.handleEffectSegment(...) end
+
+---
+--- Updates text state
+---
+---@param txt TextSystem.Text
+---@param dt float # delta time
+---@return nil
+function TextSystem.Functions.updateText(...) end
+
+---
+--- Renders text to screen
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.renderText(...) end
+
+---
+--- Clears all effects on text
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.clearAllEffects(...) end
+
+---
+--- Applies global effects to text
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.applyGlobalEffects(...) end
+
+---
+--- Prints internal debug info for text
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.debugPrintText(...) end
+
+---
+--- Resizes text to fit its container
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.resizeTextToFit(...) end
+
+---
+--- Sets text scale and recenters origin
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.setTextScaleAndRecenter(...) end
+
+---
+--- Resets text scale and layout
+---
+---@param txt TextSystem.Text
+---@return nil
+function TextSystem.Functions.resetTextScaleAndLayout(...) end
+
+---
+--- Updates the raw text string
+---
+---@param txt TextSystem.Text
+---@param newText string
+---@return nil
+function TextSystem.Functions.setText(...) end
+
+---
+--- Advances all animations by dt
+---
+---@param dt number # Delta time in seconds
+---@return nil
+function animation_system.update(...) end
+
+---
+--- Returns nine-patch border info and texture
+---
+---@param uuid_or_raw_identifier string # N-patch identifier or raw key
+---@return NPatchInfo info # Border slicing information
+---@return Texture2D texture # Associated texture
+function animation_system.getNinepatchUIBorderInfo(...) end
+
+---
+--- Creates an animated object with a transform
+---
+---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID
+---@param generateNewAnimFromSprite boolean? # Create a new anim from sprite? Default false
+---@param x number? # Initial X position. Default 0
+---@param y number? # Initial Y position. Default 0
+---@param shaderPassConfigFunc fun(entt_entity: entt.entity)? # Optional shader setup callback
+---@param shadowEnabled boolean? # Enable shadow? Default true
+---@return entt.entity entity # Created animation entity
+function animation_system.createAnimatedObjectWithTransform(...) end
+
+---
+--- Creates a still animation from a sprite UUID
+---
+---@param spriteUUID string # Sprite UUID to use
+---@param fg Color? # Optional foreground tint
+---@param bg Color? # Optional background tint
+---@return AnimationObject animObj # New still animation object
+function animation_system.createStillAnimationFromSpriteUUID(...) end
+
+---
+--- Resizes all animation objects in an entity to fit
+---
+---@param e entt.entity # Target entity
+---@param targetWidth number # Desired width
+---@param targetHeight number # Desired height
+---@return nil
+function animation_system.resizeAnimationObjectsInEntityToFit(...) end
+
+---
+--- Resizes and centers all animation objects in an entity
+---
+---@param e entt.entity # Target entity
+---@param targetWidth number # Desired width
+---@param targetHeight number # Desired height
+---@param centerLaterally boolean? # Center horizontally? Default true
+---@param centerVertically boolean? # Center vertically? Default true
+---@return nil
+function animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(...) end
+
+---
+--- Resets UI render scale for an entity’s animations
+---
+---@param e entt.entity # Target entity
+---@return nil
+function animation_system.resetAnimationUIRenderScale(...) end
+
+---
+--- Resizes a single animation object to fit
+---
+---@param animObj AnimationObject # Animation object reference
+---@param targetWidth number # Desired width
+---@param targetHeight number # Desired height
+---@return nil
+function animation_system.resizeAnimationObjectToFit(...) end
 

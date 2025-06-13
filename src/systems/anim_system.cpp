@@ -13,37 +13,129 @@
 #include "systems/uuid/uuid.hpp"
 #include "core/init.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 #include "sol/sol.hpp"
 
 namespace animation_system {
 
     auto exposeToLua(sol::state &lua) -> void {
-        // 1) Ensure the top‐level table
+        // // 1) Ensure the top‐level table
+        // sol::table anim = lua.create_named_table("animation_system");
+
+        // // 2) Bind each free function
+        // anim.set_function("update", &animation_system::update);
+
+        // // returns (NPatchInfo, Texture2D)
+        // anim.set_function("getNinepatchUIBorderInfo", &animation_system::getNinepatchUIBorderInfo);
+
+        // // full‐signature binding; Lua will need to pass all args or use nil for defaults
+        // anim.set_function("createAnimatedObjectWithTransform",
+        //     &animation_system::createAnimatedObjectWithTransform);
+
+        // // convenience still‐animation factory
+        // anim.set_function("createStillAnimationFromSpriteUUID",
+        //     &animation_system::createStillAnimationFromSpriteUUID);
+
+        // // resizing helpers
+        // anim.set_function("resizeAnimationObjectsInEntityToFit",
+        //     &animation_system::resizeAnimationObjectsInEntityToFit);
+        // anim.set_function("resizeAnimationObjectsInEntityToFitAndCenterUI",
+        //     &animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI);
+        // anim.set_function("resetAnimationUIRenderScale",
+        //     &animation_system::resetAnimationUIRenderScale);
+        // anim.set_function("resizeAnimationObjectToFit",
+        //     &animation_system::resizeAnimationObjectToFit);
+
+        auto& rec = BindingRecorder::instance();
+
+        // 1) Create the top‐level animation_system table
         sol::table anim = lua.create_named_table("animation_system");
+        // Emit: local animation_system = {}
+        rec.add_type("animation_system").doc = "Animation system functions";
 
-        // 2) Bind each free function
-        anim.set_function("update", &animation_system::update);
+        // 2) Bind & record free functions under animation_system
 
-        // returns (NPatchInfo, Texture2D)
-        anim.set_function("getNinepatchUIBorderInfo", &animation_system::getNinepatchUIBorderInfo);
+        // update(dt: number) -> nil
+        rec.bind_function(lua, {"animation_system"}, "update",
+            &animation_system::update,
+            "---@param dt number # Delta time in seconds\n"
+            "---@return nil",
+            "Advances all animations by dt"
+        );
 
-        // full‐signature binding; Lua will need to pass all args or use nil for defaults
-        anim.set_function("createAnimatedObjectWithTransform",
-            &animation_system::createAnimatedObjectWithTransform);
+        // getNinepatchUIBorderInfo(uuid: string) -> NPatchInfo, Texture2D
+        rec.bind_function(lua, {"animation_system"}, "getNinepatchUIBorderInfo",
+            &animation_system::getNinepatchUIBorderInfo,
+            "---@param uuid_or_raw_identifier string # N-patch identifier or raw key\n"
+            "---@return NPatchInfo info # Border slicing information\n"
+            "---@return Texture2D texture # Associated texture",
+            "Returns nine-patch border info and texture"
+        );
 
-        // convenience still‐animation factory
-        anim.set_function("createStillAnimationFromSpriteUUID",
-            &animation_system::createStillAnimationFromSpriteUUID);
+        // createAnimatedObjectWithTransform(defaultAnimationIDOrSpriteUUID: string, generateNewAnimFromSprite?: boolean, x?: number, y?: number, shaderPassConfigFunc?: fun(entt.entity), shadowEnabled?: boolean) -> entt.entity
+        rec.bind_function(lua, {"animation_system"}, "createAnimatedObjectWithTransform",
+            &animation_system::createAnimatedObjectWithTransform,
+            "---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID\n"
+            "---@param generateNewAnimFromSprite boolean? # Create a new anim from sprite? Default false\n"
+            "---@param x number? # Initial X position. Default 0\n"
+            "---@param y number? # Initial Y position. Default 0\n"
+            "---@param shaderPassConfigFunc fun(entt_entity: entt.entity)? # Optional shader setup callback\n"
+            "---@param shadowEnabled boolean? # Enable shadow? Default true\n"
+            "---@return entt.entity entity # Created animation entity",
+            "Creates an animated object with a transform"
+        );
 
-        // resizing helpers
-        anim.set_function("resizeAnimationObjectsInEntityToFit",
-            &animation_system::resizeAnimationObjectsInEntityToFit);
-        anim.set_function("resizeAnimationObjectsInEntityToFitAndCenterUI",
-            &animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI);
-        anim.set_function("resetAnimationUIRenderScale",
-            &animation_system::resetAnimationUIRenderScale);
-        anim.set_function("resizeAnimationObjectToFit",
-            &animation_system::resizeAnimationObjectToFit);
+        // createStillAnimationFromSpriteUUID(spriteUUID: string, fg?: Color, bg?: Color) -> AnimationObject
+        rec.bind_function(lua, {"animation_system"}, "createStillAnimationFromSpriteUUID",
+            &animation_system::createStillAnimationFromSpriteUUID,
+            "---@param spriteUUID string # Sprite UUID to use\n"
+            "---@param fg Color? # Optional foreground tint\n"
+            "---@param bg Color? # Optional background tint\n"
+            "---@return AnimationObject animObj # New still animation object",
+            "Creates a still animation from a sprite UUID"
+        );
+
+        // resizeAnimationObjectsInEntityToFit(e: entt.entity, targetWidth: number, targetHeight: number) -> nil
+        rec.bind_function(lua, {"animation_system"}, "resizeAnimationObjectsInEntityToFit",
+            &animation_system::resizeAnimationObjectsInEntityToFit,
+            "---@param e entt.entity # Target entity\n"
+            "---@param targetWidth number # Desired width\n"
+            "---@param targetHeight number # Desired height\n"
+            "---@return nil",
+            "Resizes all animation objects in an entity to fit"
+        );
+
+        // resizeAnimationObjectsInEntityToFitAndCenterUI(e: entt.entity, targetWidth: number, targetHeight: number, centerLaterally?: boolean, centerVertically?: boolean) -> nil
+        rec.bind_function(lua, {"animation_system"}, "resizeAnimationObjectsInEntityToFitAndCenterUI",
+            &animation_system::resizeAnimationObjectsInEntityToFitAndCenterUI,
+            "---@param e entt.entity # Target entity\n"
+            "---@param targetWidth number # Desired width\n"
+            "---@param targetHeight number # Desired height\n"
+            "---@param centerLaterally boolean? # Center horizontally? Default true\n"
+            "---@param centerVertically boolean? # Center vertically? Default true\n"
+            "---@return nil",
+            "Resizes and centers all animation objects in an entity"
+        );
+
+        // resetAnimationUIRenderScale(e: entt.entity) -> nil
+        rec.bind_function(lua, {"animation_system"}, "resetAnimationUIRenderScale",
+            &animation_system::resetAnimationUIRenderScale,
+            "---@param e entt.entity # Target entity\n"
+            "---@return nil",
+            "Resets UI render scale for an entity’s animations"
+        );
+
+        // resizeAnimationObjectToFit(animObj: AnimationObject, targetWidth: number, targetHeight: number) -> nil
+        rec.bind_function(lua, {"animation_system"}, "resizeAnimationObjectToFit",
+            &animation_system::resizeAnimationObjectToFit,
+            "---@param animObj AnimationObject # Animation object reference\n"
+            "---@param targetWidth number # Desired width\n"
+            "---@param targetHeight number # Desired height\n"
+            "---@return nil",
+            "Resizes a single animation object to fit"
+        );
+
     }
     
     auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg, std::optional<Color> bg) -> AnimationObject {

@@ -157,12 +157,7 @@ public:
             out << "function " << m.name << "(...) end\n\n";
         }
 
-        // 2) Emit named modules (nested tables):
-        for (auto& [modname, node] : modules_) {
-            dump_module(out, { modname }, node);
-        }
-
-        // 3) Emit types with real-value tables + methods:
+                // 3) Emit types with real-value tables + methods:
         for (auto& t : types_) {
             out << "\n";
             out << "---\n";
@@ -177,7 +172,12 @@ public:
             out << "\n";
 
             // real Lua table of constants:
-            out << "local " << t.name << " = {\n";
+            if (t.name.find('.') != std::string::npos) {
+                // nested name, e.g. TextSystem.Character
+                out << t.name << " = {\n";
+            } else {
+                out << "local " << t.name << " = {\n";
+            }
             for (auto& prop : t.properties) {
                 out << "    " << prop.name
                     << " = " << prop.value;
@@ -200,6 +200,13 @@ public:
                     << m.name << "(...) end\n\n";
             }
         }
+
+        // 2) Emit named modules (nested tables):
+        for (auto& [modname, node] : modules_) {
+            dump_module(out, { modname }, node);
+        }
+
+
 
         out.close();
         spdlog::info("dump_lua_defs: finished '{}'", path);

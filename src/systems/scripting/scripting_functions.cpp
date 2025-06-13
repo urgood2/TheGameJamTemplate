@@ -101,7 +101,7 @@ namespace scripting {
             + base4 + "?.lua;"
             "' .. package.path";
 
-        lua.script(lua_path_cmd);
+        stateToInit.script(lua_path_cmd);
         
         // read all the script files and load them into the lua state
         for (auto &filename : scriptFilesToRead) {

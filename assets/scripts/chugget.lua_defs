@@ -1,0 +1,26 @@
+---@meta
+
+---
+--- Bindings for chugget's c++ code, for use with lua.
+---
+-- version: 0.1
+---@class chugget.engine
+
+---
+--- Results of an action
+---
+---@class ActionResult
+local ActionResult = {
+    SUCCESS = 0  -- When succeeded
+    FAILURE = 1  -- When failed
+    RUNNING = 2  -- When still running
+}
+
+
+---
+--- Wraps an EnTT entity handle for Lua scripts.
+---
+---@class Entity
+local Entity = {
+}
+

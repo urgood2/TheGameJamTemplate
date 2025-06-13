@@ -17,6 +17,8 @@
 #include "../random/random.hpp"
 #include "../timer/timer.hpp"
 
+#include "binding_recorder.hpp"
+
 #include "../layer/layer.hpp"
 
 #include "systems/anim_system.hpp"
@@ -122,18 +124,37 @@ namespace scripting {
                 SPDLOG_DEBUG("Lua script file loading success.");
             }
         }
+
+        // 1) Module‐level banner
+        auto& rec = BindingRecorder::instance();
+        rec.set_module_name("chugget.engine");
+        rec.set_module_version("0.1");
+        rec.set_module_doc("Bindings for chugget's c++ code, for use with lua.");
         
         //---------------------------------------------------------
         // initialize lua state with custom object bindings
         //---------------------------------------------------------
-
         stateToInit.new_enum("ActionResult",
             "SUCCESS", Action::Result::SUCCESS,
             "FAILURE", Action::Result::FAILURE,
             "RUNNING", Action::Result::RUNNING
         );
+        // 3) Record it as a class with constant fields
+        //    (so dump_lua_defs will emit @class + @field for each value)
+        rec.add_type("ActionResult").doc = "Results of an action";
+        rec.record_property("ActionResult", { "SUCCESS", "0", "When succeeded" });
+        rec.record_property("ActionResult", { "FAILURE", "1", "When failed" });
+        rec.record_property("ActionResult", { "RUNNING", "2", "When still running" });
         
-        stateToInit.new_usertype<entt::entity>("Entity");
+        // stateToInit.new_usertype<entt::entity>("Entity");
+        // 3) Bind & record the Entity usertype
+        rec.bind_usertype<entt::entity>(
+            stateToInit,
+            "Entity",
+            /*version=*/"0.1",
+            /*doc=*/"Wraps an EnTT entity handle for Lua scripts."
+        );
+
 
         //---------------------------------------------------------
         // methods from event_system.cpp. These can be called from lua
@@ -259,7 +280,9 @@ namespace scripting {
 
         stateToInit.set_function("pauseGame", pauseGame);
         stateToInit.set_function("unpauseGame", unpauseGame);
-        
+
+        // 5) Finally dump out your definitions:
+        rec.dump_lua_defs(util::getRawAssetPathNoUUID("scripts/chugget.lua_defs")); 
     }
 
 

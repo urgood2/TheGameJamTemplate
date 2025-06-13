@@ -132,7 +132,7 @@ namespace scripting {
         rec.set_module_doc("Bindings for chugget's c++ code, for use with lua.");
         
         //---------------------------------------------------------
-        // initialize lua state with custom object bindings
+        // initialize lua state with custom object bindings✅
         //---------------------------------------------------------
         stateToInit.new_enum("ActionResult",
             "SUCCESS", Action::Result::SUCCESS,
@@ -157,27 +157,27 @@ namespace scripting {
 
 
         //---------------------------------------------------------
-        // methods from event_system.cpp. These can be called from lua
+        // methods from event_system.cpp. These can be called from lua✅
         //---------------------------------------------------------
         event_system::exposeEventSystemToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from textVer2.cpp. These can be called from lua
+        // methods from textVer2.cpp. These can be called from lua✅
         //---------------------------------------------------------
         TextSystem::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from anim_system.cpp. These can be called from lua
+        // methods from anim_system.cpp. These can be called from lua✅
         //---------------------------------------------------------
         animation_system::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
-        // methods from tutorial_system_v2.cpp. These can be called from lua
+        // methods from tutorial_system_v2.cpp. These can be called from lua ✅
         // ------------------------------------------------------
         tutorial_system_v2::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from particle system. These can be called from lua
+        // methods from particle system. These can be called from lua✅
         //---------------------------------------------------------
         particle::exposeToLua(stateToInit);
 

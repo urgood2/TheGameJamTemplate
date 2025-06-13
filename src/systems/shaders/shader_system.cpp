@@ -22,6 +22,8 @@ using json = nlohmann::json;
 #include <functional>
 #include <filesystem>
 
+#include "systems/scripting/binding_recorder.hpp"
+
 namespace shaders
 {
     auto exposeToLua(sol::state& lua) -> void {

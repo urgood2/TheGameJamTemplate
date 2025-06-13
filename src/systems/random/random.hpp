@@ -9,6 +9,8 @@
 #include <effolkronium/random.hpp>
 #include <thread>
 
+#include "systems/scripting/binding_recorder.hpp"
+
 #include <raylib.h>
 
 #include "sol/sol.hpp"

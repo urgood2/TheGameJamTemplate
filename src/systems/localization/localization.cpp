@@ -3,6 +3,8 @@
 #include "core/globals.hpp"
 #include "util/utilities.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 namespace localization
 {
     // ==========================

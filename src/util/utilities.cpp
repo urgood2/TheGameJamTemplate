@@ -12,6 +12,8 @@
 #include <nlohmann/json.hpp> // nlohmann JSON parsing
 using json = nlohmann::json;
 
+#include "systems/scripting/binding_recorder.hpp"
+
 
 // #include "unnamed.rgs.h"
 

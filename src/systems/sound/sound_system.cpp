@@ -11,6 +11,9 @@
 #include <map>
 #include <vector>
 
+#include "systems/scripting/binding_recorder.hpp"
+
+
 using json = nlohmann::json;
 
 namespace sound_system {

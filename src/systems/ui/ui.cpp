@@ -1,6 +1,8 @@
 #include "ui.hpp"
 #include "sol/sol.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 namespace ui {
     auto exposeToLua(sol::state &lua) -> void {
         

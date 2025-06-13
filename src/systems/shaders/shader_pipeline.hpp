@@ -7,6 +7,8 @@
 
 #include "shader_system.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 namespace shader_pipeline {
 
     struct ShaderPass {

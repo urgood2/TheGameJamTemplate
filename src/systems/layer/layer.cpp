@@ -27,6 +27,8 @@
 
 #include "layer_command_buffer.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 // Graphics namespace for rendering functions
 namespace layer
 {

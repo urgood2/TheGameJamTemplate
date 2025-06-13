@@ -13,6 +13,8 @@
 #include "systems/ui/box.hpp"
 #include "systems/ui/inventory_ui.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 #include "core/globals.hpp"
 
 namespace transform

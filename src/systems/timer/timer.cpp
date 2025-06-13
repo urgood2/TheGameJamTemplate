@@ -4,6 +4,8 @@
 #include "../../core/globals.hpp"
 #include "../../core/game.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 namespace timer
 {
     /*

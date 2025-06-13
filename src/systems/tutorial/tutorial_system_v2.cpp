@@ -17,6 +17,7 @@
 
 #include "../../third_party/rlImGui/imgui.h"
 
+#include "systems/scripting/binding_recorder.hpp"
 
 #include <string>
 #include <vector>
@@ -246,59 +247,218 @@ namespace tutorial_system_v2 {
     auto exposeToLua(sol::state &lua) -> void {
         // Expose the tutorial system to Lua TODO:
 
-        lua.set_function("setTutorialModeActive", &setTutorialModeActive);
-        lua.set_function("resetTutorialSystem", &resetTutorialSystem);
-        lua.set_function("showTutorialWindow", [](const std::string &tutorialText) {
-            setShowTutorialWindow("Tutorial window", tutorialText, true);
-        });
-        lua.set_function("showTutorialWindowWithOptions", [](const std::string &tutorialText, sol::table options) {
-            // convert table to vector
-            std::vector<std::string> optionsVector;
-            for (auto &option : options) {
-                optionsVector.push_back(option.second.as<std::string>());
-                SPDLOG_DEBUG("Option: {}", option.second.as<std::string>());
-            }
-            setShowTutorialWindowWithOptions("Tutorial window", tutorialText, optionsVector, true);
-        });
-        lua.set_function("startTutorial", [](const std::string &tutorialName) {
-            // check that it exists
-            if (ai_system::masterStateLua["tutorials"][tutorialName] == sol::lua_nil) {
-                SPDLOG_ERROR("Tutorial name {} is not valid", tutorialName);
-                return;
-            }
-            currentTutorialCoroutine = ai_system::masterStateLua["tutorials"][tutorialName];
-            setTutorialModeActive(true);
-        });
+        // lua.set_function("setTutorialModeActive", &setTutorialModeActive);
+        // lua.set_function("resetTutorialSystem", &resetTutorialSystem);
+        // lua.set_function("showTutorialWindow", [](const std::string &tutorialText) {
+        //     setShowTutorialWindow("Tutorial window", tutorialText, true);
+        // });
+        // lua.set_function("showTutorialWindowWithOptions", [](const std::string &tutorialText, sol::table options) {
+        //     // convert table to vector
+        //     std::vector<std::string> optionsVector;
+        //     for (auto &option : options) {
+        //         optionsVector.push_back(option.second.as<std::string>());
+        //         SPDLOG_DEBUG("Option: {}", option.second.as<std::string>());
+        //     }
+        //     setShowTutorialWindowWithOptions("Tutorial window", tutorialText, optionsVector, true);
+        // });
+        // lua.set_function("startTutorial", [](const std::string &tutorialName) {
+        //     // check that it exists
+        //     if (ai_system::masterStateLua["tutorials"][tutorialName] == sol::lua_nil) {
+        //         SPDLOG_ERROR("Tutorial name {} is not valid", tutorialName);
+        //         return;
+        //     }
+        //     currentTutorialCoroutine = ai_system::masterStateLua["tutorials"][tutorialName];
+        //     setTutorialModeActive(true);
+        // });
         
-        lua.set_function("lockControls", &lockControls);
-        lua.set_function("unlockControls", &unlockControls);
+        // lua.set_function("lockControls", &lockControls);
+        // lua.set_function("unlockControls", &unlockControls);
         
-        lua.set_function("addGameAnnouncement", &addGameAnnouncement);
+        // lua.set_function("addGameAnnouncement", &addGameAnnouncement);
 
-        lua.set_function("registerTutorialToEvent", &registerTutorialToEvent);
+        // lua.set_function("registerTutorialToEvent", &registerTutorialToEvent);
 
-        lua.set_function("moveCameraTo", &moveCameraTo);
-        lua.set_function("moveCameraToEntity", &moveCameraToEntity);
+        // lua.set_function("moveCameraTo", &moveCameraTo);
+        // lua.set_function("moveCameraToEntity", &moveCameraToEntity);
         
 
-        //TODO: test these 
-        lua.set_function("fadeOutScreen", &fadeOutScreen);
-        lua.set_function("fadeInScreen", &fadeInScreen);
+        // lua.set_function("fadeOutScreen", &fadeOutScreen);
+        // lua.set_function("fadeInScreen", &fadeInScreen);
 
-        lua.set_function("displayIndicatorAroundEntity", sol::overload(
+        // lua.set_function("displayIndicatorAroundEntity", sol::overload(
+        //     static_cast<void(*)(entt::entity, std::string)>(&displayIndicatorAroundEntity),
+        //     static_cast<void(*)(entt::entity)>(&displayIndicatorAroundEntity)
+        // ));
+
+        // // register tutorials (run once), if it exists
+        // if (lua["tutorials"]["register"] != sol::lua_nil) 
+        //     lua.script("tutorials.register()");
+
+
+        auto& rec = BindingRecorder::instance();
+
+        auto tutorialPath = std::vector<std::string>{}; // global-level bindings
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "setTutorialModeActive",
+            &setTutorialModeActive,
+            "---@param active boolean # Whether to activate tutorial mode\n---@return nil",
+            "Enables or disables tutorial mode."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "resetTutorialSystem",
+            &resetTutorialSystem,
+            "---@return nil",
+            "Resets the tutorial system to its initial state."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "showTutorialWindow",
+            [](const std::string& tutorialText) {
+                setShowTutorialWindow("Tutorial window", tutorialText, true);
+            },
+            "---@param text string # Tutorial content text\n---@return nil",
+            "Displays a tutorial window with provided text."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "showTutorialWindowWithOptions",
+            [](const std::string& tutorialText, sol::table options) {
+                std::vector<std::string> optionsVector;
+                for (auto& option : options) {
+                    optionsVector.push_back(option.second.as<std::string>());
+                    SPDLOG_DEBUG("Option: {}", option.second.as<std::string>());
+                }
+                setShowTutorialWindowWithOptions("Tutorial window", tutorialText, optionsVector, true);
+            },
+            "---@param text string # Tutorial content\n"
+            "---@param options table # Array-style Lua table of option strings\n"
+            "---@return nil",
+            "Displays a tutorial window with selectable options."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "startTutorial",
+            [](const std::string& tutorialName) {
+                if (ai_system::masterStateLua["tutorials"][tutorialName] == sol::lua_nil) {
+                    SPDLOG_ERROR("Tutorial name {} is not valid", tutorialName);
+                    return;
+                }
+                currentTutorialCoroutine = ai_system::masterStateLua["tutorials"][tutorialName];
+                setTutorialModeActive(true);
+            },
+            "---@param tutorialName string # The name of the tutorial to start\n---@return nil",
+            "Begins the specified tutorial coroutine if defined."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "lockControls",
+            &lockControls,
+            "---@return nil",
+            "Locks player input controls."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "unlockControls",
+            &unlockControls,
+            "---@return nil",
+            "Unlocks player input controls."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "addGameAnnouncement",
+            &addGameAnnouncement,
+            "---@param message string # Announcement message\n---@return nil",
+            "Adds a new game announcement to the log."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "registerTutorialToEvent",
+            &registerTutorialToEvent,
+            "---@param eventType string # Event type to listen for\n---@param tutorialName string # Tutorial name to trigger\n---@return nil",
+            "Registers a tutorial to activate on a specific event."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "moveCameraTo",
+            &moveCameraTo,
+            "---@param x number # X position\n---@param y number # Y position\n---@return nil",
+            "Moves the camera instantly to the specified position."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "moveCameraToEntity",
+            &moveCameraToEntity,
+            "---@param entity Entity # Entity to focus camera on\n---@return nil",
+            "Moves the camera to center on a given entity."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "fadeOutScreen",
+            &fadeOutScreen,
+            "---@return nil",
+            "Fades the screen to black."
+        );
+
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "fadeInScreen",
+            &fadeInScreen,
+            "---@return nil",
+            "Fades the screen in from black."
+        );
+
+        // Overloaded version
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "displayIndicatorAroundEntity",
             static_cast<void(*)(entt::entity, std::string)>(&displayIndicatorAroundEntity),
-            static_cast<void(*)(entt::entity)>(&displayIndicatorAroundEntity)
-        ));
+            "---@param entity Entity\n---@param colorName string\n---@return nil",
+            "Displays a visual indicator around the entity with a color.",
+            true
+        );
 
-        //TODO: need to implement start-up scripts for main menu & main game state
-        //TODO: event waiting
+        rec.bind_function(
+            lua,
+            tutorialPath,
+            "displayIndicatorAroundEntity",
+            static_cast<void(*)(entt::entity)>(&displayIndicatorAroundEntity),
+            "---@param entity Entity\n---@return nil",
+            "Displays a visual indicator around the entity.",
+            true
+        );
 
-
-        //TODO: better documentation for lua functions?
-
-        // register tutorials (run once), if it exists
-        if (lua["tutorials"]["register"] != sol::lua_nil) 
+        // Run tutorials.register() if it exists
+        if (lua["tutorials"]["register"] != sol::lua_nil) {
             lua.script("tutorials.register()");
+        }
     }
 
 

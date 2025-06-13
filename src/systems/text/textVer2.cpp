@@ -459,6 +459,7 @@ namespace TextSystem
             "build",          &TextSystem::Builders::TextBuilder::build
         );
         {
+            rec.add_type("TextSystem.Builders");
             auto& td = rec.add_type("TextSystem.Builders.TextBuilder");
             td.doc = "Fluent builder for creating TextSystem.Text objects";
             auto Rb = [&](const char* name){

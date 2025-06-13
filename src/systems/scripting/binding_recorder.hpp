@@ -178,10 +178,18 @@ public:
             } else {
                 out << "local " << t.name << " = {\n";
             }
-            for (auto& prop : t.properties) {
-                out << "    " << prop.name
-                    << " = " << prop.value;
-                if (!prop.doc.empty()) out << "  -- " << prop.doc;
+            for (size_t i = 0; i < t.properties.size(); ++i) {
+                const auto& prop = t.properties[i];
+                out << "    " << prop.name << " = " << prop.value;
+
+                // Add comma if not the last property
+                if (i + 1 < t.properties.size())
+                    out << ",";
+
+                // Optional comment
+                if (!prop.doc.empty())
+                    out << "  -- " << prop.doc;
+
                 out << "\n";
             }
             out << "}\n\n";

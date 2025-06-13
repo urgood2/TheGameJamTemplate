@@ -81,14 +81,118 @@ function getEventOccurred(...) end
 ---@return nil
 function setEventOccurred(...) end
 
+---
+--- Enables or disables tutorial mode.
+---
+---@param active boolean # Whether to activate tutorial mode
+---@return nil
+function setTutorialModeActive(...) end
+
+---
+--- Resets the tutorial system to its initial state.
+---
+---@return nil
+function resetTutorialSystem(...) end
+
+---
+--- Displays a tutorial window with provided text.
+---
+---@param text string # Tutorial content text
+---@return nil
+function showTutorialWindow(...) end
+
+---
+--- Displays a tutorial window with selectable options.
+---
+---@param text string # Tutorial content
+---@param options table # Array-style Lua table of option strings
+---@return nil
+function showTutorialWindowWithOptions(...) end
+
+---
+--- Begins the specified tutorial coroutine if defined.
+---
+---@param tutorialName string # The name of the tutorial to start
+---@return nil
+function startTutorial(...) end
+
+---
+--- Locks player input controls.
+---
+---@return nil
+function lockControls(...) end
+
+---
+--- Unlocks player input controls.
+---
+---@return nil
+function unlockControls(...) end
+
+---
+--- Adds a new game announcement to the log.
+---
+---@param message string # Announcement message
+---@return nil
+function addGameAnnouncement(...) end
+
+---
+--- Registers a tutorial to activate on a specific event.
+---
+---@param eventType string # Event type to listen for
+---@param tutorialName string # Tutorial name to trigger
+---@return nil
+function registerTutorialToEvent(...) end
+
+---
+--- Moves the camera instantly to the specified position.
+---
+---@param x number # X position
+---@param y number # Y position
+---@return nil
+function moveCameraTo(...) end
+
+---
+--- Moves the camera to center on a given entity.
+---
+---@param entity Entity # Entity to focus camera on
+---@return nil
+function moveCameraToEntity(...) end
+
+---
+--- Fades the screen to black.
+---
+---@return nil
+function fadeOutScreen(...) end
+
+---
+--- Fades the screen in from black.
+---
+---@return nil
+function fadeInScreen(...) end
+
+---
+--- Displays a visual indicator around the entity with a color.
+---
+---@param entity Entity
+---@param colorName string
+---@return nil
+function displayIndicatorAroundEntity(...) end
+
+---
+--- Displays a visual indicator around the entity.
+---
+---@param entity Entity
+---@return nil
+function displayIndicatorAroundEntity(...) end
+
 
 ---
 --- Results of an action
 ---
 ---@class ActionResult
 local ActionResult = {
-    SUCCESS = 0  -- When succeeded
-    FAILURE = 1  -- When failed
+    SUCCESS = 0,  -- When succeeded
+    FAILURE = 1,  -- When failed
     RUNNING = 2  -- When still running
 }
 
@@ -457,9 +561,9 @@ function TextSystem.Text:applyTransformRotationAndScale(...) end
 ---
 ---@class TextSystem.TextAlignment
 TextSystem.TextAlignment = {
-    LEFT = 0  -- Left-aligned text
-    CENTER = 1  -- Centered text
-    RIGHT = 2  -- Right-aligned text
+    LEFT = 0,  -- Left-aligned text
+    CENTER = 1,  -- Centered text
+    RIGHT = 2,  -- Right-aligned text
     JUSTIFIED = 3  -- Justified text
 }
 
@@ -469,8 +573,16 @@ TextSystem.TextAlignment = {
 ---
 ---@class TextSystem.TextWrapMode
 TextSystem.TextWrapMode = {
-    WORD = 0  -- Wrap on word boundaries
+    WORD = 0,  -- Wrap on word boundaries
     CHARACTER = 1  -- Wrap on individual characters
+}
+
+
+---
+--- 
+---
+---@class TextSystem.Builders
+TextSystem.Builders = {
 }
 
 
@@ -555,6 +667,49 @@ TextSystem.Functions = {
 ---
 ---@class animation_system
 local animation_system = {
+}
+
+
+---
+--- 
+---
+---@class particle
+local particle = {
+}
+
+
+---
+--- How particles should be rendered
+---
+---@class particle.ParticleRenderType
+particle.ParticleRenderType = {
+    TEXTURE = 0,  -- Use a sprite texture
+    RECTANGLE = 1,  -- Draw as a rectangle
+    CIRCLE = 2  -- Draw as a circle
+}
+
+
+---
+--- Single particle instance
+---
+---@class particle.Particle
+particle.Particle = {
+}
+
+
+---
+--- Defines how particles are emitted
+---
+---@class particle.ParticleEmitter
+particle.ParticleEmitter = {
+}
+
+
+---
+--- Configuration for animated particle appearance
+---
+---@class particle.ParticleAnimationConfig
+particle.ParticleAnimationConfig = {
 }
 
 ---
@@ -745,4 +900,39 @@ function animation_system.resetAnimationUIRenderScale(...) end
 ---@param targetHeight number # Desired height
 ---@return nil
 function animation_system.resizeAnimationObjectToFit(...) end
+
+---
+--- Creates and attaches a particle system to an entity
+---
+---@param entity Entity
+---@param emitter ParticleEmitter
+---@return nil
+function particle.CreateParticle(...) end
+
+---
+--- Emits a burst of particles from the emitter
+---
+---@param emitter ParticleEmitter
+---@param count integer
+---@return nil
+function particle.EmitParticles(...) end
+
+---
+--- Returns a new ParticleEmitter with default values
+---
+---@return ParticleEmitter
+function particle.CreateParticleEmitter(...) end
+
+---
+--- Updates all particle systems by delta time
+---
+---@param dt number
+---@return nil
+function particle.UpdateParticles(...) end
+
+---
+--- Draws all active particle systems
+---
+---@return nil
+function particle.DrawParticles(...) end
 

@@ -95,13 +95,20 @@ namespace scripting {
         
         std::string lua_path_cmd =
             "package.path = '"
-            + base1 + "?.lua;" 
-            + base2 + "?.lua;" 
-            + base3 + "?.lua;" 
+            + base1 + "?.lua;"
+            + base2 + "?.lua;"
+            + base3 + "?.lua;"
             + base4 + "?.lua;"
-            "' .. package.path";
-
-        stateToInit.script(lua_path_cmd);
+            + "' .. package.path"; // <- correctly attached
+            
+        // set the lua path to include the scripts directory
+        stateToInit.script(lua_path_cmd, [](lua_State*, sol::protected_function_result pfr) {
+            // pfr will contain things that went wrong, for either loading or executing the script
+            // Can throw your own custom error
+            // You can also just return it, and let the call-site handle the error if necessary.
+            return pfr;
+        });
+        SPDLOG_DEBUG("Lua path set to: {}", lua_path_cmd);
         
         // read all the script files and load them into the lua state
         for (auto &filename : scriptFilesToRead) {

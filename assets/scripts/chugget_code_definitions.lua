@@ -994,8 +994,8 @@ shader_pipeline = {
 --- Defines a single shader pass with configurable uniforms.
 ---
 ---@class shader_pipeline.ShaderPass
-
-shader_pipeline.ShaderPass = {}
+shader_pipeline.ShaderPass = {
+}
 
 
 ---
@@ -1012,16 +1012,16 @@ shader_pipeline.OverlayInputSource = {
 --- Defines a shader overlay draw operation.
 ---
 ---@class shader_pipeline.ShaderOverlayDraw
-
-shader_pipeline.ShaderOverlayDraw = {}
+shader_pipeline.ShaderOverlayDraw = {
+}
 
 
 ---
 --- Holds a set of shader passes and overlays for rendering.
 ---
 ---@class shader_pipeline.ShaderPipelineComponent
-
-shader_pipeline.ShaderPipelineComponent = {}
+shader_pipeline.ShaderPipelineComponent = {
+}
 
 
 ---
@@ -1053,24 +1053,24 @@ layer = {
 --- Stores Z-index for layer sorting
 ---
 ---@class layer.LayerOrderComponent
----@field zIndex integer Z sort order
-
-layer.LayerOrderComponent = {}
+layer.LayerOrderComponent = {
+    zIndex = nil, -- integer Z sort order
+}
 
 
 ---
 --- Represents a drawing layer and its properties.
 ---
 ---@class layer.Layer
----@field canvases table Map of canvas names to textures
----@field drawCommands table Command list
----@field fixed boolean Whether layer is fixed
----@field zIndex integer Z-index
----@field backgroundColor Color Background fill color
----@field commands table Draw commands list
----@field isSorted boolean True if layer is sorted
-
-layer.Layer = {}
+layer.Layer = {
+    canvases = nil, -- table Map of canvas names to textures
+    drawCommands = nil, -- table Command list
+    fixed = nil, -- boolean Whether layer is fixed
+    zIndex = nil, -- integer Z-index
+    backgroundColor = nil, -- Color Background fill color
+    commands = nil, -- table Draw commands list
+    isSorted = nil, -- boolean True if layer is sorted
+}
 
 
 ---
@@ -1131,521 +1131,521 @@ layer.DrawCommandType = {
 --- 
 ---
 ---@class layer.CmdBeginDrawing
----@field dummy false Unused field
-
-layer.CmdBeginDrawing = {}
+layer.CmdBeginDrawing = {
+    dummy = nil, -- false Unused field
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdEndDrawing
----@field dummy false Unused field
-
-layer.CmdEndDrawing = {}
+layer.CmdEndDrawing = {
+    dummy = nil, -- false Unused field
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdClearBackground
----@field color Color Background color
-
-layer.CmdClearBackground = {}
+layer.CmdClearBackground = {
+    color = nil, -- Color Background color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdTranslate
----@field x number X offset
----@field y number Y offset
-
-layer.CmdTranslate = {}
+layer.CmdTranslate = {
+    x = nil, -- number X offset
+    y = nil, -- number Y offset
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdScale
----@field scaleX number Scale in X
----@field scaleY number Scale in Y
-
-layer.CmdScale = {}
+layer.CmdScale = {
+    scaleX = nil, -- number Scale in X
+    scaleY = nil, -- number Scale in Y
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdRotate
----@field angle number Rotation angle in degrees
-
-layer.CmdRotate = {}
+layer.CmdRotate = {
+    angle = nil, -- number Rotation angle in degrees
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdAddPush
----@field camera table Camera parameters
-
-layer.CmdAddPush = {}
+layer.CmdAddPush = {
+    camera = nil, -- table Camera parameters
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdAddPop
----@field dummy false Unused field
-
-layer.CmdAddPop = {}
+layer.CmdAddPop = {
+    dummy = nil, -- false Unused field
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdPushMatrix
----@field dummy false Unused field
-
-layer.CmdPushMatrix = {}
+layer.CmdPushMatrix = {
+    dummy = nil, -- false Unused field
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdPopMatrix
----@field dummy false Unused field
-
-layer.CmdPopMatrix = {}
+layer.CmdPopMatrix = {
+    dummy = nil, -- false Unused field
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawCircle
----@field x number Center X
----@field y number Center Y
----@field radius number Radius
----@field color Color Fill color
-
-layer.CmdDrawCircle = {}
+layer.CmdDrawCircle = {
+    x = nil, -- number Center X
+    y = nil, -- number Center Y
+    radius = nil, -- number Radius
+    color = nil, -- Color Fill color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawRectangle
----@field x number Top-left X
----@field y number Top-left Y
----@field width number Width
----@field height number Height
----@field color Color Fill color
----@field lineWidth number Line width
-
-layer.CmdDrawRectangle = {}
+layer.CmdDrawRectangle = {
+    x = nil, -- number Top-left X
+    y = nil, -- number Top-left Y
+    width = nil, -- number Width
+    height = nil, -- number Height
+    color = nil, -- Color Fill color
+    lineWidth = nil, -- number Line width
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawRectanglePro
----@field offsetX number Offset X
----@field offsetY number Offset Y
----@field size Vector2 Size
----@field rotationCenter Vector2 Rotation center
----@field rotation number Rotation
----@field color Color Color
-
-layer.CmdDrawRectanglePro = {}
+layer.CmdDrawRectanglePro = {
+    offsetX = nil, -- number Offset X
+    offsetY = nil, -- number Offset Y
+    size = nil, -- Vector2 Size
+    rotationCenter = nil, -- Vector2 Rotation center
+    rotation = nil, -- number Rotation
+    color = nil, -- Color Color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawRectangleLinesPro
----@field offsetX number Offset X
----@field offsetY number Offset Y
----@field size Vector2 Size
----@field lineThickness number Line thickness
----@field color Color Color
-
-layer.CmdDrawRectangleLinesPro = {}
+layer.CmdDrawRectangleLinesPro = {
+    offsetX = nil, -- number Offset X
+    offsetY = nil, -- number Offset Y
+    size = nil, -- Vector2 Size
+    lineThickness = nil, -- number Line thickness
+    color = nil, -- Color Color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawLine
----@field x1 number Start X
----@field y1 number Start Y
----@field x2 number End X
----@field y2 number End Y
----@field color Color Line color
----@field lineWidth number Line width
-
-layer.CmdDrawLine = {}
+layer.CmdDrawLine = {
+    x1 = nil, -- number Start X
+    y1 = nil, -- number Start Y
+    x2 = nil, -- number End X
+    y2 = nil, -- number End Y
+    color = nil, -- Color Line color
+    lineWidth = nil, -- number Line width
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawDashedLine
----@field x1 number Start X
----@field y1 number Start Y
----@field x2 number End X
----@field y2 number End Y
----@field dashSize number Dash size
----@field gapSize number Gap size
----@field color Color Color
----@field lineWidth number Line width
-
-layer.CmdDrawDashedLine = {}
+layer.CmdDrawDashedLine = {
+    x1 = nil, -- number Start X
+    y1 = nil, -- number Start Y
+    x2 = nil, -- number End X
+    y2 = nil, -- number End Y
+    dashSize = nil, -- number Dash size
+    gapSize = nil, -- number Gap size
+    color = nil, -- Color Color
+    lineWidth = nil, -- number Line width
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawText
----@field text string Text
----@field font Font Font
----@field x number X
----@field y number Y
----@field color Color Color
----@field fontSize number Font size
-
-layer.CmdDrawText = {}
+layer.CmdDrawText = {
+    text = nil, -- string Text
+    font = nil, -- Font Font
+    x = nil, -- number X
+    y = nil, -- number Y
+    color = nil, -- Color Color
+    fontSize = nil, -- number Font size
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawTextCentered
----@field text string Text
----@field font Font Font
----@field x number X
----@field y number Y
----@field color Color Color
----@field fontSize number Font size
-
-layer.CmdDrawTextCentered = {}
+layer.CmdDrawTextCentered = {
+    text = nil, -- string Text
+    font = nil, -- Font Font
+    x = nil, -- number X
+    y = nil, -- number Y
+    color = nil, -- Color Color
+    fontSize = nil, -- number Font size
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdTextPro
----@field text string Text
----@field font Font Font
----@field x number X
----@field y number Y
----@field origin Vector2 Origin
----@field rotation number Rotation
----@field fontSize number Font size
----@field spacing number Spacing
----@field color Color Color
-
-layer.CmdTextPro = {}
+layer.CmdTextPro = {
+    text = nil, -- string Text
+    font = nil, -- Font Font
+    x = nil, -- number X
+    y = nil, -- number Y
+    origin = nil, -- Vector2 Origin
+    rotation = nil, -- number Rotation
+    fontSize = nil, -- number Font size
+    spacing = nil, -- number Spacing
+    color = nil, -- Color Color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawImage
----@field image Texture2D Image
----@field x number X
----@field y number Y
----@field rotation number Rotation
----@field scaleX number Scale X
----@field scaleY number Scale Y
----@field color Color Tint color
-
-layer.CmdDrawImage = {}
+layer.CmdDrawImage = {
+    image = nil, -- Texture2D Image
+    x = nil, -- number X
+    y = nil, -- number Y
+    rotation = nil, -- number Rotation
+    scaleX = nil, -- number Scale X
+    scaleY = nil, -- number Scale Y
+    color = nil, -- Color Tint color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdTexturePro
----@field texture Texture2D Texture
----@field source Rectangle Source rect
----@field offsetX number Offset X
----@field offsetY number Offset Y
----@field size Vector2 Size
----@field rotationCenter Vector2 Rotation center
----@field rotation number Rotation
----@field color Color Color
-
-layer.CmdTexturePro = {}
+layer.CmdTexturePro = {
+    texture = nil, -- Texture2D Texture
+    source = nil, -- Rectangle Source rect
+    offsetX = nil, -- number Offset X
+    offsetY = nil, -- number Offset Y
+    size = nil, -- Vector2 Size
+    rotationCenter = nil, -- Vector2 Rotation center
+    rotation = nil, -- number Rotation
+    color = nil, -- Color Color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawEntityAnimation
----@field e Entity entt::entity
----@field registry Registry EnTT registry
----@field x number X
----@field y number Y
-
-layer.CmdDrawEntityAnimation = {}
+layer.CmdDrawEntityAnimation = {
+    e = nil, -- Entity entt::entity
+    registry = nil, -- Registry EnTT registry
+    x = nil, -- number X
+    y = nil, -- number Y
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawTransformEntityAnimation
----@field e Entity entt::entity
----@field registry Registry EnTT registry
-
-layer.CmdDrawTransformEntityAnimation = {}
+layer.CmdDrawTransformEntityAnimation = {
+    e = nil, -- Entity entt::entity
+    registry = nil, -- Registry EnTT registry
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawTransformEntityAnimationPipeline
----@field e Entity entt::entity
----@field registry Registry EnTT registry
-
-layer.CmdDrawTransformEntityAnimationPipeline = {}
+layer.CmdDrawTransformEntityAnimationPipeline = {
+    e = nil, -- Entity entt::entity
+    registry = nil, -- Registry EnTT registry
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSetShader
----@field shader Shader Shader object
-
-layer.CmdSetShader = {}
+layer.CmdSetShader = {
+    shader = nil, -- Shader Shader object
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdResetShader
-
-layer.CmdResetShader = {}
+layer.CmdResetShader = {
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSetBlendMode
----@field blendMode number Blend mode
-
-layer.CmdSetBlendMode = {}
+layer.CmdSetBlendMode = {
+    blendMode = nil, -- number Blend mode
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdUnsetBlendMode
----@field dummy false Unused field
-
-layer.CmdUnsetBlendMode = {}
+layer.CmdUnsetBlendMode = {
+    dummy = nil, -- false Unused field
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSendUniformFloat
----@field shader Shader Shader
----@field uniform string Uniform name
----@field value number Float value
-
-layer.CmdSendUniformFloat = {}
+layer.CmdSendUniformFloat = {
+    shader = nil, -- Shader Shader
+    uniform = nil, -- string Uniform name
+    value = nil, -- number Float value
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSendUniformInt
----@field shader Shader Shader
----@field uniform string Uniform name
----@field value number Int value
-
-layer.CmdSendUniformInt = {}
+layer.CmdSendUniformInt = {
+    shader = nil, -- Shader Shader
+    uniform = nil, -- string Uniform name
+    value = nil, -- number Int value
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSendUniformVec2
----@field shader Shader Shader
----@field uniform string Uniform name
----@field value Vector2 Vec2 value
-
-layer.CmdSendUniformVec2 = {}
+layer.CmdSendUniformVec2 = {
+    shader = nil, -- Shader Shader
+    uniform = nil, -- string Uniform name
+    value = nil, -- Vector2 Vec2 value
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSendUniformVec3
----@field shader Shader Shader
----@field uniform string Uniform name
----@field value Vector3 Vec3 value
-
-layer.CmdSendUniformVec3 = {}
+layer.CmdSendUniformVec3 = {
+    shader = nil, -- Shader Shader
+    uniform = nil, -- string Uniform name
+    value = nil, -- Vector3 Vec3 value
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSendUniformVec4
----@field shader Shader Shader
----@field uniform string Uniform name
----@field value Vector4 Vec4 value
-
-layer.CmdSendUniformVec4 = {}
+layer.CmdSendUniformVec4 = {
+    shader = nil, -- Shader Shader
+    uniform = nil, -- string Uniform name
+    value = nil, -- Vector4 Vec4 value
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSendUniformFloatArray
----@field shader Shader Shader
----@field uniform string Uniform name
----@field values table Float array
-
-layer.CmdSendUniformFloatArray = {}
+layer.CmdSendUniformFloatArray = {
+    shader = nil, -- Shader Shader
+    uniform = nil, -- string Uniform name
+    values = nil, -- table Float array
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSendUniformIntArray
----@field shader Shader Shader
----@field uniform string Uniform name
----@field values table Int array
-
-layer.CmdSendUniformIntArray = {}
+layer.CmdSendUniformIntArray = {
+    shader = nil, -- Shader Shader
+    uniform = nil, -- string Uniform name
+    values = nil, -- table Int array
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdVertex
----@field v Vector3 Position
----@field color Color Vertex color
-
-layer.CmdVertex = {}
+layer.CmdVertex = {
+    v = nil, -- Vector3 Position
+    color = nil, -- Color Vertex color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdBeginOpenGLMode
----@field mode number GL mode enum
-
-layer.CmdBeginOpenGLMode = {}
+layer.CmdBeginOpenGLMode = {
+    mode = nil, -- number GL mode enum
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdEndOpenGLMode
----@field dummy false Unused field
-
-layer.CmdEndOpenGLMode = {}
+layer.CmdEndOpenGLMode = {
+    dummy = nil, -- false Unused field
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSetColor
----@field color Color Draw color
-
-layer.CmdSetColor = {}
+layer.CmdSetColor = {
+    color = nil, -- Color Draw color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSetLineWidth
----@field lineWidth number Line width
-
-layer.CmdSetLineWidth = {}
+layer.CmdSetLineWidth = {
+    lineWidth = nil, -- number Line width
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdSetTexture
----@field texture Texture2D Texture to bind
-
-layer.CmdSetTexture = {}
+layer.CmdSetTexture = {
+    texture = nil, -- Texture2D Texture to bind
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdRenderRectVerticesFilledLayer
----@field outerRec Rectangle Outer rectangle
----@field progressOrFullBackground bool Mode
----@field cache table Vertex cache
----@field color Color Fill color
-
-layer.CmdRenderRectVerticesFilledLayer = {}
+layer.CmdRenderRectVerticesFilledLayer = {
+    outerRec = nil, -- Rectangle Outer rectangle
+    progressOrFullBackground = nil, -- bool Mode
+    cache = nil, -- table Vertex cache
+    color = nil, -- Color Fill color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdRenderRectVerticesOutlineLayer
----@field cache table Vertex cache
----@field color Color Outline color
----@field useFullVertices bool Use full vertices
-
-layer.CmdRenderRectVerticesOutlineLayer = {}
+layer.CmdRenderRectVerticesOutlineLayer = {
+    cache = nil, -- table Vertex cache
+    color = nil, -- Color Outline color
+    useFullVertices = nil, -- bool Use full vertices
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawPolygon
----@field vertices table Vertex array
----@field color Color Polygon color
----@field lineWidth number Line width
-
-layer.CmdDrawPolygon = {}
+layer.CmdDrawPolygon = {
+    vertices = nil, -- table Vertex array
+    color = nil, -- Color Polygon color
+    lineWidth = nil, -- number Line width
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdRenderNPatchRect
----@field sourceTexture Texture2D Source texture
----@field info NPatchInfo Nine-patch info
----@field dest Rectangle Destination
----@field origin Vector2 Origin
----@field rotation number Rotation
----@field tint Color Tint color
-
-layer.CmdRenderNPatchRect = {}
+layer.CmdRenderNPatchRect = {
+    sourceTexture = nil, -- Texture2D Source texture
+    info = nil, -- NPatchInfo Nine-patch info
+    dest = nil, -- Rectangle Destination
+    origin = nil, -- Vector2 Origin
+    rotation = nil, -- number Rotation
+    tint = nil, -- Color Tint color
+}
 
 
 ---
 --- 
 ---
 ---@class layer.CmdDrawTriangle
----@field p1 Vector2 Point 1
----@field p2 Vector2 Point 2
----@field p3 Vector2 Point 3
----@field color Color Triangle color
-
-layer.CmdDrawTriangle = {}
+layer.CmdDrawTriangle = {
+    p1 = nil, -- Vector2 Point 1
+    p2 = nil, -- Vector2 Point 2
+    p3 = nil, -- Vector2 Point 3
+    color = nil, -- Color Triangle color
+}
 
 
 ---
 --- A single draw command with type, data payload, and z-order.
 ---
 ---@class layer.DrawCommandV2
----@field type number The draw command type enum
----@field data any The actual command data (CmdX struct)
----@field z number Z-order depth value for sorting
-
-layer.DrawCommandV2 = {}
+layer.DrawCommandV2 = {
+    type = nil, -- number The draw command type enum
+    data = nil, -- any The actual command data (CmdX struct)
+    z = nil, -- number Z-order depth value for sorting
+}
 
 
 ---
@@ -1811,48 +1811,48 @@ EventQueueSystem.TimerType = {
 --- Data for an easing/tweening operation.
 ---
 ---@class EventQueueSystem.EaseData
----@field type EventQueueSystem.EaseType The easing function to use.
----@field startValue number The starting value of the tween.
----@field endValue number The ending value of the tween.
----@field startTime number The start time of the tween.
----@field endTime number The end time of the tween.
----@field setValueCallback fun(value:number) Callback to apply the tweened value.
----@field getValueCallback fun():number Callback to get the current value.
-
-EventQueueSystem.EaseData = {}
+EventQueueSystem.EaseData = {
+    type = nil, -- EventQueueSystem.EaseType The easing function to use.
+    startValue = nil, -- number The starting value of the tween.
+    endValue = nil, -- number The ending value of the tween.
+    startTime = nil, -- number The start time of the tween.
+    endTime = nil, -- number The end time of the tween.
+    setValueCallback = nil, -- fun(value:number) Callback to apply the tweened value.
+    getValueCallback = nil, -- fun():number Callback to get the current value.
+}
 
 
 ---
 --- A condition that must be met for an event to trigger.
 ---
 ---@class EventQueueSystem.ConditionData
----@field check fun():boolean A function that returns true when the condition is met.
-
-EventQueueSystem.ConditionData = {}
+EventQueueSystem.ConditionData = {
+    check = nil, -- fun():boolean A function that returns true when the condition is met.
+}
 
 
 ---
 --- A single event in the event queue.
 ---
 ---@class EventQueueSystem.Event
----@field eventTrigger EventQueueSystem.TriggerType When the event should trigger.
----@field blocksQueue boolean If true, no other events will process until this one completes.
----@field canBeBlocked boolean If true, this event can be blocked by another.
----@field complete boolean True if the event has finished processing.
----@field timerStarted boolean Internal flag for timed events.
----@field delaySeconds number The delay in seconds for 'AFTER' triggers.
----@field retainAfterCompletion boolean If true, the event remains in the queue after completion.
----@field createdWhilePaused boolean If true, the event was created while the game was paused.
----@field func function The callback function to execute.
----@field timerType EventQueueSystem.TimerType The clock type to use for this event's timer.
----@field time number Internal time tracking for the event.
----@field ease EventQueueSystem.EaseData Easing data for tweening events.
----@field condition EventQueueSystem.ConditionData Condition data for conditional events.
----@field tag string An optional tag for finding the event later.
----@field debugID string A debug identifier for the event.
----@field deleteNextCycleImmediately boolean If true, deletes the event on the next update cycle.
-
-EventQueueSystem.Event = {}
+EventQueueSystem.Event = {
+    eventTrigger = nil, -- EventQueueSystem.TriggerType When the event should trigger.
+    blocksQueue = nil, -- boolean If true, no other events will process until this one completes.
+    canBeBlocked = nil, -- boolean If true, this event can be blocked by another.
+    complete = nil, -- boolean True if the event has finished processing.
+    timerStarted = nil, -- boolean Internal flag for timed events.
+    delaySeconds = nil, -- number The delay in seconds for 'AFTER' triggers.
+    retainAfterCompletion = nil, -- boolean If true, the event remains in the queue after completion.
+    createdWhilePaused = nil, -- boolean If true, the event was created while the game was paused.
+    func = nil, -- function The callback function to execute.
+    timerType = nil, -- EventQueueSystem.TimerType The clock type to use for this event's timer.
+    time = nil, -- number Internal time tracking for the event.
+    ease = nil, -- EventQueueSystem.EaseData Easing data for tweening events.
+    condition = nil, -- EventQueueSystem.ConditionData Condition data for conditional events.
+    tag = nil, -- string An optional tag for finding the event later.
+    debugID = nil, -- string A debug identifier for the event.
+    deleteNextCycleImmediately = nil, -- boolean If true, deletes the event on the next update cycle.
+}
 
 
 ---
@@ -2047,18 +2047,18 @@ util = {
 --- Manages an entity's position, size, rotation, and scale, with spring dynamics for smooth visual updates.
 ---
 ---@class Transform
----@field actualX number The logical X position.
----@field visualX number The visual (spring-interpolated) X position.
----@field actualY number The logical Y position.
----@field visualY number The visual (spring-interpolated) Y position.
----@field actualW number The logical width.
----@field visualW number The visual width.
----@field actualH number The logical height.
----@field visualH number The visual height.
----@field rotation number The logical rotation in degrees.
----@field scale number The logical scale multiplier.
-
-Transform = {}
+Transform = {
+    actualX = nil, -- number The logical X position.
+    visualX = nil, -- number The visual (spring-interpolated) X position.
+    actualY = nil, -- number The logical Y position.
+    visualY = nil, -- number The visual (spring-interpolated) Y position.
+    actualW = nil, -- number The logical width.
+    visualW = nil, -- number The visual width.
+    actualH = nil, -- number The logical height.
+    visualH = nil, -- number The visual height.
+    rotation = nil, -- number The logical rotation in degrees.
+    scale = nil, -- number The logical scale multiplier.
+}
 
 ---
 --- Updates cached transform values.
@@ -2182,11 +2182,11 @@ AlignmentFlag = {
 --- Stores alignment flags and offsets for an inherited property.
 ---
 ---@class Alignment
----@field alignment integer The raw bitmask of alignment flags.
----@field extraOffset Vector2 Additional fine-tuning offset.
----@field prevExtraOffset Vector2 Previous frame's fine-tuning offset.
-
-Alignment = {}
+Alignment = {
+    alignment = nil, -- integer The raw bitmask of alignment flags.
+    extraOffset = nil, -- Vector2 Additional fine-tuning offset.
+    prevExtraOffset = nil, -- Vector2 Previous frame's fine-tuning offset.
+}
 
 ---
 --- Checks if a specific alignment flag is set.
@@ -2221,17 +2221,17 @@ function Alignment:toggleFlag(...) end
 --- Defines how an entity inherits transform properties from a master entity.
 ---
 ---@class InheritedProperties
----@field role_type InheritedPropertiesType The role of this entity in the hierarchy.
----@field master Entity The master entity this entity inherits from.
----@field offset Vector2 The current offset from the master.
----@field prevOffset Vector2 The previous frame's offset.
----@field location_bond InheritedPropertiesSync|nil The sync bond for location.
----@field size_bond InheritedPropertiesSync|nil The sync bond for size.
----@field rotation_bond InheritedPropertiesSync|nil The sync bond for rotation.
----@field scale_bond InheritedPropertiesSync|nil The sync bond for scale.
----@field flags Alignment|nil Alignment flags and data.
-
-InheritedProperties = {}
+InheritedProperties = {
+    role_type = nil, -- InheritedPropertiesType The role of this entity in the hierarchy.
+    master = nil, -- Entity The master entity this entity inherits from.
+    offset = nil, -- Vector2 The current offset from the master.
+    prevOffset = nil, -- Vector2 The previous frame's offset.
+    location_bond = nil, -- InheritedPropertiesSync|nil The sync bond for location.
+    size_bond = nil, -- InheritedPropertiesSync|nil The sync bond for size.
+    rotation_bond = nil, -- InheritedPropertiesSync|nil The sync bond for rotation.
+    scale_bond = nil, -- InheritedPropertiesSync|nil The sync bond for scale.
+    flags = nil, -- Alignment|nil Alignment flags and data.
+}
 
 
 ---
@@ -2315,88 +2315,88 @@ function InheritedPropertiesBuilder:build(...) end
 --- A table of optional script-defined callback methods for a GameObject.
 ---
 ---@class GameObjectMethods
----@field getObjectToDrag function|nil Returns the entity that should be dragged.
----@field update function|nil Called every frame.
----@field draw function|nil Called every frame for drawing.
----@field onClick function|nil Called on click.
----@field onRelease function|nil Called on click release.
----@field onHover function|nil Called when hover starts.
----@field onStopHover function|nil Called when hover ends.
----@field onDrag function|nil Called while dragging.
----@field onStopDrag function|nil Called when dragging stops.
-
-GameObjectMethods = {}
+GameObjectMethods = {
+    getObjectToDrag = nil, -- function|nil Returns the entity that should be dragged.
+    update = nil, -- function|nil Called every frame.
+    draw = nil, -- function|nil Called every frame for drawing.
+    onClick = nil, -- function|nil Called on click.
+    onRelease = nil, -- function|nil Called on click release.
+    onHover = nil, -- function|nil Called when hover starts.
+    onStopHover = nil, -- function|nil Called when hover ends.
+    onDrag = nil, -- function|nil Called while dragging.
+    onStopDrag = nil, -- function|nil Called when dragging stops.
+}
 
 
 ---
 --- A collection of boolean flags representing the current state of a GameObject.
 ---
 ---@class GameObjectState
----@field visible boolean
----@field collisionEnabled boolean
----@field isColliding boolean
----@field focusEnabled boolean
----@field isBeingFocused boolean
----@field hoverEnabled boolean
----@field isBeingHovered boolean
----@field enlargeOnHover boolean
----@field enlargeOnDrag boolean
----@field clickEnabled boolean
----@field isBeingClicked boolean
----@field dragEnabled boolean
----@field isBeingDragged boolean
----@field triggerOnReleaseEnabled boolean
----@field isTriggeringOnRelease boolean
----@field isUnderOverlay boolean
-
-GameObjectState = {}
+GameObjectState = {
+    visible = nil, -- boolean
+    collisionEnabled = nil, -- boolean
+    isColliding = nil, -- boolean
+    focusEnabled = nil, -- boolean
+    isBeingFocused = nil, -- boolean
+    hoverEnabled = nil, -- boolean
+    isBeingHovered = nil, -- boolean
+    enlargeOnHover = nil, -- boolean
+    enlargeOnDrag = nil, -- boolean
+    clickEnabled = nil, -- boolean
+    isBeingClicked = nil, -- boolean
+    dragEnabled = nil, -- boolean
+    isBeingDragged = nil, -- boolean
+    triggerOnReleaseEnabled = nil, -- boolean
+    isTriggeringOnRelease = nil, -- boolean
+    isUnderOverlay = nil, -- boolean
+}
 
 
 ---
 --- The core component for a scene entity, managing hierarchy, state, and scriptable logic.
 ---
 ---@class GameObject
----@field parent Entity|nil
----@field children table<Entity, boolean>
----@field orderedChildren table<integer, Entity>
----@field ignoresPause boolean
----@field container Entity|nil
----@field collisionTransform Transform|nil
----@field clickTimeout number
----@field methods GameObjectMethods|nil
----@field updateFunction function|nil
----@field drawFunction function|nil
----@field state GameObjectState
----@field dragOffset Vector2
----@field clickOffset Vector2
----@field hoverOffset Vector2
----@field shadowDisplacement Vector2
----@field layerDisplacement Vector2
----@field layerDisplacementPrev Vector2
----@field shadowHeight number
-
-GameObject = {}
+GameObject = {
+    parent = nil, -- Entity|nil
+    children = nil, -- table<Entity, boolean>
+    orderedChildren = nil, -- table<integer, Entity>
+    ignoresPause = nil, -- boolean
+    container = nil, -- Entity|nil
+    collisionTransform = nil, -- Transform|nil
+    clickTimeout = nil, -- number
+    methods = nil, -- GameObjectMethods|nil
+    updateFunction = nil, -- function|nil
+    drawFunction = nil, -- function|nil
+    state = nil, -- GameObjectState
+    dragOffset = nil, -- Vector2
+    clickOffset = nil, -- Vector2
+    hoverOffset = nil, -- Vector2
+    shadowDisplacement = nil, -- Vector2
+    layerDisplacement = nil, -- Vector2
+    layerDisplacementPrev = nil, -- Vector2
+    shadowHeight = nil, -- number
+}
 
 
 ---
 --- Contains information about an entity's render and collision order.
 ---
 ---@class CollisionOrderInfo
----@field hasCollisionOrder boolean
----@field parentBox Rectangle
----@field treeOrder integer
----@field layerOrder integer
-
-CollisionOrderInfo = {}
+CollisionOrderInfo = {
+    hasCollisionOrder = nil, -- boolean
+    parentBox = nil, -- Rectangle
+    treeOrder = nil, -- integer
+    layerOrder = nil, -- integer
+}
 
 
 ---
 --- A simple component storing an entity's tree order for sorting.
 ---
 ---@class TreeOrderComponent
----@field order integer
-
-TreeOrderComponent = {}
+TreeOrderComponent = {
+    order = nil, -- integer
+}
 
 
 ---
@@ -2436,107 +2436,107 @@ UITypeEnum = {
 --- Core component for a UI element, linking its type, root, and configuration.
 ---
 ---@class UIElementComponent
----@field UIT UITypeEnum The type of this UI element.
----@field uiBox Entity The root entity of the UI box this element belongs to.
----@field config UIConfig The configuration settings for this element.
-
-UIElementComponent = {}
+UIElementComponent = {
+    UIT = nil, -- UITypeEnum The type of this UI element.
+    uiBox = nil, -- Entity The root entity of the UI box this element belongs to.
+    config = nil, -- UIConfig The configuration settings for this element.
+}
 
 
 ---
 --- Component for managing the state of a text input UI element.
 ---
 ---@class TextInput
----@field text string The current text content.
----@field cursorPos integer The position of the text cursor.
----@field maxLength integer The maximum allowed length of the text.
----@field allCaps boolean If true, all input is converted to uppercase.
----@field callback function|nil A callback function triggered on text change.
-
-TextInput = {}
+TextInput = {
+    text = nil, -- string The current text content.
+    cursorPos = nil, -- integer The position of the text cursor.
+    maxLength = nil, -- integer The maximum allowed length of the text.
+    allCaps = nil, -- boolean If true, all input is converted to uppercase.
+    callback = nil, -- function|nil A callback function triggered on text change.
+}
 
 
 ---
 --- A component that hooks global text input to a specific text input entity.
 ---
 ---@class TextInputHook
----@field hookedEntity Entity The entity that currently has text input focus.
-
-TextInputHook = {}
+TextInputHook = {
+    hookedEntity = nil, -- Entity The entity that currently has text input focus.
+}
 
 
 ---
 --- Defines a root of a UI tree, managing its draw layers.
 ---
 ---@class UIBoxComponent
----@field uiRoot Entity The root entity of this UI tree.
----@field drawLayers table A map of layers used for drawing the UI.
-
-UIBoxComponent = {}
+UIBoxComponent = {
+    uiRoot = nil, -- Entity The root entity of this UI tree.
+    drawLayers = nil, -- table A map of layers used for drawing the UI.
+}
 
 
 ---
 --- Holds dynamic state information for a UI element.
 ---
 ---@class UIState
----@field contentDimensions Vector2 The calculated dimensions of the element's content.
----@field textDrawable TextDrawable The drawable text object.
----@field last_clicked Entity The last entity that was clicked within this UI context.
----@field object_focus_timer number Timer for object focus events.
----@field focus_timer number General purpose focus timer.
-
-UIState = {}
+UIState = {
+    contentDimensions = nil, -- Vector2 The calculated dimensions of the element's content.
+    textDrawable = nil, -- TextDrawable The drawable text object.
+    last_clicked = nil, -- Entity The last entity that was clicked within this UI context.
+    object_focus_timer = nil, -- number Timer for object focus events.
+    focus_timer = nil, -- number General purpose focus timer.
+}
 
 
 ---
 --- Represents a tooltip with a title and descriptive text.
 ---
 ---@class Tooltip
----@field title string The title of the tooltip.
----@field text string The main body text of the tooltip.
-
-Tooltip = {}
+Tooltip = {
+    title = nil, -- string The title of the tooltip.
+    text = nil, -- string The main body text of the tooltip.
+}
 
 
 ---
 --- Arguments for configuring focus and navigation behavior.
 ---
 ---@class FocusArgs
----@field button GamepadButton The gamepad button associated with this focus.
----@field snap_to boolean If the view should snap to this element when focused.
----@field registered boolean Whether this focus is registered with the focus system.
----@field type string The type of focus.
----@field claim_focus_from table<string, Entity> Entities this element can claim focus from.
----@field redirect_focus_to Entity|nil Redirect focus to another entity.
----@field nav table<string, Entity> Navigation map (e.g., nav.up = otherEntity).
----@field no_loop boolean Disables navigation looping.
-
-FocusArgs = {}
+FocusArgs = {
+    button = nil, -- GamepadButton The gamepad button associated with this focus.
+    snap_to = nil, -- boolean If the view should snap to this element when focused.
+    registered = nil, -- boolean Whether this focus is registered with the focus system.
+    type = nil, -- string The type of focus.
+    claim_focus_from = nil, -- table<string, Entity> Entities this element can claim focus from.
+    redirect_focus_to = nil, -- Entity|nil Redirect focus to another entity.
+    nav = nil, -- table<string, Entity> Navigation map (e.g., nav.up = otherEntity).
+    no_loop = nil, -- boolean Disables navigation looping.
+}
 
 
 ---
 --- Data for a UI slider element.
 ---
 ---@class SliderComponent
----@field color string
----@field text string
----@field min number
----@field max number
----@field value number
----@field decimal_places integer
----@field w number
----@field h number
-
-SliderComponent = {}
+SliderComponent = {
+    color = nil, -- string
+    text = nil, -- string
+    min = nil, -- number
+    max = nil, -- number
+    value = nil, -- number
+    decimal_places = nil, -- integer
+    w = nil, -- number
+    h = nil, -- number
+}
 
 
 ---
 --- Represents a tile in an inventory grid, potentially holding an item.
 ---
 ---@class InventoryGridTileComponent
----@field item Entity|nil The item entity occupying this tile.
-
-InventoryGridTileComponent = {}
+InventoryGridTileComponent = {
+    item = nil, -- Entity|nil The item entity occupying this tile.
+}
 
 
 ---
@@ -2553,107 +2553,107 @@ UIStylingType = {
 --- A comprehensive configuration component for defining all aspects of a UI element.
 ---
 ---@class UIConfig
----@field stylingType UIStylingType|nil The visual style of the element.
----@field nPatchInfo NPatchInfo|nil 9-patch slicing information.
----@field nPatchSourceTexture string|nil Texture path for the 9-patch.
----@field id string|nil Unique identifier for this UI element.
----@field instanceType string|nil A specific instance type for categorization.
----@field uiType UITypeEnum|nil The fundamental type of the UI element.
----@field drawLayer string|nil The layer on which this element is drawn.
----@field group string|nil The focus group this element belongs to.
----@field groupParent string|nil The parent focus group.
----@field location_bond InheritedPropertiesSync|nil Bonding strength for location.
----@field rotation_bond InheritedPropertiesSync|nil Bonding strength for rotation.
----@field size_bond InheritedPropertiesSync|nil Bonding strength for size.
----@field scale_bond InheritedPropertiesSync|nil Bonding strength for scale.
----@field offset Vector2|nil Offset from the parent/aligned position.
----@field scale number|nil Scale multiplier.
----@field textSpacing number|nil Spacing for text characters.
----@field focusWithObject boolean|nil Whether focus is tied to a game object.
----@field refreshMovement boolean|nil Force movement refresh.
----@field no_recalc boolean|nil Prevents recalculation of transform.
----@field non_recalc boolean|nil Alias for no_recalc.
----@field noMovementWhenDragged boolean|nil Prevents movement while being dragged.
----@field master string|nil ID of the master element.
----@field parent string|nil ID of the parent element.
----@field object Entity|nil The game object associated with this UI element.
----@field objectRecalculate boolean|nil Force recalculation based on the object.
----@field alignmentFlags integer|nil Bitmask of alignment flags.
----@field width number|nil Explicit width.
----@field height number|nil Explicit height.
----@field maxWidth number|nil Maximum width.
----@field maxHeight number|nil Maximum height.
----@field minWidth number|nil Minimum width.
----@field minHeight number|nil Minimum height.
----@field padding number|nil Padding around the content.
----@field color string|nil Background color.
----@field outlineColor string|nil Outline color.
----@field outlineThickness number|nil Outline thickness in pixels.
----@field makeMovementDynamic boolean|nil Enables springy movement.
----@field shadow Vector2|nil Offset for the shadow.
----@field outlineShadow Vector2|nil Offset for the outline shadow.
----@field shadowColor string|nil Color of the shadow.
----@field noFill boolean|nil If true, the background is not filled.
----@field pixelatedRectangle boolean|nil Use pixel-perfect rectangle drawing.
----@field canCollide boolean|nil Whether collision is possible.
----@field collideable boolean|nil Alias for canCollide.
----@field forceCollision boolean|nil Forces collision checks.
----@field button_UIE boolean|nil Behaves as a button.
----@field disable_button boolean|nil Disables button functionality.
----@field progressBarFetchValueLambda function|nil Function to get the progress bar's current value.
----@field progressBar boolean|nil If this element is a progress bar.
----@field progressBarEmptyColor string|nil Color of the empty part of the progress bar.
----@field progressBarFullColor string|nil Color of the filled part of the progress bar.
----@field progressBarMaxValue number|nil The maximum value of the progress bar.
----@field progressBarValueComponentName string|nil Component name to fetch progress value from.
----@field progressBarValueFieldName string|nil Field name to fetch progress value from.
----@field ui_object_updated boolean|nil Flag indicating the UI object was updated.
----@field buttonDelayStart boolean|nil Flag for button delay start.
----@field buttonDelay number|nil Delay for button actions.
----@field buttonDelayProgress number|nil Progress of the button delay.
----@field buttonDelayEnd boolean|nil Flag for button delay end.
----@field buttonClicked boolean|nil True if the button was clicked this frame.
----@field buttonDistance number|nil Distance for button press effect.
----@field tooltip string|nil Simple tooltip text.
----@field detailedTooltip Tooltip|nil A detailed tooltip object.
----@field onDemandTooltip function|nil A function that returns a tooltip.
----@field hover boolean|nil Flag indicating if the element is being hovered.
----@field force_focus boolean|nil Forces this element to take focus.
----@field dynamicMotion boolean|nil Enables dynamic motion effects.
----@field choice boolean|nil Marks this as a choice in a selection.
----@field chosen boolean|nil True if this choice is currently selected.
----@field one_press boolean|nil Button can only be pressed once.
----@field chosen_vert boolean|nil Indicates a vertical choice selection.
----@field draw_after boolean|nil Draw this element after its children.
----@field focusArgs FocusArgs|nil Arguments for focus behavior.
----@field updateFunc function|nil Custom update function.
----@field initFunc function|nil Custom initialization function.
----@field onUIResizeFunc function|nil Callback for when the UI is resized.
----@field onUIScalingResetToOne function|nil Callback for when UI scaling resets.
----@field instaFunc function|nil A function to be executed instantly.
----@field buttonCallback function|nil Callback for button presses.
----@field buttonTemp boolean|nil Temporary button flag.
----@field textGetter function|nil Function to dynamically get text content.
----@field ref_entity Entity|nil A referenced entity.
----@field ref_component string|nil Name of a referenced component.
----@field ref_value any|nil A referenced value.
----@field prev_ref_value any|nil The previous referenced value.
----@field text string|nil Static text content.
----@field language string|nil Language key for localization.
----@field verticalText boolean|nil If true, text is rendered vertically.
----@field hPopup boolean|nil Is a horizontal popup.
----@field dPopup boolean|nil Is a detailed popup.
----@field hPopupConfig UIConfig|nil Configuration for the horizontal popup.
----@field dPopupConfig UIConfig|nil Configuration for the detailed popup.
----@field extend_up boolean|nil If the element extends upwards.
----@field resolution Vector2|nil Resolution context for this element.
----@field emboss boolean|nil Apply an emboss effect.
----@field line_emboss boolean|nil Apply a line emboss effect.
----@field mid boolean|nil A miscellaneous flag.
----@field noRole boolean|nil This element has no inherited properties role.
----@field role InheritedProperties|nil The inherited properties role.
-
-UIConfig = {}
+UIConfig = {
+    stylingType = nil, -- UIStylingType|nil The visual style of the element.
+    nPatchInfo = nil, -- NPatchInfo|nil 9-patch slicing information.
+    nPatchSourceTexture = nil, -- string|nil Texture path for the 9-patch.
+    id = nil, -- string|nil Unique identifier for this UI element.
+    instanceType = nil, -- string|nil A specific instance type for categorization.
+    uiType = nil, -- UITypeEnum|nil The fundamental type of the UI element.
+    drawLayer = nil, -- string|nil The layer on which this element is drawn.
+    group = nil, -- string|nil The focus group this element belongs to.
+    groupParent = nil, -- string|nil The parent focus group.
+    location_bond = nil, -- InheritedPropertiesSync|nil Bonding strength for location.
+    rotation_bond = nil, -- InheritedPropertiesSync|nil Bonding strength for rotation.
+    size_bond = nil, -- InheritedPropertiesSync|nil Bonding strength for size.
+    scale_bond = nil, -- InheritedPropertiesSync|nil Bonding strength for scale.
+    offset = nil, -- Vector2|nil Offset from the parent/aligned position.
+    scale = nil, -- number|nil Scale multiplier.
+    textSpacing = nil, -- number|nil Spacing for text characters.
+    focusWithObject = nil, -- boolean|nil Whether focus is tied to a game object.
+    refreshMovement = nil, -- boolean|nil Force movement refresh.
+    no_recalc = nil, -- boolean|nil Prevents recalculation of transform.
+    non_recalc = nil, -- boolean|nil Alias for no_recalc.
+    noMovementWhenDragged = nil, -- boolean|nil Prevents movement while being dragged.
+    master = nil, -- string|nil ID of the master element.
+    parent = nil, -- string|nil ID of the parent element.
+    object = nil, -- Entity|nil The game object associated with this UI element.
+    objectRecalculate = nil, -- boolean|nil Force recalculation based on the object.
+    alignmentFlags = nil, -- integer|nil Bitmask of alignment flags.
+    width = nil, -- number|nil Explicit width.
+    height = nil, -- number|nil Explicit height.
+    maxWidth = nil, -- number|nil Maximum width.
+    maxHeight = nil, -- number|nil Maximum height.
+    minWidth = nil, -- number|nil Minimum width.
+    minHeight = nil, -- number|nil Minimum height.
+    padding = nil, -- number|nil Padding around the content.
+    color = nil, -- string|nil Background color.
+    outlineColor = nil, -- string|nil Outline color.
+    outlineThickness = nil, -- number|nil Outline thickness in pixels.
+    makeMovementDynamic = nil, -- boolean|nil Enables springy movement.
+    shadow = nil, -- Vector2|nil Offset for the shadow.
+    outlineShadow = nil, -- Vector2|nil Offset for the outline shadow.
+    shadowColor = nil, -- string|nil Color of the shadow.
+    noFill = nil, -- boolean|nil If true, the background is not filled.
+    pixelatedRectangle = nil, -- boolean|nil Use pixel-perfect rectangle drawing.
+    canCollide = nil, -- boolean|nil Whether collision is possible.
+    collideable = nil, -- boolean|nil Alias for canCollide.
+    forceCollision = nil, -- boolean|nil Forces collision checks.
+    button_UIE = nil, -- boolean|nil Behaves as a button.
+    disable_button = nil, -- boolean|nil Disables button functionality.
+    progressBarFetchValueLambda = nil, -- function|nil Function to get the progress bar's current value.
+    progressBar = nil, -- boolean|nil If this element is a progress bar.
+    progressBarEmptyColor = nil, -- string|nil Color of the empty part of the progress bar.
+    progressBarFullColor = nil, -- string|nil Color of the filled part of the progress bar.
+    progressBarMaxValue = nil, -- number|nil The maximum value of the progress bar.
+    progressBarValueComponentName = nil, -- string|nil Component name to fetch progress value from.
+    progressBarValueFieldName = nil, -- string|nil Field name to fetch progress value from.
+    ui_object_updated = nil, -- boolean|nil Flag indicating the UI object was updated.
+    buttonDelayStart = nil, -- boolean|nil Flag for button delay start.
+    buttonDelay = nil, -- number|nil Delay for button actions.
+    buttonDelayProgress = nil, -- number|nil Progress of the button delay.
+    buttonDelayEnd = nil, -- boolean|nil Flag for button delay end.
+    buttonClicked = nil, -- boolean|nil True if the button was clicked this frame.
+    buttonDistance = nil, -- number|nil Distance for button press effect.
+    tooltip = nil, -- string|nil Simple tooltip text.
+    detailedTooltip = nil, -- Tooltip|nil A detailed tooltip object.
+    onDemandTooltip = nil, -- function|nil A function that returns a tooltip.
+    hover = nil, -- boolean|nil Flag indicating if the element is being hovered.
+    force_focus = nil, -- boolean|nil Forces this element to take focus.
+    dynamicMotion = nil, -- boolean|nil Enables dynamic motion effects.
+    choice = nil, -- boolean|nil Marks this as a choice in a selection.
+    chosen = nil, -- boolean|nil True if this choice is currently selected.
+    one_press = nil, -- boolean|nil Button can only be pressed once.
+    chosen_vert = nil, -- boolean|nil Indicates a vertical choice selection.
+    draw_after = nil, -- boolean|nil Draw this element after its children.
+    focusArgs = nil, -- FocusArgs|nil Arguments for focus behavior.
+    updateFunc = nil, -- function|nil Custom update function.
+    initFunc = nil, -- function|nil Custom initialization function.
+    onUIResizeFunc = nil, -- function|nil Callback for when the UI is resized.
+    onUIScalingResetToOne = nil, -- function|nil Callback for when UI scaling resets.
+    instaFunc = nil, -- function|nil A function to be executed instantly.
+    buttonCallback = nil, -- function|nil Callback for button presses.
+    buttonTemp = nil, -- boolean|nil Temporary button flag.
+    textGetter = nil, -- function|nil Function to dynamically get text content.
+    ref_entity = nil, -- Entity|nil A referenced entity.
+    ref_component = nil, -- string|nil Name of a referenced component.
+    ref_value = nil, -- any|nil A referenced value.
+    prev_ref_value = nil, -- any|nil The previous referenced value.
+    text = nil, -- string|nil Static text content.
+    language = nil, -- string|nil Language key for localization.
+    verticalText = nil, -- boolean|nil If true, text is rendered vertically.
+    hPopup = nil, -- boolean|nil Is a horizontal popup.
+    dPopup = nil, -- boolean|nil Is a detailed popup.
+    hPopupConfig = nil, -- UIConfig|nil Configuration for the horizontal popup.
+    dPopupConfig = nil, -- UIConfig|nil Configuration for the detailed popup.
+    extend_up = nil, -- boolean|nil If the element extends upwards.
+    resolution = nil, -- Vector2|nil Resolution context for this element.
+    emboss = nil, -- boolean|nil Apply an emboss effect.
+    line_emboss = nil, -- boolean|nil Apply a line emboss effect.
+    mid = nil, -- boolean|nil A miscellaneous flag.
+    noRole = nil, -- boolean|nil This element has no inherited properties role.
+    role = nil, -- InheritedProperties|nil The inherited properties role.
+}
 
 
 ---
@@ -3353,11 +3353,11 @@ function UIConfigBuilder:build(...) end
 --- A node in a UI template, defining an element's type, config, and children.
 ---
 ---@class UIElementTemplateNode
----@field type UITypeEnum
----@field config UIConfig
----@field children table<integer, UIElementTemplateNode>
-
-UIElementTemplateNode = {}
+UIElementTemplateNode = {
+    type = nil, -- UITypeEnum
+    config = nil, -- UIConfig
+    children = nil, -- table<integer, UIElementTemplateNode>
+}
 
 
 ---

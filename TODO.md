@@ -9,11 +9,9 @@
 - [ ] use backgrounds & images for the tooltip text
 
 - [ ] need to get lua_path_cmd working
-- [ ] load globals.lua module separately?
 - [ ] need to hook up main.lua 
-- [ ] hook up scripting system
-- [ ] got to registery registry lua methods in scripting_system.hpp with binding system
-- [ ] set up registry hook & script component hook
+- [ ] hook up scripting system.cpp
+- [ ] got to register registry lua methods in scripting_system.hpp with binding system
 - [ ]  type registration not done properly for shader_pipeline
 - [ ] shader_pipeline.createShaderPass is registered as a type, not a method
 

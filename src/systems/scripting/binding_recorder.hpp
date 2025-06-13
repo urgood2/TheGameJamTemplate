@@ -186,6 +186,8 @@ public:
                 for (size_t i = 0; i < t.properties.size(); ++i) {
                     auto& prop = t.properties[i];
                     out << "    " << prop.name << " = " << prop.value;
+                    // ← add comma only if _not_ the last entry
+                    if (i + 1 < t.properties.size()) out << ",";
                     if (!prop.doc.empty()) out << "  -- " << prop.doc;
                     out << "\n";
                 }

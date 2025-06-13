@@ -1,5 +1,4 @@
-local globals = require("globals")
-local registry = require("registry")
+local globals = require("init.globals")
 
 function init()
     -- entity creation example
@@ -9,6 +8,7 @@ function init()
     assert(registry:has(bowser, Transform))
     assert(registry:has(bowser, Transform.type_id()))
     
+    Layer
 
     assert(not registry:any_of(bowser, -1, -2))
 

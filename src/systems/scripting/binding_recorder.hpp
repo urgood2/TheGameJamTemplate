@@ -228,7 +228,7 @@ public:
                     // nested name, e.g. TextSystem.Character
                     out << t.name << " = {\n";
                 } else {
-                    out << "local " << t.name << " = {\n";
+                    out << "" << t.name << " = {\n";
                 }
                 for (size_t i = 0; i < t.properties.size(); ++i) {
                     const auto& prop = t.properties[i];

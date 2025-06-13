@@ -459,7 +459,7 @@ function unpauseGame(...) end
 --- Results of an action
 ---
 ---@class ActionResult
-local ActionResult = {
+ActionResult = {
     SUCCESS = 0,  -- When succeeded
     FAILURE = 1,  -- When failed
     RUNNING = 2  -- When still running
@@ -470,7 +470,7 @@ local ActionResult = {
 --- Wraps an EnTT entity handle for Lua scripts.
 ---
 ---@class Entity
-local Entity = {
+Entity = {
 }
 
 
@@ -478,7 +478,7 @@ local Entity = {
 --- Container for all text‐system types
 ---
 ---@class TextSystem
-local TextSystem = {
+TextSystem = {
     effectFunctions = {}  -- Map of effect names to C++ functions
 }
 
@@ -935,7 +935,7 @@ TextSystem.Functions = {
 --- Animation system functions
 ---
 ---@class animation_system
-local animation_system = {
+animation_system = {
 }
 
 
@@ -943,7 +943,7 @@ local animation_system = {
 --- 
 ---
 ---@class particle
-local particle = {
+particle = {
 }
 
 
@@ -986,7 +986,7 @@ particle.ParticleAnimationConfig = {
 --- Root table for shader pipeline helpers and types.
 ---
 ---@class shader_pipeline
-local shader_pipeline = {
+shader_pipeline = {
 }
 
 
@@ -1036,7 +1036,7 @@ shader_pipeline.createShaderPass = {
 --- Random number generation utilities and helper functions
 ---
 ---@class random_utils
-local random_utils = {
+random_utils = {
 }
 
 
@@ -1044,7 +1044,7 @@ local random_utils = {
 --- namespace for rendering & layer operations
 ---
 ---@class layer
-local layer = {
+layer = {
     layers = table  -- Global list of layers
 }
 
@@ -1652,7 +1652,7 @@ layer.DrawCommandV2 = {}
 --- 
 ---
 ---@class command_buffer
-local command_buffer = {
+command_buffer = {
 }
 
 
@@ -1660,7 +1660,7 @@ local command_buffer = {
 --- Manages shaders, their uniforms, and rendering modes.
 ---
 ---@class shaders
-local shaders = {
+shaders = {
 }
 
 
@@ -1728,7 +1728,7 @@ function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
 --- namespace for localization functions
 ---
 ---@class localization
-local localization = {
+localization = {
 }
 
 
@@ -1736,7 +1736,7 @@ local localization = {
 --- A system for creating, managing, and updating timers.
 ---
 ---@class timer
-local timer = {
+timer = {
 }
 
 
@@ -1767,7 +1767,7 @@ timer.TimerType = {
 --- A system for managing and processing sequential and timed events.
 ---
 ---@class EventQueueSystem
-local EventQueueSystem = {
+EventQueueSystem = {
 }
 
 
@@ -2039,7 +2039,7 @@ function EventQueueSystem.EventBuilder:AddToQueue(...) end
 --- General-purpose utility functions.
 ---
 ---@class util
-local util = {
+util = {
 }
 
 
@@ -2144,7 +2144,7 @@ function Transform:hoverBufferY(...) end
 --- Defines how an entity relates to its master in the transform hierarchy.
 ---
 ---@class InheritedPropertiesType
-local InheritedPropertiesType = {
+InheritedPropertiesType = {
     RoleRoot = 0,  -- A root object that is not influenced by a master.
     RoleInheritor = 1,  -- Inherits transformations from a master.
     RoleCarbonCopy = 2,  -- Perfectly mirrors its master's transformations.
@@ -2156,7 +2156,7 @@ local InheritedPropertiesType = {
 --- Defines the strength of a transform bond.
 ---
 ---@class InheritedPropertiesSync
-local InheritedPropertiesSync = {
+InheritedPropertiesSync = {
     Strong = 0,  -- The property is directly copied from the master.
     Weak = 1  -- The property is influenced by but not locked to the master.
 }
@@ -2166,7 +2166,7 @@ local InheritedPropertiesSync = {
 --- Bitmask flags for aligning an entity to its master.
 ---
 ---@class AlignmentFlag
-local AlignmentFlag = {
+AlignmentFlag = {
     NONE = 0,  -- No alignment.
     HORIZONTAL_LEFT = 1,  -- Align left edges.
     HORIZONTAL_CENTER = 2,  -- Align horizontal centers.
@@ -2238,7 +2238,7 @@ InheritedProperties = {}
 --- A fluent builder for creating InheritedProperties components.
 ---
 ---@class InheritedPropertiesBuilder
-local InheritedPropertiesBuilder = {
+InheritedPropertiesBuilder = {
 }
 
 ---
@@ -2403,7 +2403,7 @@ TreeOrderComponent = {}
 --- A global system for creating and managing all Transforms and GameObjects.
 ---
 ---@class transform
-local transform = {
+transform = {
 }
 
 
@@ -2411,7 +2411,7 @@ local transform = {
 --- A tag component indicating an entity is attached to a UI element.
 ---
 ---@class ObjectAttachedToUITag
-local ObjectAttachedToUITag = {
+ObjectAttachedToUITag = {
 }
 
 
@@ -2419,7 +2419,7 @@ local ObjectAttachedToUITag = {
 --- Defines the fundamental type or behavior of a UI element.
 ---
 ---@class UITypeEnum
-local UITypeEnum = {
+UITypeEnum = {
     NONE = 0,  -- No specific UI type.
     ROOT = 1,  -- The root of a UI tree.
     VERTICAL_CONTAINER = 2,  -- Arranges children vertically.
@@ -2543,7 +2543,7 @@ InventoryGridTileComponent = {}
 --- Defines how a UI element's background is styled.
 ---
 ---@class UIStylingType
-local UIStylingType = {
+UIStylingType = {
     RoundedRectangle = 0,  -- A simple rounded rectangle.
     NinePatchBorders = 1  -- A 9-patch texture for scalable borders.
 }
@@ -2660,7 +2660,7 @@ UIConfig = {}
 --- A fluent builder for creating UIConfig components.
 ---
 ---@class UIConfigBuilder
-local UIConfigBuilder = {
+UIConfigBuilder = {
 }
 
 ---
@@ -3364,7 +3364,7 @@ UIElementTemplateNode = {}
 --- A fluent builder for creating UI template trees.
 ---
 ---@class UIElementTemplateNodeBuilder
-local UIElementTemplateNodeBuilder = {
+UIElementTemplateNodeBuilder = {
 }
 
 ---
@@ -3405,7 +3405,7 @@ function UIElementTemplateNodeBuilder:build(...) end
 --- Top-level namespace for the UI system.
 ---
 ---@class ui
-local ui = {
+ui = {
 }
 
 

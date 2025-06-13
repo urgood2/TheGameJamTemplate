@@ -368,7 +368,7 @@ namespace scripting {
         rec.record_free_function({}, {"unpauseGame", "---@return nil", "Unpauses the game.", true, false});
 
         // 5) Finally dump out your definitions:
-        rec.dump_lua_defs(util::getRawAssetPathNoUUID("scripts/chugget.lua_defs")); 
+        rec.dump_lua_defs(util::getRawAssetPathNoUUID("scripts/chugget_code_definitions.lua")); 
     }
 
 

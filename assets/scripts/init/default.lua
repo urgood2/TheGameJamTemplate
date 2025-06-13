@@ -8,3 +8,4 @@ init_blackboard = {}
 function init_blackboard.default(entity) -- default initialization script for entities. "default" should be replaced with the string identifier for the entity type.
     setBlackboardString(entity, "Name", "Mysterious Bob")
 end
+

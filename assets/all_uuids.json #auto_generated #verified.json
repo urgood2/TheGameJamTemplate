@@ -13158,7 +13158,8 @@
         "CHOCOLATE"
     ],
     "chugget_script": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\chugget.lua_defs"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\chugget.lua_defs",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget.lua_defs"
     ],
     "circle_fragment_shader_spectrum": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_fragment.fs",

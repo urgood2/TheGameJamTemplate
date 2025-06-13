@@ -74,8 +74,11 @@ namespace layer
             layerTbl = lua.create_table();
             lua["layer"] = layerTbl;
         }
+        
 
         auto& rec = BindingRecorder::instance();
+
+        rec.add_type("layer").doc = "namespace for rendering & layer operations";
         rec.add_type("layer.LayerOrderComponent", true).doc = "Stores Z-index for layer sorting";
         layerTbl.new_usertype<layer::LayerOrderComponent>("LayerOrderComponent",
             sol::constructors<>(),
@@ -221,7 +224,7 @@ namespace layer
             "---@param registry Registry\n"
             "---@param entity Entity\n"
             "---@return nil\n"
-            "Draws a transform entity with animation using a specific pipeline");
+            "---Draws a transform entity with animation using a specific pipeline");
         rec.bind_function(lua, {"layer"}, "DrawCanvasOntoOtherLayer", &layer::DrawCanvasOntoOtherLayer,
             "---@param sourceLayer layer.Layer\n"
             "---@param sourceCanvasName string\n"
@@ -676,7 +679,7 @@ namespace layer
             "z",    &layer::DrawCommandV2::z
         );
 
-        rec.add_type("layer.DrawCommandV2").doc = "A single draw command with type, data payload, and z-order.";
+        rec.add_type("layer.DrawCommandV2", true).doc = "A single draw command with type, data payload, and z-order.";
         rec.record_property("layer.DrawCommandV2", { "type", "number", "The draw command type enum" });
         rec.record_property("layer.DrawCommandV2", { "data", "any",    "The actual command data (CmdX struct)" });
         rec.record_property("layer.DrawCommandV2", { "z",    "number", "Z-order depth value for sorting" });

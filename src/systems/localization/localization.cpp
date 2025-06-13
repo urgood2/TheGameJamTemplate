@@ -194,6 +194,8 @@ namespace localization
         // 1) Bind the functions and record their metadata simultaneously.
         // The get_or_create_table logic is now handled inside bind_function.
 
+        rec.add_type("localization").doc = "namespace for localization functions";
+
         // loadLanguage
         rec.bind_function(lua, path, "loadLanguage", &localization::loadLanguage,
             "---@param languageCode string # The language to load (e.g., \"en_US\").\n"

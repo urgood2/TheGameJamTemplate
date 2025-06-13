@@ -1215,7 +1215,17 @@ namespace ui {
             static_cast<std::optional<entt::entity> (*)(entt::registry&, const std::string&)>(&ui::box::GetUIEByID)
         ));
         rec.record_free_function({"ui", "box"}, {"GetUIEByID", "---@param registry registry\n---@param node Entity\n---@param id string\n---@return Entity|nil", "Gets a UI element by its ID, searching from a specific node.", true, false});
-        rec.record_free_function({"ui", "box"}, {"GetUIEByID", "(registry: registry, id: string):Entity|nil", "Gets a UI element by its ID, searching globally.", true, true});
+        rec.record_free_function({"ui", "box"}, {
+            "GetUIEByID",
+            R"(
+        ---@param registry registry
+        ---@param id string
+        ---@return Entity|nil
+        )",
+            "Gets a UI element by its ID, searching globally.",
+            true,
+            true
+        });
 
         box.set_function("RemoveGroup", &ui::box::RemoveGroup);
         rec.record_free_function({"ui", "box"}, {"RemoveGroup", "---@param registry registry\n---@param entity Entity\n---@param group string\n---@return boolean", "Removes all UI elements belonging to a specific group.", true, false});

@@ -165,7 +165,7 @@ namespace timer
         t.set_function("cooldown",   &timer::TimerSystem::timer_cooldown);
         t.set_function("every",      &timer::TimerSystem::timer_every);
         t.set_function("every_step", &timer::TimerSystem::timer_every_step);
-        t.set_function("for",        &timer::TimerSystem::timer_for);
+        t.set_function("for_time",        &timer::TimerSystem::timer_for);
         t.set_function("tween",      &timer::TimerSystem::timer_tween);
         // Recorder: creation functions
         rec.record_free_function({"timer"}, {"run", "---@param callback function\n---@return integer # timerHandle", "Create a timer that runs once immediately.", true, false});
@@ -173,7 +173,7 @@ namespace timer
         rec.record_free_function({"timer"}, {"cooldown", "---@param duration number\n---@param callback function\n---@return integer # timerHandle", "Create a resettable one-shot timer.", true, false});
         rec.record_free_function({"timer"}, {"every", "---@param interval number\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs repeatedly.", true, false});
         rec.record_free_function({"timer"}, {"every_step", "---@param frames integer\n---@param callback function\n---@return integer # timerHandle", "Create a timer that runs every N frames.", true, false});
-        rec.record_free_function({"timer"}, {"for", "---@param duration number\n---@param callback fun(elapsedTime:number)\n---@return integer # timerHandle", "Create a timer that runs every frame for a set duration.", true, false});
+        rec.record_free_function({"timer"}, {"for_time", "---@param duration number\n---@param callback fun(elapsedTime:number)\n---@return integer # timerHandle", "Create a timer that runs every frame for a set duration.", true, false});
         rec.record_free_function({"timer"}, {"tween", "---@param duration number\n---@param callback fun(value:number)\n---@return integer # timerHandle", "Create a timer that interpolates a value from 0 to 1 over a duration.", true, false});
 
 

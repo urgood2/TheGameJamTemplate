@@ -39,19 +39,132 @@ namespace sound_system {
 
     void ExposeToLua(sol::state &lua) {
 
+        // BindingRecorder instance
+        auto& rec = BindingRecorder::instance();
+
         lua.set_function("playSoundEffect", &PlaySoundEffectSimple);
+        rec.record_free_function({}, {
+            "playSoundEffect", 
+            "---@param category string # The category of the sound.\n"
+            "---@param soundName string # The name of the sound effect to play.\n"
+            "---@return nil", 
+            "Plays a sound effect from the specified category.", 
+            true, false
+        });
+
         lua.set_function("playMusic", &PlayMusic);
-        //TODO: probably need easier nnmes for music tracks in json
+        rec.record_free_function({}, {
+            "playMusic", 
+            "---@param musicName string # The name of the music track to play.\n"
+            "---@param loop? boolean # If the music should loop. Defaults to false.\n"
+            "---@return nil", 
+            "Plays a music track.", 
+            true, false
+        });
+
+        //TODO: probably need easier names for music tracks in json
         //TODO: the following have not been tested 
         lua.set_function("queueMusic", &QueueMusic);
+        rec.record_free_function({}, {
+            "queueMusic", 
+            "---@param musicName string # The name of the music track to queue.\n"
+            "---@param loop? boolean # If the queued music should loop. Defaults to false.\n"
+            "---@return nil", 
+            "Adds a music track to the queue to be played next.", 
+            true, false
+        });
+
         lua.set_function("fadeInMusic", &FadeInMusic);
+        rec.record_free_function({}, {
+            "fadeInMusic", 
+            "---@param musicName string # The music track to fade in.\n"
+            "---@param duration number # The duration of the fade in seconds.\n"
+            "---@return nil", 
+            "Fades in and plays a music track over a duration.", 
+            true, false
+        });
+
         lua.set_function("fadeOutMusic", &FadeOutMusic);
+        rec.record_free_function({}, {
+            "fadeOutMusic", 
+            "---@param duration number # The duration of the fade in seconds.\n"
+            "---@return nil", 
+            "Fades out the currently playing music.", 
+            true, false
+        });
+
         lua.set_function("pauseMusic", &PauseMusic);
+        rec.record_free_function({}, {
+            "pauseMusic", 
+            "---@param smooth? boolean # Whether to fade out when pausing. Defaults to false.\n"
+            "---@param fadeDuration? number # The fade duration if smooth is true. Defaults to 0.\n"
+            "---@return nil", 
+            "Pauses the current music track.", 
+            true, false
+        });
+
         lua.set_function("resumeMusic", &ResumeMusic);
+        rec.record_free_function({}, {
+            "resumeMusic", 
+            "---@param smooth? boolean # Whether to fade in when resuming. Defaults to false.\n"
+            "---@param fadeDuration? number # The fade duration if smooth is true. Defaults to 0.\n"
+            "---@return nil", 
+            "Resumes the paused music track.", 
+            true, false
+        });
+
         lua.set_function("setVolume", &SetVolume);
+        rec.record_free_function({}, {
+            "setVolume", 
+            "---@param volume number # The master volume level (0.0 to 1.0).\n"
+            "---@return nil", 
+            "Sets the master audio volume.", 
+            true, false
+        });
+
         lua.set_function("setMusicVolume", &SetMusicVolume);
+        rec.record_free_function({}, {
+            "setMusicVolume", 
+            "---@param volume number # The music volume level (0.0 to 1.0).\n"
+            "---@return nil", 
+            "Sets the volume for the music category only.", 
+            true, false
+        });
+
         lua.set_function("setCategoryVolume", &SetCategoryVolume);
+        rec.record_free_function({}, {
+            "setCategoryVolume", 
+            "---@param category string # The name of the sound category.\n"
+            "---@param volume number # The volume for this category (0.0 to 1.0).\n"
+            "---@return nil", 
+            "Sets the volume for a specific sound effect category.", 
+            true, false
+        });
+
         lua.set_function("setSoundPitch", &SetSoundPitch);
+        rec.record_free_function({}, {
+            "setSoundPitch", 
+            "---@param category string # The category of the sound.\n"
+            "---@param soundName string # The name of the sound effect.\n"
+            "---@param pitch number # The new pitch multiplier (1.0 is default).\n"
+            "---@return nil", 
+            "Sets the pitch for a specific sound. Note: This may not apply to currently playing instances.", 
+            true, false
+        });
+
+        // lua.set_function("playSoundEffect", &PlaySoundEffectSimple);
+        // lua.set_function("playMusic", &PlayMusic);
+        // //TODO: probably need easier nnmes for music tracks in json
+        // //TODO: the following have not been tested 
+        // lua.set_function("queueMusic", &QueueMusic);
+        // lua.set_function("fadeInMusic", &FadeInMusic);
+        // lua.set_function("fadeOutMusic", &FadeOutMusic);
+        // lua.set_function("pauseMusic", &PauseMusic);
+        // lua.set_function("resumeMusic", &ResumeMusic);
+        // lua.set_function("setVolume", &SetVolume);
+        // lua.set_function("setMusicVolume", &SetMusicVolume);
+        // lua.set_function("setCategoryVolume", &SetCategoryVolume);
+        // lua.set_function("setSoundPitch", &SetSoundPitch);
         
     }
 

@@ -2171,318 +2171,699 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     }
     
     auto exposeToLua(sol::state &lua) -> void {
-        // Register the Transform usertype
+        // BindingRecorder instance
+        auto& rec = BindingRecorder::instance();
+
+        //=========================================================
+        // Part 1: Transform Component
+        //=========================================================
         lua.new_usertype<Transform>("Transform",
-            // Bind the constructor that takes a registry*
             sol::constructors<Transform(entt::registry*)>(),
-            
-            // 3) Expose the cache‐updater (with both overloads if you like)
             "updateCachedValues", sol::overload(
                 static_cast<void(Transform::*)(bool)>(&Transform::updateCachedValues),
                 static_cast<void(Transform::*)(const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, bool)>(&Transform::updateCachedValues)
             ),
-
-            // 4) Position getters & setters as properties
-            "actualX",   sol::property(&Transform::getActualX, &Transform::setActualX),
-            "visualX",   sol::property(&Transform::getVisualX, &Transform::setVisualX),
-            "actualY",   sol::property(&Transform::getActualY, &Transform::setActualY),
-            "visualY",   sol::property(&Transform::getVisualY, &Transform::setVisualY),
-
-            // 5) Size
-            "actualW",   sol::property(&Transform::getActualW, &Transform::setActualW),
-            "visualW",   sol::property(&Transform::getVisualW, &Transform::setVisualW),
-            "actualH",   sol::property(&Transform::getActualH, &Transform::setActualH),
-            "visualH",   sol::property(&Transform::getVisualH, &Transform::setVisualH),
-
-            // 6) Rotation
-            "rotation",  sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
-            "visualR",   &Transform::getVisualR,
+            "actualX",  sol::property(&Transform::getActualX, &Transform::setActualX),
+            "visualX",  sol::property(&Transform::getVisualX, &Transform::setVisualX),
+            "actualY",  sol::property(&Transform::getActualY, &Transform::setActualY),
+            "visualY",  sol::property(&Transform::getVisualY, &Transform::setVisualY),
+            "actualW",  sol::property(&Transform::getActualW, &Transform::setActualW),
+            "visualW",  sol::property(&Transform::getVisualW, &Transform::setVisualW),
+            "actualH",  sol::property(&Transform::getActualH, &Transform::setActualH),
+            "visualH",  sol::property(&Transform::getVisualH, &Transform::setVisualH),
+            "rotation", sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
+            "visualR",  &Transform::getVisualR,
             "visualRWithMotion", &Transform::getVisualRWithDynamicMotionAndXLeaning,
-
-            // 7) Scale
-            "scale",     sol::property(&Transform::getActualScale, &Transform::setActualScale),
-            "visualS",   &Transform::getVisualScale,
+            "scale",    sol::property(&Transform::getActualScale, &Transform::setActualScale),
+            "visualS",  &Transform::getVisualScale,
             "visualSWithMotion", &Transform::getVisualScaleWithHoverAndDynamicMotionReflected,
-
-            // 8) Expose spring accessors if you need them
-            "xSpring",  &Transform::getXSpring,
-            "ySpring",  &Transform::getYSpring,
-            "wSpring",  &Transform::getWSpring,
-            "hSpring",  &Transform::getHSpring,
-            "rSpring",  &Transform::getRSpring,
-            "sSpring",  &Transform::getSSpring,
-
-            // 9) Handy utilities
+            "xSpring", &Transform::getXSpring,
+            "ySpring", &Transform::getYSpring,
+            "wSpring", &Transform::getWSpring,
+            "hSpring", &Transform::getHSpring,
+            "rSpring", &Transform::getRSpring,
+            "sSpring", &Transform::getSSpring,
             "hoverBufferX", &Transform::getHoverCollisionBufferX,
             "hoverBufferY", &Transform::getHoverCollisionBufferY,
-
-            // 10) A __tostring metamethod
             sol::meta_function::to_string, [](Transform& t) {
                 std::ostringstream o;
-                o << "Transform{ x=" << t.getActualX()
-                << ", y="  << t.getActualY()
-                << ", scale=" << t.getActualScale() << " }";
+                o << "Transform{ x=" << t.getActualX() << ", y="  << t.getActualY() << ", scale=" << t.getActualScale() << " }";
                 return o.str();
             }
         );
-        
-        // 1) Register the nested enums
+        // Recorder: Transform
+        auto& tDef = rec.add_type("Transform");
+        tDef.doc = "Manages an entity's position, size, rotation, and scale, with spring dynamics for smooth visual updates.";
+        rec.record_method("Transform", {"updateCachedValues", "---@overload fun(self, force:boolean)\n---@overload fun(self, x:Spring, y:Spring, w:Spring, h:Spring, r:Spring, s:Spring, force:boolean)", "Updates cached transform values.", false, false});
+        rec.record_property("Transform", {"actualX", "number", "The logical X position."});
+        rec.record_property("Transform", {"visualX", "number", "The visual (spring-interpolated) X position."});
+        rec.record_property("Transform", {"actualY", "number", "The logical Y position."});
+        rec.record_property("Transform", {"visualY", "number", "The visual (spring-interpolated) Y position."});
+        rec.record_property("Transform", {"actualW", "number", "The logical width."});
+        rec.record_property("Transform", {"visualW", "number", "The visual width."});
+        rec.record_property("Transform", {"actualH", "number", "The logical height."});
+        rec.record_property("Transform", {"visualH", "number", "The visual height."});
+        rec.record_property("Transform", {"rotation", "number", "The logical rotation in degrees."});
+        rec.record_method("Transform", {"visualR", "---@return number", "Gets the visual rotation.", false, false});
+        rec.record_method("Transform", {"visualRWithMotion", "---@return number", "Gets the visual rotation including dynamic motion.", false, false});
+        rec.record_property("Transform", {"scale", "number", "The logical scale multiplier."});
+        rec.record_method("Transform", {"visualS", "---@return number", "Gets the visual scale.", false, false});
+        rec.record_method("Transform", {"visualSWithMotion", "---@return number", "Gets the visual scale including dynamic motion.", false, false});
+        rec.record_method("Transform", {"xSpring", "---@return Spring", "Gets the X position spring.", false, false});
+        rec.record_method("Transform", {"ySpring", "---@return Spring", "Gets the Y position spring.", false, false});
+        rec.record_method("Transform", {"wSpring", "---@return Spring", "Gets the width spring.", false, false});
+        rec.record_method("Transform", {"hSpring", "---@return Spring", "Gets the height spring.", false, false});
+        rec.record_method("Transform", {"rSpring", "---@return Spring", "Gets the rotation spring.", false, false});
+        rec.record_method("Transform", {"sSpring", "---@return Spring", "Gets the scale spring.", false, false});
+        rec.record_method("Transform", {"hoverBufferX", "---@return number", "Gets the X-axis hover buffer.", false, false});
+        rec.record_method("Transform", {"hoverBufferY", "---@return number", "Gets the Y-axis hover buffer.", false, false});
+
+
+        //=========================================================
+        // Part 2: InheritedProperties & Related Types
+        //=========================================================
+        // 2a) Enums
         lua.new_enum<InheritedProperties::Type>("InheritedPropertiesType", {
-            {"RoleRoot",          InheritedProperties::Type::RoleRoot},
-            {"RoleInheritor",     InheritedProperties::Type::RoleInheritor},
-            {"RoleCarbonCopy",    InheritedProperties::Type::RoleCarbonCopy},
-            {"PermanentAttachment", InheritedProperties::Type::PermanentAttachment}
+            {"RoleRoot",           InheritedProperties::Type::RoleRoot},
+            {"RoleInheritor",      InheritedProperties::Type::RoleInheritor},
+            {"RoleCarbonCopy",     InheritedProperties::Type::RoleCarbonCopy},
+            {"PermanentAttachment",InheritedProperties::Type::PermanentAttachment}
         });
+        auto& ipType = rec.add_type("InheritedPropertiesType");
+        ipType.doc = "Defines how an entity relates to its master in the transform hierarchy.";
+        rec.record_property("InheritedPropertiesType", {"RoleRoot", "0", "A root object that is not influenced by a master."});
+        rec.record_property("InheritedPropertiesType", {"RoleInheritor", "1", "Inherits transformations from a master."});
+        rec.record_property("InheritedPropertiesType", {"RoleCarbonCopy", "2", "Perfectly mirrors its master's transformations."});
+        rec.record_property("InheritedPropertiesType", {"PermanentAttachment", "3", "A permanent, non-detachable inheritor."});
 
         lua.new_enum<InheritedProperties::Sync>("InheritedPropertiesSync", {
             {"Strong", InheritedProperties::Sync::Strong},
             {"Weak",   InheritedProperties::Sync::Weak}
         });
+        auto& ipSync = rec.add_type("InheritedPropertiesSync");
+        ipSync.doc = "Defines the strength of a transform bond.";
+        rec.record_property("InheritedPropertiesSync", {"Strong", "0", "The property is directly copied from the master."});
+        rec.record_property("InheritedPropertiesSync", {"Weak", "1", "The property is influenced by but not locked to the master."});
 
-        // 2) Register the Alignment‐flag constants so you can do bitmasks in Lua
+        // 2b) Alignment Flags as a constant table
         lua["AlignmentFlag"] = lua.create_table_with(
-            "NONE",                   InheritedProperties::Alignment::NONE,
-            "HORIZONTAL_LEFT",        InheritedProperties::Alignment::HORIZONTAL_LEFT,
-            "HORIZONTAL_CENTER",      InheritedProperties::Alignment::HORIZONTAL_CENTER,
-            "HORIZONTAL_RIGHT",       InheritedProperties::Alignment::HORIZONTAL_RIGHT,
-            "VERTICAL_TOP",           InheritedProperties::Alignment::VERTICAL_TOP,
-            "VERTICAL_CENTER",        InheritedProperties::Alignment::VERTICAL_CENTER,
-            "VERTICAL_BOTTOM",        InheritedProperties::Alignment::VERTICAL_BOTTOM,
-            "ALIGN_TO_INNER_EDGES",   InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES
+            "NONE",                InheritedProperties::Alignment::NONE,
+            "HORIZONTAL_LEFT",     InheritedProperties::Alignment::HORIZONTAL_LEFT,
+            "HORIZONTAL_CENTER",   InheritedProperties::Alignment::HORIZONTAL_CENTER,
+            "HORIZONTAL_RIGHT",    InheritedProperties::Alignment::HORIZONTAL_RIGHT,
+            "VERTICAL_TOP",        InheritedProperties::Alignment::VERTICAL_TOP,
+            "VERTICAL_CENTER",     InheritedProperties::Alignment::VERTICAL_CENTER,
+            "VERTICAL_BOTTOM",     InheritedProperties::Alignment::VERTICAL_BOTTOM,
+            "ALIGN_TO_INNER_EDGES",InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES
         );
+        auto& alignFlag = rec.add_type("AlignmentFlag");
+        alignFlag.doc = "Bitmask flags for aligning an entity to its master.";
+        rec.record_property("AlignmentFlag", {"NONE", std::to_string(InheritedProperties::Alignment::NONE), "No alignment."});
+        rec.record_property("AlignmentFlag", {"HORIZONTAL_LEFT", std::to_string(InheritedProperties::Alignment::HORIZONTAL_LEFT), "Align left edges."});
+        rec.record_property("AlignmentFlag", {"HORIZONTAL_CENTER", std::to_string(InheritedProperties::Alignment::HORIZONTAL_CENTER), "Align horizontal centers."});
+        rec.record_property("AlignmentFlag", {"HORIZONTAL_RIGHT", std::to_string(InheritedProperties::Alignment::HORIZONTAL_RIGHT), "Align right edges."});
+        rec.record_property("AlignmentFlag", {"VERTICAL_TOP", std::to_string(InheritedProperties::Alignment::VERTICAL_TOP), "Align top edges."});
+        rec.record_property("AlignmentFlag", {"VERTICAL_CENTER", std::to_string(InheritedProperties::Alignment::VERTICAL_CENTER), "Align vertical centers."});
+        rec.record_property("AlignmentFlag", {"VERTICAL_BOTTOM", std::to_string(InheritedProperties::Alignment::VERTICAL_BOTTOM), "Align bottom edges."});
+        rec.record_property("AlignmentFlag", {"ALIGN_TO_INNER_EDGES", std::to_string(InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES), "Align to inner instead of outer edges."});
 
-        // 3) Expose the Alignment struct
+        // 2c) Alignment struct
         lua.new_usertype<InheritedProperties::Alignment>("Alignment",
-            // raw data
-            "alignment",      &InheritedProperties::Alignment::alignment,
-            "extraOffset",    &InheritedProperties::Alignment::extraAlignmentFinetuningOffset,
-            "prevExtraOffset",&InheritedProperties::Alignment::prevExtraAlignmentFinetuningOffset,
+            "alignment",       &InheritedProperties::Alignment::alignment,
+            "extraOffset",     &InheritedProperties::Alignment::extraAlignmentFinetuningOffset,
+            "prevExtraOffset", &InheritedProperties::Alignment::prevExtraAlignmentFinetuningOffset,
+            "hasFlag", [](InheritedProperties::Alignment& a, int flag) { return InheritedProperties::Alignment::hasFlag(a.alignment, flag); },
+            "addFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::addFlag(a.alignment, flag); },
+            "removeFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::removeFlag(a.alignment, flag); },
+            "toggleFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::toggleFlag(a.alignment, flag); }
+        );
+        auto& alignDef = rec.add_type("Alignment");
+        alignDef.doc = "Stores alignment flags and offsets for an inherited property.";
+        rec.record_property("Alignment", {"alignment", "integer", "The raw bitmask of alignment flags."});
+        rec.record_property("Alignment", {"extraOffset", "Vector2", "Additional fine-tuning offset."});
+        rec.record_property("Alignment", {"prevExtraOffset", "Vector2", "Previous frame's fine-tuning offset."});
+        rec.record_method("Alignment", {"hasFlag", "---@param flag AlignmentFlag\n---@return boolean", "Checks if a specific alignment flag is set.", false, false});
+    rec.record_method("Alignment", {"addFlag", "---@param flag AlignmentFlag\n---@return nil", "Adds an alignment flag.", false, false});
+    rec.record_method("Alignment", {"removeFlag", "---@param flag AlignmentFlag\n---@return nil", "Removes an alignment flag.", false, false});
+    rec.record_method("Alignment", {"toggleFlag", "---@param flag AlignmentFlag\n---@return nil", "Toggles an alignment flag.", false, false});
+
+    // 2d) Main InheritedProperties struct
+    lua.new_usertype<InheritedProperties>("InheritedProperties",
+        sol::constructors<>(),
+        "role_type",       &InheritedProperties::role_type,
+        "master",          &InheritedProperties::master,
+        "offset",          &InheritedProperties::offset,
+        "prevOffset",      &InheritedProperties::prevOffset,
+        "location_bond",   &InheritedProperties::location_bond,
+        "size_bond",       &InheritedProperties::size_bond,
+        "rotation_bond",   &InheritedProperties::rotation_bond,
+        "scale_bond",      &InheritedProperties::scale_bond,
+        "flags",           &InheritedProperties::flags
+    );
+    auto& ipDef = rec.add_type("InheritedProperties");
+    ipDef.doc = "Defines how an entity inherits transform properties from a master entity.";
+    rec.record_property("InheritedProperties", {"role_type", "InheritedPropertiesType", "The role of this entity in the hierarchy."});
+    rec.record_property("InheritedProperties", {"master", "Entity", "The master entity this entity inherits from."});
+    rec.record_property("InheritedProperties", {"offset", "Vector2", "The current offset from the master."});
+    rec.record_property("InheritedProperties", {"prevOffset", "Vector2", "The previous frame's offset."});
+    rec.record_property("InheritedProperties", {"location_bond", "InheritedPropertiesSync|nil", "The sync bond for location."});
+    rec.record_property("InheritedProperties", {"size_bond", "InheritedPropertiesSync|nil", "The sync bond for size."});
+    rec.record_property("InheritedProperties", {"rotation_bond", "InheritedPropertiesSync|nil", "The sync bond for rotation."});
+    rec.record_property("InheritedProperties", {"scale_bond", "InheritedPropertiesSync|nil", "The sync bond for scale."});
+    rec.record_property("InheritedProperties", {"flags", "Alignment|nil", "Alignment flags and data."});
+
+    // 2e) Builder
+    lua.new_usertype<InheritedProperties::Builder>("InheritedPropertiesBuilder",
+        sol::constructors<>(),
+        "addRoleType",        &InheritedProperties::Builder::addRoleType,
+        "addMaster",          &InheritedProperties::Builder::addMaster,
+        "addOffset",          &InheritedProperties::Builder::addOffset,
+        "addLocationBond",    &InheritedProperties::Builder::addLocationBond,
+        "addSizeBond",        &InheritedProperties::Builder::addSizeBond,
+        "addRotationBond",    &InheritedProperties::Builder::addRotationBond,
+        "addScaleBond",       &InheritedProperties::Builder::addScaleBond,
+        "addAlignment",       &InheritedProperties::Builder::addAlignment,
+        "addAlignmentOffset", &InheritedProperties::Builder::addAlignmentOffset,
+        "build",              &InheritedProperties::Builder::build
+    );
+    auto& ipBuilder = rec.add_type("InheritedPropertiesBuilder");
+    ipBuilder.doc = "A fluent builder for creating InheritedProperties components.";
+    rec.record_method("InheritedPropertiesBuilder", {"addRoleType", "---@param type InheritedPropertiesType\n---@return self", "Sets the role type.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addMaster", "---@param master Entity\n---@return self", "Sets the master entity.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addOffset", "---@param offset Vector2\n---@return self", "Sets the offset.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addLocationBond", "---@param bond InheritedPropertiesSync\n---@return self", "Sets the location bond.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addSizeBond", "---@param bond InheritedPropertiesSync\n---@return self", "Sets the size bond.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addRotationBond", "---@param bond InheritedPropertiesSync\n---@return self", "Sets the rotation bond.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addScaleBond", "---@param bond InheritedPropertiesSync\n---@return self", "Sets the scale bond.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addAlignment", "---@param flags AlignmentFlag\n---@return self", "Sets the alignment flags.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"addAlignmentOffset", "---@param offset Vector2\n---@return self", "Sets the alignment offset.", false, false});
+    rec.record_method("InheritedPropertiesBuilder", {"build", "---@return InheritedProperties", "Constructs the final InheritedProperties object.", false, false});
+
+
+    //=========================================================
+    // Part 3: GameObject & Related Types
+    //=========================================================
+    // 3a) GameObject.Methods
+    lua.new_usertype<GameObject::Methods>("GameObjectMethods",
+        sol::constructors<>(),
+        "getObjectToDrag", &GameObject::Methods::getObjectToDrag,
+        "update",          &GameObject::Methods::update,
+        "draw",            &GameObject::Methods::draw,
+        "onClick",         &GameObject::Methods::onClick,
+        "onRelease",       &GameObject::Methods::onRelease,
+        "onHover",         &GameObject::Methods::onHover,
+        "onStopHover",     &GameObject::Methods::onStopHover,
+        "onDrag",          &GameObject::Methods::onDrag,
+        "onStopDrag",      &GameObject::Methods::onStopDrag
+    );
+    auto& goMethods = rec.add_type("GameObjectMethods");
+    goMethods.doc = "A table of optional script-defined callback methods for a GameObject.";
+    rec.record_property("GameObjectMethods", {"getObjectToDrag", "function|nil", "Returns the entity that should be dragged."});
+    rec.record_property("GameObjectMethods", {"update", "function|nil", "Called every frame."});
+    rec.record_property("GameObjectMethods", {"draw", "function|nil", "Called every frame for drawing."});
+    rec.record_property("GameObjectMethods", {"onClick", "function|nil", "Called on click."});
+    rec.record_property("GameObjectMethods", {"onRelease", "function|nil", "Called on click release."});
+    rec.record_property("GameObjectMethods", {"onHover", "function|nil", "Called when hover starts."});
+    rec.record_property("GameObjectMethods", {"onStopHover", "function|nil", "Called when hover ends."});
+    rec.record_property("GameObjectMethods", {"onDrag", "function|nil", "Called while dragging."});
+    rec.record_property("GameObjectMethods", {"onStopDrag", "function|nil", "Called when dragging stops."});
+
+    // 3b) GameObject.State
+    lua.new_usertype<GameObject::State>("GameObjectState",
+        sol::constructors<>(),
+        "visible",                 &GameObject::State::visible,
+        "collisionEnabled",        &GameObject::State::collisionEnabled,
+        "isColliding",             &GameObject::State::isColliding,
+        "focusEnabled",            &GameObject::State::focusEnabled,
+        "isBeingFocused",          &GameObject::State::isBeingFocused,
+        "hoverEnabled",            &GameObject::State::hoverEnabled,
+        "isBeingHovered",          &GameObject::State::isBeingHovered,
+        "enlargeOnHover",          &GameObject::State::enlargeOnHover,
+        "enlargeOnDrag",           &GameObject::State::enlargeOnDrag,
+        "clickEnabled",            &GameObject::State::clickEnabled,
+        "isBeingClicked",          &GameObject::State::isBeingClicked,
+        "dragEnabled",             &GameObject::State::dragEnabled,
+        "isBeingDragged",          &GameObject::State::isBeingDragged,
+        "triggerOnReleaseEnabled", &GameObject::State::triggerOnReleaseEnabled,
+        "isTriggeringOnRelease",   &GameObject::State::isTriggeringOnRelease,
+        "isUnderOverlay",          &GameObject::State::isUnderOverlay
+    );
+    auto& goState = rec.add_type("GameObjectState");
+    goState.doc = "A collection of boolean flags representing the current state of a GameObject.";
+    rec.record_property("GameObjectState", {"visible", "boolean"});
+    rec.record_property("GameObjectState", {"collisionEnabled", "boolean"});
+    rec.record_property("GameObjectState", {"isColliding", "boolean"});
+    rec.record_property("GameObjectState", {"focusEnabled", "boolean"});
+    rec.record_property("GameObjectState", {"isBeingFocused", "boolean"});
+    rec.record_property("GameObjectState", {"hoverEnabled", "boolean"});
+    rec.record_property("GameObjectState", {"isBeingHovered", "boolean"});
+    rec.record_property("GameObjectState", {"enlargeOnHover", "boolean"});
+    rec.record_property("GameObjectState", {"enlargeOnDrag", "boolean"});
+    rec.record_property("GameObjectState", {"clickEnabled", "boolean"});
+    rec.record_property("GameObjectState", {"isBeingClicked", "boolean"});
+    rec.record_property("GameObjectState", {"dragEnabled", "boolean"});
+    rec.record_property("GameObjectState", {"isBeingDragged", "boolean"});
+    rec.record_property("GameObjectState", {"triggerOnReleaseEnabled", "boolean"});
+    rec.record_property("GameObjectState", {"isTriggeringOnRelease", "boolean"});
+    rec.record_property("GameObjectState", {"isUnderOverlay", "boolean"});
+
+    // 3c) Main GameObject
+    lua.new_usertype<GameObject>("GameObject",
+        sol::constructors<>(),
+        "parent",               &GameObject::parent,
+        "children",             &GameObject::children,
+        "orderedChildren",      &GameObject::orderedChildren,
+        "ignoresPause",         &GameObject::ignoresPause,
+        "container",            &GameObject::container,
+        "collisionTransform",   &GameObject::collisionTransform,
+        "clickTimeout",         &GameObject::clickTimeout,
+        "methods",              &GameObject::methods,
+        "updateFunction",       &GameObject::updateFunction,
+        "drawFunction",         &GameObject::drawFunction,
+        "state",                &GameObject::state,
+        "dragOffset",           &GameObject::dragOffset,
+        "clickOffset",          &GameObject::clickOffset,
+        "hoverOffset",          &GameObject::hoverOffset,
+        "shadowDisplacement",   &GameObject::shadowDisplacement,
+        "layerDisplacement",    &GameObject::layerDisplacement,
+        "layerDisplacementPrev",&GameObject::layerDisplacementPrev,
+        "shadowHeight",         &GameObject::shadowHeight
+    );
+    auto& goDef = rec.add_type("GameObject");
+    goDef.doc = "The core component for a scene entity, managing hierarchy, state, and scriptable logic.";
+    rec.record_property("GameObject", {"parent", "Entity|nil"});
+    rec.record_property("GameObject", {"children", "table<Entity, boolean>"});
+    rec.record_property("GameObject", {"orderedChildren", "table<integer, Entity>"});
+    rec.record_property("GameObject", {"ignoresPause", "boolean"});
+    rec.record_property("GameObject", {"container", "Entity|nil"});
+    rec.record_property("GameObject", {"collisionTransform", "Transform|nil"});
+    rec.record_property("GameObject", {"clickTimeout", "number"});
+    rec.record_property("GameObject", {"methods", "GameObjectMethods|nil"});
+    rec.record_property("GameObject", {"updateFunction", "function|nil"});
+    rec.record_property("GameObject", {"drawFunction", "function|nil"});
+    rec.record_property("GameObject", {"state", "GameObjectState"});
+    rec.record_property("GameObject", {"dragOffset", "Vector2"});
+    rec.record_property("GameObject", {"clickOffset", "Vector2"});
+    rec.record_property("GameObject", {"hoverOffset", "Vector2"});
+    rec.record_property("GameObject", {"shadowDisplacement", "Vector2"});
+    rec.record_property("GameObject", {"layerDisplacement", "Vector2"});
+    rec.record_property("GameObject", {"layerDisplacementPrev", "Vector2"});
+    rec.record_property("GameObject", {"shadowHeight", "number"});
+    
+    // 3d) Collision-ordering structs
+    lua.new_usertype<CollisionOrderInfo>("CollisionOrderInfo",
+        sol::constructors<>(),
+        "hasCollisionOrder", &CollisionOrderInfo::hasCollisionOrder,
+        "parentBox",         &CollisionOrderInfo::parentBox,
+        "treeOrder",         &CollisionOrderInfo::treeOrder,
+        "layerOrder",        &CollisionOrderInfo::layerOrder
+    );
+    auto& coiDef = rec.add_type("CollisionOrderInfo");
+    coiDef.doc = "Contains information about an entity's render and collision order.";
+    rec.record_property("CollisionOrderInfo", {"hasCollisionOrder", "boolean"});
+    rec.record_property("CollisionOrderInfo", {"parentBox", "Rectangle"});
+    rec.record_property("CollisionOrderInfo", {"treeOrder", "integer"});
+    rec.record_property("CollisionOrderInfo", {"layerOrder", "integer"});
+    
+    lua.new_usertype<TreeOrderComponent>("TreeOrderComponent",
+        sol::constructors<>(),
+        "order", &TreeOrderComponent::order
+    );
+    auto& tocDef = rec.add_type("TreeOrderComponent");
+    tocDef.doc = "A simple component storing an entity's tree order for sorting.";
+    rec.record_property("TreeOrderComponent", {"order", "integer"});
+
+
+    //=========================================================
+    // Part 4: Global `transform` system functions
+    //=========================================================
+    sol::table transform_tbl = lua.create_named_table("transform");
+    rec.add_type("transform").doc = "A global system for creating and managing all Transforms and GameObjects.";
+
+    transform_tbl.set_function("InitializeSystem", &transform::InitializeSystem);
+    rec.record_free_function({"transform"}, {"InitializeSystem", "---@return nil", "Initializes the transform system.", true, false});
+
+    transform_tbl.set_function("UpdateAllTransforms", &transform::UpdateAllTransforms);
+    rec.record_free_function({"transform"}, {"UpdateAllTransforms", "---@param registry registry\n---@param dt number\n---@return nil", "Updates all transforms in the registry.", true, false});
+    
+    transform_tbl.set_function("CreateOrEmplace", &transform::CreateOrEmplace);
+    rec.record_free_function({"transform"}, {"CreateOrEmplace", "---@param registry registry\n---@param container Entity\n---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@param entityToEmplaceTo? Entity\n---@return Entity", "Creates or emplaces an entity with core components.", true, false});
+    
+    transform_tbl.set_function("CreateGameWorldContainerEntity", &transform::CreateGameWorldContainerEntity);
+    rec.record_free_function({"transform"}, {"CreateGameWorldContainerEntity", "---@param registry registry\n---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@return Entity", "Creates a root container entity for the game world.", true, false});
+
+    transform_tbl.set_function("UpdateTransformSmoothingFactors", &transform::UpdateTransformSmoothingFactors);
+    rec.record_free_function({"transform"}, {"UpdateTransformSmoothingFactors", "---@param registry registry\n---@param e Entity\n---@param dt number\n---@return nil", "Updates spring smoothing factors for a transform.", true, false});
+
+    transform_tbl.set_function("AlignToMaster", &transform::AlignToMaster);
+    rec.record_free_function({"transform"}, {"AlignToMaster", "---@param registry registry\n---@param e Entity\n---@param force? boolean\n---@return nil", "Aligns an entity to its master.", true, false});
+
+    transform_tbl.set_function("MoveWithMaster", &transform::MoveWithMaster);
+    rec.record_free_function({"transform"}, {"MoveWithMaster", "---@param e Entity\n---@param dt number\n---@param selfTransform Transform\n---@param selfRole InheritedProperties\n---@param selfNode GameObject\n---@return nil", "Updates an entity's position based on its master's movement.", true, false});
+
+    transform_tbl.set_function("GetMaster", 
+        [](entt::entity e, Transform& selfT, InheritedProperties& selfR, GameObject& selfN) {
+            Transform* parentT = nullptr;
+            InheritedProperties* parentR = nullptr;
+            auto cache = transform::GetMaster(e, selfT, selfR, selfN, parentT, parentR);
+            return std::make_tuple(cache, parentT, parentR);
+        }
+    );
+    rec.record_free_function({"transform"}, {"GetMaster", "---@param e Entity\n---@param selfT Transform\n---@param selfR InheritedProperties\n---@param selfN GameObject\n---@return MasterCache, Transform|nil, InheritedProperties|nil", "Gets the master components for a given entity.", true, false});
+
+    transform_tbl.set_function("SyncPerfectlyToMaster", &transform::SyncPerfectlyToMaster);
+    rec.record_free_function({"transform"}, {"SyncPerfectlyToMaster", "---@param e Entity\n---@param parent Entity\n---@param selfT Transform\n---@param selfR InheritedProperties\n---@param parentT Transform\n---@param parentR InheritedProperties\n---@return nil", "Instantly snaps an entity's transform to its master's.", true, false});
+
+    transform_tbl.set_function("ConfigureAlignment", &transform::ConfigureAlignment);
+    rec.record_free_function({"transform"}, {"ConfigureAlignment", "---@param registry registry\n---@param e Entity\n---@param isChild boolean\n---@param parent? Entity\n---@param xy? InheritedPropertiesSync\n---@param wh? InheritedPropertiesSync\n---@param rotation? InheritedPropertiesSync\n---@param scale? InheritedPropertiesSync\n---@param alignment? AlignmentFlag\n---@param offset? Vector2\n---@return nil", "Configures all alignment and bonding properties for an entity.", true, false});
+    
+    transform_tbl.set_function("DrawBoundingBoxAndDebugInfo", &transform::DrawBoundingBoxAndDebugInfo);
+    rec.record_free_function({"transform"}, {"DrawBoundingBoxAndDebugInfo", "---@param registry registry\n---@param e Entity\n---@param layer Layer\n---@return nil", "Draws debug visuals for a transform.", true, false});
+    
+    transform_tbl.set_function("FindTopEntityAtPoint", &transform::FindTopEntityAtPoint);
+    rec.record_free_function({"transform"}, {"FindTopEntityAtPoint", "---@param point Vector2\n---@return Entity|nil", "Finds the top-most interactable entity at a screen point.", true, false});
+
+    transform_tbl.set_function("FindAllEntitiesAtPoint", &transform::FindAllEntitiesAtPoint);
+    rec.record_free_function({"transform"}, {"FindAllEntitiesAtPoint", "---@param point Vector2\n---@return Entity[]", "Finds all interactable entities at a screen point.", true, false});
+    
+    transform_tbl.set_function("RemoveEntity", &transform::RemoveEntity);
+    rec.record_free_function({"transform"}, {"RemoveEntity", "---@param registry registry\n---@param e Entity\n---@return nil", "Removes an entity and its children from the game.", true, false});
+
+    transform_tbl.set_function("setJiggleOnHover", &transform::setJiggleOnHover);
+    rec.record_free_function({"transform"}, {"setJiggleOnHover", "---@param registry registry\n---@param e Entity\n---@param jiggleAmount number\n---@return nil", "Configures a jiggle animation on hover.", true, false});
+
+        // // Register the Transform usertype
+        // lua.new_usertype<Transform>("Transform",
+        //     // Bind the constructor that takes a registry*
+        //     sol::constructors<Transform(entt::registry*)>(),
+            
+        //     // 3) Expose the cache‐updater (with both overloads if you like)
+        //     "updateCachedValues", sol::overload(
+        //         static_cast<void(Transform::*)(bool)>(&Transform::updateCachedValues),
+        //         static_cast<void(Transform::*)(const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, bool)>(&Transform::updateCachedValues)
+        //     ),
+
+        //     // 4) Position getters & setters as properties
+        //     "actualX",   sol::property(&Transform::getActualX, &Transform::setActualX),
+        //     "visualX",   sol::property(&Transform::getVisualX, &Transform::setVisualX),
+        //     "actualY",   sol::property(&Transform::getActualY, &Transform::setActualY),
+        //     "visualY",   sol::property(&Transform::getVisualY, &Transform::setVisualY),
+
+        //     // 5) Size
+        //     "actualW",   sol::property(&Transform::getActualW, &Transform::setActualW),
+        //     "visualW",   sol::property(&Transform::getVisualW, &Transform::setVisualW),
+        //     "actualH",   sol::property(&Transform::getActualH, &Transform::setActualH),
+        //     "visualH",   sol::property(&Transform::getVisualH, &Transform::setVisualH),
+
+        //     // 6) Rotation
+        //     "rotation",  sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
+        //     "visualR",   &Transform::getVisualR,
+        //     "visualRWithMotion", &Transform::getVisualRWithDynamicMotionAndXLeaning,
+
+        //     // 7) Scale
+        //     "scale",     sol::property(&Transform::getActualScale, &Transform::setActualScale),
+        //     "visualS",   &Transform::getVisualScale,
+        //     "visualSWithMotion", &Transform::getVisualScaleWithHoverAndDynamicMotionReflected,
+
+        //     // 8) Expose spring accessors if you need them
+        //     "xSpring",  &Transform::getXSpring,
+        //     "ySpring",  &Transform::getYSpring,
+        //     "wSpring",  &Transform::getWSpring,
+        //     "hSpring",  &Transform::getHSpring,
+        //     "rSpring",  &Transform::getRSpring,
+        //     "sSpring",  &Transform::getSSpring,
+
+        //     // 9) Handy utilities
+        //     "hoverBufferX", &Transform::getHoverCollisionBufferX,
+        //     "hoverBufferY", &Transform::getHoverCollisionBufferY,
+
+        //     // 10) A __tostring metamethod
+        //     sol::meta_function::to_string, [](Transform& t) {
+        //         std::ostringstream o;
+        //         o << "Transform{ x=" << t.getActualX()
+        //         << ", y="  << t.getActualY()
+        //         << ", scale=" << t.getActualScale() << " }";
+        //         return o.str();
+        //     }
+        // );
         
-            // instance methods via lambdas
-            "hasFlag", [](InheritedProperties::Alignment& a, int flag) {
-                return InheritedProperties::Alignment::hasFlag(a.alignment, flag);
-            },
-            "addFlag", [](InheritedProperties::Alignment& a, int flag) {
-                InheritedProperties::Alignment::addFlag(a.alignment, flag);
-            },
-            "removeFlag", [](InheritedProperties::Alignment& a, int flag) {
-                InheritedProperties::Alignment::removeFlag(a.alignment, flag);
-            },
-            "toggleFlag", [](InheritedProperties::Alignment& a, int flag) {
-                InheritedProperties::Alignment::toggleFlag(a.alignment, flag);
-            }
-        );
+        // // 1) Register the nested enums
+        // lua.new_enum<InheritedProperties::Type>("InheritedPropertiesType", {
+        //     {"RoleRoot",          InheritedProperties::Type::RoleRoot},
+        //     {"RoleInheritor",     InheritedProperties::Type::RoleInheritor},
+        //     {"RoleCarbonCopy",    InheritedProperties::Type::RoleCarbonCopy},
+        //     {"PermanentAttachment", InheritedProperties::Type::PermanentAttachment}
+        // });
 
-        // 4) Expose the main InheritedProperties struct
-        lua.new_usertype<InheritedProperties>("InheritedProperties",
-            sol::constructors<>(),   // default‐constructible
+        // lua.new_enum<InheritedProperties::Sync>("InheritedPropertiesSync", {
+        //     {"Strong", InheritedProperties::Sync::Strong},
+        //     {"Weak",   InheritedProperties::Sync::Weak}
+        // });
 
-            // basic fields
-            "role_type",             &InheritedProperties::role_type,
-            "master",                &InheritedProperties::master,
-            "offset",                &InheritedProperties::offset,
-            "prevOffset",            &InheritedProperties::prevOffset,
+        // // 2) Register the Alignment‐flag constants so you can do bitmasks in Lua
+        // lua["AlignmentFlag"] = lua.create_table_with(
+        //     "NONE",                   InheritedProperties::Alignment::NONE,
+        //     "HORIZONTAL_LEFT",        InheritedProperties::Alignment::HORIZONTAL_LEFT,
+        //     "HORIZONTAL_CENTER",      InheritedProperties::Alignment::HORIZONTAL_CENTER,
+        //     "HORIZONTAL_RIGHT",       InheritedProperties::Alignment::HORIZONTAL_RIGHT,
+        //     "VERTICAL_TOP",           InheritedProperties::Alignment::VERTICAL_TOP,
+        //     "VERTICAL_CENTER",        InheritedProperties::Alignment::VERTICAL_CENTER,
+        //     "VERTICAL_BOTTOM",        InheritedProperties::Alignment::VERTICAL_BOTTOM,
+        //     "ALIGN_TO_INNER_EDGES",   InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES
+        // );
 
-            // optional bonds (std::optional<Sync>)
-            "location_bond",         &InheritedProperties::location_bond,
-            "size_bond",             &InheritedProperties::size_bond,
-            "rotation_bond",         &InheritedProperties::rotation_bond,
-            "scale_bond",            &InheritedProperties::scale_bond,
+        // // 3) Expose the Alignment struct
+        // lua.new_usertype<InheritedProperties::Alignment>("Alignment",
+        //     // raw data
+        //     "alignment",      &InheritedProperties::Alignment::alignment,
+        //     "extraOffset",    &InheritedProperties::Alignment::extraAlignmentFinetuningOffset,
+        //     "prevExtraOffset",&InheritedProperties::Alignment::prevExtraAlignmentFinetuningOffset,
+        
+        //     // instance methods via lambdas
+        //     "hasFlag", [](InheritedProperties::Alignment& a, int flag) {
+        //         return InheritedProperties::Alignment::hasFlag(a.alignment, flag);
+        //     },
+        //     "addFlag", [](InheritedProperties::Alignment& a, int flag) {
+        //         InheritedProperties::Alignment::addFlag(a.alignment, flag);
+        //     },
+        //     "removeFlag", [](InheritedProperties::Alignment& a, int flag) {
+        //         InheritedProperties::Alignment::removeFlag(a.alignment, flag);
+        //     },
+        //     "toggleFlag", [](InheritedProperties::Alignment& a, int flag) {
+        //         InheritedProperties::Alignment::toggleFlag(a.alignment, flag);
+        //     }
+        // );
 
-            // optional Alignment
-            "flags",                 &InheritedProperties::flags
-        );
+        // // 4) Expose the main InheritedProperties struct
+        // lua.new_usertype<InheritedProperties>("InheritedProperties",
+        //     sol::constructors<>(),   // default‐constructible
 
-        // 5) Expose the Builder for fluent construction
-        lua.new_usertype<InheritedProperties::Builder>("InheritedPropertiesBuilder",
-            sol::constructors<>(),
+        //     // basic fields
+        //     "role_type",             &InheritedProperties::role_type,
+        //     "master",                &InheritedProperties::master,
+        //     "offset",                &InheritedProperties::offset,
+        //     "prevOffset",            &InheritedProperties::prevOffset,
 
-            "addRoleType",            &InheritedProperties::Builder::addRoleType,
-            "addMaster",              &InheritedProperties::Builder::addMaster,
-            "addOffset",              &InheritedProperties::Builder::addOffset,
-            "addLocationBond",        &InheritedProperties::Builder::addLocationBond,
-            "addSizeBond",            &InheritedProperties::Builder::addSizeBond,
-            "addRotationBond",        &InheritedProperties::Builder::addRotationBond,
-            "addScaleBond",           &InheritedProperties::Builder::addScaleBond,
-            "addAlignment",           &InheritedProperties::Builder::addAlignment,
-            "addAlignmentOffset",     &InheritedProperties::Builder::addAlignmentOffset,
-            "build",                  &InheritedProperties::Builder::build
-        );
+        //     // optional bonds (std::optional<Sync>)
+        //     "location_bond",         &InheritedProperties::location_bond,
+        //     "size_bond",             &InheritedProperties::size_bond,
+        //     "rotation_bond",         &InheritedProperties::rotation_bond,
+        //     "scale_bond",            &InheritedProperties::scale_bond,
+
+        //     // optional Alignment
+        //     "flags",                 &InheritedProperties::flags
+        // );
+
+        // // 5) Expose the Builder for fluent construction
+        // lua.new_usertype<InheritedProperties::Builder>("InheritedPropertiesBuilder",
+        //     sol::constructors<>(),
+
+        //     "addRoleType",            &InheritedProperties::Builder::addRoleType,
+        //     "addMaster",              &InheritedProperties::Builder::addMaster,
+        //     "addOffset",              &InheritedProperties::Builder::addOffset,
+        //     "addLocationBond",        &InheritedProperties::Builder::addLocationBond,
+        //     "addSizeBond",            &InheritedProperties::Builder::addSizeBond,
+        //     "addRotationBond",        &InheritedProperties::Builder::addRotationBond,
+        //     "addScaleBond",           &InheritedProperties::Builder::addScaleBond,
+        //     "addAlignment",           &InheritedProperties::Builder::addAlignment,
+        //     "addAlignmentOffset",     &InheritedProperties::Builder::addAlignmentOffset,
+        //     "build",                  &InheritedProperties::Builder::build
+        // );
         
         
-        //
-        // 1) Nested Methods
-        //
-        lua.new_usertype<GameObject::Methods>("GameObjectMethods",
-            sol::constructors<>(),
-            "getObjectToDrag", &GameObject::Methods::getObjectToDrag,
-            "update",          &GameObject::Methods::update,
-            "draw",            &GameObject::Methods::draw,
-            "onClick",         &GameObject::Methods::onClick,
-            "onRelease",       &GameObject::Methods::onRelease,
-            "onHover",         &GameObject::Methods::onHover,
-            "onStopHover",     &GameObject::Methods::onStopHover,
-            "onDrag",          &GameObject::Methods::onDrag,
-            "onStopDrag",      &GameObject::Methods::onStopDrag
-        );
+        // //
+        // // 1) Nested Methods
+        // //
+        // lua.new_usertype<GameObject::Methods>("GameObjectMethods",
+        //     sol::constructors<>(),
+        //     "getObjectToDrag", &GameObject::Methods::getObjectToDrag,
+        //     "update",          &GameObject::Methods::update,
+        //     "draw",            &GameObject::Methods::draw,
+        //     "onClick",         &GameObject::Methods::onClick,
+        //     "onRelease",       &GameObject::Methods::onRelease,
+        //     "onHover",         &GameObject::Methods::onHover,
+        //     "onStopHover",     &GameObject::Methods::onStopHover,
+        //     "onDrag",          &GameObject::Methods::onDrag,
+        //     "onStopDrag",      &GameObject::Methods::onStopDrag
+        // );
 
-        //
-        // 2) Nested State
-        //
-        lua.new_usertype<GameObject::State>("GameObjectState",
-            sol::constructors<>(),
-            "visible",                   &GameObject::State::visible,
-            "collisionEnabled",          &GameObject::State::collisionEnabled,
-            "isColliding",               &GameObject::State::isColliding,
-            "focusEnabled",              &GameObject::State::focusEnabled,
-            "isBeingFocused",            &GameObject::State::isBeingFocused,
-            "hoverEnabled",              &GameObject::State::hoverEnabled,
-            "isBeingHovered",            &GameObject::State::isBeingHovered,
-            "enlargeOnHover",            &GameObject::State::enlargeOnHover,
-            "enlargeOnDrag",             &GameObject::State::enlargeOnDrag,
-            "clickEnabled",              &GameObject::State::clickEnabled,
-            "isBeingClicked",            &GameObject::State::isBeingClicked,
-            "dragEnabled",               &GameObject::State::dragEnabled,
-            "isBeingDragged",            &GameObject::State::isBeingDragged,
-            "triggerOnReleaseEnabled",   &GameObject::State::triggerOnReleaseEnabled,
-            "isTriggeringOnRelease",     &GameObject::State::isTriggeringOnRelease,
-            "isUnderOverlay",            &GameObject::State::isUnderOverlay
-        );
+        // //
+        // // 2) Nested State
+        // //
+        // lua.new_usertype<GameObject::State>("GameObjectState",
+        //     sol::constructors<>(),
+        //     "visible",                   &GameObject::State::visible,
+        //     "collisionEnabled",          &GameObject::State::collisionEnabled,
+        //     "isColliding",               &GameObject::State::isColliding,
+        //     "focusEnabled",              &GameObject::State::focusEnabled,
+        //     "isBeingFocused",            &GameObject::State::isBeingFocused,
+        //     "hoverEnabled",              &GameObject::State::hoverEnabled,
+        //     "isBeingHovered",            &GameObject::State::isBeingHovered,
+        //     "enlargeOnHover",            &GameObject::State::enlargeOnHover,
+        //     "enlargeOnDrag",             &GameObject::State::enlargeOnDrag,
+        //     "clickEnabled",              &GameObject::State::clickEnabled,
+        //     "isBeingClicked",            &GameObject::State::isBeingClicked,
+        //     "dragEnabled",               &GameObject::State::dragEnabled,
+        //     "isBeingDragged",            &GameObject::State::isBeingDragged,
+        //     "triggerOnReleaseEnabled",   &GameObject::State::triggerOnReleaseEnabled,
+        //     "isTriggeringOnRelease",     &GameObject::State::isTriggeringOnRelease,
+        //     "isUnderOverlay",            &GameObject::State::isUnderOverlay
+        // );
 
-        //
-        // 3) The main GameObject
-        //
-        lua.new_usertype<GameObject>("GameObject",
-            sol::constructors<>(),  // default constructor
+        // //
+        // // 3) The main GameObject
+        // //
+        // lua.new_usertype<GameObject>("GameObject",
+        //     sol::constructors<>(),  // default constructor
 
-            // basic hierarchy & containers
-            "parent",               &GameObject::parent,
-            "children",             &GameObject::children,
-            "orderedChildren",      &GameObject::orderedChildren,
-            "ignoresPause",         &GameObject::ignoresPause,
-            "container",            &GameObject::container,
-            "collisionTransform",   &GameObject::collisionTransform,
-            "clickTimeout",         &GameObject::clickTimeout,
+        //     // basic hierarchy & containers
+        //     "parent",               &GameObject::parent,
+        //     "children",             &GameObject::children,
+        //     "orderedChildren",      &GameObject::orderedChildren,
+        //     "ignoresPause",         &GameObject::ignoresPause,
+        //     "container",            &GameObject::container,
+        //     "collisionTransform",   &GameObject::collisionTransform,
+        //     "clickTimeout",         &GameObject::clickTimeout,
 
-            // optional custom Methods table
-            "methods",              &GameObject::methods,
+        //     // optional custom Methods table
+        //     "methods",              &GameObject::methods,
 
-            // script‐driven hooks
-            "updateFunction",       &GameObject::updateFunction,
-            "drawFunction",         &GameObject::drawFunction,
+        //     // script‐driven hooks
+        //     "updateFunction",       &GameObject::updateFunction,
+        //     "drawFunction",         &GameObject::drawFunction,
 
-            // mutable state and offsets
-            "state",                &GameObject::state,
-            "dragOffset",           &GameObject::dragOffset,
-            "clickOffset",          &GameObject::clickOffset,
-            "hoverOffset",          &GameObject::hoverOffset,
+        //     // mutable state and offsets
+        //     "state",                &GameObject::state,
+        //     "dragOffset",           &GameObject::dragOffset,
+        //     "clickOffset",          &GameObject::clickOffset,
+        //     "hoverOffset",          &GameObject::hoverOffset,
 
-            // parallax/shadow
-            "shadowDisplacement",    &GameObject::shadowDisplacement,
-            "layerDisplacement",     &GameObject::layerDisplacement,
-            "layerDisplacementPrev", &GameObject::layerDisplacementPrev,
-            "shadowHeight",          &GameObject::shadowHeight
-        );
+        //     // parallax/shadow
+        //     "shadowDisplacement",    &GameObject::shadowDisplacement,
+        //     "layerDisplacement",     &GameObject::layerDisplacement,
+        //     "layerDisplacementPrev", &GameObject::layerDisplacementPrev,
+        //     "shadowHeight",          &GameObject::shadowHeight
+        // );
 
-        //
-        // 4) Collision‐ordering structs
-        //
-        lua.new_usertype<CollisionOrderInfo>("CollisionOrderInfo",
-            sol::constructors<>(),
-            "hasCollisionOrder", &CollisionOrderInfo::hasCollisionOrder,
-            "parentBox",         &CollisionOrderInfo::parentBox,
-            "treeOrder",         &CollisionOrderInfo::treeOrder,
-            "layerOrder",        &CollisionOrderInfo::layerOrder
-        );
+        // //
+        // // 4) Collision‐ordering structs
+        // //
+        // lua.new_usertype<CollisionOrderInfo>("CollisionOrderInfo",
+        //     sol::constructors<>(),
+        //     "hasCollisionOrder", &CollisionOrderInfo::hasCollisionOrder,
+        //     "parentBox",         &CollisionOrderInfo::parentBox,
+        //     "treeOrder",         &CollisionOrderInfo::treeOrder,
+        //     "layerOrder",        &CollisionOrderInfo::layerOrder
+        // );
 
-        lua.new_usertype<TreeOrderComponent>("TreeOrderComponent",
-            sol::constructors<>(),
-            "order",             &TreeOrderComponent::order
-        );
+        // lua.new_usertype<TreeOrderComponent>("TreeOrderComponent",
+        //     sol::constructors<>(),
+        //     "order",             &TreeOrderComponent::order
+        // );
         
         
-        // 1) Initialization
-        lua.set_function("InitializeTransformSystem", &transform::InitializeSystem);
+        // // 1) Initialization
+        // lua.set_function("InitializeTransformSystem", &transform::InitializeSystem);
 
-        // 2) Bulk update & creation
-        lua.set_function("UpdateAllTransforms",            &transform::UpdateAllTransforms);
-        lua.set_function("CreateOrEmplace",                &transform::CreateOrEmplace);
-        lua.set_function("CreateGameWorldContainerEntity", &transform::CreateGameWorldContainerEntity);
+        // // 2) Bulk update & creation
+        // lua.set_function("UpdateAllTransforms",            &transform::UpdateAllTransforms);
+        // lua.set_function("CreateOrEmplace",                &transform::CreateOrEmplace);
+        // lua.set_function("CreateGameWorldContainerEntity", &transform::CreateGameWorldContainerEntity);
 
-        // 3) Per‐entity updates & alignment
-        lua.set_function("UpdateTransformSmoothingFactors", &transform::UpdateTransformSmoothingFactors);
-        lua.set_function("AlignToMaster",                   &transform::AlignToMaster);
-        lua.set_function("MoveWithMaster",                  &transform::MoveWithMaster);
-        lua.set_function("UpdateLocation",                  &transform::UpdateLocation);
-        lua.set_function("UpdateSize",                      &transform::UpdateSize);
-        lua.set_function("UpdateRotation",                  &transform::UpdateRotation);
-        lua.set_function("UpdateScale",                     &transform::UpdateScale);
+        // // 3) Per‐entity updates & alignment
+        // lua.set_function("UpdateTransformSmoothingFactors", &transform::UpdateTransformSmoothingFactors);
+        // lua.set_function("AlignToMaster",                   &transform::AlignToMaster);
+        // lua.set_function("MoveWithMaster",                  &transform::MoveWithMaster);
+        // lua.set_function("UpdateLocation",                  &transform::UpdateLocation);
+        // lua.set_function("UpdateSize",                      &transform::UpdateSize);
+        // lua.set_function("UpdateRotation",                  &transform::UpdateRotation);
+        // lua.set_function("UpdateScale",                     &transform::UpdateScale);
 
-        // 4) Master‐child management
-        lua.set_function("GetMaster", 
-            [](entt::entity e,
-               Transform& selfT,
-               InheritedProperties& selfR,
-               GameObject& selfN)
-            {
-                // these will be filled by your real function:
-                Transform*              parentT = nullptr;
-                InheritedProperties*    parentR = nullptr;
+        // // 4) Master‐child management
+        // lua.set_function("GetMaster", 
+        //     [](entt::entity e,
+        //        Transform& selfT,
+        //        InheritedProperties& selfR,
+        //        GameObject& selfN)
+        //     {
+        //         // these will be filled by your real function:
+        //         Transform*              parentT = nullptr;
+        //         InheritedProperties*    parentR = nullptr;
         
-                auto cache = transform::GetMaster(
-                  e, selfT, selfR, selfN,
-                  parentT,      // passed by reference
-                  parentR       // passed by reference
-                );
+        //         auto cache = transform::GetMaster(
+        //           e, selfT, selfR, selfN,
+        //           parentT,      // passed by reference
+        //           parentR       // passed by reference
+        //         );
         
-                // return three values: cache, parentT, parentR
-                return std::make_tuple(cache, parentT, parentR);
-            }
-        );
-        lua.set_function("SyncPerfectlyToMaster",&transform::SyncPerfectlyToMaster);
+        //         // return three values: cache, parentT, parentR
+        //         return std::make_tuple(cache, parentT, parentR);
+        //     }
+        // );
+        // lua.set_function("SyncPerfectlyToMaster",&transform::SyncPerfectlyToMaster);
 
-        // 5) Dynamic‐motion & parallax
-        lua.set_function("UpdateDynamicMotion",      &transform::UpdateDynamicMotion);
-        lua.set_function("InjectDynamicMotion",      &transform::InjectDynamicMotion);
-        lua.set_function("UpdateParallaxCalculations",&transform::UpdateParallaxCalculations);
+        // // 5) Dynamic‐motion & parallax
+        // lua.set_function("UpdateDynamicMotion",      &transform::UpdateDynamicMotion);
+        // lua.set_function("InjectDynamicMotion",      &transform::InjectDynamicMotion);
+        // lua.set_function("UpdateParallaxCalculations",&transform::UpdateParallaxCalculations);
 
-        // 6) Convenience & configuration
-        lua.set_function("ConfigureAlignment", &transform::ConfigureAlignment);
-        lua.set_function("AssignRole",         &transform::AssignRole);
-        lua.set_function("SnapTransformValues",       &transform::SnapTransformValues);
-        lua.set_function("SnapVisualTransformValues", &transform::SnapVisualTransformValues);
+        // // 6) Convenience & configuration
+        // lua.set_function("ConfigureAlignment", &transform::ConfigureAlignment);
+        // lua.set_function("AssignRole",         &transform::AssignRole);
+        // lua.set_function("SnapTransformValues",       &transform::SnapTransformValues);
+        // lua.set_function("SnapVisualTransformValues", &transform::SnapVisualTransformValues);
 
-        // 7) Drawing & debug
-        lua.set_function("DrawBoundingBoxAndDebugInfo", &transform::DrawBoundingBoxAndDebugInfo);
+        // // 7) Drawing & debug
+        // lua.set_function("DrawBoundingBoxAndDebugInfo", &transform::DrawBoundingBoxAndDebugInfo);
 
-        // 8) Cursor & collision helpers
-        lua.set_function("CalculateCursorPositionWithinFocus", &transform::CalculateCursorPositionWithinFocus);
-        lua.set_function("CheckCollisionWithPoint",            &transform::CheckCollisionWithPoint);
-        lua.set_function("FindTopEntityAtPoint",               &transform::FindTopEntityAtPoint);
-        lua.set_function("FindAllEntitiesAtPoint",             &transform::FindAllEntitiesAtPoint);
-        lua.set_function("GetCollisionOrderInfo",              &transform::GetCollisionOrderInfo);
+        // // 8) Cursor & collision helpers
+        // lua.set_function("CalculateCursorPositionWithinFocus", &transform::CalculateCursorPositionWithinFocus);
+        // lua.set_function("CheckCollisionWithPoint",            &transform::CheckCollisionWithPoint);
+        // lua.set_function("FindTopEntityAtPoint",               &transform::FindTopEntityAtPoint);
+        // lua.set_function("FindAllEntitiesAtPoint",             &transform::FindAllEntitiesAtPoint);
+        // lua.set_function("GetCollisionOrderInfo",              &transform::GetCollisionOrderInfo);
 
-        // 9) Input handlers
-        lua.set_function("HandleClick",         &transform::HandleClick);
-        lua.set_function("HandleClickReleased", &transform::HandleClickReleased);
-        lua.set_function("StartDrag",           &transform::StartDrag);
-        lua.set_function("StopDragging",        &transform::StopDragging);
-        lua.set_function("StartHover",          &transform::StartHover);
-        lua.set_function("StopHover",           &transform::StopHover);
-        lua.set_function("GetCursorOnFocus",    &transform::GetCursorOnFocus);
+        // // 9) Input handlers
+        // lua.set_function("HandleClick",         &transform::HandleClick);
+        // lua.set_function("HandleClickReleased", &transform::HandleClickReleased);
+        // lua.set_function("StartDrag",           &transform::StartDrag);
+        // lua.set_function("StopDragging",        &transform::StopDragging);
+        // lua.set_function("StartHover",          &transform::StartHover);
+        // lua.set_function("StopHover",           &transform::StopHover);
+        // lua.set_function("GetCursorOnFocus",    &transform::GetCursorOnFocus);
 
-        // 10) Container & translation helpers
-        lua.set_function("ConfigureContainerForEntity",     &transform::ConfigureContainerForEntity);
-        lua.set_function("ApplyTranslationFromEntityContainer", &transform::ApplyTranslationFromEntityContainer);
+        // // 10) Container & translation helpers
+        // lua.set_function("ConfigureContainerForEntity",     &transform::ConfigureContainerForEntity);
+        // lua.set_function("ApplyTranslationFromEntityContainer", &transform::ApplyTranslationFromEntityContainer);
 
-        // 11) Utility & cleanup
-        lua.set_function("GetDistanceBetween",  &transform::GetDistanceBetween);
-        lua.set_function("RemoveEntity",        &transform::RemoveEntity);
-        lua.set_function("SetClickOffset",      &transform::SetClickOffset);
-        lua.set_function("GetObjectToDrag",     &transform::GetObjectToDrag);
-        lua.set_function("Draw",                &transform::Draw);
-        lua.set_function("updateTransformCacheForAllTransforms", &transform::updateTransformCacheForAllTransforms);
-        lua.set_function("setJiggleOnHover",    &transform::setJiggleOnHover);
+        // // 11) Utility & cleanup
+        // lua.set_function("GetDistanceBetween",  &transform::GetDistanceBetween);
+        // lua.set_function("RemoveEntity",        &transform::RemoveEntity);
+        // lua.set_function("SetClickOffset",      &transform::SetClickOffset);
+        // lua.set_function("GetObjectToDrag",     &transform::GetObjectToDrag);
+        // lua.set_function("Draw",                &transform::Draw);
+        // lua.set_function("updateTransformCacheForAllTransforms", &transform::updateTransformCacheForAllTransforms);
+        // lua.set_function("setJiggleOnHover",    &transform::setJiggleOnHover);
     }
 
 }

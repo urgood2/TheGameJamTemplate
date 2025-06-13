@@ -157,81 +157,81 @@ namespace scripting {
 
 
         //---------------------------------------------------------
-        // methods from event_system.cpp. These can be called from lua✅
+        // methods from event_system.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         event_system::exposeEventSystemToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from textVer2.cpp. These can be called from lua✅
+        // methods from textVer2.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         TextSystem::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from anim_system.cpp. These can be called from lua✅
+        // methods from anim_system.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         animation_system::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
-        // methods from tutorial_system_v2.cpp. These can be called from lua ✅
+        // methods from tutorial_system_v2.cpp. These can be called from lua ✅ TODO: lua def PARAMETERS NEED WORK
         // ------------------------------------------------------
         tutorial_system_v2::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from particle system. These can be called from lua✅
+        // methods from particle system. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         particle::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from shader_pipeline.cpp. These can be called from lua✅
+        // methods from shader_pipeline.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         shader_pipeline::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from random.cpp. These can be called from lua✅
+        // methods from random.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         random_utils::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from system/layer folder. These can be called from lua✅
+        // methods from system/layer folder. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         layer::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from shader_system.cpp. These can be called from lua✅
+        // methods from shader_system.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         shaders::exposeToLua(stateToInit);
 
         // ---------------------------------------------------------
-        // methods from localization.cpp. These can be called from lua✅
+        // methods from localization.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         localization::exposeToLua(stateToInit);
 
         // ---------------------------------------------------------
-        // methods from timer.cpp. These can be called from lua✅
+        // methods from timer.cpp. These can be called from lua✅ TODO: lua def PARAMETERS NEED WORK
         //---------------------------------------------------------
         timer::exposeToLua(stateToInit);
 
         
 
         //---------------------------------------------------------
-        // methods from sound_system.cpp. These can be called from lua
+        // methods from sound_system.cpp. These can be called from lua✅
         //---------------------------------------------------------
         sound_system::ExposeToLua(stateToInit);
 
         //---------------------------------------------------------
-        // methods from utilities.cpp. These can be called from lua
+        // methods from utilities.cpp. These can be called from lua✅
         //---------------------------------------------------------
         util::exposeToLua(stateToInit);
 
 
         
         //---------------------------------------------------------
-        // methods and data from transform system. These can be called from lua
+        // methods and data from transform system. These can be called from lua ✅
         //---------------------------------------------------------
         transform::exposeToLua(stateToInit);
         
         //---------------------------------------------------------
-        // methods from ui system. These can be called from lua
+        // methods from ui system. These can be called from lua ✅
         //---------------------------------------------------------
         ui::exposeToLua(stateToInit);
 
@@ -260,14 +260,14 @@ namespace scripting {
             static_cast<void(*)(std::string)>(&luaDebugLogWrapperNoEntity)
         ));
         rec.record_free_function({}, {"debug", "---@param entity Entity\n---@param message string\n---@return nil", "Logs a debug message associated with an entity.", true, false});
-        rec.record_free_function({}, {"debug", "(message: string):nil", "Logs a general debug message.", true, true});
+        rec.record_free_function({}, {"debug", "---(message: string):nil", "Logs a general debug message.", true, true});
 
         stateToInit.set_function("error", sol::overload(
             static_cast<void(*)(entt::entity, std::string)>(&luaErrorLogWrapper),
             static_cast<void(*)(std::string)>(&luaErrorLogWrapperNoEntity)
         ));
         rec.record_free_function({}, {"error", "---@param entity Entity\n---@param message string\n---@return nil", "Logs an error message associated with an entity.", true, false});
-        rec.record_free_function({}, {"error", "(message: string):nil", "Logs a general error message.", true, true});
+        rec.record_free_function({}, {"error", "---(message: string):nil", "Logs a general error message.", true, true});
 
         stateToInit.set_function("setCurrentWorldStateValue", setCurrentWorldStateValue);
         stateToInit.set_function("getCurrentWorldStateValue", getCurrentWorldStateValue);

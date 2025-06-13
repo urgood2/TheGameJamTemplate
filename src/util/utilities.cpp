@@ -92,16 +92,81 @@ namespace util {
     }
 
     auto exposeToLua(sol::state &lua) -> void {
-        // Create (or fetch) the top‐level `util` table:
+
+        // BindingRecorder instance
+        auto& rec = BindingRecorder::instance();
+        
+        // Create (or fetch) the top-level `util` table:
         sol::table util_tbl = lua.create_named_table("util");
+        // Recorder: Top-level namespace
+        rec.add_type("util").doc = "General-purpose utility functions.";
 
         // Bind only the requested functions:
-        util_tbl.set_function("getRawAssetPathNoUUID",  &util::getRawAssetPathNoUUID);
-        util_tbl.set_function("getColor",               &util::getColor);
-        util_tbl.set_function("getAssetPathUUIDVersion",&util::getAssetPathUUIDVersion);
-        util_tbl.set_function("raylibColorToImVec",     &util::raylibColorToImVec);
-        util_tbl.set_function("getRandomSynonymFor",    &util::getRandomSynonymFor);
-        util_tbl.set_function("toUnsignedChar",         &util::toUnsignedChar);
+        util_tbl.set_function("getRawAssetPathNoUUID",   &util::getRawAssetPathNoUUID);
+        rec.record_free_function({"util"}, {
+            "getRawAssetPathNoUUID",
+            "---@param assetName string # The name of the asset.\n"
+            "---@return string",
+            "Constructs a raw asset path without a UUID.",
+            true, false
+        });
+
+        util_tbl.set_function("getColor",                &util::getColor);
+        rec.record_free_function({"util"}, {
+            "getColor",
+            "---@param colorName string # The name of the color (e.g., \"red\").\n"
+            "---@return Color",
+            "Retrieves a pre-defined Color object by its name.",
+            true, false
+        });
+        
+        util_tbl.set_function("getAssetPathUUIDVersion", &util::getAssetPathUUIDVersion);
+        rec.record_free_function({"util"}, {
+            "getAssetPathUUIDVersion",
+            "---@param path_uuid_or_raw_identifier string # The asset identifier.\n"
+            "---@return string",
+            "Gets the UUID version of an asset path.",
+            true, false
+        });
+
+        util_tbl.set_function("raylibColorToImVec",      &util::raylibColorToImVec);
+        rec.record_free_function({"util"}, {
+            "raylibColorToImVec",
+            "---@param c Color # The Raylib Color object.\n"
+            "---@return ImVec4",
+            "Converts a Raylib Color to an ImGui ImVec4.",
+            true, false
+        });
+
+        util_tbl.set_function("getRandomSynonymFor",     &util::getRandomSynonymFor);
+        rec.record_free_function({"util"}, {
+            "getRandomSynonymFor",
+            "---@param word string # The word to find a synonym for.\n"
+            "---@return string",
+            "Returns a random synonym for the given word.",
+            true, false
+        });
+
+        util_tbl.set_function("toUnsignedChar",          &util::toUnsignedChar);
+        rec.record_free_function({"util"}, {
+            "toUnsignedChar",
+            "---@param value string # The string to convert.\n"
+            "---@return integer",
+            "Converts a string to its unsigned char representation.",
+            true, false
+        });
+
+
+        // // Create (or fetch) the top‐level `util` table:
+        // sol::table util_tbl = lua.create_named_table("util");
+
+        // // Bind only the requested functions:
+        // util_tbl.set_function("getRawAssetPathNoUUID",  &util::getRawAssetPathNoUUID);
+        // util_tbl.set_function("getColor",               &util::getColor);
+        // util_tbl.set_function("getAssetPathUUIDVersion",&util::getAssetPathUUIDVersion);
+        // util_tbl.set_function("raylibColorToImVec",     &util::raylibColorToImVec);
+        // util_tbl.set_function("getRandomSynonymFor",    &util::getRandomSynonymFor);
+        // util_tbl.set_function("toUnsignedChar",         &util::toUnsignedChar);
     }
 
     auto getRawAssetPathNoUUID(const string assetName) -> string {

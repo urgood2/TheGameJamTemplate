@@ -185,6 +185,270 @@ function displayIndicatorAroundEntity(...) end
 ---@return nil
 function displayIndicatorAroundEntity(...) end
 
+---
+--- Plays a sound effect from the specified category.
+---
+---@param category string # The category of the sound.
+---@param soundName string # The name of the sound effect to play.
+---@return nil
+function playSoundEffect(...) end
+
+---
+--- Plays a music track.
+---
+---@param musicName string # The name of the music track to play.
+---@param loop? boolean # If the music should loop. Defaults to false.
+---@return nil
+function playMusic(...) end
+
+---
+--- Adds a music track to the queue to be played next.
+---
+---@param musicName string # The name of the music track to queue.
+---@param loop? boolean # If the queued music should loop. Defaults to false.
+---@return nil
+function queueMusic(...) end
+
+---
+--- Fades in and plays a music track over a duration.
+---
+---@param musicName string # The music track to fade in.
+---@param duration number # The duration of the fade in seconds.
+---@return nil
+function fadeInMusic(...) end
+
+---
+--- Fades out the currently playing music.
+---
+---@param duration number # The duration of the fade in seconds.
+---@return nil
+function fadeOutMusic(...) end
+
+---
+--- Pauses the current music track.
+---
+---@param smooth? boolean # Whether to fade out when pausing. Defaults to false.
+---@param fadeDuration? number # The fade duration if smooth is true. Defaults to 0.
+---@return nil
+function pauseMusic(...) end
+
+---
+--- Resumes the paused music track.
+---
+---@param smooth? boolean # Whether to fade in when resuming. Defaults to false.
+---@param fadeDuration? number # The fade duration if smooth is true. Defaults to 0.
+---@return nil
+function resumeMusic(...) end
+
+---
+--- Sets the master audio volume.
+---
+---@param volume number # The master volume level (0.0 to 1.0).
+---@return nil
+function setVolume(...) end
+
+---
+--- Sets the volume for the music category only.
+---
+---@param volume number # The music volume level (0.0 to 1.0).
+---@return nil
+function setMusicVolume(...) end
+
+---
+--- Sets the volume for a specific sound effect category.
+---
+---@param category string # The name of the sound category.
+---@param volume number # The volume for this category (0.0 to 1.0).
+---@return nil
+function setCategoryVolume(...) end
+
+---
+--- Sets the pitch for a specific sound. Note: This may not apply to currently playing instances.
+---
+---@param category string # The category of the sound.
+---@param soundName string # The name of the sound effect.
+---@param pitch number # The new pitch multiplier (1.0 is default).
+---@return nil
+function setSoundPitch(...) end
+
+---
+--- Requests a full reset of the AI system state.
+---
+---@return nil
+function hardReset(...) end
+
+---
+--- Retrieves an entity by its string alias.
+---
+---@param alias string
+---@return Entity|nil
+function getEntityByAlias(...) end
+
+---
+--- Assigns a string alias to an entity.
+---
+---@param entity Entity
+---@param alias string
+---@return nil
+function setEntityAlias(...) end
+
+---
+--- Logs a debug message associated with an entity.
+---
+---@param entity Entity
+---@param message string
+---@return nil
+function debug(...) end
+
+---
+--- Logs a general debug message.
+---
+(message: string):nil
+function debug(...) end
+
+---
+--- Logs an error message associated with an entity.
+---
+---@param entity Entity
+---@param message string
+---@return nil
+function error(...) end
+
+---
+--- Logs a general error message.
+---
+(message: string):nil
+function error(...) end
+
+---
+--- Sets a value in the current world state.
+---
+---@param key string
+---@param value any
+---@return nil
+function setCurrentWorldStateValue(...) end
+
+---
+--- Gets a value from the current world state.
+---
+---@param key string
+---@return any|nil
+function getCurrentWorldStateValue(...) end
+
+---
+--- Clears the current world state.
+---
+---@return nil
+function clearCurrentWorldState(...) end
+
+---
+--- Sets a value in the goal world state.
+---
+---@param key string
+---@param value any
+---@return nil
+function setGoalWorldStateValue(...) end
+
+---
+--- Gets a value from the goal world state.
+---
+---@param key string
+---@return any|nil
+function getGoalWorldStateValue(...) end
+
+---
+--- Clears the goal world state.
+---
+---@return nil
+function clearGoalWorldState(...) end
+
+---
+--- Sets a float value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value number
+---@return nil
+function setBlackboardFloat(...) end
+
+---
+--- Gets a float value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return number
+function getBlackboardFloat(...) end
+
+---
+--- Sets a boolean value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value boolean
+---@return nil
+function setBlackboardBool(...) end
+
+---
+--- Gets a boolean value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return boolean
+function getBlackboardBool(...) end
+
+---
+--- Sets an integer value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value integer
+---@return nil
+function setBlackboardInt(...) end
+
+---
+--- Gets an integer value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return integer
+function getBlackboardInt(...) end
+
+---
+--- Sets a string value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value string
+---@return nil
+function setBlackboardString(...) end
+
+---
+--- Gets a string value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return string
+function getBlackboardString(...) end
+
+---
+--- Checks if a specific keyboard key is currently pressed.
+---
+---@param key string
+---@return boolean
+function isKeyPressed(...) end
+
+---
+--- Pauses the game.
+---
+---@return nil
+function pauseGame(...) end
+
+---
+--- Unpauses the game.
+---
+---@return nil
+function unpauseGame(...) end
+
 
 ---
 --- Results of an action
@@ -1446,6 +1710,344 @@ function shaders.ShaderUniformComponent:getSet(...) end
 ---@param entity Entity # The entity to source uniform values from
 function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
 
+
+---
+--- A system for creating, managing, and updating timers.
+---
+---@class timer
+local timer = {
+}
+
+
+---
+--- Mathematical utility functions for timers.
+---
+---@class timer.math
+timer.math = {
+}
+
+
+---
+--- Specifies the behavior of a timer.
+---
+---@class timer.TimerType
+timer.TimerType = {
+    RUN = 0,  -- Runs once immediately.
+    AFTER = 1,  -- Runs once after a delay.
+    COOLDOWN = 2,  -- A resettable one-shot timer.
+    EVERY = 3,  -- Runs repeatedly at an interval.
+    EVERY_STEP = 4,  -- Runs repeatedly every N frames.
+    FOR = 5,  -- Runs every frame for a duration.
+    TWEEN = 6  -- Interpolates a value over a duration.
+}
+
+
+---
+--- A system for managing and processing sequential and timed events.
+---
+---@class EventQueueSystem
+local EventQueueSystem = {
+}
+
+
+---
+--- Collection of easing functions for tweening.
+---
+---@class EventQueueSystem.EaseType
+EventQueueSystem.EaseType = {
+    LERP = 0,  -- Linear interpolation.
+    ELASTIC_IN = 1,  -- Elastic in.
+    ELASTIC_OUT = 2,  -- Elastic out.
+    QUAD_IN = 3,  -- Quadratic in.
+    QUAD_OUT = 4  -- Quadratic out.
+}
+
+
+---
+--- Defines when an event in the queue should be triggered.
+---
+---@class EventQueueSystem.TriggerType
+EventQueueSystem.TriggerType = {
+    IMMEDIATE = 0,  -- Triggers immediately.
+    AFTER = 1,  -- Triggers after a delay.
+    BEFORE = 2,  -- Triggers before a delay.
+    EASE = 3,  -- Triggers as part of an ease/tween.
+    CONDITION = 4  -- Triggers when a condition is met.
+}
+
+
+---
+--- Defines which clock an event timer uses.
+---
+---@class EventQueueSystem.TimerType
+EventQueueSystem.TimerType = {
+    REAL_TIME = 0,  -- Uses the real-world clock, unaffected by game pause.
+    TOTAL_TIME_EXCLUDING_PAUSE = 1  -- Uses the game clock, which may be paused.
+}
+
+
+---
+--- Data for an easing/tweening operation.
+---
+---@class EventQueueSystem.EaseData
+EventQueueSystem.EaseData = {
+    type = EventQueueSystem.EaseType,  -- The easing function to use.
+    startValue = number,  -- The starting value of the tween.
+    endValue = number,  -- The ending value of the tween.
+    startTime = number,  -- The start time of the tween.
+    endTime = number,  -- The end time of the tween.
+    setValueCallback = fun(value:number),  -- Callback to apply the tweened value.
+    getValueCallback = fun():number  -- Callback to get the current value.
+}
+
+
+---
+--- A condition that must be met for an event to trigger.
+---
+---@class EventQueueSystem.ConditionData
+EventQueueSystem.ConditionData = {
+    check = fun():boolean  -- A function that returns true when the condition is met.
+}
+
+
+---
+--- A single event in the event queue.
+---
+---@class EventQueueSystem.Event
+EventQueueSystem.Event = {
+    eventTrigger = EventQueueSystem.TriggerType,  -- When the event should trigger.
+    blocksQueue = boolean,  -- If true, no other events will process until this one completes.
+    canBeBlocked = boolean,  -- If true, this event can be blocked by another.
+    complete = boolean,  -- True if the event has finished processing.
+    timerStarted = boolean,  -- Internal flag for timed events.
+    delaySeconds = number,  -- The delay in seconds for 'AFTER' triggers.
+    retainAfterCompletion = boolean,  -- If true, the event remains in the queue after completion.
+    createdWhilePaused = boolean,  -- If true, the event was created while the game was paused.
+    func = function,  -- The callback function to execute.
+    timerType = EventQueueSystem.TimerType,  -- The clock type to use for this event's timer.
+    time = number,  -- Internal time tracking for the event.
+    ease = EventQueueSystem.EaseData,  -- Easing data for tweening events.
+    condition = EventQueueSystem.ConditionData,  -- Condition data for conditional events.
+    tag = string,  -- An optional tag for finding the event later.
+    debugID = string,  -- A debug identifier for the event.
+    deleteNextCycleImmediately = boolean  -- If true, deletes the event on the next update cycle.
+}
+
+
+---
+--- A builder for creating EaseData objects.
+---
+---@class EventQueueSystem.EaseDataBuilder
+EventQueueSystem.EaseDataBuilder = {
+}
+
+---
+--- Sets the ease type.
+---
+---@param type EventQueueSystem.EaseType
+---@return EventQueueSystem.EaseDataBuilder
+function EventQueueSystem.EaseDataBuilder:Type(...) end
+
+---
+--- Sets the starting value.
+---
+---@param value number
+---@return EventQueueSystem.EaseDataBuilder
+function EventQueueSystem.EaseDataBuilder:StartValue(...) end
+
+---
+--- Sets the ending value.
+---
+---@param value number
+---@return EventQueueSystem.EaseDataBuilder
+function EventQueueSystem.EaseDataBuilder:EndValue(...) end
+
+---
+--- Sets the start time.
+---
+---@param time number
+---@return EventQueueSystem.EaseDataBuilder
+function EventQueueSystem.EaseDataBuilder:StartTime(...) end
+
+---
+--- Sets the end time.
+---
+---@param time number
+---@return EventQueueSystem.EaseDataBuilder
+function EventQueueSystem.EaseDataBuilder:EndTime(...) end
+
+---
+--- Sets the 'set value' callback.
+---
+---@param cb fun(value:number)
+---@return EventQueueSystem.EaseDataBuilder
+function EventQueueSystem.EaseDataBuilder:SetCallback(...) end
+
+---
+--- Sets the 'get value' callback.
+---
+---@param cb fun():number
+---@return EventQueueSystem.EaseDataBuilder
+function EventQueueSystem.EaseDataBuilder:GetCallback(...) end
+
+---
+--- Builds the final EaseData object.
+---
+---@return EventQueueSystem.EaseData
+function EventQueueSystem.EaseDataBuilder:Build(...) end
+
+
+---
+--- A builder for creating and queuing events.
+---
+---@class EventQueueSystem.EventBuilder
+EventQueueSystem.EventBuilder = {
+}
+
+---
+--- Sets the event trigger type.
+---
+---@param type EventQueueSystem.TriggerType
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:Trigger(...) end
+
+---
+--- Sets if the event blocks the queue.
+---
+---@param blocks boolean
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:BlocksQueue(...) end
+
+---
+--- Sets if the event can be blocked.
+---
+---@param can_be_blocked boolean
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:CanBeBlocked(...) end
+
+---
+--- Sets the delay for an 'AFTER' trigger.
+---
+---@param seconds number
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:Delay(...) end
+
+---
+--- Sets the main callback function.
+---
+---@param cb function
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:Func(...) end
+
+---
+--- Attaches ease data to the event.
+---
+---@param easeData EventQueueSystem.EaseData
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:Ease(...) end
+
+---
+--- Attaches a condition to the event.
+---
+---@param condData EventQueueSystem.ConditionData
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:Condition(...) end
+
+---
+--- Assigns a string tag to the event.
+---
+---@param tag string
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:Tag(...) end
+
+---
+--- Assigns a debug ID to the event.
+---
+---@param id string
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:DebugID(...) end
+
+---
+--- Sets if the event is kept after completion.
+---
+---@param retain boolean
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:RetainAfterCompletion(...) end
+
+---
+--- Marks the event as created while paused.
+---
+---@param was_paused boolean
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:CreatedWhilePaused(...) end
+
+---
+--- Sets the timer clock type for the event.
+---
+---@param type EventQueueSystem.TimerType
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:TimerType(...) end
+
+---
+--- Starts the timer immediately.
+---
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:StartTimer(...) end
+
+---
+--- Flags the event for deletion on the next cycle.
+---
+---@param delete_next boolean
+---@return EventQueueSystem.EventBuilder
+function EventQueueSystem.EventBuilder:DeleteNextCycleImmediately(...) end
+
+---
+--- Builds the final Event object.
+---
+---@return EventQueueSystem.Event
+function EventQueueSystem.EventBuilder:Build(...) end
+
+---
+--- Builds the event and adds it directly to the queue.
+---
+---@return nil
+function EventQueueSystem.EventBuilder:AddToQueue(...) end
+
+
+---
+--- General-purpose utility functions.
+---
+---@class util
+local util = {
+}
+
+---
+--- Adds a pre-built event to the queue.
+---
+---@param event EventQueueSystem.Event
+---@return nil
+function EventQueueSystem.add_event(...) end
+
+---
+--- Finds an active event by its tag.
+---
+---@param tag string
+---@return EventQueueSystem.Event|nil
+function EventQueueSystem.get_event_by_tag(...) end
+
+---
+--- Removes all events from the queue.
+---
+---@return nil
+function EventQueueSystem.clear_queue(...) end
+
+---
+--- Updates the event queue, processing active events.
+---
+---@param dt number # Delta time.
+---@return nil
+function EventQueueSystem.update(...) end
+
 ---
 --- Adjusts text alignment
 ---
@@ -1636,13 +2238,13 @@ function animation_system.resetAnimationUIRenderScale(...) end
 function animation_system.resizeAnimationObjectToFit(...) end
 
 ---
---- Sorts the layers
+--- ---Sorts the layers
 ---
 ---@return nil
 function layer.SortLayers(...) end
 
 ---
---- Updates the Z index of a layer
+--- ---Updates the Z index of a layer
 ---
 ---@param layer layer.Layer
 ---@param newZIndex integer
@@ -1650,13 +2252,13 @@ function layer.SortLayers(...) end
 function layer.UpdateLayerZIndex(...) end
 
 ---
---- Creates a new layer and returns it
+--- ---Creates a new layer and returns it
 ---
 ---@return layer.Layer
 function layer.CreateLayer(...) end
 
 ---
---- Creates a layer with a specified canvas size
+--- ---Creates a layer with a specified canvas size
 ---
 ---@param width integer
 ---@param height integer
@@ -1664,14 +2266,14 @@ function layer.CreateLayer(...) end
 function layer.CreateLayerWithSize(...) end
 
 ---
---- Removes a layer and unloads its canvases
+--- ---Removes a layer and unloads its canvases
 ---
 ---@param layer layer.Layer
 ---@return nil
 function layer.RemoveLayerFromCanvas(...) end
 
 ---
---- Resizes the canvas of a layer
+--- ---Resizes the canvas of a layer
 ---
 ---@param layer layer.Layer
 ---@param canvasName string
@@ -1685,11 +2287,11 @@ function layer.ResizeCanvasInLayer(...) end
 ---
 ---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer)
 ---@overload fun(layer: layer.Layer, canvasName: string)
-Adds a canvas to the layer. Will create if needed.
+---Adds a canvas to the layer. Will create if needed.
 function layer.AddCanvasToLayer(...) end
 
 ---
---- Removes a canvas by name
+--- ---Removes a canvas by name
 ---
 ---@param layer layer.Layer
 ---@param canvasName string
@@ -1697,38 +2299,38 @@ function layer.AddCanvasToLayer(...) end
 function layer.RemoveCanvas(...) end
 
 ---
---- Destroys all layers and their contents
+--- ---Destroys all layers and their contents
 ---
 ---@return nil
 function layer.UnloadAllLayers(...) end
 
 ---
---- Clears draw commands for a specific layer
+--- ---Clears draw commands for a specific layer
 ---
 ---@param layer layer.Layer
 ---@return nil
 function layer.ClearDrawCommands(...) end
 
 ---
---- Clears all draw commands from all layers
+--- ---Clears all draw commands from all layers
 ---
 ---@return nil
 function layer.ClearAllDrawCommands(...) end
 
 ---
---- Begins drawing to all canvases
+--- ---Begins drawing to all canvases
 ---
 ---@return nil
 function layer.Begin(...) end
 
 ---
---- Ends drawing to all canvases
+--- ---Ends drawing to all canvases
 ---
 ---@return nil
 function layer.End(...) end
 
 ---
---- Renders all layers to the current render target
+--- ---Renders all layers to the current render target
 ---
 ---@param camera Camera2D?
 ---@return nil
@@ -1741,7 +2343,7 @@ function layer.RenderAllLayersToCurrentRenderTarget(...) end
 ---@param canvasName string
 ---@param camera Camera2D?
 ---@return nil
-Draws commands to a specific canvas, optionally using a camera
+---Draws commands to a specific canvas, optionally using a camera
 function layer.DrawLayerCommandsToSpecificCanvas(...) end
 
 ---
@@ -1758,7 +2360,7 @@ function layer.DrawLayerCommandsToSpecificCanvas(...) end
 ---@param shader Shader
 ---@param flat boolean
 ---@return nil
-Draws a canvas to the current render target with transform, color, and optional shader
+---Draws a canvas to the current render target with transform, color, and optional shader
 function layer.DrawCanvasToCurrentRenderTargetWithTransform(...) end
 
 ---
@@ -1784,7 +2386,7 @@ function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
 ---@param scaleY number
 ---@param tint Color
 ---@return nil
-Draws a canvas from one layer onto another
+---Draws a canvas from one layer onto another
 function layer.DrawCanvasOntoOtherLayer(...) end
 
 ---
@@ -1802,35 +2404,35 @@ function layer.DrawCanvasOntoOtherLayer(...) end
 ---@param tint Color
 ---@param shader Shader
 ---@return nil
-Draws a canvas from one layer onto another with an optional shader
+---Draws a canvas from one layer onto another with an optional shader
 function layer.DrawCanvasOntoOtherLayerWithShader(...) end
 
 ---
 --- 
 ---
 ---@param redo---@return nil
-Draws a canvas to the current render target with a destination rectangle
+---Draws a canvas to the current render target with a destination rectangle
 function layer.DrawCanvasToCurrentRenderTargetWithDestRect(...) end
 
 ---
 --- 
 ---
 ---@param redo---@return nil
-Draws a custom lambda function to a specific canvas
+---Draws a custom lambda function to a specific canvas
 function layer.DrawCustomLamdaToSpecificCanvas(...) end
 
 ---
 --- 
 ---
 ---@param redo---@return nil
-Draws a transform entity with animation
+---Draws a transform entity with animation
 function layer.DrawTransformEntityWithAnimation(...) end
 
 ---
 --- 
 ---
 ---@param redo---@return nil
-Draws a transform entity with animation using a specific pipeline
+---Draws a transform entity with animation using a specific pipeline
 function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
 
 ---
@@ -2248,6 +2850,61 @@ function layer.queueRenderNPatchRect(...) end
 function layer.queueDrawTriangle(...) end
 
 ---
+--- Loads a language file for the given language code.
+---
+---@param languageCode string # The language to load (e.g., "en_US").
+---@return nil
+function localization.loadLanguage(...) end
+
+---
+--- Sets a fallback language if a key isn't found in the current one.
+---
+---@param languageCode string # The language to use as a fallback.
+---@return nil
+function localization.setFallbackLanguage(...) end
+
+---
+--- Gets the localized string for the given key, using the fallback if needed.
+---
+---@param key string # The localization key.
+---@return string # The localized string.
+function localization.get(...) end
+
+---
+--- Gets the raw string from the language file, ignoring fallbacks.
+---
+---@param key string # The localization key.
+---@return string # The raw, untransformed string.
+function localization.getRaw(...) end
+
+---
+--- Retrieves font data associated with the current language.
+---
+---@return FontData # A handle to the font data for the current language.
+function localization.getFontData(...) end
+
+---
+--- Loads font data from the specified path.
+---
+---@param path string # The file path to the font data.
+---@return nil
+function localization.loadFontData(...) end
+
+---
+--- Registers a callback that executes after the current language changes.
+---
+---@param callback fun() # A function to call when the language is changed.
+---@return nil
+function localization.onLanguageChanged(...) end
+
+---
+--- Sets the current language for all subsequent 'get' calls.
+---
+---@param languageCode string # The language to make active.
+---@return nil
+function localization.setCurrentLanguage(...) end
+
+---
 --- Creates and attaches a particle system to an entity
 ---
 ---@param entity Entity
@@ -2567,4 +3224,183 @@ function shaders.updateShaders(...) end
 ---
 ---@return void
 function shaders.ShowShaderEditorUI(...) end
+
+---
+--- Cancels and destroys an active timer.
+---
+---@param timerHandle integer
+---@return nil
+function timer.cancel(...) end
+
+---
+--- Gets the current invocation count for an 'every' timer.
+---
+---@param timerHandle integer
+---@return integer
+function timer.get_every_index(...) end
+
+---
+--- Resets a timer, such as a 'cooldown'.
+---
+---@param timerHandle integer
+---@return nil
+function timer.reset(...) end
+
+---
+--- Gets the remaining time on a timer.
+---
+---@param timerHandle integer
+---@return number
+function timer.get_delay(...) end
+
+---
+--- Sets the global speed multiplier for all timers.
+---
+---@param multiplier number
+---@return nil
+function timer.set_multiplier(...) end
+
+---
+--- Gets the global timer speed multiplier.
+---
+---@return number
+function timer.get_multiplier(...) end
+
+---
+--- Gets the elapsed time for a 'for' timer.
+---
+---@param timerHandle integer
+---@return number
+function timer.get_for_elapsed(...) end
+
+---
+--- Returns the timer object and its remaining delay.
+---
+---@param timerHandle integer
+---@return table, number
+function timer.get_timer_and_delay(...) end
+
+---
+--- Updates all active timers, should be called once per frame.
+---
+---@param dt number # Delta time.
+---@return nil
+function timer.update(...) end
+
+---
+--- Create a timer that runs once immediately.
+---
+---@param callback function
+---@return integer # timerHandle
+function timer.run(...) end
+
+---
+--- Create a timer that runs once after a delay.
+---
+---@param delay number
+---@param callback function
+---@return integer # timerHandle
+function timer.after(...) end
+
+---
+--- Create a resettable one-shot timer.
+---
+---@param duration number
+---@param callback function
+---@return integer # timerHandle
+function timer.cooldown(...) end
+
+---
+--- Create a timer that runs repeatedly.
+---
+---@param interval number
+---@param callback function
+---@return integer # timerHandle
+function timer.every(...) end
+
+---
+--- Create a timer that runs every N frames.
+---
+---@param frames integer
+---@param callback function
+---@return integer # timerHandle
+function timer.every_step(...) end
+
+---
+--- Create a timer that runs every frame for a set duration.
+---
+---@param duration number
+---@param callback fun(elapsedTime:number)
+---@return integer # timerHandle
+function timer.for(...) end
+
+---
+--- Create a timer that interpolates a value from 0 to 1 over a duration.
+---
+---@param duration number
+---@param callback fun(value:number)
+---@return integer # timerHandle
+function timer.tween(...) end
+
+---
+--- Re-maps a number from one range to another.
+---
+---@param value number
+---@param from1 number
+---@param to1 number
+---@param from2 number
+---@param to2 number
+---@return number
+function timer.math.remap(...) end
+
+---
+--- Linearly interpolates between two points.
+---
+---@param a number
+---@param b number
+---@param t number
+---@return number
+function timer.math.lerp(...) end
+
+---
+--- Constructs a raw asset path without a UUID.
+---
+---@param assetName string # The name of the asset.
+---@return string
+function util.getRawAssetPathNoUUID(...) end
+
+---
+--- Retrieves a pre-defined Color object by its name.
+---
+---@param colorName string # The name of the color (e.g., "red").
+---@return Color
+function util.getColor(...) end
+
+---
+--- Gets the UUID version of an asset path.
+---
+---@param path_uuid_or_raw_identifier string # The asset identifier.
+---@return string
+function util.getAssetPathUUIDVersion(...) end
+
+---
+--- Converts a Raylib Color to an ImGui ImVec4.
+---
+---@param c Color # The Raylib Color object.
+---@return ImVec4
+function util.raylibColorToImVec(...) end
+
+---
+--- Returns a random synonym for the given word.
+---
+---@param word string # The word to find a synonym for.
+---@return string
+function util.getRandomSynonymFor(...) end
+
+---
+--- Converts a string to its unsigned char representation.
+---
+---@param value string # The string to convert.
+---@return integer
+function util.toUnsignedChar(...) end
 

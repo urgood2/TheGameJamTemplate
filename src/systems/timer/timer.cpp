@@ -345,7 +345,7 @@ namespace timer
             "setValueCallback",   &timer::EventQueueSystem::EaseData::set_value_callback,
             "getValueCallback",   &timer::EventQueueSystem::EaseData::get_value_callback
         );
-        auto& easeData = rec.add_type("EventQueueSystem.EaseData");
+        auto& easeData = rec.add_type("EventQueueSystem.EaseData", /*is_data_class=*/true);
         easeData.doc = "Data for an easing/tweening operation.";
         rec.record_property("EventQueueSystem.EaseData", {"type", "EventQueueSystem.EaseType", "The easing function to use."});
         rec.record_property("EventQueueSystem.EaseData", {"startValue", "number", "The starting value of the tween."});
@@ -358,7 +358,7 @@ namespace timer
         eq.new_usertype<timer::EventQueueSystem::ConditionData>("ConditionData",
             "check", &timer::EventQueueSystem::ConditionData::checkConditionCallback
         );
-        auto& condData = rec.add_type("EventQueueSystem.ConditionData");
+        auto& condData = rec.add_type("EventQueueSystem.ConditionData", /*is_data_class=*/true);
         condData.doc = "A condition that must be met for an event to trigger.";
         rec.record_property("EventQueueSystem.ConditionData", {"check", "fun():boolean", "A function that returns true when the condition is met."});
 
@@ -380,7 +380,7 @@ namespace timer
             "debugID",                   &timer::EventQueueSystem::Event::debug_string_id,
             "deleteNextCycleImmediately",&timer::EventQueueSystem::Event::deleteNextCycleImmediately
         );
-        auto& event = rec.add_type("EventQueueSystem.Event");
+        auto& event = rec.add_type("EventQueueSystem.Event", /*is_data_class=*/true);
         event.doc = "A single event in the event queue.";
         rec.record_property("EventQueueSystem.Event", {"eventTrigger", "EventQueueSystem.TriggerType", "When the event should trigger."});
         rec.record_property("EventQueueSystem.Event", {"blocksQueue", "boolean", "If true, no other events will process until this one completes."});

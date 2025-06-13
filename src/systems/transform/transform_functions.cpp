@@ -2212,7 +2212,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             }
         );
         // Recorder: Transform
-        auto& tDef = rec.add_type("Transform");
+        auto& tDef = rec.add_type("Transform", /*is_data_class=*/true);
         tDef.doc = "Manages an entity's position, size, rotation, and scale, with spring dynamics for smooth visual updates.";
         rec.record_method("Transform", {"updateCachedValues", "---@overload fun(self, force:boolean)\n---@overload fun(self, x:Spring, y:Spring, w:Spring, h:Spring, r:Spring, s:Spring, force:boolean)", "Updates cached transform values.", false, false});
         rec.record_property("Transform", {"actualX", "number", "The logical X position."});
@@ -2297,7 +2297,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             "removeFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::removeFlag(a.alignment, flag); },
             "toggleFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::toggleFlag(a.alignment, flag); }
         );
-        auto& alignDef = rec.add_type("Alignment");
+        auto& alignDef = rec.add_type("Alignment", /*is_data_class=*/true);
         alignDef.doc = "Stores alignment flags and offsets for an inherited property.";
         rec.record_property("Alignment", {"alignment", "integer", "The raw bitmask of alignment flags."});
         rec.record_property("Alignment", {"extraOffset", "Vector2", "Additional fine-tuning offset."});
@@ -2320,7 +2320,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "scale_bond",      &InheritedProperties::scale_bond,
         "flags",           &InheritedProperties::flags
     );
-    auto& ipDef = rec.add_type("InheritedProperties");
+    auto& ipDef = rec.add_type("InheritedProperties", /*is_data_class=*/true);
     ipDef.doc = "Defines how an entity inherits transform properties from a master entity.";
     rec.record_property("InheritedProperties", {"role_type", "InheritedPropertiesType", "The role of this entity in the hierarchy."});
     rec.record_property("InheritedProperties", {"master", "Entity", "The master entity this entity inherits from."});
@@ -2376,7 +2376,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "onDrag",          &GameObject::Methods::onDrag,
         "onStopDrag",      &GameObject::Methods::onStopDrag
     );
-    auto& goMethods = rec.add_type("GameObjectMethods");
+    auto& goMethods = rec.add_type("GameObjectMethods", /*is_data_class=*/true);
     goMethods.doc = "A table of optional script-defined callback methods for a GameObject.";
     rec.record_property("GameObjectMethods", {"getObjectToDrag", "function|nil", "Returns the entity that should be dragged."});
     rec.record_property("GameObjectMethods", {"update", "function|nil", "Called every frame."});
@@ -2408,7 +2408,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "isTriggeringOnRelease",   &GameObject::State::isTriggeringOnRelease,
         "isUnderOverlay",          &GameObject::State::isUnderOverlay
     );
-    auto& goState = rec.add_type("GameObjectState");
+    auto& goState = rec.add_type("GameObjectState", /*is_data_class=*/true);
     goState.doc = "A collection of boolean flags representing the current state of a GameObject.";
     rec.record_property("GameObjectState", {"visible", "boolean"});
     rec.record_property("GameObjectState", {"collisionEnabled", "boolean"});
@@ -2449,7 +2449,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "layerDisplacementPrev",&GameObject::layerDisplacementPrev,
         "shadowHeight",         &GameObject::shadowHeight
     );
-    auto& goDef = rec.add_type("GameObject");
+    auto& goDef = rec.add_type("GameObject", /*is_data_class=*/true);
     goDef.doc = "The core component for a scene entity, managing hierarchy, state, and scriptable logic.";
     rec.record_property("GameObject", {"parent", "Entity|nil"});
     rec.record_property("GameObject", {"children", "table<Entity, boolean>"});
@@ -2478,7 +2478,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "treeOrder",         &CollisionOrderInfo::treeOrder,
         "layerOrder",        &CollisionOrderInfo::layerOrder
     );
-    auto& coiDef = rec.add_type("CollisionOrderInfo");
+    auto& coiDef = rec.add_type("CollisionOrderInfo", /*is_data_class=*/true);
     coiDef.doc = "Contains information about an entity's render and collision order.";
     rec.record_property("CollisionOrderInfo", {"hasCollisionOrder", "boolean"});
     rec.record_property("CollisionOrderInfo", {"parentBox", "Rectangle"});
@@ -2489,7 +2489,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         sol::constructors<>(),
         "order", &TreeOrderComponent::order
     );
-    auto& tocDef = rec.add_type("TreeOrderComponent");
+    auto& tocDef = rec.add_type("TreeOrderComponent", /*is_data_class=*/true);
     tocDef.doc = "A simple component storing an entity's tree order for sorting.";
     rec.record_property("TreeOrderComponent", {"order", "integer"});
 

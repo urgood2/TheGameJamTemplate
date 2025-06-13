@@ -153,7 +153,7 @@ namespace shader_pipeline {
             "uniforms",               &shader_pipeline::ShaderPass::uniforms,
             "customPrePassFunction",  &shader_pipeline::ShaderPass::customPrePassFunction
         );
-        rec.add_type("shader_pipeline.ShaderPass").doc = "Defines a single shader pass with configurable uniforms.";
+        rec.add_type("shader_pipeline.ShaderPass", /*is_data_class=*/true).doc = "Defines a single shader pass with configurable uniforms.";
 
         // 3) OverlayInputSource enum
         sp["OverlayInputSource"] = lua.create_table_with(
@@ -175,7 +175,7 @@ namespace shader_pipeline {
             "blendMode",              &shader_pipeline::ShaderOverlayDraw::blendMode,
             "enabled",                &shader_pipeline::ShaderOverlayDraw::enabled
         );
-        rec.add_type("shader_pipeline.ShaderOverlayDraw").doc = "Defines a shader overlay draw operation.";
+        rec.add_type("shader_pipeline.ShaderOverlayDraw", /*is_data_class=*/true).doc = "Defines a shader overlay draw operation.";
 
         // 5) ShaderPipelineComponent
         sp.new_usertype<shader_pipeline::ShaderPipelineComponent>("ShaderPipelineComponent",
@@ -184,7 +184,7 @@ namespace shader_pipeline {
             "overlayDraws",&shader_pipeline::ShaderPipelineComponent::overlayDraws,
             "padding",     &shader_pipeline::ShaderPipelineComponent::padding
         );
-        rec.add_type("shader_pipeline.ShaderPipelineComponent").doc = "Holds a set of shader passes and overlays for rendering.";
+        rec.add_type("shader_pipeline.ShaderPipelineComponent", /*is_data_class=*/true).doc = "Holds a set of shader passes and overlays for rendering.";
 
         // 6) Helper to convert table to ShaderUniformValue
         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {

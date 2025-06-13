@@ -76,14 +76,14 @@ namespace layer
         }
 
         auto& rec = BindingRecorder::instance();
-        rec.add_type("layer.LayerOrderComponent").doc = "Stores Z-index for layer sorting";
+        rec.add_type("layer.LayerOrderComponent", true).doc = "Stores Z-index for layer sorting";
         layerTbl.new_usertype<layer::LayerOrderComponent>("LayerOrderComponent",
             sol::constructors<>(),
             "zIndex", &layer::LayerOrderComponent::zIndex
         );
         rec.record_property("layer.LayerOrderComponent", {"zIndex", "integer", "Z sort order"});
 
-        rec.add_type("layer.Layer").doc = "Represents a drawing layer and its properties.";
+        rec.add_type("layer.Layer", true).doc = "Represents a drawing layer and its properties.";
         layerTbl.new_usertype<layer::Layer>("Layer",
             sol::constructors<>(),
             "canvases",        &layer::Layer::canvases,
@@ -433,45 +433,45 @@ namespace layer
 
         #undef BIND_CMD
 
-        rec.add_type("layer.CmdBeginDrawing");
+        rec.add_type("layer.CmdBeginDrawing", true);
         rec.record_property("layer.CmdBeginDrawing", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdEndDrawing");
+        rec.add_type("layer.CmdEndDrawing", true);
         rec.record_property("layer.CmdEndDrawing", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdClearBackground");
+        rec.add_type("layer.CmdClearBackground", true);
         rec.record_property("layer.CmdClearBackground", { "color", "Color", "Background color" });
 
-        rec.add_type("layer.CmdTranslate");
+        rec.add_type("layer.CmdTranslate", true);
         rec.record_property("layer.CmdTranslate", { "x", "number", "X offset" });
         rec.record_property("layer.CmdTranslate", { "y", "number", "Y offset" });
 
-        rec.add_type("layer.CmdScale");
+        rec.add_type("layer.CmdScale", true);
         rec.record_property("layer.CmdScale", { "scaleX", "number", "Scale in X" });
         rec.record_property("layer.CmdScale", { "scaleY", "number", "Scale in Y" });
 
-        rec.add_type("layer.CmdRotate");
+        rec.add_type("layer.CmdRotate", true);
         rec.record_property("layer.CmdRotate", { "angle", "number", "Rotation angle in degrees" });
 
-        rec.add_type("layer.CmdAddPush");
+        rec.add_type("layer.CmdAddPush", true);
         rec.record_property("layer.CmdAddPush", { "camera", "table", "Camera parameters" });
 
-        rec.add_type("layer.CmdAddPop");
+        rec.add_type("layer.CmdAddPop", true);
         rec.record_property("layer.CmdAddPop", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdPushMatrix");
+        rec.add_type("layer.CmdPushMatrix", true);
         rec.record_property("layer.CmdPushMatrix", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdPopMatrix");
+        rec.add_type("layer.CmdPopMatrix", true);
         rec.record_property("layer.CmdPopMatrix", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdDrawCircle");
+        rec.add_type("layer.CmdDrawCircle", true);
         rec.record_property("layer.CmdDrawCircle", { "x", "number", "Center X" });
         rec.record_property("layer.CmdDrawCircle", { "y", "number", "Center Y" });
         rec.record_property("layer.CmdDrawCircle", { "radius", "number", "Radius" });
         rec.record_property("layer.CmdDrawCircle", { "color", "Color", "Fill color" });
 
-        rec.add_type("layer.CmdDrawRectangle");
+        rec.add_type("layer.CmdDrawRectangle", true);
         rec.record_property("layer.CmdDrawRectangle", { "x", "number", "Top-left X" });
         rec.record_property("layer.CmdDrawRectangle", { "y", "number", "Top-left Y" });
         rec.record_property("layer.CmdDrawRectangle", { "width", "number", "Width" });
@@ -479,7 +479,7 @@ namespace layer
         rec.record_property("layer.CmdDrawRectangle", { "color", "Color", "Fill color" });
         rec.record_property("layer.CmdDrawRectangle", { "lineWidth", "number", "Line width" });
 
-        rec.add_type("layer.CmdDrawRectanglePro");
+        rec.add_type("layer.CmdDrawRectanglePro", true);
         rec.record_property("layer.CmdDrawRectanglePro", { "offsetX", "number", "Offset X" });
         rec.record_property("layer.CmdDrawRectanglePro", { "offsetY", "number", "Offset Y" });
         rec.record_property("layer.CmdDrawRectanglePro", { "size", "Vector2", "Size" });
@@ -487,14 +487,14 @@ namespace layer
         rec.record_property("layer.CmdDrawRectanglePro", { "rotation", "number", "Rotation" });
         rec.record_property("layer.CmdDrawRectanglePro", { "color", "Color", "Color" });
 
-        rec.add_type("layer.CmdDrawRectangleLinesPro");
+        rec.add_type("layer.CmdDrawRectangleLinesPro", true);
         rec.record_property("layer.CmdDrawRectangleLinesPro", { "offsetX", "number", "Offset X" });
         rec.record_property("layer.CmdDrawRectangleLinesPro", { "offsetY", "number", "Offset Y" });
         rec.record_property("layer.CmdDrawRectangleLinesPro", { "size", "Vector2", "Size" });
         rec.record_property("layer.CmdDrawRectangleLinesPro", { "lineThickness", "number", "Line thickness" });
         rec.record_property("layer.CmdDrawRectangleLinesPro", { "color", "Color", "Color" });
 
-        rec.add_type("layer.CmdDrawLine");
+        rec.add_type("layer.CmdDrawLine", true);
         rec.record_property("layer.CmdDrawLine", { "x1", "number", "Start X" });
         rec.record_property("layer.CmdDrawLine", { "y1", "number", "Start Y" });
         rec.record_property("layer.CmdDrawLine", { "x2", "number", "End X" });
@@ -502,7 +502,7 @@ namespace layer
         rec.record_property("layer.CmdDrawLine", { "color", "Color", "Line color" });
         rec.record_property("layer.CmdDrawLine", { "lineWidth", "number", "Line width" });
 
-        rec.add_type("layer.CmdDrawDashedLine");
+        rec.add_type("layer.CmdDrawDashedLine", true);
         rec.record_property("layer.CmdDrawDashedLine", { "x1", "number", "Start X" });
         rec.record_property("layer.CmdDrawDashedLine", { "y1", "number", "Start Y" });
         rec.record_property("layer.CmdDrawDashedLine", { "x2", "number", "End X" });
@@ -512,7 +512,7 @@ namespace layer
         rec.record_property("layer.CmdDrawDashedLine", { "color", "Color", "Color" });
         rec.record_property("layer.CmdDrawDashedLine", { "lineWidth", "number", "Line width" });
 
-        rec.add_type("layer.CmdDrawText");
+        rec.add_type("layer.CmdDrawText", true);
         rec.record_property("layer.CmdDrawText", { "text", "string", "Text" });
         rec.record_property("layer.CmdDrawText", { "font", "Font", "Font" });
         rec.record_property("layer.CmdDrawText", { "x", "number", "X" });
@@ -520,7 +520,7 @@ namespace layer
         rec.record_property("layer.CmdDrawText", { "color", "Color", "Color" });
         rec.record_property("layer.CmdDrawText", { "fontSize", "number", "Font size" });
 
-        rec.add_type("layer.CmdDrawTextCentered");
+        rec.add_type("layer.CmdDrawTextCentered", true);
         rec.record_property("layer.CmdDrawTextCentered", { "text", "string", "Text" });
         rec.record_property("layer.CmdDrawTextCentered", { "font", "Font", "Font" });
         rec.record_property("layer.CmdDrawTextCentered", { "x", "number", "X" });
@@ -528,7 +528,7 @@ namespace layer
         rec.record_property("layer.CmdDrawTextCentered", { "color", "Color", "Color" });
         rec.record_property("layer.CmdDrawTextCentered", { "fontSize", "number", "Font size" });
 
-        rec.add_type("layer.CmdTextPro");
+        rec.add_type("layer.CmdTextPro", true);
         rec.record_property("layer.CmdTextPro", { "text", "string", "Text" });
         rec.record_property("layer.CmdTextPro", { "font", "Font", "Font" });
         rec.record_property("layer.CmdTextPro", { "x", "number", "X" });
@@ -539,7 +539,7 @@ namespace layer
         rec.record_property("layer.CmdTextPro", { "spacing", "number", "Spacing" });
         rec.record_property("layer.CmdTextPro", { "color", "Color", "Color" });
 
-        rec.add_type("layer.CmdDrawImage");
+        rec.add_type("layer.CmdDrawImage", true);
         rec.record_property("layer.CmdDrawImage", { "image", "Texture2D", "Image" });
         rec.record_property("layer.CmdDrawImage", { "x", "number", "X" });
         rec.record_property("layer.CmdDrawImage", { "y", "number", "Y" });
@@ -548,7 +548,7 @@ namespace layer
         rec.record_property("layer.CmdDrawImage", { "scaleY", "number", "Scale Y" });
         rec.record_property("layer.CmdDrawImage", { "color", "Color", "Tint color" });
 
-        rec.add_type("layer.CmdTexturePro");
+        rec.add_type("layer.CmdTexturePro", true);
         rec.record_property("layer.CmdTexturePro", { "texture", "Texture2D", "Texture" });
         rec.record_property("layer.CmdTexturePro", { "source", "Rectangle", "Source rect" });
         rec.record_property("layer.CmdTexturePro", { "offsetX", "number", "Offset X" });
@@ -558,102 +558,102 @@ namespace layer
         rec.record_property("layer.CmdTexturePro", { "rotation", "number", "Rotation" });
         rec.record_property("layer.CmdTexturePro", { "color", "Color", "Color" });
 
-        rec.add_type("layer.CmdDrawEntityAnimation");
+        rec.add_type("layer.CmdDrawEntityAnimation", true);
         rec.record_property("layer.CmdDrawEntityAnimation", { "e", "Entity", "entt::entity" });
         rec.record_property("layer.CmdDrawEntityAnimation", { "registry", "Registry", "EnTT registry" });
         rec.record_property("layer.CmdDrawEntityAnimation", { "x", "number", "X" });
         rec.record_property("layer.CmdDrawEntityAnimation", { "y", "number", "Y" });
 
-        rec.add_type("layer.CmdDrawTransformEntityAnimation");
+        rec.add_type("layer.CmdDrawTransformEntityAnimation", true);
         rec.record_property("layer.CmdDrawTransformEntityAnimation", { "e", "Entity", "entt::entity" });
         rec.record_property("layer.CmdDrawTransformEntityAnimation", { "registry", "Registry", "EnTT registry" });
 
-        rec.add_type("layer.CmdDrawTransformEntityAnimationPipeline");
+        rec.add_type("layer.CmdDrawTransformEntityAnimationPipeline", true);
         rec.record_property("layer.CmdDrawTransformEntityAnimationPipeline", { "e", "Entity", "entt::entity" });
         rec.record_property("layer.CmdDrawTransformEntityAnimationPipeline", { "registry", "Registry", "EnTT registry" });
 
-        rec.add_type("layer.CmdSetShader");
+        rec.add_type("layer.CmdSetShader", true);
         rec.record_property("layer.CmdSetShader", { "shader", "Shader", "Shader object" });
 
-        rec.add_type("layer.CmdResetShader");
+        rec.add_type("layer.CmdResetShader", true);
 
-        rec.add_type("layer.CmdSetBlendMode");
+        rec.add_type("layer.CmdSetBlendMode", true);
         rec.record_property("layer.CmdSetBlendMode", { "blendMode", "number", "Blend mode" });
 
-        rec.add_type("layer.CmdUnsetBlendMode");
+        rec.add_type("layer.CmdUnsetBlendMode", true);
         rec.record_property("layer.CmdUnsetBlendMode", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdSendUniformFloat");
+        rec.add_type("layer.CmdSendUniformFloat", true);
         rec.record_property("layer.CmdSendUniformFloat", { "shader", "Shader", "Shader" });
         rec.record_property("layer.CmdSendUniformFloat", { "uniform", "string", "Uniform name" });
         rec.record_property("layer.CmdSendUniformFloat", { "value", "number", "Float value" });
 
-        rec.add_type("layer.CmdSendUniformInt");
+        rec.add_type("layer.CmdSendUniformInt", true);
         rec.record_property("layer.CmdSendUniformInt", { "shader", "Shader", "Shader" });
         rec.record_property("layer.CmdSendUniformInt", { "uniform", "string", "Uniform name" });
         rec.record_property("layer.CmdSendUniformInt", { "value", "number", "Int value" });
 
-        rec.add_type("layer.CmdSendUniformVec2");
+        rec.add_type("layer.CmdSendUniformVec2", true);
         rec.record_property("layer.CmdSendUniformVec2", { "shader", "Shader", "Shader" });
         rec.record_property("layer.CmdSendUniformVec2", { "uniform", "string", "Uniform name" });
         rec.record_property("layer.CmdSendUniformVec2", { "value", "Vector2", "Vec2 value" });
 
-        rec.add_type("layer.CmdSendUniformVec3");
+        rec.add_type("layer.CmdSendUniformVec3", true);
         rec.record_property("layer.CmdSendUniformVec3", { "shader", "Shader", "Shader" });
         rec.record_property("layer.CmdSendUniformVec3", { "uniform", "string", "Uniform name" });
         rec.record_property("layer.CmdSendUniformVec3", { "value", "Vector3", "Vec3 value" });
 
-        rec.add_type("layer.CmdSendUniformVec4");
+        rec.add_type("layer.CmdSendUniformVec4", true);
         rec.record_property("layer.CmdSendUniformVec4", { "shader", "Shader", "Shader" });
         rec.record_property("layer.CmdSendUniformVec4", { "uniform", "string", "Uniform name" });
         rec.record_property("layer.CmdSendUniformVec4", { "value", "Vector4", "Vec4 value" });
 
-        rec.add_type("layer.CmdSendUniformFloatArray");
+        rec.add_type("layer.CmdSendUniformFloatArray", true);
         rec.record_property("layer.CmdSendUniformFloatArray", { "shader", "Shader", "Shader" });
         rec.record_property("layer.CmdSendUniformFloatArray", { "uniform", "string", "Uniform name" });
         rec.record_property("layer.CmdSendUniformFloatArray", { "values", "table", "Float array" });
 
-        rec.add_type("layer.CmdSendUniformIntArray");
+        rec.add_type("layer.CmdSendUniformIntArray", true);
         rec.record_property("layer.CmdSendUniformIntArray", { "shader", "Shader", "Shader" });
         rec.record_property("layer.CmdSendUniformIntArray", { "uniform", "string", "Uniform name" });
         rec.record_property("layer.CmdSendUniformIntArray", { "values", "table", "Int array" });
 
-        rec.add_type("layer.CmdVertex");
+        rec.add_type("layer.CmdVertex", true);
         rec.record_property("layer.CmdVertex", { "v", "Vector3", "Position" });
         rec.record_property("layer.CmdVertex", { "color", "Color", "Vertex color" });
 
-        rec.add_type("layer.CmdBeginOpenGLMode");
+        rec.add_type("layer.CmdBeginOpenGLMode", true);
         rec.record_property("layer.CmdBeginOpenGLMode", { "mode", "number", "GL mode enum" });
 
-        rec.add_type("layer.CmdEndOpenGLMode");
+        rec.add_type("layer.CmdEndOpenGLMode", true);
         rec.record_property("layer.CmdEndOpenGLMode", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdSetColor");
+        rec.add_type("layer.CmdSetColor", true);
         rec.record_property("layer.CmdSetColor", { "color", "Color", "Draw color" });
 
-        rec.add_type("layer.CmdSetLineWidth");
+        rec.add_type("layer.CmdSetLineWidth", true);
         rec.record_property("layer.CmdSetLineWidth", { "lineWidth", "number", "Line width" });
 
-        rec.add_type("layer.CmdSetTexture");
+        rec.add_type("layer.CmdSetTexture", true);
         rec.record_property("layer.CmdSetTexture", { "texture", "Texture2D", "Texture to bind" });
 
-        rec.add_type("layer.CmdRenderRectVerticesFilledLayer");
+        rec.add_type("layer.CmdRenderRectVerticesFilledLayer", true);
         rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "outerRec", "Rectangle", "Outer rectangle" });
         rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "progressOrFullBackground", "bool", "Mode" });
         rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "cache", "table", "Vertex cache" });
         rec.record_property("layer.CmdRenderRectVerticesFilledLayer", { "color", "Color", "Fill color" });
 
-        rec.add_type("layer.CmdRenderRectVerticesOutlineLayer");
+        rec.add_type("layer.CmdRenderRectVerticesOutlineLayer", true);
         rec.record_property("layer.CmdRenderRectVerticesOutlineLayer", { "cache", "table", "Vertex cache" });
         rec.record_property("layer.CmdRenderRectVerticesOutlineLayer", { "color", "Color", "Outline color" });
         rec.record_property("layer.CmdRenderRectVerticesOutlineLayer", { "useFullVertices", "bool", "Use full vertices" });
 
-        rec.add_type("layer.CmdDrawPolygon");
+        rec.add_type("layer.CmdDrawPolygon", true);
         rec.record_property("layer.CmdDrawPolygon", { "vertices", "table", "Vertex array" });
         rec.record_property("layer.CmdDrawPolygon", { "color", "Color", "Polygon color" });
         rec.record_property("layer.CmdDrawPolygon", { "lineWidth", "number", "Line width" });
 
-        rec.add_type("layer.CmdRenderNPatchRect");
+        rec.add_type("layer.CmdRenderNPatchRect", true);
         rec.record_property("layer.CmdRenderNPatchRect", { "sourceTexture", "Texture2D", "Source texture" });
         rec.record_property("layer.CmdRenderNPatchRect", { "info", "NPatchInfo", "Nine-patch info" });
         rec.record_property("layer.CmdRenderNPatchRect", { "dest", "Rectangle", "Destination" });
@@ -661,7 +661,7 @@ namespace layer
         rec.record_property("layer.CmdRenderNPatchRect", { "rotation", "number", "Rotation" });
         rec.record_property("layer.CmdRenderNPatchRect", { "tint", "Color", "Tint color" });
 
-        rec.add_type("layer.CmdDrawTriangle");
+        rec.add_type("layer.CmdDrawTriangle", true);
         rec.record_property("layer.CmdDrawTriangle", { "p1", "Vector2", "Point 1" });
         rec.record_property("layer.CmdDrawTriangle", { "p2", "Vector2", "Point 2" });
         rec.record_property("layer.CmdDrawTriangle", { "p3", "Vector2", "Point 3" });

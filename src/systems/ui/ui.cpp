@@ -295,7 +295,7 @@ namespace ui {
             "uiBox",  &UIElementComponent::uiBox,
             "config", &UIElementComponent::config
         );
-        auto& uieDef = rec.add_type("UIElementComponent");
+        auto& uieDef = rec.add_type("UIElementComponent", /*is_data_class=*/true);
         uieDef.doc = "Core component for a UI element, linking its type, root, and configuration.";
         rec.record_property("UIElementComponent", {"UIT", "UITypeEnum", "The type of this UI element."});
         rec.record_property("UIElementComponent", {"uiBox", "Entity", "The root entity of the UI box this element belongs to."});
@@ -310,7 +310,7 @@ namespace ui {
             "allCaps",   &TextInput::allCaps,
             "callback",  &TextInput::callback
         );
-        auto& textInDef = rec.add_type("TextInput");
+        auto& textInDef = rec.add_type("TextInput", /*is_data_class=*/true);
         textInDef.doc = "Component for managing the state of a text input UI element.";
         rec.record_property("TextInput", {"text", "string", "The current text content."});
         rec.record_property("TextInput", {"cursorPos", "integer", "The position of the text cursor."});
@@ -323,7 +323,7 @@ namespace ui {
             sol::constructors<>(),
             "hookedEntity", &TextInputHook::hookedEntity
         );
-        auto& hookDef = rec.add_type("TextInputHook");
+        auto& hookDef = rec.add_type("TextInputHook", /*is_data_class=*/true);
         hookDef.doc = "A component that hooks global text input to a specific text input entity.";
         rec.record_property("TextInputHook", {"hookedEntity", "Entity", "The entity that currently has text input focus."});
 
@@ -333,7 +333,7 @@ namespace ui {
             "uiRoot",     &UIBoxComponent::uiRoot,
             "drawLayers", &UIBoxComponent::drawLayers
         );
-        auto& boxDef = rec.add_type("UIBoxComponent");
+        auto& boxDef = rec.add_type("UIBoxComponent", /*is_data_class=*/true);
         boxDef.doc = "Defines a root of a UI tree, managing its draw layers.";
         rec.record_property("UIBoxComponent", {"uiRoot", "Entity", "The root entity of this UI tree."});
         rec.record_property("UIBoxComponent", {"drawLayers", "table", "A map of layers used for drawing the UI."});
@@ -347,7 +347,7 @@ namespace ui {
             "object_focus_timer",&UIState::object_focus_timer,
             "focus_timer",       &UIState::focus_timer
         );
-        auto& uiStateDef = rec.add_type("UIState");
+        auto& uiStateDef = rec.add_type("UIState", /*is_data_class=*/true);
         uiStateDef.doc = "Holds dynamic state information for a UI element.";
         rec.record_property("UIState", {"contentDimensions", "Vector2", "The calculated dimensions of the element's content."});
         rec.record_property("UIState", {"textDrawable", "TextDrawable", "The drawable text object."});
@@ -361,7 +361,7 @@ namespace ui {
             "title", &Tooltip::title,
             "text",  &Tooltip::text
         );
-        auto& tooltipDef = rec.add_type("Tooltip");
+        auto& tooltipDef = rec.add_type("Tooltip", /*is_data_class=*/true);
         tooltipDef.doc = "Represents a tooltip with a title and descriptive text.";
         rec.record_property("Tooltip", {"title", "string", "The title of the tooltip."});
         rec.record_property("Tooltip", {"text", "string", "The main body text of the tooltip."});
@@ -378,7 +378,7 @@ namespace ui {
             "nav",               &FocusArgs::nav,
             "no_loop",           &FocusArgs::no_loop
         );
-        auto& focusDef = rec.add_type("FocusArgs");
+        auto& focusDef = rec.add_type("FocusArgs", /*is_data_class=*/true);
         focusDef.doc = "Arguments for configuring focus and navigation behavior.";
         rec.record_property("FocusArgs", {"button", "GamepadButton", "The gamepad button associated with this focus."});
         rec.record_property("FocusArgs", {"snap_to", "boolean", "If the view should snap to this element when focused."});
@@ -401,7 +401,7 @@ namespace ui {
             "w",              &SliderComponent::w,
             "h",              &SliderComponent::h
         );
-        auto& sliderDef = rec.add_type("SliderComponent");
+        auto& sliderDef = rec.add_type("SliderComponent", /*is_data_class=*/true);
         sliderDef.doc = "Data for a UI slider element.";
         rec.record_property("SliderComponent", {"color", "string"});
         rec.record_property("SliderComponent", {"text", "string"});
@@ -417,7 +417,7 @@ namespace ui {
             sol::constructors<>(),
             "item", &InventoryGridTileComponent::item
         );
-        auto& invTileDef = rec.add_type("InventoryGridTileComponent");
+        auto& invTileDef = rec.add_type("InventoryGridTileComponent", /*is_data_class=*/true);
         invTileDef.doc = "Represents a tile in an inventory grid, potentially holding an item.";
         rec.record_property("InventoryGridTileComponent", {"item", "Entity|nil", "The item entity occupying this tile."});
 
@@ -548,7 +548,7 @@ namespace ui {
             "noRole",                  &UIConfig::noRole,
             "role",                    &UIConfig::role
         );
-        auto& cfgDef = rec.add_type("UIConfig");
+        auto& cfgDef = rec.add_type("UIConfig", /*is_data_class=*/true);
         cfgDef.doc = "A comprehensive configuration component for defining all aspects of a UI element.";
         // Styling
         rec.record_property("UIConfig", {"stylingType", "UIStylingType|nil", "The visual style of the element."});
@@ -997,7 +997,7 @@ namespace ui {
         lua.new_usertype<UIElementTemplateNode>("UIElementTemplateNode", sol::constructors<>(),
             "type", &UIElementTemplateNode::type, "config", &UIElementTemplateNode::config, "children", &UIElementTemplateNode::children
         );
-        auto& tNode = rec.add_type("UIElementTemplateNode");
+        auto& tNode = rec.add_type("UIElementTemplateNode", /*is_data_class=*/true);
         tNode.doc = "A node in a UI template, defining an element's type, config, and children.";
         rec.record_property("UIElementTemplateNode", {"type", "UITypeEnum"});
         rec.record_property("UIElementTemplateNode", {"config", "UIConfig"});

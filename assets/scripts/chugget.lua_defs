@@ -303,7 +303,7 @@ function debug(...) end
 ---
 --- Logs a general debug message.
 ---
-(message: string):nil
+---(message: string):nil
 function debug(...) end
 
 ---
@@ -317,7 +317,7 @@ function error(...) end
 ---
 --- Logs a general error message.
 ---
-(message: string):nil
+---(message: string):nil
 function error(...) end
 
 ---
@@ -2021,6 +2021,1388 @@ function EventQueueSystem.EventBuilder:AddToQueue(...) end
 local util = {
 }
 
+
+---
+--- Manages an entity's position, size, rotation, and scale, with spring dynamics for smooth visual updates.
+---
+---@class Transform
+local Transform = {
+    actualX = number,  -- The logical X position.
+    visualX = number,  -- The visual (spring-interpolated) X position.
+    actualY = number,  -- The logical Y position.
+    visualY = number,  -- The visual (spring-interpolated) Y position.
+    actualW = number,  -- The logical width.
+    visualW = number,  -- The visual width.
+    actualH = number,  -- The logical height.
+    visualH = number,  -- The visual height.
+    rotation = number,  -- The logical rotation in degrees.
+    scale = number  -- The logical scale multiplier.
+}
+
+---
+--- Updates cached transform values.
+---
+---@overload fun(self, force:boolean)
+---@overload fun(self, x:Spring, y:Spring, w:Spring, h:Spring, r:Spring, s:Spring, force:boolean)
+function Transform:updateCachedValues(...) end
+
+---
+--- Gets the visual rotation.
+---
+---@return number
+function Transform:visualR(...) end
+
+---
+--- Gets the visual rotation including dynamic motion.
+---
+---@return number
+function Transform:visualRWithMotion(...) end
+
+---
+--- Gets the visual scale.
+---
+---@return number
+function Transform:visualS(...) end
+
+---
+--- Gets the visual scale including dynamic motion.
+---
+---@return number
+function Transform:visualSWithMotion(...) end
+
+---
+--- Gets the X position spring.
+---
+---@return Spring
+function Transform:xSpring(...) end
+
+---
+--- Gets the Y position spring.
+---
+---@return Spring
+function Transform:ySpring(...) end
+
+---
+--- Gets the width spring.
+---
+---@return Spring
+function Transform:wSpring(...) end
+
+---
+--- Gets the height spring.
+---
+---@return Spring
+function Transform:hSpring(...) end
+
+---
+--- Gets the rotation spring.
+---
+---@return Spring
+function Transform:rSpring(...) end
+
+---
+--- Gets the scale spring.
+---
+---@return Spring
+function Transform:sSpring(...) end
+
+---
+--- Gets the X-axis hover buffer.
+---
+---@return number
+function Transform:hoverBufferX(...) end
+
+---
+--- Gets the Y-axis hover buffer.
+---
+---@return number
+function Transform:hoverBufferY(...) end
+
+
+---
+--- Defines how an entity relates to its master in the transform hierarchy.
+---
+---@class InheritedPropertiesType
+local InheritedPropertiesType = {
+    RoleRoot = 0,  -- A root object that is not influenced by a master.
+    RoleInheritor = 1,  -- Inherits transformations from a master.
+    RoleCarbonCopy = 2,  -- Perfectly mirrors its master's transformations.
+    PermanentAttachment = 3  -- A permanent, non-detachable inheritor.
+}
+
+
+---
+--- Defines the strength of a transform bond.
+---
+---@class InheritedPropertiesSync
+local InheritedPropertiesSync = {
+    Strong = 0,  -- The property is directly copied from the master.
+    Weak = 1  -- The property is influenced by but not locked to the master.
+}
+
+
+---
+--- Bitmask flags for aligning an entity to its master.
+---
+---@class AlignmentFlag
+local AlignmentFlag = {
+    NONE = 0,  -- No alignment.
+    HORIZONTAL_LEFT = 1,  -- Align left edges.
+    HORIZONTAL_CENTER = 2,  -- Align horizontal centers.
+    HORIZONTAL_RIGHT = 4,  -- Align right edges.
+    VERTICAL_TOP = 8,  -- Align top edges.
+    VERTICAL_CENTER = 16,  -- Align vertical centers.
+    VERTICAL_BOTTOM = 32,  -- Align bottom edges.
+    ALIGN_TO_INNER_EDGES = 64  -- Align to inner instead of outer edges.
+}
+
+
+---
+--- Stores alignment flags and offsets for an inherited property.
+---
+---@class Alignment
+local Alignment = {
+    alignment = integer,  -- The raw bitmask of alignment flags.
+    extraOffset = Vector2,  -- Additional fine-tuning offset.
+    prevExtraOffset = Vector2  -- Previous frame's fine-tuning offset.
+}
+
+---
+--- Checks if a specific alignment flag is set.
+---
+---@param flag AlignmentFlag
+---@return boolean
+function Alignment:hasFlag(...) end
+
+---
+--- Adds an alignment flag.
+---
+---@param flag AlignmentFlag
+---@return nil
+function Alignment:addFlag(...) end
+
+---
+--- Removes an alignment flag.
+---
+---@param flag AlignmentFlag
+---@return nil
+function Alignment:removeFlag(...) end
+
+---
+--- Toggles an alignment flag.
+---
+---@param flag AlignmentFlag
+---@return nil
+function Alignment:toggleFlag(...) end
+
+
+---
+--- Defines how an entity inherits transform properties from a master entity.
+---
+---@class InheritedProperties
+local InheritedProperties = {
+    role_type = InheritedPropertiesType,  -- The role of this entity in the hierarchy.
+    master = Entity,  -- The master entity this entity inherits from.
+    offset = Vector2,  -- The current offset from the master.
+    prevOffset = Vector2,  -- The previous frame's offset.
+    location_bond = InheritedPropertiesSync|nil,  -- The sync bond for location.
+    size_bond = InheritedPropertiesSync|nil,  -- The sync bond for size.
+    rotation_bond = InheritedPropertiesSync|nil,  -- The sync bond for rotation.
+    scale_bond = InheritedPropertiesSync|nil,  -- The sync bond for scale.
+    flags = Alignment|nil  -- Alignment flags and data.
+}
+
+
+---
+--- A fluent builder for creating InheritedProperties components.
+---
+---@class InheritedPropertiesBuilder
+local InheritedPropertiesBuilder = {
+}
+
+---
+--- Sets the role type.
+---
+---@param type InheritedPropertiesType
+---@return self
+function InheritedPropertiesBuilder:addRoleType(...) end
+
+---
+--- Sets the master entity.
+---
+---@param master Entity
+---@return self
+function InheritedPropertiesBuilder:addMaster(...) end
+
+---
+--- Sets the offset.
+---
+---@param offset Vector2
+---@return self
+function InheritedPropertiesBuilder:addOffset(...) end
+
+---
+--- Sets the location bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function InheritedPropertiesBuilder:addLocationBond(...) end
+
+---
+--- Sets the size bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function InheritedPropertiesBuilder:addSizeBond(...) end
+
+---
+--- Sets the rotation bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function InheritedPropertiesBuilder:addRotationBond(...) end
+
+---
+--- Sets the scale bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function InheritedPropertiesBuilder:addScaleBond(...) end
+
+---
+--- Sets the alignment flags.
+---
+---@param flags AlignmentFlag
+---@return self
+function InheritedPropertiesBuilder:addAlignment(...) end
+
+---
+--- Sets the alignment offset.
+---
+---@param offset Vector2
+---@return self
+function InheritedPropertiesBuilder:addAlignmentOffset(...) end
+
+---
+--- Constructs the final InheritedProperties object.
+---
+---@return InheritedProperties
+function InheritedPropertiesBuilder:build(...) end
+
+
+---
+--- A table of optional script-defined callback methods for a GameObject.
+---
+---@class GameObjectMethods
+local GameObjectMethods = {
+    getObjectToDrag = function|nil,  -- Returns the entity that should be dragged.
+    update = function|nil,  -- Called every frame.
+    draw = function|nil,  -- Called every frame for drawing.
+    onClick = function|nil,  -- Called on click.
+    onRelease = function|nil,  -- Called on click release.
+    onHover = function|nil,  -- Called when hover starts.
+    onStopHover = function|nil,  -- Called when hover ends.
+    onDrag = function|nil,  -- Called while dragging.
+    onStopDrag = function|nil  -- Called when dragging stops.
+}
+
+
+---
+--- A collection of boolean flags representing the current state of a GameObject.
+---
+---@class GameObjectState
+local GameObjectState = {
+    visible = boolean,
+    collisionEnabled = boolean,
+    isColliding = boolean,
+    focusEnabled = boolean,
+    isBeingFocused = boolean,
+    hoverEnabled = boolean,
+    isBeingHovered = boolean,
+    enlargeOnHover = boolean,
+    enlargeOnDrag = boolean,
+    clickEnabled = boolean,
+    isBeingClicked = boolean,
+    dragEnabled = boolean,
+    isBeingDragged = boolean,
+    triggerOnReleaseEnabled = boolean,
+    isTriggeringOnRelease = boolean,
+    isUnderOverlay = boolean
+}
+
+
+---
+--- The core component for a scene entity, managing hierarchy, state, and scriptable logic.
+---
+---@class GameObject
+local GameObject = {
+    parent = Entity|nil,
+    children = table<Entity, boolean>,
+    orderedChildren = table<integer, Entity>,
+    ignoresPause = boolean,
+    container = Entity|nil,
+    collisionTransform = Transform|nil,
+    clickTimeout = number,
+    methods = GameObjectMethods|nil,
+    updateFunction = function|nil,
+    drawFunction = function|nil,
+    state = GameObjectState,
+    dragOffset = Vector2,
+    clickOffset = Vector2,
+    hoverOffset = Vector2,
+    shadowDisplacement = Vector2,
+    layerDisplacement = Vector2,
+    layerDisplacementPrev = Vector2,
+    shadowHeight = number
+}
+
+
+---
+--- Contains information about an entity's render and collision order.
+---
+---@class CollisionOrderInfo
+local CollisionOrderInfo = {
+    hasCollisionOrder = boolean,
+    parentBox = Rectangle,
+    treeOrder = integer,
+    layerOrder = integer
+}
+
+
+---
+--- A simple component storing an entity's tree order for sorting.
+---
+---@class TreeOrderComponent
+local TreeOrderComponent = {
+    order = integer
+}
+
+
+---
+--- A global system for creating and managing all Transforms and GameObjects.
+---
+---@class transform
+local transform = {
+}
+
+
+---
+--- A tag component indicating an entity is attached to a UI element.
+---
+---@class ObjectAttachedToUITag
+local ObjectAttachedToUITag = {
+}
+
+
+---
+--- Defines the fundamental type or behavior of a UI element.
+---
+---@class UITypeEnum
+local UITypeEnum = {
+    NONE = 0,  -- No specific UI type.
+    ROOT = 1,  -- The root of a UI tree.
+    VERTICAL_CONTAINER = 2,  -- Arranges children vertically.
+    HORIZONTAL_CONTAINER = 3,  -- Arranges children horizontally.
+    SLIDER_UI = 4,  -- A slider control.
+    INPUT_TEXT = 5,  -- A text input field.
+    RECT_SHAPE = 6,  -- A simple rectangular shape.
+    TEXT = 7,  -- A text label.
+    OBJECT = 8  -- A UI element that displays a game object.
+}
+
+
+---
+--- Core component for a UI element, linking its type, root, and configuration.
+---
+---@class UIElementComponent
+local UIElementComponent = {
+    UIT = UITypeEnum,  -- The type of this UI element.
+    uiBox = Entity,  -- The root entity of the UI box this element belongs to.
+    config = UIConfig  -- The configuration settings for this element.
+}
+
+
+---
+--- Component for managing the state of a text input UI element.
+---
+---@class TextInput
+local TextInput = {
+    text = string,  -- The current text content.
+    cursorPos = integer,  -- The position of the text cursor.
+    maxLength = integer,  -- The maximum allowed length of the text.
+    allCaps = boolean,  -- If true, all input is converted to uppercase.
+    callback = function|nil  -- A callback function triggered on text change.
+}
+
+
+---
+--- A component that hooks global text input to a specific text input entity.
+---
+---@class TextInputHook
+local TextInputHook = {
+    hookedEntity = Entity  -- The entity that currently has text input focus.
+}
+
+
+---
+--- Defines a root of a UI tree, managing its draw layers.
+---
+---@class UIBoxComponent
+local UIBoxComponent = {
+    uiRoot = Entity,  -- The root entity of this UI tree.
+    drawLayers = table  -- A map of layers used for drawing the UI.
+}
+
+
+---
+--- Holds dynamic state information for a UI element.
+---
+---@class UIState
+local UIState = {
+    contentDimensions = Vector2,  -- The calculated dimensions of the element's content.
+    textDrawable = TextDrawable,  -- The drawable text object.
+    last_clicked = Entity,  -- The last entity that was clicked within this UI context.
+    object_focus_timer = number,  -- Timer for object focus events.
+    focus_timer = number  -- General purpose focus timer.
+}
+
+
+---
+--- Represents a tooltip with a title and descriptive text.
+---
+---@class Tooltip
+local Tooltip = {
+    title = string,  -- The title of the tooltip.
+    text = string  -- The main body text of the tooltip.
+}
+
+
+---
+--- Arguments for configuring focus and navigation behavior.
+---
+---@class FocusArgs
+local FocusArgs = {
+    button = GamepadButton,  -- The gamepad button associated with this focus.
+    snap_to = boolean,  -- If the view should snap to this element when focused.
+    registered = boolean,  -- Whether this focus is registered with the focus system.
+    type = string,  -- The type of focus.
+    claim_focus_from = table<string, Entity>,  -- Entities this element can claim focus from.
+    redirect_focus_to = Entity|nil,  -- Redirect focus to another entity.
+    nav = table<string, Entity>,  -- Navigation map (e.g., nav.up = otherEntity).
+    no_loop = boolean  -- Disables navigation looping.
+}
+
+
+---
+--- Data for a UI slider element.
+---
+---@class SliderComponent
+local SliderComponent = {
+    color = string,
+    text = string,
+    min = number,
+    max = number,
+    value = number,
+    decimal_places = integer,
+    w = number,
+    h = number
+}
+
+
+---
+--- Represents a tile in an inventory grid, potentially holding an item.
+---
+---@class InventoryGridTileComponent
+local InventoryGridTileComponent = {
+    item = Entity|nil  -- The item entity occupying this tile.
+}
+
+
+---
+--- Defines how a UI element's background is styled.
+---
+---@class UIStylingType
+local UIStylingType = {
+    RoundedRectangle = 0,  -- A simple rounded rectangle.
+    NinePatchBorders = 1  -- A 9-patch texture for scalable borders.
+}
+
+
+---
+--- A comprehensive configuration component for defining all aspects of a UI element.
+---
+---@class UIConfig
+local UIConfig = {
+    stylingType = UIStylingType|nil,  -- The visual style of the element.
+    nPatchInfo = NPatchInfo|nil,  -- 9-patch slicing information.
+    nPatchSourceTexture = string|nil,  -- Texture path for the 9-patch.
+    id = string|nil,  -- Unique identifier for this UI element.
+    instanceType = string|nil,  -- A specific instance type for categorization.
+    uiType = UITypeEnum|nil,  -- The fundamental type of the UI element.
+    drawLayer = string|nil,  -- The layer on which this element is drawn.
+    group = string|nil,  -- The focus group this element belongs to.
+    groupParent = string|nil,  -- The parent focus group.
+    location_bond = InheritedPropertiesSync|nil,  -- Bonding strength for location.
+    rotation_bond = InheritedPropertiesSync|nil,  -- Bonding strength for rotation.
+    size_bond = InheritedPropertiesSync|nil,  -- Bonding strength for size.
+    scale_bond = InheritedPropertiesSync|nil,  -- Bonding strength for scale.
+    offset = Vector2|nil,  -- Offset from the parent/aligned position.
+    scale = number|nil,  -- Scale multiplier.
+    textSpacing = number|nil,  -- Spacing for text characters.
+    focusWithObject = boolean|nil,  -- Whether focus is tied to a game object.
+    refreshMovement = boolean|nil,  -- Force movement refresh.
+    no_recalc = boolean|nil,  -- Prevents recalculation of transform.
+    non_recalc = boolean|nil,  -- Alias for no_recalc.
+    noMovementWhenDragged = boolean|nil,  -- Prevents movement while being dragged.
+    master = string|nil,  -- ID of the master element.
+    parent = string|nil,  -- ID of the parent element.
+    object = Entity|nil,  -- The game object associated with this UI element.
+    objectRecalculate = boolean|nil,  -- Force recalculation based on the object.
+    alignmentFlags = integer|nil,  -- Bitmask of alignment flags.
+    width = number|nil,  -- Explicit width.
+    height = number|nil,  -- Explicit height.
+    maxWidth = number|nil,  -- Maximum width.
+    maxHeight = number|nil,  -- Maximum height.
+    minWidth = number|nil,  -- Minimum width.
+    minHeight = number|nil,  -- Minimum height.
+    padding = number|nil,  -- Padding around the content.
+    color = string|nil,  -- Background color.
+    outlineColor = string|nil,  -- Outline color.
+    outlineThickness = number|nil,  -- Outline thickness in pixels.
+    makeMovementDynamic = boolean|nil,  -- Enables springy movement.
+    shadow = Vector2|nil,  -- Offset for the shadow.
+    outlineShadow = Vector2|nil,  -- Offset for the outline shadow.
+    shadowColor = string|nil,  -- Color of the shadow.
+    noFill = boolean|nil,  -- If true, the background is not filled.
+    pixelatedRectangle = boolean|nil,  -- Use pixel-perfect rectangle drawing.
+    canCollide = boolean|nil,  -- Whether collision is possible.
+    collideable = boolean|nil,  -- Alias for canCollide.
+    forceCollision = boolean|nil,  -- Forces collision checks.
+    button_UIE = boolean|nil,  -- Behaves as a button.
+    disable_button = boolean|nil,  -- Disables button functionality.
+    progressBarFetchValueLambda = function|nil,  -- Function to get the progress bar's current value.
+    progressBar = boolean|nil,  -- If this element is a progress bar.
+    progressBarEmptyColor = string|nil,  -- Color of the empty part of the progress bar.
+    progressBarFullColor = string|nil,  -- Color of the filled part of the progress bar.
+    progressBarMaxValue = number|nil,  -- The maximum value of the progress bar.
+    progressBarValueComponentName = string|nil,  -- Component name to fetch progress value from.
+    progressBarValueFieldName = string|nil,  -- Field name to fetch progress value from.
+    ui_object_updated = boolean|nil,  -- Flag indicating the UI object was updated.
+    buttonDelayStart = boolean|nil,  -- Flag for button delay start.
+    buttonDelay = number|nil,  -- Delay for button actions.
+    buttonDelayProgress = number|nil,  -- Progress of the button delay.
+    buttonDelayEnd = boolean|nil,  -- Flag for button delay end.
+    buttonClicked = boolean|nil,  -- True if the button was clicked this frame.
+    buttonDistance = number|nil,  -- Distance for button press effect.
+    tooltip = string|nil,  -- Simple tooltip text.
+    detailedTooltip = Tooltip|nil,  -- A detailed tooltip object.
+    onDemandTooltip = function|nil,  -- A function that returns a tooltip.
+    hover = boolean|nil,  -- Flag indicating if the element is being hovered.
+    force_focus = boolean|nil,  -- Forces this element to take focus.
+    dynamicMotion = boolean|nil,  -- Enables dynamic motion effects.
+    choice = boolean|nil,  -- Marks this as a choice in a selection.
+    chosen = boolean|nil,  -- True if this choice is currently selected.
+    one_press = boolean|nil,  -- Button can only be pressed once.
+    chosen_vert = boolean|nil,  -- Indicates a vertical choice selection.
+    draw_after = boolean|nil,  -- Draw this element after its children.
+    focusArgs = FocusArgs|nil,  -- Arguments for focus behavior.
+    updateFunc = function|nil,  -- Custom update function.
+    initFunc = function|nil,  -- Custom initialization function.
+    onUIResizeFunc = function|nil,  -- Callback for when the UI is resized.
+    onUIScalingResetToOne = function|nil,  -- Callback for when UI scaling resets.
+    instaFunc = function|nil,  -- A function to be executed instantly.
+    buttonCallback = function|nil,  -- Callback for button presses.
+    buttonTemp = boolean|nil,  -- Temporary button flag.
+    textGetter = function|nil,  -- Function to dynamically get text content.
+    ref_entity = Entity|nil,  -- A referenced entity.
+    ref_component = string|nil,  -- Name of a referenced component.
+    ref_value = any|nil,  -- A referenced value.
+    prev_ref_value = any|nil,  -- The previous referenced value.
+    text = string|nil,  -- Static text content.
+    language = string|nil,  -- Language key for localization.
+    verticalText = boolean|nil,  -- If true, text is rendered vertically.
+    hPopup = boolean|nil,  -- Is a horizontal popup.
+    dPopup = boolean|nil,  -- Is a detailed popup.
+    hPopupConfig = UIConfig|nil,  -- Configuration for the horizontal popup.
+    dPopupConfig = UIConfig|nil,  -- Configuration for the detailed popup.
+    extend_up = boolean|nil,  -- If the element extends upwards.
+    resolution = Vector2|nil,  -- Resolution context for this element.
+    emboss = boolean|nil,  -- Apply an emboss effect.
+    line_emboss = boolean|nil,  -- Apply a line emboss effect.
+    mid = boolean|nil,  -- A miscellaneous flag.
+    noRole = boolean|nil,  -- This element has no inherited properties role.
+    role = InheritedProperties|nil  -- The inherited properties role.
+}
+
+
+---
+--- A fluent builder for creating UIConfig components.
+---
+---@class UIConfigBuilder
+local UIConfigBuilder = {
+}
+
+---
+--- Creates a new builder instance with an ID.
+---
+---@param id string
+---@return self
+function UIConfigBuilder.create(...) end
+
+---
+--- Sets the ID.
+---
+---@param id string
+---@return self
+function UIConfigBuilder:addId(...) end
+
+---
+--- Sets a function to dynamically retrieve text.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addTextGetter(...) end
+
+---
+--- Sets the instance type.
+---
+---@param type string
+---@return self
+function UIConfigBuilder:addInstanceType(...) end
+
+---
+--- Sets the UI type.
+---
+---@param type UITypeEnum
+---@return self
+function UIConfigBuilder:addUiType(...) end
+
+---
+--- Sets the drawing layer.
+---
+---@param layer string
+---@return self
+function UIConfigBuilder:addDrawLayer(...) end
+
+---
+--- Sets the focus group.
+---
+---@param group string
+---@return self
+function UIConfigBuilder:addGroup(...) end
+
+---
+--- Sets the location bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function UIConfigBuilder:addLocationBond(...) end
+
+---
+--- Sets the rotation bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function UIConfigBuilder:addRotationBond(...) end
+
+---
+--- Sets the size bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function UIConfigBuilder:addSizeBond(...) end
+
+---
+--- Sets the scale bond.
+---
+---@param bond InheritedPropertiesSync
+---@return self
+function UIConfigBuilder:addScaleBond(...) end
+
+---
+--- Sets the transform offset.
+---
+---@param offset Vector2
+---@return self
+function UIConfigBuilder:addOffset(...) end
+
+---
+--- Sets the scale.
+---
+---@param scale number
+---@return self
+function UIConfigBuilder:addScale(...) end
+
+---
+--- Sets text character spacing.
+---
+---@param spacing number
+---@return self
+function UIConfigBuilder:addTextSpacing(...) end
+
+---
+--- Sets if focus is tied to the game object.
+---
+---@param focus boolean
+---@return self
+function UIConfigBuilder:addFocusWithObject(...) end
+
+---
+--- Sets if movement should be refreshed.
+---
+---@param refresh boolean
+---@return self
+function UIConfigBuilder:addRefreshMovement(...) end
+
+---
+--- Prevents movement while dragged.
+---
+---@param noMove boolean
+---@return self
+function UIConfigBuilder:addNoMovementWhenDragged(...) end
+
+---
+--- Prevents transform recalculation.
+---
+---@param noRecalc boolean
+---@return self
+function UIConfigBuilder:addNoRecalc(...) end
+
+---
+--- Alias for addNoRecalc.
+---
+---@param nonRecalc boolean
+---@return self
+function UIConfigBuilder:addNonRecalc(...) end
+
+---
+--- Enables dynamic (springy) movement.
+---
+---@param dynamic boolean
+---@return self
+function UIConfigBuilder:addMakeMovementDynamic(...) end
+
+---
+--- Sets the master UI element by ID.
+---
+---@param id string
+---@return self
+function UIConfigBuilder:addMaster(...) end
+
+---
+--- Sets the parent UI element by ID.
+---
+---@param id string
+---@return self
+function UIConfigBuilder:addParent(...) end
+
+---
+--- Attaches a game object.
+---
+---@param entity Entity
+---@return self
+function UIConfigBuilder:addObject(...) end
+
+---
+--- Sets the alignment flags.
+---
+---@param flags integer
+---@return self
+function UIConfigBuilder:addAlign(...) end
+
+---
+--- Sets the width.
+---
+---@param width number
+---@return self
+function UIConfigBuilder:addWidth(...) end
+
+---
+--- Sets the height.
+---
+---@param height number
+---@return self
+function UIConfigBuilder:addHeight(...) end
+
+---
+--- Sets the max width.
+---
+---@param maxWidth number
+---@return self
+function UIConfigBuilder:addMaxWidth(...) end
+
+---
+--- Sets the max height.
+---
+---@param maxHeight number
+---@return self
+function UIConfigBuilder:addMaxHeight(...) end
+
+---
+--- Sets the min width.
+---
+---@param minWidth number
+---@return self
+function UIConfigBuilder:addMinWidth(...) end
+
+---
+--- Sets the min height.
+---
+---@param minHeight number
+---@return self
+function UIConfigBuilder:addMinHeight(...) end
+
+---
+--- Sets the padding.
+---
+---@param padding number
+---@return self
+function UIConfigBuilder:addPadding(...) end
+
+---
+--- Sets the background color.
+---
+---@param color string
+---@return self
+function UIConfigBuilder:addColor(...) end
+
+---
+--- Sets the outline color.
+---
+---@param color string
+---@return self
+function UIConfigBuilder:addOutlineColor(...) end
+
+---
+--- Sets the outline thickness.
+---
+---@param thickness number
+---@return self
+function UIConfigBuilder:addOutlineThickness(...) end
+
+---
+--- Adds a shadow with an offset.
+---
+---@param offset Vector2
+---@return self
+function UIConfigBuilder:addShadow(...) end
+
+---
+--- Sets the shadow color.
+---
+---@param color string
+---@return self
+function UIConfigBuilder:addShadowColor(...) end
+
+---
+--- Sets if the background should be transparent.
+---
+---@param noFill boolean
+---@return self
+function UIConfigBuilder:addNoFill(...) end
+
+---
+--- Sets if the rectangle should be drawn pixel-perfect.
+---
+---@param pixelated boolean
+---@return self
+function UIConfigBuilder:addPixelatedRectangle(...) end
+
+---
+--- Sets if collision is enabled.
+---
+---@param canCollide boolean
+---@return self
+function UIConfigBuilder:addCanCollide(...) end
+
+---
+--- Alias for addCanCollide.
+---
+---@param collideable boolean
+---@return self
+function UIConfigBuilder:addCollideable(...) end
+
+---
+--- Forces collision checks.
+---
+---@param force boolean
+---@return self
+function UIConfigBuilder:addForceCollision(...) end
+
+---
+--- Marks this element as a button.
+---
+---@param isButton boolean
+---@return self
+function UIConfigBuilder:addButtonUIE(...) end
+
+---
+--- Disables the button functionality.
+---
+---@param disabled boolean
+---@return self
+function UIConfigBuilder:addDisableButton(...) end
+
+---
+--- Sets a function to get progress bar value.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addProgressBarFetchValueLamnda(...) end
+
+---
+--- Marks this as a progress bar.
+---
+---@param isProgressBar boolean
+---@return self
+function UIConfigBuilder:addProgressBar(...) end
+
+---
+--- Sets the progress bar's empty color.
+---
+---@param color string
+---@return self
+function UIConfigBuilder:addProgressBarEmptyColor(...) end
+
+---
+--- Sets the progress bar's full color.
+---
+---@param color string
+---@return self
+function UIConfigBuilder:addProgressBarFullColor(...) end
+
+---
+--- Sets the progress bar's max value.
+---
+---@param maxVal number
+---@return self
+function UIConfigBuilder:addProgressBarMaxValue(...) end
+
+---
+--- Sets the component name for progress value.
+---
+---@param name string
+---@return self
+function UIConfigBuilder:addProgressBarValueComponentName(...) end
+
+---
+--- Sets the field name for progress value.
+---
+---@param name string
+---@return self
+function UIConfigBuilder:addProgressBarValueFieldName(...) end
+
+---
+--- Sets the UI object updated flag.
+---
+---@param updated boolean
+---@return self
+function UIConfigBuilder:addUIObjectUpdated(...) end
+
+---
+--- Sets button delay start flag.
+---
+---@param delay boolean
+---@return self
+function UIConfigBuilder:addButtonDelayStart(...) end
+
+---
+--- Sets button press delay.
+---
+---@param delay number
+---@return self
+function UIConfigBuilder:addButtonDelay(...) end
+
+---
+--- Sets button delay progress.
+---
+---@param progress number
+---@return self
+function UIConfigBuilder:addButtonDelayProgress(...) end
+
+---
+--- Sets button delay end flag.
+---
+---@param ended boolean
+---@return self
+function UIConfigBuilder:addButtonDelayEnd(...) end
+
+---
+--- Sets the button clicked flag.
+---
+---@param clicked boolean
+---@return self
+function UIConfigBuilder:addButtonClicked(...) end
+
+---
+--- Sets button press visual distance.
+---
+---@param distance number
+---@return self
+function UIConfigBuilder:addButtonDistance(...) end
+
+---
+--- Sets the tooltip text.
+---
+---@param text string
+---@return self
+function UIConfigBuilder:addTooltip(...) end
+
+---
+--- Sets a detailed tooltip.
+---
+---@param tooltip Tooltip
+---@return self
+function UIConfigBuilder:addDetailedTooltip(...) end
+
+---
+--- Sets a function to generate a tooltip.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addOnDemandTooltip(...) end
+
+---
+--- Sets the hover state.
+---
+---@param hover boolean
+---@return self
+function UIConfigBuilder:addHover(...) end
+
+---
+--- Forces this element to take focus.
+---
+---@param force boolean
+---@return self
+function UIConfigBuilder:addForceFocus(...) end
+
+---
+--- Enables dynamic motion.
+---
+---@param dynamic boolean
+---@return self
+function UIConfigBuilder:addDynamicMotion(...) end
+
+---
+--- Marks this as a choice element.
+---
+---@param isChoice boolean
+---@return self
+function UIConfigBuilder:addChoice(...) end
+
+---
+--- Sets the chosen state.
+---
+---@param isChosen boolean
+---@return self
+function UIConfigBuilder:addChosen(...) end
+
+---
+--- Makes the button a one-time press.
+---
+---@param onePress boolean
+---@return self
+function UIConfigBuilder:addOnePress(...) end
+
+---
+--- Sets if choice navigation is vertical.
+---
+---@param isVert boolean
+---@return self
+function UIConfigBuilder:addChosenVert(...) end
+
+---
+--- Draws this element after its children.
+---
+---@param drawAfter boolean
+---@return self
+function UIConfigBuilder:addDrawAfter(...) end
+
+---
+--- Sets the focus arguments.
+---
+---@param args FocusArgs
+---@return self
+function UIConfigBuilder:addFocusArgs(...) end
+
+---
+--- Sets a custom update function.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addUpdateFunc(...) end
+
+---
+--- Sets a custom init function.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addInitFunc(...) end
+
+---
+--- Sets a resize callback.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addOnUIResizeFunc(...) end
+
+---
+--- Sets a scale reset callback.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addOnUIScalingResetToOne(...) end
+
+---
+--- Sets an instant-execution function.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addInstaFunc(...) end
+
+---
+--- Sets a button press callback.
+---
+---@param func function
+---@return self
+function UIConfigBuilder:addButtonCallback(...) end
+
+---
+--- Sets a temporary button flag.
+---
+---@param temp boolean
+---@return self
+function UIConfigBuilder:addButtonTemp(...) end
+
+---
+--- Sets a referenced entity.
+---
+---@param entity Entity
+---@return self
+function UIConfigBuilder:addRefEntity(...) end
+
+---
+--- Sets a referenced component name.
+---
+---@param name string
+---@return self
+function UIConfigBuilder:addRefComponent(...) end
+
+---
+--- Sets a referenced value.
+---
+---@param val any
+---@return self
+function UIConfigBuilder:addRefValue(...) end
+
+---
+--- Sets the previous referenced value.
+---
+---@param val any
+---@return self
+function UIConfigBuilder:addPrevRefValue(...) end
+
+---
+--- Sets the static text.
+---
+---@param text string
+---@return self
+function UIConfigBuilder:addText(...) end
+
+---
+--- Sets the language key.
+---
+---@param lang string
+---@return self
+function UIConfigBuilder:addLanguage(...) end
+
+---
+--- Enables vertical text.
+---
+---@param vertical boolean
+---@return self
+function UIConfigBuilder:addVerticalText(...) end
+
+---
+--- Marks as a horizontal popup.
+---
+---@param isPopup boolean
+---@return self
+function UIConfigBuilder:addHPopup(...) end
+
+---
+--- Sets the horizontal popup config.
+---
+---@param config UIConfig
+---@return self
+function UIConfigBuilder:addHPopupConfig(...) end
+
+---
+--- Marks as a detailed popup.
+---
+---@param isPopup boolean
+---@return self
+function UIConfigBuilder:addDPopup(...) end
+
+---
+--- Sets the detailed popup config.
+---
+---@param config UIConfig
+---@return self
+function UIConfigBuilder:addDPopupConfig(...) end
+
+---
+--- Sets if the element extends upwards.
+---
+---@param extendUp boolean
+---@return self
+function UIConfigBuilder:addExtendUp(...) end
+
+---
+--- Sets the resolution context.
+---
+---@param res Vector2
+---@return self
+function UIConfigBuilder:addResolution(...) end
+
+---
+--- Enables emboss effect.
+---
+---@param emboss boolean
+---@return self
+function UIConfigBuilder:addEmboss(...) end
+
+---
+--- Enables line emboss effect.
+---
+---@param emboss boolean
+---@return self
+function UIConfigBuilder:addLineEmboss(...) end
+
+---
+--- Sets the 'mid' flag.
+---
+---@param mid boolean
+---@return self
+function UIConfigBuilder:addMid(...) end
+
+---
+--- Disables the inherited properties role.
+---
+---@param noRole boolean
+---@return self
+function UIConfigBuilder:addNoRole(...) end
+
+---
+--- Sets the inherited properties role.
+---
+---@param role InheritedProperties
+---@return self
+function UIConfigBuilder:addRole(...) end
+
+---
+--- Sets the styling type.
+---
+---@param type UIStylingType
+---@return self
+function UIConfigBuilder:addStylingType(...) end
+
+---
+--- Sets the 9-patch info.
+---
+---@param info NPatchInfo
+---@return self
+function UIConfigBuilder:addNPatchInfo(...) end
+
+---
+--- Sets the 9-patch texture.
+---
+---@param texture string
+---@return self
+function UIConfigBuilder:addNPatchSourceTexture(...) end
+
+---
+--- Constructs the final UIConfig object.
+---
+---@return UIConfig
+function UIConfigBuilder:build(...) end
+
+
+---
+--- A node in a UI template, defining an element's type, config, and children.
+---
+---@class UIElementTemplateNode
+local UIElementTemplateNode = {
+    type = UITypeEnum,
+    config = UIConfig,
+    children = table<integer, UIElementTemplateNode>
+}
+
+
+---
+--- A fluent builder for creating UI template trees.
+---
+---@class UIElementTemplateNodeBuilder
+local UIElementTemplateNodeBuilder = {
+}
+
+---
+--- Creates a new builder instance.
+---
+---@return self
+function UIElementTemplateNodeBuilder.create(...) end
+
+---
+--- Sets the node's UI type.
+---
+---@param type UITypeEnum
+---@return self
+function UIElementTemplateNodeBuilder:addType(...) end
+
+---
+--- Sets the node's config.
+---
+---@param config UIConfig
+---@return self
+function UIElementTemplateNodeBuilder:addConfig(...) end
+
+---
+--- Adds a child template node.
+---
+---@param child UIElementTemplateNode
+---@return self
+function UIElementTemplateNodeBuilder:addChild(...) end
+
+---
+--- Builds the final template node.
+---
+---@return UIElementTemplateNode
+function UIElementTemplateNodeBuilder:build(...) end
+
+
+---
+--- Top-level namespace for the UI system.
+---
+---@class ui
+local ui = {
+}
+
+
+---
+--- Functions for creating and managing UI elements.
+---
+---@class ui.element
+ui.element = {
+}
+
+
+---
+--- Functions for managing and laying out entire UI trees (boxes).
+---
+---@class ui.box
+ui.box = {
+}
+
 ---
 --- Adds a pre-built event to the queue.
 ---
@@ -3361,6 +4743,635 @@ function timer.math.remap(...) end
 ---@param t number
 ---@return number
 function timer.math.lerp(...) end
+
+---
+--- Initializes the transform system.
+---
+---@return nil
+function transform.InitializeSystem(...) end
+
+---
+--- Updates all transforms in the registry.
+---
+---@param registry registry
+---@param dt number
+---@return nil
+function transform.UpdateAllTransforms(...) end
+
+---
+--- Creates or emplaces an entity with core components.
+---
+---@param registry registry
+---@param container Entity
+---@param x number
+---@param y number
+---@param w number
+---@param h number
+---@param entityToEmplaceTo? Entity
+---@return Entity
+function transform.CreateOrEmplace(...) end
+
+---
+--- Creates a root container entity for the game world.
+---
+---@param registry registry
+---@param x number
+---@param y number
+---@param w number
+---@param h number
+---@return Entity
+function transform.CreateGameWorldContainerEntity(...) end
+
+---
+--- Updates spring smoothing factors for a transform.
+---
+---@param registry registry
+---@param e Entity
+---@param dt number
+---@return nil
+function transform.UpdateTransformSmoothingFactors(...) end
+
+---
+--- Aligns an entity to its master.
+---
+---@param registry registry
+---@param e Entity
+---@param force? boolean
+---@return nil
+function transform.AlignToMaster(...) end
+
+---
+--- Updates an entity's position based on its master's movement.
+---
+---@param e Entity
+---@param dt number
+---@param selfTransform Transform
+---@param selfRole InheritedProperties
+---@param selfNode GameObject
+---@return nil
+function transform.MoveWithMaster(...) end
+
+---
+--- Gets the master components for a given entity.
+---
+---@param e Entity
+---@param selfT Transform
+---@param selfR InheritedProperties
+---@param selfN GameObject
+---@return MasterCache, Transform|nil, InheritedProperties|nil
+function transform.GetMaster(...) end
+
+---
+--- Instantly snaps an entity's transform to its master's.
+---
+---@param e Entity
+---@param parent Entity
+---@param selfT Transform
+---@param selfR InheritedProperties
+---@param parentT Transform
+---@param parentR InheritedProperties
+---@return nil
+function transform.SyncPerfectlyToMaster(...) end
+
+---
+--- Configures all alignment and bonding properties for an entity.
+---
+---@param registry registry
+---@param e Entity
+---@param isChild boolean
+---@param parent? Entity
+---@param xy? InheritedPropertiesSync
+---@param wh? InheritedPropertiesSync
+---@param rotation? InheritedPropertiesSync
+---@param scale? InheritedPropertiesSync
+---@param alignment? AlignmentFlag
+---@param offset? Vector2
+---@return nil
+function transform.ConfigureAlignment(...) end
+
+---
+--- Draws debug visuals for a transform.
+---
+---@param registry registry
+---@param e Entity
+---@param layer Layer
+---@return nil
+function transform.DrawBoundingBoxAndDebugInfo(...) end
+
+---
+--- Finds the top-most interactable entity at a screen point.
+---
+---@param point Vector2
+---@return Entity|nil
+function transform.FindTopEntityAtPoint(...) end
+
+---
+--- Finds all interactable entities at a screen point.
+---
+---@param point Vector2
+---@return Entity[]
+function transform.FindAllEntitiesAtPoint(...) end
+
+---
+--- Removes an entity and its children from the game.
+---
+---@param registry registry
+---@param e Entity
+---@return nil
+function transform.RemoveEntity(...) end
+
+---
+--- Configures a jiggle animation on hover.
+---
+---@param registry registry
+---@param e Entity
+---@param jiggleAmount number
+---@return nil
+function transform.setJiggleOnHover(...) end
+
+---
+--- Handles alignment for an entire UI tree.
+---
+---@param registry registry
+---@param root Entity
+---@return nil
+function ui.box.handleAlignment(...) end
+
+---
+--- Builds a UI tree from a template definition.
+---
+---@param registry registry
+---@param uiBoxEntity Entity
+---@param uiElementDef UIElementTemplateNode
+---@param uiElementParent Entity
+---@return nil
+function ui.box.BuildUIElementTree(...) end
+
+---
+--- Initializes a new UI box from a definition.
+---
+---@param registry registry
+---@param transformData table
+---@param definition UIElementTemplateNode
+---@param config? UIConfig
+---@return Entity
+function ui.box.Initialize(...) end
+
+---
+--- Recursively places UI elements within a layout.
+---
+---@param registry registry
+---@param uiElement Entity
+---@param runningTransform table
+---@param parentType UITypeEnum
+---@param parent Entity
+---@return nil
+function ui.box.placeUIElementsRecursively(...) end
+
+---
+--- Places a single non-container element within its parent.
+---
+---@param role InheritedProperties
+---@param runningTransform table
+---@param uiElement Entity
+---@param parentType UITypeEnum
+---@param uiState UIState
+---@param uiConfig UIConfig
+---@return nil
+function ui.box.placeNonContainerUIE(...) end
+
+---
+--- Clamps the calculated transform dimensions to the configured minimums.
+---
+---@param uiConfig UIConfig
+---@param calcTransform table
+---@return nil
+function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
+
+---
+--- Calculates the sizes for an entire UI tree.
+---
+---@param registry registry
+---@param uiElement Entity
+---@param parentUINodeRect table
+---@param forceRecalculateLayout? boolean
+---@param scale? number
+---@return number, number
+function ui.box.CalcTreeSizes(...) end
+
+---
+--- Calculates the size for a non-container sub-element.
+---
+---@param registry registry
+---@param uiElement Entity
+---@param parentUINodeRect table
+---@param forceRecalculateLayout boolean
+---@param scale? number
+---@param calcCurrentNodeTransform table
+---@return Vector2
+function ui.box.TreeCalcSubNonContainer(...) end
+
+---
+--- Renews the alignment for an entity.
+---
+---@param registry registry
+---@param self Entity
+---@return nil
+function ui.box.RenewAlignment(...) end
+
+---
+--- Calculates the size for a container sub-element.
+---
+---@param registry registry
+---@param uiElement Entity
+---@param parentUINodeRect table
+---@param forceRecalculateLayout boolean
+---@param scale? number
+---@param calcCurrentNodeTransform table
+---@param contentSizes table
+---@return Vector2
+function ui.box.TreeCalcSubContainer(...) end
+
+---
+--- Sub-routine for calculating a container's size based on its children.
+---
+---@param calcCurrentNodeTransform table
+---@param parentUINodeRect table
+---@param uiConfig UIConfig
+---@param calcChildTransform table
+---@param padding number
+---@param node GameObject
+---@param registry registry
+---@param factor number
+---@param contentSizes table
+---@return nil
+function ui.box.SubCalculateContainerSize(...) end
+
+---
+--- Gets a UI element by its ID, searching from a specific node.
+---
+---@param registry registry
+---@param node Entity
+---@param id string
+---@return Entity|nil
+function ui.box.GetUIEByID(...) end
+
+---
+--- Gets a UI element by its ID, searching globally.
+---
+(registry: registry, id: string):Entity|nil
+function ui.box.GetUIEByID(...) end
+
+---
+--- Removes all UI elements belonging to a specific group.
+---
+---@param registry registry
+---@param entity Entity
+---@param group string
+---@return boolean
+function ui.box.RemoveGroup(...) end
+
+---
+--- Gets all UI elements belonging to a specific group.
+---
+---@param registry registry
+---@param entity Entity
+---@param group string
+---@return Entity[]
+function ui.box.GetGroup(...) end
+
+---
+--- Removes a UI box and all its elements.
+---
+---@param registry registry
+---@param entity Entity
+---@return nil
+function ui.box.Remove(...) end
+
+---
+--- Forces a full recalculation of a UI box's layout.
+---
+---@param registry registry
+---@param entity Entity
+---@return nil
+function ui.box.Recalculate(...) end
+
+---
+--- Assigns tree order components for collision and input processing.
+---
+---@param registry registry
+---@param rootUIElement Entity
+---@return nil
+function ui.box.AssignTreeOrderComponents(...) end
+
+---
+--- Assigns layer order components for drawing.
+---
+---@param registry registry
+---@param uiBox Entity
+---@return nil
+function ui.box.AssignLayerOrderComponents(...) end
+
+---
+--- Updates the movement and spring physics for a UI box.
+---
+---@param registry registry
+---@param self Entity
+---@param dt number
+---@return nil
+function ui.box.Move(...) end
+
+---
+--- Handles dragging logic for a UI box.
+---
+---@param registry registry
+---@param self Entity
+---@param offset Vector2
+---@param dt number
+---@return nil
+function ui.box.Drag(...) end
+
+---
+--- Adds a new child element to a UI box or container.
+---
+---@param registry registry
+---@param uiBox Entity
+---@param uiElementDef UIElementTemplateNode
+---@param parent Entity
+---@return nil
+function ui.box.AddChild(...) end
+
+---
+--- Sets the container for a UI box.
+---
+---@param registry registry
+---@param self Entity
+---@param container Entity
+---@return nil
+function ui.box.SetContainer(...) end
+
+---
+--- Returns a string representation of the UI box tree for debugging.
+---
+---@param registry registry
+---@param self Entity
+---@param indent? integer
+---@return string
+function ui.box.DebugPrint(...) end
+
+---
+--- Traverses the UI tree from the leaves up to the root, calling the visitor function on each element.
+---
+---@param registry registry
+---@param rootUIElement Entity
+---@param visitor fun(entity: Entity)
+---@return nil
+function ui.box.TraverseUITreeBottomUp(...) end
+
+---
+--- Draws all UI boxes in the registry.
+---
+---@param registry registry
+---@param layerPtr Layer
+---@return nil
+function ui.box.drawAllBoxes(...) end
+
+---
+--- Builds a sorted list of all drawable elements within a UI box.
+---
+---@param registry registry
+---@param boxEntity Entity
+---@param out_list table
+---@return nil
+function ui.box.buildUIBoxDrawList(...) end
+
+---
+--- Clamps the calculated transform dimensions to the configured minimums.
+---
+---@param uiConfig UIConfig
+---@param calcTransform table
+---@return nil
+function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
+
+---
+--- Initializes a new UI element.
+---
+---@param registry registry
+---@param parent Entity
+---@param uiBox Entity
+---@param type UITypeEnum
+---@param config? UIConfig
+---@return Entity
+function ui.element.Initialize(...) end
+
+---
+--- Applies a scaling factor to all elements in a UI subtree.
+---
+---@param registry registry
+---@param rootEntity Entity
+---@param scaling number
+---@return nil
+function ui.element.ApplyScalingToSubtree(...) end
+
+---
+--- Updates the scaling of a UI object and recenters it.
+---
+---@param uiConfig UIConfig
+---@param newScale number
+---@param transform Transform
+---@return nil
+function ui.element.UpdateUIObjectScalingAndRecenter(...) end
+
+---
+--- Sets local transform values for a UI element.
+---
+---@param registry registry
+---@param entity Entity
+---@param _T table
+---@param recalculate boolean
+---@return nil
+function ui.element.SetValues(...) end
+
+---
+--- Returns a string representation of the UI tree for debugging.
+---
+---@param registry registry
+---@param entity Entity
+---@param indent integer
+---@return string
+function ui.element.DebugPrintTree(...) end
+
+---
+--- Initializes the visual transform properties (e.g., springs) for an element.
+---
+---@param registry registry
+---@param entity Entity
+---@return nil
+function ui.element.InitializeVisualTransform(...) end
+
+---
+--- Applies a 'juice' animation (dynamic motion) to an element.
+---
+---@param registry registry
+---@param entity Entity
+---@param amount number
+---@param rot_amt number
+---@return nil
+function ui.element.JuiceUp(...) end
+
+---
+--- Checks if the element can be dragged and returns the draggable entity if so.
+---
+---@param registry registry
+---@param entity Entity
+---@return Entity|nil
+function ui.element.CanBeDragged(...) end
+
+---
+--- Sets the width and height of an element based on its content and configuration.
+---
+---@param registry registry
+---@param entity Entity
+---@return number, number
+function ui.element.SetWH(...) end
+
+---
+--- Applies alignment logic to position an element.
+---
+---@param registry registry
+---@param entity Entity
+---@param x number
+---@param y number
+---@return nil
+function ui.element.ApplyAlignment(...) end
+
+---
+--- Sets all alignments for an element within its UI box.
+---
+---@param registry registry
+---@param entity Entity
+---@param uiBoxOffset? Vector2
+---@param rootEntity? boolean
+---@return nil
+function ui.element.SetAlignments(...) end
+
+---
+--- Updates the text content and drawable for a text element.
+---
+---@param registry registry
+---@param entity Entity
+---@param config UIConfig
+---@param state UIState
+---@return nil
+function ui.element.UpdateText(...) end
+
+---
+--- Updates a UI element that represents a game object.
+---
+---@param registry registry
+---@param entity Entity
+---@param elementConfig UIConfig
+---@param elementNode GameObject
+---@param objectConfig UIConfig
+---@param objTransform Transform
+---@param objectRole InheritedProperties
+---@param objectNode GameObject
+---@return nil
+function ui.element.UpdateObject(...) end
+
+---
+--- Draws a single UI element.
+---
+---@param layerPtr Layer
+---@param entity Entity
+---@param uiElementComp UIElementComponent
+---@param configComp UIConfig
+---@param stateComp UIState
+---@param nodeComp GameObject
+---@param transformComp Transform
+---@param zIndex? integer
+---@return nil
+function ui.element.DrawSelf(...) end
+
+---
+--- Performs a full update cycle for a UI element.
+---
+---@param registry registry
+---@param entity Entity
+---@param dt number
+---@param uiConfig UIConfig
+---@param transform Transform
+---@param uiElement UIElementComponent
+---@param node GameObject
+---@return nil
+function ui.element.Update(...) end
+
+---
+--- Checks if a UI element collides with a given point.
+---
+---@param registry registry
+---@param entity Entity
+---@param cursorPosition Vector2
+---@return boolean
+function ui.element.CollidesWithPoint(...) end
+
+---
+--- Gets the ideal position for a cursor when focusing this element.
+---
+---@param registry registry
+---@param entity Entity
+---@return Vector2
+function ui.element.PutFocusedCursor(...) end
+
+---
+--- Removes a UI element and its children.
+---
+---@param registry registry
+---@param entity Entity
+---@return nil
+function ui.element.Remove(...) end
+
+---
+--- Triggers a click event on a UI element.
+---
+---@param registry registry
+---@param entity Entity
+---@return nil
+function ui.element.Click(...) end
+
+---
+--- Triggers a release event on a UI element.
+---
+---@param registry registry
+---@param entity Entity
+---@param objectBeingDragged Entity
+---@return nil
+function ui.element.Release(...) end
+
+---
+--- Applies hover state and effects to a UI element.
+---
+---@param registry registry
+---@param entity Entity
+---@return nil
+function ui.element.ApplyHover(...) end
+
+---
+--- Removes hover state and effects from a UI element.
+---
+---@param registry registry
+---@param entity Entity
+---@return nil
+function ui.element.StopHover(...) end
+
+---
+--- Populates a table with a sorted list of UI entities to be drawn.
+---
+---@param registry registry
+---@param root Entity
+---@param out_list table
+---@return nil
+function ui.element.BuildUIDrawList(...) end
 
 ---
 --- Constructs a raw asset path without a UUID.

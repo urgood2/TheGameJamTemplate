@@ -20,22 +20,23 @@ struct MethodDef {
     std::string signature;   // e.g. "---@return number x # description"
     std::string doc;         // free-form description text
     bool        is_static;
-    bool        is_overload;  // if part of @overload annotation
+    bool        is_overload;   // if part of @overload annotation
 };
 
 struct PropDef {
     std::string name;
-    std::string value;       // e.g. "0", "1", or "\"foo\""
+    std::string value;       // e.g. "0", "1", or a type like "number"
     std::string doc;         // optional comment
 };
 
 struct TypeDef {
     std::string name;
-    std::string version;     // e.g. "11.5"
+    std::string version;
     std::string doc;
     std::vector<std::string> base_classes;
     std::vector<MethodDef>   methods;
     std::vector<PropDef>     properties;
+    bool is_data_class = false; // Flag to indicate if this is a data-only class for @field output
 };
 
 struct ModuleNode {
@@ -56,12 +57,20 @@ public:
     void set_module_name   (const std::string& name)    { module_name_    = name;    }
 
     //--- Types, methods, properties
-    TypeDef& add_type(const std::string& name) {
+    /**
+     * @brief Adds a new type definition.
+     * @param name The fully qualified name of the type (e.g., "MySystem.MyType").
+     * @param is_data_class Set to true to generate definitions with '@field' annotations, suitable for data structures. Defaults to false, generating a table of constants suitable for enums.
+     * @return A reference to the newly created TypeDef.
+     */
+    TypeDef& add_type(const std::string& name, bool is_data_class = false) {
         std::lock_guard<std::mutex> _(mtx_);
         types_.push_back(TypeDef{ name });
-        return types_.back();
+        TypeDef& new_type = types_.back();
+        new_type.is_data_class = is_data_class;
+        return new_type;
     }
-    void record_method  (const std::string& type, MethodDef m) {
+    void record_method   (const std::string& type, MethodDef m) {
         std::lock_guard<std::mutex> _(mtx_);
         if (auto* t = find_type(type)) t->methods.emplace_back(std::move(m));
     }
@@ -107,7 +116,7 @@ public:
                        const std::vector<std::string>& bases = {})
     {
         lua.new_usertype<T>(name);
-        auto& td = add_type(name);
+        auto& td = add_type(name); // is_data_class defaults to false, which is correct for usertypes
         td.version      = version;
         td.doc          = doc;
         td.base_classes = bases;
@@ -126,17 +135,17 @@ public:
 
     template <typename T, typename... Args>
     void bind_usertype(sol::state& lua,
-                    const std::vector<std::string>& path,
-                    const std::string& name,
-                    const std::string& version = "",
-                    const std::string& doc = "",
-                    const std::vector<std::string>& bases = {},
-                    Args&&... args)
+                       const std::vector<std::string>& path,
+                       const std::string& name,
+                       const std::string& version = "",
+                       const std::string& doc = "",
+                       const std::vector<std::string>& bases = {},
+                       Args&&... args)
     {
         sol::table tbl = get_or_create_table(lua, path);
         tbl.new_usertype<T>(name, std::forward<Args>(args)...);
 
-        auto& td = add_type(join_path(path, name));
+        auto& td = add_type(join_path(path, name)); // is_data_class defaults to false
         td.version      = version;
         td.doc          = doc;
         td.base_classes = bases;
@@ -186,7 +195,7 @@ public:
             out << "function " << m.name << "(...) end\n\n";
         }
 
-                // 3) Emit types with real-value tables + methods:
+        // 3) Emit types with real-value tables + methods:
         for (auto& t : types_) {
             out << "\n";
             out << "---\n";
@@ -200,28 +209,45 @@ public:
             }
             out << "\n";
 
-            // real Lua table of constants:
-            if (t.name.find('.') != std::string::npos) {
-                // nested name, e.g. TextSystem.Character
-                out << t.name << " = {\n";
-            } else {
-                out << "local " << t.name << " = {\n";
-            }
-            for (size_t i = 0; i < t.properties.size(); ++i) {
-                const auto& prop = t.properties[i];
-                out << "    " << prop.name << " = " << prop.value;
-
-                // Add comma if not the last property
-                if (i + 1 < t.properties.size())
-                    out << ",";
-
-                // Optional comment
-                if (!prop.doc.empty())
-                    out << "  -- " << prop.doc;
-
+            // --- MODIFIED SECTION ---
+            // Based on the flag, choose the output format.
+            if (t.is_data_class) {
+                // NEW FORMAT: Use @field for data-class properties
+                for (const auto& prop : t.properties) {
+                    out << "---@field " << prop.name << " " << prop.value;
+                    if (!prop.doc.empty()) {
+                        out << " " << prop.doc;
+                    }
+                    out << "\n";
+                }
                 out << "\n";
+                out << t.name << " = {}\n\n";
+            } else {
+                // ORIGINAL FORMAT: Create a table with key-value pairs for enums/constants
+                if (t.name.find('.') != std::string::npos) {
+                    // nested name, e.g. TextSystem.Character
+                    out << t.name << " = {\n";
+                } else {
+                    out << "local " << t.name << " = {\n";
+                }
+                for (size_t i = 0; i < t.properties.size(); ++i) {
+                    const auto& prop = t.properties[i];
+                    out << "    " << prop.name << " = " << prop.value;
+
+                    // Add comma if not the last property
+                    if (i < t.properties.size() - 1)
+                        out << ",";
+
+                    // Optional comment
+                    if (!prop.doc.empty())
+                        out << "  -- " << prop.doc;
+
+                    out << "\n";
+                }
+                out << "}\n\n";
             }
-            out << "}\n\n";
+            // --- END MODIFIED SECTION ---
+
 
             // stub out each method:
             for (auto& m : t.methods) {
@@ -243,8 +269,6 @@ public:
             dump_module(out, { modname }, node);
         }
 
-
-
         out.close();
         spdlog::info("dump_lua_defs: finished '{}'", path);
     }
@@ -265,7 +289,7 @@ private:
     }
 
     sol::table get_or_create_table(sol::state& lua,
-                               const std::vector<std::string>& path) {
+                                   const std::vector<std::string>& path) {
         sol::table tbl = lua.globals();
         for (auto& p : path) {
             // grab whatever is at tbl[p]

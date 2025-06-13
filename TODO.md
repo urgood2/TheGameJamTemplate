@@ -9,7 +9,9 @@
 - [ ] use backgrounds & images for the tooltip text
 - [ ] Register my ui & transform components & event queue system bindings in lua & Set up registry bond (scripting_functions.cpp) / also set up the basic lua scripts in the [folder here](src/systems/scripting/scripts_move_later_to_assets)
 - [ ] need to hook up main.lua 
-- [ ] need to hook up defs to the language server
+- [ ] need to hook up defs to the language server, debug lua defs
+- [ ] rec.add_type("shader_pipeline.ShaderOverlayDraw", /*is_data_class=*/true).doc = "Defines a shader overlay draw operation."; - some like this are missing parmeter info
+- [ ] shader_pipeline.createShaderPass is registered as a type, not a method
 - [ ] might have to redo some lua binding defs because they don't have proper method param info
 - [ ] lua autocomplete https://chatgpt.com/share/684ae2bb-0fc4-800a-b960-825041059ae5
 - [ ] lua dump needs to export deep nested index so I can refer to it while coding.

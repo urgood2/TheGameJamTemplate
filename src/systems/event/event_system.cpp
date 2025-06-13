@@ -1,6 +1,8 @@
 #include "event_system.hpp"
 #include "../../util/common_headers.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
+
 namespace event_system {
 
     MyEmitter emitter{};
@@ -139,71 +141,236 @@ namespace event_system {
     // Function to expose event system to Lua
     // Note that additional event types from C++ side must be added here manually as well
     void exposeEventSystemToLua(sol::state& lua) {
-        // Subscribe to C++ events from Lua
-        lua.set_function("subscribeToCppEvent", [](const std::string& eventType, sol::function listener) {
-            if (eventType == "player_jumped") {
-                Subscribe<PlayerJumped>(
-                    [listener](const PlayerJumped& event, MyEmitter&) {
-                        listener(event.player_name);  // Call Lua listener
-                    }
-                );
-            } else if (eventType == "player_died") {
-                Subscribe<PlayerDied>(
-                    [listener](const PlayerDied& event, MyEmitter&) {
-                        listener(event.player_name, event.cause_of_death);  // Call Lua listener
-                    }
-                );
-            }
-        });
+        auto& rec = BindingRecorder::instance();
 
-        // Publish C++ events from Lua
-        lua.set_function("publishCppEvent", [](const std::string& eventType, sol::table data) {
-            if (luaToCppEventMap.find(eventType) != luaToCppEventMap.end()) {
-                luaToCppEventMap[eventType](data);  // Publish mapped C++ event
-                markEventAsOccurred(eventType, data);
-            } else {
-                SPDLOG_DEBUG("Unknown C++ event type: {}", eventType);
-            }
-        });
+        // // Subscribe to C++ events from Lua
+        // lua.set_function("subscribeToCppEvent", [](const std::string& eventType, sol::function listener) {
+        //     if (eventType == "player_jumped") {
+        //         Subscribe<PlayerJumped>(
+        //             [listener](const PlayerJumped& event, MyEmitter&) {
+        //                 listener(event.player_name);  // Call Lua listener
+        //             }
+        //         );
+        //     } else if (eventType == "player_died") {
+        //         Subscribe<PlayerDied>(
+        //             [listener](const PlayerDied& event, MyEmitter&) {
+        //                 listener(event.player_name, event.cause_of_death);  // Call Lua listener
+        //             }
+        //         );
+        //     }
+        // });
 
-        //TODO: unit test this
+        // // Publish C++ events from Lua
+        // lua.set_function("publishCppEvent", [](const std::string& eventType, sol::table data) {
+        //     if (luaToCppEventMap.find(eventType) != luaToCppEventMap.end()) {
+        //         luaToCppEventMap[eventType](data);  // Publish mapped C++ event
+        //         markEventAsOccurred(eventType, data);
+        //     } else {
+        //         SPDLOG_DEBUG("Unknown C++ event type: {}", eventType);
+        //     }
+        // });
+
+        // subscribeToCppEvent
+        rec.bind_function(
+            lua,
+            /*path=*/{},  
+            /*name=*/"subscribeToCppEvent",
+            /*callable=*/
+            [](const std::string& eventType, sol::function listener) {
+                if (eventType == "player_jumped") {
+                    Subscribe<PlayerJumped>(
+                        [listener](const PlayerJumped& evt, MyEmitter&) {
+                            listener(evt.player_name);
+                        }
+                    );
+                }
+                else if (eventType == "player_died") {
+                    Subscribe<PlayerDied>(
+                        [listener](const PlayerDied& evt, MyEmitter&) {
+                            listener(evt.player_name, evt.cause_of_death);
+                        }
+                    );
+                }
+            },
+            /*signature=*/
+            "---@param eventType string # The C++ event name\n"
+            "---@param listener fun(...) # Lua callback invoked with event fields\n"
+            "---@return nil",
+            /*doc=*/
+            "Subscribes a Lua listener to named C++ events.",
+            /*is_overload=*/false
+        );
+
+        // publishCppEvent
+        rec.bind_function(
+            lua,
+            /*path=*/{},  
+            /*name=*/"publishCppEvent",
+            /*callable=*/
+            [](const std::string& eventType, sol::table data) {
+                auto it = luaToCppEventMap.find(eventType);
+                if (it != luaToCppEventMap.end()) {
+                    it->second(data);
+                    markEventAsOccurred(eventType, data);
+                } else {
+                    SPDLOG_DEBUG("Unknown C++ event type: {}", eventType);
+                }
+            },
+            /*signature=*/
+            "---@param eventType string # The C++ event name\n"
+            "---@param data table    # Payload fields as a Lua table\n"
+            "---@return nil",
+            /*doc=*/
+            "Publishes a Lua table as a C++ event and records its occurrence.",
+            /*is_overload=*/false
+        );
+
+        // subscribeToLuaEvent
+        rec.bind_function(
+            lua,
+            /*path=*/{},
+            /*name=*/"subscribeToLuaEvent",
+            /*callable=*/
+            [](const std::string& eventType, sol::function listener) {
+                luaEventListeners[eventType].push_back(listener);
+            },
+            /*signature=*/
+            "---@param eventType string # The Lua event name\n"
+            "---@param listener fun(...)    # Callback invoked when that event fires\n"
+            "---@return nil",
+            /*doc=*/
+            "Subscribes a Lua listener to a Lua-defined event."
+        );
+
+        // publishLuaEvent
+        rec.bind_function(
+            lua,
+            {},
+            "publishLuaEvent",
+            [](const std::string& eventType, sol::table data) {
+                publishLuaEvent(eventType, data);
+            },
+            "---@param eventType string # The Lua event name\n"
+            "---@param data table       # Payload table passed to listeners\n"
+            "---@return nil",
+            "Publishes a Lua-defined event with a data table."
+        );
+
+        // publishLuaEventNoArgs
+        rec.bind_function(
+            lua,
+            {},
+            "publishLuaEventNoArgs",
+            [](const std::string& eventType) {
+                sol::table data = sol::lua_nil;
+                publishLuaEvent(eventType, data);
+            },
+            "---@param eventType string # The Lua event name\n"
+            "---@return nil",
+            "Publishes a Lua-defined event with no arguments."
+        );
+
+        // resetListenersForLuaEvent
+        rec.bind_function(
+            lua,
+            {},
+            "resetListenersForLuaEvent",
+            &resetListenersForLuaEvent,
+            "---@param eventType string # The Lua event name\n"
+            "---@return nil",
+            "Clears all listeners for the specified Lua-defined event."
+        );
+
+        // resetListenersForCppEvent
+        rec.bind_function(
+            lua,
+            {},
+            "resetListenersForCppEvent",
+            [](const std::string& eventType) {
+                if (eventType == "player_jumped") {
+                    ResetListenersForSpecificEvent<PlayerJumped>();
+                }
+                else if (eventType == "player_died") {
+                    ResetListenersForSpecificEvent<PlayerDied>();
+                }
+                // …other C++ event types…
+            },
+            "---@param eventType string # The C++ event type name\n"
+            "---@return nil",
+            "Clears all listeners for the specified C++ event type."
+        );
+
+        // clearAllListeners
+        rec.bind_function(
+            lua,
+            {},
+            "clearAllListeners",
+            []() {
+                ClearAllListeners();
+            },
+            "---@return nil",
+            "Removes all registered event listeners (both C++ and Lua)."
+        );
+
+        // getEventOccurred
+        rec.bind_function(
+            lua,
+            {},
+            "getEventOccurred",
+            &getEventOccurred,
+            "---@param eventType string # The event name\n"
+            "---@return boolean occurred # True if that event has fired since last reset\n",
+            "Returns whether the given event has occurred."
+        );
+
+        // setEventOccurred
+        rec.bind_function(
+            lua,
+            {},
+            "setEventOccurred",
+            &setEventOccurred,
+            "---@param eventType string  # The event name\n"
+            "---@param occurred boolean  # Whether to mark it occurred or not\n"
+            "---@return nil",
+            "Manually marks an event as occurred (or not)."
+        );
         // Expose function for Lua-defined events
-        lua.set_function("subscribeToLuaEvent", [](const std::string& eventType, sol::function listener) {
-            luaEventListeners[eventType].push_back(listener);
-        });
+        // lua.set_function("subscribeToLuaEvent", [](const std::string& eventType, sol::function listener) {
+        //     luaEventListeners[eventType].push_back(listener);
+        // });
 
-        // Publish Lua-defined events
-        lua.set_function("publishLuaEvent", [](const std::string& eventType, sol::table data) {
-            publishLuaEvent(eventType, data);  // Call all listeners for this Lua-defined event
-        });
+        // // Publish Lua-defined events
+        // lua.set_function("publishLuaEvent", [](const std::string& eventType, sol::table data) {
+        //     publishLuaEvent(eventType, data);  // Call all listeners for this Lua-defined event
+        // });
         
-        // Wrapper for publish lua event but with no arguments (for console)
-        lua.set_function("publishLuaEventNoArgs", [](const std::string& eventType) {
-            sol::table data = sol::lua_nil;
-            publishLuaEvent(eventType, data);  // Call all listeners for this Lua-defined event
-        });
+        // // Wrapper for publish lua event but with no arguments (for console)
+        // lua.set_function("publishLuaEventNoArgs", [](const std::string& eventType) {
+        //     sol::table data = sol::lua_nil;
+        //     publishLuaEvent(eventType, data);  // Call all listeners for this Lua-defined event
+        // });
 
-        lua.set_function("resetListenersForLuaEvent", &resetListenersForLuaEvent);
+        // lua.set_function("resetListenersForLuaEvent", &resetListenersForLuaEvent);
 
-        // Reset listeners for a specific C++ event type (from Lua)
-        lua.set_function("resetListenersForCppEvent", [](const std::string& eventType) {
-            if (eventType == "player_jumped") {
-                ResetListenersForSpecificEvent<PlayerJumped>();
-            } else if (eventType == "player_died") {
-                ResetListenersForSpecificEvent<PlayerDied>();
-            }
-            // Add reset for other C++ event types as necessary
-        });
+        // // Reset listeners for a specific C++ event type (from Lua)
+        // lua.set_function("resetListenersForCppEvent", [](const std::string& eventType) {
+        //     if (eventType == "player_jumped") {
+        //         ResetListenersForSpecificEvent<PlayerJumped>();
+        //     } else if (eventType == "player_died") {
+        //         ResetListenersForSpecificEvent<PlayerDied>();
+        //     }
+        //     // Add reset for other C++ event types as necessary
+        // });
 
-        // Clear all listeners (from Lua)
-        lua.set_function("clearAllListeners", []() {
-            ClearAllListeners();
-        });
+        // // Clear all listeners (from Lua)
+        // lua.set_function("clearAllListeners", []() {
+        //     ClearAllListeners();
+        // });
 
-        // Getter for eventOccurredMap
-        lua.set_function("getEventOccurred", &getEventOccurred);
+        // // Getter for eventOccurredMap
+        // lua.set_function("getEventOccurred", &getEventOccurred);
 
-        // Setter for eventOccurredMap
-        lua.set_function("setEventOccurred", &setEventOccurred);
+        // // Setter for eventOccurredMap
+        // lua.set_function("setEventOccurred", &setEventOccurred);
     }
 }

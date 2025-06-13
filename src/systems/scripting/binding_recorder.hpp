@@ -6,8 +6,8 @@
 #include <mutex>
 #include <fstream>
 #include <utility>
-#include <sol/sol.hpp>            // for sol::state and sol::table
-#include <spdlog/spdlog.h>        // for logging
+#include <sol/sol.hpp>
+#include <spdlog/spdlog.h>
 
 //-----------------------------------------------------------------------------
 // BindingRecorder.hpp
@@ -17,31 +17,30 @@
 
 struct MethodDef {
     std::string name;
-    std::string signature;     // e.g. "---@return number x # description"
-    std::string doc;           // free-form description text
+    std::string signature;   // e.g. "---@return number x # description"
+    std::string doc;         // free-form description text
     bool        is_static;
-    bool        is_overload;    // if part of @overload annotation
+    bool        is_overload;  // if part of @overload annotation
 };
 
 struct PropDef {
     std::string name;
-    std::string value;         // literal value, e.g. "0", "1", or "\"foo\""
-    std::string doc;           // optional comment
+    std::string value;       // e.g. "0", "1", or "\"foo\""
+    std::string doc;         // optional comment
 };
 
 struct TypeDef {
     std::string name;
-    std::string version;       // e.g. "11.5"
+    std::string version;     // e.g. "11.5"
     std::string doc;
     std::vector<std::string> base_classes;
-    std::vector<MethodDef>    methods;
-    std::vector<PropDef>      properties;
+    std::vector<MethodDef>   methods;
+    std::vector<PropDef>     properties;
 };
 
-// Tree node for nested modules/tables
 struct ModuleNode {
     std::map<std::string, ModuleNode> children;
-    std::vector<MethodDef>    functions;
+    std::vector<MethodDef> functions;
 };
 
 class BindingRecorder {
@@ -51,33 +50,39 @@ public:
         return I;
     }
 
-    //--- Module-level metadata
+    //--- Module‐level metadata
     void set_module_version(const std::string& version) { module_version_ = version; }
-    void set_module_doc(const std::string& doc)         { module_doc_ = doc; }
-    void set_module_name(const std::string& name)       { module_name_ = name; }
+    void set_module_doc    (const std::string& doc)     { module_doc_     = doc;     }
+    void set_module_name   (const std::string& name)    { module_name_    = name;    }
 
-    //--- Direct record APIs
+    //--- Types, methods, properties
     TypeDef& add_type(const std::string& name) {
         std::lock_guard<std::mutex> _(mtx_);
         types_.push_back(TypeDef{ name });
         return types_.back();
     }
-    void record_method(const std::string& type, MethodDef m) {
+    void record_method  (const std::string& type, MethodDef m) {
         std::lock_guard<std::mutex> _(mtx_);
-        if (auto* t = find_type(type)) t->methods.push_back(std::move(m));
+        if (auto* t = find_type(type)) t->methods.emplace_back(std::move(m));
     }
-    void record_property(const std::string& type, PropDef p) {
+    void record_property(const std::string& type, PropDef   p) {
         std::lock_guard<std::mutex> _(mtx_);
-        if (auto* t = find_type(type)) t->properties.push_back(std::move(p));
+        if (auto* t = find_type(type)) t->properties.emplace_back(std::move(p));
     }
+
+    //--- Free functions (global & modules)
     void record_free_function(const std::vector<std::string>& path, MethodDef m) {
         std::lock_guard<std::mutex> _(mtx_);
-        ensure_module(path).functions.push_back(std::move(m));
+        if (path.empty()) {
+            free_functions_.emplace_back(std::move(m));
+        } else {
+            ModuleNode& node = ensure_module(path);
+            node.functions.emplace_back(std::move(m));
+        }
     }
 
     //--- Combined bind & record helpers
 
-    // Bind a free function into a nested table (or global) and record it
     template <typename Func>
     void bind_function(sol::state& lua,
                        const std::vector<std::string>& path,
@@ -87,12 +92,13 @@ public:
                        const std::string& doc = "",
                        bool is_overload = false)
     {
+        // always safe: get_or_create_table(lua, {}) == globals()
         sol::table tbl = get_or_create_table(lua, path);
         tbl.set_function(name, std::forward<Func>(f));
-        record_free_function(path, MethodDef{name, signature, doc, /*is_static=*/true, is_overload});
+        record_free_function(path,
+            MethodDef{ name, signature, doc, /*is_static=*/true, is_overload });
     }
 
-    // Bind a usertype and record the stub
     template <typename T>
     void bind_usertype(sol::state& lua,
                        const std::string& name,
@@ -102,12 +108,11 @@ public:
     {
         lua.new_usertype<T>(name);
         auto& td = add_type(name);
-        td.version = version;
-        td.doc = doc;
+        td.version      = version;
+        td.doc          = doc;
         td.base_classes = bases;
     }
 
-    // Bind a method on a usertype and record it
     template <typename Func>
     void bind_method(sol::state& lua,
                      const std::string& type,
@@ -120,17 +125,18 @@ public:
     {
         sol::table ut = lua[type];
         ut.set_function(name, std::forward<Func>(f));
-        record_method(type, MethodDef{name, signature, doc, is_static, is_overload});
+        record_method(type,
+            MethodDef{ name, signature, doc, is_static, is_overload });
     }
 
     //--- Emit .lua_defs
     void dump_lua_defs(const std::string& path) const {
         std::lock_guard<std::mutex> lock(mtx_);
-        spdlog::info("dump_lua_defs: triggered, writing {}", path);
+        spdlog::info("dump_lua_defs: writing '{}'", path);
 
         std::ofstream out(path);
         if (!out.is_open()) {
-            spdlog::error("dump_lua_defs: failed to open output file '{}'", path);
+            spdlog::error("dump_lua_defs: failed to open '{}'", path);
             return;
         }
 
@@ -140,9 +146,23 @@ public:
         out << "--- " << module_doc_ << "\n";
         out << "---\n";
         out << "-- version: " << module_version_ << "\n";
-        out << "---@class " << module_name_ << "\n";
+        out << "---@class " << module_name_ << "\n\n";
 
-        // Emit each type with its real-value properties
+        // 1) Emit truly global functions:
+        for (auto& m : free_functions_) {
+            out << "---\n";
+            out << "--- " << m.doc << "\n";
+            out << "---\n";
+            out << m.signature << "\n";
+            out << "function " << m.name << "(...) end\n\n";
+        }
+
+        // 2) Emit named modules (nested tables):
+        for (auto& [modname, node] : modules_) {
+            dump_module(out, { modname }, node);
+        }
+
+        // 3) Emit types with real-value tables + methods:
         for (auto& t : types_) {
             out << "\n";
             out << "---\n";
@@ -156,7 +176,7 @@ public:
             }
             out << "\n";
 
-            // Emit a real Lua table literal containing the constants
+            // real Lua table of constants:
             out << "local " << t.name << " = {\n";
             for (auto& prop : t.properties) {
                 out << "    " << prop.name
@@ -166,7 +186,7 @@ public:
             }
             out << "}\n\n";
 
-            // Now emit any recorded methods
+            // stub out each method:
             for (auto& m : t.methods) {
                 out << "---\n";
                 out << "--- " << m.doc << "\n";
@@ -181,21 +201,17 @@ public:
             }
         }
 
-        // Emit any free functions under modules_
-        for (auto& [name, node] : modules_) {
-            dump_module(out, { name }, node);
-        }
-
         out.close();
-        spdlog::info("dump_lua_defs: finished writing {}", path);
+        spdlog::info("dump_lua_defs: finished '{}'", path);
     }
 
 private:
     BindingRecorder() = default;
     mutable std::mutex mtx_;
 
-    std::string module_name_{""}, module_version_{"0.0"}, module_doc_{""};
+    std::string module_name_{"<unnamed>"}, module_version_{"0.0"}, module_doc_{""};
     std::vector<TypeDef> types_;
+    std::vector<MethodDef> free_functions_;
     std::map<std::string, ModuleNode> modules_;
 
     TypeDef* find_type(const std::string& name) {
@@ -204,7 +220,8 @@ private:
         return nullptr;
     }
 
-    sol::table get_or_create_table(sol::state& lua, const std::vector<std::string>& path) {
+    sol::table get_or_create_table(sol::state& lua,
+                                   const std::vector<std::string>& path) {
         sol::table tbl = lua.globals();
         for (auto& p : path) {
             if (!tbl[p]) tbl[p] = lua.create_table();
@@ -214,9 +231,14 @@ private:
     }
 
     ModuleNode& ensure_module(const std::vector<std::string>& path) {
+        if (path.empty()) {
+            spdlog::error("ensure_module: empty path");
+            throw std::invalid_argument("path must not be empty");
+        }
         ModuleNode* cur = &modules_[path[0]];
-        for (size_t i = 1; i < path.size(); ++i)
+        for (size_t i = 1; i < path.size(); ++i) {
             cur = &cur->children[path[i]];
+        }
         return *cur;
     }
 
@@ -235,7 +257,6 @@ private:
             out << m.signature << "\n";
             out << "function " << full << "." << m.name << "(...) end\n\n";
         }
-
         for (auto& [nm, child] : node.children) {
             auto sub = path;
             sub.push_back(nm);
@@ -243,7 +264,6 @@ private:
         }
     }
 };
-
 
 
 /*
@@ -282,5 +302,72 @@ Signals that the function accepts additional (variadic) arguments of the given t
 
 ---@alias <Name> <definition>
 Defines a custom type alias (e.g. enumerations or callback‐signature types). After this, you can use <Name> wherever a type is expected.
+
+*/
+
+
+/*
+
+Binding styles:
+
+
+
+        // publishLuaEventNoArgs
+        rec.bind_function(
+            lua,
+            {},
+            "publishLuaEventNoArgs",
+            [](const std::string& eventType) {
+                sol::table data = sol::lua_nil;
+                publishLuaEvent(eventType, data);
+            },
+            "---@param eventType string # The Lua event name\n"
+            "---@return nil",
+            "Publishes a Lua-defined event with no arguments."
+        );
+
+        // resetListenersForLuaEvent
+        rec.bind_function(
+            lua,
+            {},
+            "resetListenersForLuaEvent",
+            &resetListenersForLuaEvent,
+            "---@param eventType string # The Lua event name\n"
+            "---@return nil",
+            "Clears all listeners for the specified Lua-defined event."
+        );
+
+
+        
+        // 1) Module‐level banner
+        auto& rec = BindingRecorder::instance();
+        rec.set_module_name("chugget.engine");
+        rec.set_module_version("0.1");
+        rec.set_module_doc("Bindings for chugget's c++ code, for use with lua.");
+        
+        //---------------------------------------------------------
+        // initialize lua state with custom object bindings
+        //---------------------------------------------------------
+        stateToInit.new_enum("ActionResult",
+            "SUCCESS", Action::Result::SUCCESS,
+            "FAILURE", Action::Result::FAILURE,
+            "RUNNING", Action::Result::RUNNING
+        );
+        // 3) Record it as a class with constant fields
+        //    (so dump_lua_defs will emit @class + @field for each value)
+        rec.add_type("ActionResult").doc = "Results of an action";
+        rec.record_property("ActionResult", { "SUCCESS", "0", "When succeeded" });
+        rec.record_property("ActionResult", { "FAILURE", "1", "When failed" });
+        rec.record_property("ActionResult", { "RUNNING", "2", "When still running" });
+        
+        // stateToInit.new_usertype<entt::entity>("Entity");
+        // 3) Bind & record the Entity usertype
+        rec.bind_usertype<entt::entity>(
+            stateToInit,
+            "Entity",
+            "0.1",
+            "Wraps an EnTT entity handle for Lua scripts."
+        );
+    }
 
 */

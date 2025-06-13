@@ -7,6 +7,82 @@
 ---@class chugget.engine
 
 ---
+--- Subscribes a Lua listener to named C++ events.
+---
+---@param eventType string # The C++ event name
+---@param listener fun(...) # Lua callback invoked with event fields
+---@return nil
+function subscribeToCppEvent(...) end
+
+---
+--- Publishes a Lua table as a C++ event and records its occurrence.
+---
+---@param eventType string # The C++ event name
+---@param data table    # Payload fields as a Lua table
+---@return nil
+function publishCppEvent(...) end
+
+---
+--- Subscribes a Lua listener to a Lua-defined event.
+---
+---@param eventType string # The Lua event name
+---@param listener fun(...)    # Callback invoked when that event fires
+---@return nil
+function subscribeToLuaEvent(...) end
+
+---
+--- Publishes a Lua-defined event with a data table.
+---
+---@param eventType string # The Lua event name
+---@param data table       # Payload table passed to listeners
+---@return nil
+function publishLuaEvent(...) end
+
+---
+--- Publishes a Lua-defined event with no arguments.
+---
+---@param eventType string # The Lua event name
+---@return nil
+function publishLuaEventNoArgs(...) end
+
+---
+--- Clears all listeners for the specified Lua-defined event.
+---
+---@param eventType string # The Lua event name
+---@return nil
+function resetListenersForLuaEvent(...) end
+
+---
+--- Clears all listeners for the specified C++ event type.
+---
+---@param eventType string # The C++ event type name
+---@return nil
+function resetListenersForCppEvent(...) end
+
+---
+--- Removes all registered event listeners (both C++ and Lua).
+---
+---@return nil
+function clearAllListeners(...) end
+
+---
+--- Returns whether the given event has occurred.
+---
+---@param eventType string # The event name
+---@return boolean occurred # True if that event has fired since last reset
+
+function getEventOccurred(...) end
+
+---
+--- Manually marks an event as occurred (or not).
+---
+---@param eventType string  # The event name
+---@param occurred boolean  # Whether to mark it occurred or not
+---@return nil
+function setEventOccurred(...) end
+
+
+---
 --- Results of an action
 ---
 ---@class ActionResult

@@ -368,6 +368,22 @@ namespace particle {
             "endColor",      &particle::Particle::endColor
         );
         rec.bind_usertype<particle::Particle>(lua, "particle.Particle", "0.1", "Single particle instance");
+        // Let's create a data class definition for Particle so Lua users get good tooltips
+        rec.record_property("particle.Particle", {"renderType",    "nil", "particle.ParticleRenderType: How the particle is drawn."});
+        rec.record_property("particle.Particle", {"velocity",      "nil", "Vector2?: The particle's current velocity."});
+        rec.record_property("particle.Particle", {"rotation",      "nil", "number?: The particle's current rotation in degrees."});
+        rec.record_property("particle.Particle", {"rotationSpeed", "nil", "number?: How fast the particle rotates."});
+        rec.record_property("particle.Particle", {"scale",         "nil", "number?: The particle's current scale."});
+        rec.record_property("particle.Particle", {"lifespan",      "nil", "number?: How long the particle exists in seconds."});
+        rec.record_property("particle.Particle", {"age",           "nil", "number?: The current age of the particle in seconds."});
+        rec.record_property("particle.Particle", {"color",         "nil", "Color?: The current color of the particle."});
+        rec.record_property("particle.Particle", {"gravity",       "nil", "number?: Gravity strength applied to the particle."});
+        rec.record_property("particle.Particle", {"acceleration",  "nil", "number?: Acceleration applied over the particle's lifetime."});
+        rec.record_property("particle.Particle", {"startColor",    "nil", "Color?: The color the particle starts with."});
+        rec.record_property("particle.Particle", {"endColor",      "nil", "Color?: The color the particle fades to over its life."});
+
+
+
 
         // 4) ParticleEmitter usertype
         p.new_usertype<particle::ParticleEmitter>("ParticleEmitter",
@@ -394,6 +410,26 @@ namespace particle {
             "colors",                &particle::ParticleEmitter::colors
         );
         rec.bind_usertype<particle::ParticleEmitter>(lua, "particle.ParticleEmitter", "0.1", "Defines how particles are emitted");
+        // Create a data class definition for ParticleEmitter
+        rec.record_property("particle.ParticleEmitter", {"size",                 "nil", "Vector2: The size of the emission area."});
+        rec.record_property("particle.ParticleEmitter", {"emissionRate",         "nil", "number: Time in seconds between emissions."});
+        rec.record_property("particle.ParticleEmitter", {"particleLifespan",     "nil", "number: How long each particle lives."});
+        rec.record_property("particle.ParticleEmitter", {"particleSpeed",        "nil", "number: Initial speed of emitted particles."});
+        rec.record_property("particle.ParticleEmitter", {"fillArea",             "nil", "boolean: If true, emit from anywhere within the size rect."});
+        rec.record_property("particle.ParticleEmitter", {"oneShot",              "nil", "boolean: If true, emits a burst of particles once."});
+        rec.record_property("particle.ParticleEmitter", {"oneShotParticleCount", "nil", "number: Number of particles for a one-shot burst."});
+        rec.record_property("particle.ParticleEmitter", {"prewarm",              "nil", "boolean: If true, simulates the system on creation."});
+        rec.record_property("particle.ParticleEmitter", {"prewarmParticleCount", "nil", "number: Number of particles for prewarming."});
+        rec.record_property("particle.ParticleEmitter", {"useGlobalCoords",      "nil", "boolean: If true, particles operate in world space."});
+        rec.record_property("particle.ParticleEmitter", {"emissionSpread",       "nil", "number: Angular spread of particle emissions in degrees."});
+        rec.record_property("particle.ParticleEmitter", {"gravityStrength",      "nil", "number: Gravity applied to emitted particles."});
+        rec.record_property("particle.ParticleEmitter", {"emissionDirection",    "nil", "Vector2: Base direction for particle emission."});
+        rec.record_property("particle.ParticleEmitter", {"acceleration",         "nil", "number: Acceleration applied to particles."});
+        rec.record_property("particle.ParticleEmitter", {"blendMode",            "nil", "BlendMode: The blend mode for rendering particles."});
+        rec.record_property("particle.ParticleEmitter", {"colors",               "nil", "Color[]: A table of possible colors for particles."});
+
+
+
 
         // 5) ParticleAnimationConfig
         p.new_usertype<particle::ParticleAnimationConfig>("ParticleAnimationConfig",
@@ -402,6 +438,9 @@ namespace particle {
             "animationName", &particle::ParticleAnimationConfig::animationName
         );
         rec.bind_usertype<particle::ParticleAnimationConfig>(lua, "particle.ParticleAnimationConfig", "0.1", "Configuration for animated particle appearance");
+        rec.record_property("particle.ParticleAnimationConfig", {"loop", "boolean", "Whether the particle's animation should loop."});
+        rec.record_property("particle.ParticleAnimationConfig", {"animationName", "string", "The name of the animation to play."});
+
 
         // 6) Free functions
         rec.bind_function(

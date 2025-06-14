@@ -113,7 +113,7 @@ struct GOAPComponent
     int planCost;
     int current_action;
     int retries; // Number of retries for the current action
-    const int max_retries = 3; // Maximum number of retries before re-planning
+    int max_retries = 3; // Maximum number of retries before re-planning
     bool dirty = true; // If the plan is dirty/unintialized and needs to be re-planned
 
     Blackboard blackboard;

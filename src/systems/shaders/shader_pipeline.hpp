@@ -154,6 +154,10 @@ namespace shader_pipeline {
             "customPrePassFunction",  &shader_pipeline::ShaderPass::customPrePassFunction
         );
         rec.add_type("shader_pipeline.ShaderPass", /*is_data_class=*/true).doc = "Defines a single shader pass with configurable uniforms.";
+        rec.record_property("shader_pipeline.ShaderPass", { "shaderName", "string", "Name of the shader to use for this pass" });
+        rec.record_property("shader_pipeline.ShaderPass", { "enabled", "bool", "Whether this shader pass is enabled" });
+        rec.record_property("shader_pipeline.ShaderPass", { "uniforms", "UniformSet", "Shader uniforms to apply for this pass" });
+        rec.record_property("shader_pipeline.ShaderPass", { "customPrePassFunction", "fun()", "Custom function to run before activating the shader for this pass" });
 
         // 3) OverlayInputSource enum
         sp["OverlayInputSource"] = lua.create_table_with(
@@ -176,6 +180,12 @@ namespace shader_pipeline {
             "enabled",                &shader_pipeline::ShaderOverlayDraw::enabled
         );
         rec.add_type("shader_pipeline.ShaderOverlayDraw", /*is_data_class=*/true).doc = "Defines a shader overlay draw operation.";
+        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "inputSource", "OverlayInputSource", "Source input for the overlay draw" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "shaderName", "string", "Name of the shader to use for this overlay" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "uniforms", "shaders::ShaderUniformSet", "Shader uniforms to apply for this overlay" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "customPrePassFunction", "fun()", "Custom function to run before activating the shader for this overlay" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "blendMode", "BlendMode", "Blend mode to use for this overlay" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "enabled", "bool", "Whether this overlay draw is enabled" });
 
         // 5) ShaderPipelineComponent
         sp.new_usertype<shader_pipeline::ShaderPipelineComponent>("ShaderPipelineComponent",
@@ -185,6 +195,10 @@ namespace shader_pipeline {
             "padding",     &shader_pipeline::ShaderPipelineComponent::padding
         );
         rec.add_type("shader_pipeline.ShaderPipelineComponent", /*is_data_class=*/true).doc = "Holds a set of shader passes and overlays for rendering.";
+        rec.record_property("shader_pipeline.ShaderPipelineComponent", { "passes", "std::vector<ShaderPass>", "List of shader passes to apply" });
+        rec.record_property("shader_pipeline.ShaderPipelineComponent", { "overlayDraws", "std::vector<ShaderOverlayDraw>", "List of shader overlays to apply" });
+        rec.record_property("shader_pipeline.ShaderPipelineComponent", { "padding", "float", "Padding around the shader overlays" });
+        
 
         // 6) Helper to convert table to ShaderUniformValue
         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {
@@ -211,7 +225,14 @@ namespace shader_pipeline {
             }
             return pass;
         });
-        rec.add_type("shader_pipeline.createShaderPass").doc = "Create a new ShaderPass and populate uniforms.";
+        // Correctly document createShaderPass as a function
+        rec.record_free_function({"shader_pipeline"}, {
+            "createShaderPass",
+            "---@param name string # The name of the shader to use.\n"
+            "---@param uniforms table<string, any> # A Lua table of uniform names to values.\n"
+            "---@return shader_pipeline.ShaderPass",
+            "Factory function to create a new ShaderPass object from a name and a table of uniforms."
+        });
 
         // 8) Free functions
         sp.set_function("ShaderPipelineUnload", &shader_pipeline::ShaderPipelineUnload);
@@ -224,6 +245,18 @@ namespace shader_pipeline {
         sp.set_function("GetLastRenderTarget",  &shader_pipeline::GetLastRenderTarget);
         sp.set_function("SetLastRenderRect",    &shader_pipeline::SetLastRenderRect);
         sp.set_function("GetLastRenderRect",    &shader_pipeline::GetLastRenderRect);
+        
+        // --- Added Missing Documentation for Free Functions ---
+        rec.record_free_function({"shader_pipeline"}, {"ShaderPipelineUnload", "---@return nil", "Unloads the pipeline's internal render textures."});
+        rec.record_free_function({"shader_pipeline"}, {"ShaderPipelineInit", "---@param width integer\n---@param height integer\n---@return nil", "Initializes or re-initializes the pipeline's render textures to a new size."});
+        rec.record_free_function({"shader_pipeline"}, {"Resize", "---@param newWidth integer\n---@param newHeight integer\n---@return nil", "Resizes the pipeline's render textures if the new dimensions are different."});
+        rec.record_free_function({"shader_pipeline"}, {"ClearTextures", "---@param color? Color\n---@return nil", "Clears the pipeline's internal textures to a specific color (defaults to transparent).", true});
+        rec.record_free_function({"shader_pipeline"}, {"DebugDrawFront", "---@param x? integer\n---@param y? integer\n---@return nil", "Draws the current 'front' render texture for debugging purposes."});
+        rec.record_free_function({"shader_pipeline"}, {"Swap", "---@return nil", "Swaps the internal 'ping' and 'pong' render textures."});
+        rec.record_free_function({"shader_pipeline"}, {"SetLastRenderTarget", "---@param texture RenderTexture2D\n---@return nil", "Internal helper to track the last used render target."});
+        rec.record_free_function({"shader_pipeline"}, {"GetLastRenderTarget", "---@return RenderTexture2D|nil", "Internal helper to retrieve the last used render target."});
+        rec.record_free_function({"shader_pipeline"}, {"SetLastRenderRect", "---@param rect Rectangle\n---@return nil", "Internal helper to track the last rendered rectangle area."});
+        rec.record_free_function({"shader_pipeline"}, {"GetLastRenderRect", "---@return Rectangle", "Internal helper to retrieve the last rendered rectangle area."});
 
     }
 }

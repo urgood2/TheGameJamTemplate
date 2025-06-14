@@ -7,8 +7,6 @@ function init()
     registry:emplace(bowser, Transform(5, 6))
     assert(registry:has(bowser, Transform))
     assert(registry:has(bowser, Transform.type_id()))
-    
-    Layer
 
     assert(not registry:any_of(bowser, -1, -2))
 

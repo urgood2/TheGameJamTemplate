@@ -79,7 +79,7 @@ namespace transform
         {
             e = registry->create();
         }
-        auto &transform = registry->emplace_or_replace<Transform>(e, registry); 
+        auto &transform = registry->emplace_or_replace<Transform>(e); 
         transform.self = e;
         transform.middleEntityForAlignment = e; // self is the middle entity for alignment
         transform.setActualX(x);
@@ -147,7 +147,7 @@ namespace transform
     {
         //TODO: use create() method for this
         auto e = registry->create();
-        auto &transform = registry->emplace<Transform>(e, registry);
+        auto &transform = registry->emplace<Transform>(e);
         transform.middleEntityForAlignment = e; // self is the middle entity for alignment
         transform.setActualX(x);
         transform.setActualY(y);
@@ -2178,7 +2178,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // Part 1: Transform Component
         //=========================================================
         lua.new_usertype<Transform>("Transform",
-            sol::constructors<Transform(entt::registry*)>(),
+            sol::constructors<Transform()>(),
             "updateCachedValues", sol::overload(
                 static_cast<void(Transform::*)(bool)>(&Transform::updateCachedValues),
                 static_cast<void(Transform::*)(const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, bool)>(&Transform::updateCachedValues)

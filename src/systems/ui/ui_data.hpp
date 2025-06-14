@@ -20,7 +20,9 @@ namespace ui
 {
     
     // this marks objects like text, animations, etc. which are attached to a UI element. For optimization purposes.
-    struct ObjectAttachedToUITag {};
+    struct ObjectAttachedToUITag {
+        bool dummy = true; // dummy variable 
+    };
     
     enum class UITypeEnum
     {           

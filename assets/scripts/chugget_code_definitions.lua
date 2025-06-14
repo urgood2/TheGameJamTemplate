@@ -963,6 +963,18 @@ particle.ParticleRenderType = {
 ---
 ---@class particle.Particle
 particle.Particle = {
+    renderType = nil,  -- particle.ParticleRenderType: How the particle is drawn.
+    velocity = nil,  -- Vector2?: The particle's current velocity.
+    rotation = nil,  -- number?: The particle's current rotation in degrees.
+    rotationSpeed = nil,  -- number?: How fast the particle rotates.
+    scale = nil,  -- number?: The particle's current scale.
+    lifespan = nil,  -- number?: How long the particle exists in seconds.
+    age = nil,  -- number?: The current age of the particle in seconds.
+    color = nil,  -- Color?: The current color of the particle.
+    gravity = nil,  -- number?: Gravity strength applied to the particle.
+    acceleration = nil,  -- number?: Acceleration applied over the particle's lifetime.
+    startColor = nil,  -- Color?: The color the particle starts with.
+    endColor = nil  -- Color?: The color the particle fades to over its life.
 }
 
 
@@ -971,6 +983,22 @@ particle.Particle = {
 ---
 ---@class particle.ParticleEmitter
 particle.ParticleEmitter = {
+    size = nil,  -- Vector2: The size of the emission area.
+    emissionRate = nil,  -- number: Time in seconds between emissions.
+    particleLifespan = nil,  -- number: How long each particle lives.
+    particleSpeed = nil,  -- number: Initial speed of emitted particles.
+    fillArea = nil,  -- boolean: If true, emit from anywhere within the size rect.
+    oneShot = nil,  -- boolean: If true, emits a burst of particles once.
+    oneShotParticleCount = nil,  -- number: Number of particles for a one-shot burst.
+    prewarm = nil,  -- boolean: If true, simulates the system on creation.
+    prewarmParticleCount = nil,  -- number: Number of particles for prewarming.
+    useGlobalCoords = nil,  -- boolean: If true, particles operate in world space.
+    emissionSpread = nil,  -- number: Angular spread of particle emissions in degrees.
+    gravityStrength = nil,  -- number: Gravity applied to emitted particles.
+    emissionDirection = nil,  -- Vector2: Base direction for particle emission.
+    acceleration = nil,  -- number: Acceleration applied to particles.
+    blendMode = nil,  -- BlendMode: The blend mode for rendering particles.
+    colors = nil  -- Color[]: A table of possible colors for particles.
 }
 
 
@@ -979,6 +1007,8 @@ particle.ParticleEmitter = {
 ---
 ---@class particle.ParticleAnimationConfig
 particle.ParticleAnimationConfig = {
+    loop = boolean,  -- Whether the particle's animation should loop.
+    animationName = string  -- The name of the animation to play.
 }
 
 
@@ -995,6 +1025,10 @@ shader_pipeline = {
 ---
 ---@class shader_pipeline.ShaderPass
 shader_pipeline.ShaderPass = {
+    shaderName = nil, -- string Name of the shader to use for this pass
+    enabled = nil, -- bool Whether this shader pass is enabled
+    uniforms = nil, -- UniformSet Shader uniforms to apply for this pass
+    customPrePassFunction = nil, -- fun() Custom function to run before activating the shader for this pass
 }
 
 
@@ -1013,6 +1047,12 @@ shader_pipeline.OverlayInputSource = {
 ---
 ---@class shader_pipeline.ShaderOverlayDraw
 shader_pipeline.ShaderOverlayDraw = {
+    inputSource = nil, -- OverlayInputSource Source input for the overlay draw
+    shaderName = nil, -- string Name of the shader to use for this overlay
+    uniforms = nil, -- shaders::ShaderUniformSet Shader uniforms to apply for this overlay
+    customPrePassFunction = nil, -- fun() Custom function to run before activating the shader for this overlay
+    blendMode = nil, -- BlendMode Blend mode to use for this overlay
+    enabled = nil, -- bool Whether this overlay draw is enabled
 }
 
 
@@ -1021,14 +1061,9 @@ shader_pipeline.ShaderOverlayDraw = {
 ---
 ---@class shader_pipeline.ShaderPipelineComponent
 shader_pipeline.ShaderPipelineComponent = {
-}
-
-
----
---- Create a new ShaderPass and populate uniforms.
----
----@class shader_pipeline.createShaderPass
-shader_pipeline.createShaderPass = {
+    passes = nil, -- std::vector<ShaderPass> List of shader passes to apply
+    overlayDraws = nil, -- std::vector<ShaderOverlayDraw> List of shader overlays to apply
+    padding = nil, -- float Padding around the shader overlays
 }
 
 
@@ -4576,6 +4611,83 @@ function random_utils.random_weighted_pick_vec2(...) end
 ---@param weights number[] # A table of corresponding weights.
 ---@return Entity
 function random_utils.random_weighted_pick_entity(...) end
+
+---
+--- Factory function to create a new ShaderPass object from a name and a table of uniforms.
+---
+---@param name string # The name of the shader to use.
+---@param uniforms table<string, any> # A Lua table of uniform names to values.
+---@return shader_pipeline.ShaderPass
+function shader_pipeline.createShaderPass(...) end
+
+---
+--- Unloads the pipeline's internal render textures.
+---
+---@return nil
+function shader_pipeline.ShaderPipelineUnload(...) end
+
+---
+--- Initializes or re-initializes the pipeline's render textures to a new size.
+---
+---@param width integer
+---@param height integer
+---@return nil
+function shader_pipeline.ShaderPipelineInit(...) end
+
+---
+--- Resizes the pipeline's render textures if the new dimensions are different.
+---
+---@param newWidth integer
+---@param newHeight integer
+---@return nil
+function shader_pipeline.Resize(...) end
+
+---
+--- Clears the pipeline's internal textures to a specific color (defaults to transparent).
+---
+---@param color? Color
+---@return nil
+function shader_pipeline.ClearTextures(...) end
+
+---
+--- Draws the current 'front' render texture for debugging purposes.
+---
+---@param x? integer
+---@param y? integer
+---@return nil
+function shader_pipeline.DebugDrawFront(...) end
+
+---
+--- Swaps the internal 'ping' and 'pong' render textures.
+---
+---@return nil
+function shader_pipeline.Swap(...) end
+
+---
+--- Internal helper to track the last used render target.
+---
+---@param texture RenderTexture2D
+---@return nil
+function shader_pipeline.SetLastRenderTarget(...) end
+
+---
+--- Internal helper to retrieve the last used render target.
+---
+---@return RenderTexture2D|nil
+function shader_pipeline.GetLastRenderTarget(...) end
+
+---
+--- Internal helper to track the last rendered rectangle area.
+---
+---@param rect Rectangle
+---@return nil
+function shader_pipeline.SetLastRenderRect(...) end
+
+---
+--- Internal helper to retrieve the last rendered rectangle area.
+---
+---@return Rectangle
+function shader_pipeline.GetLastRenderRect(...) end
 
 ---
 --- Applies a set of uniforms to a specific shader instance.

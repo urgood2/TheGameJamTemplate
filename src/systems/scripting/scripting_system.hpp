@@ -3,6 +3,11 @@
 
 #include "registry_bond.hpp"
 
+#include "systems/ui/ui.hpp"
+#include "systems/particles/particle.hpp"
+#include "components/graphics.hpp"
+#include "components/components.hpp"
+
 // pass both the type and value of an argument to a function
 #define AUTO_ARG(x) decltype(x), x
 
@@ -118,6 +123,32 @@ namespace scripting
         {
             //TODO: call register_meta_component<Component>(); for all components that need to be usable within script with registry
             register_meta_component<ScriptComponent>();
+            register_meta_component<layer::LayerOrderComponent>();
+            register_meta_component<layer::Layer>();
+            register_meta_component<transform::Transform>();
+            register_meta_component<transform::InheritedProperties>();
+            register_meta_component<transform::GameObject>();
+            register_meta_component<transform::TreeOrderComponent>();
+            register_meta_component<ui::ObjectAttachedToUITag>();
+            register_meta_component<ui::UIElementComponent>();
+            register_meta_component<ui::TextInput>();
+            register_meta_component<ui::UIBoxComponent>();
+            register_meta_component<ui::UIState>();
+            register_meta_component<ui::Tooltip>();
+            register_meta_component<ui::InventoryGridTileComponent>();
+            register_meta_component<ui::UIConfig>();
+            register_meta_component<ui::UIElementTemplateNode>();
+            register_meta_component<particle::ParticleEmitter>();
+            register_meta_component<particle::Particle>();
+            register_meta_component<shaders::ShaderUniformSet>();
+            register_meta_component<shaders::ShaderUniformComponent>();
+            register_meta_component<shader_pipeline::ShaderPass>();
+            register_meta_component<shader_pipeline::ShaderOverlayDraw>();
+            register_meta_component<shader_pipeline::ShaderPipelineComponent>();
+            register_meta_component<GOAPComponent>();
+            register_meta_component<SpriteComponentASCII>();
+            register_meta_component<AnimationObject>();
+            register_meta_component<AnimationQueueComponent>();
 
             registry.on_construct<ScriptComponent>().connect<&init_script>();
             registry.on_destroy<ScriptComponent>().connect<&release_script>();

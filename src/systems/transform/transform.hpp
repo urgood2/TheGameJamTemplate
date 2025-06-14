@@ -2,6 +2,8 @@
 
 #include "../spring/spring.hpp"
 
+#include "core/globals.hpp"
+
 #include "entt/entt.hpp"
 #include "util/common_headers.hpp"
 
@@ -763,10 +765,9 @@ namespace transform
         };
         std::optional<DynamicMotion> dynamicMotion;
 
-        Transform(entt::registry *registry)
+        Transform()
         {
-            AssertThat(&registry, Is().Not().EqualTo(nullptr));
-            this->registry = registry;
+            this->registry = &globals::registry;
 
             x = registry->create();
             y = registry->create();
@@ -782,6 +783,7 @@ namespace transform
             auto RSpring = registry->emplace<Spring>(r, DEFAULT_SPRING_ZERO);
             auto SSpring = registry->emplace<Spring>(s, DEFAULT_SPRING_ONE);
         }
+        
 
         ~Transform()
         {

@@ -12,6 +12,7 @@
 - [ ] Changes to goap system to make it easier to use, fully lua capable, easier to understand https://chatgpt.com/share/684c5e60-0d84-800a-a769-d75d64f8503d 
 - [ ] bind_ai_utilities needs binding docs
 - [ ] ai_module needs documentation 
+- [ ] when action returns success, nothing seems to happen (no done eating message)
 
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?

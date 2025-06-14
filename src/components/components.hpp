@@ -95,7 +95,10 @@ struct Action {
     };
     
     sol::function start; // Function to run when the action starts
-    sol::function update; // Function to run every frame until action is complete - SUCCESS if action is complete
+    sol::thread             thread;    // <-- new
+
+    sol::coroutine          update;    // now bound to that thread
+
     sol::function finish; // Function to run when the action ends
     
     bool is_running = false;

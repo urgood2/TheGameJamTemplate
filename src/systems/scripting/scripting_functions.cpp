@@ -249,10 +249,11 @@ namespace scripting {
             static_cast<void(*)(entt::entity, std::string)>(&luaDebugLogWrapper),
             static_cast<void(*)(std::string)>(&luaDebugLogWrapperNoEntity)
         ));
+
         // Main signature
         rec.record_free_function({}, {"debug",
             "---@param entity Entity # The entity to associate the log with.\n"
-            "---@param message string # The message to log.\n"
+            "---@param message string # The message to log. Can be variadic arguments.\n"
             "---@return nil",
             "Logs a debug message associated with an entity.", true, false});
         // Overload for no entity

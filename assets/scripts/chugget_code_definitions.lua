@@ -302,7 +302,7 @@ function setEntityAlias(...) end
 --- Logs a debug message associated with an entity.
 ---
 ---@param entity Entity # The entity to associate the log with.
----@param message string # The message to log.
+---@param message string # The message to log. Can be variadic arguments.
 ---@return nil
 function debug(...) end
 

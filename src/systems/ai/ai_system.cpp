@@ -123,16 +123,36 @@ namespace ai_system
                 continue;
             }
             sol::table tbl = *maybe;
+            
+            
+            // 1) pull out the raw Lua function
+            sol::function fn_update = tbl["update"];
+            
+            // 1) spin up a fresh Lua thread
+            sol::thread     thr = sol::thread::create(masterStateLua);
+                    
+            // 2) bind our raw_update on that thread
+            sol::state_view thread_view = thr.state();
+            thread_view["__update_fn"] = fn_update;
 
-            // 4) Build a C++ Action from the Lua callbacks
+            // 3) grab it back as a function in that thread
+            sol::function thread_fn = thread_view["__update_fn"];
+            
+            // 4) make a coroutine out of it
+            sol::coroutine co = sol::coroutine{ thread_fn };
+
+            // 4) stash everything into your Action
             Action a;
-            a.start      = tbl["start"];
-            a.update     = tbl["update"];   // expected to be a coroutine
+            a.start      = tbl["start"];        // still on master, if you like
+            a.thread     = std::move(thr);      // keep the thread alive
+            a.update     = std::move(co);       // THIS co now lives in its own thread
             a.finish     = tbl["finish"];
             a.is_running = false;
 
-            // 5) Enqueue it for sequential execution
-            cmp.actionQueue.push(a);
+            cmp.actionQueue.push(std::move(a));
+
+            // Debug log the action being added
+            SPDLOG_DEBUG("Adding action '{}' to queue for entity {}", actionName, static_cast<int>(e)); 
         }
 
         // 6) Immediately invoke the first action’s start() so execution begins next frame
@@ -674,14 +694,14 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
             return std::nullopt;
         }
         
-        // turn into isolated coroutine
-        goapComponent.currentUpdateCoroutine = currentAction.update;
+        // // turn into isolated coroutine
+        // goapComponent.currentUpdateCoroutine = currentAction.update;
         
-        // we run update() as a coroutine to let it call methods like wait(i)
-        sol::coroutine &updateCoroutine = goapComponent.currentUpdateCoroutine;
+        // // we run update() as a coroutine to let it call methods like wait(i)
+        // sol::coroutine &updateCoroutine = goapComponent.currentUpdateCoroutine;
         
         // coroutine can return an action result or simply yield.
-        auto luaResult = updateCoroutine(entity, deltaTime);
+        auto luaResult = currentAction.update(entity, deltaTime);
         if (luaResult.valid() == false ) {
             // An error has occured
             sol::error err = luaResult;
@@ -713,8 +733,8 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
                 result = ret.as<Action::Result>();
             } else {
                 SPDLOG_ERROR(
-                "Action update returned {} values but first isn't a number ({}); treating as FAILURE",
-                returns, ret.get_type());
+                "Action update returned {} values but first isn't a number; treating as FAILURE",
+                returns);
                 result = Action::Result::FAILURE;
             }
         }

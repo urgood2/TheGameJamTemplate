@@ -7,6 +7,13 @@
 ---@class chugget.engine
 
 ---
+--- Retrieves the ScriptComponent for a given entity ID.
+---
+---@param entity_id integer
+---@return ScriptComponent
+function get_script_component(...) end
+
+---
 --- Subscribes a Lua listener to named C++ events.
 ---
 ---@param eventType 'player_jumped'|'player_died' # The C++ event name.
@@ -612,13 +619,27 @@ function entt.registry:runtime_view(...) end
 ---
 --- The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these methods.
 ---
----@class Script
-Script = {
+---@class ScriptComponent
+ScriptComponent = {
     id = nil, -- nil Entity: (Read-only) The entity handle this script is attached to. Injected by the system.
+    owner = nil, -- nil registry: (Read-only) A reference to the C++ registry. Injected by the system.
     init = nil, -- nil function(): Optional function called once when the script is attached to an entity.
     update = nil, -- nil function(dt: number): Function called every frame.
     destroy = nil, -- nil function(): Optional function called just before the entity is destroyed.
 }
+
+---
+--- Adds a new coroutine to this script's task list.
+---
+---@param task coroutine
+---@return nil
+function ScriptComponent:add_task(...) end
+
+---
+--- Returns the number of active coroutines on this script.
+---
+---@return integer
+function ScriptComponent:count_tasks(...) end
 
 
 ---

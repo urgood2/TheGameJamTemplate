@@ -79,6 +79,7 @@ using json = nlohmann::json;
 #include "systems/sound/sound_system.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/localization/localization.hpp"
+#include "systems/scripting/scripting_system.hpp"
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
@@ -393,4 +394,6 @@ auto updateSystems(float dt) -> void
 
     // update event queue
     timer::EventQueueSystem::EventManager::update(dt);
+    
+    scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
 }

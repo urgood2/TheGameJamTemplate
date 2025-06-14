@@ -17506,6 +17506,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\screen_tone_transition_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/screen_tone_transition_vertex.vs"
     ],
+    "script_task": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task"
+    ],
     "script_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial",
@@ -17619,6 +17622,9 @@
     ],
     "tan": [
         "TAN"
+    ],
+    "task_task": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task/task.lua"
     ],
     "thistle": [
         "THISTLE"

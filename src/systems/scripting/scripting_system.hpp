@@ -30,6 +30,20 @@ namespace scripting
         {
             sol::function update; ///< Update hook called every frame (if exists)
         } hooks;
+        
+        // list of currently running Lua coroutines (tasks)
+        std::vector<sol::coroutine> tasks;
+
+        void add_task(sol::coroutine co) {
+            if (co.valid()) {
+                tasks.emplace_back(std::move(co));
+            }
+        }
+
+        std::size_t count_tasks() const {
+            return tasks.size();
+        }
+
     };
 
     /**
@@ -66,6 +80,7 @@ namespace scripting
         script.self["id"] = sol::readonly_property([entity]
                                                    { return entity; });
         script.self["owner"] = std::ref(registry);
+        script.self["__entity_id"] = static_cast<uint32_t>(entity);
         if (auto &&f = script.self["init"]; f.valid())
             f(script.self);
         // inspect_script(script);
@@ -103,17 +118,52 @@ namespace scripting
         for (auto entity : view)
         {
             auto &script = view.get<ScriptComponent>(entity);
+            // 1. Run normal update
             assert(script.self.valid());
             script.hooks.update(script.self, delta_time);
+            
+            // 2. Resume coroutine tasks
+            auto& tasks = script.tasks;
+            for (auto it = tasks.begin(); it != tasks.end();) {
+                if (it->valid() && it->status() == sol::call_status::yielded) {
+                    sol::protected_function_result result = (*it)(script.self, delta_time);
+                    if (!result.valid()) {
+                        sol::error err = result;
+                        std::cerr << "[Coroutine Error] " << err.what() << "\n";
+                        it = tasks.erase(it);
+                        continue;
+                    }
+                }
+
+                if (!it->valid() || it->status() == sol::call_status::ok) {
+                    it = tasks.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+            
+
         }
     }
     
 
-    namespace scripting_system {
+    namespace monobehavior_system {
         
         inline auto generateBindingsToLua(sol::state &lua) -> void
         {
             auto& rec = BindingRecorder::instance();
+            
+            // Expose ScriptComponent to Lua
+            lua.new_usertype<ScriptComponent>("ScriptComponent",
+                "add_task", &ScriptComponent::add_task,
+                "count_tasks", &ScriptComponent::count_tasks
+            );
+
+            // Global function to get ScriptComponent from entity ID
+            lua["get_script_component"] = [&](uint32_t entity_id) -> ScriptComponent& {
+                entt::entity ent = static_cast<entt::entity>(entity_id);
+                return globals::registry.get<ScriptComponent>(ent);
+            };
             
             rec.add_type("entt");
             
@@ -240,15 +290,38 @@ namespace scripting
             
             // --- 2. Document the structure of a Lua script component ---
             // This defines the "interface" that C++ expects from your Lua tables.
-            auto& script_interface = rec.add_type("Script", true);
-            script_interface.doc = "The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these methods.";
-
-            rec.record_property("Script", {"id", "nil", "Entity: (Read-only) The entity handle this script is attached to. Injected by the system."});
-            rec.record_property("scripting.Script", {"owner", "nil", "registry: (Read-only) A reference to the C++ registry. Injected by the system."});
             
-            rec.record_property("Script", {"init", "nil", "function(): Optional function called once when the script is attached to an entity."});
-            rec.record_property("Script", {"update", "nil", "function(dt: number): Function called every frame."});
-            rec.record_property("Script", {"destroy", "nil", "function(): Optional function called just before the entity is destroyed."});
+            auto& script_interface = rec.add_type("ScriptComponent", true);
+            script_interface.doc = "The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these methods.";
+            
+            // --- Global Scripting Functions ---
+            rec.record_free_function({}, {
+                "get_script_component",
+                "---@param entity_id integer\n"
+                "---@return ScriptComponent",
+                "Retrieves the ScriptComponent for a given entity ID."
+            });
+            
+            // --- Added ScriptComponent Methods ---
+            rec.record_method("ScriptComponent", {
+                "add_task",
+                "---@param task coroutine\n"
+                "---@return nil",
+                "Adds a new coroutine to this script's task list."
+            });
+            
+            rec.record_method("ScriptComponent", {
+                "count_tasks",
+                "---@return integer",
+                "Returns the number of active coroutines on this script."
+            });
+        
+            rec.record_property("ScriptComponent", {"id", "nil", "Entity: (Read-only) The entity handle this script is attached to. Injected by the system."});
+            rec.record_property("ScriptComponent", {"owner", "nil", "registry: (Read-only) A reference to the C++ registry. Injected by the system."});
+            
+            rec.record_property("ScriptComponent", {"init", "nil", "function(): Optional function called once when the script is attached to an entity."});
+            rec.record_property("ScriptComponent", {"update", "nil", "function(dt: number): Function called every frame."});
+            rec.record_property("ScriptComponent", {"destroy", "nil", "function(): Optional function called just before the entity is destroyed."});
 
 
         }

@@ -466,8 +466,8 @@ namespace ai_system
         // ------------------------------------------------------
         // methods for entt registry access & monobehavior
         // ------------------------------------------------------
-        scripting::scripting_system::init(globals::registry, masterStateLua);
-        scripting::scripting_system::generateBindingsToLua(masterStateLua);
+        scripting::monobehavior_system::init(globals::registry, masterStateLua);
+        scripting::monobehavior_system::generateBindingsToLua(masterStateLua);
 
 
         // read in master lua state 
@@ -478,11 +478,13 @@ namespace ai_system
         std::string tutorialDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["tutorialDirectory"].get<std::string>()));
         std::string coreDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["coreDirectory"].get<std::string>()));
         std::string monoBehaviorDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["monoBehaviorDirectory"].get<std::string>()));
+        std::string taskDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["taskDirectory"].get<std::string>()));
 
         std::vector<std::string> luaFiles{};
 
         // Iterate over all files in the directories
         getLuaFilesFromDirectory(actionsDir, luaFiles);
+        getLuaFilesFromDirectory(taskDir, luaFiles);
         getLuaFilesFromDirectory(worldstatesDir, luaFiles);
         getLuaFilesFromDirectory(logicDir, luaFiles);
         getLuaFilesFromDirectory(initBlackboardDir, luaFiles);
@@ -493,9 +495,6 @@ namespace ai_system
 
         // run default initialization function
         scripting::initLuaMasterState(masterStateLua, luaFiles);
-
-        //TODO: debugging
-        scripting::dump_lua_globals(masterStateLua, util::getRawAssetPathNoUUID("scripts/lua_globals_dump.txt"));
 
     }
 

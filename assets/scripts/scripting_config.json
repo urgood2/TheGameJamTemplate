@@ -6,6 +6,7 @@
     "logicDirectory": "logic",
     "blackboardInitDirectory": "init",
     "tutorialDirectory": "tutorial",
+    "taskDirectory": "task",
 
     "__comment": "The name of the default lua function that initializes the blackboard",
     "blackboardInitTableName": "init_blackboard",

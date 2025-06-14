@@ -371,7 +371,8 @@ namespace scripting {
         stateToInit.set_function("unpauseGame", unpauseGame);
         rec.record_free_function({}, {"pauseGame", "---@return nil", "Pauses the game.", true, false});
         rec.record_free_function({}, {"unpauseGame", "---@return nil", "Unpauses the game.", true, false});
-
+        
+        
         // 5) Finally dump out your definitions:
         rec.dump_lua_defs(util::getRawAssetPathNoUUID("scripts/chugget_code_definitions.lua")); 
     }

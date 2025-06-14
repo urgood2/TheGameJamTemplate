@@ -6,6 +6,8 @@
 #include "systems/ui/ui.hpp"
 #include "systems/particles/particle.hpp"
 #include "components/graphics.hpp"
+#include "systems/shaders/shader_pipeline.hpp"
+#include "systems/shaders/shader_system.hpp"
 #include "components/components.hpp"
 
 // pass both the type and value of an argument to a function
@@ -109,6 +111,148 @@ namespace scripting
 
     namespace scripting_system {
         
+        inline auto generateBindingsToLua(sol::state &lua) -> void
+        {
+            auto& rec = BindingRecorder::instance();
+            
+            rec.add_type("entt");
+            
+            // --- entt.runtime_view ---
+            auto& view_type = rec.add_type("entt.runtime_view");
+            view_type.doc = "An iterable view over a set of entities that have all the given components.";
+
+            rec.record_method("entt.runtime_view", {
+                "size_hint",
+                "---@return integer",
+                "Returns an estimated number of entities in the view."
+            });
+
+            rec.record_method("entt.runtime_view", {
+                "contains",
+                "---@param entity Entity\n"
+                "---@return boolean",
+                "Checks if an entity is present in the view."
+            });
+
+            rec.record_method("entt.runtime_view", {
+                "each",
+                "---@param callback fun(entity: Entity)\n"
+                "---@return nil",
+                "Iterates over all entities in the view and calls the provided function for each one."
+            });
+
+            // --- entt.registry ---
+            auto& reg_type = rec.add_type("entt.registry");
+            reg_type.doc = "The main container for all entities and components in the ECS world.";
+
+            rec.record_method("entt.registry", {
+                "new",
+                "---@return entt.registry",
+                "Creates a new, empty registry instance.",
+                true // is_static
+            });
+
+            rec.record_method("entt.registry", {"size", "---@return integer", "Returns the number of entities created so far."});
+            rec.record_method("entt.registry", {"alive", "---@return integer", "Returns the number of living entities."});
+            rec.record_method("entt.registry", {"valid", "---@param entity Entity\n---@return boolean", "Checks if an entity handle is valid and still alive."});
+            rec.record_method("entt.registry", {"current", "---@param entity Entity\n---@return integer", "Returns the current version of an entity handle."});
+
+            rec.record_method("entt.registry", {
+                "create",
+                "---@return Entity",
+                "Creates a new entity and returns its handle."
+            });
+
+            rec.record_method("entt.registry", {
+                "destroy",
+                "---@param entity Entity\n"
+                "---@return nil",
+                "Destroys an entity and all its components."
+            });
+
+            rec.record_method("entt.registry", {
+                "emplace",
+                "---@param entity Entity\n"
+                "---@param component_table table # A Lua table representing the component, must contain a `__type` field.\n"
+                "---@return any # The newly created component instance.",
+                "Adds and initializes a component for an entity using a Lua table."
+            });
+            
+            rec.record_method("entt.registry", {
+                "remove",
+                "---@param entity Entity\n"
+                "---@param component_type ComponentType\n"
+                "---@return integer # The number of components removed (0 or 1).",
+                "Removes a component from an entity."
+            });
+
+            rec.record_method("entt.registry", {
+                "has",
+                "---@param entity Entity\n"
+                "---@param component_type ComponentType\n"
+                "---@return boolean",
+                "Checks if an entity has a specific component."
+            });
+            
+            rec.record_method("entt.registry", {
+                "any_of",
+                "---@param entity Entity\n"
+                "---@param ... ComponentType\n"
+                "---@return boolean",
+                "Checks if an entity has any of the specified components."
+            });
+
+            rec.record_method("entt.registry", {
+                "get",
+                "---@param entity Entity\n"
+                "---@param component_type ComponentType\n"
+                "---@return any|nil # The component instance, or nil if not found.",
+                "Retrieves a component from an entity."
+            });
+
+            // --- Overloaded clear() method ---
+            rec.record_method("entt.registry", {
+                "clear",
+                "---@return nil",
+                "Destroys all entities and clears all component pools.",
+                false, false // Not an overload, this is the base signature
+            });
+            rec.record_method("entt.registry", {
+                "clear",
+                "---@overload fun(component_type: ComponentType):void",
+                "Removes all components of a given type from all entities.",
+                false, true // This is the overload
+            });
+
+
+            rec.record_method("entt.registry", {
+                "orphan",
+                "---@return nil",
+                "Destroys all entities that have no components."
+            });
+
+            rec.record_method("entt.registry", {
+                "runtime_view",
+                "---@param ... ComponentType\n"
+                "---@return entt.runtime_view",
+                "Creates and returns a view for iterating over entities that have all specified components."
+            });
+            
+            // --- 2. Document the structure of a Lua script component ---
+            // This defines the "interface" that C++ expects from your Lua tables.
+            auto& script_interface = rec.add_type("Script", true);
+            script_interface.doc = "The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these methods.";
+
+            rec.record_property("Script", {"id", "nil", "Entity: (Read-only) The entity handle this script is attached to. Injected by the system."});
+            rec.record_property("scripting.Script", {"owner", "nil", "registry: (Read-only) A reference to the C++ registry. Injected by the system."});
+            
+            rec.record_property("Script", {"init", "nil", "function(): Optional function called once when the script is attached to an entity."});
+            rec.record_property("Script", {"update", "nil", "function(dt: number): Function called every frame."});
+            rec.record_property("Script", {"destroy", "nil", "function(): Optional function called just before the entity is destroyed."});
+
+
+        }
+        
         /**
          * @brief Initializes the scripting system.
          *
@@ -121,7 +265,7 @@ namespace scripting
          */
         inline auto init(entt::registry &registry, sol::state &lua) -> void
         {
-            //TODO: call register_meta_component<Component>(); for all components that need to be usable within script with registry
+            //  call register_meta_component<Component>(); for all components that need to be usable within script with registry
             register_meta_component<ScriptComponent>();
             register_meta_component<layer::LayerOrderComponent>();
             register_meta_component<layer::Layer>();

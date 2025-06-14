@@ -16,7 +16,7 @@
 - [ ] #to-process 01:18 coroutine update monobehavior loop. https://chatgpt.com/share/684c5620-55a8-800a-9cb9-8aecc96e3c8e
 - [ ] Task scheduler with coroutines https://chatgpt.com/share/684c5800-52b0-800a-afa1-f04c026e3de1
 - [ ] Changes to goap system to make it easier to use, fully lua capable, easier to understand https://chatgpt.com/share/684c5e60-0d84-800a-a769-d75d64f8503d 
-- [ ] Lua sode - making monobehavior components in lua, assigning scripts from lua side, etc etc, making evertyhing run - refer to this - https://chatgpt.com/share/684c4b90-9228-800a-adc7-7697564a98fe
+
 
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?
@@ -39,6 +39,9 @@
   - [ ] Tooltips -> ui boxes with rows/columns with backgrounds + text of varying colors + sometimes dynamic text for effect. There are drag, hover tooltips, each of which should be tested. Also don't make them be re-created every time, just cache them with the owner entity and destroy them later
 - [ ] make particle system a little easier to use on the go
 - [ ] Text input (with cursor displayed, etc, software keyboard)
+
+### Glance_at_later
+- [ ] Lua sode - making monobehavior components in lua, assigning scripts from lua side, etc etc, making evertyhing run - refer to this - https://chatgpt.com/share/684c4b90-9228-800a-adc7-7697564a98fe
 
 ### MISC. RENDERING
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this

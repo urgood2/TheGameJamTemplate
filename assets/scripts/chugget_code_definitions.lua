@@ -456,6 +456,172 @@ function unpauseGame(...) end
 
 
 ---
+--- 
+---
+---@class entt
+entt = {
+}
+
+
+---
+--- An iterable view over a set of entities that have all the given components.
+---
+---@class entt.runtime_view
+entt.runtime_view = {
+}
+
+---
+--- Returns an estimated number of entities in the view.
+---
+---@return integer
+function entt.runtime_view:size_hint(...) end
+
+---
+--- Checks if an entity is present in the view.
+---
+---@param entity Entity
+---@return boolean
+function entt.runtime_view:contains(...) end
+
+---
+--- Iterates over all entities in the view and calls the provided function for each one.
+---
+---@param callback fun(entity: Entity)
+---@return nil
+function entt.runtime_view:each(...) end
+
+
+---
+--- The main container for all entities and components in the ECS world.
+---
+---@class entt.registry
+entt.registry = {
+}
+
+---
+--- Creates a new, empty registry instance.
+---
+---@return entt.registry
+function entt.registry.new(...) end
+
+---
+--- Returns the number of entities created so far.
+---
+---@return integer
+function entt.registry:size(...) end
+
+---
+--- Returns the number of living entities.
+---
+---@return integer
+function entt.registry:alive(...) end
+
+---
+--- Checks if an entity handle is valid and still alive.
+---
+---@param entity Entity
+---@return boolean
+function entt.registry:valid(...) end
+
+---
+--- Returns the current version of an entity handle.
+---
+---@param entity Entity
+---@return integer
+function entt.registry:current(...) end
+
+---
+--- Creates a new entity and returns its handle.
+---
+---@return Entity
+function entt.registry:create(...) end
+
+---
+--- Destroys an entity and all its components.
+---
+---@param entity Entity
+---@return nil
+function entt.registry:destroy(...) end
+
+---
+--- Adds and initializes a component for an entity using a Lua table.
+---
+---@param entity Entity
+---@param component_table table # A Lua table representing the component, must contain a `__type` field.
+---@return any # The newly created component instance.
+function entt.registry:emplace(...) end
+
+---
+--- Removes a component from an entity.
+---
+---@param entity Entity
+---@param component_type ComponentType
+---@return integer # The number of components removed (0 or 1).
+function entt.registry:remove(...) end
+
+---
+--- Checks if an entity has a specific component.
+---
+---@param entity Entity
+---@param component_type ComponentType
+---@return boolean
+function entt.registry:has(...) end
+
+---
+--- Checks if an entity has any of the specified components.
+---
+---@param entity Entity
+---@param ... ComponentType
+---@return boolean
+function entt.registry:any_of(...) end
+
+---
+--- Retrieves a component from an entity.
+---
+---@param entity Entity
+---@param component_type ComponentType
+---@return any|nil # The component instance, or nil if not found.
+function entt.registry:get(...) end
+
+---
+--- Destroys all entities and clears all component pools.
+---
+---@return nil
+function entt.registry:clear(...) end
+
+---
+--- Removes all components of a given type from all entities.
+---
+---@overload fun---@overload fun(component_type: ComponentType):void
+function entt.registry:clear(...) end
+
+---
+--- Destroys all entities that have no components.
+---
+---@return nil
+function entt.registry:orphan(...) end
+
+---
+--- Creates and returns a view for iterating over entities that have all specified components.
+---
+---@param ... ComponentType
+---@return entt.runtime_view
+function entt.registry:runtime_view(...) end
+
+
+---
+--- The interface for a Lua script attached to an entity (like monobehavior). Your script table should implement these methods.
+---
+---@class Script
+Script = {
+    id = nil, -- nil Entity: (Read-only) The entity handle this script is attached to. Injected by the system.
+    init = nil, -- nil function(): Optional function called once when the script is attached to an entity.
+    update = nil, -- nil function(dt: number): Function called every frame.
+    destroy = nil, -- nil function(): Optional function called just before the entity is destroyed.
+}
+
+
+---
 --- Results of an action
 ---
 ---@class ActionResult

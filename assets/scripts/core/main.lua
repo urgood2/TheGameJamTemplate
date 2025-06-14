@@ -1,12 +1,17 @@
 local globals = require("init.globals")
+local registry = require("registry")
 
-function init()
+-- Represents game loop main module
+main = {}
+
+function main.init()
     -- entity creation example
     bowser = registry:create()
     assert(bowser == 0 and registry:size() == 1)
     registry:emplace(bowser, Transform(5, 6))
     assert(registry:has(bowser, Transform))
     assert(registry:has(bowser, Transform.type_id()))
+    
 
     assert(not registry:any_of(bowser, -1, -2))
 
@@ -16,7 +21,7 @@ function init()
 
 end
   
-function update(dt)
+function main.update(dt)
     -- entity iteration example
     local view = registry:runtime_view(Transform)
     assert(view:size_hint() > 0)

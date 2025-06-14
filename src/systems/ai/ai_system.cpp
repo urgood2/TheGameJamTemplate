@@ -7,6 +7,7 @@
 #include "../../core/globals.hpp"
 
 #include "../scripting/scripting_functions.hpp"
+#include "../scripting/scripting_system.hpp"
 
 #include "../event/event_system.hpp"
 
@@ -461,6 +462,13 @@ namespace ai_system
 
         globals::registry.on_construct<GOAPComponent>().connect<&onGOAPComponentCreated>();
         globals::registry.on_destroy<GOAPComponent>().connect<&onGOAPComponentDestroyed>();
+        
+        // ------------------------------------------------------
+        // methods for entt registry access & monobehavior
+        // ------------------------------------------------------
+        scripting::scripting_system::init(globals::registry, masterStateLua);
+        scripting::scripting_system::generateBindingsToLua(masterStateLua);
+
 
         // read in master lua state 
         std::string actionsDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["actionsDirectory"].get<std::string>()));

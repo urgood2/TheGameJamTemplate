@@ -115,7 +115,14 @@ namespace ai_system
             std::string actionName = plan[i];
 
             // 3) Look up the Lua table for this action (must have start/update/finish)
-            sol::table tbl = masterStateLua[actionName];
+            // look up the Lua table for this action
+            sol::table actionsT = masterStateLua["ai"]["actions"];
+            sol::optional<sol::table> maybe = actionsT.get<sol::table>(actionName);
+            if (!maybe) {
+                SPDLOG_ERROR("Unknown action '{}' in ai.actions", actionName);
+                continue;
+            }
+            sol::table tbl = *maybe;
 
             // 4) Build a C++ Action from the Lua callbacks
             Action a;
@@ -219,82 +226,82 @@ namespace ai_system
         return goapStruct.planSize == 0 || goapStruct.dirty == true;
     }
 
-    // takes a loaded-in json object and reads in the actions and their preconditions and postconditions
-    void load_actions_from_json(const json& data, actionplanner_t& planner) {
-        for (const auto& action : data["actions"]) {
-            std::string name = action["name"];
-            int cost = action["cost"].get<int>();
+    // // takes a loaded-in json object and reads in the actions and their preconditions and postconditions
+    // void load_actions_from_json(const json& data, actionplanner_t& planner) {
+    //     for (const auto& action : data["actions"]) {
+    //         std::string name = action["name"];
+    //         int cost = action["cost"].get<int>();
 
-            // Debug log the action name and cost
-            SPDLOG_DEBUG("Loading action: {}, Cost: {}", name, cost);
+    //         // Debug log the action name and cost
+    //         SPDLOG_DEBUG("Loading action: {}, Cost: {}", name, cost);
 
-            goap_set_cost(&planner, name.c_str(), cost);
+    //         goap_set_cost(&planner, name.c_str(), cost);
 
-            // Debugging the preconditions
-            // SPDLOG_DEBUG("  Preconditions:");
-            for (const auto& precondition : action["preconditions"].items()) {
-                const std::string pre_key = precondition.key();
-                const bool pre_value = precondition.value().get<bool>();
+    //         // Debugging the preconditions
+    //         // SPDLOG_DEBUG("  Preconditions:");
+    //         for (const auto& precondition : action["preconditions"].items()) {
+    //             const std::string pre_key = precondition.key();
+    //             const bool pre_value = precondition.value().get<bool>();
                 
-                // Log the precondition
-                // SPDLOG_DEBUG("    {}: {}", pre_key, pre_value ? "true" : "false");
+    //             // Log the precondition
+    //             // SPDLOG_DEBUG("    {}: {}", pre_key, pre_value ? "true" : "false");
                 
-                goap_set_pre(&planner, name.data(), pre_key.data(), pre_value);
-                SPDLOG_DEBUG("goap_set_pre(&planner, {}, {}, {})", name, pre_key, pre_value);
-            }
+    //             goap_set_pre(&planner, name.data(), pre_key.data(), pre_value);
+    //             SPDLOG_DEBUG("goap_set_pre(&planner, {}, {}, {})", name, pre_key, pre_value);
+    //         }
 
-            // Debugging the postconditions
-            // SPDLOG_DEBUG("  Postconditions:");
-            for (const auto& postcondition : action["postconditions"].items()) {
-                const std::string post_key = postcondition.key();
-                const bool post_value = postcondition.value().get<bool>();
+    //         // Debugging the postconditions
+    //         // SPDLOG_DEBUG("  Postconditions:");
+    //         for (const auto& postcondition : action["postconditions"].items()) {
+    //             const std::string post_key = postcondition.key();
+    //             const bool post_value = postcondition.value().get<bool>();
 
-                // Log the postcondition
-                // SPDLOG_DEBUG("    {}: {}", post_key, post_value ? "true" : "false");
+    //             // Log the postcondition
+    //             // SPDLOG_DEBUG("    {}: {}", post_key, post_value ? "true" : "false");
 
-                goap_set_pst(&planner, name.data(), post_key.data(), post_value);
-                SPDLOG_DEBUG("goap_set_pst(&planner, {}, {}, {})", name, post_key, post_value);
+    //             goap_set_pst(&planner, name.data(), post_key.data(), post_value);
+    //             SPDLOG_DEBUG("goap_set_pst(&planner, {}, {}, {})", name, post_key, post_value);
                 
-                allPostconditionsForEveryAction[name][post_key] = post_value ;
-            }
+    //             allPostconditionsForEveryAction[name][post_key] = post_value ;
+    //         }
             
-            SPDLOG_DEBUG("Planner state after loading action: {}", name);
+    //         SPDLOG_DEBUG("Planner state after loading action: {}", name);
 
-            char desc[ 4096 ];
-            goap_description( &planner, desc, sizeof(desc) );
-            SPDLOG_INFO("{}", desc);
-        }
-    }
+    //         char desc[ 4096 ];
+    //         goap_description( &planner, desc, sizeof(desc) );
+    //         SPDLOG_INFO("{}", desc);
+    //     }
+    // }
 
-    void load_worldstate_from_json(const json& data, actionplanner_t& planner, worldstate_t& initialState, worldstate_t& goalState) {
-        // Debugging initial state
-        SPDLOG_DEBUG("Loading initial world state:");
-        for (const auto& atom : data["initial_state"].items()) {
-            const std::string& atom_key = atom.key();
-            const bool atom_value = atom.value().get<bool>();
+    // void load_worldstate_from_json(const json& data, actionplanner_t& planner, worldstate_t& initialState, worldstate_t& goalState) {
+    //     // Debugging initial state
+    //     SPDLOG_DEBUG("Loading initial world state:");
+    //     for (const auto& atom : data["initial_state"].items()) {
+    //         const std::string& atom_key = atom.key();
+    //         const bool atom_value = atom.value().get<bool>();
 
-            // Log the initial state atom
-            // SPDLOG_DEBUG("  {}: {}", atom_key, atom_value ? "true" : "false");
+    //         // Log the initial state atom
+    //         // SPDLOG_DEBUG("  {}: {}", atom_key, atom_value ? "true" : "false");
 
-            goap_worldstate_set(&planner, &initialState, atom_key.c_str(), atom_value);
-            SPDLOG_DEBUG("goap_worldstate_set(&planner, &initialState, {}, {})", atom_key.c_str(), atom_value);
-        }
+    //         goap_worldstate_set(&planner, &initialState, atom_key.c_str(), atom_value);
+    //         SPDLOG_DEBUG("goap_worldstate_set(&planner, &initialState, {}, {})", atom_key.c_str(), atom_value);
+    //     }
 
-        // Debugging goal state
-        SPDLOG_DEBUG("Loading goal world state:");
-        for (const auto& atom : data["goal_state"].items()) {
-            const std::string& atom_key = atom.key();
-            const bool atom_value = atom.value().get<bool>();
+    //     // Debugging goal state
+    //     SPDLOG_DEBUG("Loading goal world state:");
+    //     for (const auto& atom : data["goal_state"].items()) {
+    //         const std::string& atom_key = atom.key();
+    //         const bool atom_value = atom.value().get<bool>();
 
-            // Log the goal state atom
-            // SPDLOG_DEBUG("  {}: {}", atom_key, atom_value ? "true" : "false");
+    //         // Log the goal state atom
+    //         // SPDLOG_DEBUG("  {}: {}", atom_key, atom_value ? "true" : "false");
 
-            goap_worldstate_set(&planner, &goalState, atom_key.c_str(), atom_value);
-            SPDLOG_DEBUG("goap_worldstate_set(&planner, &goalState, {}, {})", atom_key.c_str(), atom_value);
-        }
+    //         goap_worldstate_set(&planner, &goalState, atom_key.c_str(), atom_value);
+    //         SPDLOG_DEBUG("goap_worldstate_set(&planner, &goalState, {}, {})", atom_key.c_str(), atom_value);
+    //     }
 
-        SPDLOG_DEBUG("Finished loading world state\n");
-    }
+    //     SPDLOG_DEBUG("Finished loading world state\n");
+    // }
 
     // Function to find a Lua function by key in a table
     sol::protected_function find_function_in_table(sol::table& tbl, const std::string& func_name) {
@@ -373,19 +380,36 @@ namespace ai_system
         }
     }
     
-    void load_worldstate_from_lua(const std::string& creature_type, actionplanner_t& planner, worldstate_t& initial, worldstate_t& goal) {
+    void load_worldstate_from_lua(
+        const std::string& creature_type,
+        actionplanner_t&   planner,
+        worldstate_t&      initial,
+        worldstate_t&      goal)
+    {
         sol::table types = masterStateLua["ai"]["entity_types"];
-        sol::table def = types[creature_type];
+        sol::optional<sol::table> maybe_def = types.get<sol::table>(creature_type);
+        if (!maybe_def) {
+            SPDLOG_ERROR("Unknown creature_type '{}'", creature_type);
+            return;
+        }
+        sol::table def = *maybe_def;
     
-        auto init = def["initial"];
-        auto target = def["goal"];
+        sol::table init   = def["initial"];
+        sol::table target = def["goal"];
     
-        for (auto &[k, v] : init)
-            goap_worldstate_set(&planner, &initial, k.as<std::string>().c_str(), v.as<bool>());
+        for (auto& kv : init) {
+            auto key   = kv.first.as<std::string>();
+            auto value = kv.second.as<bool>();
+            goap_worldstate_set(&planner, &initial, key.c_str(), value);
+        }
     
-        for (auto &[k, v] : target)
-            goap_worldstate_set(&planner, &goal, k.as<std::string>().c_str(), v.as<bool>());
+        for (auto& kv : target) {
+            auto key   = kv.first.as<std::string>();
+            auto value = kv.second.as<bool>();
+            goap_worldstate_set(&planner, &goal, key.c_str(), value);
+        }
     }
+    
     
     void initGOAPComponent(entt::entity entity, const std::string& type)
     {
@@ -415,12 +439,6 @@ namespace ai_system
     // TODO: make human entity def file
 
     // creature tags should be globally avaiable to lua scripts
-    
-    // make auto-init of goap component possible
-    auto onGOAPComponentCreated(entt::registry &reg, entt::entity entity) -> void {
-        // init component automatically
-        initGOAPComponent(entity);
-    }
 
     bool resetGOAPAndLuaStateRequested{false};
 
@@ -478,26 +496,21 @@ namespace ai_system
 
 
         // read in master lua state 
-        std::string actionsDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["actionsDirectory"].get<std::string>()));
-        std::string worldstatesDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["conditionsDirectory"].get<std::string>()));
-        std::string logicDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["logicDirectory"].get<std::string>()));
-        std::string initBlackboardDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["blackboardInitDirectory"].get<std::string>()));
+        
         std::string tutorialDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["tutorialDirectory"].get<std::string>()));
         std::string coreDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["coreDirectory"].get<std::string>()));
         std::string monoBehaviorDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["monoBehaviorDirectory"].get<std::string>()));
         std::string taskDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["taskDirectory"].get<std::string>()));
+        std::string aiInitDir = util::getAssetPathUUIDVersion("scripts/ai");
 
         std::vector<std::string> luaFiles{};
 
         // Iterate over all files in the directories
-        getLuaFilesFromDirectory(actionsDir, luaFiles);
-        getLuaFilesFromDirectory(taskDir, luaFiles);
-        getLuaFilesFromDirectory(worldstatesDir, luaFiles);
-        getLuaFilesFromDirectory(logicDir, luaFiles);
-        getLuaFilesFromDirectory(initBlackboardDir, luaFiles);
         getLuaFilesFromDirectory(tutorialDir, luaFiles);
         getLuaFilesFromDirectory(coreDir, luaFiles);
         getLuaFilesFromDirectory(monoBehaviorDir, luaFiles);
+        getLuaFilesFromDirectory(taskDir, luaFiles);
+        getLuaFilesFromDirectory(aiInitDir, luaFiles);
         
 
         // run default initialization function
@@ -605,7 +618,7 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
 
         sol::protected_function_result result = func(entity);
         if (!result.valid()) {
-            SPDLOG_ERROR("Goal selection failed: {}", result);
+            SPDLOG_ERROR("Goal selection failed: {}", result.get<sol::error>().what());
             return;
         }
 
@@ -763,11 +776,31 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
             for (auto& [k, v] : goal)
                 goap_worldstate_set(&goap.ap, &goap.goal, k.as<std::string>().c_str(), v.as<bool>());
         });
+        
+        lua.new_usertype<Blackboard>("Blackboard",
+            // setters for the main types you need
+            "set_bool",   &Blackboard::set<bool>,
+            "set_int",    &Blackboard::set<int>,
+            "set_double", &Blackboard::set<double>,
+            "set_string", &Blackboard::set<std::string>,
+          
+            // getters
+            "get_bool",   &Blackboard::get<bool>,
+            "get_int",    &Blackboard::get<int>,
+            "get_double", &Blackboard::get<double>,
+            "get_string", &Blackboard::get<std::string>,
+          
+            // utilities
+            "contains", &Blackboard::contains,
+            "clear",    &Blackboard::clear,
+            "size",     &Blackboard::size,
+            "isEmpty",  &Blackboard::isEmpty
+          
+          );
+          
 
-        lua.set_function("get_blackboard", [](entt::entity e) -> sol::table
-        {
-            auto& bb = globals::registry.get<GOAPComponent>(e).blackboard;
-            return bb;
+        lua.set_function("get_blackboard", [](entt::entity e) -> Blackboard& {
+        return globals::registry.get<GOAPComponent>(e).blackboard;
         });
 
         lua.set_function("create_ai_entity", [](std::string type) -> entt::entity
@@ -783,15 +816,19 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
             ai_system::on_interrupt(e);
         });
 
-        lua.set_function("list_lua_files", [](const std::string &dir)
-        {
+        lua.set_function("list_lua_files", [](const std::string &dir) {
+            // turn "ai.actions" → "ai/actions"
+            std::string rel = dir;
+            std::replace(rel.begin(), rel.end(), '.', '/');
+            std::filesystem::path scriptDir = std::filesystem::path(util::getRawAssetPathNoUUID("scripts")) / rel;
+            
             std::vector<std::string> result;
-            for (const auto &entry : std::filesystem::directory_iterator("scripts/" + dir))
-            {
-                if (entry.path().extension() == ".lua")
+            for (auto& entry : std::filesystem::directory_iterator(scriptDir)) {
+                if (entry.path().extension() == ".lua") {
                     result.push_back(entry.path().stem().string());
+                }
             }
-            return result;
+            return result;  // Sol2 will convert std::vector<string> → Lua table
         });
     }
 
@@ -885,7 +922,7 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
     //     }
     // }
     
-    void runWorldStateUpdaters(entt::entity entity)
+    void runWorldStateUpdaters(entt::entity &entity)
     {
         sol::table updaters = masterStateLua["ai"]["worldstate_updaters"];
         for (auto &[k, v] : updaters) {

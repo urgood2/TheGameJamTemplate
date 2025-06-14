@@ -14,6 +14,12 @@
 function get_script_component(...) end
 
 ---
+--- Requests a full reset of the AI system state.
+---
+---@return nil
+function hardReset(...) end
+
+---
 --- Subscribes a Lua listener to named C++ events.
 ---
 ---@param eventType 'player_jumped'|'player_died' # The C++ event name.
@@ -276,12 +282,6 @@ function setCategoryVolume(...) end
 ---@param pitch number # The new pitch multiplier (1.0 is default).
 ---@return nil
 function setSoundPitch(...) end
-
----
---- Requests a full reset of the AI system state.
----
----@return nil
-function hardReset(...) end
 
 ---
 --- Retrieves an entity by its string alias.

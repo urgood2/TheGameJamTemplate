@@ -1,21 +1,6 @@
 {
     "coreDirectory": "core",
     "monoBehaviorDirectory": "monobehavior",
-    "actionsDirectory": "actions",
-    "conditionsDirectory": "conditions",
-    "logicDirectory": "logic",
-    "blackboardInitDirectory": "init",
     "tutorialDirectory": "tutorial",
-    "taskDirectory": "task",
-
-    "__comment": "The name of the default lua function that initializes the blackboard",
-    "blackboardInitTableName": "init_blackboard",
-    "blackboardInitDefaultFunctionName": "default",
-
-    "__comment": "The lua table that contains worldstate update functions to be run every tick. To add more, put the functions under the lua table of the following name",
-    "worldstateUpdaterTable": "conditions",
-
-    "__comment": "The lua table that contains goal selection logic function",
-    "goalSelectionLogicTableName": "logic",
-    "goalSelectionLogicFunctionName": "select_goal"
+    "taskDirectory": "task"
 }

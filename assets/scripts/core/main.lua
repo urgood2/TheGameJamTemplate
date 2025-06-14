@@ -1,6 +1,7 @@
 local globals = require("init.globals")
 require("registry")
-local task = require("task/task")
+local task = require("task.task")
+require("ai.init") -- Read in ai scripts and populate the ai table
 
 -- Represents game loop main module
 main = {}
@@ -65,6 +66,38 @@ local PlayerLogic = {
     end
 }
 
+-- Recursively prints any table (with cycle detection)
+local function print_table(tbl, indent, seen)
+    indent = indent or ""                 -- current indentation
+    seen   = seen   or {}                 -- tables we’ve already visited
+  
+    if seen[tbl] then
+      print(indent .. "*<recursion>–")    -- cycle detected
+      return
+    end
+    seen[tbl] = true
+  
+    -- iterate all entries
+    for k, v in pairs(tbl) do
+      local key = type(k) == "string" and ("%q"):format(k) or tostring(k)
+      if type(v) == "table" then
+        print(indent .. "["..key.."] = {")
+        print_table(v, indent.."  ", seen)
+        print(indent .. "}")
+      else
+        -- primitive: just tostring it
+        print(indent .. "["..key.."] = " .. tostring(v))
+      end
+    end
+  end
+  
+  -- convenience wrapper
+  local function dump(t)
+    assert(type(t) == "table", "dump expects a table")
+    print_table(t)
+  end
+  
+
 function main.init()
     -- -- entity creation example
     bowser = registry:create()
@@ -87,6 +120,14 @@ function main.init()
     -- transform.actualX = 10
     -- print('Bowser position = ' .. transform.actualX .. ', ' .. transform.actualY)
     
+    -- testing
+    
+    
+    dump(ai)
+    
+    -- local entity = create_ai_entity("kobold")
+    
+    -- dump(entity)
     
     
     -- scheduler example

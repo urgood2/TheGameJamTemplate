@@ -50,6 +50,9 @@ namespace scripting {
      */
     auto initLuaMasterState(sol::state& stateToInit, const std::vector<std::string> scriptFilesToRead) -> void {
         
+        
+        auto& rec = BindingRecorder::instance();
+        
         // basic lua state initialization
         stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string);
         
@@ -60,10 +63,10 @@ namespace scripting {
         
         std::string lua_path_cmd =
             "package.path = '"
-            + base1 + "?.lua;"
+            + base1 + "?.lua;" + base1 + "?/?.lua;" + base1 + "?/?/?.lua;"
             + base2 + "?.lua;"
             + base3 + "?.lua;"
-            + base4 + "?.lua;"
+            + base4 + "?.lua;scripts/?/?.lua"
             + "' .. package.path"; // <- correctly attached
             
         // set the lua path to include the scripts directory
@@ -74,6 +77,16 @@ namespace scripting {
             return pfr;
         });
         SPDLOG_DEBUG("Lua path set to: {}", lua_path_cmd);
+        
+        //---------------------------------------------------------
+        // methods from ai_system.cpp. These can be called from lua,
+        // binding before anything else because it is used in the init function
+        //---------------------------------------------------------
+        stateToInit.set_function("hardReset", []() {
+            ai_system::requestAISystemReset();
+        });
+        rec.record_free_function({}, {"hardReset", "---@return nil", "Requests a full reset of the AI system state.", true, false});
+        ai_system::bind_ai_utilities(stateToInit);
         
         // ------------------------------------------------------
         // methods for coroutine scheduling
@@ -102,7 +115,6 @@ namespace scripting {
         }
 
         // 1) Module‐level banner
-        auto& rec = BindingRecorder::instance();
         rec.set_module_name("chugget.engine");
         rec.set_module_version("0.1");
         rec.set_module_doc("Bindings for chugget's c++ code, for use with lua.");
@@ -212,14 +224,7 @@ namespace scripting {
         ui::exposeToLua(stateToInit);
 
 
-        //---------------------------------------------------------
-        // methods from ai_system.cpp. These can be called from lua
-        //---------------------------------------------------------
-        stateToInit.set_function("hardReset", []() {
-            ai_system::requestAISystemReset();
-        });
-        rec.record_free_function({}, {"hardReset", "---@return nil", "Requests a full reset of the AI system state.", true, false});
-        ai_system::bind_ai_utilities(stateToInit);
+        
 
         // ------------------------------------------------------
         // methods for entity registry access
@@ -344,6 +349,12 @@ namespace scripting {
         rec.record_free_function({}, {"pauseGame", "---@return nil", "Pauses the game.", true, false});
         rec.record_free_function({}, {"unpauseGame", "---@return nil", "Unpauses the game.", true, false});
         
+        
+        
+        // intialize ai directories
+        // Call require to load and cache ai.init
+        // TODO: access results later with "ai" in lua
+        // sol::table ai_module = stateToInit.require("ai.init");
         
         
         // 5) Finally dump out your definitions:

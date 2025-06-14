@@ -1,7 +1,6 @@
 local globals = require("init.globals")
 require("registry")
 local task = require("task/task")
-local sol_coroutine = require("coroutine")  -- Sol overrides this in require()
 
 -- Represents game loop main module
 main = {}
@@ -30,30 +29,33 @@ local PlayerLogic = {
         -- You still have full registry access through self.owner
         -- (e.g., self.owner:get(self.id, Transform).x = self.x)
         
-        if not self._has_spawned_task then
-            print("[player]", self.id, " update; spawning coroutine task")
-            task.run_named_task(self, "blinker", function()
-                print("start lua coroutine task")
-                task.wait(5.0)
-                print("end lua coroutine task")
-            end)
+        -- if not self._has_spawned_task then
+        --     task.run_named_task(self, "blinker1", function()
+        --         task.wait(5.0)
+        --     end)
             
-            print("[player]", self.id, " update; spawning coroutine task2")
-            task.run_named_task(self, "blinker1", function()
-                print("start lua coroutine task 2")
-                task.wait(6.0)
-                print("end lua coroutine task 2")
-            end)
+        --     task.run_named_task(self, "blinker2", function()
+        --         task.wait(6.0)
+        --     end)
             
-            print("[player]", self.id, " update; spawning coroutine task3")
-            task.run_named_task(self, "blinker2", function()
-                print("start lua coroutine task 3")
-                task.wait(7.0)
-                print("end lua coroutine task 3")
-            end)
+        --     task.run_named_task(self, "blinker3", function()
+        --         task.wait(7.0)
+        --     end)
             
-            self._has_spawned_task = true
-        end
+        --     self._has_spawned_task = true
+        -- end
+        
+        if not self._spawned then
+            for i, delay in ipairs({3, 5, 7}) do
+              task.run_named_task(self, "t" .. i, function()
+                print("▶︎ Task " .. i .. " start @ " .. tostring(os.clock()))
+                task.wait(delay)
+                print("✔︎ Task " .. i .. "  end @ " .. tostring(os.clock()))
+              end)
+            end
+            self._spawned = true
+          end
+          
     end,
 
     -- Called just before the entity is destroyed

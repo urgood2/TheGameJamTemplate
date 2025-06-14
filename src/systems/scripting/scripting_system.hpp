@@ -11,6 +11,7 @@
 #include "systems/shaders/shader_pipeline.hpp"
 #include "systems/shaders/shader_system.hpp"
 #include "components/components.hpp"
+#include "systems/ai/ai_system.hpp"
 
 // pass both the type and value of an argument to a function
 #define AUTO_ARG(x) decltype(x), x
@@ -37,20 +38,29 @@ namespace scripting
         std::vector<sol::coroutine> tasks;
 
         void add_task(sol::object obj) {
-            if (obj.is<sol::coroutine>()) {
+            if (obj.is<sol::function>()) {
+                sol::function fn = obj.as<sol::function>();
+                sol::thread thread = sol::thread::create(ai_system::masterStateLua);
+                sol::state_view ts = thread.state();
+                ts["__fn"] = fn;
+                sol::coroutine co = ts["__fn"];
+                tasks.emplace_back(std::move(co));
+                SPDLOG_DEBUG("Added coroutine from function via new thread.");
+            }
+            else if (obj.is<sol::coroutine>()) {
                 tasks.emplace_back(obj.as<sol::coroutine>());
-                
-                SPDLOG_DEBUG("ScriptComponent::add_task: Added coroutine.");
-            } else if (obj.get_type() == sol::type::thread) {
-                // Force wrap
+                SPDLOG_DEBUG("Added coroutine.");
+            }
+            else if (obj.get_type() == sol::type::thread) {
                 sol::thread th = obj;
                 tasks.emplace_back(sol::coroutine(th));
-                
-                SPDLOG_DEBUG("ScriptComponent::add_task: Added coroutine from thread object.");
-            } else {
-                spdlog::warn("ScriptComponent::add_task: Invalid coroutine object! type = {}", static_cast<int>(obj.get_type()));
+                SPDLOG_DEBUG("Added coroutine from thread object.");
+            }
+            else {
+                spdlog::warn("Invalid coroutine object: type = {}", static_cast<int>(obj.get_type()));
             }
         }
+        
 
         std::size_t count_tasks() const {
             return tasks.size();

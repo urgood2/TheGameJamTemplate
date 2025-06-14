@@ -98,27 +98,41 @@ namespace scripting
                     std::cerr << "[Script Error] update failed for entity " << int(entity) << ": " << err.what() << "\n";
                 }
             }
+            
+            // 2. Process all coroutine tasks using a safe-swap pattern
             auto& tasks = script.tasks;
-            for (auto it = tasks.begin(); it != tasks.end(); ) {
-                bool advance = true;
+            if (tasks.empty()) {
+                continue;
+            }
+            
+            // Create a new vector to hold tasks that are still active for the next frame.
+            std::vector<sol::coroutine> next_tasks;
+            next_tasks.reserve(tasks.size());
 
-                if (it->valid() && it->status() == sol::call_status::yielded) {
-                    sol::protected_function_result result = (*it)(delta_time);
-                    if (!result.valid()) {
-                        sol::error err = result;
-                        std::cerr << "[Coroutine Error] " << err.what() << "\n";
-                        it = tasks.erase(it);
-                        continue;
-                    }
+            // Process each task from the current list.
+            for (auto& task : tasks) {
+                // Skip any tasks that might already be invalid.
+                if (!task.valid()) {
+                    continue;
+                }
+                
+                // Resume any task that is not finished. This includes 'suspended' (new) and 'yielded' tasks.
+                sol::protected_function_result result = task(delta_time);
+                if (!result.valid()) {
+                    sol::error err = result;
+                    std::cerr << "[Coroutine Error] " << err.what() << "\n";
+                    // Do not add the failed task to the next_tasks list, effectively removing it.
+                    continue;
                 }
 
-                // After resuming, check if it's done or invalid
-                if (!it->valid() || it->status() == sol::call_status::ok) {
-                    it = tasks.erase(it);
-                } else {
-                    ++it;
+                // After running, if the task is still valid and not finished, keep it.
+                if (task.valid() && task.status() != sol::call_status::ok) {
+                    next_tasks.push_back(task);
                 }
             }
+
+            // Replace the old task list with the new list of active tasks.
+            tasks = std::move(next_tasks);
                         
 
         }

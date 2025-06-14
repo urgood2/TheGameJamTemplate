@@ -19,6 +19,7 @@ function M.wait(seconds)
     while elapsed < seconds do
         local dt = coroutine.yield()
         elapsed = elapsed + dt
+        -- print("[task] WAIT: dt = " .. dt .. ", elapsed = " .. elapsed)
     end
 end
 
@@ -32,18 +33,28 @@ end
 
 -- Named task (prevents duplicates)
 function M.run_named_task(self, name, fn)
-    
     self._named_tasks = self._named_tasks or {}
-    if self._named_tasks[name] then return end
-    local co = function()
-        fn()
-        self._named_tasks[name] = nil
-        print("coroutine Task '" .. name .. "' completed and removed.")
+
+    print("[run_named_task]", name, "called")
+    if self._named_tasks[name] then
+        print("[run_named_task]", name, "already exists, skipping")
+        return
     end
-    self._named_tasks[name] = co
+
     local script = get_script_component_from_self(self)
-    script:add_task(co)
+
+    local wrapped = function()
+        print("[run_named_task]", name, "coroutine started")
+        fn()
+        self._named_tasks[name] = nil -- clean up after task finishes
+        print("[run_named_task]", name, "coroutine finished")
+    end
+
+    self._named_tasks[name] = true -- use boolean as marker
+
+    script:add_task(wrapped)
 end
+
 
 -- Cancel a named task
 function M.cancel_named_task(self, name)

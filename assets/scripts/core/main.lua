@@ -1,7 +1,7 @@
 local globals = require("init.globals")
 require("registry")
 local task = require("task.task")
-require("ai.init") -- Read in ai scripts and populate the ai table
+require("ai.init") -- Read in ai scripts and populate the ai table 
 
 -- Represents game loop main module
 main = {}
@@ -17,7 +17,7 @@ local PlayerLogic = {
 
     -- Called once, right after the component is attached.
     init = function(self)
-        print("[player] init, entity-id =", self.id)
+        debug("[player] init, entity-id =", self.id)
         self.x, self.y = 0, 0     -- give the table some state
         
     end,
@@ -26,7 +26,7 @@ local PlayerLogic = {
     update = function(self, dt)
         -- Simple movement example
         self.x = self.x + self.speed * dt
-        -- print("[player] update; entity-id =", self.id, "position:", self.x, self.y)
+        debug("[player] update; entity-id =", self.id, "position:", self.x, self.y)
         -- You still have full registry access through self.owner
         -- (e.g., self.owner:get(self.id, Transform).x = self.x)
         
@@ -62,7 +62,7 @@ local PlayerLogic = {
 
     -- Called just before the entity is destroyed
     destroy = function(self)
-        print("[player] destroy; final position:", self.x, self.y)
+        debug("[player] destroy; final position:", self.x, self.y)
     end
 }
 
@@ -100,7 +100,7 @@ local function print_table(tbl, indent, seen)
 
 function main.init()
     -- -- entity creation example
-    bowser = registry:create()
+    bowser = create_ai_entity("kobold")
     -- -- registry:emplace(bowser, Transform, {})-- Pass an empty table for defualt construction
     
     registry:add_script(bowser, PlayerLogic) -- Attach the script to the entity
@@ -125,9 +125,7 @@ function main.init()
     
     dump(ai)
     
-    -- local entity = create_ai_entity("kobold")
-    
-    -- dump(entity)
+    -- print("DEBUG: ActionResult.SUCCESS is", type(ActionResult.SUCCESS), ActionResult.SUCCESS)
     
     
     -- scheduler example

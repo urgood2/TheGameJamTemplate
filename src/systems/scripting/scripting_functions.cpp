@@ -113,6 +113,13 @@ namespace scripting {
                 SPDLOG_DEBUG("Lua script file loading success.");
             }
         }
+        
+        stateToInit.script("require(\"ai.init\")", [](lua_State*, sol::protected_function_result pfr) {
+            // pfr will contain things that went wrong, for either loading or executing the script
+            // Can throw your own custom error
+            // You can also just return it, and let the call-site handle the error if necessary.
+            return pfr;
+        });
 
         // 1) Module‐level banner
         rec.set_module_name("chugget.engine");

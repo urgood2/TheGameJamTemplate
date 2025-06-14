@@ -48,9 +48,7 @@ namespace ai_system
     extern void fill_action_queue_based_on_plan(entt::entity e, const char** plan, int planSize);
     extern auto initGOAPComponent(entt::entity entity) -> void;
     extern auto requestAISystemReset() -> void;
-    extern auto runBlackboardInitFunction(entt::entity entity, std::string identifier) -> void;
-    extern void load_worldstate_from_json(const json& data, actionplanner_t& planner, worldstate_t& initialState, worldstate_t& goalState);
-    extern void load_actions_from_json(const json& data, actionplanner_t& planner);
+    auto runBlackboardInitFunction(entt::entity entity, const std::string &identifier) -> void;
     extern bool goap_worldstate_get(actionplanner_t *ap, worldstate_t ws, const char *atomname, bool *value);
     extern bool goap_worldstate_match(actionplanner_t* ap, worldstate_t current_state, worldstate_t expected_state);
     extern std::map<std::string, bool> goap_worldstate_to_map(const actionplanner_t* ap, const worldstate_t* ws);

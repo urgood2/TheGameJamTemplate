@@ -9,16 +9,16 @@ return {
     pre = { hungry = true },
     post = { hungry = false },
 
-    start = function(self, e)
-        debug("Entity", e, "is eating.")
+    start = function(e)
+        debug("Entity" .. e .. "is eating.")
     end,
 
-    update = function(self, e, dt) -- update can be coroutine
+    update = function(e, dt) -- update can be coroutine
         wait(1.0)
         return ActionResult.SUCCESS
     end,
 
-    finish = function(self, e)
+    finish = function(e)
         debug("Done eating.")
     end
 }

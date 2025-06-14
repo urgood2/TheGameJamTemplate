@@ -397,4 +397,6 @@ auto updateSystems(float dt) -> void
     
     scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
     ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
+    
+    ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
 }

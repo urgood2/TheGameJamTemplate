@@ -331,31 +331,42 @@ namespace ai_system
      * blackboard initialization function in the lua master state. If nothing is found, a default blackboard initialization function will be used.
      * Also clears the blackboard before initializing it.
      */
-    auto runBlackboardInitFunction(entt::entity entity, std::string identifier) -> void {
-
+    auto runBlackboardInitFunction(entt::entity entity, const std::string &identifier) -> void {
         auto &goapStruct = globals::registry.get<GOAPComponent>(entity);
         goapStruct.blackboard.clear();
-
-        // search in the master state for the right blackboard init function. If there is no match, use the default blackboard init function
-        sol::table initTable = masterStateLua[globals::aiConfigJSON["blackboardInitTableName"].get<std::string>()]; 
-        auto func = find_function_in_table(initTable, identifier);
-
-        // get the default blackboard init function
-        sol::protected_function defaultInitializationFunc = find_function_in_table(initTable, globals::aiConfigJSON["blackboardInitDefaultFunctionName"].get<std::string>());
-        if (defaultInitializationFunc.valid() == false) {
-            SPDLOG_ERROR("Default blackboard init function not found in table '{}'.", globals::aiConfigJSON["blackboardInitTableName"].get<std::string>());
+    
+        // 1) Grab the lua table you populated in ai.init.lua
+        sol::table initTable = masterStateLua["ai"]["blackboard_init"];
+        if (!initTable.valid()) {
+            SPDLOG_ERROR("ai.blackboard_init table is missing!");
+            return;
         }
-
-        if (func.valid()) {
-            SPDLOG_DEBUG("Blackboard init function found for identifier '{}'.", identifier);
-            // Call the function with the entity as an argument
-            sol::protected_function_result result = func(entity);
-            debugLuaProtectedFunctionResult(result, identifier);
+    
+        // 2) Try the specific function
+        sol::optional<sol::protected_function> maybeFunc =
+            initTable.get<sol::protected_function>(identifier);
+    
+        // 3) Fallback to the "default" key if not found
+        sol::protected_function func;
+        if (maybeFunc) {
+            func = *maybeFunc;
+            SPDLOG_DEBUG("Found blackboard init for '{}'", identifier);
         } else {
-            SPDLOG_ERROR("Blackboard init function not found for identifier '{}'. Using default blackboard init function.", identifier);
-            // Call the default blackboard init function
-            sol::protected_function_result result = defaultInitializationFunc(entity);
-            debugLuaProtectedFunctionResult(result, globals::aiConfigJSON["blackboardInitDefaultFunctionName"].get<std::string>());
+            SPDLOG_WARN("No blackboard init for '{}', using default", identifier);
+            sol::optional<sol::protected_function> maybeDefault =
+                initTable.get<sol::protected_function>("default");
+            if (!maybeDefault) {
+                SPDLOG_ERROR("ai.blackboard_init.default is missing!");
+                return;
+            }
+            func = *maybeDefault;
+        }
+    
+        // 4) Call it
+        sol::protected_function_result result = func(entity);
+        if (!result.valid()) {
+            sol::error err = result;
+            SPDLOG_ERROR("Error in blackboard init '{}': {}", identifier, err.what());
         }
     }
     
@@ -566,13 +577,13 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         // Example 1: Set a fallback goal (e.g., wandering)
         goap_worldstate_clear(&goapStruct.goal);
         goap_worldstate_set(&goapStruct.ap, &goapStruct.goal, "wandering", true);
-        SPDLOG_DEBUG("No valid plan found, setting goal to wander and replanning.");
-        replan(entity);
+        SPDLOG_DEBUG("No valid plan found, setting goal to wander.");
+        // replan(entity);
 
         if (goapStruct.planSize == 0) {
             // Still no plan found, perhaps enter an idle state or default action
             // Example: Log the error or set the creature to an idle state
-            SPDLOG_DEBUG("- No valid plan found after attempting to enter wandering state.");
+            SPDLOG_DEBUG("- No valid plan found.");
             // You can implement an idle behavior or log the issue here.
         }
     }
@@ -686,7 +697,27 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         
         // coroutine has not yielded, get result value
         
-        Action::Result result = luaResult.get<Action::Result>();
+        // Action::Result result = luaResult.get<Action::Result>();
+        
+        // … after checking for yield …
+        int returns = luaResult.return_count();
+        Action::Result result;
+
+        // no explicit return → assume SUCCESS
+        if (returns == 0) {
+            result = Action::Result::SUCCESS;
+        } else {
+            // peek at what’s on the stack
+            sol::object ret = luaResult.get<sol::object>(1);
+            if (ret.get_type() == sol::type::number) {
+                result = ret.as<Action::Result>();
+            } else {
+                SPDLOG_ERROR(
+                "Action update returned {} values but first isn't a number ({}); treating as FAILURE",
+                returns, ret.get_type());
+                result = Action::Result::FAILURE;
+            }
+        }
 
         // move on to next action if current action is successful
         if (result == Action::Result::SUCCESS) {
@@ -751,7 +782,7 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         }
 
         // clear the blackboard
-        runBlackboardInitFunction(entity, "creature_kobold"); //FIXME: placeholder value, these should come from the entity type (file)
+        runBlackboardInitFunction(entity, goapComponent.type); //FIXME: placeholder value, these should come from the entity type (file)
         
         //LATER: take whatever interruption it was into account - how?
         
@@ -763,74 +794,90 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
     
     void bind_ai_utilities(sol::state& lua)
     {
-        lua.set_function("set_worldstate", [](entt::entity e, std::string key, bool value)
-        {
+        // 1) Create (or overwrite) the `ai` table:
+        lua.create_named_table("ai");            // equivalent to lua["ai"] = {}
+        sol::table ai = lua["ai"];
+
+        // 2) Move each binding into ai:
+        ai.set_function("set_worldstate", [](entt::entity e, std::string key, bool value) {
             auto& goap = globals::registry.get<GOAPComponent>(e);
             goap_worldstate_set(&goap.ap, &goap.current_state, key.c_str(), value);
         });
 
-        lua.set_function("set_goal", [](entt::entity e, sol::table goal)
-        {
+        ai.set_function("set_goal", [](entt::entity e, sol::table goal) {
             auto& goap = globals::registry.get<GOAPComponent>(e);
             goap_worldstate_clear(&goap.goal);
             for (auto& [k, v] : goal)
-                goap_worldstate_set(&goap.ap, &goap.goal, k.as<std::string>().c_str(), v.as<bool>());
+                goap_worldstate_set(&goap.ap, &goap.goal,
+                                    k.as<std::string>().c_str(), v.as<bool>());
         });
         
+        // patch a single world‐state flag, without clearing anything else
+        ai.set_function("patch_worldstate", [](entt::entity e, const std::string &key, bool value) {
+            auto& goap = globals::registry.get<GOAPComponent>(e);
+            // this will only set that one bit
+            goap_worldstate_set(&goap.ap, &goap.current_state, key.c_str(), value);
+        });
+
+        // patch multiple goal flags, without clearing the whole goal first
+        ai.set_function("patch_goal", [](entt::entity e, sol::table tbl) {
+            auto& goap = globals::registry.get<GOAPComponent>(e);
+            // leave existing goal bits alone, just set these ones
+            for (auto& [k, v] : tbl) {
+                std::string key = k.as<std::string>();
+                bool        val = v.as<bool>();
+                goap_worldstate_set(&goap.ap, &goap.goal, key.c_str(), val);
+            }
+        });
+
+        // 3) Register the Blackboard usertype under ai:
         lua.new_usertype<Blackboard>("Blackboard",
-            // setters for the main types you need
             "set_bool",   &Blackboard::set<bool>,
             "set_int",    &Blackboard::set<int>,
             "set_double", &Blackboard::set<double>,
             "set_string", &Blackboard::set<std::string>,
-          
-            // getters
+
             "get_bool",   &Blackboard::get<bool>,
             "get_int",    &Blackboard::get<int>,
             "get_double", &Blackboard::get<double>,
             "get_string", &Blackboard::get<std::string>,
-          
-            // utilities
+
             "contains", &Blackboard::contains,
             "clear",    &Blackboard::clear,
             "size",     &Blackboard::size,
             "isEmpty",  &Blackboard::isEmpty
-          
-          );
-          
+        );
 
-        lua.set_function("get_blackboard", [](entt::entity e) -> Blackboard& {
-        return globals::registry.get<GOAPComponent>(e).blackboard;
+        ai.set_function("get_blackboard", [](entt::entity e) -> Blackboard& {
+            return globals::registry.get<GOAPComponent>(e).blackboard;
         });
 
-        lua.set_function("create_ai_entity", [](std::string type) -> entt::entity
-        {
+        lua.set_function("create_ai_entity", [](std::string type) -> entt::entity {
             auto e = globals::registry.create();
             globals::registry.emplace<GOAPComponent>(e);
             initGOAPComponent(e, type);
             return e;
         });
 
-        lua.set_function("force_interrupt", [](entt::entity e)
-        {
+        ai.set_function("force_interrupt", [](entt::entity e) {
             ai_system::on_interrupt(e);
         });
 
-        lua.set_function("list_lua_files", [](const std::string &dir) {
-            // turn "ai.actions" → "ai/actions"
+        ai.set_function("list_lua_files", [](const std::string &dir) {
             std::string rel = dir;
             std::replace(rel.begin(), rel.end(), '.', '/');
-            std::filesystem::path scriptDir = std::filesystem::path(util::getRawAssetPathNoUUID("scripts")) / rel;
-            
+            std::filesystem::path scriptDir =
+            std::filesystem::path(util::getRawAssetPathNoUUID("scripts")) / rel;
+
             std::vector<std::string> result;
             for (auto& entry : std::filesystem::directory_iterator(scriptDir)) {
-                if (entry.path().extension() == ".lua") {
+                if (entry.path().extension() == ".lua")
                     result.push_back(entry.path().stem().string());
-                }
             }
-            return result;  // Sol2 will convert std::vector<string> → Lua table
+            return result;  // Sol2 → Lua table
         });
     }
+
 
     // Update the GOAP logic within the game loop
     void update_goap(entt::entity entity) {
@@ -849,13 +896,6 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
 
         runWorldStateUpdaters(entity);
 
-        //TODO: custom intial state for each entity type?
-
-        //TODO: use some commibnation of lua and json to dynamically initialize entities?
-        
-        //TODO: string identifier for entity type from json file, use this to custom init blackboard + worldstate + goalstate
-
-        //TODO: make a demo for creature init
         
         // Check if re-planning is necessary based on action failure or mismatch with expected state / plan is empty
         if (is_goap_info_valid == false && plan_is_running_valid == false) { // plan might be running one action, but plan can be empty otherwise
@@ -1015,7 +1055,7 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         checkAndSetGOAPDirty(goapStruct, globals::MAX_ACTIONS);
         if (goapStruct.dirty == false) {
             // clear and reinit the blackboard
-            runBlackboardInitFunction(entity, "creature_kobold"); //FIXME: placeholder value, these should come from the entity type (file)
+            runBlackboardInitFunction(entity, goapStruct.type); //FIXME: placeholder value, these should come from the entity type (file)
 
             fill_action_queue_based_on_plan(entity, goapStruct.plan, goapStruct.planSize);
 
@@ -1049,8 +1089,6 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         
         for (auto entity : view)
         {
-            // get the human entity
-            auto& goapStruct = view.get<GOAPComponent>(entity);
             
             SPDLOG_DEBUG("Updating AI for entity: {}", static_cast<int>(entity)); 
 

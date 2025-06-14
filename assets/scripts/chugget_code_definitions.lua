@@ -497,6 +497,12 @@ function entt.runtime_view:contains(...) end
 ---@return nil
 function entt.runtime_view:each(...) end
 
+---
+--- Returns an estimated number of entities in the view.
+---
+---@return integer
+function entt.runtime_view:size_hint(...) end
+
 
 ---
 --- The main container for all entities and components in the ECS world.
@@ -648,6 +654,56 @@ function ScriptComponent:add_task(...) end
 ---
 ---@return integer
 function ScriptComponent:count_tasks(...) end
+
+
+---
+--- Task scheduler.
+---
+---@class scheduler
+scheduler = {
+}
+
+---
+--- Returns the number of processes in the scheduler.
+---
+---@return integer
+function scheduler:size(...) end
+
+---
+--- Checks if the scheduler has no processes.
+---
+---@return boolean
+function scheduler:empty(...) end
+
+---
+--- Clears all processes from the scheduler.
+---
+---@return nil
+function scheduler:clear(...) end
+
+---
+--- Attaches a script process to the scheduler, optionally chaining child processes.
+---
+---@param process table # The Lua table representing the process.
+---@param ... table # Optional child processes to chain.
+
+function scheduler:attach(...) end
+
+---
+--- Updates all processes in the scheduler, passing the elapsed time and optional data.
+---
+---@param delta_time number # The time elapsed since the last update.
+---@param data any # Optional data to pass to the process.
+
+function scheduler:update(...) end
+
+---
+--- Aborts all processes in the scheduler. If `terminate` is true, it will terminate all processes immediately.
+---
+---@overload fun():void
+---@overload fun(terminate: boolean):void
+
+function scheduler:abort(...) end
 
 
 ---

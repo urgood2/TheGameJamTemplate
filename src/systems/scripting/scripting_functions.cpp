@@ -28,45 +28,10 @@
 #include "meta_helper.hpp"
 #include "registry_bond.hpp"
 #include "scripting_system.hpp"
+#include "script_process.hpp"
 
 #include "../../core/game.hpp"
 
-/*
-    
-
-    TODO: Set up registry bond
-
-
-    register_meta_component<Transform>();
-
-    sol::state lua{};
-    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string);
-    lua.require("registry", sol::c_call<AUTO_ARG(&open_registry)>, false);
-    register_transform(lua); // Make Transform struct available to Lua
-
-    entt::registry registry{};
-    lua["registry"] = std::ref(registry); // Make the registry available to Lua
-
-    lua.do_file("lua/registry_simple.lua");
-
-    const auto bowser = lua["bowser"].get<entt::entity>();
-    const auto *xf = registry.try_get<Transform>(bowser);
-    assert(xf != nullptr);
-    const Transform &transform = lua["transform"];
-    assert(xf->x == transform.x && xf->y == transform.y);
-
-    lua.do_file("lua/iterate_entities.lua");
-    assert(registry.orphan(bowser) && "The only component (Transform) should  "
-                                      "be removed by the script");
-    
-    TODO: script hookups should be done as follows:
-
-    auto behavior_script = lua.load_file("scripts/behavior_script.lua");
-    ...
-    registry.emplace<scripting::ScriptComponent>(e, behavior_script.call());
-
-
-*/
 
 
 // * Steps to follow if you wish to add a lua binding for a new method:
@@ -109,6 +74,12 @@ namespace scripting {
             return pfr;
         });
         SPDLOG_DEBUG("Lua path set to: {}", lua_path_cmd);
+        
+        // ------------------------------------------------------
+        // methods for coroutine scheduling
+        // ------------------------------------------------------
+        coroutine_scheduler::open_scheduler(stateToInit);
+        stateToInit["scheduler"] = std::ref(ai_system::masterScheduler);
         
         // read all the script files and load them into the lua state
         for (auto &filename : scriptFilesToRead) {
@@ -371,6 +342,7 @@ namespace scripting {
         stateToInit.set_function("unpauseGame", unpauseGame);
         rec.record_free_function({}, {"pauseGame", "---@return nil", "Pauses the game.", true, false});
         rec.record_free_function({}, {"unpauseGame", "---@return nil", "Unpauses the game.", true, false});
+        
         
         
         // 5) Finally dump out your definitions:

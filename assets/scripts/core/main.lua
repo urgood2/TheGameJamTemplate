@@ -45,16 +45,17 @@ local PlayerLogic = {
         --     self._has_spawned_task = true
         -- end
         
-        if not self._spawned then
-            for i, delay in ipairs({3, 5, 7}) do
-              task.run_named_task(self, "t" .. i, function()
-                print("▶︎ Task " .. i .. " start @ " .. tostring(os.clock()))
-                task.wait(delay)
-                print("✔︎ Task " .. i .. "  end @ " .. tostring(os.clock()))
-              end)
-            end
-            self._spawned = true
-          end
+        -- if not self._spawned then
+        --     for i, delay in ipairs({10, 20, 30}) do
+        --       task.run_named_task(self, "t" .. i, function()
+        --         print("▶︎ Task " .. i .. " start @ " .. tostring(os.clock()))
+        --         --  os clock is imprecise, but the wait works as expected.
+        --         task.wait(delay)
+        --         print("✔︎ Task " .. i .. "  end @ " .. tostring(os.clock()))
+        --       end)
+        --     end
+        --     self._spawned = true
+        --   end
           
     end,
 
@@ -86,7 +87,27 @@ function main.init()
     -- transform.actualX = 10
     -- print('Bowser position = ' .. transform.actualX .. ', ' .. transform.actualY)
     
-
+    
+    
+    -- scheduler example
+    
+    local p1 = {
+        update = function(self, dt)
+            print("Task 1 Start")
+            task.wait(1.0)
+            print("Task 1 End after 1s")
+        end
+    }
+    
+    local p2 = {
+        update = function(self, dt)
+            print("Task 2 Start")
+            task.wait(2.0)
+            print("Task 2 End after 2s")
+        end
+    }
+    -- print("type of arg:", type(p1))  -- should print 'table'
+    scheduler:attach(p1, p2)
 end
   
 function main.update(dt)

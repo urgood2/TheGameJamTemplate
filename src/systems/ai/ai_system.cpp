@@ -14,6 +14,10 @@
 #include "../../third_party/GPGOAP/goap.h"
 #include "../../third_party/GPGOAP/astar.h"
 
+
+#include "entt/process/process.hpp"
+#include "entt/process/scheduler.hpp"
+
 #include "sol/sol.hpp"
 
 #include <functional>
@@ -31,7 +35,8 @@ namespace ai_system
     sol::state masterStateLua; // stores all scripts in one state
 
     std::map<std::string, std::map<std::string, bool>> allPostconditionsForEveryAction; // Contains all post-conditions for every action
-
+    
+    scheduler masterScheduler{}; // master scheduler for AI processes
 
     float aiUpdateTickInSeconds = 0.5f;
     float aiUpdateTickTotal = 0.0f; // running total of time passed since last tick

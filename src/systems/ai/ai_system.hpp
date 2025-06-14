@@ -16,6 +16,10 @@ using json = nlohmann::json;
 
 namespace ai_system
 {
+    
+    using fsec = std::chrono::duration<float>;
+    using scheduler = entt::basic_scheduler<fsec>;
+    extern scheduler masterScheduler; // master scheduler for AI processes
 
     // this event is used to update pointers to the master lua state in other systems
     struct LuaStateResetEvent {

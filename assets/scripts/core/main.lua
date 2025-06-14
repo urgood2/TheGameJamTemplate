@@ -38,12 +38,14 @@ local PlayerLogic = {
                 print("end lua coroutine task")
             end)
             
+            print("[player]", self.id, " update; spawning coroutine task2")
             task.run_named_task(self, "blinker1", function()
                 print("start lua coroutine task 2")
                 task.wait(6.0)
                 print("end lua coroutine task 2")
             end)
             
+            print("[player]", self.id, " update; spawning coroutine task3")
             task.run_named_task(self, "blinker2", function()
                 print("start lua coroutine task 3")
                 task.wait(7.0)

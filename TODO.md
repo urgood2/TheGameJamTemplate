@@ -16,6 +16,30 @@
 - [ ] Task scheduler with coroutines https://chatgpt.com/share/684c5800-52b0-800a-afa1-f04c026e3de1
 - [ ] Changes to goap system to make it easier to use, fully lua capable, easier to understand https://chatgpt.com/share/684c5e60-0d84-800a-a769-d75d64f8503d 
 
+maybe  removing does somethig wrong?
+
+auto& tasks = script.tasks;
+            for (auto it = tasks.begin(); it != tasks.end(); ) {
+                bool advance = true;
+
+                if (it->valid() && it->status() == sol::call_status::yielded) {
+                    sol::protected_function_result result = (*it)(delta_time);
+                    if (!result.valid()) {
+                        sol::error err = result;
+                        std::cerr << "[Coroutine Error] " << err.what() << "\n";
+                        it = tasks.erase(it);
+                        continue;
+                    }
+                }
+
+                // After resuming, check if it's done or invalid
+                if (!it->valid() || it->status() == sol::call_status::ok) {
+                    it = tasks.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+
 
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?

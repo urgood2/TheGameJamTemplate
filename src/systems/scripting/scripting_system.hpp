@@ -39,6 +39,8 @@ namespace scripting
         void add_task(sol::object obj) {
             if (obj.is<sol::coroutine>()) {
                 tasks.emplace_back(obj.as<sol::coroutine>());
+                
+                SPDLOG_DEBUG("ScriptComponent::add_task: Added coroutine.");
             } else if (obj.get_type() == sol::type::thread) {
                 // Force wrap
                 sol::thread th = obj;

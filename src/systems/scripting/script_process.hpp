@@ -4,6 +4,7 @@
 #include "entt/process/process.hpp"
 #include "entt/process/scheduler.hpp"
 #include "sol/sol.hpp"
+#include "sol/state_view.hpp"
 
 // -------------------------------------------------------
 // Script Process Class - for task management & chaining w/ lua coroutines
@@ -32,12 +33,19 @@ namespace scripting
         if (raw_update.valid() && raw_update.get_type() == sol::type::function) {
           // wrap it so the coroutine only ever takes a single float
           sol::state_view lua{ m_self.lua_state() };
-          sol::protected_function pf = lua.create_function(
-            [table = m_self, raw_update](float dt) {
-              // invoke the original method as update(self, dt)
+          // — wrap your lambda in a Lua function:
+          auto updateFunc = [table = m_self, raw_update](float dt) {
+              // call the original update(self, dt)
               return raw_update(table, dt);
-            }
+          };
+          lua.set_function(
+            // you can give it a name if you like; it shows up in back-traces:
+            "__internal_update_coroutine",
+            // this lambda signature is fine—Sol2 will turn it into a protected call:
+            updateFunc
           );
+          sol::protected_function pf = lua["__internal_update_coroutine"];
+          
           m_coroutine = sol::coroutine(pf);
         }
       

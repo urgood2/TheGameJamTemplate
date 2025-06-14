@@ -217,7 +217,8 @@ namespace TextSystem
             "renderScale",                     &TextSystem::Text::renderScale,
             "createdTime",                     &TextSystem::Text::createdTime,
             "effectStartTime",                 &TextSystem::Text::effectStartTime,
-            "applyTransformRotationAndScale",  &TextSystem::Text::applyTransformRotationAndScale
+            "applyTransformRotationAndScale",  &TextSystem::Text::applyTransformRotationAndScale,
+            "type_id",                         []() { return entt::type_hash<TextSystem::Text>::value(); }
         );
         {
             auto& td = rec.add_type("TextSystem.Text");

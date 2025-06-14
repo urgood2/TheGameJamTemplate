@@ -258,7 +258,8 @@ namespace ui {
 
         // 1) Empty “tag” type
         lua.new_usertype<ObjectAttachedToUITag>("ObjectAttachedToUITag", 
-            sol::constructors<>()
+            sol::constructors<>(),
+            "type_id", []() { return entt::type_hash<ObjectAttachedToUITag>::value(); }
         );
         rec.add_type("ObjectAttachedToUITag").doc = "A tag component indicating an entity is attached to a UI element.";
 
@@ -293,7 +294,8 @@ namespace ui {
             sol::constructors<>(),
             "UIT",    &UIElementComponent::UIT,
             "uiBox",  &UIElementComponent::uiBox,
-            "config", &UIElementComponent::config
+            "config", &UIElementComponent::config,
+            "type_id", []() { return entt::type_hash<UIElementComponent>::value(); }
         );
         auto& uieDef = rec.add_type("UIElementComponent", /*is_data_class=*/true);
         uieDef.doc = "Core component for a UI element, linking its type, root, and configuration.";
@@ -308,7 +310,8 @@ namespace ui {
             "cursorPos", &TextInput::cursorPos,
             "maxLength", &TextInput::maxLength,
             "allCaps",   &TextInput::allCaps,
-            "callback",  &TextInput::callback
+            "callback",  &TextInput::callback,
+            "type_id", []() { return entt::type_hash<TextInput>::value(); }
         );
         auto& textInDef = rec.add_type("TextInput", /*is_data_class=*/true);
         textInDef.doc = "Component for managing the state of a text input UI element.";
@@ -321,7 +324,8 @@ namespace ui {
         // 5) TextInputHook
         lua.new_usertype<TextInputHook>("TextInputHook",
             sol::constructors<>(),
-            "hookedEntity", &TextInputHook::hookedEntity
+            "hookedEntity", &TextInputHook::hookedEntity,
+            "type_id", []() { return entt::type_hash<TextInputHook>::value(); }
         );
         auto& hookDef = rec.add_type("TextInputHook", /*is_data_class=*/true);
         hookDef.doc = "A component that hooks global text input to a specific text input entity.";
@@ -331,7 +335,8 @@ namespace ui {
         lua.new_usertype<UIBoxComponent>("UIBoxComponent",
             sol::constructors<>(),
             "uiRoot",     &UIBoxComponent::uiRoot,
-            "drawLayers", &UIBoxComponent::drawLayers
+            "drawLayers", &UIBoxComponent::drawLayers,
+            "type_id", []() { return entt::type_hash<UIBoxComponent>::value(); }
         );
         auto& boxDef = rec.add_type("UIBoxComponent", /*is_data_class=*/true);
         boxDef.doc = "Defines a root of a UI tree, managing its draw layers.";
@@ -345,7 +350,8 @@ namespace ui {
             "textDrawable",      &UIState::textDrawable,
             "last_clicked",      &UIState::last_clicked,
             "object_focus_timer",&UIState::object_focus_timer,
-            "focus_timer",       &UIState::focus_timer
+            "focus_timer",       &UIState::focus_timer,
+            "type_id", []() { return entt::type_hash<UIState>::value(); }
         );
         auto& uiStateDef = rec.add_type("UIState", /*is_data_class=*/true);
         uiStateDef.doc = "Holds dynamic state information for a UI element.";
@@ -359,7 +365,8 @@ namespace ui {
         lua.new_usertype<Tooltip>("Tooltip",
             sol::constructors<>(),
             "title", &Tooltip::title,
-            "text",  &Tooltip::text
+            "text",  &Tooltip::text,
+            "type_id", []() { return entt::type_hash<Tooltip>::value(); }
         );
         auto& tooltipDef = rec.add_type("Tooltip", /*is_data_class=*/true);
         tooltipDef.doc = "Represents a tooltip with a title and descriptive text.";
@@ -376,7 +383,8 @@ namespace ui {
             "claim_focus_from",  &FocusArgs::claim_focus_from,
             "redirect_focus_to", &FocusArgs::redirect_focus_to,
             "nav",               &FocusArgs::nav,
-            "no_loop",           &FocusArgs::no_loop
+            "no_loop",           &FocusArgs::no_loop,
+            "type_id", []() { return entt::type_hash<FocusArgs>::value(); }
         );
         auto& focusDef = rec.add_type("FocusArgs", /*is_data_class=*/true);
         focusDef.doc = "Arguments for configuring focus and navigation behavior.";
@@ -399,7 +407,8 @@ namespace ui {
             "value",          &SliderComponent::value,
             "decimal_places", &SliderComponent::decimal_places,
             "w",              &SliderComponent::w,
-            "h",              &SliderComponent::h
+            "h",              &SliderComponent::h,
+            "type_id", []() { return entt::type_hash<SliderComponent>::value(); }
         );
         auto& sliderDef = rec.add_type("SliderComponent", /*is_data_class=*/true);
         sliderDef.doc = "Data for a UI slider element.";
@@ -415,7 +424,8 @@ namespace ui {
         // 11) InventoryGridTileComponent
         lua.new_usertype<InventoryGridTileComponent>("InventoryGridTileComponent",
             sol::constructors<>(),
-            "item", &InventoryGridTileComponent::item
+            "item", &InventoryGridTileComponent::item,
+            "type_id", []() { return entt::type_hash<InventoryGridTileComponent>::value(); }
         );
         auto& invTileDef = rec.add_type("InventoryGridTileComponent", /*is_data_class=*/true);
         invTileDef.doc = "Represents a tile in an inventory grid, potentially holding an item.";
@@ -546,7 +556,10 @@ namespace ui {
             "line_emboss",             &UIConfig::line_emboss,
             "mid",                     &UIConfig::mid,
             "noRole",                  &UIConfig::noRole,
-            "role",                    &UIConfig::role
+            "role",                    &UIConfig::role,
+            
+            
+            "type_id", []() { return entt::type_hash<UIConfig>::value(); }
         );
         auto& cfgDef = rec.add_type("UIConfig", /*is_data_class=*/true);
         cfgDef.doc = "A comprehensive configuration component for defining all aspects of a UI element.";
@@ -995,7 +1008,9 @@ namespace ui {
         // Part 2: UI Templating
         //=========================================================
         lua.new_usertype<UIElementTemplateNode>("UIElementTemplateNode", sol::constructors<>(),
-            "type", &UIElementTemplateNode::type, "config", &UIElementTemplateNode::config, "children", &UIElementTemplateNode::children
+            "type", &UIElementTemplateNode::type, "config", &UIElementTemplateNode::config, "children", &UIElementTemplateNode::children,
+            
+            "type_id", []() { return entt::type_hash<UIElementTemplateNode>::value(); }
         );
         auto& tNode = rec.add_type("UIElementTemplateNode", /*is_data_class=*/true);
         tNode.doc = "A node in a UI template, defining an element's type, config, and children.";

@@ -2209,7 +2209,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 std::ostringstream o;
                 o << "Transform{ x=" << t.getActualX() << ", y="  << t.getActualY() << ", scale=" << t.getActualScale() << " }";
                 return o.str();
-            }
+            },
+            "type_id", []() { return entt::type_hash<transform::Transform>::value(); }
+            
         );
         // Recorder: Transform
         auto& tDef = rec.add_type("Transform", /*is_data_class=*/true);
@@ -2295,7 +2297,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             "hasFlag", [](InheritedProperties::Alignment& a, int flag) { return InheritedProperties::Alignment::hasFlag(a.alignment, flag); },
             "addFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::addFlag(a.alignment, flag); },
             "removeFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::removeFlag(a.alignment, flag); },
-            "toggleFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::toggleFlag(a.alignment, flag); }
+            "toggleFlag", [](InheritedProperties::Alignment& a, int flag) { InheritedProperties::Alignment::toggleFlag(a.alignment, flag); },
+            "type_id", []() { return entt::type_hash<InheritedProperties::Alignment>::value(); }
         );
         auto& alignDef = rec.add_type("Alignment", /*is_data_class=*/true);
         alignDef.doc = "Stores alignment flags and offsets for an inherited property.";
@@ -2318,7 +2321,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "size_bond",       &InheritedProperties::size_bond,
         "rotation_bond",   &InheritedProperties::rotation_bond,
         "scale_bond",      &InheritedProperties::scale_bond,
-        "flags",           &InheritedProperties::flags
+        "flags",           &InheritedProperties::flags,
+        "type_id",         []() { return entt::type_hash<InheritedProperties>::value(); }
     );
     auto& ipDef = rec.add_type("InheritedProperties", /*is_data_class=*/true);
     ipDef.doc = "Defines how an entity inherits transform properties from a master entity.";
@@ -2447,7 +2451,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "shadowDisplacement",   &GameObject::shadowDisplacement,
         "layerDisplacement",    &GameObject::layerDisplacement,
         "layerDisplacementPrev",&GameObject::layerDisplacementPrev,
-        "shadowHeight",         &GameObject::shadowHeight
+        "shadowHeight",         &GameObject::shadowHeight,
+        "type_id",              []() { return entt::type_hash<GameObject>::value(); }
     );
     auto& goDef = rec.add_type("GameObject", /*is_data_class=*/true);
     goDef.doc = "The core component for a scene entity, managing hierarchy, state, and scriptable logic.";
@@ -2476,7 +2481,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "hasCollisionOrder", &CollisionOrderInfo::hasCollisionOrder,
         "parentBox",         &CollisionOrderInfo::parentBox,
         "treeOrder",         &CollisionOrderInfo::treeOrder,
-        "layerOrder",        &CollisionOrderInfo::layerOrder
+        "layerOrder",        &CollisionOrderInfo::layerOrder,
+        "type_id",           []() { return entt::type_hash<CollisionOrderInfo>::value(); }
     );
     auto& coiDef = rec.add_type("CollisionOrderInfo", /*is_data_class=*/true);
     coiDef.doc = "Contains information about an entity's render and collision order.";
@@ -2487,7 +2493,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
     lua.new_usertype<TreeOrderComponent>("TreeOrderComponent",
         sol::constructors<>(),
-        "order", &TreeOrderComponent::order
+        "order", &TreeOrderComponent::order,
+        "type_id", []() { return entt::type_hash<TreeOrderComponent>::value(); }
     );
     auto& tocDef = rec.add_type("TreeOrderComponent", /*is_data_class=*/true);
     tocDef.doc = "A simple component storing an entity's tree order for sorting.";

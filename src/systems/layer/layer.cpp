@@ -48,7 +48,9 @@ namespace layer
         rec.add_type("layer.LayerOrderComponent", true).doc = "Stores Z-index for layer sorting";
         layerTbl.new_usertype<layer::LayerOrderComponent>("LayerOrderComponent",
             sol::constructors<>(),
-            "zIndex", &layer::LayerOrderComponent::zIndex
+            "zIndex", &layer::LayerOrderComponent::zIndex,
+            "type_id", []() {
+                return entt::type_hash<layer::LayerOrderComponent>::value(); }
         );
         rec.record_property("layer.LayerOrderComponent", {"zIndex", "integer", "Z sort order"});
 
@@ -61,7 +63,9 @@ namespace layer
             "zIndex",          &layer::Layer::zIndex,
             "backgroundColor", &layer::Layer::backgroundColor,
             "commands",        &layer::Layer::commands,
-            "isSorted",        &layer::Layer::isSorted
+            "isSorted",        &layer::Layer::isSorted,
+            "type_id", []() {
+                return entt::type_hash<layer::Layer>::value(); }
         );
         rec.record_property("layer.Layer", {"canvases", "table", "Map of canvas names to textures"});
         rec.record_property("layer.Layer", {"drawCommands", "table", "Command list"});
@@ -371,7 +375,11 @@ namespace layer
 
         // Helper macro to reduce boilerplate
         #define BIND_CMD(name, ...) \
-        layerTbl.new_usertype<layer::Cmd##name>("Cmd" #name, sol::constructors<>(), __VA_ARGS__);
+        layerTbl.new_usertype<layer::Cmd##name>("Cmd" #name, \
+            sol::constructors<>(), \
+            __VA_ARGS__, \
+            "type_id", []() { return entt::type_hash<layer::Cmd##name>::value(); } \
+        );
 
         // 2) Register every Cmd* struct:
         BIND_CMD(BeginDrawing,           "dummy", &layer::CmdBeginDrawing::dummy)

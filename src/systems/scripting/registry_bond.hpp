@@ -16,12 +16,13 @@ namespace scripting
     }
     template <typename Component>
     inline auto emplace_component(entt::registry *registry, entt::entity entity,
-                                  const sol::table &instance, sol::this_state s)
+                                const sol::table &instance, // This parameter is now ignored
+                                sol::this_state s)
     {
         assert(registry);
-        auto &comp = registry->emplace_or_replace<Component>(
-            entity,
-            instance.valid() ? std::move(instance.as<Component &&>()) : Component{});
+
+        // This version ONLY creates a default component.
+        auto &comp = registry->emplace_or_replace<Component>(entity);
 
         return sol::make_reference(s, std::ref(comp));
     }
@@ -118,12 +119,16 @@ namespace scripting
                 return self.destroy(entity);
             },
 
+            // In open_registry, inside the entt::registry usertype
             "emplace",
-            [](entt::registry &self, entt::entity entity, const sol::table &comp,
-                sol::this_state s) -> sol::object {
-                if (!comp.valid()) return sol::lua_nil_t{};
-                const auto maybe_any = scripting::invoke_meta_func(scripting::get_type_id(comp), "emplace"_hs,
-                &self, entity, comp, s);
+            [](entt::registry &self, entt::entity entity, const sol::table &comp_type, sol::this_state s) -> sol::object {
+                if (!comp_type.valid()) return sol::lua_nil_t{};
+
+                const auto type_id = scripting::get_type_id(comp_type);
+
+                // We no longer pass the 'instance' table. We can pass an empty one.
+                const auto maybe_any = scripting::invoke_meta_func(type_id, "emplace"_hs, &self, entity, sol::table{}, s);
+
                 return maybe_any ? maybe_any.cast<sol::reference>() : sol::lua_nil_t{};
             },
             "remove",

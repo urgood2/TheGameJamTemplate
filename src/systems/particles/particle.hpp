@@ -365,7 +365,8 @@ namespace particle {
             "gravity",       &particle::Particle::gravity,
             "acceleration",  &particle::Particle::acceleration,
             "startColor",    &particle::Particle::startColor,
-            "endColor",      &particle::Particle::endColor
+            "endColor",      &particle::Particle::endColor,
+            "type_id", []() { return entt::type_hash<particle::Particle>::value(); }
         );
         rec.bind_usertype<particle::Particle>(lua, "particle.Particle", "0.1", "Single particle instance");
         // Let's create a data class definition for Particle so Lua users get good tooltips
@@ -407,7 +408,8 @@ namespace particle {
             "emissionDirection",     &particle::ParticleEmitter::emissionDirection,
             "acceleration",          &particle::ParticleEmitter::acceleration,
             "blendMode",             &particle::ParticleEmitter::blendMode,
-            "colors",                &particle::ParticleEmitter::colors
+            "colors",                &particle::ParticleEmitter::colors,
+            "type_id", []() { return entt::type_hash<particle::ParticleEmitter>::value(); }
         );
         rec.bind_usertype<particle::ParticleEmitter>(lua, "particle.ParticleEmitter", "0.1", "Defines how particles are emitted");
         // Create a data class definition for ParticleEmitter
@@ -435,7 +437,8 @@ namespace particle {
         p.new_usertype<particle::ParticleAnimationConfig>("ParticleAnimationConfig",
             sol::constructors<>(),
             "loop",          &particle::ParticleAnimationConfig::loop,
-            "animationName", &particle::ParticleAnimationConfig::animationName
+            "animationName", &particle::ParticleAnimationConfig::animationName,
+            "type_id", []() { return entt::type_hash<particle::ParticleAnimationConfig>::value(); }
         );
         rec.bind_usertype<particle::ParticleAnimationConfig>(lua, "particle.ParticleAnimationConfig", "0.1", "Configuration for animated particle appearance");
         rec.record_property("particle.ParticleAnimationConfig", {"loop", "boolean", "Whether the particle's animation should loop."});

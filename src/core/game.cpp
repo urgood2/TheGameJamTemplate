@@ -32,6 +32,7 @@
 #include "../systems/collision/broad_phase.hpp"
 #include "../systems/collision/Quadtree.h"
 #include "../systems/scripting/scripting_functions.hpp"
+#include "../systems/ai/ai_system.hpp"
 #include "rlgl.h"
 
 using std::pair;
@@ -94,6 +95,12 @@ entt::entity hoverPopupUIBox{entt::null};
 entt::entity dragPopupUIBox{entt::null};
 entt::entity alertUIBox{entt::null};
 entt::entity testInventory{entt::null};
+
+// lua function handles
+sol::function luaMainInitFunc;
+sol::function luaMainUpdateFunc;
+sol::function luaMainDrawFunc;
+
 
 float transitionShaderPositionVar = 0.f;
 
@@ -757,6 +764,16 @@ namespace game
         // AnimationQueueComponent,
         // ui::InventoryGrid>();
         
+        luaMainInitFunc = ai_system::masterStateLua["main"]["init"];
+        luaMainUpdateFunc = ai_system::masterStateLua["main"]["update"];
+        luaMainDrawFunc = ai_system::masterStateLua["main"]["draw"];
+        
+        sol::protected_function_result result = luaMainInitFunc();
+        if (!result.valid()) {
+            sol::error err = result;
+            spdlog::error("Lua init failed: {}", err.what());
+        }
+        
     }
     
     
@@ -846,6 +863,14 @@ namespace game
         }
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+        
+        // update lua main script
+        sol::protected_function_result result = luaMainUpdateFunc(delta);
+        if (!result.valid()) {
+            sol::error err = result;
+            spdlog::error("Lua update failed: {}", err.what());
+        }
+        
     }
 
     auto draw(float dt) -> void
@@ -858,6 +883,16 @@ namespace game
         layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
             cmd->color = util::getColor("brick_palette_red_resurrect");
         });
+        
+        {
+            ZoneScopedN("game::draw-lua draw main script");
+            // update lua main script
+            sol::protected_function_result result = luaMainDrawFunc(dt);
+            if (!result.valid()) {
+                sol::error err = result;
+                spdlog::error("Lua draw failed: {}", err.what());
+            }
+        }
 
 
         {

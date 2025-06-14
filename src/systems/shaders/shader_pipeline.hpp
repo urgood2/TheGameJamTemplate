@@ -151,7 +151,8 @@ namespace shader_pipeline {
             "shaderName",             &shader_pipeline::ShaderPass::shaderName,
             "enabled",                &shader_pipeline::ShaderPass::enabled,
             "uniforms",               &shader_pipeline::ShaderPass::uniforms,
-            "customPrePassFunction",  &shader_pipeline::ShaderPass::customPrePassFunction
+            "customPrePassFunction",  &shader_pipeline::ShaderPass::customPrePassFunction,
+            "type_id", []() { return entt::type_hash<shader_pipeline::ShaderPass>::value(); }
         );
         rec.add_type("shader_pipeline.ShaderPass", /*is_data_class=*/true).doc = "Defines a single shader pass with configurable uniforms.";
         rec.record_property("shader_pipeline.ShaderPass", { "shaderName", "string", "Name of the shader to use for this pass" });
@@ -177,7 +178,8 @@ namespace shader_pipeline {
             "uniforms",               &shader_pipeline::ShaderOverlayDraw::uniforms,
             "customPrePassFunction",  &shader_pipeline::ShaderOverlayDraw::customPrePassFunction,
             "blendMode",              &shader_pipeline::ShaderOverlayDraw::blendMode,
-            "enabled",                &shader_pipeline::ShaderOverlayDraw::enabled
+            "enabled",                &shader_pipeline::ShaderOverlayDraw::enabled,
+            "type_id", []() { return entt::type_hash<shader_pipeline::ShaderOverlayDraw>::value(); }
         );
         rec.add_type("shader_pipeline.ShaderOverlayDraw", /*is_data_class=*/true).doc = "Defines a shader overlay draw operation.";
         rec.record_property("shader_pipeline.ShaderOverlayDraw", { "inputSource", "OverlayInputSource", "Source input for the overlay draw" });
@@ -192,7 +194,8 @@ namespace shader_pipeline {
             sol::constructors<>(),
             "passes",      &shader_pipeline::ShaderPipelineComponent::passes,
             "overlayDraws",&shader_pipeline::ShaderPipelineComponent::overlayDraws,
-            "padding",     &shader_pipeline::ShaderPipelineComponent::padding
+            "padding",     &shader_pipeline::ShaderPipelineComponent::padding,
+            "type_id", []() { return entt::type_hash<shader_pipeline::ShaderPipelineComponent>::value(); }
         );
         rec.add_type("shader_pipeline.ShaderPipelineComponent", /*is_data_class=*/true).doc = "Holds a set of shader passes and overlays for rendering.";
         rec.record_property("shader_pipeline.ShaderPipelineComponent", { "passes", "std::vector<ShaderPass>", "List of shader passes to apply" });

@@ -156,7 +156,8 @@ namespace scripting
             // Expose ScriptComponent to Lua
             lua.new_usertype<ScriptComponent>("ScriptComponent",
                 "add_task", &ScriptComponent::add_task,
-                "count_tasks", &ScriptComponent::count_tasks
+                "count_tasks", &ScriptComponent::count_tasks,
+                "type_id", []() { return entt::type_hash<ScriptComponent>::value(); }
             );
 
             // Global function to get ScriptComponent from entity ID
@@ -341,7 +342,6 @@ namespace scripting
             //  call register_meta_component<Component>(); for all components that need to be usable within script with registry
             register_meta_component<ScriptComponent>();
             register_meta_component<layer::LayerOrderComponent>();
-            register_meta_component<layer::Layer>();
             register_meta_component<transform::Transform>();
             register_meta_component<transform::InheritedProperties>();
             register_meta_component<transform::GameObject>();
@@ -369,6 +369,10 @@ namespace scripting
 
             registry.on_construct<ScriptComponent>().connect<&init_script>();
             registry.on_destroy<ScriptComponent>().connect<&release_script>();
+            
+            // 2. Create a global variable in Lua named "registry" and
+            //    point it directly to your C++ globals::registry instance.
+            lua["registry"] = std::ref(globals::registry);
         
             /*
             When Lua does:

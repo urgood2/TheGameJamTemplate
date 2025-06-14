@@ -56,7 +56,8 @@ namespace shaders
                     SPDLOG_ERROR("Unsupported uniform value type for uniform '{}'", name);
                 }
             },
-            "get", &shaders::ShaderUniformSet::get
+            "get", &shaders::ShaderUniformSet::get,
+            "type_id", []() { return entt::type_hash<shaders::ShaderUniformSet>::value(); }
         );
 
         // 2b) Document with BindingRecorder
@@ -85,7 +86,8 @@ namespace shaders
             "set", &shaders::ShaderUniformComponent::set,
             "registerEntityUniformCallback", &shaders::ShaderUniformComponent::registerEntityUniformCallback,
             "getSet", &shaders::ShaderUniformComponent::getSet,
-            "applyToShaderForEntity", &shaders::ShaderUniformComponent::applyToShaderForEntity
+            "applyToShaderForEntity", &shaders::ShaderUniformComponent::applyToShaderForEntity,
+            "type_id", []() { return entt::type_hash<shaders::ShaderUniformComponent>::value(); }
         );
 
         // 3b) Document with BindingRecorder

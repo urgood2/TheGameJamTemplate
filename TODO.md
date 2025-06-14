@@ -13,7 +13,6 @@
 - [ ] got to register registry lua methods in scripting_system.hpp with binding system
 
 - [ ] Inter-entity collision https://chatgpt.com/share/684c4f55-cf68-800a-95b4-80e31c75d23c
-- [ ] #to-process 01:18 coroutine update monobehavior loop. https://chatgpt.com/share/684c5620-55a8-800a-9cb9-8aecc96e3c8e
 - [ ] Task scheduler with coroutines https://chatgpt.com/share/684c5800-52b0-800a-afa1-f04c026e3de1
 - [ ] Changes to goap system to make it easier to use, fully lua capable, easier to understand https://chatgpt.com/share/684c5e60-0d84-800a-a769-d75d64f8503d 
 

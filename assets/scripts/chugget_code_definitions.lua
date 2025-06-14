@@ -559,6 +559,14 @@ function entt.registry:destroy(...) end
 function entt.registry:emplace(...) end
 
 ---
+--- Attaches a script component to an entity, initializing it with the provided Lua table.
+---
+---@param entity Entity # The entity to attach the script to.
+---@param script_table table # A Lua table containing the script's methods (init, update, etc.).
+---@return nil
+function entt.registry:add_script(...) end
+
+---
 --- Removes a component from an entity.
 ---
 ---@param entity Entity

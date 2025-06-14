@@ -497,12 +497,6 @@ function entt.runtime_view:contains(...) end
 ---@return nil
 function entt.runtime_view:each(...) end
 
----
---- Returns an estimated number of entities in the view.
----
----@return integer
-function entt.runtime_view:size_hint(...) end
-
 
 ---
 --- The main container for all entities and components in the ECS world.

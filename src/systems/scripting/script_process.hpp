@@ -13,141 +13,117 @@
 namespace scripting
 {
 
-  namespace coroutine_scheduler
-  {
+    namespace coroutine_scheduler
+    {
 
 #define AUTO_ARG(x) decltype(x), x
 
-    using fsec = std::chrono::duration<float>;
+        using fsec = std::chrono::duration<float>;
 
-    class script_process : public entt::process<script_process, fsec>
-    {
-    public:
-    script_process(const sol::table &t,
-      const fsec freq = std::chrono::milliseconds{16})
-        : m_self{t},
-        m_frequency{freq}
+        class script_process : public entt::process<script_process, fsec>
         {
-        // grab the raw Lua-side update(self, dt)
-        sol::function raw_update = m_self["update"];
-        if (raw_update.valid() && raw_update.get_type() == sol::type::function) {
-          // wrap it so the coroutine only ever takes a single float
-          sol::state_view lua{ m_self.lua_state() };
-          // — wrap your lambda in a Lua function:
-          auto updateFunc = [table = m_self, raw_update](float dt) {
-              // call the original update(self, dt)
-              return raw_update(table, dt);
-          };
-          lua.set_function(
-            // you can give it a name if you like; it shows up in back-traces:
-            "__internal_update_coroutine",
-            // this lambda signature is fine—Sol2 will turn it into a protected call:
-            updateFunc
-          );
-          sol::protected_function pf = lua["__internal_update_coroutine"];
-          
-          m_coroutine = sol::coroutine(pf);
-        }
-      
+        public:
+            script_process(const sol::table &t,
+                           const fsec freq = std::chrono::milliseconds{16})
+                : m_self{t},
+                  m_frequency{freq}
+            {
+                // grab the raw Lua-side update(self, dt)
+                sol::function raw_update = m_self["update"];
+                if (raw_update.valid()) {
+                    // 1) spin up a fresh Lua thread
+                    m_thread = sol::thread::create(m_self.lua_state());
+                    
+                    // 2) bind our raw_update on that thread
+                    sol::state_view thread_view = m_thread.state();
+                    thread_view["__update_fn"] = raw_update;
 
+                    // 3) grab it back as a function in that thread
+                    sol::function thread_fn = thread_view["__update_fn"];
+                    
+                    // 4) make a coroutine out of it
+                    m_coroutine = sol::coroutine{ thread_fn };
+                }
 
-        // Bind C++ methods into the script table
+                // Bind C++ methods into the script table
 #define BIND(func) m_self.set_function(#func, &script_process::func, this)
-        BIND(succeed);
-        BIND(fail);
-        BIND(pause);
-        BIND(unpause);
-        BIND(abort);
-        BIND(alive);
-        BIND(finished);
-        BIND(paused);
-        BIND(rejected);
+                BIND(succeed);
+                BIND(fail);
+                BIND(pause);
+                BIND(unpause);
+                BIND(abort);
+                BIND(alive);
+                BIND(finished);
+                BIND(paused);
+                BIND(rejected);
 #undef BIND
-      }
+            }
 
-      ~script_process()
-      {
-        std::cout << "script_process: " << m_self.pointer() << " terminated\n";
-        m_self.clear();
-        m_self.abandon();
-      }
+            ~script_process()
+            {
+                std::cout << "script_process: " << m_self.pointer() << " terminated\n";
+                m_self.clear();
+                m_self.abandon();
+            }
 
-      void init()
-      {
-        std::cout << "script_process: " << m_self.pointer() << " joined\n";
-        _call("init");
-      }
+            void init()
+            {
+                std::cout << "script_process: " << m_self.pointer() << " joined\n";
+                _call("init");
+            }
 
-      void update(fsec dt, void *)
-      {
-        if (!m_coroutine || m_coroutine_done)
-          return succeed();
+            void update(fsec dt, void *)
+            {
+                if (!m_coroutine || m_coroutine_done)
+                    return succeed();
 
-        m_elapsed += dt;
+                // **only** pass the number into the coroutine now:
+                sol::protected_function_result result = m_coroutine(dt.count());
 
-        if (m_wait_timer > fsec{0})
+                if (!result.valid())
+                {
+                    sol::error err = result;
+                    std::cerr << "Coroutine error: " << err.what() << std::endl;
+                    return fail();
+                }
+
+                if (result.status() == sol::call_status::ok)
+                {
+                    m_coroutine_done = true;
+                    return succeed();
+                }
+            }
+
+            void succeeded() { _call("succeeded"); }
+            void failed() { _call("failed"); }
+            void aborted() { _call("aborted"); }
+
+        private:
+            void _call(std::string_view function_name)
+            {
+                if (auto f = m_self[function_name]; f.valid())
+                    f(m_self);
+            }
+
+        private:
+            sol::table m_self;
+            sol::coroutine m_coroutine;
+            sol::thread    m_thread;      // keep it alive
+            bool m_coroutine_done = false;
+
+            fsec m_frequency;
+            fsec m_wait_timer{0};
+            fsec m_elapsed{0};
+        };
+
+        using scheduler = entt::basic_scheduler<fsec>;
+
+        [[nodiscard]] inline sol::table open_scheduler(sol::state &s)
         {
-          if (m_elapsed < m_wait_timer)
-          {
-            return; // Still waiting
-          }
-          m_wait_timer = fsec{0}; // Done waiting
-          m_elapsed = fsec{0};
-        }
+            sol::state_view lua{s};
+            auto entt_module = lua["entt"].get_or_create<sol::table>();
 
-        // **only** pass the number into the coroutine now:
-        sol::protected_function_result result = m_coroutine(dt.count());
-
-        if (!result.valid()) {
-          sol::error err = result;
-          std::cerr << "Coroutine error: " << err.what() << std::endl;
-          return fail();
-        }
-
-
-        // Check for wait duration
-        if (result.return_count() == 1 && result.get_type(0) == sol::type::number)
-        {
-          float wait_secs = result.get<float>(0);
-          m_wait_timer = fsec{wait_secs};
-          m_elapsed = fsec{0};
-        }
-        else if (m_coroutine.status() == sol::call_status::ok)
-        {
-          m_coroutine_done = true;
-          return succeed();
-        }
-      }
-
-      void succeeded() { _call("succeeded"); }
-      void failed() { _call("failed"); }
-      void aborted() { _call("aborted"); }
-
-    private:
-      void _call(std::string_view function_name)
-      {
-        if (auto f = m_self[function_name]; f.valid())
-          f(m_self);
-      }
-
-    private:
-      sol::table m_self;
-      sol::coroutine m_coroutine;
-      bool m_coroutine_done = false;
-
-      fsec m_frequency;
-      fsec m_wait_timer{0};
-      fsec m_elapsed{0};
-    };
-
-    using scheduler = entt::basic_scheduler<fsec>;
-
-    [[nodiscard]] inline sol::table open_scheduler(sol::state &s)
-    {
-      sol::state_view lua{s};
-      auto entt_module = lua["entt"].get_or_create<sol::table>();
-
-      // clang-format off
+            // clang-format off
         entt_module.new_usertype<scheduler>("scheduler",
             sol::meta_function::construct,
             sol::factories([]{ return scheduler{}; }),
@@ -162,7 +138,9 @@ namespace scripting
                 continuator.template then<script_process>(std::move(child_process));
                 }
             },
-            "update", sol::resolve<void(fsec, void *)>(&scheduler::update),
+                   "update", [](scheduler &self, float dt) {
+                         self.update(fsec{dt}, nullptr);
+                    },
             "abort",
             sol::overload(
                 [](scheduler &self) { self.abort(); },
@@ -175,11 +153,6 @@ namespace scripting
         rec.add_type("scheduler")
             .doc = "Task scheduler.";
             
-        rec.record_method("entt.runtime_view", {
-              "size_hint",
-              "---@return integer",
-              "Returns an estimated number of entities in the view."
-          });
         rec.record_method("scheduler", {
             "size",
             "---@return integer",
@@ -211,15 +184,14 @@ namespace scripting
             "Aborts all processes in the scheduler. If `terminate` is true, it will terminate all processes immediately."
         });
 
-      // clang-format on
-      
-      // lua.require("scheduler", sol::c_call<AUTO_ARG(&open_scheduler)>, false);
+            // clang-format on
 
+            // lua.require("scheduler", sol::c_call<AUTO_ARG(&open_scheduler)>, false);
 
-      return entt_module;
+            return entt_module;
+        }
+
     }
-
-  }
 }
 
 /*

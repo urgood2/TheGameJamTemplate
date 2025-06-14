@@ -93,21 +93,28 @@ function main.init()
     
     local p1 = {
         update = function(self, dt)
-            print("Task 1 Start")
-            task.wait(1.0)
-            print("Task 1 End after 1s")
+            debug("Task 1 Start")
+            task.wait(5.0)
+            debug("Task 1 End after 5s")
         end
     }
     
     local p2 = {
         update = function(self, dt)
-            print("Task 2 Start")
-            task.wait(2.0)
-            print("Task 2 End after 2s")
+            debug("Task 2 Start")
+            task.wait(5.0)
+            debug("Task 2 End after 5s")
         end
     }
-    -- print("type of arg:", type(p1))  -- should print 'table'
-    scheduler:attach(p1, p2)
+    
+    local p3 = {
+        update = function(self, dt)
+            debug("Task 3 Start")
+            task.wait(10.0)
+            debug("Task 3 End after 10s")
+        end
+    }
+    scheduler:attach(p1, p2, p3)
 end
   
 function main.update(dt)

@@ -219,6 +219,7 @@ namespace scripting {
             ai_system::requestAISystemReset();
         });
         rec.record_free_function({}, {"hardReset", "---@return nil", "Requests a full reset of the AI system state.", true, false});
+        ai_system::bind_ai_utilities(stateToInit);
 
         // ------------------------------------------------------
         // methods for entity registry access

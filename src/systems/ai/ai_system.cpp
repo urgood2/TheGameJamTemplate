@@ -352,53 +352,55 @@ namespace ai_system
         }
     }
     
+    void load_actions_from_lua(actionplanner_t& planner) {
+        sol::table actions = masterStateLua["ai"]["actions"];
+        for (auto &[key, val] : actions) {
+            std::string name = key.as<std::string>();
+            sol::table tbl = val.as<sol::table>();
     
-    auto initGOAPComponent(entt::entity entity) -> void
+            int cost = tbl["cost"].get_or(1);
+            goap_set_cost(&planner, name.c_str(), cost);
+    
+            sol::table pre = tbl["pre"];
+            for (auto &[pre_key, pre_val] : pre)
+                goap_set_pre(&planner, name.c_str(), pre_key.as<std::string>().c_str(), pre_val.as<bool>());
+    
+            sol::table post = tbl["post"];
+            for (auto &[post_key, post_val] : post) {
+                goap_set_pst(&planner, name.c_str(), post_key.as<std::string>().c_str(), post_val.as<bool>());
+                allPostconditionsForEveryAction[name][post_key.as<std::string>()] = post_val.as<bool>();
+            }
+        }
+    }
+    
+    void load_worldstate_from_lua(const std::string& creature_type, actionplanner_t& planner, worldstate_t& initial, worldstate_t& goal) {
+        sol::table types = masterStateLua["ai"]["entity_types"];
+        sol::table def = types[creature_type];
+    
+        auto init = def["initial"];
+        auto target = def["goal"];
+    
+        for (auto &[k, v] : init)
+            goap_worldstate_set(&planner, &initial, k.as<std::string>().c_str(), v.as<bool>());
+    
+        for (auto &[k, v] : target)
+            goap_worldstate_set(&planner, &goal, k.as<std::string>().c_str(), v.as<bool>());
+    }
+    
+    void initGOAPComponent(entt::entity entity, const std::string& type)
     {
-        auto &goapStruct = globals::registry.get<GOAPComponent>(entity);
-        // clear the action planner
-        goap_actionplanner_clear(&goapStruct.ap);
+        auto& goap = globals::registry.get<GOAPComponent>(entity);
+        goap_actionplanner_clear(&goap.ap);
 
-        // output should be like this:
+        load_actions_from_lua(goap.ap); // all actions, global
 
-/*
+        // Per-creature world state
+        load_worldstate_from_lua(type, goap.ap, goap.current_state, goap.goal);
 
-    [2024-09-13 21:00:10.031] [info] [ai_system.cpp:534] Action planner description: 
-    wander:
-        wandering:=1
-    scout:
-        wandering==1
-        enemyvisible:=1
-    attack:
-        enemyvisible==1
-        canfight==1
-        enemyalive:=0   
-    eat:
-        hungry==1
-        hungry:=0
+        // Cache type string
+        goap.type = type;
 
-    [2024-09-13 21:00:10.032] [info] [ai_system.cpp:536] plancost = 3
-    [2024-09-13 21:00:10.032] [info] [ai_system.cpp:538]                        wandering,enemyvisible,CANFIGHT,ENEMYALIVE,hungry,
-    [2024-09-13 21:00:10.032] [info] [ai_system.cpp:541] 0: wander              WANDERING,enemyvisible,CANFIGHT,ENEMYALIVE,hungry,
-    [2024-09-13 21:00:10.032] [info] [ai_system.cpp:541] 1: scout               WANDERING,ENEMYVISIBLE,CANFIGHT,ENEMYALIVE,hungry,
-    [2024-09-13 21:00:10.032] [info] [ai_system.cpp:541] 2: attack              WANDERING,ENEMYVISIBLE,CANFIGHT,enemyalive,hungry,
-
-*/
-
-
-
-        // load in actions from json
-        load_actions_from_json(globals::aiActionsJSON, goapStruct.ap);
-
-        // Initialize the current world state & Initialize the goal state
-        goap_worldstate_clear(&goapStruct.current_state);
-        goap_worldstate_clear(&goapStruct.goal);
-        //TODO: these should probably be for the specific entity, not global
-        load_worldstate_from_json(globals::aiWorldstateJSON, goapStruct.ap, goapStruct.current_state, goapStruct.goal);
-
-        // Optional: Ensure the AI stays alive
-        // goap_worldstate_set(&goapStruct.ap, &goapStruct.goal, "alive", true);
-
+        // Goal will be selected after worldstate is updated
         select_goal(entity);
     }
 
@@ -465,7 +467,7 @@ namespace ai_system
         // get value of ai_tick_rate_seconds from config json and store it in aiUpdateTickInSeconds
         aiUpdateTickInSeconds = globals::configJSON["global_tick_settings"]["ai_tick_rate_seconds"];
 
-        globals::registry.on_construct<GOAPComponent>().connect<&onGOAPComponentCreated>();
+        // globals::registry.on_construct<GOAPComponent>().connect<&onGOAPComponentCreated>();
         globals::registry.on_destroy<GOAPComponent>().connect<&onGOAPComponentDestroyed>();
         
         // ------------------------------------------------------
@@ -572,20 +574,41 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
      *
      * @param goapStruct A pointer to the GOAPComponent containing the current state and goal.
      */
-    void select_goal(entt::entity entity) {
+    // void select_goal(entt::entity entity) {
         
-        auto table = masterStateLua[globals::aiConfigJSON["goalSelectionLogicTableName"].get<std::string>()];
-        sol::protected_function selectGoal = table[globals::aiConfigJSON["goalSelectionLogicFunctionName"].get<std::string>()];
+    //     auto table = masterStateLua[globals::aiConfigJSON["goalSelectionLogicTableName"].get<std::string>()];
+    //     sol::protected_function selectGoal = table[globals::aiConfigJSON["goalSelectionLogicFunctionName"].get<std::string>()];
 
-        sol::protected_function_result result = selectGoal(entity);
+    //     sol::protected_function_result result = selectGoal(entity);
 
-        if (!result.valid()) {
-            sol::error err = result;
-            SPDLOG_ERROR("{}: Error selecting goal: {}", static_cast<int>(entity), err.what());
+    //     if (!result.valid()) {
+    //         sol::error err = result;
+    //         SPDLOG_ERROR("{}: Error selecting goal: {}", static_cast<int>(entity), err.what());
+    //         return;
+    //     }
+
+    //     // Generate a new plan based on the selected goal
+    //     replan(entity);
+    // }
+    
+    void select_goal(entt::entity entity)
+    {
+        auto& goap = globals::registry.get<GOAPComponent>(entity);
+        auto type = goap.type;
+
+        sol::table goals = masterStateLua["ai"]["goal_selectors"];
+        sol::protected_function func = goals[type];
+        if (!func.valid()) {
+            SPDLOG_ERROR("No goal selector found for type '{}'", type);
             return;
         }
 
-        // Generate a new plan based on the selected goal
+        sol::protected_function_result result = func(entity);
+        if (!result.valid()) {
+            SPDLOG_ERROR("Goal selection failed: {}", result);
+            return;
+        }
+
         replan(entity);
     }
 
@@ -724,6 +747,53 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
     }
     
     //TODO: some method ideas: showTutorialMessageBox(), showTutorialHighlightCircle()
+    
+    void bind_ai_utilities(sol::state& lua)
+    {
+        lua.set_function("set_worldstate", [](entt::entity e, std::string key, bool value)
+        {
+            auto& goap = globals::registry.get<GOAPComponent>(e);
+            goap_worldstate_set(&goap.ap, &goap.current_state, key.c_str(), value);
+        });
+
+        lua.set_function("set_goal", [](entt::entity e, sol::table goal)
+        {
+            auto& goap = globals::registry.get<GOAPComponent>(e);
+            goap_worldstate_clear(&goap.goal);
+            for (auto& [k, v] : goal)
+                goap_worldstate_set(&goap.ap, &goap.goal, k.as<std::string>().c_str(), v.as<bool>());
+        });
+
+        lua.set_function("get_blackboard", [](entt::entity e) -> sol::table
+        {
+            auto& bb = globals::registry.get<GOAPComponent>(e).blackboard;
+            return bb;
+        });
+
+        lua.set_function("create_ai_entity", [](std::string type) -> entt::entity
+        {
+            auto e = globals::registry.create();
+            globals::registry.emplace<GOAPComponent>(e);
+            initGOAPComponent(e, type);
+            return e;
+        });
+
+        lua.set_function("force_interrupt", [](entt::entity e)
+        {
+            ai_system::on_interrupt(e);
+        });
+
+        lua.set_function("list_lua_files", [](const std::string &dir)
+        {
+            std::vector<std::string> result;
+            for (const auto &entry : std::filesystem::directory_iterator("scripts/" + dir))
+            {
+                if (entry.path().extension() == ".lua")
+                    result.push_back(entry.path().stem().string());
+            }
+            return result;
+        });
+    }
 
     // Update the GOAP logic within the game loop
     void update_goap(entt::entity entity) {
@@ -783,35 +853,49 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         debugPrintGOAPStruct(goapStruct);
     }
 
-    void runWorldStateUpdaters(entt::entity &entity)
+    // void runWorldStateUpdaters(entt::entity &entity)
+    // {
+    //     // update world state using the condition updaters
+    //     std::string updateFunctionTable = globals::aiConfigJSON["worldstateUpdaterTable"].get<std::string>();
+
+    //     sol::table worldstateUpdaterTable = masterStateLua[updateFunctionTable];
+
+    //     // Iterate through the table and invoke each and every function
+    //     for (auto &pair : worldstateUpdaterTable)
+    //     {
+    //         sol::object key = pair.first;    // key
+    //         sol::object value = pair.second; // value (which should be a function)
+
+    //         if (value.is<sol::function>() == false)
+    //             continue;
+
+    //         SPDLOG_DEBUG("Executing worldstate update function: {}", key.as<std::string>());
+    //         sol::protected_function func = value.as<sol::function>();
+    //         // Call the function in a protected manner
+    //         sol::protected_function_result result = func(entity, aiUpdateTickInSeconds); // Call the Lua function
+    //         // Check if the function call resulted in an error
+
+    //         if (result.valid())
+    //             continue;
+
+    //         // Capture the error message
+    //         sol::error err = result;
+    //         std::string error_message = err.what();
+    //         SPDLOG_DEBUG("Error executing worldstate update function: {}", error_message);
+    //     }
+    // }
+    
+    void runWorldStateUpdaters(entt::entity entity)
     {
-        // update world state using the condition updaters
-        std::string updateFunctionTable = globals::aiConfigJSON["worldstateUpdaterTable"].get<std::string>();
-
-        sol::table worldstateUpdaterTable = masterStateLua[updateFunctionTable];
-
-        // Iterate through the table and invoke each and every function
-        for (auto &pair : worldstateUpdaterTable)
-        {
-            sol::object key = pair.first;    // key
-            sol::object value = pair.second; // value (which should be a function)
-
-            if (value.is<sol::function>() == false)
-                continue;
-
-            SPDLOG_DEBUG("Executing worldstate update function: {}", key.as<std::string>());
-            sol::protected_function func = value.as<sol::function>();
-            // Call the function in a protected manner
-            sol::protected_function_result result = func(entity, aiUpdateTickInSeconds); // Call the Lua function
-            // Check if the function call resulted in an error
-
-            if (result.valid())
-                continue;
-
-            // Capture the error message
-            sol::error err = result;
-            std::string error_message = err.what();
-            SPDLOG_DEBUG("Error executing worldstate update function: {}", error_message);
+        sol::table updaters = masterStateLua["ai"]["worldstate_updaters"];
+        for (auto &[k, v] : updaters) {
+            if (!v.is<sol::function>()) continue;
+            sol::protected_function f = v;
+            sol::protected_function_result result = f(entity, aiUpdateTickInSeconds);
+            if (!result.valid()) {
+                sol::error err = result;
+                SPDLOG_ERROR("Error in worldstate updater '{}': {}", k.as<std::string>(), err.what());
+            }
         }
     }
 

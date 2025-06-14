@@ -109,6 +109,7 @@ struct GOAPComponent
     worldstate_t goal;
     const char* plan[64];
     worldstate_t states[64];
+    std::string type{"NONE"}; // type of the entity, used to determine which blackboard init function to call
     int planSize;
     int planCost;
     int current_action;

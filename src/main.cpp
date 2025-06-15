@@ -80,6 +80,7 @@ using json = nlohmann::json;
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/localization/localization.hpp"
 #include "systems/scripting/scripting_system.hpp"
+#include "systems/fade/fade_system.hpp"
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
@@ -381,6 +382,7 @@ auto updateSystems(float dt) -> void
 {
     ZoneScopedN("UpdateSystems"); // custom label
     updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
+    fade_system::update(dt); // update fade system
     
     input::Update(globals::registry, globals::inputState, dt);
     globals::updateGlobalVariables();

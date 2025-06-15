@@ -1014,13 +1014,8 @@ namespace ai_system
                 }
             );
 
-        // lua.set_function("create_ai_entity", [](std::string type) -> entt::entity {
+        // 
 
-        //     auto e = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
-        //     globals::registry.emplace<GOAPComponent>(e);
-        //     initGOAPComponent(e, type);
-        //     return e;
-        // });
 
         ai.set_function("force_interrupt", [](entt::entity e)
                         { ai_system::on_interrupt(e); });

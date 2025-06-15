@@ -11510,7 +11510,8 @@
     ],
     "ai_example_script_table": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/AI_TABLE_EXAMPLE.md",
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_EXAMPLE.md"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_EXAMPLE.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_EXAMPLE.lua"
     ],
     "ai_goal_selector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors",

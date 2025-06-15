@@ -68,6 +68,7 @@ using std::pair;
 #include "systems/particles/particle.hpp"
 #include "systems/random/random.hpp"
 #include "systems/second_order_dynamics/second_order_dynamics.hpp"
+#include "systems/fade/fade_system.hpp"
 
 #include "entt/entt.hpp"
 
@@ -1123,6 +1124,8 @@ namespace game
             // Display UPS and FPS
             DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
 
+            fade_system::draw();
+
             {
                 ZoneScopedN("EndDrawing call");
                 EndDrawing();
@@ -1136,6 +1139,8 @@ namespace game
 
             layer::End();
         }
+
+        // fade
     }
 
 }

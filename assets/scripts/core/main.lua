@@ -77,7 +77,22 @@ local PlayerLogic = {
 
 function main.init()
     -- -- entity creation example
-    bowser = create_ai_entity("kobold")
+    bowser = create_ai_entity("kobold") -- Create a new entity of type kobold
+
+    bowser2 = create_ai_entity("kobold", { 
+        entity_types = {
+            kobold = {
+                initial = {
+                    has_food    = true,
+                    enemyvisible = true,
+                    hungry      = false,
+                },
+                goal = {
+                    enemyvisible = false,
+                },
+            },
+        }
+    }) -- Create a new entity of type goblin, with specific ai parameter overrides (refer to [example](assets\scripts\AI_TABLE_EXAMPLE.lua)
     -- bowser = registry:create() -- Create a new entity
     -- -- registry:emplace(bowser, Transform, {})-- Pass an empty table for defualt construction
     
@@ -93,22 +108,27 @@ function main.init()
 
     timer.every(1.0, function()
         transformComp.actualX = transformComp.actualX + 5
-        transformComp.actualY = transformComp.actualY + 5
+        transformComp.actualY = transformComp.actualY - 5
         print("Bowser position = " .. transformComp.actualX .. ', ' .. transformComp.actualY)
         print("Bowser size = " .. transformComp.actualW .. ', ' .. transformComp.actualH)
     end, 0, true, nil, "bowser_timer")
 
-    ---
---- Creates a timer that runs an action repeatedly at a given interval.
----
----@param interval number|{number, number} # Interval in seconds or a {min, max} range.
----@param action fun()
----@param times? integer # Number of times to run. 0 for infinite.
----@param immediate? boolean # If true, the action runs immediately on creation.
----@param after? fun()
----@param tag? string
----@return integer # timerHandle
-function timer.every(...) end
+    local p1 = {
+        update = function(self, dt)
+            debug("Fade out screen")
+            fadeOutScreen(1)
+            task.wait(5.0)
+        end
+    }
+    
+    local p2 = {
+        update = function(self, dt)
+            fadeInScreen(1)
+        end
+    }
+
+    scheduler:attach(p1, p2)
+
     
     -- assert(registry:has(bowser, Transform))
     

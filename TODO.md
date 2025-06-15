@@ -11,12 +11,12 @@
 - [ ] Inter-entity collision https://chatgpt.com/share/684c4f55-cf68-800a-95b4-80e31c75d23c / https://chatgpt.com/share/684e3621-eee8-800a-a451-52f0eb0c82b4
 - [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc.
  
-- [ ]  input bindings need documenting
 - [ ] bind_ai_utilities needs binding docs
-- [ ] ai_module needs documentation 
+- [ ] ai_module needs documentation - how to override goap 
 
 - [ ] test goap test case.
 - [ ] try producing ui in lua
+- [ ] ai_system: need replan, functions to alter the goal selectors
 
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?

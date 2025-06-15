@@ -1,178 +1,243 @@
-# Lua Scripting & Coroutine Cheatsheet
+# Lua Scripting & AI Cheatsheet
+
+*An extensive reference to your current Lua-based game scripting, AI setup, and coroutine/task utilities.*
 
 ---
 
-## 1. Module Imports
+## 1. Required Modules & Globals
 
 ```lua
-local globals  = require("init.globals")
-require("registry")                 -- attaches `registry` global
-local task     = require("task/task")
+local globals = require("init.globals")   -- core game constants & registry handle
+require("registry")                       -- registers `registry` global for ECS ops
+local task    = require("task.task")      -- coroutine helpers: wait, run_named_task
+require("ai.init")                       -- loads/initializes global `ai` definitions from scripts
+require("util.util")                     -- utility functions: debug(), fadeOutScreen(), etc.
 ```
 
-* **`globals`**: shared constants / utilities
-* **`registry`**: your EnTT registry bindings
-* **`task`**: coroutine helper (wait, run\_named\_task, etc.)
+* **globals**: holds shared singletons (registry, inputState, etc.)
+* **registry**: your EnTT-backed world interface (`create`, `emplace`, `get`, `add_script`, `runtime_view`, etc.)
+* **task.task**: Lua module providing `task.wait`, `task.run_named_task`, and named coroutine management
+* **ai.init**: populates a global `ai` table with `entity_types`, `actions`, `worldstate_updaters`, `goal_selectors`, `blackboard_init`
+* **util.util**: common functions (e.g. `debug(...)`, `fadeOutScreen(duration)`)
 
 ---
 
-## 2. Main Game Loop Module
+## 2. Game Loop Skeleton
 
 ```lua
 main = {}
 
 function main.init()
-  -- runs once at startup
+  -- One-time setup: spawn entities, attach scripts & timers, configure AI
 end
 
 function main.update(dt)
-  -- runs every frame before draw
+  -- Per-frame logic: update physics, scripts, scheduler, AI tick
 end
 
 function main.draw(dt)
-  -- runs every frame for rendering
+  -- Per-frame rendering: draw sprites, UI, debug overlays
 end
 ```
 
-* Place entity-creation, scheduler setup, etc. in `main.init()`
-* Use `dt` for frame-rate–independent logic
+**Key Points:**
+
+* `dt` is the delta-time in seconds since the last frame.
+* Put heavy setup in `main.init()` to avoid runtime allocations.
+* `main.update()` is where you drive your simulation (entity scripts, AI planning).
 
 ---
 
-## 3. Entity & ScriptComponent Setup
+## 3. Defining ScriptComponent Tables
 
-```lua
--- create an entity
-local eid = registry:create()
-
--- attach a script table
-registry:add_script(eid, PlayerLogic)
-```
-
-* `registry:create() → entity-id`
-* `registry:add_script(id, table)`
-
-  * your C++ system looks for `init/update/destroy` on that table
-
----
-
-## 4. Script-Table Structure
+Each script is just a Lua table with optional methods: `init`, `update`, `on_collision`, and `destroy`.
 
 ```lua
 local PlayerLogic = {
-  -- custom fields
-  speed = 150,
+  -- custom fields (persist per-entity)
+  speed = 150,  -- movement speed (px/sec)
   hp    = 10,
 
-  -- called immediately after add_script
   init = function(self)
+    -- called once when script is attached
+    print("[Player] init; id=", self.id)
     self.x, self.y = 0, 0
-    print("[player] init, id =", self.id)
   end,
 
-  -- called every frame: dt is seconds since last frame
   update = function(self, dt)
+    -- called each frame
     self.x = self.x + self.speed * dt
-    -- can access other components:
-    -- self.owner:get(self.id, Transform).x = self.x
+    -- access other components:
+    -- local t = self.owner:get(self.id, Transform)
+    -- t.actualX, t.actualY = self.x, self.y
   end,
 
-  -- called when entity is destroyed
+  on_collision = function(self, other)
+    -- called when this entity collides with `other` entity
+  end,
+
   destroy = function(self)
-    print("[player] destroy; final pos:", self.x, self.y)
+    -- called just before entity removal
+    print("[Player] destroyed at (", self.x, ",", self.y, ")")
   end,
 }
 ```
 
-* **`self.id`** & **`self.owner`** come from your C++ binding
-* Keep per-entity state inside the table (`self.x`, `self._flag`, etc.)
+**Attach** to an entity:
+
+```lua
+local e = registry:create()
+registry:add_script(e, PlayerLogic)
+```
 
 ---
 
-## 5. Spawning Coroutine Tasks
+## 4. Spawning Entities with AI
 
-### A) `task.run_named_task`
+Use `create_ai_entity(type, overrides?)` to spawn GOAP-driven creatures.
+
+### Default spawn
 
 ```lua
-task.run_named_task(self, "task_name", function()
-  -- arbitrary coroutine code
+local kobold = create_ai_entity("kobold")
+```
+
+Spawns with prototype data from `ai.entity_types.kobold`.
+
+### With overrides
+
+```lua
+local custom = create_ai_entity("kobold", {
+  initial = { hungry=false, has_food=true },
+  goal    = { wandering=true },
+  blackboard_init = function(e)
+    local bb = get_blackboard(e)
+    bb:set_double("speed_mod", 1.5)
+  end,
+})
+```
+
+* **`overrides`**: table where keys match any top-level in the AI-definition (`initial`, `goal`, `blackboard_init`, `select_goal`, `actions`, etc.). Overrides are merged *after* deep-copying the prototype.
+* **Common override targets**:
+
+  * `initial`: world-state keys
+  * `goal`: target-state keys
+  * `blackboard_init(e)`: set up custom blackboard data
+  * `select_goal(e)`: supply custom goal-selection logic
+
+---
+
+## 5. AI Definition Structure
+
+Your `ai` table (printed via `dump(ai)`) looks like:
+
+```lua
+ai = {
+  entity_types = {
+    kobold = {
+      initial = { hungry=true, enemyvisible=false, has_food=true },
+      goal    = { hungry=false },
+      init_blackboard = function(e) ... end,
+      select_goal     = function(e) ... end,
+    }
+  },
+
+  actions = {
+    eat = {
+      name   = "eat",
+      cost   = 1,
+      pre    = { hungry=true },
+      post   = { hungry=false },
+      start  = function(e) ... end,
+      update = function(self,e,dt) ... end,
+      finish = function(e) ... end,
+    }
+  },
+
+  worldstate_updaters = {
+    hunger_check  = function(e,dt) ... end,
+    enemy_sight   = function(e,dt) ... end,
+  },
+
+  goal_selectors = {
+    kobold = function(e) ... end,
+  },
+
+  blackboard_init = {
+    kobold = function(e) ... end,
+  },
+}
+```
+
+Load order in C++:
+
+1. `actions` (global)
+2. `worldstate_updaters` (global)
+3. `entity_types[type].initial`, `goal`, `init_blackboard`, `select_goal`
+
+---
+
+## 6. Coroutine & Task Utilities
+
+### `task.wait(seconds)`
+
+Yield inside a coroutine until `seconds` have elapsed.
+
+```lua
+task.wait(2.5)  -- suspends for 2.5s (accumulates dt)
+```
+
+### `task.run_named_task(self, name, fn)`
+
+Starts a Lua coroutine bound to `self` with identifier `name`.
+
+```lua
+task.run_named_task(self, "blinker", function()
+  print("Blink start")
   task.wait(5.0)
-  print("done waiting")
+  print("Blink end")
 end)
 ```
 
-* **Parameters**:
+* Multiple named tasks can coexist per-entity.
+* Use `self._flags[name] = true` to prevent re-spawning.
 
-  1. `self` (script table)
-  2. name/ID string
-  3. function body
+### `scheduler:attach(p1, p2, ...)`
 
-* **Inside** your `M.wait(seconds)`:
-
-  ```lua
-  local elapsed = 0
-  while elapsed < seconds do
-    local dt = coroutine.yield()   -- yields back to C++
-    elapsed = elapsed + dt
-  end
-  ```
-
-### B) Batch scheduling via `scheduler:attach`
+Chain a sequence of process-tables (each with an `update(dt)` method).
 
 ```lua
-local p1 = { update = function(self, dt) debug("P1 start"); task.wait(5.0); debug("P1 end") end }
-local p2 = { update = function(self, dt) debug("P2 start"); task.wait(5.0); debug("P2 end") end }
-local p3 = { update = function(self, dt) debug("P3 start"); task.wait(10.0); debug("P3 end") end }
-
 scheduler:attach(p1, p2, p3)
 ```
 
-* Chaining multiple processes in sequence
-* Each `update` table is run one after the previous succeeds
+Each process runs to completion (`wait` returns) before the next starts.
 
 ---
 
-## 6. Debug & Timing
+## 7. Timers & Utilities
 
-* **`print(...)`**: standard console output
-* **`debug(...)`**: your custom debug logger
-* **`os.clock()`**: CPU-time stamp—good for rough profiling
-* Example:
+### `timer.every(interval, fn, count, repeat, tag)`
 
-  ```lua
-  print("▶︎ Task start @ " .. tostring(os.clock()))
-  ```
+Schedule `fn()` every `interval` seconds.
 
----
+* `count`: run this many times (`0` for infinite)
+* `repeat`: **true** to auto-repeat
+* `tag`: optional string to cancel later
 
-## 7. Common Patterns
+```lua
+timer.every(1.0, function()
+  debug("Tick @" .. tostring(os.clock()))
+end, 0, true, nil, "tick_timer")
+```
 
-* **One-time flags**:
+### Debug Helpers
 
-  ```lua
-  if not self._spawned then
-    -- spawn tasks
-    self._spawned = true
-  end
-  ```
-
-* **Loop-driven spawns**:
-
-  ```lua
-  for i, delay in ipairs({10,20,30}) do
-    task.run_named_task(self, "t"..i, function()
-      print("start", i); task.wait(delay); print("end", i)
-    end)
-  end
-  ```
-
-* **Access other components**:
-
-  ```lua
-  local pos = self.owner:get(self.id, Transform)
-  pos.x, pos.y = ...
-  ```
+* `debug(...)` — your C++‑bound logger
+* `dump(table)` — pretty-print any Lua table
+* `os.clock()` — CPU time, useful for profiling tasks
 
 ---
 
-Keep this cheat-sheet handy as you expand your system—each section maps directly to the patterns in your code above.
+### End of Cheatsheet
+
+Keep this reference next to your editor for fast lookup!

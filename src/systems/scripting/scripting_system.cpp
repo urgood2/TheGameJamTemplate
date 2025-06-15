@@ -47,7 +47,9 @@ namespace scripting
         auto &script = registry.get<ScriptComponent>(entity);
         assert(script.self.valid());
         script.hooks.update = script.self["update"];
+        script.hooks.on_collision = script.self["on_collision"];
         assert(script.hooks.update.valid());
+        assert(script.hooks.on_collision.valid());
 
         script.self["id"] = sol::readonly_property([entity]
                                                    { return entity; });

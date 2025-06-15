@@ -32,6 +32,7 @@ namespace scripting
         struct
         {
             sol::function update; ///< Update hook called every frame (if exists)
+            sol::function on_collision; // called for collisions with other entities
         } hooks;
         
         // list of currently running Lua coroutines (tasks)

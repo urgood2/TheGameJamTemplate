@@ -357,6 +357,16 @@ namespace scripting {
         rec.record_free_function({}, {"pauseGame", "---@return nil", "Pauses the game.", true, false});
         rec.record_free_function({}, {"unpauseGame", "---@return nil", "Unpauses the game.", true, false});
         
+
+        // ------------------------------------------------------
+        // input functions
+        // ------------------------------------------------------
+
+
+        // ------------------------------------------------------
+        // Expose global variables to Lua
+        // ------------------------------------------------------
+        exposeGlobalsToLua(stateToInit);
         
         
         // intialize ai directories
@@ -367,6 +377,29 @@ namespace scripting {
         
         // 5) Finally dump out your definitions:
         rec.dump_lua_defs(util::getRawAssetPathNoUUID("scripts/chugget_code_definitions.lua")); 
+    }
+
+    auto exposeGlobalsToLua(sol::state &lua) -> void{
+        // 1) create the root table
+        lua.create_named_table("globals");
+
+        // 2) simple bools / ints / floats
+        lua["globals"]["isGamePaused"]  = &globals::isGamePaused;
+        lua["globals"]["screenWipe"]    = &globals::screenWipe;
+        lua["globals"]["screenWidth"]   = &globals::screenWidth;
+        lua["globals"]["screenHeight"]  = &globals::screenHeight;
+        lua["globals"]["currentGameState"] = &globals::currentGameState;
+
+        // 3) entt::entity
+        lua["globals"]["gameWorldContainerEntity"] = &globals::gameWorldContainerEntity;
+        lua["globals"]["cursor"]                   = &globals::cursor;
+
+        // 4) expose your Layer pointers under a sub-table "game"
+        lua.create_named_table("game")[
+            "background"   ] = game::background;
+        lua["game"]["sprites"]       = game::sprites;
+        lua["game"]["ui_layer"]      = game::ui_layer;
+        lua["game"]["finalOutput"]   = game::finalOutput;
     }
 
 

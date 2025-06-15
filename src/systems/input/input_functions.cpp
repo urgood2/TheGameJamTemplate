@@ -32,6 +32,380 @@ using namespace snowhouse; // assert
 namespace input
 {
 
+    auto exposeToLua(sol::state &lua) -> void {
+
+        // Sol2 binding for input::InputState struct
+        auto &L = lua;
+        L.new_usertype<input::InputState>("InputState",
+            sol::no_constructor,
+            // Cursor targets and interaction
+            "cursor_clicked_target",         &input::InputState::cursor_clicked_target,
+            "cursor_prev_clicked_target",    &input::InputState::cursor_prev_clicked_target,
+            "cursor_focused_target",         &input::InputState::cursor_focused_target,
+            "cursor_prev_focused_target",    &input::InputState::cursor_prev_focused_target,
+            "cursor_focused_target_area",    &input::InputState::cursor_focused_target_area,
+            "cursor_dragging_target",        &input::InputState::cursor_dragging_target,
+            "cursor_prev_dragging_target",   &input::InputState::cursor_prev_dragging_target,
+            "cursor_prev_released_on_target",&input::InputState::cursor_prev_released_on_target,
+            "cursor_released_on_target",     &input::InputState::cursor_released_on_target,
+            "current_designated_hover_target", &input::InputState::current_designated_hover_target,
+            "prev_designated_hover_target",    &input::InputState::prev_designated_hover_target,
+            "cursor_hovering_target",        &input::InputState::cursor_hovering_target,
+            "cursor_prev_hovering_target",   &input::InputState::cursor_prev_hovering_target,
+            "cursor_hovering_handled",       &input::InputState::cursor_hovering_handled,
+
+            // Collision and cursor lists
+            "collision_list",                &input::InputState::collision_list,
+            "nodes_at_cursor",               &input::InputState::nodes_at_cursor,
+
+            // Cursor positions
+            "cursor_position",               &input::InputState::cursor_position,
+            "cursor_down_position",          &input::InputState::cursor_down_position,
+            "cursor_up_position",            &input::InputState::cursor_up_position,
+            "focus_cursor_pos",              &input::InputState::focus_cursor_pos,
+            "cursor_down_time",              &input::InputState::cursor_down_time,
+            "cursor_up_time",                &input::InputState::cursor_up_time,
+
+            // Cursor handling flags
+            "cursor_down_handled",           &input::InputState::cursor_down_handled,
+            "cursor_down_target",            &input::InputState::cursor_down_target,
+            "cursor_down_target_click_timeout", &input::InputState::cursor_down_target_click_timeout,
+            "cursor_up_handled",             &input::InputState::cursor_up_handled,
+            "cursor_up_target",              &input::InputState::cursor_up_target,
+            "cursor_released_on_handled",    &input::InputState::cursor_released_on_handled,
+            "cursor_click_handled",          &input::InputState::cursor_click_handled,
+            "is_cursor_down",                &input::InputState::is_cursor_down,
+
+            // Frame button press
+            "frame_buttonpress",             &input::InputState::frame_buttonpress,
+            "repress_timer",                 &input::InputState::repress_timer,
+            "no_holdcap",                    &input::InputState::no_holdcap,
+
+            // Text input hook
+            "text_input_hook",               &input::InputState::text_input_hook,
+            "capslock",                      &input::InputState::capslock,
+            "coyote_focus",                  &input::InputState::coyote_focus,
+
+            "cursor_hover_transform",        &input::InputState::cursor_hover_transform,
+            "cursor_hover_time",             &input::InputState::cursor_hover_time,
+            "L_cursor_queue",                &input::InputState::L_cursor_queue,
+
+            // Key states
+            "keysPressedThisFrame",          &input::InputState::keysPressedThisFrame,
+            "keysHeldThisFrame",             &input::InputState::keysHeldThisFrame,
+            "heldKeyDurations",              &input::InputState::heldKeyDurations,
+            "keysReleasedThisFrame",         &input::InputState::keysReleasedThisFrame,
+
+            // Gamepad buttons
+            "gamepadButtonsPressedThisFrame", &input::InputState::gamepadButtonsPressedThisFrame,
+            "gamepadButtonsHeldThisFrame",   &input::InputState::gamepadButtonsHeldThisFrame,
+            "gamepadHeldButtonDurations",    &input::InputState::gamepadHeldButtonDurations,
+            "gamepadButtonsReleasedThisFrame", &input::InputState::gamepadButtonsReleasedThisFrame,
+
+            // Input locks
+            "focus_interrupt",               &input::InputState::focus_interrupt,
+            "activeInputLocks",              &input::InputState::activeInputLocks,
+            "inputLocked",                   &input::InputState::inputLocked,
+
+            // Axis buttons
+            "axis_buttons",                  &input::InputState::axis_buttons,
+
+            // Gamepad state
+            "axis_cursor_speed",             &input::InputState::axis_cursor_speed,
+            "button_registry",               &input::InputState::button_registry,
+            "snap_cursor_to",                &input::InputState::snap_cursor_to,
+
+            // Cursor context & HID flags
+            "cursor_context",                &input::InputState::cursor_context,
+            "hid",                           &input::InputState::hid,
+
+            // Gamepad config
+            "gamepad",                       &input::InputState::gamepad,
+            "overlay_menu_active_timer",     &input::InputState::overlay_menu_active_timer,
+            "overlay_menu_active",           &input::InputState::overlay_menu_active,
+            "screen_keyboard" ,              &input::InputState::screen_keyboard
+        );
+
+        // Finally assign the singleton instance to globals.input.state
+        lua["globals"]["inputstate"] = &globals::inputState;
+
+        // Replacing large enums with safe Lua table creation to avoid sol2 argument overflow
+
+        // 1. Raylib KeyboardKey enum (complete)
+        lua["KeyboardKey"] = lua.create_table_with(
+            "KEY_NULL",            KEY_NULL,
+            "KEY_APOSTROPHE",      KEY_APOSTROPHE,
+            "KEY_COMMA",           KEY_COMMA,
+            "KEY_MINUS",           KEY_MINUS,
+            "KEY_PERIOD",          KEY_PERIOD,
+            "KEY_SLASH",           KEY_SLASH,
+            "KEY_ZERO",            KEY_ZERO,
+            "KEY_ONE",             KEY_ONE,
+            "KEY_TWO",             KEY_TWO,
+            "KEY_THREE",           KEY_THREE,
+            "KEY_FOUR",            KEY_FOUR,
+            "KEY_FIVE",            KEY_FIVE,
+            "KEY_SIX",             KEY_SIX,
+            "KEY_SEVEN",           KEY_SEVEN,
+            "KEY_EIGHT",           KEY_EIGHT,
+            "KEY_NINE",            KEY_NINE,
+            "KEY_SEMICOLON",       KEY_SEMICOLON,
+            "KEY_EQUAL",           KEY_EQUAL,
+            "KEY_A",               KEY_A,
+            "KEY_B",               KEY_B,
+            "KEY_C",               KEY_C,
+            "KEY_D",               KEY_D,
+            "KEY_E",               KEY_E,
+            "KEY_F",               KEY_F,
+            "KEY_G",               KEY_G,
+            "KEY_H",               KEY_H,
+            "KEY_I",               KEY_I,
+            "KEY_J",               KEY_J,
+            "KEY_K",               KEY_K,
+            "KEY_L",               KEY_L,
+            "KEY_M",               KEY_M,
+            "KEY_N",               KEY_N,
+            "KEY_O",               KEY_O,
+            "KEY_P",               KEY_P,
+            "KEY_Q",               KEY_Q,
+            "KEY_R",               KEY_R,
+            "KEY_S",               KEY_S,
+            "KEY_T",               KEY_T,
+            "KEY_U",               KEY_U,
+            "KEY_V",               KEY_V,
+            "KEY_W",               KEY_W,
+            "KEY_X",               KEY_X,
+            "KEY_Y",               KEY_Y,
+            "KEY_Z",               KEY_Z,
+            "KEY_LEFT_BRACKET",    KEY_LEFT_BRACKET,
+            "KEY_BACKSLASH",       KEY_BACKSLASH,
+            "KEY_RIGHT_BRACKET",   KEY_RIGHT_BRACKET,
+            "KEY_GRAVE",           KEY_GRAVE,
+            "KEY_SPACE",           KEY_SPACE,
+            "KEY_ESCAPE",          KEY_ESCAPE,
+            "KEY_ENTER",           KEY_ENTER,
+            "KEY_TAB",             KEY_TAB,
+            "KEY_BACKSPACE",       KEY_BACKSPACE,
+            "KEY_INSERT",          KEY_INSERT,
+            "KEY_DELETE",          KEY_DELETE,
+            "KEY_RIGHT",           KEY_RIGHT,
+            "KEY_LEFT",            KEY_LEFT,
+            "KEY_DOWN",            KEY_DOWN,
+            "KEY_UP",              KEY_UP,
+            "KEY_PAGE_UP",         KEY_PAGE_UP,
+            "KEY_PAGE_DOWN",       KEY_PAGE_DOWN,
+            "KEY_HOME",            KEY_HOME,
+            "KEY_END",             KEY_END,
+            "KEY_CAPS_LOCK",       KEY_CAPS_LOCK,
+            "KEY_SCROLL_LOCK",     KEY_SCROLL_LOCK,
+            "KEY_NUM_LOCK",        KEY_NUM_LOCK,
+            "KEY_PRINT_SCREEN",    KEY_PRINT_SCREEN,
+            "KEY_PAUSE",           KEY_PAUSE,
+            "KEY_F1",              KEY_F1,
+            "KEY_F2",              KEY_F2,
+            "KEY_F3",              KEY_F3,
+            "KEY_F4",              KEY_F4,
+            "KEY_F5",              KEY_F5,
+            "KEY_F6",              KEY_F6,
+            "KEY_F7",              KEY_F7,
+            "KEY_F8",              KEY_F8,
+            "KEY_F9",              KEY_F9,
+            "KEY_F10",             KEY_F10,
+            "KEY_F11",             KEY_F11,
+            "KEY_F12",             KEY_F12,
+            "KEY_LEFT_SHIFT",      KEY_LEFT_SHIFT,
+            "KEY_LEFT_CONTROL",    KEY_LEFT_CONTROL,
+            "KEY_LEFT_ALT",        KEY_LEFT_ALT,
+            "KEY_LEFT_SUPER",      KEY_LEFT_SUPER,
+            "KEY_RIGHT_SHIFT",     KEY_RIGHT_SHIFT,
+            "KEY_RIGHT_CONTROL",   KEY_RIGHT_CONTROL,
+            "KEY_RIGHT_ALT",       KEY_RIGHT_ALT,
+            "KEY_RIGHT_SUPER",     KEY_RIGHT_SUPER,
+            "KEY_KB_MENU",         KEY_KB_MENU,
+            "KEY_KP_0",            KEY_KP_0,
+            "KEY_KP_1",            KEY_KP_1,
+            "KEY_KP_2",            KEY_KP_2,
+            "KEY_KP_3",            KEY_KP_3,
+            "KEY_KP_4",            KEY_KP_4,
+            "KEY_KP_5",            KEY_KP_5,
+            "KEY_KP_6",            KEY_KP_6,
+            "KEY_KP_7",            KEY_KP_7,
+            "KEY_KP_8",            KEY_KP_8,
+            "KEY_KP_9",            KEY_KP_9,
+            "KEY_KP_DECIMAL",      KEY_KP_DECIMAL,
+            "KEY_KP_DIVIDE",       KEY_KP_DIVIDE,
+            "KEY_KP_MULTIPLY",     KEY_KP_MULTIPLY,
+            "KEY_KP_SUBTRACT",     KEY_KP_SUBTRACT,
+            "KEY_KP_ADD",          KEY_KP_ADD,
+            "KEY_KP_ENTER",        KEY_KP_ENTER,
+            "KEY_KP_EQUAL",        KEY_KP_EQUAL,
+            "KEY_BACK",            KEY_BACK,
+            "KEY_MENU",            KEY_MENU,
+            "KEY_VOLUME_UP",       KEY_VOLUME_UP,
+            "KEY_VOLUME_DOWN",     KEY_VOLUME_DOWN
+        );
+
+        // 2. MouseButton enum
+        lua["MouseButton"] = lua.create_table_with(
+            "MOUSE_BUTTON_LEFT",    MOUSE_BUTTON_LEFT,
+            "MOUSE_BUTTON_RIGHT",   MOUSE_BUTTON_RIGHT,
+            "MOUSE_BUTTON_MIDDLE",  MOUSE_BUTTON_MIDDLE,
+            "MOUSE_BUTTON_SIDE",    MOUSE_BUTTON_SIDE,
+            "MOUSE_BUTTON_EXTRA",   MOUSE_BUTTON_EXTRA,
+            "MOUSE_BUTTON_FORWARD", MOUSE_BUTTON_FORWARD,
+            "MOUSE_BUTTON_BACK",    MOUSE_BUTTON_BACK
+        );
+
+        // 3. GamepadButton enum
+        lua["GamepadButton"] = lua.create_table_with(
+            "GAMEPAD_BUTTON_UNKNOWN",           GAMEPAD_BUTTON_UNKNOWN,
+            "GAMEPAD_BUTTON_LEFT_FACE_UP",      GAMEPAD_BUTTON_LEFT_FACE_UP,
+            "GAMEPAD_BUTTON_LEFT_FACE_RIGHT",   GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
+            "GAMEPAD_BUTTON_LEFT_FACE_DOWN",    GAMEPAD_BUTTON_LEFT_FACE_DOWN,
+            "GAMEPAD_BUTTON_LEFT_FACE_LEFT",    GAMEPAD_BUTTON_LEFT_FACE_LEFT,
+            "GAMEPAD_BUTTON_RIGHT_FACE_UP",     GAMEPAD_BUTTON_RIGHT_FACE_UP,
+            "GAMEPAD_BUTTON_RIGHT_FACE_RIGHT",  GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
+            "GAMEPAD_BUTTON_RIGHT_FACE_DOWN",   GAMEPAD_BUTTON_RIGHT_FACE_DOWN,
+            "GAMEPAD_BUTTON_RIGHT_FACE_LEFT",   GAMEPAD_BUTTON_RIGHT_FACE_LEFT,
+            "GAMEPAD_BUTTON_LEFT_TRIGGER_1",    GAMEPAD_BUTTON_LEFT_TRIGGER_1,
+            "GAMEPAD_BUTTON_LEFT_TRIGGER_2",    GAMEPAD_BUTTON_LEFT_TRIGGER_2,
+            "GAMEPAD_BUTTON_RIGHT_TRIGGER_1",   GAMEPAD_BUTTON_RIGHT_TRIGGER_1,
+            "GAMEPAD_BUTTON_RIGHT_TRIGGER_2",   GAMEPAD_BUTTON_RIGHT_TRIGGER_2,
+            "GAMEPAD_BUTTON_MIDDLE_LEFT",       GAMEPAD_BUTTON_MIDDLE_LEFT,
+            "GAMEPAD_BUTTON_MIDDLE",            GAMEPAD_BUTTON_MIDDLE,
+            "GAMEPAD_BUTTON_MIDDLE_RIGHT",      GAMEPAD_BUTTON_MIDDLE_RIGHT,
+            "GAMEPAD_BUTTON_LEFT_THUMB",        GAMEPAD_BUTTON_LEFT_THUMB,
+            "GAMEPAD_BUTTON_RIGHT_THUMB",       GAMEPAD_BUTTON_RIGHT_THUMB
+        );
+
+        // 4. GamepadAxis enum
+        lua["GamepadAxis"] = lua.create_table_with(
+            "GAMEPAD_AXIS_LEFT_X",        GAMEPAD_AXIS_LEFT_X,
+            "GAMEPAD_AXIS_LEFT_Y",        GAMEPAD_AXIS_LEFT_Y,
+            "GAMEPAD_AXIS_RIGHT_X",       GAMEPAD_AXIS_RIGHT_X,
+            "GAMEPAD_AXIS_RIGHT_Y",       GAMEPAD_AXIS_RIGHT_Y,
+            "GAMEPAD_AXIS_LEFT_TRIGGER",  GAMEPAD_AXIS_LEFT_TRIGGER,
+            "GAMEPAD_AXIS_RIGHT_TRIGGER", GAMEPAD_AXIS_RIGHT_TRIGGER
+        );
+
+        // 5. InputDeviceInputCategory enum
+        lua["InputDeviceInputCategory"] = lua.create_table_with(
+            "NONE",                InputDeviceInputCategory::NONE,
+            "GAMEPAD_AXIS_CURSOR", InputDeviceInputCategory::GAMEPAD_AXIS_CURSOR,
+            "GAMEPAD_AXIS",        InputDeviceInputCategory::GAMEPAD_AXIS,
+            "GAMEPAD_BUTTON",      InputDeviceInputCategory::GAMEPAD_BUTTON,
+            "MOUSE",               InputDeviceInputCategory::MOUSE,
+            "TOUCH",               InputDeviceInputCategory::TOUCH
+        );
+
+
+        // 2. Simple structs
+        lua.new_usertype<AxisButtonState>("AxisButtonState",
+            sol::constructors<AxisButtonState()>(),
+            "current", &AxisButtonState::current,
+            "previous",&AxisButtonState::previous
+        );
+
+        lua.new_usertype<NodeData>("NodeData",
+            sol::constructors<NodeData()>(),
+            "node",          &NodeData::node,
+            "click",         &NodeData::click,
+            "menu",          &NodeData::menu,
+            "under_overlay", &NodeData::under_overlay
+        );
+
+        lua.new_usertype<SnapTarget>("SnapTarget",
+            sol::constructors<SnapTarget()>(),
+            "node",      &SnapTarget::node,
+            "transform", &SnapTarget::transform,
+            "type",      &SnapTarget::type
+        );
+
+        // CursorContext and nested CursorLayer
+        lua.new_usertype<CursorContext::CursorLayer>("CursorLayer",
+            sol::constructors<CursorContext::CursorLayer()>(),
+            "cursor_focused_target", &CursorContext::CursorLayer::cursor_focused_target,
+            "cursor_position",      &CursorContext::CursorLayer::cursor_position,
+            "focus_interrupt",      &CursorContext::CursorLayer::focus_interrupt
+        );
+
+        lua.new_usertype<CursorContext>("CursorContext",
+            sol::constructors<CursorContext()>(),
+            "layer", &CursorContext::layer,
+            "stack", &CursorContext::stack
+        );
+
+        lua.new_usertype<GamepadState>("GamepadState",
+            sol::constructors<GamepadState()>(),
+            "object",  &GamepadState::object,
+            "mapping", &GamepadState::mapping,
+            "name",    &GamepadState::name,
+            "console", &GamepadState::console,
+            "id",      &GamepadState::id
+        );
+
+        lua.new_usertype<HIDFlags>("HIDFlags",
+            sol::constructors<HIDFlags()>(),
+            "last_type",          &HIDFlags::last_type,
+            "dpad_enabled",       &HIDFlags::dpad_enabled,
+            "pointer_enabled",    &HIDFlags::pointer_enabled,
+            "touch_enabled",      &HIDFlags::touch_enabled,
+            "controller_enabled", &HIDFlags::controller_enabled,
+            "mouse_enabled",      &HIDFlags::mouse_enabled,
+            "axis_cursor_enabled",&HIDFlags::axis_cursor_enabled
+        );
+
+        // 3. InputState (bind optional and complex fields alongside earlier simple fields)
+        L.new_usertype<input::InputState>("InputState",
+            sol::no_constructor,
+            // Optionals
+            "cursor_down_position",          &input::InputState::cursor_down_position,
+            "cursor_up_position",            &input::InputState::cursor_up_position,
+            "focus_cursor_pos",              &input::InputState::focus_cursor_pos,
+            "text_input_hook",               &input::InputState::text_input_hook,
+
+            // Axis buttons map
+            "axis_buttons",                  &input::InputState::axis_buttons,
+
+            // Cursor context & HID
+            "cursor_context",                &input::InputState::cursor_context,
+            "hid",                           &input::InputState::hid,
+
+            // Gamepad state
+            "gamepad",                       &input::InputState::gamepad
+            // (Remaining fields inherited from previous snippet)
+        );
+
+        // raylib input 
+
+        auto in = lua.create_named_table("input");
+
+        //TODO: need to expose the enums too
+
+        // Keyboard
+        in.set_function("isKeyDown",      &IsKeyDown);
+        in.set_function("isKeyPressed",   &IsKeyPressed);
+        in.set_function("isKeyReleased",  &IsKeyReleased);
+        in.set_function("isKeyUp",        &IsKeyUp);
+
+        // Mouse
+        in.set_function("isMouseDown",    &IsMouseButtonDown);
+        in.set_function("isMousePressed", &IsMouseButtonPressed);
+        in.set_function("isMouseReleased",&IsMouseButtonReleased);
+        in.set_function("getMousePos",    &GetMousePosition);
+        in.set_function("getMouseWheel",  &GetMouseWheelMove);
+
+        // Gamepad
+        in.set_function("isPadConnected", &IsGamepadAvailable);
+        in.set_function("isPadButtonDown",&IsGamepadButtonDown);
+        in.set_function("getPadAxis",     &GetGamepadAxisMovement);
+
+        // Text / misc
+        in.set_function("getChar",        &GetCharPressed);
+        in.set_function("getKeyPressed",  &GetKeyPressed);
+        in.set_function("setExitKey",     &SetExitKey);
+    }
+
     // Initializes the controller
     auto Init(InputState &inputState) -> void
     {

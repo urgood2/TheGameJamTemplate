@@ -11474,7 +11474,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Ac437_IBM_BIOS.ttf"
     ],
     "action_ai": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions"
     ],
     "action_ai_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/ai_actions.json",
@@ -11483,7 +11484,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai_actions.json"
     ],
     "action_eat": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/eat.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/eat.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions\\eat.lua"
     ],
     "action_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/actions",
@@ -11499,25 +11501,32 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/wander.lua"
     ],
     "ai_blackboard_init": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\blackboard_init"
     ],
     "ai_entity_type": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\entity_types"
     ],
     "ai_example_script_table": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/AI_TABLE_EXAMPLE.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/AI_TABLE_EXAMPLE.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_EXAMPLE.md"
     ],
     "ai_goal_selector": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\goal_selectors"
     ],
     "ai_implement_script_to": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/TO_IMPLEMENT_AI.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/TO_IMPLEMENT_AI.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\TO_IMPLEMENT_AI.lua"
     ],
     "ai_init": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/init.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/init.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\init.lua"
     ],
     "ai_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai"
     ],
     "ai_script_worldstate": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/ai_worldstate.json",
@@ -11526,7 +11535,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai_worldstate.json"
     ],
     "ai_updater_worldstate": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/worldstate_updaters.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/worldstate_updaters.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\worldstate_updaters.lua"
     ],
     "air_fast_mono_sound_whoosh": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/WHOOSH_Fast_Air_mono.wav",
@@ -12512,7 +12522,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/customizable_spectrum_beam_overlay_fragment.fs"
     ],
     "behavior_monobehavior_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\monobehavior\\behavior_script.lua"
     ],
     "beige": [
         "BEIGE"
@@ -12527,7 +12538,8 @@
         "BLACK"
     ],
     "blackboard_init_kobold": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/kobold.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/kobold.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\blackboard_init\\kobold.lua"
     ],
     "blue": [
         "BLUE"
@@ -13152,7 +13164,8 @@
         "CHARTREUSE"
     ],
     "cheatsheet_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/cheatsheet.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/cheatsheet.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\cheatsheet.md"
     ],
     "check_default_flair_outline_small": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_small_check_outline.png",
@@ -13198,7 +13211,8 @@
         "CHOCOLATE"
     ],
     "chugget_code_definition_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget_code_definitions.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget_code_definitions.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\chugget_code_definitions.lua"
     ],
     "chugget_script": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\chugget.lua_defs",
@@ -13341,10 +13355,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/globals.lua"
     ],
     "core_main": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/main.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/main.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core\\main.lua"
     ],
     "core_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core"
     ],
     "cornsilk": [
         "CORNSILK"
@@ -15682,7 +15698,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_enter.svg"
     ],
     "entity_kobold_type": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types/kobold.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types/kobold.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\entity_types\\kobold.lua"
     ],
     "escape_keyboard": [
         "keyboard_escape.png"
@@ -16269,7 +16286,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glitch_vertex.vs"
     ],
     "global_init": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init/globals.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init/globals.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\init\\globals.lua"
     ],
     "glow_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glow.fs",
@@ -16282,7 +16300,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glow.fs"
     ],
     "goal_kobold_selector": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors/kobold.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors/kobold.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\goal_selectors\\kobold.lua"
     ],
     "goal_logic_selection": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/logic/goal_selection.lua",
@@ -17181,7 +17200,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MomentumGain.wav"
     ],
     "monobehavior_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\monobehavior"
     ],
     "mouse": [
         "mouse.png"
@@ -17550,13 +17570,17 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/screen_tone_transition_vertex.vs"
     ],
     "script_task": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\task"
     ],
     "script_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial"
+    ],
+    "script_util": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util"
     ],
     "seashell": [
         "SEASHELL"
@@ -17667,7 +17691,8 @@
         "TAN"
     ],
     "task_task": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task/task.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task/task.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\task\\task.lua"
     ],
     "thistle": [
         "THISTLE"
@@ -17677,6 +17702,9 @@
     ],
     "turquoise": [
         "TURQUOISE"
+    ],
+    "util_util": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util\\util.lua"
     ],
     "vertex_web_wind": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\wind_vertex.vs",

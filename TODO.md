@@ -8,11 +8,17 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 
-- [ ] Inter-entity collision https://chatgpt.com/share/684c4f55-cf68-800a-95b4-80e31c75d23c
-- [ ] Changes to goap system to make it easier to use, fully lua capable, easier to understand https://chatgpt.com/share/684c5e60-0d84-800a-a769-d75d64f8503d 
+- [ ] Inter-entity collision https://chatgpt.com/share/684c4f55-cf68-800a-95b4-80e31c75d23c / https://chatgpt.com/share/684e3621-eee8-800a-a451-52f0eb0c82b4
+- [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc.
+ 
+- [ ]  input bindings needed. what about some globals as well? 
+- [ ] test goap test case.
 - [ ] bind_ai_utilities needs binding docs
 - [ ] ai_module needs documentation 
 - [ ] when action returns success, nothing seems to happen (no done eating message)
+- [ ] how to have multiple of the same entity type with different goals, etc? -> https://chatgpt.com/share/684e2349-89a4-800a-9ac5-01ab79de81cc
+- [ ] separate ai loaded data into its own table, not all in "ai"
+- [ ] try producing ui in lua
 
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?

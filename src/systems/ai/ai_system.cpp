@@ -726,6 +726,7 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         // no explicit return → assume SUCCESS
         if (returns == 0) {
             result = Action::Result::SUCCESS;
+            SPDLOG_DEBUG("Action {} completed successfully", goapComponent.plan[goapComponent.current_action]);
         } else {
             // peek at what’s on the stack
             sol::object ret = luaResult.get<sol::object>(1);
@@ -873,7 +874,8 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         });
 
         lua.set_function("create_ai_entity", [](std::string type) -> entt::entity {
-            auto e = globals::registry.create();
+
+            auto e = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 50, 50);
             globals::registry.emplace<GOAPComponent>(e);
             initGOAPComponent(e, type);
             return e;

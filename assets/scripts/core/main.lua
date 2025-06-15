@@ -2,6 +2,7 @@ local globals = require("init.globals")
 require("registry")
 local task = require("task.task")
 require("ai.init") -- Read in ai scripts and populate the ai table 
+require("util.util")
 
 -- Represents game loop main module
 main = {}
@@ -26,7 +27,7 @@ local PlayerLogic = {
     update = function(self, dt)
         -- Simple movement example
         self.x = self.x + self.speed * dt
-        print("[player] update; entity-id =", self.id, "position:", self.x, self.y)
+        -- print("[player] update; entity-id =", self.id, "position:", self.x, self.y)
         -- You still have full registry access through self.owner
         -- (e.g., self.owner:get(self.id, Transform).x = self.x)
         
@@ -60,42 +61,18 @@ local PlayerLogic = {
           
     end,
 
+    on_collision = function(self, other)
+        -- Called when this entity collides with another entity
+        -- other is the other entity's id
+        print("[player] on_collision; entity-id =", self.id, "collided with", other)
+    end,
+
     -- Called just before the entity is destroyed
     destroy = function(self)
         print("[player] destroy; final position:", self.x, self.y)
     end
 }
 
--- Recursively prints any table (with cycle detection)
-local function print_table(tbl, indent, seen)
-    indent = indent or ""                 -- current indentation
-    seen   = seen   or {}                 -- tables we’ve already visited
-  
-    if seen[tbl] then
-      print(indent .. "*<recursion>–")    -- cycle detected
-      return
-    end
-    seen[tbl] = true
-  
-    -- iterate all entries
-    for k, v in pairs(tbl) do
-      local key = type(k) == "string" and ("%q"):format(k) or tostring(k)
-      if type(v) == "table" then
-        print(indent .. "["..key.."] = {")
-        print_table(v, indent.."  ", seen)
-        print(indent .. "}")
-      else
-        -- primitive: just tostring it
-        print(indent .. "["..key.."] = " .. tostring(v))
-      end
-    end
-  end
-  
-  -- convenience wrapper
-  local function dump(t)
-    assert(type(t) == "table", "dump expects a table")
-    print_table(t)
-  end
   
 
 function main.init()
@@ -107,10 +84,12 @@ function main.init()
     registry:add_script(bowser, PlayerLogic) -- Attach the script to the entity
     
     
-    -- transformComp = registry:emplace(bowser, Transform)
+    transformComp = registry:get(bowser, Transform)
     
-    -- transformComp.actualX = 100
-    -- transformComp.actualY = 200
+    transformComp.actualX = 100
+    transformComp.actualY = 200
+    transformComp.actualW = 50
+    transformComp.actualH = 50
     
     -- assert(registry:has(bowser, Transform))
     

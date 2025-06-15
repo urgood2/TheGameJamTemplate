@@ -23,6 +23,7 @@ using namespace snowhouse; // assert
 
 namespace input
 {
+    auto exposeToLua(sol::state &lua) -> void;
 
     // Controller Initialization
     auto Init(InputState &inputState) -> void;

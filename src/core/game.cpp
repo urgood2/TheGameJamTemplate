@@ -32,6 +32,7 @@
 #include "../systems/collision/broad_phase.hpp"
 #include "../systems/collision/Quadtree.h"
 #include "../systems/scripting/scripting_functions.hpp"
+#include "../systems/scripting/scripting_system.hpp"
 #include "../systems/ai/ai_system.hpp"
 #include "rlgl.h"
 
@@ -74,11 +75,7 @@ using std::pair;
 
 #include "raymath.h"
 
-// make layers to draw to
-std::shared_ptr<layer::Layer> background;  // background
-std::shared_ptr<layer::Layer> sprites;     // sprites
-std::shared_ptr<layer::Layer> ui_layer;    // ui
-std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
+
 
 // AsteroidManager *asteroidManager = nullptr;
 
@@ -106,6 +103,12 @@ float transitionShaderPositionVar = 0.f;
 
 namespace game
 {
+
+    // make layers to draw to
+    std::shared_ptr<layer::Layer> background;  // background
+    std::shared_ptr<layer::Layer> sprites;     // sprites
+    std::shared_ptr<layer::Layer> ui_layer;    // ui
+    std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
     
     std::string randomStringText{"HEY HEY!"
     };
@@ -247,11 +250,47 @@ namespace game
         //         (int)e, queryArea.getTopLeft().x, queryArea.getTopLeft().y);
         // }
 
-        // // broad phase collision detection
-        // auto overlaps = quadtree.findAllIntersections();
+        // broad phase collision detection
+        auto overlaps = globals::quadtree.findAllIntersections();
 
-        // for (auto &[a, b] : overlaps) {
-        //     // Handle collision between entity a and entity b
+        for (const auto& [a, b] : overlaps)
+        {
+            // Entity A
+            if (globals::registry.valid(a) && globals::registry.all_of<scripting::ScriptComponent>(a))
+            {
+                auto& scriptA = globals::registry.get<scripting::ScriptComponent>(a);
+                if (scriptA.hooks.on_collision.valid())
+                    scriptA.hooks.on_collision(scriptA.self, b);  // self, other
+            }
+
+            // Entity B
+            if (globals::registry.valid(b) && globals::registry.all_of<scripting::ScriptComponent>(b))
+            {
+                auto& scriptB = globals::registry.get<scripting::ScriptComponent>(b);
+                if (scriptB.hooks.on_collision.valid())
+                    scriptB.hooks.on_collision(scriptB.self, a);  // self, other
+            }
+        }
+
+        // for (auto &pair : overlaps) {
+        //     auto a = pair.first;
+        //     auto b = pair.second;
+
+        //     if (globals::registry.valid(a) && globals::registry.valid(b)) {
+        //         if (globals::registry.all_of<ScriptComponent>(a)) {
+        //             auto &scriptA = globals::registry.get<ScriptComponent>(a);
+        //             if (scriptA.hooks.on_collision.valid()) {
+        //                 scriptA.hooks.on_collision(scriptA.self, b);  // self, other
+        //             }
+        //         }
+
+        //         if (globals::registry.all_of<ScriptComponent>(b)) {
+        //             auto &scriptB = globals::registry.get<ScriptComponent>(b);
+        //             if (scriptB.hooks.on_collision.valid()) {
+        //                 scriptB.hooks.on_collision(scriptB.self, a);  // self, other
+        //             }
+        //         }
+        //     }
         // }
 
     }

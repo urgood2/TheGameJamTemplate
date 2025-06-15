@@ -463,7 +463,7 @@ namespace scripting {
         lua["globals"]["cursor"]                   = &globals::cursor;
         lua["globalShaderUniforms"] = std::ref(globals::globalShaderUniforms);
         
-        rec.record_property("globals", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
+        rec.record_property("", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
 
         // 4) expose your Layer pointers under a sub-table "game"
         lua.create_named_table("game")[

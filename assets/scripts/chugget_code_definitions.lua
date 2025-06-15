@@ -651,6 +651,84 @@ function ScriptComponent:count_tasks(...) end
 
 
 ---
+--- 
+---
+---@class ai
+ai = {
+}
+
+---
+--- Returns the mutable AI-definition table for the given entity.
+---
+---@param e Entity
+---@return table # The Lua AI-definition table (with entity_types, actions, goal_selectors, etc.)
+function ai:get_entity_ai_def(...) end
+
+---
+--- Sets a single world-state flag on the entity’s current state.
+---
+---@param e Entity
+---@param key string
+---@param value boolean
+---@return nil
+function ai:set_worldstate(...) end
+
+---
+--- Clears existing goal and assigns new goal flags for the entity.
+---
+---@param e Entity
+---@param goal table<string,boolean>
+---@return nil
+function ai:set_goal(...) end
+
+---
+--- Patches one world-state flag without resetting other flags.
+---
+---@param e Entity
+---@param key string
+---@param value boolean
+---@return nil
+function ai:patch_worldstate(...) end
+
+---
+--- Patches multiple goal flags without clearing the current goal.
+---
+---@param e Entity
+---@param tbl table<string,boolean>
+---@return nil
+function ai:patch_goal(...) end
+
+---
+--- Returns a reference to the entity’s Blackboard component.
+---
+---@param e Entity
+---@return Blackboard
+function ai:get_blackboard(...) end
+
+---
+--- Creates a new GOAP entity of the given type, applying optional AI overrides.
+---
+---@param type string
+---@param overrides table<string,any>?
+---@return Entity
+function ai:create_ai_entity(...) end
+
+---
+--- Immediately interrupts the entity’s current GOAP action.
+---
+---@param e Entity
+---@return nil
+function ai:force_interrupt(...) end
+
+---
+--- Returns a list of Lua script filenames (without extensions) from the specified directory.
+---
+---@param dir string
+---@return string[]
+function ai:list_lua_files(...) end
+
+
+---
 --- Task scheduler.
 ---
 ---@class scheduler

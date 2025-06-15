@@ -11504,6 +11504,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\blackboard_init"
     ],
+    "ai_content_example_script_table": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_CONTENT_EXAMPLE.lua"
+    ],
     "ai_entity_type": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\entity_types"

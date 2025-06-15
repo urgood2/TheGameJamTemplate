@@ -11505,7 +11505,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\blackboard_init"
     ],
     "ai_content_example_script_table": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_CONTENT_EXAMPLE.lua"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_CONTENT_EXAMPLE.lua",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/AI_TABLE_CONTENT_EXAMPLE.lua"
     ],
     "ai_entity_type": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types",
@@ -13596,7 +13597,8 @@
         "DEEP PINK"
     ],
     "def_ui_ui": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui\\ui_defs.lua"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui\\ui_defs.lua",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ui/ui_defs.lua"
     ],
     "default_delete_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_delete.png",
@@ -15721,7 +15723,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_escape.svg"
     ],
     "example_prepas_shader": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders\\prepass_example.lua"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders\\prepass_example.lua",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/shaders/prepass_example.lua"
     ],
     "exclamation": [
         "exclamation.png"
@@ -16119,7 +16122,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_forward.svg"
     ],
     "fragment_gamejam_shader": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_fragment.fs"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_fragment.fs",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_fragment.fs"
     ],
     "fragment_glitch_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glitch_fragment.fs",
@@ -16273,7 +16277,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\start_main_game.lua"
     ],
     "gamejam_shader_vertex": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_vertex.vs"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_vertex.vs",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_vertex.vs"
     ],
     "gear": [
         "gear.png"
@@ -17586,7 +17591,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/screen_tone_transition_vertex.vs"
     ],
     "script_shader": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/shaders"
     ],
     "script_task": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task",
@@ -17599,10 +17605,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial"
     ],
     "script_ui": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ui"
     ],
     "script_util": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/util"
     ],
     "seashell": [
         "SEASHELL"
@@ -17726,7 +17734,8 @@
         "TURQUOISE"
     ],
     "util_util": [
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util\\util.lua"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util\\util.lua",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/util/util.lua"
     ],
     "vertex_web_wind": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\wind_vertex.vs",

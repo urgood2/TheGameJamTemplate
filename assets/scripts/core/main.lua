@@ -86,7 +86,7 @@ function main.init()
     animation_system.setupAnimatedObjectOnEntity(
         bowser, 
         "idle_animation", -- Default animation ID
-        true, -- generate a new animation from sprite
+        false, -- ? generate a new still animation from sprite
         shader_prepass, -- Optional shader pass config function
         true -- Enable shadow
     )    

@@ -8,6 +8,7 @@
 
 #include "../scripting/scripting_functions.hpp"
 #include "../scripting/scripting_system.hpp"
+#include "../scripting/binding_recorder.hpp"
 
 #include "../event/event_system.hpp"
 
@@ -924,6 +925,7 @@ namespace ai_system
 
     void bind_ai_utilities(sol::state &lua)
     {
+
         // 1) Create (or overwrite) the `ai` table:
         lua.create_named_table("ai"); // equivalent to lua["ai"] = {}
         sol::table ai = lua["ai"];
@@ -981,41 +983,41 @@ namespace ai_system
                         { return globals::registry.get<GOAPComponent>(e).blackboard; });
 
         lua.set_function("create_ai_entity",
-            sol::overload(
-                [&](const std::string &type) {
-                    auto e = transform::CreateOrEmplace(
-                        &globals::registry,
-                        globals::gameWorldContainerEntity,
-                        0, 0, 50, 50);
-                    globals::registry.emplace<GOAPComponent>(e);
-                    initGOAPComponent(e, type, sol::nullopt);
-                    return e;
-                },
-                [&](const std::string &type, sol::table overrides) {
-                    auto e = transform::CreateOrEmplace(
-                        &globals::registry,
-                        globals::gameWorldContainerEntity,
-                        0, 0, 50, 50);
-                    globals::registry.emplace<GOAPComponent>(e);
-                    initGOAPComponent(e, type, overrides);
-                    return e;
-                }
-            ));
+                         sol::overload(
+                             [&](const std::string &type)
+                             {
+                                 auto e = transform::CreateOrEmplace(
+                                     &globals::registry,
+                                     globals::gameWorldContainerEntity,
+                                     0, 0, 50, 50);
+                                 globals::registry.emplace<GOAPComponent>(e);
+                                 initGOAPComponent(e, type, sol::nullopt);
+                                 return e;
+                             },
+                             [&](const std::string &type, sol::table overrides)
+                             {
+                                 auto e = transform::CreateOrEmplace(
+                                     &globals::registry,
+                                     globals::gameWorldContainerEntity,
+                                     0, 0, 50, 50);
+                                 globals::registry.emplace<GOAPComponent>(e);
+                                 initGOAPComponent(e, type, overrides);
+                                 return e;
+                             }));
 
         lua.set_function("create_ai_entity_with_overrides",
-                [&](const std::string &type, sol::table overrides) {
-                    auto e = transform::CreateOrEmplace(
-                        &globals::registry,
-                        globals::gameWorldContainerEntity,
-                        0, 0, 50, 50);
-                    globals::registry.emplace<GOAPComponent>(e);
-                    initGOAPComponent(e, type, overrides);
-                    return e;
-                }
-            );
+                         [&](const std::string &type, sol::table overrides)
+                         {
+                             auto e = transform::CreateOrEmplace(
+                                 &globals::registry,
+                                 globals::gameWorldContainerEntity,
+                                 0, 0, 50, 50);
+                             globals::registry.emplace<GOAPComponent>(e);
+                             initGOAPComponent(e, type, overrides);
+                             return e;
+                         });
 
-        // 
-
+        //
 
         ai.set_function("force_interrupt", [](entt::entity e)
                         { ai_system::on_interrupt(e); });
@@ -1035,6 +1037,58 @@ namespace ai_system
                             }
                             return result; // Sol2 → Lua table
                         });
+
+        auto &rec = BindingRecorder::instance();
+
+        // 1) InputState usertype
+        rec.add_type("ai");
+
+        rec.record_method("ai", {"set_worldstate",
+                                 "---@param e Entity\n"
+                                 "---@param key string\n"
+                                 "---@param value boolean\n"
+                                 "---@return nil",
+                                 "Sets a single world-state flag on the entity’s current state."});
+
+        rec.record_method("ai", {"set_goal",
+                                 "---@param e Entity\n"
+                                 "---@param goal table<string,boolean>\n"
+                                 "---@return nil",
+                                 "Clears existing goal and assigns new goal flags for the entity."});
+
+        rec.record_method("ai", {"patch_worldstate",
+                                 "---@param e Entity\n"
+                                 "---@param key string\n"
+                                 "---@param value boolean\n"
+                                 "---@return nil",
+                                 "Patches one world-state flag without resetting other flags."});
+
+        rec.record_method("ai", {"patch_goal",
+                                 "---@param e Entity\n"
+                                 "---@param tbl table<string,boolean>\n"
+                                 "---@return nil",
+                                 "Patches multiple goal flags without clearing the current goal."});
+
+        rec.record_method("ai", {"get_blackboard",
+                                 "---@param e Entity\n"
+                                 "---@return Blackboard",
+                                 "Returns a reference to the entity’s Blackboard component."});
+
+        rec.record_method("ai", {"create_ai_entity",
+                                 "---@param type string\n"
+                                 "---@param overrides table<string,any>?\n"
+                                 "---@return Entity",
+                                 "Creates a new GOAP entity of the given type, applying optional AI overrides."});
+
+        rec.record_method("ai", {"force_interrupt",
+                                 "---@param e Entity\n"
+                                 "---@return nil",
+                                 "Immediately interrupts the entity’s current GOAP action."});
+
+        rec.record_method("ai", {"list_lua_files",
+                                 "---@param dir string\n"
+                                 "---@return string[]",
+                                 "Returns a list of Lua script filenames (without extensions) from the specified directory."});
     }
 
     // Update the GOAP logic within the game loop

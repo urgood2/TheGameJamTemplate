@@ -159,7 +159,7 @@ void goap_worldstate_description( const actionplanner_t* ap, const worldstate_t*
 
 			// Check if val is null before proceeding
             if (val == NULL) {
-				LOGI( "Value is NULL" )
+				// LOGI( "Value is NULL" )
                 continue;  // Skip this iteration if the atom name is null
             }
 

@@ -10,6 +10,9 @@
 
 - [ ] Inter-entity collision https://chatgpt.com/share/684c4f55-cf68-800a-95b4-80e31c75d23c / https://chatgpt.com/share/684e3621-eee8-800a-a451-52f0eb0c82b4
 - [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc.
+
+- [ ] ai_system debug prints Value is NULL repeatedly, get rid of this
+- [ ] variadic debug() that takes commas instead of concatenated strings.
  
 - [ ]  input bindings needed. what about some globals as well? 
 - [ ] test goap test case.

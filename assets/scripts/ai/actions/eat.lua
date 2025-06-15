@@ -13,8 +13,8 @@ return {
         debug("Entity" .. e .. " is eating.")
     end,
 
-    update = function(self, e, dt) -- update can be coroutine
-        debug("Entity" .. e .. " eat update.")
+    update = function(e, dt) -- update can be coroutine
+        debug("Entity " .. e .. " eat update.")
         wait(1.0)
         return ActionResult.SUCCESS
     end,

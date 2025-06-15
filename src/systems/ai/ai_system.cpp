@@ -717,28 +717,28 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
         
         // coroutine has not yielded, get result value
         
-        // Action::Result result = luaResult.get<Action::Result>();
+        Action::Result result = luaResult.get<Action::Result>();
         
-        // … after checking for yield …
-        int returns = luaResult.return_count();
-        Action::Result result;
+        // // … after checking for yield …
+        // int returns = luaResult.return_count();
+        // Action::Result result;
 
-        // no explicit return → assume SUCCESS
-        if (returns == 0) {
-            result = Action::Result::SUCCESS;
-            SPDLOG_DEBUG("Action {} completed successfully", goapComponent.plan[goapComponent.current_action]);
-        } else {
-            // peek at what’s on the stack
-            sol::object ret = luaResult.get<sol::object>(1);
-            if (ret.get_type() == sol::type::number) {
-                result = ret.as<Action::Result>();
-            } else {
-                SPDLOG_ERROR(
-                "Action update returned {} values but first isn't a number; treating as FAILURE",
-                returns);
-                result = Action::Result::FAILURE;
-            }
-        }
+        // // no explicit return → assume SUCCESS
+        // if (returns == 0) {
+        //     result = Action::Result::SUCCESS;
+        //     SPDLOG_DEBUG("Action {} completed successfully", goapComponent.plan[goapComponent.current_action]);
+        // } else {
+        //     // peek at what’s on the stack
+        //     sol::object ret = luaResult.get<sol::object>(1);
+        //     if (ret.get_type() == sol::type::number) {
+        //         result = ret.as<Action::Result>();
+        //     } else {
+        //         SPDLOG_ERROR(
+        //         "Action update returned {} values but first isn't a number; treating as FAILURE",
+        //         returns);
+        //         result = Action::Result::FAILURE;
+        //     }
+        // }
 
         // move on to next action if current action is successful
         if (result == Action::Result::SUCCESS) {
@@ -769,6 +769,7 @@ void getLuaFilesFromDirectory(const std::string &actionsDir, std::vector<std::st
             }
             else {
                 SPDLOG_DEBUG("Action queue is now empty");
+                return std::nullopt; // this will force caller to replan
             }
         } 
         // upon failure, retry X number of times by calling start() again

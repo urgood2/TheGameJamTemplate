@@ -64,7 +64,7 @@ local PlayerLogic = {
     on_collision = function(self, other)
         -- Called when this entity collides with another entity
         -- other is the other entity's id
-        print("[player] on_collision; entity-id =", self.id, "collided with", other)
+        -- print("[player] on_collision; entity-id =", self.id, "collided with", other)
     end,
 
     -- Called just before the entity is destroyed

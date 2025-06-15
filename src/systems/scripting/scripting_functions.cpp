@@ -438,6 +438,7 @@ namespace scripting {
         // 3) entt::entity
         lua["globals"]["gameWorldContainerEntity"] = &globals::gameWorldContainerEntity;
         lua["globals"]["cursor"]                   = &globals::cursor;
+        lua["globals"]["globalShaderUniforms"] = &globals::globalShaderUniforms;
 
         // 4) expose your Layer pointers under a sub-table "game"
         lua.create_named_table("game")[

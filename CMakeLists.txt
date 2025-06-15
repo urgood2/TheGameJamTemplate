@@ -379,10 +379,16 @@ endif()
 # Target to configure CMake with Emscripten
 add_custom_target(configure_web_build
     DEPENDS activate_emsdk copy_assets
-    COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3 -s -sFULL_ES3 -s MIN_WEBGL_VERSION=2 -sNO_DISABLE_EXCEPTION_CATCHING=1" -DCMAKE_EXECUTABLE_SUFFIX=".html"
+    COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. 
+        -DPLATFORM=Web 
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo 
+        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3 -sMIN_WEBGL_VERSION=2 -sNO_DISABLE_EXCEPTION_CATCHING=1 -sASSERTIONS=1 -sDEMANGLE_SUPPORT=1 -gsource-map"
+        -DCMAKE_EXECUTABLE_SUFFIX=\".html\"
     WORKING_DIRECTORY ${BUILD_DIR}
-    COMMENT "Configuring CMake with Emscripten for web build"
+    COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"
 )
+
+# COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. -DPLATFORM=Web -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-s USE_GLFW=3 -s -sFULL_ES3 -s MIN_WEBGL_VERSION=2 -sNO_DISABLE_EXCEPTION_CATCHING=1" -DCMAKE_EXECUTABLE_SUFFIX=".html"
 
 # Target to compile the web build
 add_custom_target(compile_web_build

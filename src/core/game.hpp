@@ -11,6 +11,20 @@
 
 
 namespace game {
+    
+    extern std::vector<std::string> fullscreenShaders;
+    
+    inline void add_fullscreen_shader(const std::string &name) {
+        fullscreenShaders.push_back(name);
+    }
+    
+    inline void remove_fullscreen_shader(const std::string &name) {
+        fullscreenShaders.erase(
+            std::remove(fullscreenShaders.begin(),
+                        fullscreenShaders.end(),
+                        name),
+            fullscreenShaders.end());
+    }
 
     // make layers to draw to
     extern std::shared_ptr<layer::Layer> background;  // background

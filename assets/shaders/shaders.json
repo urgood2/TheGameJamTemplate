@@ -169,5 +169,14 @@
             "vertex": "web/voucher_sheen_vertex.vs",
             "fragment": "web/voucher_sheen_fragment.fs"
         }
+    },
+    "gamejam": {
+        "vertex": "gamejam_vertex.vs",
+        "fragment": "gamejam_fragment.fs",
+
+        "web": {
+            "vertex": "web/gamejam_vertex.vs",
+            "fragment": "web/gamejam_fragment.fs"
+        }
     }
 }

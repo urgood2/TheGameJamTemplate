@@ -16,6 +16,15 @@ local function flashPrepass()
     )
 end
 
+local function customShaderTestPass()
+    -- This is a custom shader pass that can be used for testing purposes.
+    shaders.TryApplyUniforms(
+      shaders.getShader("gamejam"),
+      globals.globalShaderUniforms,
+      "gamejam"
+    )
+end
+
 local function shaderPassConfigFunction(e)
     -- 1) emplace the pipeline component
     
@@ -23,13 +32,13 @@ local function shaderPassConfigFunction(e)
 
     -- 2) create & configure first pass
     
-    local pass1 = shader_pipeline.createShaderPass("voucher_sheen", {}) -- uniforms are empty for now
-    pass1.customPrePassFunction = voucherSheenPrepass
-    table.insert(pipeline.passes, pass1)
+    -- local pass1 = shader_pipeline.createShaderPass("voucher_sheen", {}) -- uniforms are empty for now
+    -- pass1.customPrePassFunction = voucherSheenPrepass
+    -- table.insert(pipeline.passes, pass1)
 
     -- 3) create & configure second pass
-    local pass2 = shader_pipeline.createShaderPass("flash", {})
-    pass2.customPrePassFunction = flashPrepass
+    local pass2 = shader_pipeline.createShaderPass("gamejam", {})
+    pass2.customPrePassFunction = customShaderTestPass
     table.insert(pipeline.passes, pass2)
 end
 

@@ -86,10 +86,23 @@ function main.init()
     animation_system.setupAnimatedObjectOnEntity(
         bowser, 
         "idle_animation", -- Default animation ID
-        false, -- ? generate a new still animation from sprite
-        shader_prepass, -- Optional shader pass config function
+        false, -- ? generate a new still animation from sprite, don't set to true, causes bug
+        nil,-- shader_prepass, -- Optional shader pass config function
         true -- Enable shadow
     )    
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        bowser, 
+        120, -- Width
+        120 -- Height
+    )
+    
+    -- add optional fullscreen shader which will be applied to the whole screen, can be removed later
+    add_fullscreen_shader("flash")
+    
+    assert(globalShaderUniforms, "globalShaderUniforms not registered!")
+    
+    globalShaderUniforms:set("flash", "randomUniform", 0.5) -- Set a nonexistant uniform for the flash shader)
+
     
     transformComp = registry:get(bowser, Transform)
     
@@ -99,8 +112,8 @@ function main.init()
     transformComp.actualH = 100
 
     timer.every(1.0, function()
-        transformComp.actualX = transformComp.actualX + 5
-        transformComp.actualY = transformComp.actualY - 5
+        transformComp.actualX = transformComp.actualX + 10
+        transformComp.actualY = transformComp.actualY - 10
         print("Bowser position = " .. transformComp.actualX .. ', ' .. transformComp.actualY)
         print("Bowser size = " .. transformComp.actualW .. ', ' .. transformComp.actualH)
     end, 0, true, nil, "bowser_timer")

@@ -104,6 +104,8 @@ float transitionShaderPositionVar = 0.f;
 
 namespace game
 {
+    
+    std::vector<std::string> fullscreenShaders;
 
     // make layers to draw to
     std::shared_ptr<layer::Layer> background;  // background
@@ -1072,6 +1074,7 @@ namespace game
             
             
             
+            
             layer::Push(&globals::camera2D);
 
             
@@ -1108,6 +1111,23 @@ namespace game
             {
                 ZoneScopedN("Draw canvas to render target (screen)");
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
+            }
+            
+            {
+                ZoneScopedN("injected lua shaders (fullscreen)");
+                
+                for (auto &shaderName : fullscreenShaders) {
+                    Shader sh = shaders::getShader(shaderName);
+                    // this will look up the uniform set you populated from Lua
+                    shaders::TryApplyUniforms(sh, globals::globalShaderUniforms, shaderName);
+
+                    // draw the full-screen canvas through that shader
+                    layer::DrawCanvasToCurrentRenderTargetWithTransform(
+                        finalOutput, "main", 
+                        0, 0, 0, 1, 1, WHITE,
+                        sh
+                    );
+                }
             }
             
             {

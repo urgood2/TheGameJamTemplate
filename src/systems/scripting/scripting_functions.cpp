@@ -94,38 +94,6 @@ namespace scripting {
         coroutine_scheduler::open_scheduler(stateToInit);
         stateToInit["scheduler"] = std::ref(ai_system::masterScheduler);
         
-        // read all the script files and load them into the lua state
-        for (auto &filename : scriptFilesToRead) {
-            stateToInit.script_file(filename);
-            
-            auto code_valid_result = stateToInit.script_file(filename, [](lua_State*, sol::protected_function_result pfr) {
-                // pfr will contain things that went wrong, for either loading or executing the script
-                // Can throw your own custom error
-                // You can also just return it, and let the call-site handle the error if necessary.
-                return pfr;
-            });
-            SPDLOG_DEBUG("Loading file {}...", filename);
-            if (code_valid_result.valid() == false) {
-                SPDLOG_ERROR("Lua loading failed. Check script file for errors.");
-                SPDLOG_ERROR("Error: {}", code_valid_result.get<sol::error>().what());
-            } else
-            {
-                SPDLOG_DEBUG("Lua script file loading success.");
-            }
-        }
-        
-        stateToInit.script("require(\"ai.init\")", [](lua_State*, sol::protected_function_result pfr) {
-            // pfr will contain things that went wrong, for either loading or executing the script
-            // Can throw your own custom error
-            // You can also just return it, and let the call-site handle the error if necessary.
-            return pfr;
-        });
-        stateToInit.script("require(\"util.util\")", [](lua_State*, sol::protected_function_result pfr) {
-            // pfr will contain things that went wrong, for either loading or executing the script
-            // Can throw your own custom error
-            // You can also just return it, and let the call-site handle the error if necessary.
-            return pfr;
-        });
 
         // 1) Module‐level banner
         rec.set_module_name("chugget.engine");
@@ -402,7 +370,27 @@ namespace scripting {
         rec.record_free_function({}, {"pauseGame", "---@return nil", "Pauses the game.", true, false});
         rec.record_free_function({}, {"unpauseGame", "---@return nil", "Unpauses the game.", true, false});
         
+        // ------------------------------------------------------
+        // game.cpp variables and functions
+        // ------------------------------------------------------
+        // wherever you bind your scripting API:
+         
+        
+        stateToInit.set_function("add_fullscreen_shader", game::add_fullscreen_shader);
+        stateToInit.set_function("remove_fullscreen_shader", game::remove_fullscreen_shader);
+        
+        rec.record_free_function({""}, {"add_fullscreen_shader",
+            "---@param shaderName string\n",
+            "Adds a fullscreen shader to the game.", true, false});
+        rec.record_free_function({""}, {"remove_fullscreen_shader",
+            "---@param shaderName string\n",
+            "Removes a fullscreen shader from the game.", true, false});
 
+        // Also expose your globalShaderUniforms so Lua can call
+        //   globalShaderUniforms.set(shaderName, uniformName, value)
+
+        
+        
         // ------------------------------------------------------
         // input functions
         // ------------------------------------------------------
@@ -420,11 +408,46 @@ namespace scripting {
         // sol::table ai_module = stateToInit.require("ai.init");
         
         
+        // read all the script files and load them into the lua state
+        for (auto &filename : scriptFilesToRead) {
+            stateToInit.script_file(filename);
+            
+            auto code_valid_result = stateToInit.script_file(filename, [](lua_State*, sol::protected_function_result pfr) {
+                // pfr will contain things that went wrong, for either loading or executing the script
+                // Can throw your own custom error
+                // You can also just return it, and let the call-site handle the error if necessary.
+                return pfr;
+            });
+            SPDLOG_DEBUG("Loading file {}...", filename);
+            if (code_valid_result.valid() == false) {
+                SPDLOG_ERROR("Lua loading failed. Check script file for errors.");
+                SPDLOG_ERROR("Error: {}", code_valid_result.get<sol::error>().what());
+            } else
+            {
+                SPDLOG_DEBUG("Lua script file loading success.");
+            }
+        }
+        
+        stateToInit.script("require(\"ai.init\")", [](lua_State*, sol::protected_function_result pfr) {
+            // pfr will contain things that went wrong, for either loading or executing the script
+            // Can throw your own custom error
+            // You can also just return it, and let the call-site handle the error if necessary.
+            return pfr;
+        });
+        stateToInit.script("require(\"util.util\")", [](lua_State*, sol::protected_function_result pfr) {
+            // pfr will contain things that went wrong, for either loading or executing the script
+            // Can throw your own custom error
+            // You can also just return it, and let the call-site handle the error if necessary.
+            return pfr;
+        });
+        
+        
         // 5) Finally dump out your definitions:
         rec.dump_lua_defs(util::getRawAssetPathNoUUID("scripts/chugget_code_definitions.lua")); 
     }
 
     auto exposeGlobalsToLua(sol::state &lua) -> void{
+        auto &rec = BindingRecorder::instance();
         // 1) create the root table
         lua.create_named_table("globals");
 
@@ -438,7 +461,9 @@ namespace scripting {
         // 3) entt::entity
         lua["globals"]["gameWorldContainerEntity"] = &globals::gameWorldContainerEntity;
         lua["globals"]["cursor"]                   = &globals::cursor;
-        lua["globals"]["globalShaderUniforms"] = &globals::globalShaderUniforms;
+        lua["globalShaderUniforms"] = std::ref(globals::globalShaderUniforms);
+        
+        rec.record_property("globals", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});
 
         // 4) expose your Layer pointers under a sub-table "game"
         lua.create_named_table("game")[

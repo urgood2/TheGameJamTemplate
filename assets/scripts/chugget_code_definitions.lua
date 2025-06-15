@@ -3783,6 +3783,20 @@ ui.box = {
 }
 
 ---
+--- Adds a fullscreen shader to the game.
+---
+---@param shaderName string
+
+function .add_fullscreen_shader(...) end
+
+---
+--- Removes a fullscreen shader from the game.
+---
+---@param shaderName string
+
+function .remove_fullscreen_shader(...) end
+
+---
 --- Adds a pre-built event to the queue.
 ---
 ---@param event EventQueueSystem.Event

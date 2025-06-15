@@ -252,26 +252,26 @@ namespace game
         // }
 
         // broad phase collision detection
-        auto overlaps = globals::quadtree.findAllIntersections();
+        // auto overlaps = globals::quadtree.findAllIntersections();
 
-        for (const auto& [a, b] : overlaps)
-        {
-            // Entity A
-            if (globals::registry.valid(a) && globals::registry.all_of<scripting::ScriptComponent>(a))
-            {
-                auto& scriptA = globals::registry.get<scripting::ScriptComponent>(a);
-                if (scriptA.hooks.on_collision.valid())
-                    scriptA.hooks.on_collision(scriptA.self, b);  // self, other
-            }
+        // for (const auto& [a, b] : overlaps)
+        // {
+        //     // Entity A
+        //     if (globals::registry.valid(a) && globals::registry.all_of<scripting::ScriptComponent>(a))
+        //     {
+        //         auto& scriptA = globals::registry.get<scripting::ScriptComponent>(a);
+        //         if (scriptA.hooks.on_collision.valid())
+        //             scriptA.hooks.on_collision(scriptA.self, b);  // self, other
+        //     }
 
-            // Entity B
-            if (globals::registry.valid(b) && globals::registry.all_of<scripting::ScriptComponent>(b))
-            {
-                auto& scriptB = globals::registry.get<scripting::ScriptComponent>(b);
-                if (scriptB.hooks.on_collision.valid())
-                    scriptB.hooks.on_collision(scriptB.self, a);  // self, other
-            }
-        }
+        //     // Entity B
+        //     if (globals::registry.valid(b) && globals::registry.all_of<scripting::ScriptComponent>(b))
+        //     {
+        //         auto& scriptB = globals::registry.get<scripting::ScriptComponent>(b);
+        //         if (scriptB.hooks.on_collision.valid())
+        //             scriptB.hooks.on_collision(scriptB.self, a);  // self, other
+        //     }
+        // }
 
         // for (auto &pair : overlaps) {
         //     auto a = pair.first;
@@ -445,11 +445,11 @@ namespace game
             
             shaderPipeline.passes.push_back(pass);
             
-            // auto pass2 = shader_pipeline::createShaderPass("flash", {});
-            // pass2.customPrePassFunction = []() {
-            //     shaders::TryApplyUniforms(shaders::getShader("flash"), globals::globalShaderUniforms, "flash");
-            // };
-            // shaderPipeline.passes.push_back(pass2);
+            auto pass2 = shader_pipeline::createShaderPass("flash", {});
+            pass2.customPrePassFunction = []() {
+                shaders::TryApplyUniforms(shaders::getShader("flash"), globals::globalShaderUniforms, "flash");
+            };
+            shaderPipeline.passes.push_back(pass2);
         };
 
         // create entt::entity, give animation, which will update automatically thanks to animation system, which is updated in the main loop

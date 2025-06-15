@@ -224,6 +224,22 @@ namespace shaders
             "---@return nil",
             "Displays the ImGui-based shader editor window for real-time debugging and uniform tweaking."
         });
+
+        // TryApplyUniforms(
+        //     shader: Shader,
+        //     component: ShaderUniformComponent,
+        //     shaderName: string
+        // ) -> void
+        rec.bind_function(lua, {"shaders"}, "TryApplyUniforms",
+            &shaders::TryApplyUniforms,
+            R"lua(
+        ---@param shader Shader                    # The target Shader handle
+        ---@param component ShaderUniformComponent # Holds named uniform‐sets
+        ---@param shaderName string                 # Key of the uniform set to apply
+        ---@return nil
+        )lua",
+            "If the component has a uniform set registered under shaderName, applies those uniforms to shader"
+        );
         
     }
 
@@ -303,13 +319,13 @@ namespace shaders
             {
                 auto webPaths = shaderPathsJSON["web"];
                 if (webPaths.contains("vertex") && webPaths["vertex"].is_string())
-                {
-                    vertexPath = loading::getAssetPath("shaders/" + webPaths["vertex"].get<std::string>());
+                { 
+                    vertexPath =  util::getAssetPathUUIDVersion("shaders/" + webPaths["vertex"].get<std::string>());
                     SPDLOG_DEBUG("Web Vertex path: {}", vertexPath);
                 }
                 if (webPaths.contains("fragment") && webPaths["fragment"].is_string())
                 {
-                    fragmentPath = loading::getAssetPath("shaders/" + webPaths["fragment"].get<std::string>());
+                    fragmentPath = util::getAssetPathUUIDVersion("shaders/" + webPaths["fragment"].get<std::string>());
                     SPDLOG_DEBUG("Web Fragment path: {}", fragmentPath);
                 }
             }

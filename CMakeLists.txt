@@ -39,7 +39,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Set project details
 set(ITCH_USER "chugget")
-set(ITCH_PAGE "testing-jame-gam-christmas-2024")
+set(ITCH_PAGE "jame-gam-50")
 set(PROJECT_VERSION "0.1")
 
 include(FetchContent)
@@ -350,30 +350,26 @@ add_custom_target(activate_emsdk
     COMMENT "Activating latest emsdk"
 )
 
+add_custom_target(copy_assets ALL
+    COMMENT "Copying asset files to build directory"
+)
+
 if(EMSCRIPTEN)
-    # Target to copy assets to build directory excluding specific folder
-    add_custom_target(copy_assets ALL
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_DIR}/assets
-        COMMENT "Copying assets to build directory"
-    )
-
-    # Excluded directory
+    # Only add copy logic when EMSCRIPTEN is true
     set(EXCLUDED_DIR ${CMAKE_SOURCE_DIR}/assets/graphics/pre-packing-files_globbed)
-
-    # Gather all files in assets excluding the excluded directory
-    file(GLOB_RECURSE ASSET_FILES
-        RELATIVE ${CMAKE_SOURCE_DIR}/assets
-        ${CMAKE_SOURCE_DIR}/assets/*
-    )
+    file(GLOB_RECURSE ASSET_FILES RELATIVE ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets/*)
 
     foreach(ASSET_FILE ${ASSET_FILES})
         string(FIND "${ASSET_FILE}" "graphics/pre-packing-files_globbed" FOUND)
         if(FOUND EQUAL -1)
+            # Create the destination directory first
+            get_filename_component(DEST_DIR "${BUILD_DIR}/assets/${ASSET_FILE}" DIRECTORY)
             add_custom_command(
                 TARGET copy_assets POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}
-                ${BUILD_DIR}/assets/${ASSET_FILE}
+                        "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
+                        "${BUILD_DIR}/assets/${ASSET_FILE}"
             )
         endif()
     endforeach()
@@ -517,16 +513,20 @@ add_definitions( -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_STD_OPTIONAL) # Enable std::optional support in sol2 to prevent errors
 
-# Setting ASSETS_PATH
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DDEBUG")
-    # use -O3 for better performance 
-
-    # Set the asset path macro to the absolute path on the dev machine
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
+# at the top of CMakeLists.txt
+if(${PLATFORM} STREQUAL "Web")
+    message(STATUS "Detected Emscripten; forcing ASSETS_PATH=\"/assets/\"")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
+        ASSETS_PATH=\"/assets/\")
 else()
-    # Set the asset path macro in release mode to a relative path that assumes the assets folder is in the same directory as the game executable
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="./assets/")
+    # your existing Debug / Release logic
+    if(CMAKE_BUILD_TYPE MATCHES "Debug")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC
+            ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
+    else()
+        target_compile_definitions(${PROJECT_NAME} PUBLIC
+            ASSETS_PATH=\"/assets/\")
+    endif()
 endif()
 
 # Set common compiler flags

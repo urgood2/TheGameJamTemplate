@@ -19,6 +19,13 @@ namespace animation_system {
     
     // convenience function to create a still animation object from a sprite UUID
     auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg = std::nullopt, std::optional<Color> bg = std::nullopt) -> AnimationObject;
+    auto setupAnimatedObjectOnEntity(
+        entt::entity                            e,
+        std::string                             defaultAnimationIDorSpriteUUID,
+        bool                                    generateNewAnimFromSprite,
+        std::function<void(entt::entity)>       shaderPassConfig,
+        bool                                    shadowEnabled
+    ) -> void;
     
     extern auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth, float targetHeight) -> void;
     extern void resizeAnimationObjectsInEntityToFitAndCenterUI(entt::entity e, float targetWidth, float targetHeight, bool centerLaterally = true, bool centerVertically = true);

@@ -3972,6 +3972,19 @@ function animation_system.getNinepatchUIBorderInfo(...) end
 function animation_system.createAnimatedObjectWithTransform(...) end
 
 ---
+--- Configures an existing entity with Transform, AnimationQueueComponent, and optional shader‐pass + shadow settings
+---
+
+        ---@param e entt.entity                        # The existing entity to configure
+        ---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID
+        ---@param generateNewAnimFromSprite boolean?    # Create a new anim from sprite? Default false
+        ---@param shaderPassConfigFunc fun(entt.entity)? # Optional shader setup callback
+        ---@param shadowEnabled boolean?                # Enable shadow? Default true
+        ---@return nil
+        
+function animation_system.setupAnimatedObjectOnEntity(...) end
+
+---
 --- Creates a still animation from a sprite UUID
 ---
 ---@param spriteUUID string # Sprite UUID to use
@@ -5092,6 +5105,17 @@ function shaders.updateShaders(...) end
 ---
 ---@return nil
 function shaders.ShowShaderEditorUI(...) end
+
+---
+--- If the component has a uniform set registered under shaderName, applies those uniforms to shader
+---
+
+        ---@param shader Shader                    # The target Shader handle
+        ---@param component ShaderUniformComponent # Holds named uniform‐sets
+        ---@param shaderName string                 # Key of the uniform set to apply
+        ---@return nil
+        
+function shaders.TryApplyUniforms(...) end
 
 ---
 --- Cancels and destroys an active timer.

@@ -1,12 +1,14 @@
 Building for Web
 
-If you get errors about sol2, use this; https://github.com/ThePhD/sol2/commit/d805d027e0a0a7222e936926139f06e23828ce9f#diff-6ed9c3214abb954282e4aa199723b4fbbb89c19ac8cc296534b817fae46e818dR2195
+- If you get errors about sol2, use this; https://github.com/ThePhD/sol2/commit/d805d027e0a0a7222e936926139f06e23828ce9f#diff-6ed9c3214abb954282e4aa199723b4fbbb89c19ac8cc296534b817fae46e818dR2195
 
 ```cpp
             *this = nullopt;
  			new (static_cast<void*>(this)) optional(std::in_place, std::forward<Args>(args)...);
  			return **this;
 ```
+
+- Also make sure that build-emc directory exists.
 
 Desktop builds are great for testing locally but they're not the best when it comes to distributing your game. Few people will want to download a random exe files from a stranger and willingly run it on their PCs. The best way to distribute is as a web build that can be played directly from within your browser.
 

@@ -3,6 +3,7 @@ require("registry")
 local task = require("task.task")
 require("ai.init") -- Read in ai scripts and populate the ai table 
 require("util.util")
+local shader_prepass = require("shaders.prepass_example")
 
 -- Represents game loop main module
 main = {}
@@ -73,31 +74,22 @@ local PlayerLogic = {
     end
 }
 
-  
 
 function main.init()
     -- -- entity creation example
     bowser = create_ai_entity("kobold") -- Create a new entity of type kobold
 
-    bowser2 = create_ai_entity("kobold", { 
-        entity_types = {
-            kobold = {
-                initial = {
-                    has_food    = true,
-                    enemyvisible = true,
-                    hungry      = false,
-                },
-                goal = {
-                    enemyvisible = false,
-                },
-            },
-        }
-    }) -- Create a new entity of type goblin, with specific ai parameter overrides (refer to [example](assets\scripts\AI_TABLE_EXAMPLE.lua)
-    -- bowser = registry:create() -- Create a new entity
-    -- -- registry:emplace(bowser, Transform, {})-- Pass an empty table for defualt construction
+
     
     registry:add_script(bowser, PlayerLogic) -- Attach the script to the entity
-    
+
+    animation_system.setupAnimatedObjectOnEntity(
+        bowser, 
+        "idle_animation", -- Default animation ID
+        true, -- generate a new animation from sprite
+        shader_prepass, -- Optional shader pass config function
+        true -- Enable shadow
+    )    
     
     transformComp = registry:get(bowser, Transform)
     

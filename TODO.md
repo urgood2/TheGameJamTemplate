@@ -8,9 +8,10 @@
 ## Kinda high priority
 - [ ] use backgrounds & images for the tooltip text
 
-- [ ] Inter-entity collision https://chatgpt.com/share/684c4f55-cf68-800a-95b4-80e31c75d23c / https://chatgpt.com/share/684e3621-eee8-800a-a451-52f0eb0c82b4
-- [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc.
 
+- [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc. I don't actually know if I need it right now, and I don't have entity-to-entity collision-just broad box based collision. If that's accurate enough, so be it. otherwise it's going to require checking whether something is collideable first, then checking if the two collide.
+
+- [ ] get [ui defs file](assets/scripts/ui/ui_defs.lua) going
 - [ ] test goap test case.
 - [ ] try producing ui in lua
 

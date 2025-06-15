@@ -60,6 +60,26 @@ namespace animation_system {
             "Creates an animated object with a transform"
         );
 
+        // setupAnimatedObjectOnEntity(
+        //    e: entt.entity,
+        //    defaultAnimationIDOrSpriteUUID: string,
+        //    generateNewAnimFromSprite?: boolean,
+        //    shaderPassConfigFunc?: fun(entt_entity: entt.entity),
+        //    shadowEnabled?: boolean
+        // ) -> void
+        rec.bind_function(lua, {"animation_system"}, "setupAnimatedObjectOnEntity",
+            &animation_system::setupAnimatedObjectOnEntity,
+            R"lua(
+        ---@param e entt.entity                        # The existing entity to configure
+        ---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID
+        ---@param generateNewAnimFromSprite boolean?    # Create a new anim from sprite? Default false
+        ---@param shaderPassConfigFunc fun(entt.entity)? # Optional shader setup callback
+        ---@param shadowEnabled boolean?                # Enable shadow? Default true
+        ---@return nil
+        )lua",
+            "Configures an existing entity with Transform, AnimationQueueComponent, and optional shader‐pass + shadow settings"
+        );
+
         // createStillAnimationFromSpriteUUID(spriteUUID: string, fg?: Color, bg?: Color) -> AnimationObject
         rec.bind_function(lua, {"animation_system"}, "createStillAnimationFromSpriteUUID",
             &animation_system::createStillAnimationFromSpriteUUID,
@@ -190,6 +210,53 @@ namespace animation_system {
             shaderPassConfig(e); // pass the entity to the shader pass config function
         
         return e;
+    }
+
+    auto setupAnimatedObjectOnEntity(
+        entt::entity                            e,
+        std::string                             defaultAnimationIDorSpriteUUID,
+        bool                                    generateNewAnimFromSprite,
+        std::function<void(entt::entity)>       shaderPassConfig,
+        bool                                    shadowEnabled
+    ) -> void
+    {
+        // --- ASSUME: `e` already has a transform::Transform attached ---
+        auto &registry  = globals::registry;
+        auto &transform = registry.get<transform::Transform>(e);
+
+        // 1) attach animation queue
+        auto &animQueue = registry.emplace<AnimationQueueComponent>(e);
+
+        if (generateNewAnimFromSprite) {
+            animQueue.defaultAnimation =
+                createStillAnimationFromSpriteUUID(
+                    defaultAnimationIDorSpriteUUID,
+                    std::nullopt,
+                    std::nullopt
+                );
+        }
+        else {
+            animQueue.defaultAnimation =
+                init::getAnimationObject(defaultAnimationIDorSpriteUUID);
+        }
+
+        // 2) grab the GameObject (should already exist via your Transform→GameObject mapping)
+        auto &gameObject = registry.get<transform::GameObject>(e);
+
+        // 3) optionally disable shadow
+        if (!shadowEnabled) {
+            gameObject.shadowDisplacement.reset();
+        }
+
+        // 4) size the transform to match the first frame
+        const auto &firstFrame = animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame;
+        transform.setActualW(firstFrame.width);
+        transform.setActualH(firstFrame.height);
+
+        // 5) run any custom shader‐pass config
+        if (shaderPassConfig) {
+            shaderPassConfig(e);
+        }
     }
     
     auto resizeAnimationObjectsInEntityToFit(entt::entity e, float targetWidth, float targetHeight) -> void {

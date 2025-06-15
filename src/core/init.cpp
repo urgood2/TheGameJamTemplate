@@ -19,8 +19,12 @@ namespace init {
     
     void scanAssetsFolderAndAddAllPaths()
     {
+    #ifdef __EMSCRIPTEN__
+        auto folderPath = "assets";
+    #else
         // read in all items & folders from assets folder for uuid checking & generation
         auto folderPath = util::getRawAssetPathNoUUID("");
+    #endif
 
         // This vector will store the paths of all files/folders encountered
         std::vector<std::string> subpaths;
@@ -490,7 +494,9 @@ namespace init {
         spdlog::set_level(spdlog::level::trace);
         
         // load root json and other data init from json
+
         scanAssetsFolderAndAddAllPaths();
+
         loadJSONData();
         loadColorsFromJSON();
         loadInSpriteFramesFromJSON();       

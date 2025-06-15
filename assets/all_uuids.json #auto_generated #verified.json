@@ -13595,6 +13595,9 @@
     "deep_pink": [
         "DEEP PINK"
     ],
+    "def_ui_ui": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui\\ui_defs.lua"
+    ],
     "default_delete_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_delete.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_delete.png"
@@ -15717,6 +15720,9 @@
     "escape_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_escape.svg"
     ],
+    "example_prepas_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders\\prepass_example.lua"
+    ],
     "exclamation": [
         "exclamation.png"
     ],
@@ -16112,6 +16118,9 @@
     "forward_keyboard_slash_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_forward.svg"
     ],
+    "fragment_gamejam_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_fragment.fs"
+    ],
     "fragment_glitch_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glitch_fragment.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\glitch_fragment.fs",
@@ -16262,6 +16271,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\start_main_game.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_game.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\start_main_game.lua"
+    ],
+    "gamejam_shader_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_vertex.vs"
     ],
     "gear": [
         "gear.png"
@@ -17573,6 +17585,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\screen_tone_transition_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/screen_tone_transition_vertex.vs"
     ],
+    "script_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders"
+    ],
     "script_task": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\task"
@@ -17582,6 +17597,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial"
+    ],
+    "script_ui": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui"
     ],
     "script_util": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util"

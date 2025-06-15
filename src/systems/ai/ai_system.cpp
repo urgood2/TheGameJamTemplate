@@ -930,6 +930,16 @@ namespace ai_system
         lua.create_named_table("ai"); // equivalent to lua["ai"] = {}
         sol::table ai = lua["ai"];
 
+        // 1) Expose a getter that returns the entity’s AI-definition table:
+        ai.set_function(
+        "get_entity_ai_def",
+        [](entt::entity e) -> sol::table {
+            auto &cmp = globals::registry.get<GOAPComponent>(e);
+            return cmp.def;
+        }
+        );
+
+
         // 2) Move each binding into ai:
         ai.set_function("set_worldstate", [](entt::entity e, std::string key, bool value)
                         {
@@ -1042,6 +1052,14 @@ namespace ai_system
 
         // 1) InputState usertype
         rec.add_type("ai");
+
+        // 2) Record it in your BindingRecorder:
+        rec.record_method("ai", {
+        "get_entity_ai_def",
+        "---@param e Entity\n"
+        "---@return table # The Lua AI-definition table (with entity_types, actions, goal_selectors, etc.)",
+        "Returns the mutable AI-definition table for the given entity."
+        });
 
         rec.record_method("ai", {"set_worldstate",
                                  "---@param e Entity\n"

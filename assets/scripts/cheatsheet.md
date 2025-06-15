@@ -238,6 +238,31 @@ end, 0, true, nil, "tick_timer")
 
 ---
 
+---
+
+## 8. Dynamic Goal Selector Overrides
+
+You can swap or tweak an entity’s goal selector at runtime by grabbing its per-instance AI definition table:
+
+```lua
+local ai_def = ai.get_entity_ai_def(myEntity)
+
+-- Swap in a brand-new selector for just this instance:
+ai_def.goal_selectors[ ai_def.type ] = function(e)
+  -- your custom logic:
+  ai.set_goal(e, { custom_flag = true })
+end
+
+-- OR tweak the existing selector:
+local old_sel = ai_def.goal_selectors[ ai_def.type ]
+ai_def.goal_selectors[ ai_def.type ] = function(e)
+  -- run original selector first:
+  old_sel(e)
+  -- then apply extra world-state changes:
+  ai.set_worldstate(e, "extra_flag", true)
+end
+```
+
 ### End of Cheatsheet
 
 Keep this reference next to your editor for fast lookup!

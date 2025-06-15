@@ -15,12 +15,14 @@
 - [ ] test goap test case.
 - [ ] try producing ui in lua
 
+- [ ] make variations of texture shaders based on voucher sheen/polychrome
+- [ ] implement voucher sheen -> use new overlay draw system to do it
+
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui
 - [ ] Need to test pipeline rendering w/ scaling for animations 
-- [ ] make variations of texture shaders based on voucher sheen/polychrome
-- [ ] implement voucher sheen -> use new overlay draw system to do it
+
 
 - [ ] Implement more UI element types:
   

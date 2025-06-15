@@ -10,17 +10,12 @@
 
 - [ ] Inter-entity collision https://chatgpt.com/share/684c4f55-cf68-800a-95b4-80e31c75d23c / https://chatgpt.com/share/684e3621-eee8-800a-a451-52f0eb0c82b4
 - [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc.
-
-- [ ] ai_system debug prints Value is NULL repeatedly, get rid of this
-- [ ] variadic debug() that takes commas instead of concatenated strings.
  
-- [ ]  input bindings needed. what about some globals as well? 
-- [ ] test goap test case.
+- [ ]  input bindings need documenting
 - [ ] bind_ai_utilities needs binding docs
 - [ ] ai_module needs documentation 
-- [ ] when action returns success, nothing seems to happen (no done eating message)
-- [ ] how to have multiple of the same entity type with different goals, etc? -> https://chatgpt.com/share/684e2349-89a4-800a-9ac5-01ab79de81cc
-- [ ] separate ai loaded data into its own table, not all in "ai"
+
+- [ ] test goap test case.
 - [ ] try producing ui in lua
 
 - [ ] inventory drag & drop broken
@@ -45,8 +40,6 @@
 - [ ] make particle system a little easier to use on the go
 - [ ] Text input (with cursor displayed, etc, software keyboard)
 
-### Glance_at_later
-- [ ] Lua sode - making monobehavior components in lua, assigning scripts from lua side, etc etc, making evertyhing run - refer to this - https://chatgpt.com/share/684c4b90-9228-800a-adc7-7697564a98fe
 
 ### MISC. RENDERING
 - [ ] higher shadow on hovered items, draw above everything else. How? -> add height offset to shadow I guess -> use layer z-order for this

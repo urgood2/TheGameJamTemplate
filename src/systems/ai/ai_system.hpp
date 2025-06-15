@@ -41,12 +41,14 @@ namespace ai_system
 
     extern void debugPrintGOAPStruct(GOAPComponent &goapStruct);
 
-    void runWorldStateUpdaters(entt::entity &entity);
+    void runWorldStateUpdaters(GOAPComponent &goapStruct, entt::entity &entity);
     extern auto resetAllGOAPComponentsAndScripting() -> void;
 
     // goap methodse
     extern void fill_action_queue_based_on_plan(entt::entity e, const char** plan, int planSize);
-    extern auto initGOAPComponent(entt::entity entity) -> void;
+    extern void initGOAPComponent(entt::entity entity,
+                           const std::string &type,
+                           sol::optional<sol::table> overrides = sol::nullopt /*may be nil*/);
     extern auto requestAISystemReset() -> void;
     auto runBlackboardInitFunction(entt::entity entity, const std::string &identifier) -> void;
     extern bool goap_worldstate_get(actionplanner_t *ap, worldstate_t ws, const char *atomname, bool *value);

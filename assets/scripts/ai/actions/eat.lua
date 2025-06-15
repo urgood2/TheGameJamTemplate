@@ -10,11 +10,11 @@ return {
     post = { hungry = false },
 
     start = function(e)
-        debug("Entity" .. e .. " is eating.")
+        debug("Entity", e, "is eating.")
     end,
 
     update = function(e, dt) -- update can be coroutine
-        debug("Entity " .. e .. " eat update.")
+        debug("Entity", e, "eat update.")
         wait(1.0)
         return ActionResult.SUCCESS
     end,

@@ -61,14 +61,14 @@ namespace scripting
 
             ~script_process()
             {
-                std::cout << "script_process: " << m_self.pointer() << " terminated\n";
+                SPDLOG_DEBUG("script_process: {} destructor called", m_self.pointer());
                 m_self.clear();
                 m_self.abandon();
             }
 
             void init()
             {
-                std::cout << "script_process: " << m_self.pointer() << " joined\n";
+                SPDLOG_DEBUG("script_process: {} init called", m_self.pointer());
                 _call("init");
             }
 
@@ -83,7 +83,7 @@ namespace scripting
                 if (!result.valid())
                 {
                     sol::error err = result;
-                    std::cerr << "Coroutine error: " << err.what() << std::endl;
+                    SPDLOG_ERROR("Coroutine error: {}", err.what());
                     return fail();
                 }
 

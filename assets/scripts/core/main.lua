@@ -86,10 +86,29 @@ function main.init()
     
     transformComp = registry:get(bowser, Transform)
     
-    transformComp.actualX = 100
-    transformComp.actualY = 200
-    transformComp.actualW = 50
-    transformComp.actualH = 50
+    transformComp.actualX = 600
+    transformComp.actualY = 800
+    transformComp.actualW = 100
+    transformComp.actualH = 100
+
+    timer.every(1.0, function()
+        transformComp.actualX = transformComp.actualX + 5
+        transformComp.actualY = transformComp.actualY + 5
+        print("Bowser position = " .. transformComp.actualX .. ', ' .. transformComp.actualY)
+        print("Bowser size = " .. transformComp.actualW .. ', ' .. transformComp.actualH)
+    end, 0, true, nil, "bowser_timer")
+
+    ---
+--- Creates a timer that runs an action repeatedly at a given interval.
+---
+---@param interval number|{number, number} # Interval in seconds or a {min, max} range.
+---@param action fun()
+---@param times? integer # Number of times to run. 0 for infinite.
+---@param immediate? boolean # If true, the action runs immediately on creation.
+---@param after? fun()
+---@param tag? string
+---@return integer # timerHandle
+function timer.every(...) end
     
     -- assert(registry:has(bowser, Transform))
     

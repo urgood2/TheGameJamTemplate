@@ -120,6 +120,12 @@ namespace scripting {
             // You can also just return it, and let the call-site handle the error if necessary.
             return pfr;
         });
+        stateToInit.script("require(\"util.util\")", [](lua_State*, sol::protected_function_result pfr) {
+            // pfr will contain things that went wrong, for either loading or executing the script
+            // Can throw your own custom error
+            // You can also just return it, and let the call-site handle the error if necessary.
+            return pfr;
+        });
 
         // 1) Module‐level banner
         rec.set_module_name("chugget.engine");
@@ -245,10 +251,49 @@ namespace scripting {
         // methods from scripting_functions.cpp. These can be called from lua
         //---------------------------------------------------------
         // --- Logging Functions ---
-        stateToInit.set_function("debug", sol::overload(
-            static_cast<void(*)(entt::entity, std::string)>(&luaDebugLogWrapper),
-            static_cast<void(*)(std::string)>(&luaDebugLogWrapperNoEntity)
-        ));
+        // stateToInit.set_function("debug", sol::overload(
+        //     static_cast<void(*)(entt::entity, std::string)>(&luaDebugLogWrapper),
+        //     static_cast<void(*)(std::string)>(&luaDebugLogWrapperNoEntity)
+        // ));
+
+        // In your Sol2 init (after registering luaDebugLogWrapper*):
+        stateToInit.set_function("debug",
+        [](sol::this_state ts, sol::variadic_args va) {
+            sol::state_view L{ts};
+            std::ostringstream oss;
+
+            // Check if first arg is an entity
+            auto it = va.begin();
+            bool hasEntity = false;
+            entt::entity e = entt::null;
+            if (it != va.end() && it->get_type() == sol::type::number) {
+            // Sol2 represents entt::entity as integer
+            e = static_cast<entt::entity>(it->as<int>());
+            hasEntity = true;
+            ++it;
+            }
+
+            // Concatenate the rest
+            bool first = true;
+            for (; it != va.end(); ++it) {
+            if (!first) oss << ' ';
+            first = false;
+
+            // Convert any Lua value to string via tostring()
+            sol::object obj = *it;
+            sol::function tostr = L["tostring"];
+            std::string s = tostr(obj);
+            oss << s;
+            }
+
+            // Dispatch to the correct backend
+            if (hasEntity) {
+            luaDebugLogWrapper(e, oss.str());
+            } else {
+            luaDebugLogWrapperNoEntity(oss.str());
+            }
+        }
+        );
 
         // Main signature
         rec.record_free_function({}, {"debug",

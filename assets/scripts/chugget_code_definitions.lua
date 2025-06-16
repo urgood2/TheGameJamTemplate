@@ -4856,8 +4856,8 @@ function random_utils.random_element_double(...) end
 ---
 --- Selects a random element from a table of strings.
 ---
----@param items string[] # A table of strings.
----@return string
+---@param items string[] # A Lua table (array) of strings.
+---@return string       # One random element from the list.
 function random_utils.random_element_string(...) end
 
 ---

@@ -106,7 +106,7 @@ auto mainGameStateGameLoop(float dt) -> void
     // bool shouldPauseFromNoFocus = (pauseGameWhenOutofFocus == true && IsWindowFocused() == false);
     // if (shouldPauseFromNoFocus == false && game::isGameOver == false)
     // {
-        game::update(dt);
+        // game::update(dt);
         // updatedGame = true;
         // if (game::isPaused == false)
     // }
@@ -124,7 +124,7 @@ void MainLoopFixedUpdateAbstraction(float dt)
 {
     ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
     
-    updateSystems(dt);
+    // updateSystems(dt);
 
     // this switch statement handles only update logic, rendering is handled in the mainloopRenderAbstraction function
     switch (globals::currentGameState)
@@ -152,7 +152,7 @@ void MainLoopFixedUpdateAbstraction(float dt)
 
 
 auto mainGameStateGameLoopRender(float dt) -> void {
-    game::draw(dt);
+    // game::draw(dt);
 }
 
 
@@ -265,7 +265,7 @@ void RunGameLoop()
         int updatesPerformed = 0;
         while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
         {
-            MainLoopFixedUpdateAbstraction(mainLoop.rate);
+            // MainLoopFixedUpdateAbstraction(mainLoop.rate);
             mainLoop.lag -= mainLoop.rate;
             mainLoop.updates++;
             updatesPerformed++;
@@ -282,7 +282,7 @@ void RunGameLoop()
         }
 
         // Render
-        MainLoopRenderAbstraction(deltaTime);
+        // MainLoopRenderAbstraction(deltaTime);
 
         // Update FPS counter (accurate version)
         frameCounter++;
@@ -351,7 +351,7 @@ int main(void)
     // Main game loop
     while (!WindowShouldClose())
     { // Detect window close button or ESC key
-        FrameMark; // marks one frame
+        // FrameMark; // marks one frame
         RunGameLoop();
     }
 
@@ -381,24 +381,24 @@ int main(void)
 auto updateSystems(float dt) -> void
 {
     ZoneScopedN("UpdateSystems"); // custom label
-    updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
-    fade_system::update(dt); // update fade system
+    // updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
+    // fade_system::update(dt); // update fade system
     
-    input::Update(globals::registry, globals::inputState, dt);
-    globals::updateGlobalVariables();
+    // input::Update(globals::registry, globals::inputState, dt);
+    // globals::updateGlobalVariables();
     
-    // systems
-    shaders::update(dt);
-    timer::TimerSystem::update_timers(dt);
-    spring::updateAllSprings(globals::registry, dt);
-    animation_system::update(dt);
-    transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
+    // // systems
+    // shaders::update(dt);
+    // timer::TimerSystem::update_timers(dt);
+    // spring::updateAllSprings(globals::registry, dt);
+    // animation_system::update(dt);
+    // transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
 
-    // update event queue
-    timer::EventQueueSystem::EventManager::update(dt);
+    // // update event queue
+    // timer::EventQueueSystem::EventManager::update(dt);
     
-    scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
-    ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
+    // scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
+    // ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
     
-    ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
+    // ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
 }

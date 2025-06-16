@@ -202,3 +202,110 @@ Complex visual effects are achieved by attaching a `ShaderPipelineComponent` to 
     shaderPipeline.passes.push_back(pass);
     shaderPipeline.passes.push_back(pass2);
     
+    
+This cheatsheet explains how to create, style, and manage dynamic text entities using your game's `TextSystem`.
+
+---
+## 1. Defining a Text Object
+
+The foundation of the system is the `TextSystem::Text` C++ struct. You create an instance of this struct to define the appearance and content of your text before turning it into a game entity.
+
+```cpp
+text = {
+    // The core string, with special formatting tags.
+    .rawText = "[HEY!](rainbow;bump)[img](uuid=gear.png)",
+
+    // --- Basic Properties ---
+    .fontData = globals::fontData, // Font data loaded globally
+    .fontSize = 50.0f,
+
+    // --- Layout Properties ---
+    .wrapEnabled = false,
+    .alignment = TextSystem::Text::Alignment::LEFT,
+    .wrapMode = TextSystem::Text::WrapMode::WORD
+};
+```
+
+* **`rawText`**: The most important property. It contains the string to be displayed, along with special tags for styling and effects.
+* **UTF-8 Support**: The system handles UTF-8 characters, allowing for languages like Korean (`"[안녕하세요]"`) to be used seamlessly with effects.
+
+---
+## 2. Rich Text Tagging
+
+The system's power comes from its BBCode-style tagging within the `rawText` string. This allows you to apply effects, embed images, or change colors on a per-character or per-word basis.
+
+**Syntax:** `[Text To Display](tag1=value;tag2;...)`
+
+| Tag Syntax Example | Description |
+| :--- | :--- |
+| `[Hello](color=red)` | Applies a static color. |
+| `[World](rainbow)` | Applies a dynamic, cycling rainbow color effect. |
+| `[Shake!](shake=2,2)` | Applies a shake animation with a given x/y intensity. |
+| `[Bump](bump)` | Applies a "bump" or "pop" animation. |
+| `[img](uuid=gear.png;scale=0.8)` | **Embeds an Image:** Renders an image from the sprite atlas directly inside the text flow. |
+| `[안녕하세요](rotate=2.0,5;float)` | **Chaining:** Multiple effects can be chained together by separating them with a semicolon. |
+
+---
+## 3. Creating and Managing the Text Entity
+
+Once your `Text` object is configured, you create a live entity in the world that the text system will manage and render.
+
+* **Entity Creation**:
+    ```cpp
+    // Creates the entity and its character children.
+    textEntity = TextSystem::Functions::createTextEntity(text, x_pos, y_pos);
+    ```
+* **Applying Effects Programmatically**: You can add or change effects on a live text entity after it has been created.
+    ```cpp
+    // Removes all existing effects.
+    TextSystem::Functions::clearAllEffects(textEntity);
+    // Adds new effects to all characters in the string.
+    TextSystem::Functions::applyGlobalEffects(textEntity, "pop=0.4,0.1,out;");
+    ```
+
+---
+## 4. Advanced: Dynamic Content with Callbacks
+
+Your text system uses a powerful callback-driven design to handle dynamic content and reactive layouts automatically.
+
+### Dynamic Text Content
+
+The `get_value_callback` allows the displayed text to be driven by an external C++ variable, decoupling the UI from the game state.
+
+* **How it works**:
+    1.  You assign a lambda to `text.get_value_callback`.
+    2.  This lambda should return the string you want to display.
+    3.  The text system will automatically call this function to get the most up-to-date string, re-parsing and re-rendering the text entity whenever the underlying value changes.
+* **Example**:
+    ```cpp
+    // In C++, randomStringText is a global variable.
+    text.get_value_callback = []() {
+        return randomStringText; // The text entity will always display the current value of this variable.
+    };
+
+    // Elsewhere, a timer changes the variable, and the text updates automatically.
+    timer::TimerSystem::timer_every(5.f, [](...) {
+        randomStringText = random_utils::random_element(randomStringTextList);
+    });
+    ```
+
+### Reacting to Changes
+
+The `onStringContentUpdatedViaCallback` is a hook that fires whenever the text content changes, allowing you to run logic like resizing the text's container.
+
+* **How it works**:
+    1.  Assign a lambda to `text.onStringContentUpdatedViaCallback`.
+    2.  This lambda receives the `textEntity` as an argument.
+    3.  It's the perfect place to run layout-related code.
+* **Example**:
+    ```cpp
+    // This function will run automatically whenever the text content changes.
+    text.onStringContentUpdatedViaCallback = [](entt::entity textEntity) {
+        // Get the text's parent/master entity.
+        auto& role = globals::registry.get<transform::InheritedProperties>(textEntity);
+        auto& masterTransform = globals::registry.get<transform::Transform>(role.master);
+
+        // Automatically resize the text to fit its container.
+        TextSystem::Functions::resizeTextToFit(textEntity, masterTransform.getActualW(), masterTransform.getActualH());
+    };
+    

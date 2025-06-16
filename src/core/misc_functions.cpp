@@ -18,12 +18,35 @@ namespace game
         // pre-load shader values for later use
 
         // outer space
+        
+        /*
+        
+        [2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   iTime: float = 324.27
+[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   u_donutWidth: float = -2.77
+[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   u_noisiness: float = 0.22
+[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   u_brightness: float = 0.17
+[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   speedFactor : float = 0.61
+[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   desaturateAmount : float = 2.87
+[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   grayAmount: float = 0.77
+[2025-06-16 18:15:09.338] [info] [shader_system.cpp:598]   u_hueOffset: float = 1.85
+[2025-06-16 18:15:09.338] [info] [shader_system.cpp:600]   iResolution: Vector2 = (1440, 900)
+        */
 
         shaders::registerUniformUpdate("outer_space_donuts_bg", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("outer_space_donuts_bg", "iTime", static_cast<float>(GetTime()));
         });
         // One-time setup
         globalShaderUniforms.set("outer_space_donuts_bg", "iResolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+        globalShaderUniforms.set("outer_space_donuts_bg", "grayAmount", 0.77f); // Set initial gray amount
+        globalShaderUniforms.set("outer_space_donuts_bg", "desaturateAmount ", 2.87f); // Set initial desaturation amount
+        globalShaderUniforms.set("outer_space_donuts_bg", "speedFactor", 0.61f); // Set initial speed factor
+
+        globalShaderUniforms.set("outer_space_donuts_bg", "u_brightness", 0.17f); // Set initial brightness
+        globalShaderUniforms.set("outer_space_donuts_bg", "u_noisiness", 0.22f); // Set initial noisiness
+        globalShaderUniforms.set("outer_space_donuts_bg", "u_hueOffset", 0.0f); // Set initial hue offset
+        globalShaderUniforms.set("outer_space_donuts_bg", "u_donutWidth", -2.77f); // Set initial donut width
+        
+        //TODO: hue offset can be animated with timer
 
         
         // flash shader

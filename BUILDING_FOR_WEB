@@ -10,6 +10,8 @@ Building for Web
 
 - Also make sure that build-emc directory exists.
 
+- DO NOT clean the deps directory unless you want to fix a whole bunch of bugs.
+
 Desktop builds are great for testing locally but they're not the best when it comes to distributing your game. Few people will want to download a random exe files from a stranger and willingly run it on their PCs. The best way to distribute is as a web build that can be played directly from within your browser.
 
 TODO: clean this up

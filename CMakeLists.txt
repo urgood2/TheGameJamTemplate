@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Debug)
 
 # enable tracy (disable for web)
-option( TRACY_ENABLE "" ON)
+option( TRACY_ENABLE "" OFF)
 add_definitions(-DTRACY_NO_CRASH_HANDLER)
 
 #set opengl version
@@ -245,7 +245,9 @@ endif()
 # Add the src subdirectory
 add_subdirectory("src/third_party/GPGOAP")
 add_subdirectory("src/third_party/chipmunk")
-add_subdirectory("src/third_party/tracy-master")
+if(NOT EMSCRIPTEN)
+    add_subdirectory("src/third_party/tracy-master")
+endif()
 add_subdirectory("src/third_party/objectpool-master")
 
 ##########################################################################################
@@ -290,9 +292,9 @@ target_include_directories(CommonSettings INTERFACE
     "${PROJECT_INCLUDE}/spine"
     "${stduuid_SOURCE_DIR}/include"
     "${snowhouse_SOURCE_DIR}/include"
-    "third_party/tracy-master/public"
     "third_party/objectpool-master/src"
 )
+
 target_link_libraries(CommonSettings INTERFACE
     raylib
     fmt
@@ -307,8 +309,16 @@ target_link_libraries(CommonSettings INTERFACE
     chipmunk_static
     stduuid
     snowhouse
-    Tracy::TracyClient
 )
+
+if(NOT EMSCRIPTEN)
+    target_include_directories(CommonSettings INTERFACE
+        "third_party/tracy-master/public"
+    )
+    target_link_libraries(CommonSettings INTERFACE
+        Tracy::TracyClient
+    )    
+endif()
 
 # Declaring our executable
 add_executable(${PROJECT_NAME})
@@ -382,9 +392,7 @@ add_custom_target(configure_web_build
     COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. 
         -DPLATFORM=Web 
         -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-        -DCMAKE_C_FLAGS="-fexceptions -fwasm-exceptions"
-        -DCMAKE_CXX_FLAGS="-fexceptions -fwasm-exceptions"
-        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -O0 -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sDISABLE_EXCEPTION_CATCHING=0 -sEXCEPTION_CATCHING_ALLOWED='[\"*\"]"
+        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -O0 -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0"
         -DCMAKE_EXECUTABLE_SUFFIX=\".html\"
     WORKING_DIRECTORY ${BUILD_DIR}
     COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"

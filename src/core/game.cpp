@@ -104,7 +104,6 @@ float transitionShaderPositionVar = 0.f;
 
 namespace game
 {
-    quadtree::Box<float> expandedBounds;
     
     std::vector<std::string> fullscreenShaders;
 
@@ -178,21 +177,19 @@ namespace game
         
         constexpr float buffer = 200.f;
 
-        // // 1) build an expanded bounds rectangle
-        // //    (assumes worldBounds.x,y is the top-left and width/height are positive)
-        // Box<float> expandedBounds;
-        // expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;
-        // expandedBounds.left = globals::worldBounds.getTopLeft().x - buffer;
-        // expandedBounds.width = globals::worldBounds.getSize().x + 2 * buffer;
-        // expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
+        // 1) build an expanded bounds rectangle
+        //    (assumes worldBounds.x,y is the top-left and width/height are positive)
+        Box<float> expandedBounds;
+        expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;
+        expandedBounds.left = globals::worldBounds.getTopLeft().x - buffer;
+        expandedBounds.width = globals::worldBounds.getSize().x + 2 * buffer;
+        expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
 
-        // // 2) reset the quadtree using the bigger area
-        // globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
-        //     expandedBounds,
-        //     globals::getBox
-        // );
-
-        globals::quadtree.clear();
+        // 2) reset the quadtree using the bigger area
+        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
+            expandedBounds,
+            globals::getBox
+        );
 
         // Populate the Quadtree Per Frame
         globals::registry.view<transform::Transform>().each([&](entt::entity e, transform::Transform& transform) {
@@ -819,23 +816,6 @@ namespace game
             spdlog::error("Lua init failed: {}", err.what());
         }
         
-
-        /// build quadtree for collision detection
-        // 1) build an expanded bounds rectangle
-        //    (assumes worldBounds.x,y is the top-left and width/height are positive)
-        constexpr float buffer = 200.f;
-        using namespace quadtree;
-        Box<float> expandedBounds;
-        expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;
-        expandedBounds.left = globals::worldBounds.getTopLeft().x - buffer;
-        expandedBounds.width = globals::worldBounds.getSize().x + 2 * buffer;
-        expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
-
-        // 2) reset the quadtree using the bigger area
-        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
-            expandedBounds,
-            globals::getBox
-        );
     }
     
     
@@ -1090,6 +1070,10 @@ namespace game
                 layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
             }
             
+
+            #ifdef __EMSCRIPTEN__
+            rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
+            #endif
             
             
             
@@ -1111,6 +1095,10 @@ namespace game
                 layer::DrawCanvasOntoOtherLayerWithShader(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_circle); // render the ui layer main canvas to the screen
 
                 layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
+
+                #ifdef __EMSCRIPTEN__
+                rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
+                #endif
             }
         }
 
@@ -1137,6 +1125,9 @@ namespace game
                 ZoneScopedN("injected lua shaders (fullscreen)");
                 
                 for (auto &shaderName : fullscreenShaders) {
+                    #ifdef __EMSCRIPTEN__
+                    rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
+                    #endif
                     Shader sh = shaders::getShader(shaderName);
                     // this will look up the uniform set you populated from Lua
                     shaders::TryApplyUniforms(sh, globals::globalShaderUniforms, shaderName);

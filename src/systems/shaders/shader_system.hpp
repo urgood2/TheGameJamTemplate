@@ -29,7 +29,7 @@ template <class... Fs>
 struct overloaded : Fs... { using Fs::operator()...; };
 template <class... Fs> overloaded(Fs...) -> overloaded<Fs...>;
 
-void print_uniform_value(const ShaderUniformValue& uv) {
+inline void print_uniform_value(const ShaderUniformValue& uv) {
     std::visit(overloaded{
         [](float f) {
             std::cout << f;

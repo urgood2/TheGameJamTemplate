@@ -215,7 +215,7 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 // The main game loop callback / blocking loop
 void RunGameLoop()
 {
-    SPDLOG_DEBUG("RunGameLoop called");
+    // SPDLOG_DEBUG("RunGameLoop called");
     // Store the initial time
     float lastFrameTime = GetTime();
 

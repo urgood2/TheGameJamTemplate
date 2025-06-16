@@ -288,7 +288,7 @@ namespace shaders
     // Load shaders from JSON and initialize modification times
     auto loadShadersFromJSON(std::string jsonPath) -> void
     {
-        auto path = util::getAssetPathUUIDVersion(jsonPath);
+        auto path = util::getRawAssetPathNoUUID(jsonPath);
 
         std::ifstream jsonFile(path);
         if (!jsonFile.is_open())
@@ -320,12 +320,12 @@ namespace shaders
                 auto webPaths = shaderPathsJSON["web"];
                 if (webPaths.contains("vertex") && webPaths["vertex"].is_string())
                 { 
-                    vertexPath =  util::getAssetPathUUIDVersion("shaders/" + webPaths["vertex"].get<std::string>());
+                    vertexPath =  util::getRawAssetPathNoUUID("shaders/" + webPaths["vertex"].get<std::string>());
                     SPDLOG_DEBUG("Web Vertex path: {}", vertexPath);
                 }
                 if (webPaths.contains("fragment") && webPaths["fragment"].is_string())
                 {
-                    fragmentPath = util::getAssetPathUUIDVersion("shaders/" + webPaths["fragment"].get<std::string>());
+                    fragmentPath = util::getRawAssetPathNoUUID("shaders/" + webPaths["fragment"].get<std::string>());
                     SPDLOG_DEBUG("Web Fragment path: {}", fragmentPath);
                 }
             }
@@ -334,12 +334,12 @@ namespace shaders
             // Fallback to default paths if web-specific paths are not present
             if (vertexPath.empty() && shaderPathsJSON.contains("vertex") && shaderPathsJSON["vertex"].is_string())
             {
-                vertexPath = util::getAssetPathUUIDVersion("shaders/" + shaderPathsJSON["vertex"].get<std::string>());
+                vertexPath = util::getRawAssetPathNoUUID("shaders/" + shaderPathsJSON["vertex"].get<std::string>());
                 SPDLOG_DEBUG("Default Vertex path: {}", vertexPath);
             }
             if (fragmentPath.empty() && shaderPathsJSON.contains("fragment") && shaderPathsJSON["fragment"].is_string())
             {
-                fragmentPath = util::getAssetPathUUIDVersion("shaders/" + shaderPathsJSON["fragment"].get<std::string>());
+                fragmentPath = util::getRawAssetPathNoUUID("shaders/" + shaderPathsJSON["fragment"].get<std::string>());
                 SPDLOG_DEBUG("Default Fragment path: {}", fragmentPath);
             }
 

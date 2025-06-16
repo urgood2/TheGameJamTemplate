@@ -13,8 +13,8 @@ in vec2 vertexTexCoord2;  // Additional texture coordinates
 uniform mat4 mvp;                  // Model-View-Projection matrix
 uniform vec2 topLeftCorner;        // Top-left corner of the shape
 uniform vec2 size;                 // Size of the shape (width, height)
-uniform float scale = 2.0;         // Scaling factor for borders
-uniform float shadow_scale = 1.5; // shadow scale
+uniform float scale ;         // Scaling factor for borders
+uniform float shadow_scale; // shadow scale
 
 // Outputs to fragment shader
 out vec2 fragTexCoord;

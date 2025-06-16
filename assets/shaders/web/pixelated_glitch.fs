@@ -3,13 +3,13 @@
 in vec2 fragTexCoord;
 
 uniform sampler2D texture0;     // Main texture
-uniform float pixel = 1.0;      // Pixelation level
-uniform vec2 redOffset = vec2(0.0, 0.0);    // Red channel offset
-uniform vec2 greenOffset = vec2(0.0, 0.0);  // Green channel offset
-uniform vec2 blueOffset = vec2(0.0, 0.0);   // Blue channel offset
-uniform float alpha = 1.0;      // Alpha transparency modifier
-uniform float randStrength = 1.0;  // Strength of the random alpha variation
-uniform vec4 affected = vec4(0.0, 0.0, 1.0, 1.0);  // Area affected by the effect
+uniform float pixel;      // Pixelation level
+uniform vec2 redOffset;    // Red channel offset
+uniform vec2 greenOffset;  // Green channel offset
+uniform vec2 blueOffset;   // Blue channel offset
+uniform float alpha;      // Alpha transparency modifier
+uniform float randStrength;  // Strength of the random alpha variation
+uniform vec4 affected;  // Area affected by the effect
 
 out vec4 finalColor;
 

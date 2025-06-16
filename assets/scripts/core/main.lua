@@ -96,7 +96,7 @@ function main.init()
     )
     
     -- add optional fullscreen shader which will be applied to the whole screen, can be removed later
-    add_fullscreen_shader("flash")
+    -- add_fullscreen_shader("flash")
     
     -- shader uniform manipulation example
     assert(globalShaderUniforms, "globalShaderUniforms not registered!")    

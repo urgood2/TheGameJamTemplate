@@ -12,22 +12,22 @@ in vec3 screenVertexPos;
 uniform sampler2D texture0;       // Texture sampler
 uniform vec2 topLeftCorner;       // Top-left corner of the shape
 uniform vec2 size;                // Size of the shape (width, height)
-uniform float scale = 2.0;        // Scaling factor
-uniform vec2 shadow_offset = vec2(-2.0, -2.0); // Default shadow offset
-uniform float shadow_scale = 1.8;
-uniform float blur_amount = 1.3;
-uniform bool disable_rotating = false; // Disable rotating feature
+uniform float scale;        // Scaling factor
+uniform vec2 shadow_offset; // Default shadow offset
+uniform float shadow_scale;
+uniform float blur_amount;
+uniform bool disable_rotating; // Disable rotating feature
 uniform float sprite_rotation;        // Rotation of the sprite in degrees
-uniform vec2 screen_center = vec2(700, 700);           // Center coordinate of the screen (e.g., in normalized screen coordinates)
-uniform float parallax_strength = 0.003; // Strength of the parallax effect
+uniform vec2 screen_center;           // Center coordinate of the screen (e.g., in normalized screen coordinates)
+uniform float parallax_strength; // Strength of the parallax effect
 
 uniform float uMin;                   // UV bounds for the sprite being rendered (From sprite atlas)
 uniform float uMax;
 uniform float vMin;
 uniform float vMax;
 
-uniform bool debug = false;            // Debug mode flag
-uniform vec4 debugColor = vec4(1, 0, 0, 0.3); // Color for the debug border
+uniform bool debug;            // Debug mode flag
+uniform vec4 debugColor ; // Color for the debug border
 
 // Output fragment color
 out vec4 finalColor;

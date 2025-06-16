@@ -11,11 +11,11 @@ in vec4 fragColor;
 uniform sampler2D texture0;       // Texture sampler
 uniform vec2 topLeftCorner;       // Top-left corner of the shape
 uniform vec2 size;                // Size of the shape (width, height)
-uniform float scale = 2.0;        // Scaling factor
-uniform vec2 shadow_offset = vec2(-14.0, -14.0);
-uniform float shadow_scale = 1.5;
-uniform float blur_amount =  1.9;
-uniform bool disable_rotating = false;//TODO: add this feature
+uniform float scale;        // Scaling factor
+uniform vec2 shadow_offset;
+uniform float shadow_scale;
+uniform float blur_amount;
+uniform bool disable_rotating;//TODO: add this feature
 uniform float sprite_rotation; // Rotation of the sprite in degrees
 
 

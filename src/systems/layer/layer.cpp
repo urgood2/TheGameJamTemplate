@@ -2113,7 +2113,7 @@ namespace layer
         rlColor4ub(255, 255, 255, 255); // Reset to white before each draw
         rlSetTexture(0);
         rlDisableDepthTest(); // Disable depth testing for 2D rendering
-        rlEnableDepthTest();
+        // rlEnableDepthTest();
         rlDisableColorBlend(); // Disable color blending for solid color
         rlEnableColorBlend(); // Enable color blending for textures
         rlBegin(RL_TRIANGLES);
@@ -2126,6 +2126,14 @@ namespace layer
         // Fill using the **outer vertices** and the **center**
         for (size_t i = 0; i < outerVertices.size(); i += 2)
         {
+            // each triangle is 3 verts
+            if (rlCheckRenderBatchLimit(3))
+            {
+                rlEnd();
+                rlDrawRenderBatchActive(); // push what you have
+                rlBegin(RL_TRIANGLES);     // start a new batch
+            }
+            
             // Triangle: Center → Outer1 → Outer2
             rlColor4ub(color.r, color.g, color.b, color.a);
             rlVertex2f(center.x, center.y);
@@ -2152,7 +2160,7 @@ namespace layer
         // Draw the outlines
         // Draw the filled outline
         rlDisableDepthTest(); // Disable depth testing for 2D rendering
-        rlEnableDepthTest();
+        // rlEnableDepthTest();
         rlColor4ub(255, 255, 255, 255); // Reset to white before each draw
         rlSetTexture(0);
         rlDisableColorBlend(); // Disable color blending for solid color
@@ -2163,6 +2171,14 @@ namespace layer
         // Draw quads between outer and inner outlines using two triangles each
         for (size_t i = 0; i < outerVertices.size(); i += 2)
         {
+            // each triangle is 3 verts
+            if (rlCheckRenderBatchLimit(3))
+            {
+                rlEnd();
+                rlDrawRenderBatchActive(); // push what you have
+                rlBegin(RL_TRIANGLES);     // start a new batch
+            }
+            
             rlColor4ub(color.r, color.g, color.b, color.a);
             rlVertex2f(outerVertices[i].x, outerVertices[i].y);
             rlColor4ub(color.r, color.g, color.b, color.a);

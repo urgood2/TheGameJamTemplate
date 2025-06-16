@@ -15711,7 +15711,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\entity_types\\kobold.lua"
     ],
     "error_msg_shader_shader_web": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shader_web_error_msgs.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shader_web_error_msgs.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\shader_web_error_msgs.md"
     ],
     "escape_keyboard": [
         "keyboard_escape.png"

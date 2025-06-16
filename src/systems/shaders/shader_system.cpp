@@ -524,7 +524,9 @@ namespace shaders
 
         updateAllShaderUniforms();
         // FIXME: perforamnce intensive on windows, commenting out for now
-        //  hotReloadShaders(); // Check for shader file modifications
+    #ifndef __EMSCRIPTEN__
+         hotReloadShaders(); // Check for shader file modifications
+    #endif
     }
 
     // call this before suing beginImGUIWindowWithCallback

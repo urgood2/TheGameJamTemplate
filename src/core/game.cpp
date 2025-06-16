@@ -1016,10 +1016,12 @@ namespace game
         // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
         auto crt = shaders::getShader("crt");
         shaders::TryApplyUniforms(crt, globals::globalShaderUniforms, "crt");
-        auto spectrum_circle = shaders::getShader("spectrum_circle");
-        shaders::TryApplyUniforms(spectrum_circle, globals::globalShaderUniforms, "spectrum_circle");
+        // auto spectrum_circle = shaders::getShader("spectrum_circle");
+        // shaders::TryApplyUniforms(spectrum_circle, globals::globalShaderUniforms, "spectrum_circle");
         auto spectrum_line = shaders::getShader("spectrum_line_background");
         shaders::TryApplyUniforms(spectrum_line, globals::globalShaderUniforms, "spectrum_line_background");
+        auto outer_space = shaders::getShader("outer_space_donuts_bg");
+        shaders::TryApplyUniforms(outer_space, globals::globalShaderUniforms, "outer_space_donuts_bg");
         // auto shockwave = shaders::getShader("shockwave");
         // shaders::TryApplyUniforms(shockwave, globalShaderUniforms, "shockwave");
         // auto glitch = shaders::getShader("glitch");
@@ -1089,10 +1091,10 @@ namespace game
             
             {
                 // ZoneScopedN("Draw canvases to other canvases with shaders");
-                layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_line); // render the background layer main canvas to the screen
+                layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, outer_space); // render the background layer main canvas to the screen
 
                 
-                layer::DrawCanvasOntoOtherLayerWithShader(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_circle); // render the ui layer main canvas to the screen
+                layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
 
                 layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 

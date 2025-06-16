@@ -178,5 +178,14 @@
             "vertex": "web/gamejam_vertex.vs",
             "fragment": "web/gamejam_fragment.fs"
         }
+    },
+    "outer_space_donuts_bg": {
+        "vertex": "outer_space_donuts_bg_vertex.vs",
+        "fragment": "outer_space_donuts_bg_fragment.fs",
+
+        "web": {
+            "vertex": "web/outer_space_donuts_bg_vertex.vs",
+            "fragment": "web/outer_space_donuts_bg_fragment.fs"
+        }
     }
 }

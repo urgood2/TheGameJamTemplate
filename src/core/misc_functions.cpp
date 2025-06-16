@@ -16,6 +16,15 @@ namespace game
 
         using namespace globals;
         // pre-load shader values for later use
+
+        // outer space
+
+        shaders::registerUniformUpdate("outer_space_donuts_bg", [](Shader &shader) { // update iTime every frame
+            globalShaderUniforms.set("outer_space_donuts_bg", "iTime", static_cast<float>(GetTime()));
+        });
+        // One-time setup
+        globalShaderUniforms.set("outer_space_donuts_bg", "iResolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+
         
         // flash shader
         shaders::registerUniformUpdate("flash", [](Shader &shader) { // update iTime every frame

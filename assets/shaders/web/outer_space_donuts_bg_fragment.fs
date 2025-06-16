@@ -1,4 +1,5 @@
 #version 300 es
+precision mediump float; 
 
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -7,7 +8,7 @@ uniform sampler2D texture0;
 uniform vec4 colDiffuse;
 uniform float grayAmount;       // range 0.0 to 1.0
 uniform float desaturateAmount; // range 0.0 to 1.0
-uniform float speedFactor = 2.0;        // e.g. 0.2 = very slow, 2.0 = very fast
+uniform float speedFactor;        // e.g. 0.2 = very slow, 2.0 = very fast
 
 uniform float u_brightness;   // Controls the overall brightness of the effect. Range: 0.0 (black) to 1.0 (full brightness).
 uniform float u_noisiness;    // Controls the amount of wavy distortion. Range: 0.0 (none) to ~1.0 (very wavy).

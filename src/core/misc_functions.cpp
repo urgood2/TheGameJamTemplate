@@ -3,6 +3,7 @@
 #include "util/common_headers.hpp"
 #include "core/globals.hpp"
 #include "core/game.hpp"
+#include "systems/shaders/shader_system.hpp"
 
 namespace game
 {

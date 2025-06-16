@@ -29,7 +29,6 @@
 #include "../systems/anim_system.hpp"
 #include "../systems/layer/layer.hpp"
 #include "../systems/collision/Quadtree.h"
-#include "../systems/shaders/shader_system.hpp"
 #include "../systems/localization/localization.hpp"
 
 #include "third_party/rlImGui/imgui.h" // raylib imGUI binding
@@ -83,6 +82,11 @@ namespace transform
 {
     struct MasterCacheEntry;
     struct SpringCacheBundle;
+}
+
+namespace shaders
+{
+    struct ShaderUniformComponent;
 }
 
 namespace globals

@@ -181,9 +181,9 @@ function main.init()
     -- transformComp.actualH = 100
 
     -- use a timer to update the position of Bowser every second
-    timer.every(0.3, function()
-        transformComp.actualX = transformComp.actualX + random_utils.random_int(-10, 10)
-        transformComp.actualY = transformComp.actualY + random_utils.random_int(-10, 10)
+    timer.every(2, function()
+        transformComp.actualX = transformComp.actualX + random_utils.random_int(-30, 30)
+        transformComp.actualY = transformComp.actualY + random_utils.random_int(-30, 30)
         print("Bowser position = " .. transformComp.actualX .. ', ' .. transformComp.actualY)
         print("Bowser size = " .. transformComp.actualW .. ', ' .. transformComp.actualH)
         

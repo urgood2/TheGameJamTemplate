@@ -823,6 +823,7 @@ namespace game
         /// build quadtree for collision detection
         // 1) build an expanded bounds rectangle
         //    (assumes worldBounds.x,y is the top-left and width/height are positive)
+        constexpr float buffer = 200.f;
         using namespace quadtree;
         Box<float> expandedBounds;
         expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;

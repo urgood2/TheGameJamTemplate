@@ -289,9 +289,19 @@ namespace random_utils {
             "Selects a random element from a table of numbers."
         );
 
-        rec.bind_function(lua, {"random_utils"}, "random_element_string", &random_utils::random_element<std::string>,
-            "---@param items string[] # A table of strings.\n"
-            "---@return string",
+        rec.bind_function(lua, {"random_utils"}, "random_element_string",
+            // Lua-facing wrapper: accepts a table of strings
+            [](sol::table tbl) -> std::string {
+                std::vector<std::string> vec;
+                vec.reserve(tbl.size());
+                for (auto& kv : tbl) {
+                    vec.push_back(kv.second.as<std::string>());
+                }
+                return random_utils::random_element<std::string>(vec);
+            },
+            // EmmyLua docstring
+            "---@param items string[] # A Lua table (array) of strings.\n"
+            "---@return string       # One random element from the list.",
             "Selects a random element from a table of strings."
         );
 

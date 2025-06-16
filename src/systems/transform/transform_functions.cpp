@@ -221,7 +221,7 @@ namespace transform
     // not exposed publicly
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
-        ZoneScopedN("AlignToMaster");
+        // ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
         auto &role = registry->get<InheritedProperties>(e);
         auto &transform = registry->get<Transform>(e);
@@ -380,7 +380,7 @@ namespace transform
     {
         auto registry = &globals::registry;
         
-        ZoneScopedN("MoveWithMaster");
+        // ZoneScopedN("MoveWithMaster");
         Vector2 tempRotatedOffset{};
         Vector2 tempIntermediateOffsets{};
         float tempAngleCos = 0.0f;
@@ -794,7 +794,7 @@ namespace transform
     {
         auto registry = &globals::registry;
         
-        ZoneScopedN("SyncPerfectlyToMaster");
+        // ZoneScopedN("SyncPerfectlyToMaster");
 
         // copy all actual values from parent
         selfTransform.setActualX(parentTransform.getActualX());
@@ -1014,7 +1014,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto UpdateAllTransforms(entt::registry *registry, float dt) -> void
     {
-        ZoneScopedN("Update all transforms");
+        // ZoneScopedN("Update all transforms");
         
         // updateTransformCacheForAllTransforms();
         
@@ -1041,7 +1041,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     // };
     auto UpdateTransform(entt::entity e, float dt, Transform &transform, InheritedProperties &role, GameObject &node) -> void
     {
-        ZoneScopedN("UpdateTransform");
+        // ZoneScopedN("UpdateTransform");
         
         auto registry = &globals::registry;
 
@@ -1077,7 +1077,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (role.role_type == InheritedProperties::Type::RoleCarbonCopy)
         {
-            ZoneScopedN("RoleCarbonCopy");
+            // ZoneScopedN("RoleCarbonCopy");
             if (registry->valid(role.master))
             {
                 SyncPerfectlyToMaster(e, role.master, transform, role, *parentTransform, *parentRole);
@@ -1086,7 +1086,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::RoleInheritor)
         {
-            ZoneScopedN("RoleInheritor");
+            // ZoneScopedN("RoleInheritor");
             if (registry->valid(role.master))
             {
                 
@@ -1123,7 +1123,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::PermanentAttachment)
         {
-            ZoneScopedN("RolePermanentAttachment");
+            // ZoneScopedN("RolePermanentAttachment");
             // ignore sync bonds
             
             if (registry->valid(role.master))
@@ -1175,7 +1175,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         else if (role.role_type == InheritedProperties::Type::RoleRoot)
         {
-            ZoneScopedN("RoleRoot");
+            // ZoneScopedN("RoleRoot");
             transform.frameCalculation.stationary = true;
             UpdateDynamicMotion(e, dt, transform);
             
@@ -1308,7 +1308,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto DrawBoundingBoxAndDebugInfo(entt::registry *registry, entt::entity e, std::shared_ptr<layer::Layer> layer) -> void
     {
-        ZoneScopedN("DrawBoundingBoxAndDebugInfo");
+        // ZoneScopedN("DrawBoundingBoxAndDebugInfo");
         if (debugMode == false)
             return;
 

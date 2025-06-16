@@ -6,7 +6,7 @@
 #include "graphics.hpp"
 #include "globals.hpp"
 
-#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+// #include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 #include "../components/components.hpp"
 #include "../components/graphics.hpp"
@@ -843,7 +843,7 @@ namespace game
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });
         
-        ZoneScopedN("game::update"); // custom label
+        // ZoneScopedN("game::update"); // custom label
         if (gameStarted == false)
             gameStarted = true;
 
@@ -859,7 +859,7 @@ namespace game
         shaders::updateAllShaderUniforms();
         
         {
-            ZoneScopedN("TextSystem::Update");
+            // ZoneScopedN("TextSystem::Update");
             auto textView = globals::registry.view<TextSystem::Text>();
             for (auto e : textView)
             {
@@ -874,7 +874,7 @@ namespace game
         //     ui::box::Move(globals::registry, e, f);
         // }
         {
-            ZoneScopedN("Collison quadtree populate Update");
+            // ZoneScopedN("Collison quadtree populate Update");
             initCollisionEveryFrame();
         }
         
@@ -890,7 +890,7 @@ namespace game
             //                                  transform::GameObject,
             //                                  transform::Transform>();
 
-            ZoneScopedN("UIElement Update");
+            // ZoneScopedN("UIElement Update");
             // static auto uiElementGroup = globals::registry.group
 
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
@@ -917,7 +917,7 @@ namespace game
 
     auto draw(float dt) -> void
     {
-        ZoneScopedN("game::draw"); // custom label
+        // ZoneScopedN("game::draw"); // custom label
         layer::Begin(); // clear all commands, we add new ones every frame
 
         // set up layers (needs to happen every frame)
@@ -927,7 +927,7 @@ namespace game
         });
         
         {
-            ZoneScopedN("game::draw-lua draw main script");
+            // ZoneScopedN("game::draw-lua draw main script");
             // update lua main script
             sol::protected_function_result result = luaMainDrawFunc(dt);
             if (!result.valid()) {
@@ -938,7 +938,7 @@ namespace game
 
 
         {
-            ZoneScopedN("game::draw-UIElement Draw");
+            // ZoneScopedN("game::draw-UIElement Draw");
             // debug draw ui elements (draw ui boxes, will auto-propogate to children)
             // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
             // for (auto e : viewUI)
@@ -950,7 +950,7 @@ namespace game
         
         // do transform debug drawing
         {
-            ZoneScopedN("Transform Debug Draw");
+            // ZoneScopedN("Transform Debug Draw");
             auto view = globals::registry.view<transform::Transform>();
             if (globals::drawDebugInfo)
                 for (auto e : view)
@@ -967,7 +967,7 @@ namespace game
 
         // dynamic text
         {
-            ZoneScopedN("Dynamic Text Draw");
+            // ZoneScopedN("Dynamic Text Draw");
             auto textView = globals::registry.view<TextSystem::Text>();
             for (auto e : textView)
             {
@@ -977,7 +977,7 @@ namespace game
 
         //TODO: need to test this
         {
-            ZoneScopedN("AnimatedSprite Draw");
+            // ZoneScopedN("AnimatedSprite Draw");
             auto spriteView = globals::registry.view<AnimationQueueComponent>();
             for (auto e : spriteView)
             {
@@ -1007,7 +1007,7 @@ namespace game
         // uiProfiler.Stop();
         
         {
-            ZoneScopedN("Particle Draw");
+            // ZoneScopedN("Particle Draw");
             particle::DrawParticles(globals::registry, ui_layer);
         }
         
@@ -1049,24 +1049,24 @@ namespace game
 
 
         {
-            ZoneScopedN("LayerCommandsToCanvas Draw");
+            // ZoneScopedN("LayerCommandsToCanvas Draw");
             {
-                ZoneScopedN("background layer commands");
+                // ZoneScopedN("background layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(background, "main", nullptr);  // render the background layer commands to its main canvas
             }
             
             {
-                ZoneScopedN("ui layer commands");
+                // ZoneScopedN("ui layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
             }
             
             {
-                ZoneScopedN("sprites layer commands");
+                // ZoneScopedN("sprites layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
             }
             
             {
-                ZoneScopedN("final output layer commands");
+                // ZoneScopedN("final output layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
             }
             
@@ -1088,7 +1088,7 @@ namespace game
             // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
             
             {
-                ZoneScopedN("Draw canvases to other canvases with shaders");
+                // ZoneScopedN("Draw canvases to other canvases with shaders");
                 layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, spectrum_line); // render the background layer main canvas to the screen
 
                 
@@ -1116,19 +1116,19 @@ namespace game
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(sprites, "flash", 0, 0, 0, 1, 1, WHITE);   // render the sprite layer flash canvas to the screen
 
         {
-            ZoneScopedN("Final Output Draw to screen");
+            // ZoneScopedN("Final Output Draw to screen");
             BeginDrawing();
 
             // clear screen
             ClearBackground(BLACK);
             
             {
-                ZoneScopedN("Draw canvas to render target (screen)");
+                // ZoneScopedN("Draw canvas to render target (screen)");
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
             }
             
             {
-                ZoneScopedN("injected lua shaders (fullscreen)");
+                // ZoneScopedN("injected lua shaders (fullscreen)");
                 
                 for (auto &shaderName : fullscreenShaders) {
                     #ifdef __EMSCRIPTEN__
@@ -1148,7 +1148,7 @@ namespace game
             }
             
             {
-                ZoneScopedN("Debug UI");
+                // ZoneScopedN("Debug UI");
                 rlImGuiBegin(); // Required: starts ImGui frame
 
                 // shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
@@ -1164,7 +1164,7 @@ namespace game
             fade_system::draw();
 
             {
-                ZoneScopedN("EndDrawing call");
+                // ZoneScopedN("EndDrawing call");
                 EndDrawing();
             }
 

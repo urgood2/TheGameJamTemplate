@@ -1387,7 +1387,7 @@ namespace layer
     }
 
     void Begin() {
-        ZoneScopedN("Layer Begin-clear commands");
+        // ZoneScopedN("Layer Begin-clear commands");
         ClearAllDrawCommands();
     }
 

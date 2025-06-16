@@ -397,7 +397,7 @@ namespace animation_system {
     }
 
     auto update(float delta) -> void {
-        ZoneScopedN("Update animation system");
+        // ZoneScopedN("Update animation system");
         auto view = globals::registry.view<AnimationQueueComponent>();
     
         for (auto &e : view) {

@@ -24,7 +24,7 @@ using json = nlohmann::json;
 #endif
 
 
-#include "third_party/tracy-master/public/tracy/Tracy.hpp"
+// #include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 #include "entt/fwd.hpp"
 

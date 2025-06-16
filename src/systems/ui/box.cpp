@@ -1652,7 +1652,7 @@ namespace ui
     // entity is a uibox.
     // void box::Draw(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity)
     // {
-    //     ZoneScopedN("UIBox::Draw");
+    //     // ZoneScopedN("UIBox::Draw");
     //     // LATER: do not draw if already drawn this frame
     //     auto *uiBox = registry.try_get<UIBoxComponent>(entity);
     //     auto *uiState = registry.try_get<UIState>(entity);
@@ -1666,7 +1666,7 @@ namespace ui
     //     // Draw the box's child elements, not the ui root's. The ui hierarchy is stored in the ui root's children, so these would be special-case.
     //     if (node)
     //     {
-    //         ZoneScopedN("UIBox::DrawUIBOXChildren(notRoot)");
+    //         // ZoneScopedN("UIBox::DrawUIBOXChildren(notRoot)");
     //         for (auto childEntry : node->children)
     //         {
     //             auto &entryName = childEntry.first;
@@ -1702,7 +1702,7 @@ namespace ui
     //         // 🎨 Draw the root UI element
     //         if (uiBox->uiRoot)
     //         {
-    //             ZoneScopedN("UIBox::Draw::RootElement");
+    //             // ZoneScopedN("UIBox::Draw::RootElement");
     //             // TODO: are child nodes in defs added to root's children, or to the ui box as children?
     //             element::DrawSelf(layerPtr, registry, uiBox->uiRoot.value());
     //             element::DrawChildren(layerPtr, registry, uiBox->uiRoot.value());
@@ -1712,7 +1712,7 @@ namespace ui
     //         // TODO: should elements in layers be excluded from other drawing like above? figure out
     //         for (auto layerEntry : uiBox->drawLayers)
     //         {
-    //             ZoneScopedN("UIBox::DrawIfLayer");
+    //             // ZoneScopedN("UIBox::DrawIfLayer");
     //             auto layerEntity = layerEntry.second;
     //             if (registry.valid(layerEntity))
     //             {
@@ -1735,7 +1735,7 @@ namespace ui
     //     // REVIEW: alerts are the red pips on the top right. alerts can also be popups?
     //     if (node->children.find("alert") != node->children.end())
     //     {
-    //         ZoneScopedN("UIBox::Draw::Alert");
+    //         // ZoneScopedN("UIBox::Draw::Alert");
     //         auto alert = node->children["alert"];
     //         if (registry.valid(alert))
     //         {

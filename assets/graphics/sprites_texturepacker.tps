@@ -4,7 +4,7 @@
         <key>fileFormatVersion</key>
         <int>6</int>
         <key>texturePackerVersion</key>
-        <string>7.6.3</string>
+        <string>7.7.0</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -1583,6 +1583,30 @@
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_side_r.png</key>
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_l.png</key>
             <key type="filename">pre-packing-files_globbed/Xbox Series/Default/xbox_stick_top_r.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile1.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile10.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile11.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile12.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile13.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile14.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile2.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile3.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile4.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile5.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile6.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile7.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile8.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile9.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale1.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale10.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale2.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale3.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale4.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale5.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale6.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale7.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale8.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale9.png</key>
             <key type="filename">rounded_rect.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -1595,6 +1619,39 @@
                 <rect>16,16,32,32</rect>
                 <key>scale9Paddings</key>
                 <rect>16,16,32,32</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-1.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>2,2,4,4</rect>
+                <key>scale9Paddings</key>
+                <rect>2,2,4,4</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
+            <key type="filename">rounded_rect_very_small.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9Paddings</key>
+                <rect>4,4,8,8</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -1949,21 +2006,6 @@
                 <rect>32,32,64,64</rect>
                 <key>scale9Paddings</key>
                 <rect>32,32,64,64</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">rounded_rect_very_small.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9Paddings</key>
-                <rect>4,4,8,8</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -3516,6 +3558,34 @@
                     <filename>rounded_rect.png</filename>
                     <filename>rounded_rect_small.png</filename>
                     <filename>rounded_rect_very_small.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale1.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale10.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale2.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale3.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale4.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale5.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale6.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale7.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale8.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale9.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile1.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile10.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile11.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile12.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile13.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile14.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile2.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile3.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile4.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile5.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile6.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile7.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile8.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile9.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/krill-1.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/krill.png</filename>
                 </array>
             </struct>
         </map>

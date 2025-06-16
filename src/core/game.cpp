@@ -351,36 +351,13 @@ namespace game
             spdlog::error("Lua init failed: {}", err.what());
         }
         
-        timer::TimerSystem::timer_tween(
-        10.0f,                              // duration in seconds
-            [&]() { return testValue; },      // getter
-            [&](float v) { testValue = v; },  // setter
-            100.0f,                            // target_value
-            [](float t) { return t; },        // linear easing
-            []() { /* after‐tween: no‐op */ },
-            "test_tween"                      // explicit tag
-        );
-        tweenScheduled = true;
-
-        
     }
     
     
 
     auto update(float delta) -> void
     {
-        auto info = timer::TimerSystem::timer_get_timer_and_delay("test_tween");
-        float elapsed   = info ? info->first  : 0.0f;
-        float delay     = info ? info->second : 0.0f;
-        bool  exists    = info.has_value();
-        if (exists && elapsed >= delay && tweenScheduled) {
-            tweenScheduled = false; // only run once
-            SPDLOG_DEBUG("Tween completed, value: {}", testValue);
-        } else if (exists) {
-            SPDLOG_DEBUG("Tween still in progress, elapsed: {}, delay: {}, value: {}", elapsed, delay, testValue);
-        } else {
-            SPDLOG_DEBUG("No tween found with tag 'test_tween'");
-        }
+        
         globals::getMasterCacheEntityToParentCompMap.clear();
         globals::g_springCache.clear();
         

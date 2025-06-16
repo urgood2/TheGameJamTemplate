@@ -333,7 +333,7 @@
         ]
     },
 
-    "blue_whale": {
+    "blue_whale_anim": {
         "frames": [
             {
                 "sprite_UUID": "blue-whale1.png",
@@ -397,7 +397,7 @@
             }
         ]
     },
-    "blue_whale_smile": {
+    "blue_whale_smile_anim": {
         "frames": [
             {
                 "sprite_UUID": "blue-whale-smile1.png",
@@ -487,7 +487,7 @@
         ]
     },
     
-    "krill_1": {
+    "krill_1_anim": {
         "frames": [
             {
                 "sprite_UUID": "krill.png",
@@ -497,7 +497,7 @@
             }
         ]
     },
-    "krill_2": {
+    "krill_2_anim": {
         "frames": [
             {
                 "sprite_UUID": "krill-1.png",
@@ -507,7 +507,7 @@
             }
         ]
     },
-    "krill_3": {
+    "krill_3_anim": {
         "frames": [
             {
                 "sprite_UUID": "krill-2.png",
@@ -517,7 +517,7 @@
             }
         ]
     },
-    "krill_4": {
+    "krill_4_anim": {
         "frames": [
             {
                 "sprite_UUID": "krill-3.png",

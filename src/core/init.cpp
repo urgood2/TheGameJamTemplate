@@ -60,6 +60,20 @@ namespace init {
         {
             uuid::add(pathStr);
         }
+        
+        for (const auto& pathStr : subpaths)
+        {
+            // Add full path
+            uuid::add(pathStr);
+
+            // Also add just the filename if it exists and is not a directory
+            std::filesystem::path fsPath(pathStr);
+            if (std::filesystem::is_regular_file(fsPath))
+            {
+                auto filename = fsPath.filename().string(); // e.g., "enemy.png"
+                uuid::add(filename);
+            }
+        }
     }
 
     // Loads JSON data from various files and initializes game data structures.
@@ -272,6 +286,13 @@ namespace init {
                 for (auto& cp437Sprite : spriteJson.at("frames"))
                 {
                     std::string filename = cp437Sprite.at("filename").get<std::string>();
+                    
+                    // if file name contains "blue-whale"
+                    if (filename.find("blue-whale") != std::string::npos)
+                    {
+                        // debug
+                        SPDLOG_DEBUG("Skipping sprite with filename containing 'blue-whale': {}", filename);
+                    }
 
                     // Generate UUID using unify
                     std::string uuid = uuid::add(filename);
@@ -355,6 +376,7 @@ namespace init {
 
     globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier) {
         using namespace snowhouse;
+        auto test = uuid::lookup(uuid_or_raw_identifier);
         AssertThat(globals::spriteDrawFrames.find(uuid::lookup(uuid_or_raw_identifier)) != globals::spriteDrawFrames.end(), IsTrue());
         return globals::spriteDrawFrames[uuid::lookup(uuid_or_raw_identifier)];
     }

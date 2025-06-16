@@ -382,7 +382,9 @@ add_custom_target(configure_web_build
     COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. 
         -DPLATFORM=Web 
         -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -O0 -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0"
+        -DCMAKE_C_FLAGS="-fexceptions -fwasm-exceptions"
+        -DCMAKE_CXX_FLAGS="-fexceptions -fwasm-exceptions"
+        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -O0 -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sDISABLE_EXCEPTION_CATCHING=0 -sEXCEPTION_CATCHING_ALLOWED='[\"*\"]"
         -DCMAKE_EXECUTABLE_SUFFIX=\".html\"
     WORKING_DIRECTORY ${BUILD_DIR}
     COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"

@@ -39,8 +39,7 @@ namespace timer
             return out_min + ((x - in_min) * (out_max - out_min) / (in_max - in_min));
         }
 
-        inline float lerp(float t, float a, float b)
-        {
+        inline float lerp(float a, float b, float t) {
             return a + t * (b - a);
         }
 
@@ -419,20 +418,22 @@ namespace timer
                 }
                 else if (timer.type == TimerType::TWEEN)
                 {
-                    if (timer.timer <= timer.delay)
+                    float effective = timer.delay * timer.multiplier;  // if you ever use multiplier
+                    if (timer.timer < effective)
                     {
-                        // Call the action with elapsed time
+                        // Normal interpolated step
                         timer.action(timer.timer);
                     }
                     else
                     {
-                        // Final update to ensure target is set and call the after action
-                        timer.setter(timer.target_value);
+                        // Final eased step at t = 1.0
+                        timer.action(effective);
                         timer.after();
                         it = timers.erase(it);
                         continue;
                     }
                 }
+
 
                 ++it; // Move to the next timer
             }

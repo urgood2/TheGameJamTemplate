@@ -108,10 +108,10 @@ function main.init()
         -- Example 1: fixed 2-second tween
         globalShaderUniforms:set("shockwave", "radius", 0)
         timer.tween(
-            2.0,                                 -- duration in seconds
+            5,                                 -- duration in seconds
             function() return globalShaderUniforms:get("shockwave", "radius") end,   -- getter
             function(v) globalShaderUniforms:set("shockwave", "radius", v) end,     -- setter
-            4.0                               -- target_value
+            2.0                               -- target_value
         )
     end, 0, true, nil, "shockwave_uniform_tween")
 

@@ -212,8 +212,10 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 
 }
 // The main game loop function that runs until the application or window is closed.
+// The main game loop callback / blocking loop
 void RunGameLoop()
 {
+    SPDLOG_DEBUG("RunGameLoop called");
     // Store the initial time
     float lastFrameTime = GetTime();
 
@@ -230,8 +232,12 @@ void RunGameLoop()
 
     bool firstFrame = true;
 
+#ifndef __EMSCRIPTEN__
+    // On desktop, spin until window closes:
     while (!WindowShouldClose())
     {
+#endif
+
         using namespace main_loop;
 
         // Smooth deltaTime over the last few frames
@@ -266,14 +272,6 @@ void RunGameLoop()
             mainLoop.frame++; // increment frame counter
         }
 
-        // SPDLOG_DEBUG("mainloop.rate: {}, GetFrameTime(): {}, smoothedDeltaTime: {}, lag: {}, updatesPerformed: {}",
-                    //  mainLoop.rate, GetFrameTime(), deltaTime, mainLoop.lag, updatesPerformed);
-        // if (updatesPerformed == 0) {
-
-        //     SPDLOG_DEBUG("No updates performed this frame, frame time: {}", GetFrameTime());
-        //     MainLoopFixedUpdateAbstraction(GetFrameTime()); // fallback
-        // }
-
         // Update the UPS (updates per second) counter
         mainLoop.updateTimer += deltaTime;
         if (mainLoop.updateTimer >= 1.0f)
@@ -283,12 +281,8 @@ void RunGameLoop()
             mainLoop.updateTimer = 0.0f;
         }
 
-#ifndef __EMSCRIPTEN__
-            MainLoopRenderAbstraction(deltaTime);
-#else
-        // Let the browser handle FPS rendering for web builds
+        // Render
         MainLoopRenderAbstraction(deltaTime);
-#endif
 
         // Update FPS counter (accurate version)
         frameCounter++;
@@ -299,9 +293,15 @@ void RunGameLoop()
             frameCounter = 0;
             fpsLastTime = now;
         }
-    }
-}
 
+#ifdef __EMSCRIPTEN__
+        // Under Emscripten, stop the browser loop if window is closed
+        // if (WindowShouldClose())
+        //     emscripten_cancel_main_loop();
+#else
+    }
+#endif
+}
 int main(void)
 {
 
@@ -340,14 +340,14 @@ int main(void)
 
     // audio::SetMusic(MENU_MUSIC1);
 
-
+    SPDLOG_INFO("Starting game loop...");
 #ifdef __EMSCRIPTEN__
 
     emscripten_set_main_loop(RunGameLoop, 0, 1);
 #else
 
     // try {
-
+    
     // Main game loop
     while (!WindowShouldClose())
     { // Detect window close button or ESC key

@@ -77,10 +77,8 @@ local PlayerLogic = {
 
 function main.init()
     -- -- entity creation example
-    bowser = create_ai_entity("kobold") -- Create a new entity of type kobold
+    bowser = create_ai_entity("kobold") -- Create a new entity of ai type kobold
 
-
-    
     registry:add_script(bowser, PlayerLogic) -- Attach the script to the entity
 
     animation_system.setupAnimatedObjectOnEntity(
@@ -90,6 +88,7 @@ function main.init()
         nil,-- shader_prepass, -- Optional shader pass config function
         true -- Enable shadow
     )    
+
     animation_system.resizeAnimationObjectsInEntityToFit(
         bowser, 
         120, -- Width
@@ -99,11 +98,12 @@ function main.init()
     -- add optional fullscreen shader which will be applied to the whole screen, can be removed later
     add_fullscreen_shader("flash")
     
-    assert(globalShaderUniforms, "globalShaderUniforms not registered!")
-    
+    -- shader uniform manipulation example
+    assert(globalShaderUniforms, "globalShaderUniforms not registered!")    
     globalShaderUniforms:set("flash", "randomUniform", 0.5) -- Set a nonexistant uniform for the flash shader)
 
-    
+
+    -- manipulate the transformComp    
     transformComp = registry:get(bowser, Transform)
     
     transformComp.actualX = 600
@@ -111,6 +111,7 @@ function main.init()
     transformComp.actualW = 100
     transformComp.actualH = 100
 
+    -- use a timer to update the position of Bowser every second
     timer.every(1.0, function()
         transformComp.actualX = transformComp.actualX + 10
         transformComp.actualY = transformComp.actualY - 10
@@ -118,6 +119,7 @@ function main.init()
         print("Bowser size = " .. transformComp.actualW .. ', ' .. transformComp.actualH)
     end, 0, true, nil, "bowser_timer")
 
+    -- add a task to the scheduler that will fade out the screen for 5 seconds
     local p1 = {
         update = function(self, dt)
             debug("Fade out screen")

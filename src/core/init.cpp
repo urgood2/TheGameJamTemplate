@@ -78,32 +78,32 @@ namespace init {
 
         jsonStream.close();
 
-        jsonStream.open(util::getAssetPathUUIDVersion("raws/colors.json"));
+        jsonStream.open(util::getRawAssetPathNoUUID("raws/colors.json"));
         globals::colorsJSON = json::parse(jsonStream);
 
         jsonStream.close();
 
-        jsonStream.open(util::getAssetPathUUIDVersion("graphics/animations.json"));
+        jsonStream.open(util::getRawAssetPathNoUUID("graphics/animations.json"));
         globals::animationsJSON = json::parse(jsonStream);
 
         jsonStream.close();
         
-        jsonStream.open(util::getAssetPathUUIDVersion("assets/config.json"));
+        jsonStream.open(util::getRawAssetPathNoUUID("config.json"));
         globals::configJSON = json::parse(jsonStream);
         
         jsonStream.close();
 
-        jsonStream.open(util::getAssetPathUUIDVersion("scripts/scripting_config.json"));
+        jsonStream.open(util::getRawAssetPathNoUUID("scripts/scripting_config.json"));
         globals::aiConfigJSON = json::parse(jsonStream);
         
         jsonStream.close();
 
-        jsonStream.open(util::getAssetPathUUIDVersion("scripts/ai_worldstate.json"));
+        jsonStream.open(util::getRawAssetPathNoUUID("scripts/ai_worldstate.json"));
         globals::aiWorldstateJSON = json::parse(jsonStream);
         
         jsonStream.close();
 
-        jsonStream.open(util::getAssetPathUUIDVersion("scripts/ai_actions.json"));
+        jsonStream.open(util::getRawAssetPathNoUUID("scripts/ai_actions.json"));
         globals::aiActionsJSON = json::parse(jsonStream);
         
         jsonStream.close();
@@ -223,7 +223,7 @@ namespace init {
             // SPDLOG_DEBUG("Loaded color {} with values r: {} g: {} b: {}", colorName, r, g, b);
         }
 
-        auto filePath = util::getAssetPathUUIDVersion("raws/colors.json");
+        auto filePath = util::getRawAssetPathNoUUID("raws/colors.json");
         std::ofstream outFile(filePath);
         if (!outFile.is_open())
         {
@@ -536,7 +536,7 @@ namespace init {
         ai_system::init();
         graphics::init();
         shaders::loadShadersFromJSON("shaders/shaders.json");
-        sound_system::LoadFromJSON(util::getAssetPathUUIDVersion("sounds/sounds.json"));
+        sound_system::LoadFromJSON(util::getRawAssetPathNoUUID("sounds/sounds.json"));
     }
 
     /**

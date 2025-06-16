@@ -617,11 +617,11 @@ namespace ai_system
 
         // read in master lua state
 
-        std::string tutorialDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["tutorialDirectory"].get<std::string>()));
-        std::string coreDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["coreDirectory"].get<std::string>()));
-        std::string monoBehaviorDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["monoBehaviorDirectory"].get<std::string>()));
-        std::string taskDir = util::getAssetPathUUIDVersion(fmt::format("scripts/{}", globals::aiConfigJSON["taskDirectory"].get<std::string>()));
-        std::string aiInitDir = util::getAssetPathUUIDVersion("scripts/ai");
+        std::string tutorialDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["tutorialDirectory"].get<std::string>()));
+        std::string coreDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["coreDirectory"].get<std::string>()));
+        std::string monoBehaviorDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["monoBehaviorDirectory"].get<std::string>()));
+        std::string taskDir = util::getRawAssetPathNoUUID(fmt::format("scripts/{}", globals::aiConfigJSON["taskDirectory"].get<std::string>()));
+        std::string aiInitDir = util::getRawAssetPathNoUUID("scripts/ai");
 
         std::vector<std::string> luaFiles{};
 

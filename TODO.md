@@ -17,6 +17,8 @@
 
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
+- [ ] vertex rendering off for web? how to debug? (rounded rects)
+- [ ] Some text not rendering
 
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?

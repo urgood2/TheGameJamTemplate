@@ -187,7 +187,7 @@ namespace sound_system {
                 for (const auto& sound : category.value()["sounds"].items()) {
                     std::string soundName = sound.key();
                     std::string filePath = sound.value().get<std::string>();
-                    filePath = util::getAssetPathUUIDVersion(filePath);
+                    filePath = util::getRawAssetPathNoUUID(filePath);
                     categories[categoryName].sounds[soundName] = LoadSound(filePath.c_str());
                     SPDLOG_DEBUG("[SOUND] Loaded sound: {} from {}", soundName, filePath);
                 }
@@ -210,7 +210,7 @@ namespace sound_system {
             for (const auto& music : soundData.at("music").items()) {
                 std::string musicName = music.key();
                 std::string musicPath = music.value().get<std::string>();
-                musicFiles[musicName] = util::getAssetPathUUIDVersion(musicPath);
+                musicFiles[musicName] = util::getRawAssetPathNoUUID(musicPath);
                 SPDLOG_DEBUG("[SOUND] Loaded music {} with file name: {}", musicName, musicPath);
             }
         }

@@ -28,6 +28,12 @@ public:
 
     }
 
+    /// Remove all entries and collapse the tree back to a single root node
+    void clear()
+    {
+        clearNode(mRoot.get());
+    }
+
     void add(const T& value)
     {
         add(mRoot.get(), 0, mBox, value);
@@ -71,6 +77,23 @@ private:
     std::unique_ptr<Node> mRoot;
     GetBox mGetBox;
     Equal mEqual;
+
+    // Recursively clear values and delete children
+    void clearNode(Node* node)
+    {
+        // Remove all values, but keep the vector’s capacity
+        node->values.clear();
+
+        // Recursively clear & destroy children
+        for (auto& child : node->children)
+        {
+            if (child)
+            {
+                clearNode(child.get());
+                child.reset();  // delete this child subtree
+            }
+        }
+    }
 
     bool isLeaf(const Node* node) const
     {

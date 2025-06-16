@@ -85,6 +85,7 @@ namespace util {
     std::string getAssetPathUUIDVersion(const std::string path_uuid_or_raw_identifier) { // path below the assets folder {
         auto path = uuid::lookup(path_uuid_or_raw_identifier);
         using namespace snowhouse;
+        SPDLOG_DEBUG("getAssetPathUUIDVersion({}) -> {}", path_uuid_or_raw_identifier, path);
         AssertThat(path, Is().Not().EqualTo(""));
         //  Replace all backslashes with forward slashes for consistency
         std::replace(path.begin(), path.end(), '\\', '/');
@@ -170,6 +171,7 @@ namespace util {
     }
 
     auto getRawAssetPathNoUUID(const string assetName) -> string {
+        SPDLOG_DEBUG("getRawAssetPathNoUUID({})", assetName);
         return ASSETS_PATH "" + assetName;
     }
 
@@ -298,7 +300,7 @@ namespace util {
     }
     
     auto convertCP437TextToJSON() -> void {
-        std::ifstream input_stream(util::getAssetPathUUIDVersion("raws/cp437 temp"));
+        std::ifstream input_stream(util::getRawAssetPathNoUUID("raws/cp437 temp"));
         
         // check stream status
         if (!input_stream) std::cerr << "Can't open input file!";  
@@ -359,14 +361,14 @@ namespace util {
             
             lineNo++;
         }
-        std::ofstream o(util::getAssetPathUUIDVersion("raws/save_cp437.json"));
+        std::ofstream o(util::getRawAssetPathNoUUID("raws/save_cp437.json"));
         SPDLOG_DEBUG("Saving json: {}", root.dump());
         o << std::setw(4) << root << std::endl;
     }
 
     auto convertColorsFileToJSON() -> void {
         
-        std::ifstream input_stream(util::getAssetPathUUIDVersion("raws/colors.txt"));
+        std::ifstream input_stream(util::getRawAssetPathNoUUID("raws/colors.txt"));
         
         // check stream status
         if (!input_stream) std::cerr << "Can't open input file!";  

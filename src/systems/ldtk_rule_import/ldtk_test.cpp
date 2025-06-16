@@ -436,7 +436,7 @@ namespace ldtk_test {
 
     bool initLDTKTest() {
 
-        std::string file = fmt::format("{}", util::getAssetPathUUIDVersion(globals::configJSON.at("tileset").at("ldtk_file_path").get<std::string>()));
+        std::string file = fmt::format("{}", util::getRawAssetPathNoUUID(globals::configJSON.at("tileset").at("ldtk_file_path").get<std::string>()));
         // bool loadSuccess = demoLdtk.load(fmt::format("{}", util::getAssetPathUUIDVersion("graphics/newTest - ascii.ldtk")).c_str());
         // bool loadSuccess = demoLdtk.load(fmt::format("{}", util::getAssetPathUUIDVersion("graphics/newTest - mrmotext.ldtk")).c_str());
         // bool loadSuccess = demoLdtk.load(fmt::format("{}", util::getAssetPathUUIDVersion("graphics/newTest - graphicTiles.ldtk")).c_str());

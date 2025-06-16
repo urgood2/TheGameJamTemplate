@@ -448,9 +448,9 @@ const char *fragmentShaderSource = R"(
         mvpLoc = GetShaderLocation(shader, "mvp");
 
         // Load multiple textures
-        textures[0] = LoadTexture(util::getAssetPathUUIDVersion("graphics/particles/particle.png").c_str());
-        textures[1] = LoadTexture(util::getAssetPathUUIDVersion("graphics/particles/particle_circle.png").c_str());
-        textures[2] = LoadTexture(util::getAssetPathUUIDVersion("graphics/particles/particle_square.png").c_str());
+        textures[0] = LoadTexture(util::getRawAssetPathNoUUID("graphics/particles/particle.png").c_str());
+        textures[1] = LoadTexture(util::getRawAssetPathNoUUID("graphics/particles/particle_circle.png").c_str());
+        textures[2] = LoadTexture(util::getRawAssetPathNoUUID("graphics/particles/particle_square.png").c_str());
         
 
         for (int i = 0; i < MAX_TEXTURES; i++)

@@ -104,6 +104,7 @@ float transitionShaderPositionVar = 0.f;
 
 namespace game
 {
+    quadtree::Box<float> expandedBounds;
     
     std::vector<std::string> fullscreenShaders;
 
@@ -177,19 +178,21 @@ namespace game
         
         constexpr float buffer = 200.f;
 
-        // 1) build an expanded bounds rectangle
-        //    (assumes worldBounds.x,y is the top-left and width/height are positive)
-        Box<float> expandedBounds;
-        expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;
-        expandedBounds.left = globals::worldBounds.getTopLeft().x - buffer;
-        expandedBounds.width = globals::worldBounds.getSize().x + 2 * buffer;
-        expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
+        // // 1) build an expanded bounds rectangle
+        // //    (assumes worldBounds.x,y is the top-left and width/height are positive)
+        // Box<float> expandedBounds;
+        // expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;
+        // expandedBounds.left = globals::worldBounds.getTopLeft().x - buffer;
+        // expandedBounds.width = globals::worldBounds.getSize().x + 2 * buffer;
+        // expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
 
-        // 2) reset the quadtree using the bigger area
-        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
-            expandedBounds,
-            globals::getBox
-        );
+        // // 2) reset the quadtree using the bigger area
+        // globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
+        //     expandedBounds,
+        //     globals::getBox
+        // );
+
+        globals::quadtree.clear();
 
         // Populate the Quadtree Per Frame
         globals::registry.view<transform::Transform>().each([&](entt::entity e, transform::Transform& transform) {
@@ -816,6 +819,22 @@ namespace game
             spdlog::error("Lua init failed: {}", err.what());
         }
         
+
+        /// build quadtree for collision detection
+        // 1) build an expanded bounds rectangle
+        //    (assumes worldBounds.x,y is the top-left and width/height are positive)
+        using namespace quadtree;
+        Box<float> expandedBounds;
+        expandedBounds.top = globals::worldBounds.getTopLeft().y - buffer;
+        expandedBounds.left = globals::worldBounds.getTopLeft().x - buffer;
+        expandedBounds.width = globals::worldBounds.getSize().x + 2 * buffer;
+        expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
+
+        // 2) reset the quadtree using the bigger area
+        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
+            expandedBounds,
+            globals::getBox
+        );
     }
     
     
@@ -1030,8 +1049,8 @@ namespace game
         // shaders::TryApplyUniforms(skew, globalShaderUniforms, "3d_skew");
         // auto squish = shaders::getShader("squish");
         // shaders::TryApplyUniforms(squish, globalShaderUniforms, "squish");
-        auto peaches = shaders::getShader("peaches_background");
-        shaders::TryApplyUniforms(peaches, globals::globalShaderUniforms, "peaches_background");
+        // auto peaches = shaders::getShader("peaches_background");
+        // shaders::TryApplyUniforms(peaches, globals::globalShaderUniforms, "peaches_background");
         // auto fade = shaders::getShader("fade");
         // shaders::TryApplyUniforms(fade, globalShaderUniforms, "fade");
         // auto fade_zoom = shaders::getShader("fade_zoom");

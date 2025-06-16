@@ -287,12 +287,7 @@ namespace init {
                 {
                     std::string filename = cp437Sprite.at("filename").get<std::string>();
                     
-                    // if file name contains "blue-whale"
-                    if (filename.find("blue-whale") != std::string::npos)
-                    {
-                        // debug
-                        SPDLOG_DEBUG("Skipping sprite with filename containing 'blue-whale': {}", filename);
-                    }
+                    
 
                     // Generate UUID using unify
                     std::string uuid = uuid::add(filename);

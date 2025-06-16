@@ -212,5 +212,78 @@ namespace layer
         return cmd;
     }
     
+    /// Logs the block count and current allocations for a given CmdType pool
+    template<typename CmdType>
+    inline void LogPoolStats(const std::shared_ptr<Layer>& layer) {
+        auto& pool = layer_command_buffer::GetDrawCommandPool<CmdType>(*layer);
+        ObjectPoolStats stats = pool.calc_stats();
+        DrawCommandType cmdType = layer_command_buffer::GetDrawCommandType<CmdType>();
+        
+        // magic_enum::enum_name returns a std::string_view; convert to std::string for logging
+        auto nameView = magic_enum::enum_name(cmdType);
+        std::string name{nameView};
+        
+        spdlog::info("[PoolStats] {} → blocks={}, allocs={}", name, stats.num_blocks, stats.num_allocations);
+    }
+    
+    /// 
+    /// Logs stats for all draw-command pools defined in DrawCommandType.
+    /// Usage: layer::layer_command_buffer::LogAllPoolStats(myLayerPtr);
+    inline void LogAllPoolStats(const std::shared_ptr<Layer>& layer) {
+        // Define the list of all command types here
+        using AllCmds = std::tuple<
+            CmdBeginDrawing,
+            CmdEndDrawing,
+            CmdClearBackground,
+            CmdTranslate,
+            CmdScale,
+            CmdRotate,
+            CmdAddPush,
+            CmdAddPop,
+            CmdPushMatrix,
+            CmdPopMatrix,
+            CmdDrawCircle,
+            CmdDrawRectangle,
+            CmdDrawRectanglePro,
+            CmdDrawRectangleLinesPro,
+            CmdDrawLine,
+            CmdDrawDashedLine,
+            CmdDrawText,
+            CmdDrawTextCentered,
+            CmdTextPro,
+            CmdDrawImage,
+            CmdTexturePro,
+            CmdDrawEntityAnimation,
+            CmdDrawTransformEntityAnimation,
+            CmdDrawTransformEntityAnimationPipeline,
+            CmdSetShader,
+            CmdResetShader,
+            CmdSetBlendMode,
+            CmdUnsetBlendMode,
+            CmdSendUniformFloat,
+            CmdSendUniformInt,
+            CmdSendUniformVec2,
+            CmdSendUniformVec3,
+            CmdSendUniformVec4,
+            CmdSendUniformFloatArray,
+            CmdSendUniformIntArray,
+            CmdVertex,
+            CmdBeginOpenGLMode,
+            CmdEndOpenGLMode,
+            CmdSetColor,
+            CmdSetLineWidth,
+            CmdSetTexture,
+            CmdRenderRectVerticesFilledLayer,
+            CmdRenderRectVerticesOutlineLayer,
+            CmdDrawPolygon,
+            CmdRenderNPatchRect,
+            CmdDrawTriangle
+        >;
+
+        // Unpack and log for each
+        std::apply([&](auto... cmd){
+            (LogPoolStats<std::decay_t<decltype(cmd)>>(layer), ...);
+        }, AllCmds{});
+    }
 
 }

@@ -58,7 +58,7 @@ namespace layer
         layerTbl.new_usertype<layer::Layer>("Layer",
             sol::constructors<>(),
             "canvases",        &layer::Layer::canvases,
-            "drawCommands",    &layer::Layer::drawCommands,
+            // "drawCommands",    &layer::Layer::drawCommands,
             "fixed",           &layer::Layer::fixed,
             "zIndex",          &layer::Layer::zIndex,
             "backgroundColor", &layer::Layer::backgroundColor,
@@ -1334,14 +1334,14 @@ namespace layer
 
     void SortDrawCommands(std::shared_ptr<Layer> layer)
     {
-        std::sort(layer->drawCommands.begin(), layer->drawCommands.end(), [](const DrawCommand &a, const DrawCommand &b)
-                  { return a.z < b.z; });
+        // std::sort(layer->drawCommands.begin(), layer->drawCommands.end(), [](const DrawCommand &a, const DrawCommand &b)
+        //           { return a.z < b.z; });
     }
 
     void AddDrawCommand(std::shared_ptr<Layer> layer, const std::string &type, const std::vector<DrawCommandArgs> &args, int z)
     {
         DrawCommand command{type, args, z};
-        layer->drawCommands.push_back(command);
+        // layer->drawCommands.push_back(command);
     }
 
     std::shared_ptr<Layer> CreateLayer() {

@@ -1115,7 +1115,13 @@ namespace game
         }
 
         
-
+        // debug memory leak
+        
+        
+        // layer::LogAllPoolStats(background);
+        // layer::LogAllPoolStats(ui_layer);
+        // layer::LogAllPoolStats(sprites);
+        // layer::LogAllPoolStats(finalOutput);
 
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(ui_layer, "main", 0, 0, 0, 1, 1, WHITE);
 

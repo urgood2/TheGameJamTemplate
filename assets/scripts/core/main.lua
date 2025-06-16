@@ -97,7 +97,7 @@ function main.init()
         bowser,
         120, -- Width
         120  -- Height
-    )
+    ) 
 
     -- create some krill entities
     local num_krill = 10
@@ -131,8 +131,8 @@ function main.init()
 
         -- 3) Randomize its start position
         local tr = registry:get(kr, Transform)
-        tr.actualX = random_utils.random_int(200, 800)
-        tr.actualY = random_utils.random_int(200, 800)
+        tr.actualX = random_utils.random_int(200, globals.screenWidth - 200)
+        tr.actualY = random_utils.random_int(200, globals.screenHeight - 200)
 
         -- 4) Schedule its own movement timer, with a tag unique to this instance
         timer.every(

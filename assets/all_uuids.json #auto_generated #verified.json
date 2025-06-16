@@ -1,4 +1,7 @@
 {
+    "": [
+        ".DS_Store"
+    ],
     "&_default_keyboard_mouse": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default"
@@ -23,6 +26,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\Sprite-0001.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/Sprite-0001.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\Sprite-0001.json"
+    ],
+    "0001_sprite": [
+        "Sprite-0001.json"
     ],
     "000_border_border_panel": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-000.png",
@@ -1800,6 +1806,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_0.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_center_0.png"
     ],
+    "0_arrow_center_generic": [
+        "generic_arrow_center_0.svg"
+    ],
     "0_arrow_center_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_0.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_center_0.svg"
@@ -1811,6 +1820,9 @@
     "0_arrow_double_generic": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_0.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_0.png"
+    ],
+    "0_arrow_generic": [
+        "generic_arrow_0.svg"
     ],
     "0_arrow_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_0.svg",
@@ -1838,6 +1850,12 @@
     "0_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_0.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_0.png"
+    ],
+    "0_circle_flair": [
+        "flair_circle_0.svg"
+    ],
+    "0_circle_flair_red": [
+        "flair_circle_red_0.svg"
     ],
     "0_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_0.svg",
@@ -1880,7 +1898,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_0.svg"
     ],
     "0_sprite": [
-        "sprites-0.png"
+        "sprites-0.png",
+        "sprites-0.json"
     ],
     "10_particle_smoke": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_10.png",
@@ -10681,6 +10700,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_1.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_center_1.png"
     ],
+    "1_arrow_center_generic": [
+        "generic_arrow_center_1.svg"
+    ],
     "1_arrow_center_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_1.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_center_1.svg"
@@ -10693,6 +10715,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_1.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_1.png"
     ],
+    "1_arrow_generic": [
+        "generic_arrow_1.svg"
+    ],
     "1_arrow_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_1.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_1.svg"
@@ -10703,6 +10728,9 @@
     ],
     "1_atla_sprite": [
         "sprites_atlas-1.png"
+    ],
+    "1_blue_krill_krill_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-1.png"
     ],
     "1_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_1.png",
@@ -10719,6 +10747,12 @@
     "1_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_1.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_1.png"
+    ],
+    "1_circle_flair": [
+        "flair_circle_1.svg"
+    ],
+    "1_circle_flair_red": [
+        "flair_circle_red_1.svg"
     ],
     "1_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_1.svg",
@@ -10760,14 +10794,21 @@
     "1_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_1.svg"
     ],
+    "1_krill": [
+        "krill-1.png"
+    ],
     "1_sprite": [
-        "sprites-1.png"
+        "sprites-1.png",
+        "sprites-1.json"
     ],
     "20x20_cp437_for_graphic_sprite_viewing": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/cp437_20x20_sprites_for_viewing.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\cp437_20x20_sprites_for_viewing.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/cp437_20x20_sprites_for_viewing.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\cp437_20x20_sprites_for_viewing.png"
+    ],
+    "20x20_cp437_for_sprite_viewing": [
+        "cp437_20x20_sprites_for_viewing.png"
     ],
     "20x20_cp437_graphic_sprite": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/cp437_20x20_sprites.json",
@@ -10781,6 +10822,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/cp437_20x20_texturePackerProject.tps",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\cp437_20x20_texturePackerProject.tps"
     ],
+    "20x20_cp437_sprite": [
+        "cp437_20x20_sprites.json"
+    ],
+    "20x20_cp437_texturepackerproject": [
+        "cp437_20x20_texturePackerProject.tps"
+    ],
     "2_antique_white": [
         "ANTIQUE WHITE 2"
     ],
@@ -10791,6 +10838,9 @@
     "2_arrow_center_double_generic": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_2.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_center_2.png"
+    ],
+    "2_arrow_center_generic": [
+        "generic_arrow_center_2.svg"
     ],
     "2_arrow_center_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_2.svg",
@@ -10804,12 +10854,21 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_2.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_2.png"
     ],
+    "2_arrow_generic": [
+        "generic_arrow_2.svg"
+    ],
     "2_arrow_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_2.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_2.svg"
     ],
     "2_bisque": [
         "BISQUE 2"
+    ],
+    "2_blue_krill_krill_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-2.png"
+    ],
+    "2_celestial_circu_pro": [
+        "celestial-circus-pro_2.png"
     ],
     "2_celestial_circu_pro_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/celestial-circus-pro_2.png",
@@ -10832,6 +10891,12 @@
     "2_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_2.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_2.png"
+    ],
+    "2_circle_flair": [
+        "flair_circle_2.svg"
+    ],
+    "2_circle_flair_red": [
+        "flair_circle_red_2.svg"
     ],
     "2_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_2.svg",
@@ -10878,8 +10943,14 @@
     "2_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_2.svg"
     ],
+    "2_krill": [
+        "krill-2.png"
+    ],
     "2_peach_puff": [
         "PEACH PUFF 2"
+    ],
+    "2_pro_snowglobe": [
+        "snowglobe-pro_2.png"
     ],
     "2_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_2.png",
@@ -10904,6 +10975,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_center_3.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_center_3.png"
     ],
+    "3_arrow_center_generic": [
+        "generic_arrow_center_3.svg"
+    ],
     "3_arrow_center_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_center_3.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_center_3.svg"
@@ -10916,12 +10990,18 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_3.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_3.png"
     ],
+    "3_arrow_generic": [
+        "generic_arrow_3.svg"
+    ],
     "3_arrow_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_3.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_3.svg"
     ],
     "3_bisque": [
         "BISQUE 3"
+    ],
+    "3_blue_krill_krill_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-3.png"
     ],
     "3_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_3.png",
@@ -10938,6 +11018,12 @@
     "3_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_3.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_3.png"
+    ],
+    "3_circle_flair": [
+        "flair_circle_3.svg"
+    ],
+    "3_circle_flair_red": [
+        "flair_circle_red_3.svg"
     ],
     "3_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_3.svg",
@@ -10984,8 +11070,14 @@
     "3_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_3.svg"
     ],
+    "3_krill": [
+        "krill-3.png"
+    ],
     "3_peach_puff": [
         "PEACH PUFF 3"
+    ],
+    "3_pro_snowglobe": [
+        "snowglobe-pro_3.png"
     ],
     "3_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_3.png",
@@ -11005,6 +11097,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\3d_skew_fragment.fs"
     ],
+    "3d_fragment_skew": [
+        "3d_skew_fragment.fs"
+    ],
     "3d_fragment_skew_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\3d_skew_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/3d_skew_fragment.fs"
@@ -11014,6 +11109,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\3d_skew_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/3d_skew_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\3d_skew_vertex.vs"
+    ],
+    "3d_skew_vertex": [
+        "3d_skew_vertex.vs"
     ],
     "3d_skew_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\3d_skew_vertex.vs",
@@ -11040,6 +11138,12 @@
     "4_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_4.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_4.png"
+    ],
+    "4_circle_flair": [
+        "flair_circle_4.svg"
+    ],
+    "4_circle_flair_red": [
+        "flair_circle_red_4.svg"
     ],
     "4_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_4.svg",
@@ -11089,6 +11193,9 @@
     "4_peach_puff": [
         "PEACH PUFF 4"
     ],
+    "4_pro_snowglobe": [
+        "snowglobe-pro_4.png"
+    ],
     "4_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_4.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro_4.png",
@@ -11116,6 +11223,12 @@
     "5_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_5.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_5.png"
+    ],
+    "5_circle_flair": [
+        "flair_circle_5.svg"
+    ],
+    "5_circle_flair_red": [
+        "flair_circle_red_5.svg"
     ],
     "5_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_5.svg",
@@ -11153,6 +11266,9 @@
     "5_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_5.svg"
     ],
+    "5_pro_snowglobe": [
+        "snowglobe-pro_5.png"
+    ],
     "5_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_5.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro_5.png",
@@ -11174,6 +11290,12 @@
     "6_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_6.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_6.png"
+    ],
+    "6_circle_flair": [
+        "flair_circle_6.svg"
+    ],
+    "6_circle_flair_red": [
+        "flair_circle_red_6.svg"
     ],
     "6_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_6.svg",
@@ -11211,6 +11333,9 @@
     "6_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_6.svg"
     ],
+    "6_pro_snowglobe": [
+        "snowglobe-pro_6.png"
+    ],
     "6_pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro_6.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro_6.png",
@@ -11232,6 +11357,12 @@
     "7_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_7.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_7.png"
+    ],
+    "7_circle_flair": [
+        "flair_circle_7.svg"
+    ],
+    "7_circle_flair_red": [
+        "flair_circle_red_7.svg"
     ],
     "7_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_7.svg",
@@ -11284,6 +11415,12 @@
     "8_circle_double_flair_red": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_red_8.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_red_8.png"
+    ],
+    "8_circle_flair": [
+        "flair_circle_8.svg"
+    ],
+    "8_circle_flair_red": [
+        "flair_circle_red_8.svg"
     ],
     "8_circle_flair_red_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_red_8.svg",
@@ -11355,17 +11492,26 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Ac437_IGS_VGA_9x16.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Ac437_IGS_VGA_9x16.ttf"
     ],
+    "9x16_ac437_ig_vga": [
+        "Ac437_IGS_VGA_9x16.ttf"
+    ],
     "9x16_ati_en_px437": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Px437_ATI_9x16.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en\\Px437_ATI_9x16.ttf",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Px437_ATI_9x16.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Px437_ATI_9x16.ttf"
     ],
+    "9x16_ati_px437": [
+        "Px437_ATI_9x16.ttf"
+    ],
     "9x8_ega_en_ibm_px437": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Px437_IBM_EGA_9x8.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en\\Px437_IBM_EGA_9x8.ttf",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Px437_IBM_EGA_9x8.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Px437_IBM_EGA_9x8.ttf"
+    ],
+    "9x8_ega_ibm_px437": [
+        "Px437_IBM_EGA_9x8.ttf"
     ],
     "a_button_color_default_outline_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_a_outline.png",
@@ -11435,6 +11581,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_target_a.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_target_a.png"
     ],
+    "a_circle_flair_target": [
+        "flair_circle_target_a.svg"
+    ],
     "a_circle_flair_target_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_target_a.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_target_a.svg"
@@ -11473,9 +11622,13 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Ac437_IBM_BIOS.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Ac437_IBM_BIOS.ttf"
     ],
+    "ac437_bio_ibm": [
+        "Ac437_IBM_BIOS.ttf"
+    ],
     "action_ai": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions",
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions",
+        "ai_actions.json"
     ],
     "action_ai_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/ai_actions.json",
@@ -11508,6 +11661,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_CONTENT_EXAMPLE.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/AI_TABLE_CONTENT_EXAMPLE.lua"
     ],
+    "ai_content_example_table": [
+        "AI_TABLE_CONTENT_EXAMPLE.lua"
+    ],
     "ai_entity_type": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\entity_types"
@@ -11524,6 +11680,9 @@
     "ai_implement_script_to": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/TO_IMPLEMENT_AI.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\TO_IMPLEMENT_AI.lua"
+    ],
+    "ai_implement_to": [
+        "TO_IMPLEMENT_AI.lua"
     ],
     "ai_init": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/init.lua",
@@ -11542,6 +11701,9 @@
     "ai_updater_worldstate": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/worldstate_updaters.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\worldstate_updaters.lua"
+    ],
+    "ai_worldstate": [
+        "ai_worldstate.json"
     ],
     "air_fast_mono_sound_whoosh": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/WHOOSH_Fast_Air_mono.wav",
@@ -11568,6 +11730,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_diagonal_all.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrows_diagonal_all.png"
     ],
+    "all_arrow_diagonal_generic": [
+        "generic_arrows_diagonal_all.svg"
+    ],
     "all_arrow_diagonal_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_diagonal_all.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_diagonal_all.svg"
@@ -11579,6 +11744,9 @@
     "all_arrow_double_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_all.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Double/keyboard_arrows_all.png"
+    ],
+    "all_arrow_generic": [
+        "generic_arrows_all.svg"
     ],
     "all_arrow_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_all.svg",
@@ -11626,6 +11794,9 @@
     "all_dpad_xbox": [
         "xbox_dpad_all.png"
     ],
+    "all_uuid": [
+        "all_uuids.json #auto_generated #verified.json"
+    ],
     "almond_blanched": [
         "BLANCHED ALMOND"
     ],
@@ -11666,6 +11837,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/smooth_up_and_down_ambient.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\smooth_up_and_down_ambient.vs"
     ],
+    "ambient_and_down_smooth_up": [
+        "smooth_up_and_down_ambient.fs"
+    ],
     "ambient_and_down_smooth_up_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\smooth_up_and_down_ambient.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/smooth_up_and_down_ambient.fs"
@@ -11676,6 +11850,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/card_tilt_ambient_dynamic.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\card_tilt_ambient_dynamic.vs"
     ],
+    "ambient_card_dynamic_tilt": [
+        "card_tilt_ambient_dynamic.fs"
+    ],
     "ambient_card_dynamic_tilt_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\card_tilt_ambient_dynamic.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/card_tilt_ambient_dynamic.fs"
@@ -11683,14 +11860,23 @@
     "anim_sword": [
         "sword_anim"
     ],
+    "animation": [
+        "animations.json"
+    ],
     "animation_graphic": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/animations.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\animations.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animations.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\animations.json"
     ],
+    "animation_graphic_note": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animation_NOTES.md"
+    ],
     "animation_idle": [
         "idle_animation"
+    ],
+    "animation_note": [
+        "animation_NOTES.md"
     ],
     "antique_white": [
         "ANTIQUE WHITE"
@@ -11788,6 +11974,9 @@
     "arrow_backforth_double_generic": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrow_backforth.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrow_backforth.png"
+    ],
+    "arrow_backforth_generic": [
+        "generic_arrow_backforth.svg"
     ],
     "arrow_backforth_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_backforth.svg",
@@ -11901,9 +12090,15 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/generic_arrows_diagonal_right.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\generic_arrows_diagonal_right.png"
     ],
+    "arrow_diagonal_generic_left": [
+        "generic_arrows_diagonal_left.svg"
+    ],
     "arrow_diagonal_generic_left_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_diagonal_left.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_diagonal_left.svg"
+    ],
+    "arrow_diagonal_generic_right": [
+        "generic_arrows_diagonal_right.svg"
     ],
     "arrow_diagonal_generic_right_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_diagonal_right.svg",
@@ -12001,6 +12196,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_arrows_vertical.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Double/keyboard_arrows_vertical.png"
     ],
+    "arrow_down_generic": [
+        "generic_arrows_down.svg"
+    ],
     "arrow_down_generic_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_down.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_down.svg"
@@ -12017,25 +12215,43 @@
     "arrow_down_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_arrow_down.svg"
     ],
+    "arrow_generic_horizontal": [
+        "generic_arrows_horizontal.svg"
+    ],
     "arrow_generic_horizontal_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_horizontal.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_horizontal.svg"
+    ],
+    "arrow_generic_left": [
+        "generic_arrows_left.svg"
     ],
     "arrow_generic_left_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_left.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_left.svg"
     ],
+    "arrow_generic_long": [
+        "generic_arrow_long.svg"
+    ],
     "arrow_generic_long_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_long.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_long.svg"
+    ],
+    "arrow_generic_right": [
+        "generic_arrows_right.svg"
     ],
     "arrow_generic_right_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_right.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrows_right.svg"
     ],
+    "arrow_generic_short": [
+        "generic_arrow_short.svg"
+    ],
     "arrow_generic_short_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_short.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_short.svg"
+    ],
+    "arrow_generic_up": [
+        "generic_arrows_up.svg"
     ],
     "arrow_generic_up_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrows_up.svg",
@@ -12048,6 +12264,12 @@
     "arrow_generic_vector_z": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/generic_arrow_z.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\generic_arrow_z.svg"
+    ],
+    "arrow_generic_vertical": [
+        "generic_arrows_vertical.svg"
+    ],
+    "arrow_generic_z": [
+        "generic_arrow_z.svg"
     ],
     "arrow_horizontal_keyboard": [
         "keyboard_arrows_horizontal.png"
@@ -12246,6 +12468,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sprite_atlas_uv_remapping_snippet.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sprite_atlas_uv_remapping_snippet.md"
     ],
+    "atla_remapping_snippet_sprite_uv": [
+        "sprite_atlas_uv_remapping_snippet.md"
+    ],
     "atla_remapping_snippet_sprite_uv_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\sprite_atlas_uv_remapping_snippet.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/sprite_atlas_uv_remapping_snippet.md"
@@ -12324,6 +12549,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_circle_target_b.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_circle_target_b.png"
     ],
+    "b_circle_flair_target": [
+        "flair_circle_target_b.svg"
+    ],
     "b_circle_flair_target_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_circle_target_b.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_circle_target_b.svg"
@@ -12362,6 +12590,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/BABEL_EDIT_WARNING.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\BABEL_EDIT_WARNING.md"
     ],
+    "babel_edit_warning": [
+        "BABEL_EDIT_WARNING.md"
+    ],
     "back_default_keyboard_outline_slash": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_slash_back_outline.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_slash_back_outline.png"
@@ -12390,6 +12621,9 @@
     "back_keyboard_slash_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_back.svg"
     ],
+    "background_balatro_fragment": [
+        "balatro_background_fragment.fs"
+    ],
     "background_balatro_fragment_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/balatro_background_fragment.fs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\balatro_background_fragment.fs",
@@ -12408,19 +12642,34 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/balatro_background_fragment_v3.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\balatro_background_fragment_v3.fs"
     ],
+    "background_balatro_fragment_v2": [
+        "balatro_background_fragment_v2.fs"
+    ],
+    "background_balatro_fragment_v3": [
+        "balatro_background_fragment_v3.fs"
+    ],
     "background_balatro_shader_vertex": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/balatro_background_vertex.vs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\balatro_background_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/balatro_background_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\balatro_background_vertex.vs"
     ],
+    "background_balatro_vertex": [
+        "balatro_background_vertex.vs"
+    ],
     "background_fragment_line_shader_spectrum": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_line_background_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_line_background_fragment.fs"
     ],
+    "background_fragment_line_spectrum": [
+        "spectrum_line_background_fragment.fs"
+    ],
     "background_fragment_line_spectrum_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\spectrum_line_background_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/spectrum_line_background_fragment.fs"
+    ],
+    "background_fragment_peache": [
+        "peaches_background_fragment.fs"
     ],
     "background_fragment_peache_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\peaches_background_fragment.fs",
@@ -12434,6 +12683,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_line_background_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_line_background_vertex.vs"
     ],
+    "background_line_spectrum_vertex": [
+        "spectrum_line_background_vertex.vs"
+    ],
     "background_line_spectrum_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\spectrum_line_background_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/spectrum_line_background_vertex.vs"
@@ -12441,6 +12693,9 @@
     "background_peache_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\peaches_background_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/peaches_background_vertex.vs"
+    ],
+    "background_peache_vertex": [
+        "peaches_background_vertex.vs"
     ],
     "background_peache_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\peaches_background_vertex.vs",
@@ -12502,6 +12757,12 @@
     "backspace_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_backspace.svg"
     ],
+    "base": [
+        "base.vs"
+    ],
+    "base_function": [
+        "base_functions.lua"
+    ],
     "base_function_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/base_functions.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\base_functions.lua",
@@ -12522,6 +12783,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/customizable_spectrum_beam_overlay_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\customizable_spectrum_beam_overlay_fragment.fs"
     ],
+    "beam_customizable_fragment_overlay_spectrum": [
+        "customizable_spectrum_beam_overlay_fragment.fs"
+    ],
     "beam_customizable_fragment_overlay_spectrum_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\customizable_spectrum_beam_overlay_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/customizable_spectrum_beam_overlay_fragment.fs"
@@ -12530,11 +12794,26 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\monobehavior\\behavior_script.lua"
     ],
+    "behavior_script": [
+        "behavior_script.lua"
+    ],
     "beige": [
         "BEIGE"
     ],
     "beige_palette_parchment_resurrect": [
         "RESURRECT_PALETTE_PARCHMENT_BEIGE"
+    ],
+    "bg_donut_fragment_outer_shader_space": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_fragment.fs"
+    ],
+    "bg_donut_fragment_outer_space": [
+        "outer_space_donuts_bg_fragment.fs"
+    ],
+    "bg_donut_outer_shader_space_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_vertex.vs"
+    ],
+    "bg_donut_outer_space_vertex": [
+        "outer_space_donuts_bg_vertex.vs"
     ],
     "bisque": [
         "BISQUE"
@@ -12548,6 +12827,84 @@
     ],
     "blue": [
         "BLUE"
+    ],
+    "blue_blue_krill_smile10_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile10.png"
+    ],
+    "blue_blue_krill_smile11_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile11.png"
+    ],
+    "blue_blue_krill_smile12_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile12.png"
+    ],
+    "blue_blue_krill_smile13_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile13.png"
+    ],
+    "blue_blue_krill_smile14_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile14.png"
+    ],
+    "blue_blue_krill_smile1_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile1.png"
+    ],
+    "blue_blue_krill_smile2_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile2.png"
+    ],
+    "blue_blue_krill_smile3_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile3.png"
+    ],
+    "blue_blue_krill_smile4_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile4.png"
+    ],
+    "blue_blue_krill_smile5_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile5.png"
+    ],
+    "blue_blue_krill_smile6_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile6.png"
+    ],
+    "blue_blue_krill_smile7_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile7.png"
+    ],
+    "blue_blue_krill_smile8_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile8.png"
+    ],
+    "blue_blue_krill_smile9_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile9.png"
+    ],
+    "blue_blue_krill_smile_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile.png"
+    ],
+    "blue_blue_krill_whale_whale10_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale10.png"
+    ],
+    "blue_blue_krill_whale_whale1_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale1.png"
+    ],
+    "blue_blue_krill_whale_whale2_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale2.png"
+    ],
+    "blue_blue_krill_whale_whale3_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale3.png"
+    ],
+    "blue_blue_krill_whale_whale4_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale4.png"
+    ],
+    "blue_blue_krill_whale_whale5_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale5.png"
+    ],
+    "blue_blue_krill_whale_whale6_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale6.png"
+    ],
+    "blue_blue_krill_whale_whale7_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale7.png"
+    ],
+    "blue_blue_krill_whale_whale8_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale8.png"
+    ],
+    "blue_blue_krill_whale_whale9_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale9.png"
+    ],
+    "blue_blue_krill_whale_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale.png"
     ],
     "blue_cadet": [
         "CADET BLUE"
@@ -12563,6 +12920,12 @@
     ],
     "blue_dodger": [
         "DODGER BLUE"
+    ],
+    "blue_file_globbed_krill_packing_pre_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill"
+    ],
+    "blue_krill_krill_whale_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill.png"
     ],
     "blue_light": [
         "LIGHT BLUE"
@@ -12597,11 +12960,89 @@
     "blue_slate": [
         "SLATE BLUE"
     ],
+    "blue_smile10_whale": [
+        "blue-whale-smile10.png"
+    ],
+    "blue_smile11_whale": [
+        "blue-whale-smile11.png"
+    ],
+    "blue_smile12_whale": [
+        "blue-whale-smile12.png"
+    ],
+    "blue_smile13_whale": [
+        "blue-whale-smile13.png"
+    ],
+    "blue_smile14_whale": [
+        "blue-whale-smile14.png"
+    ],
+    "blue_smile1_whale": [
+        "blue-whale-smile1.png"
+    ],
+    "blue_smile2_whale": [
+        "blue-whale-smile2.png"
+    ],
+    "blue_smile3_whale": [
+        "blue-whale-smile3.png"
+    ],
+    "blue_smile4_whale": [
+        "blue-whale-smile4.png"
+    ],
+    "blue_smile5_whale": [
+        "blue-whale-smile5.png"
+    ],
+    "blue_smile6_whale": [
+        "blue-whale-smile6.png"
+    ],
+    "blue_smile7_whale": [
+        "blue-whale-smile7.png"
+    ],
+    "blue_smile8_whale": [
+        "blue-whale-smile8.png"
+    ],
+    "blue_smile9_whale": [
+        "blue-whale-smile9.png"
+    ],
+    "blue_smile_whale": [
+        "blue-whale-smile.png"
+    ],
     "blue_steel": [
         "STEEL BLUE"
     ],
     "blue_violet": [
         "BLUE VIOLET"
+    ],
+    "blue_whale": [
+        "blue-whale.png"
+    ],
+    "blue_whale1": [
+        "blue-whale1.png"
+    ],
+    "blue_whale10": [
+        "blue-whale10.png"
+    ],
+    "blue_whale2": [
+        "blue-whale2.png"
+    ],
+    "blue_whale3": [
+        "blue-whale3.png"
+    ],
+    "blue_whale4": [
+        "blue-whale4.png"
+    ],
+    "blue_whale5": [
+        "blue-whale5.png"
+    ],
+    "blue_whale6": [
+        "blue-whale6.png"
+    ],
+    "blue_whale7": [
+        "blue-whale7.png"
+    ],
+    "blue_whale8": [
+        "blue-whale8.png"
+    ],
+    "blue_whale9": [
+        "blue-whale9.png"
     ],
     "blush_lavender": [
         "LAVENDER BLUSH"
@@ -12611,6 +13052,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\ko\\BMJUA_otf.otf",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/ko/BMJUA_otf.otf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\ko\\BMJUA_otf.otf"
+    ],
+    "bmjua_otf": [
+        "BMJUA_otf.otf"
+    ],
+    "bold_galmuri11": [
+        "Galmuri11-Bold.ttf"
     ],
     "bold_galmuri11_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/Galmuri11-Bold.ttf",
@@ -12642,6 +13089,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\npatch_border_sample.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/npatch_border_sample.png"
     ],
+    "border_npatch_sample": [
+        "npatch_border_sample.png"
+    ],
     "bottle_cap_foley_mono_sound_unscrew": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/FOLEY_Unscrew_Bottle_Cap_mono.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\FOLEY_Unscrew_Bottle_Cap_mono.wav",
@@ -12651,6 +13101,9 @@
     "bound_expansion_shader_snippet_sprite": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sprite_bound_expansion_snippet.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sprite_bound_expansion_snippet.md"
+    ],
+    "bound_expansion_snippet_sprite": [
+        "sprite_bound_expansion_snippet.md"
     ],
     "bound_expansion_snippet_sprite_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\sprite_bound_expansion_snippet.md",
@@ -12785,6 +13238,9 @@
     ],
     "burlywood": [
         "BURLYWOOD"
+    ],
+    "burn_dissolve": [
+        "burn_dissolve.vs"
     ],
     "burn_dissolve_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/burn_dissolve.vs",
@@ -13139,11 +13595,17 @@
     "caret_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_caret.svg"
     ],
+    "cat_potion": [
+        "cat_potion.png"
+    ],
     "cat_potion_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/cat_potion.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\cat_potion.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/cat_potion.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\cat_potion.png"
+    ],
+    "celestial_circu_pro": [
+        "celestial-circus-pro.atlas"
     ],
     "celestial_circu_pro_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/celestial-circus-pro.atlas",
@@ -13168,6 +13630,9 @@
     "chartreuse": [
         "CHARTREUSE"
     ],
+    "cheatsheet": [
+        "cheatsheet.md"
+    ],
     "cheatsheet_script": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/cheatsheet.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\cheatsheet.md"
@@ -13188,9 +13653,15 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_check.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_small_check.png"
     ],
+    "check_flair_outline_small": [
+        "flair_small_check_outline.svg"
+    ],
     "check_flair_outline_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_check_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_small_check_outline.svg"
+    ],
+    "check_flair_small": [
+        "flair_small_check.svg"
     ],
     "check_flair_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_check.svg",
@@ -13215,6 +13686,9 @@
     "chocolate": [
         "CHOCOLATE"
     ],
+    "chugget_code_definition": [
+        "chugget_code_definitions.lua"
+    ],
     "chugget_code_definition_script": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/chugget_code_definitions.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\chugget_code_definitions.lua"
@@ -13227,6 +13701,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_circle_fragment.fs"
     ],
+    "circle_fragment_spectrum": [
+        "spectrum_circle_fragment.fs"
+    ],
     "circle_fragment_spectrum_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\spectrum_circle_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/spectrum_circle_fragment.fs"
@@ -13234,6 +13711,9 @@
     "circle_shader_spectrum_vertex": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spectrum_circle_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spectrum_circle_vertex.vs"
+    ],
+    "circle_spectrum_vertex": [
+        "spectrum_circle_vertex.vs"
     ],
     "circle_spectrum_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\spectrum_circle_vertex.vs",
@@ -13266,6 +13746,9 @@
     ],
     "colon_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_colon.svg"
+    ],
+    "color": [
+        "colors.json"
     ],
     "color_raw": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/raws/colors.json",
@@ -13341,6 +13824,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/conditions",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\conditions"
     ],
+    "config": [
+        "config.json"
+    ],
+    "config_scripting": [
+        "scripting_config.json"
+    ],
     "config_scripting_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/scripting_config.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\scripting_config.json",
@@ -13376,6 +13865,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/cp437_mappings.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\cp437_mappings.json"
     ],
+    "cp437_mapping": [
+        "cp437_mappings.json"
+    ],
+    "cp437ui": [
+        "cp437ui.aseprite"
+    ],
     "cp437ui_graphic": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/cp437ui.aseprite",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\cp437ui.png",
@@ -13384,6 +13879,9 @@
     ],
     "cream_mint": [
         "MINT CREAM"
+    ],
+    "creature": [
+        "creatures.json"
     ],
     "creature_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/creatures.json",
@@ -13431,6 +13929,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_disabled_cross_outline.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_disabled_cross_outline.png"
     ],
+    "cros_disabled_flair": [
+        "flair_disabled_cross.svg"
+    ],
+    "cros_disabled_flair_outline": [
+        "flair_disabled_cross_outline.svg"
+    ],
     "cros_disabled_flair_outline_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_cross_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_disabled_cross_outline.svg"
@@ -13451,9 +13955,18 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_cross.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_small_cross.png"
     ],
+    "cros_flair": [
+        "flair_cross.svg"
+    ],
+    "cros_flair_outline_small": [
+        "flair_small_cross_outline.svg"
+    ],
     "cros_flair_outline_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_cross_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_small_cross_outline.svg"
+    ],
+    "cros_flair_small": [
+        "flair_small_cross.svg"
     ],
     "cros_flair_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_cross.svg",
@@ -13462,6 +13975,9 @@
     "cros_flair_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_cross.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_cross.svg"
+    ],
+    "crt_fragment": [
+        "crt_fragment.fs"
     ],
     "crt_fragment_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/crt_fragment.fs",
@@ -13478,6 +13994,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\crt_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/crt_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\crt_vertex.vs"
+    ],
+    "crt_vertex": [
+        "crt_vertex.vs"
     ],
     "crt_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\crt_vertex.vs",
@@ -13551,6 +14070,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Danger on the Motorway.otf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Danger on the Motorway.otf"
     ],
+    "danger_motorway_on_the": [
+        "Danger on the Motorway.otf"
+    ],
     "dark_goldenrod": [
         "DARK GOLDENROD"
     ],
@@ -13596,9 +14118,15 @@
     "deep_pink": [
         "DEEP PINK"
     ],
+    "def_ui": [
+        "ui_defs.lua"
+    ],
     "def_ui_ui": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui\\ui_defs.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ui/ui_defs.lua"
+    ],
+    "default": [
+        "default.lua"
     ],
     "default_delete_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_delete.png",
@@ -14454,6 +14982,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Default"
     ],
+    "defined_event_list_of": [
+        "list_of_defined_events.md"
+    ],
     "defined_event_list_of_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/list_of_defined_events.md",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\list_of_defined_events.md",
@@ -14479,6 +15010,9 @@
     ],
     "delete_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_delete.svg"
+    ],
+    "demand_juice_on": [
+        "on_demand_juice.fs"
     ],
     "demand_juice_on_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/on_demand_juice.fs",
@@ -14517,6 +15051,15 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Double/flair_small_disabled.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Double\\flair_small_disabled.png"
     ],
+    "disabled_flair": [
+        "flair_disabled.svg"
+    ],
+    "disabled_flair_line": [
+        "flair_disabled_line.svg"
+    ],
+    "disabled_flair_line_outline": [
+        "flair_disabled_line_outline.svg"
+    ],
     "disabled_flair_line_outline_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_line_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_disabled_line_outline.svg"
@@ -14525,6 +15068,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_line.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_disabled_line.svg"
     ],
+    "disabled_flair_outline": [
+        "flair_disabled_outline.svg"
+    ],
+    "disabled_flair_outline_small": [
+        "flair_small_disabled_outline.svg"
+    ],
     "disabled_flair_outline_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_disabled_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_small_disabled_outline.svg"
@@ -14532,6 +15081,9 @@
     "disabled_flair_outline_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_disabled_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_disabled_outline.svg"
+    ],
+    "disabled_flair_small": [
+        "flair_small_disabled.svg"
     ],
     "disabled_flair_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_disabled.svg",
@@ -14548,6 +15100,9 @@
     "divider_double_fade": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Divider Fade",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\Double\\Divider Fade"
+    ],
+    "dospilgi": [
+        "DOSPilgi.ttf"
     ],
     "dospilgi_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/DOSPilgi.ttf",
@@ -15379,6 +15934,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Double",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Double"
     ],
+    "dovemayo_gothic": [
+        "Dovemayo_gothic.ttf"
+    ],
     "dovemayo_gothic_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/Dovemayo_gothic.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\ko\\Dovemayo_gothic.ttf",
@@ -15579,6 +16137,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/drop_shadow_final_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\drop_shadow_final_fragment.fs"
     ],
+    "drop_final_fragment_shadow": [
+        "drop_shadow_final_fragment.fs"
+    ],
     "drop_final_fragment_shadow_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\drop_shadow_final_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/drop_shadow_final_fragment.fs"
@@ -15588,6 +16149,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\drop_shadow_final_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/drop_shadow_final_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\drop_shadow_final_vertex.vs"
+    ],
+    "drop_final_shadow_vertex": [
+        "drop_shadow_final_vertex.vs"
     ],
     "drop_final_shadow_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\drop_shadow_final_vertex.vs",
@@ -15611,6 +16175,9 @@
     ],
     "e_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_e.svg"
+    ],
+    "eat": [
+        "eat.lua"
     ],
     "en_font": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en",
@@ -15664,6 +16231,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/slkscreb.ttf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\slkscreb.ttf"
     ],
+    "en_u": [
+        "en_us.json"
+    ],
     "end_keyboard": [
         "keyboard_end.png"
     ],
@@ -15681,6 +16251,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\eng_synonyms.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/eng_synonyms.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\eng_synonyms.json"
+    ],
+    "eng_synonym": [
+        "eng_synonyms.json"
     ],
     "enter_keyboard": [
         "keyboard_enter.png"
@@ -15714,6 +16287,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shader_web_error_msgs.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\shader_web_error_msgs.md"
     ],
+    "error_msg_shader_web": [
+        "shader_web_error_msgs.md"
+    ],
     "escape_keyboard": [
         "keyboard_escape.png"
     ],
@@ -15725,6 +16301,12 @@
     ],
     "escape_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_escape.svg"
+    ],
+    "every_tick_update": [
+        "update_every_tick.lua"
+    ],
+    "example_prepas": [
+        "prepass_example.lua"
     ],
     "example_prepas_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders\\prepass_example.lua",
@@ -15905,6 +16487,9 @@
     "f_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_f.svg"
     ],
+    "fade_fragment": [
+        "fade_fragment.fs"
+    ],
     "fade_fragment_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_fragment.fs"
@@ -15924,6 +16509,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\fade_zoom_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/fade_zoom_fragment.fs"
     ],
+    "fade_fragment_zoom": [
+        "fade_zoom_fragment.fs"
+    ],
     "fade_shader_slide_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\slide_fade_vertex.vs"
     ],
@@ -15935,6 +16523,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\fade_zoom_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/fade_zoom_vertex.vs"
     ],
+    "fade_vertex": [
+        "fade_vertex.vs"
+    ],
     "fade_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\fade_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/fade_vertex.vs"
@@ -15942,6 +16533,9 @@
     "fade_vertex_web_zoom": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\fade_zoom_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/fade_zoom_vertex.vs"
+    ],
+    "fade_vertex_zoom": [
+        "fade_zoom_vertex.vs"
     ],
     "fiery_orange_palette_resurrect": [
         "RESURRECT_PALETTE_FIERY_ORANGE"
@@ -15985,21 +16579,36 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/.DS_Store",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\.DS_Store"
     ],
+    "flair_info_outline_small": [
+        "flair_small_info_outline.svg"
+    ],
     "flair_info_outline_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_info_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_small_info_outline.svg"
+    ],
+    "flair_info_small": [
+        "flair_small_info.svg"
     ],
     "flair_info_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_info.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_small_info.svg"
     ],
+    "flair_outline_rotate_small": [
+        "flair_small_rotate_outline.svg"
+    ],
     "flair_outline_rotate_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_rotate_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_small_rotate_outline.svg"
     ],
+    "flair_plu": [
+        "flair_plus.svg"
+    ],
     "flair_plu_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_plus.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector\\flair_plus.svg"
+    ],
+    "flair_rotate_small": [
+        "flair_small_rotate.svg"
     ],
     "flair_rotate_small_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector/flair_small_rotate.svg",
@@ -16008,6 +16617,12 @@
     "flair_vector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Vector",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Vector"
+    ],
+    "flash": [
+        "flash.vs"
+    ],
+    "flash_fragment": [
+        "flash_fragment.fs"
     ],
     "flash_fragment_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/flash_fragment.fs",
@@ -16053,9 +16668,15 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/flash_vertex_web.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\flash_vertex_web.vs"
     ],
+    "flash_single_ui": [
+        "ui_single_flash.vs"
+    ],
     "flash_single_ui_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\ui_single_flash.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/ui_single_flash.vs"
+    ],
+    "flash_vertex": [
+        "flash_vertex.vs"
     ],
     "flash_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\flash_vertex.vs",
@@ -16075,6 +16696,9 @@
     "foggy_palette_purple_resurrect": [
         "RESURRECT_PALETTE_FOGGY_PURPLE"
     ],
+    "foil_fragment": [
+        "foil_fragment.fs"
+    ],
     "foil_fragment_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\foil_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_fragment.fs"
@@ -16087,9 +16711,15 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\foil_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/foil_vertex.vs"
     ],
+    "foil_vertex": [
+        "foil_vertex.vs"
+    ],
     "foil_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\foil_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/foil_vertex.vs"
+    ],
+    "font": [
+        "fonts.json"
     ],
     "font_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko",
@@ -16106,6 +16736,9 @@
     ],
     "forest_jade_palette_resurrect": [
         "RESURRECT_PALETTE_FOREST_JADE"
+    ],
+    "formatting_string": [
+        "string_formatting.md"
     ],
     "formatting_string_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/string_formatting.md",
@@ -16125,9 +16758,15 @@
     "forward_keyboard_slash_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_forward.svg"
     ],
+    "fragment_gamejam": [
+        "gamejam_fragment.fs"
+    ],
     "fragment_gamejam_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_fragment.fs"
+    ],
+    "fragment_glitch": [
+        "glitch_fragment.fs"
     ],
     "fragment_glitch_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glitch_fragment.fs",
@@ -16139,6 +16778,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\glitch_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glitch_fragment.fs"
     ],
+    "fragment_holo": [
+        "holo_fragment.fs"
+    ],
     "fragment_holo_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_fragment.fs"
@@ -16146,6 +16788,9 @@
     "fragment_holo_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\holo_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/holo_fragment.fs"
+    ],
+    "fragment_negative": [
+        "negative_fragment.fs"
     ],
     "fragment_negative_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\negative_fragment.fs",
@@ -16155,6 +16800,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\negative_shine_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_shine_fragment.fs"
     ],
+    "fragment_negative_shine": [
+        "negative_shine_fragment.fs"
+    ],
     "fragment_negative_shine_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\negative_shine_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/negative_shine_fragment.fs"
@@ -16162,6 +16810,9 @@
     "fragment_negative_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\negative_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/negative_fragment.fs"
+    ],
+    "fragment_polychrome": [
+        "polychrome_fragment.fs"
     ],
     "fragment_polychrome_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\polychrome_fragment.fs",
@@ -16180,6 +16831,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\screen_tone_transition_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/screen_tone_transition_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\screen_tone_transition_fragment.fs"
+    ],
+    "fragment_screen_tone_transition": [
+        "screen_tone_transition_fragment.fs"
     ],
     "fragment_screen_tone_transition_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\screen_tone_transition_fragment.fs",
@@ -16207,13 +16861,22 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/wind_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\wind_fragment.fs"
     ],
+    "fragment_sheen_voucher": [
+        "voucher_sheen_fragment.fs"
+    ],
     "fragment_sheen_voucher_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\voucher_sheen_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/voucher_sheen_fragment.fs"
     ],
+    "fragment_shockwave": [
+        "shockwave_fragment.fs"
+    ],
     "fragment_shockwave_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\shockwave_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/shockwave_fragment.fs"
+    ],
+    "fragment_squish": [
+        "squish_fragment.fs"
     ],
     "fragment_squish_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\squish_fragment.fs",
@@ -16222,6 +16885,9 @@
     "fragment_web_wind": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\wind_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/wind_fragment.fs"
+    ],
+    "fragment_wind": [
+        "wind_fragment.fs"
     ],
     "fresh_mint_palette_resurrect": [
         "RESURRECT_PALETTE_FRESH_MINT"
@@ -16256,6 +16922,9 @@
     "gainsboro": [
         "GAINSBORO"
     ],
+    "galmuri14": [
+        "Galmuri14.ttf"
+    ],
     "galmuri14_ko": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/Galmuri14.ttf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\ko\\Galmuri14.ttf",
@@ -16274,6 +16943,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/game icons/right.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\game icons\\right.png"
     ],
+    "game_main_start": [
+        "start_main_game.lua"
+    ],
     "game_main_start_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/start_main_game.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\start_main_game.lua",
@@ -16284,11 +16956,17 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\gamejam_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/gamejam_vertex.vs"
     ],
+    "gamejam_vertex": [
+        "gamejam_vertex.vs"
+    ],
     "gear": [
         "gear.png"
     ],
     "ghost_white": [
         "GHOST WHITE"
+    ],
+    "glitch_pixelated": [
+        "pixelated_glitch.vs"
     ],
     "glitch_pixelated_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/pixelated_glitch.vs",
@@ -16306,13 +16984,22 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glitch_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\glitch_vertex.vs"
     ],
+    "glitch_vertex": [
+        "glitch_vertex.vs"
+    ],
     "glitch_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\glitch_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glitch_vertex.vs"
     ],
+    "global": [
+        "globals.lua"
+    ],
     "global_init": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/init/globals.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\init\\globals.lua"
+    ],
+    "glow": [
+        "glow.fs"
     ],
     "glow_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glow.fs",
@@ -16460,6 +17147,9 @@
     "green_yellow": [
         "YELLOW GREEN"
     ],
+    "gui_movable": [
+        "movable_gui.vs"
+    ],
     "gui_movable_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/movable_gui.vs",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\movable_gui.vs",
@@ -16485,6 +17175,9 @@
     "holo_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_vertex.vs"
+    ],
+    "holo_vertex": [
+        "holo_vertex.vs"
     ],
     "holo_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\holo_vertex.vs",
@@ -16580,8 +17273,14 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\window_juice_in.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/window_juice_in.fs"
     ],
+    "in_juice_window": [
+        "window_juice_in.fs"
+    ],
     "indian_red": [
         "INDIAN RED"
+    ],
+    "init": [
+        "init.lua"
     ],
     "init_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/init",
@@ -16600,6 +17299,9 @@
     ],
     "insert_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_insert.svg"
+    ],
+    "italipixel": [
+        "Italipixel.ttf"
     ],
     "ivory": [
         "IVORY"
@@ -16627,6 +17329,9 @@
     ],
     "k_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_k.svg"
+    ],
+    "karmella": [
+        "Karmella.otf"
     ],
     "key_outline_tab": [
         "key_tab_outline.png"
@@ -17015,9 +17720,18 @@
     "khaki": [
         "KHAKI"
     ],
+    "ko_kr": [
+        "ko_kr.json"
+    ],
     "ko_kr_localization": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\ko_kr.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/ko_kr.json"
+    ],
+    "kobold": [
+        "kobold.lua"
+    ],
+    "krill": [
+        "krill.png"
     ],
     "l_left_stick_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_l_left.svg",
@@ -17149,6 +17863,9 @@
     "linen": [
         "LINEN"
     ],
+    "localization": [
+        "localization.babel"
+    ],
     "localization_localization": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\localization.babel",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/localization.babel"
@@ -17158,6 +17875,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/localization\\LOCALIZATION_NOTES.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/LOCALIZATION_NOTES.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\LOCALIZATION_NOTES.md"
+    ],
+    "localization_note": [
+        "LOCALIZATION_NOTES.md"
     ],
     "localization_string_ui": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/localization/ui_strings.json",
@@ -17185,6 +17905,12 @@
     "lt_xbox": [
         "xbox_lt.png"
     ],
+    "main": [
+        "main.lua"
+    ],
+    "main_menu_start": [
+        "start_main_menu.lua"
+    ],
     "main_menu_start_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/start_main_menu.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\start_main_menu.lua",
@@ -17205,6 +17931,9 @@
     ],
     "medium_turquoise": [
         "MEDIUM TURQUOISE"
+    ],
+    "miner": [
+        "miner.png"
     ],
     "miner_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/miner.png",
@@ -17323,9 +18052,15 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\negative_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/negative_vertex.vs"
     ],
+    "negative_shine_vertex": [
+        "negative_shine_vertex.vs"
+    ],
     "negative_shine_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\negative_shine_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/negative_shine_vertex.vs"
+    ],
+    "negative_vertex": [
+        "negative_vertex.vs"
     ],
     "negative_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\negative_vertex.vs",
@@ -17340,6 +18075,9 @@
     "none": [
         "NONE"
     ],
+    "npatch": [
+        "npatch.json"
+    ],
     "orange": [
         "ORANGE"
     ],
@@ -17348,6 +18086,9 @@
     ],
     "orchid": [
         "ORCHID"
+    ],
+    "outline_pixelperfect": [
+        "pixelperfect_outline.fs"
     ],
     "outline_pixelperfect_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/pixelperfect_outline.fs",
@@ -17410,6 +18151,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/parallax_shadow.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\parallax_shadow.vs"
     ],
+    "parallax_shadow": [
+        "parallax_shadow.vs"
+    ],
     "parallax_shadow_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\parallax_shadow.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/parallax_shadow.vs"
@@ -17436,9 +18180,15 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\polychrome_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/polychrome_vertex.vs"
     ],
+    "polychrome_vertex": [
+        "polychrome_vertex.vs"
+    ],
     "polychrome_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\polychrome_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/polychrome_vertex.vs"
+    ],
+    "powerup_pro": [
+        "powerup-pro.png"
     ],
     "powerup_pro_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/powerup-pro.png",
@@ -17453,6 +18203,9 @@
     "pres_r_stick_xbox": [
         "xbox_stick_r_press.png"
     ],
+    "pro_snowglobe": [
+        "snowglobe-pro.atlas"
+    ],
     "pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro.atlas",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\snowglobe-pro.png",
@@ -17464,6 +18217,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\spineboy-pro.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/spineboy-pro.atlas",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\spineboy-pro.png"
+    ],
+    "pro_spineboy": [
+        "spineboy-pro.atlas"
+    ],
+    "project_test_translation": [
+        "test_translation_project.babel"
     ],
     "purple": [
         "PURPLE"
@@ -17530,6 +18289,9 @@
     "rb_xbox": [
         "xbox_rb.png"
     ],
+    "readme": [
+        "readme.txt"
+    ],
     "rect_rounded": [
         "rounded_rect.png"
     ],
@@ -17549,6 +18311,9 @@
     "red_violet": [
         "VIOLET RED"
     ],
+    "register_tutorial": [
+        "register_tutorials.lua"
+    ],
     "register_tutorial_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/register_tutorials.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\register_tutorials.lua",
@@ -17557,6 +18322,9 @@
     ],
     "right": [
         "right.png"
+    ],
+    "ripple": [
+        "ripple.vs"
     ],
     "ripple_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/ripple.vs",
@@ -17578,6 +18346,9 @@
     "salmon": [
         "SALMON"
     ],
+    "sample_tutorial": [
+        "sample_tutorial.lua"
+    ],
     "sample_tutorial_tutorial": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/tutorial/sample_tutorial.lua",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\sample_tutorial.lua",
@@ -17589,6 +18360,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\screen_tone_transition_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/screen_tone_transition_vertex.vs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\screen_tone_transition_vertex.vs"
+    ],
+    "screen_tone_transition_vertex": [
+        "screen_tone_transition_vertex.vs"
     ],
     "screen_tone_transition_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\screen_tone_transition_vertex.vs",
@@ -17626,6 +18400,9 @@
     "serie_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/.DS_Store",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\.DS_Store"
+    ],
+    "shader": [
+        "shaders.json"
     ],
     "shader_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/shaders.json",
@@ -17674,9 +18451,18 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web"
     ],
+    "shadow_test_web": [
+        "shadow_test_web.vs"
+    ],
     "shadow_test_web_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\shadow_test_web.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/shadow_test_web.vs"
+    ],
+    "sheen": [
+        "sheen.fs"
+    ],
+    "sheen_vertex_voucher": [
+        "voucher_sheen_vertex.vs"
     ],
     "sheen_vertex_voucher_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\voucher_sheen_vertex.vs",
@@ -17686,6 +18472,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\sheen.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/sheen.fs"
     ],
+    "shockwave_vertex": [
+        "shockwave_vertex.vs"
+    ],
     "shockwave_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\shockwave_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/shockwave_vertex.vs"
@@ -17693,11 +18482,26 @@
     "sienna": [
         "SIENNA"
     ],
+    "slkscr": [
+        "slkscr.ttf"
+    ],
+    "slkscrb": [
+        "slkscrb.ttf"
+    ],
+    "slkscre": [
+        "slkscre.ttf"
+    ],
+    "slkscreb": [
+        "slkscreb.ttf"
+    ],
     "smoke_white": [
         "WHITE SMOKE"
     ],
     "snow": [
         "SNOW"
+    ],
+    "sound": [
+        "sounds.json"
     ],
     "sound_sound": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/sounds.json",
@@ -17717,25 +18521,49 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Woosh.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\Woosh.wav"
     ],
+    "sprite_texturepacker": [
+        "sprites_texturepacker.tps"
+    ],
+    "squish_vertex": [
+        "squish_vertex.vs"
+    ],
     "squish_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\squish_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/squish_vertex.vs"
     ],
+    "suggestion_tileset_use": [
+        "tileset use suggestions.md"
+    ],
     "tan": [
         "TAN"
+    ],
+    "task": [
+        "task.lua"
     ],
     "task_task": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task/task.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\task\\task.lua"
     ],
+    "test": [
+        "test.png"
+    ],
     "thistle": [
         "THISTLE"
+    ],
+    "title": [
+        "Title.png"
     ],
     "tomato": [
         "TOMATO"
     ],
     "turquoise": [
         "TURQUOISE"
+    ],
+    "updater_worldstate": [
+        "worldstate_updaters.lua"
+    ],
+    "util": [
+        "util.lua"
     ],
     "util_util": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util\\util.lua",
@@ -17745,6 +18573,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\wind_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/wind_vertex.vs"
     ],
+    "vertex_wind": [
+        "wind_vertex.vs"
+    ],
     "violet": [
         "VIOLET"
     ],
@@ -17753,6 +18584,9 @@
     ],
     "white": [
         "WHITE"
+    ],
+    "world": [
+        "world.ldtk"
     ],
     "yellow": [
         "YELLOW"

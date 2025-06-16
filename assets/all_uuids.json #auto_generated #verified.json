@@ -12809,11 +12809,17 @@
     "bg_donut_fragment_outer_space": [
         "outer_space_donuts_bg_fragment.fs"
     ],
+    "bg_donut_fragment_outer_space_web": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/outer_space_donuts_bg_fragment.fs"
+    ],
     "bg_donut_outer_shader_space_vertex": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_vertex.vs"
     ],
     "bg_donut_outer_space_vertex": [
         "outer_space_donuts_bg_vertex.vs"
+    ],
+    "bg_donut_outer_space_vertex_web": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/outer_space_donuts_bg_vertex.vs"
     ],
     "bisque": [
         "BISQUE"

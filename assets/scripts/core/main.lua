@@ -83,7 +83,7 @@ function main.init()
 
     animation_system.setupAnimatedObjectOnEntity(
         bowser, 
-        "idle_animation", -- Default animation ID
+        "blue_whale_anim", -- Default animation ID
         false, -- ? generate a new still animation from sprite, don't set to true, causes bug
         nil,-- shader_prepass, -- Optional shader pass config function
         true -- Enable shadow
@@ -97,19 +97,31 @@ function main.init()
     
     -- add optional fullscreen shader which will be applied to the whole screen, can be removed later
     -- add_fullscreen_shader("flash")
+    add_fullscreen_shader("shockwave")
     
     -- shader uniform manipulation example
     assert(globalShaderUniforms, "globalShaderUniforms not registered!")    
     globalShaderUniforms:set("flash", "randomUniform", 0.5) -- Set a nonexistant uniform for the flash shader)
-
+    
+    timer.every(5.0, function()
+        -- spawn a new timer that tweens the shader uniform
+        -- Example 1: fixed 2-second tween
+        globalShaderUniforms:set("shockwave", "radius", 0)
+        timer.tween(
+            2.0,                                 -- duration in seconds
+            function() return globalShaderUniforms:get("shockwave", "radius") end,   -- getter
+            function(v) globalShaderUniforms:set("shockwave", "radius", v) end,     -- setter
+            4.0                               -- target_value
+        )
+    end, 0, true, nil, "shockwave_uniform_tween")
 
     -- manipulate the transformComp    
     transformComp = registry:get(bowser, Transform)
     
     transformComp.actualX = 600
     transformComp.actualY = 800
-    transformComp.actualW = 100
-    transformComp.actualH = 100
+    -- transformComp.actualW = 100
+    -- transformComp.actualH = 100
 
     -- use a timer to update the position of Bowser every second
     timer.every(1.0, function()

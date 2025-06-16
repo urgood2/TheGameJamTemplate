@@ -8,6 +8,36 @@
 
 namespace timer
 {
+    // 1) Four-arg version
+    static void lua_tween4(std::variant<float,std::pair<float,float>> d,
+        const std::function<float()>& getter,
+        const std::function<void(float)>& setter,
+        float target_value)
+    {
+        TimerSystem::timer_tween(d, getter, setter, target_value);
+    }
+
+    // 2) Five-arg version (adds easing)
+    static void lua_tween5(std::variant<float,std::pair<float,float>> d,
+        const std::function<float()>& getter,
+        const std::function<void(float)>& setter,
+        float target_value,
+        const std::function<float(float)>& easing_method)
+    {
+        TimerSystem::timer_tween(d, getter, setter, target_value, easing_method);
+    }
+
+    // 3) Six-arg version (adds after)
+    static void lua_tween6(std::variant<float,std::pair<float,float>> d,
+        const std::function<float()>& getter,
+        const std::function<void(float)>& setter,
+        float target_value,
+        const std::function<float(float)>& easing_method,
+        const std::function<void()>& after)
+    {
+        TimerSystem::timer_tween(d, getter, setter, target_value, easing_method, after);
+    }
+    
     /*
     local ed = EventQueueSystem.EaseDataBuilder()
                   :Type(EaseType.QUAD_OUT)
@@ -173,7 +203,16 @@ namespace timer
         t.set_function("every",      &timer::TimerSystem::timer_every);
         t.set_function("every_step", &timer::TimerSystem::timer_every_step);
         t.set_function("for_time",        &timer::TimerSystem::timer_for);
-        t.set_function("tween",      &timer::TimerSystem::timer_tween);
+        
+        
+        
+        // Now bind them all, *including* the full seven-arg C++ function:
+        t.set_function("tween", sol::overload(
+            &lua_tween4,
+            &lua_tween5,
+            &lua_tween6,
+            &TimerSystem::timer_tween        // full 7-arg version
+        ));
         
 
         // Recorder: creation functions

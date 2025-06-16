@@ -43,20 +43,66 @@ namespace shaders
         // 2a) Bind with sol2
         sh.new_usertype<shaders::ShaderUniformSet>("ShaderUniformSet",
             sol::constructors<>(),
+            // your existing setter stays the same
             "set", [](shaders::ShaderUniformSet& s, const std::string& name, sol::object value) {
                 if (value.is<float>()) {
                     s.set(name, value.as<float>());
-                } else if (value.is<bool>()) {
+                }
+                else if (value.is<bool>()) {
                     s.set(name, value.as<bool>());
-                } else if (value.is<Texture2D>()) {
+                }
+                else if (value.is<Texture2D>()) {
                     s.set(name, value.as<Texture2D>());
                 }
-                // ... add other type checks (Vector2, etc.)
+                else if (value.is<Vector2>()) {
+                    s.set(name, value.as<Vector2>());
+                }
+                else if (value.is<Vector3>()) {
+                    s.set(name, value.as<Vector3>());
+                }
+                else if (value.is<Vector4>()) {
+                    s.set(name, value.as<Vector4>());
+                }
                 else {
                     SPDLOG_ERROR("Unsupported uniform value type for uniform '{}'", name);
                 }
             },
-            "get", &shaders::ShaderUniformSet::get,
+            // new 'get' override:
+            "get", [](shaders::ShaderUniformSet& s, sol::this_state ts, const std::string& name) {
+                auto L = ts.lua_state();
+                if (const ShaderUniformValue* v = s.get(name)) {
+                    // dispatch on the variant contents
+                    return std::visit([&](auto&& val) -> sol::object {
+                        using T = std::decay_t<decltype(val)>;
+                        // primitives come back as Lua numbers or booleans
+                        if constexpr (std::is_same_v<T, float> ||
+                                      std::is_same_v<T, double> ||
+                                      std::is_same_v<T, int> ||
+                                      std::is_same_v<T, bool>) {
+                            return sol::make_object(L, val);
+                        }
+                        // vector types we return as tables
+                        else if constexpr (std::is_same_v<T, Vector2>) {
+                            sol::table t = sol::state_view(L).create_table_with("x", val.x, "y", val.y);
+                            return sol::make_object(L, t);
+                        }
+                        else if constexpr (std::is_same_v<T, Vector3>) {
+                            sol::table t = sol::state_view(L).create_table_with("x", val.x, "y", val.y, "z", val.z);
+                            return sol::make_object(L, t);
+                        }
+                        else if constexpr (std::is_same_v<T, Vector4>) {
+                            sol::table t = sol::state_view(L).create_table_with("x", val.x, "y", val.y, "z", val.z, "w", val.w);
+                            return sol::make_object(L, t);
+                        }
+                        // Texture2D and other usertypes are pushed directly
+                        else {
+                            return sol::make_object(L, val);
+                        }
+                    }, *v);
+                }
+                // not found → nil
+                return sol::make_object(L, sol::lua_nil);
+            },
             "type_id", []() { return entt::type_hash<shaders::ShaderUniformSet>::value(); }
         );
 
@@ -86,6 +132,47 @@ namespace shaders
             "set", &shaders::ShaderUniformComponent::set,
             "registerEntityUniformCallback", &shaders::ShaderUniformComponent::registerEntityUniformCallback,
             "getSet", &shaders::ShaderUniformComponent::getSet,
+            // --- OVERRIDE get for Lua: ---
+                "get", [](ShaderUniformComponent& comp,
+                    sol::this_state ts,
+                    const std::string& shaderName,
+                    const std::string& uniformName) -> sol::object
+            {
+            auto L = ts.lua_state();
+            if (const ShaderUniformValue* v = comp.get(shaderName, uniformName)) {
+                return std::visit([&](auto&& val) -> sol::object {
+                    using T = std::decay_t<decltype(val)>;
+                    // primitive types → numbers/booleans
+                    if constexpr (std::is_same_v<T, float> ||
+                                    std::is_same_v<T, double> ||
+                                    std::is_same_v<T, int> ||
+                                    std::is_same_v<T, bool>) {
+                        return sol::make_object(L, val);
+                    }
+                    // vectors → tables
+                    else if constexpr (std::is_same_v<T, Vector2>) {
+                        return sol::make_object(L,
+                            sol::state_view(L).create_table_with("x", val.x, "y", val.y));
+                    }
+                    else if constexpr (std::is_same_v<T, Vector3>) {
+                        return sol::make_object(L,
+                            sol::state_view(L).create_table_with(
+                                "x", val.x, "y", val.y, "z", val.z));
+                    }
+                    else if constexpr (std::is_same_v<T, Vector4>) {
+                        return sol::make_object(L,
+                            sol::state_view(L).create_table_with(
+                                "x", val.x, "y", val.y, "z", val.z, "w", val.w));
+                    }
+                    // Texture2D (or any other bound usertype) → userdata
+                    else {
+                        return sol::make_object(L, val);
+                    }
+                }, *v);
+            }
+            // not found → nil
+            return sol::make_object(L, sol::lua_nil);
+            },
             "applyToShaderForEntity", &shaders::ShaderUniformComponent::applyToShaderForEntity,
             "type_id", []() { return entt::type_hash<shaders::ShaderUniformComponent>::value(); }
         );

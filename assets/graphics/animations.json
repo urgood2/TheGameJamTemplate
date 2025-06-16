@@ -337,61 +337,61 @@
         "frames": [
             {
                 "sprite_UUID": "blue-whale1.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale2.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale3.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale4.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale5.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale6.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale7.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale8.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale9.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale10.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             }
@@ -401,85 +401,85 @@
         "frames": [
             {
                 "sprite_UUID": "blue-whale-smile1.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile2.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile3.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile4.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile5.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile6.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile7.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile8.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile9.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile10.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile11.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile12.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile13.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
                 "sprite_UUID": "blue-whale-smile14.png",
-                "duration_seconds": 0.033,
+                "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             }

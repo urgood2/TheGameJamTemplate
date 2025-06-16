@@ -24,6 +24,36 @@ using ShaderUniformValue = std::variant<
 // #include "third_party/rlImGui/imgui.h"
 // #include "third_party/rlImGui/imgui_internal.h"
 
+// 1) A generic overloaded‐lambda helper
+template <class... Fs>
+struct overloaded : Fs... { using Fs::operator()...; };
+template <class... Fs> overloaded(Fs...) -> overloaded<Fs...>;
+
+void print_uniform_value(const ShaderUniformValue& uv) {
+    std::visit(overloaded{
+        [](float f) {
+            std::cout << f;
+        },
+        [](const Vector2& v) {
+            std::cout << "Vector2(" << v.x << ", " << v.y << ")";
+        },
+        [](const Vector3& v) {
+            std::cout << "Vector3(" << v.x << ", " << v.y << ", " << v.z << ")";
+        },
+        [](const Vector4& v) {
+            std::cout << "Vector4(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
+        },
+        [](bool b) {
+            std::cout << std::boolalpha << b;
+        },
+        [](const Texture2D& t) {
+            // Raylib’s Texture2D has an 'id' (or 'texture.id') and width/height members
+            std::cout << "Texture2D(id=" << t.id
+                      << ", " << t.width << "x" << t.height << ")";
+        }
+    }, uv);
+    std::cout << std::endl;
+}
 
 
 namespace shaders {
@@ -110,6 +140,18 @@ namespace shaders {
         void set(const std::string& shaderName, const std::string& uniformName, ShaderUniformValue value) {
             shaderUniforms[shaderName].set(uniformName, std::move(value));
             // SPDLOG_DEBUG("Set uniform {} for shader {}", uniformName, shaderName);
+        }
+        
+        // returns nullptr if nothing stored
+        const ShaderUniformValue* get(const std::string &shaderName,
+        const std::string &uniformName) const
+        {
+        auto sit = shaderUniforms.find(shaderName);
+        if (sit == shaderUniforms.end()) return nullptr;
+        
+        print_uniform_value(*sit->second.get(uniformName));
+        
+        return sit->second.get(uniformName);  // Assuming ShaderUniformSet::get returns ShaderUniformValue*
         }
         
         // entity-specific uniform update lambdas, called before rendering each entity

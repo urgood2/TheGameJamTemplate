@@ -175,13 +175,30 @@ function main.init()
     
     local p = particle.CreateParticle(
         Vec2(200,200),             -- world position
-        Vec2(8,8),                 -- render size
+        Vec2(30,30),                 -- render size
         {
-            renderType = particle.ParticleRenderType.CIRCLE_FILLED,
-            velocity   = Vec2(0,-10),
+            renderType = particle.ParticleRenderType.RECTANGLE_FILLED,
+            -- velocity   = Vec2(0,-10), random
+            acceleration = 3.0, -- gravity effect
             lifespan   = 10.0,
             startColor = util.getColor("BLUE"),
-            endColor   = util.getColor("RED")
+            endColor   = util.getColor("RED"),
+            rotationSpeed = 360,
+            onUpdateCallback = function(particleComp, dt)
+                
+                --  make size smaller over time
+                particleComp.scale = particleComp.scale - (dt * 0.1)
+                
+                if particleComp.scale < 0.1 then
+                    particleComp.scale = 0.0 -- prevent it from going too small
+                end
+                
+                -- debug("particleComp.scale = ", particleComp.scale)
+                
+                -- spin faster over time
+                particleComp.rotationSpeed = particleComp.rotationSpeed + (dt * 10)
+                
+            end,
         },
         nil -- optional animation info
     )

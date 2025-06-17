@@ -58,6 +58,8 @@ namespace particle
         std::optional<float> acceleration = 0.0f;
         std::optional<Color> startColor;
         std::optional<Color> endColor;
+        
+        std::function<void(Particle &, float)> onUpdateCallback;
     };
 
     struct ParticleEmitter
@@ -98,7 +100,7 @@ namespace particle
         transform.setActualW(size.x);
         transform.setActualH(size.y);
 
-        auto &particleComp = registry.emplace<Particle>(particle);
+        auto &particleComp = registry.emplace<Particle>(particle, particleData);
         particleComp.velocity = particleData.velocity.value_or(Vector2(
             Random::get<float>(-defaultSpeed, defaultSpeed),
             Random::get<float>(-defaultSpeed, defaultSpeed)));
@@ -107,6 +109,9 @@ namespace particle
         particleComp.scale = particleData.scale.value_or(defaultScale);
         particleComp.lifespan = particleData.lifespan.value_or(defaultLifespan);
         particleComp.color = particleData.color.value_or(WHITE);
+        particleComp.age = particleData.age.value_or(0.0f);
+        particleComp.gravity = particleData.gravity.value_or(0.0f);
+        particleComp.acceleration = particleData.acceleration.value_or(0.0f);
 
         if (animationConfig)
         {
@@ -253,10 +258,12 @@ namespace particle
             transform.setActualX(transform.getActualX() + particle.velocity->x * deltaTime);
             transform.setActualY(transform.getActualY() + particle.velocity->y * deltaTime);
             transform.setActualRotation(transform.getActualRotation() + particle.rotationSpeed.value() * deltaTime);
+            
+            transform.setActualScale(particle.scale.value());
 
             float lifeProgress = particle.age.value() / particle.lifespan.value();
-            transform.setActualScale(particle.scale.value() * (1.0f - lifeProgress));
-
+            // transform.setActualScale(particle.scale.value() * (1.0f - lifeProgress));
+            // transform.setActualScale(particle.scale.value());
             if (particle.startColor.has_value() && particle.endColor.has_value())
             {
                 Color start = particle.startColor.value();
@@ -267,6 +274,11 @@ namespace particle
                     (unsigned char)(start.g + (end.g - start.g) * lifeProgress),
                     (unsigned char)(start.b + (end.b - start.b) * lifeProgress),
                     (unsigned char)(start.a + (end.a - start.a) * lifeProgress)};
+            }
+            
+            if (particle.onUpdateCallback)
+            {
+                particle.onUpdateCallback(particle, deltaTime);
             }
         }
     }
@@ -286,52 +298,69 @@ namespace particle
 
             if (gameObject.shadowDisplacement)
             {
-                shadowDisplacementX = gameObject.shadowDisplacement->x * 0.4f;
-                shadowDisplacementY = gameObject.shadowDisplacement->y * 0.4f;
+                float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                float heightFactor = 1.0f + gameObject.shadowHeight.value_or(0.f); // Increase effect based on height
+                
+                shadowDisplacementX = gameObject.shadowDisplacement->x * baseExaggeration * heightFactor;
+                shadowDisplacementY = gameObject.shadowDisplacement->y * baseExaggeration * heightFactor;
                 shadowEnabled = true;
             }
 
-            float alpha = 255 * (1.0f - (particle.age.value() / particle.lifespan.value()));
+            // float alpha = 255 * (1.0f - (particle.age.value() / particle.lifespan.value()));
+            //FIXME: removing alpha for now
+            float alpha = 255.f;
             Color drawColor = particle.color.value();
             drawColor.a = (unsigned char)alpha;
 
-            Color shadowColor = {0, 0, 0, static_cast<unsigned char>(alpha * 0.5f)};
-
+            Color shadowColor = {0, 0, 0, static_cast<unsigned char>(alpha * 1.0f)};
+            
+            // precompute once per-particle:
+            
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
-
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd)
-                                                     {
+            
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
                 cmd->x = x;
-                cmd->y = y; });
+                cmd->y = y;
+            });
 
-            layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd)
-                                                 {
+            layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
                 cmd->scaleX = scaleX;
-                cmd->scaleY = scaleY; });
+                cmd->scaleY = scaleY;
+            });
 
-            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd)
-                                                  { cmd->angle = rotation; });
+            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualRWithDynamicMotionAndXLeaning()](layer::CmdRotate *cmd) {
+                cmd->angle = rotation;
+            });
 
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd)
-                                                     {
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
                 cmd->x = x;
-                cmd->y = y; });
+                cmd->y = y;
+            });
+
                 
             static const float CIRCLE_LINE_WIDTH = 3.0f; // Width of the circle line
+            
+            
 
             // 1) DRAW SHADOW PASS
             if (shadowEnabled)
             {
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowDisplacementX, shadowDisplacementY](layer::CmdTranslate *cmd)
+                {
+                    cmd->x = -shadowDisplacementX;
+                    cmd->y = shadowDisplacementY;
+                });
                 switch (particle.renderType)
                 {
                 case ParticleRenderType::RECTANGLE_FILLED:
-                    layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [shadowDisplacementX, shadowDisplacementY, width = transform.getVisualW(), height = transform.getVisualH(), shadowColor](auto *cmd)
+                    layer::QueueCommand<layer::CmdDrawRectanglePro>(layerPtr, [shadowDisplacementX, shadowDisplacementY, width = transform.getVisualW(), height = transform.getVisualH(), shadowColor](auto *cmd)
                                                                  {
-                            cmd->x      = shadowDisplacementX;
-                            cmd->y      = shadowDisplacementY;
-                            cmd->width  = width;
-                            cmd->height = height;
-                            cmd->color  = shadowColor; }, 0);
+                            cmd->offsetX      = 0;
+                            cmd->offsetY      = 0;
+                            cmd->size.x  = width;
+                            cmd->size.y = height;
+                            cmd->color  = shadowColor; 
+                        }, 0);
                     break;
                     
                 case ParticleRenderType::RECTANGLE_LINE:
@@ -341,31 +370,40 @@ namespace particle
                             cmd->offsetY      = shadowDisplacementY;
                             cmd->size.x  = width;
                             cmd->size.y = height;
-                            cmd->color  = shadowColor; }, 0);
+                            cmd->color  = shadowColor; 
+                            cmd->lineThickness = CIRCLE_LINE_WIDTH;  // Set line thickness for rectangle line shadow
+                        }, 0);
                     break;
                 case ParticleRenderType::CIRCLE_FILLED:
-                    layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius= transform.getVisualH(), shadowColor](auto *cmd)
+                    layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
                                                               {
                             cmd->x      = shadowDisplacementX;
                             cmd->y      = shadowDisplacementY;
                             cmd->radius = radius;
-                            cmd->color  = shadowColor; }, 0);
+                            cmd->color  = shadowColor; 
+                                                                
+                        }, 0);
                     break;
                 case ParticleRenderType::CIRCLE_LINE:
-                    layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = transform.getVisualH(), shadowColor](auto *cmd)
+                    layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
                                                                    {
                             cmd->x      = shadowDisplacementX;
                             cmd->y      = shadowDisplacementY;
                             cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
                             cmd->outerRadius = radius;
                             cmd->startAngle = 0.0f; // Start angle in radians
-                            cmd->endAngle = 2.0f * PI; // Full circle
+                            cmd->endAngle = 360; // Full circle
                             cmd->segments = 32; // Number of segments for the circle line
                             cmd->color = shadowColor; }, 0);
                     break;
                 default:
                     break; // no shadow for TEXTURE or unknown
                 }
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowDisplacementX, shadowDisplacementY](layer::CmdTranslate *cmd)
+                {
+                    cmd->x = shadowDisplacementX;
+                    cmd->y = -shadowDisplacementY;
+                });
             }
 
             // main pass
@@ -390,13 +428,13 @@ namespace particle
             }
             case ParticleRenderType::RECTANGLE_FILLED:
             {
-                layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectangle *cmd)
+                layer::QueueCommand<layer::CmdDrawRectanglePro>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectanglePro *cmd)
                                                              {
-                        cmd->x = 0;
-                        cmd->y = 0;
-                        cmd->width = width;
-                        cmd->height = height;
-                        cmd->color = color; }, 0);
+                                                                cmd->offsetX      = 0;
+                                                                cmd->offsetY      = 0;
+                                                                cmd->size.x  = width;
+                                                                cmd->size.y = height;
+                                                                cmd->color  = color; }, 0);
                 break;
             }
             case ParticleRenderType::RECTANGLE_LINE:
@@ -430,7 +468,7 @@ namespace particle
                         cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
                         cmd->outerRadius = radius;
                         cmd->startAngle = 0.0f; // Start angle in radians
-                        cmd->endAngle = 2.0f * PI; // Full circle
+                        cmd->endAngle = 360; // Full circle
                         cmd->segments = 32; // Number of segments for the circle line
                         cmd->color = color; }, 0);
                 break;
@@ -495,6 +533,7 @@ namespace particle
                   << "Particle{vel=(" << p.velocity->x << "," << p.velocity->y << ") ";
                 return ss.str();
             },
+            "onUpdateCallback", &particle::Particle::onUpdateCallback,   // <-- Add this
             "type_id", []()
             { return entt::type_hash<particle::Particle>::value(); });
         // rec.bind_usertype<particle::Particle>(lua, "Particle", "0.1", "Single particle instance");
@@ -510,6 +549,9 @@ namespace particle
         rec.record_property("Particle", {"acceleration", "nil", "number?: Acceleration applied over the particle's lifetime."});
         rec.record_property("Particle", {"startColor", "nil", "Color?: The color the particle starts with."});
         rec.record_property("Particle", {"endColor", "nil", "Color?: The color the particle fades to over its life."});
+        rec.record_property("Particle", {"onUpdateCallback",
+            "function(self: Particle, dt: number)",
+            "Optional callback, called every frame with (particle, deltaTime)."});
 
         p.new_usertype<particle::ParticleEmitter>("ParticleEmitter",
                                                   sol::constructors<>(),
@@ -669,6 +711,7 @@ namespace particle
             p.acceleration  = opts.get_or("acceleration",  p.acceleration);
             p.startColor    = opts.get_or("startColor",    p.startColor);
             p.endColor      = opts.get_or("endColor",      p.endColor);
+            p.onUpdateCallback = opts.get_or("onUpdateCallback", p.onUpdateCallback);
             return p;
         };
 

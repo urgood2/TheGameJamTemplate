@@ -16852,6 +16852,9 @@
     "fragment_grid_overlay_tile": [
         "tile_grid_overlay_fragment.fs"
     ],
+    "fragment_grid_overlay_tile_web": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/tile_grid_overlay_fragment.fs"
+    ],
     "fragment_holo": [
         "holo_fragment.fs"
     ],
@@ -17227,6 +17230,9 @@
     ],
     "grid_overlay_tile_vertex": [
         "tile_grid_overlay_vertex.vs"
+    ],
+    "grid_overlay_tile_vertex_web": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/tile_grid_overlay_vertex.vs"
     ],
     "gui_movable": [
         "movable_gui.vs"

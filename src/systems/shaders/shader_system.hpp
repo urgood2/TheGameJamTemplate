@@ -21,7 +21,8 @@ using ShaderUniformValue = std::variant<
     Vector3,
     Vector4,
     bool,
-    Texture2D>;
+    Texture2D
+    >;
 // #include "third_party/rlImGui/imgui.h"
 // #include "third_party/rlImGui/imgui_internal.h"
 
@@ -94,6 +95,7 @@ namespace shaders
         void set(const std::string &name, ShaderUniformValue value)
         {
             uniforms[name] = std::move(value);
+            // print_uniform_value(uniforms[name]);
             // SPDLOG_DEBUG("Set uniform {}", name);
         }
         /**
@@ -179,7 +181,7 @@ namespace shaders
             }
 
             // 3) now you know uv is valid—print it for debug
-            print_uniform_value(*uv);
+            // print_uniform_value(*uv);
 
             // 4) return the pointer out
             return uv;

@@ -526,5 +526,56 @@
                 "bg_color": "NONE"
             }
         ]
+    },
+    "whale_dust_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "3509-TheRoguelike_1_10_alpha_302.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "dream_weaver_antenna_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "3509-TheRoguelike_1_10_alpha_302.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "resonance_beacon_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "3973-TheRoguelike_1_10_alpha_766.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "whale_song_essence_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "3840-TheRoguelike_1_10_alpha_633.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "black_hole_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "4168-TheRoguelike_1_10_alpha_961.png",
+                "duration_seconds": 5,
+                "fg_color": "BLACK",
+                "bg_color": "NONE"
+            }
+        ]
     }
+    
 }

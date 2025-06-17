@@ -11879,11 +11879,17 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animation_NOTES.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\animation_NOTES.md"
     ],
+    "animation_graphic_warning": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animation_WARNINGS.md"
+    ],
     "animation_idle": [
         "idle_animation"
     ],
     "animation_note": [
         "animation_NOTES.md"
+    ],
+    "animation_warning": [
+        "animation_WARNINGS.md"
     ],
     "antique_white": [
         "ANTIQUE WHITE"
@@ -13153,6 +13159,15 @@
     "bound_expansion_snippet_sprite_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\sprite_bound_expansion_snippet.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/sprite_bound_expansion_snippet.md"
+    ],
+    "boundary_graphic_grid_tile": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/tile-grid-boundary.aseprite"
+    ],
+    "boundary_grid_shader_texture_tile": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/shader_textures/tile-grid-boundary.png"
+    ],
+    "boundary_grid_tile": [
+        "tile-grid-boundary.png"
     ],
     "bracket_close_default_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_bracket_close.png",
@@ -16620,6 +16635,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series"
     ],
+    "file_globbed_packing_pre_shader_texture": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/shader_textures"
+    ],
     "firebrick": [
         "FIREBRICK"
     ],
@@ -16827,6 +16845,12 @@
     "fragment_glitch_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\glitch_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glitch_fragment.fs"
+    ],
+    "fragment_grid_overlay_shader_tile": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_fragment.fs"
+    ],
+    "fragment_grid_overlay_tile": [
+        "tile_grid_overlay_fragment.fs"
     ],
     "fragment_holo": [
         "holo_fragment.fs"
@@ -17198,6 +17222,12 @@
     "green_yellow": [
         "YELLOW GREEN"
     ],
+    "grid_overlay_shader_tile_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_vertex.vs"
+    ],
+    "grid_overlay_tile_vertex": [
+        "tile_grid_overlay_vertex.vs"
+    ],
     "gui_movable": [
         "movable_gui.vs"
     ],
@@ -17369,6 +17399,12 @@
     ],
     "j_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_j.svg"
+    ],
+    "jamegam50": [
+        "JAMEGAM50.md"
+    ],
+    "jamegam50_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/JAMEGAM50.md"
     ],
     "k_keyboard": [
         "keyboard_k.png"

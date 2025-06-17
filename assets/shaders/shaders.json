@@ -187,5 +187,14 @@
             "vertex": "web/outer_space_donuts_bg_vertex.vs",
             "fragment": "web/outer_space_donuts_bg_fragment.fs"
         }
+    },
+    "tile_grid_overlay": {
+        "vertex": "tile_grid_overlay_vertex.vs",
+        "fragment": "tile_grid_overlay_fragment.fs",
+
+        "web": {
+            "vertex": "web/tile_grid_overlay_vertex.vs",
+            "fragment": "web/tile_grid_overlay_fragment.fs"
+        }
     }
 }

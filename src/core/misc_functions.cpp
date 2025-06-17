@@ -1,8 +1,10 @@
 #include "misc_fuctions.hpp"
 
 #include "util/common_headers.hpp"
+#include "util/utilities.hpp"
 #include "core/globals.hpp"
 #include "core/game.hpp"
+#include "core/init.hpp"
 #include "systems/shaders/shader_system.hpp"
 
 namespace game
@@ -17,21 +19,40 @@ namespace game
 
         using namespace globals;
         // pre-load shader values for later use
+        
+        const int TILE_SIZE = 32; // size of a tile in pixels, temporary
+        
+        auto frame = init::getSpriteFrame("tile-grid-boundary.png");
+        auto atlasID =  frame.atlasUUID;
+        auto atlas = globals::textureAtlasMap.at(atlasID);
+        auto gridX = frame.frame.x;
+        auto gridY = frame.frame.y;
+        auto gridW = frame.frame.width;
+        auto gridH = frame.frame.height;
+        
+        // tile grid overlay
+        shaders::registerUniformUpdate("tile_grid_overlay", [atlas](Shader &s) {            
+            globalShaderUniforms.set("tile_grid_overlay", "mouse_position",
+                                     GetMousePosition());   
+            globalShaderUniforms.set("tile_grid_overlay", "atlas", atlas);
+                     
+        });
+        
+        
+        // atlas dims
+        globalShaderUniforms.set("tile_grid_overlay", "uImageSize",
+            Vector2{ float(atlas.width), float(atlas.height) });
+        // which grid sprite
+        globalShaderUniforms.set("tile_grid_overlay", "uGridRect",
+                    Vector4{ gridX, gridY, gridW, gridH });
+
+        // grid parameters
+        globalShaderUniforms.set("tile_grid_overlay", "scale",             1/16.0f);
+        globalShaderUniforms.set("tile_grid_overlay", "base_opacity",      0.1f);
+        globalShaderUniforms.set("tile_grid_overlay", "highlight_opacity", 0.4f);
+        globalShaderUniforms.set("tile_grid_overlay", "distance_scaling",  50.0f);
 
         // outer space
-        
-        /*
-        
-        [2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   iTime: float = 324.27
-[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   u_donutWidth: float = -2.77
-[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   u_noisiness: float = 0.22
-[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   u_brightness: float = 0.17
-[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   speedFactor : float = 0.61
-[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   desaturateAmount : float = 2.87
-[2025-06-16 18:15:09.337] [info] [shader_system.cpp:598]   grayAmount: float = 0.77
-[2025-06-16 18:15:09.338] [info] [shader_system.cpp:598]   u_hueOffset: float = 1.85
-[2025-06-16 18:15:09.338] [info] [shader_system.cpp:600]   iResolution: Vector2 = (1440, 900)
-        */
 
         shaders::registerUniformUpdate("outer_space_donuts_bg", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("outer_space_donuts_bg", "iTime", static_cast<float>(GetTime()));

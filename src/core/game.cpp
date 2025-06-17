@@ -609,9 +609,9 @@ namespace game
             }
             
 
-            #ifdef __EMSCRIPTEN__
-            rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
-            #endif
+            // #ifdef __EMSCRIPTEN__
+            // rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
+            // #endif
             
             
             
@@ -634,9 +634,9 @@ namespace game
 
                 layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
 
-                #ifdef __EMSCRIPTEN__
-                rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
-                #endif
+                // #ifdef __EMSCRIPTEN__
+                // rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
+                // #endif
             }
         }
 

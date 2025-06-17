@@ -349,11 +349,14 @@ namespace shaders
         for (const auto &[name, value] : set.uniforms)
         {
             int loc = GetShaderLocation(shader, name.c_str());
+            if (loc < 0) continue;  // skip missing uniforms
             std::visit([&](auto &&val)
-                       {
+            {
                 using T = std::decay_t<decltype(val)>;
                 if constexpr (std::is_same_v<T, float>) {
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_FLOAT);
+                } else if constexpr (std::is_same_v<T, int>) {
+                    SetShaderValue(shader, loc, &val, SHADER_UNIFORM_INT);
                 } else if constexpr (std::is_same_v<T, Vector2>) {
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC2);
                 } else if constexpr (std::is_same_v<T, Vector3>) {
@@ -361,10 +364,16 @@ namespace shaders
                 } else if constexpr (std::is_same_v<T, Vector4>) {
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC4);
                 } else if constexpr (std::is_same_v<T, Texture2D>) {
+                    // Bind a Texture2D to the sampler uniform slot
                     SetShaderValueTexture(shader, loc, val);
-                } }, value);
+                } else if constexpr (std::is_same_v<T, RenderTexture2D>) {
+                    // Bind the texture part of a RenderTexture2D
+                    SetShaderValueTexture(shader, loc, val.texture);
+                }
+            }, value);
         }
     }
+
 
     // Disable all shaders via override
     auto disableAllShadersViaOverride(bool disabled) -> void

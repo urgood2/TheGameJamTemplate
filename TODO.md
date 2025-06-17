@@ -50,6 +50,7 @@
 - [ ] Participate in game jam or do a little test game jam on my own to make everything ready
 - [ ] make everything compile for web
 - [ ] overall pruning pass to delete code that isn't used/outdated
+- [ ] I probably need to smoothen the ui api, to make it faster to iterate with.
 
 ---
 

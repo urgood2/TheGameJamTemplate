@@ -10730,7 +10730,8 @@
         "sprites_atlas-1.png"
     ],
     "1_blue_krill_krill_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-1.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-1.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\krill-1.png"
     ],
     "1_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_1.png",
@@ -10823,7 +10824,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\cp437_20x20_texturePackerProject.tps"
     ],
     "20x20_cp437_sprite": [
-        "cp437_20x20_sprites.json"
+        "cp437_20x20_sprites.json",
+        "cp437_20x20_sprites.png"
     ],
     "20x20_cp437_texturepackerproject": [
         "cp437_20x20_texturePackerProject.tps"
@@ -10865,7 +10867,8 @@
         "BISQUE 2"
     ],
     "2_blue_krill_krill_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-2.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-2.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\krill-2.png"
     ],
     "2_celestial_circu_pro": [
         "celestial-circus-pro_2.png"
@@ -11001,7 +11004,8 @@
         "BISQUE 3"
     ],
     "3_blue_krill_krill_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-3.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill-3.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\krill-3.png"
     ],
     "3_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_3.png",
@@ -11838,7 +11842,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\smooth_up_and_down_ambient.vs"
     ],
     "ambient_and_down_smooth_up": [
-        "smooth_up_and_down_ambient.fs"
+        "smooth_up_and_down_ambient.fs",
+        "smooth_up_and_down_ambient.vs"
     ],
     "ambient_and_down_smooth_up_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\smooth_up_and_down_ambient.vs",
@@ -11851,7 +11856,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\card_tilt_ambient_dynamic.vs"
     ],
     "ambient_card_dynamic_tilt": [
-        "card_tilt_ambient_dynamic.fs"
+        "card_tilt_ambient_dynamic.fs",
+        "card_tilt_ambient_dynamic.vs"
     ],
     "ambient_card_dynamic_tilt_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\card_tilt_ambient_dynamic.vs",
@@ -11870,7 +11876,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\animations.json"
     ],
     "animation_graphic_note": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animation_NOTES.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animation_NOTES.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\animation_NOTES.md"
     ],
     "animation_idle": [
         "idle_animation"
@@ -12804,22 +12811,26 @@
         "RESURRECT_PALETTE_PARCHMENT_BEIGE"
     ],
     "bg_donut_fragment_outer_shader_space": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\outer_space_donuts_bg_fragment.fs"
     ],
     "bg_donut_fragment_outer_space": [
         "outer_space_donuts_bg_fragment.fs"
     ],
     "bg_donut_fragment_outer_space_web": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/outer_space_donuts_bg_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/outer_space_donuts_bg_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\outer_space_donuts_bg_fragment.fs"
     ],
     "bg_donut_outer_shader_space_vertex": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/outer_space_donuts_bg_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\outer_space_donuts_bg_vertex.vs"
     ],
     "bg_donut_outer_space_vertex": [
         "outer_space_donuts_bg_vertex.vs"
     ],
     "bg_donut_outer_space_vertex_web": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/outer_space_donuts_bg_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/outer_space_donuts_bg_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\outer_space_donuts_bg_vertex.vs"
     ],
     "bisque": [
         "BISQUE"
@@ -12835,82 +12846,108 @@
         "BLUE"
     ],
     "blue_blue_krill_smile10_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile10.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile10.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile10.png"
     ],
     "blue_blue_krill_smile11_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile11.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile11.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile11.png"
     ],
     "blue_blue_krill_smile12_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile12.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile12.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile12.png"
     ],
     "blue_blue_krill_smile13_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile13.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile13.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile13.png"
     ],
     "blue_blue_krill_smile14_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile14.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile14.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile14.png"
     ],
     "blue_blue_krill_smile1_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile1.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile1.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile1.png"
     ],
     "blue_blue_krill_smile2_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile2.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile2.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile2.png"
     ],
     "blue_blue_krill_smile3_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile3.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile3.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile3.png"
     ],
     "blue_blue_krill_smile4_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile4.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile4.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile4.png"
     ],
     "blue_blue_krill_smile5_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile5.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile5.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile5.png"
     ],
     "blue_blue_krill_smile6_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile6.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile6.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile6.png"
     ],
     "blue_blue_krill_smile7_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile7.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile7.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile7.png"
     ],
     "blue_blue_krill_smile8_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile8.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile8.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile8.png"
     ],
     "blue_blue_krill_smile9_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile9.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile9.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile9.png"
     ],
     "blue_blue_krill_smile_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale-smile.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale-smile.png"
     ],
     "blue_blue_krill_whale_whale10_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale10.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale10.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale10.png"
     ],
     "blue_blue_krill_whale_whale1_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale1.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale1.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale1.png"
     ],
     "blue_blue_krill_whale_whale2_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale2.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale2.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale2.png"
     ],
     "blue_blue_krill_whale_whale3_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale3.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale3.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale3.png"
     ],
     "blue_blue_krill_whale_whale4_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale4.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale4.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale4.png"
     ],
     "blue_blue_krill_whale_whale5_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale5.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale5.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale5.png"
     ],
     "blue_blue_krill_whale_whale6_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale6.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale6.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale6.png"
     ],
     "blue_blue_krill_whale_whale7_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale7.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale7.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale7.png"
     ],
     "blue_blue_krill_whale_whale8_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale8.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale8.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale8.png"
     ],
     "blue_blue_krill_whale_whale9_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale9.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale9.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale9.png"
     ],
     "blue_blue_krill_whale_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/blue-whale.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\blue-whale.png"
     ],
     "blue_cadet": [
         "CADET BLUE"
@@ -12928,10 +12965,12 @@
         "DODGER BLUE"
     ],
     "blue_file_globbed_krill_packing_pre_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill"
     ],
     "blue_krill_krill_whale_with": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/krill.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill\\krill.png"
     ],
     "blue_light": [
         "LIGHT BLUE"
@@ -13611,7 +13650,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\cat_potion.png"
     ],
     "celestial_circu_pro": [
-        "celestial-circus-pro.atlas"
+        "celestial-circus-pro.atlas",
+        "celestial-circus-pro.png"
     ],
     "celestial_circu_pro_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/celestial-circus-pro.atlas",
@@ -13875,7 +13915,8 @@
         "cp437_mappings.json"
     ],
     "cp437ui": [
-        "cp437ui.aseprite"
+        "cp437ui.aseprite",
+        "cp437ui.png"
     ],
     "cp437ui_graphic": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/cp437ui.aseprite",
@@ -15018,7 +15059,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_delete.svg"
     ],
     "demand_juice_on": [
-        "on_demand_juice.fs"
+        "on_demand_juice.fs",
+        "on_demand_juice.vs"
     ],
     "demand_juice_on_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/on_demand_juice.fs",
@@ -16644,7 +16686,8 @@
     ],
     "flash_fragment_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\flash_fragment.fs",
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/flash_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/flash_fragment.fs",
+        "flash_fragment_web.fs"
     ],
     "flash_fragment_web_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\flash_fragment_web.fs",
@@ -16686,7 +16729,8 @@
     ],
     "flash_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\flash_vertex.vs",
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/flash_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/flash_vertex.vs",
+        "flash_vertex_web.vs"
     ],
     "flash_vertex_web_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\flash_vertex_web.vs",
@@ -17005,7 +17049,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\init\\globals.lua"
     ],
     "glow": [
-        "glow.fs"
+        "glow.fs",
+        "glow.vs"
     ],
     "glow_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/glow.fs",
@@ -17280,7 +17325,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/window_juice_in.fs"
     ],
     "in_juice_window": [
-        "window_juice_in.fs"
+        "window_juice_in.fs",
+        "window_juice_in.vs"
     ],
     "indian_red": [
         "INDIAN RED"
@@ -18094,7 +18140,8 @@
         "ORCHID"
     ],
     "outline_pixelperfect": [
-        "pixelperfect_outline.fs"
+        "pixelperfect_outline.fs",
+        "pixelperfect_outline.vs"
     ],
     "outline_pixelperfect_shader": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/pixelperfect_outline.fs",
@@ -18210,7 +18257,8 @@
         "xbox_stick_r_press.png"
     ],
     "pro_snowglobe": [
-        "snowglobe-pro.atlas"
+        "snowglobe-pro.atlas",
+        "snowglobe-pro.png"
     ],
     "pro_snowglobe_spine": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/snowglobe-pro.atlas",
@@ -18225,7 +18273,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\spineboy-pro.png"
     ],
     "pro_spineboy": [
-        "spineboy-pro.atlas"
+        "spineboy-pro.atlas",
+        "spineboy-pro.png"
     ],
     "project_test_translation": [
         "test_translation_project.babel"
@@ -18465,7 +18514,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/shadow_test_web.vs"
     ],
     "sheen": [
-        "sheen.fs"
+        "sheen.fs",
+        "sheen.vs"
     ],
     "sheen_vertex_voucher": [
         "voucher_sheen_vertex.vs"

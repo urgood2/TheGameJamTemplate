@@ -206,14 +206,24 @@ function main.init()
     local p1 = {
         update = function(self, dt)
             debug("Fade out screen")
-            fadeOutScreen(1)
+            -- fadeOutScreen(0.1)
+            add_fullscreen_shader("screen_tone_transition") -- Add the fade out shader
+            globalShaderUniforms:set("screen_tone_transition", "in_out", 1.0) -- Set initial value to 1.0 (dark)
+            -- timer tween
+            timer.tween(
+                5.0, -- duration in seconds
+                function() return globalShaderUniforms:get("screen_tone_transition", "in_out") end, -- getter
+                function(v) globalShaderUniforms:set("screen_tone_transition", "in_out", v) end, -- setter
+                0.0 -- target value
+            )
             task.wait(5.0)
         end
     }
 
     local p2 = {
         update = function(self, dt)
-            fadeInScreen(1)
+            -- fadeInScreen(1)
+            -- remove_fullscreen_shader("screen_tone_transition") -- Remove the fade out shader
         end
     }
 

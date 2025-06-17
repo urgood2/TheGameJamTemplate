@@ -24,19 +24,29 @@ namespace game
         
         auto frame = init::getSpriteFrame("tile-grid-boundary.png");
         auto atlasID =  frame.atlasUUID;
-        auto atlas = globals::textureAtlasMap.at(atlasID);
+        // auto atlas = globals::textureAtlasMap.at(atlasID);
         auto gridX = frame.frame.x;
         auto gridY = frame.frame.y;
         auto gridW = frame.frame.width;
         auto gridH = frame.frame.height;
         
+        static auto atlas = 
+        LoadTexture(util::getAssetPathUUIDVersion("graphics/cp437_20x20_sprites.png").c_str());
+        
         // tile grid overlay
-        shaders::registerUniformUpdate("tile_grid_overlay", [atlas](Shader &s) {            
+        shaders::registerUniformUpdate("tile_grid_overlay", [](Shader &s) {            
             globalShaderUniforms.set("tile_grid_overlay", "mouse_position",
                                      GetMousePosition());   
-            globalShaderUniforms.set("tile_grid_overlay", "atlas", atlas);
-                     
+            
+            // globalShaderUniforms.set("tile_grid_overlay", "atlas", atlas);  
+            
+            auto shader = shaders::getShader("tile_grid_overlay");
+            
+            int atlasLoc = GetShaderLocation(shader, "atlas");
+            SetShaderValueTexture(shader, atlasLoc, atlas);
+            
         });
+        
         
         
         // atlas dims

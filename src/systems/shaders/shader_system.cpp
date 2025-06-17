@@ -349,7 +349,14 @@ namespace shaders
         for (const auto &[name, value] : set.uniforms)
         {
             int loc = GetShaderLocation(shader, name.c_str());
-            if (loc < 0) continue;  // skip missing uniforms
+            
+            if (loc < 0) {
+                // SPDLOG_WARN("Shader uniform '{}' not found in shader ID {}. Skipping.", name, shader.id);
+                continue;  // skip missing uniforms
+            }
+            if (name == "atlas") {
+                // SPDLOG_DEBUG("Found atlas uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
+            }
             std::visit([&](auto &&val)
             {
                 using T = std::decay_t<decltype(val)>;
@@ -364,11 +371,9 @@ namespace shaders
                 } else if constexpr (std::is_same_v<T, Vector4>) {
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC4);
                 } else if constexpr (std::is_same_v<T, Texture2D>) {
+                    // SPDLOG_DEBUG("Setting texture uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
                     // Bind a Texture2D to the sampler uniform slot
                     SetShaderValueTexture(shader, loc, val);
-                } else if constexpr (std::is_same_v<T, RenderTexture2D>) {
-                    // Bind the texture part of a RenderTexture2D
-                    SetShaderValueTexture(shader, loc, val.texture);
                 }
             }, value);
         }

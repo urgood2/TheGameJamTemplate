@@ -557,16 +557,6 @@ namespace particle
         rec.record_property("particle.ParticleAnimationConfig", {"loop", "boolean", "Whether the particle's animation should loop."});
         rec.record_property("particle.ParticleAnimationConfig", {"animationName", "string", "The name of the animation to play."});
 
-        // rec.bind_function(
-        //     lua,
-        //     particlePath,
-        //     "CreateParticle",
-        //     &particle::CreateParticle,
-        //     "---@param entity Entity # The entity to attach the particle system to.\n"
-        //     "---@param emitter ParticleEmitter # A pre-configured particle emitter data object.\n"
-        //     "---@return nil",
-        //     "Creates and attaches a particle system to an entity using an emitter's properties.");
-
         rec.bind_function(
             lua,
             particlePath,
@@ -577,14 +567,6 @@ namespace particle
             "---@return nil",
             "Emits a burst of particles from the specified emitter entity.");
 
-        // rec.bind_function(
-        //     lua,
-        //     particlePath,
-        //     "CreateParticleEmitter",
-        //     &particle::CreateParticleEmitter,
-        //     "---@return ParticleEmitter # A new ParticleEmitter data object.",
-        //     "Creates and returns a new ParticleEmitter data object with default values.");
-            
         auto tableDrivenCreateParticleEmitter = [](Vector2 location,
             sol::table opts) -> entt::entity
         {
@@ -666,17 +648,6 @@ namespace particle
                           "---@return ParticleEmitter",
                           "Creates a ParticleEmitter; pass a table to override any defaults.");
 
-        // 2) convenience helper that both makes *and* attaches it
-        // rec.bind_function(lua, particlePath, "SpawnEmitter", [](entt::entity ent, sol::table opts)
-        //                   {
-        //     auto em = particle::CreateParticleEmitter(opts);
-        //     particle::CreateParticle(ent, em); 
-    
-        // }, "---@param entity Entity\n"
-        //                        "---@param opts table? # same fields as CreateParticleEmitter\n"
-        //                        "---@return nil",
-        //                   "Builds and attaches a particle emitter to `entity` in one call.");
-        
         // 2) Table→Particle converter (unchanged)
         static auto tableDrivenParticleMaker = [](sol::table opts) -> particle::Particle {
             particle::Particle p;
@@ -696,7 +667,7 @@ namespace particle
         };
 
         // 3) New Lua-facing maker that calls CreateParticle with optional animation
-        static auto luaCreateParticle = [](entt::registry &registry,
+        static auto luaCreateParticle = [](
                                     Vector2 location,
                                     Vector2 size,
                                     sol::table opts,
@@ -715,7 +686,7 @@ namespace particle
             }
 
             // call your function
-            return CreateParticle(registry, location, size, p, cfg);
+            return CreateParticle(globals::registry, location, size, p, cfg);
         };
 
         // 4) Bind it
@@ -725,7 +696,6 @@ namespace particle
             "CreateParticle",
             luaCreateParticle,
             // Lua docstring
-            "---@param registry entt::registry\n"
             "---@param location Vector2\n"
             "---@param size Vector2\n"
             "---@param opts table? # configure any Particle field here\n"
@@ -733,33 +703,56 @@ namespace particle
             "---@return entt::entity",
             "Creates a Particle (and its entity) from a Lua table, with optional animation config."
         );
-        // rec.bind_function(lua, particlePath, "EmitParticle", [](entt::entity ent, sol::table opts)
-        //                   {
-        //             auto p = tableDrivenParticleMaker(opts);
-        //             particle::EmitParticles(ent, /* count */ 1, p); 
-        //         }, "---@param entity Entity\n"
-        //                        "---@param opts table? # same fields as MakeParticle\n"
-        //                        "---@return nil",
-        //                   "Spawns a single particle on `entity` with table config.");
+        
+        // 1) Create a new usertype for Vector2
+        lua.new_usertype<Vector2>(
+            "Vector2",
+            // allow `Vector2()` → (0,0) and `Vector2(x,y)`
+            sol::constructors<Vector2(), Vector2(float, float)>(),
+            // expose fields
+            "x", &Vector2::x,
+            "y", &Vector2::y
+        );
 
-        // rec.bind_function(
-        //     lua,
-        //     particlePath,
-        //     "UpdateParticles",
-        //     &particle::UpdateParticles,
-        //     "---@param dt number # The delta time since the last frame.\n"
-        //     "---@return nil",
-        //     "Updates all active particle systems."
-        // );
+        // 2) (Optional) make it easier to construct
+        lua.set_function("Vec2", [](float x, float y) { return Vector2{ x, y }; });
 
-        // rec.bind_function(
-        //     lua,
-        //     particlePath,
-        //     "DrawParticles",
-        //     &particle::DrawParticles,
-        //     "---@param layerPtr Layer # The layer to draw the particles on.\n"
-        //     "---@return nil",
-        //     "Draws all active particles."
-        // );
+        // 3) If you’re using your BindingRecorder for docs:
+        rec.add_type("Vector2");
+        rec.record_property("Vector2", { "x", "number", "X component" });
+        rec.record_property("Vector2", { "y", "number", "Y component" });
+        
+        // 1) Bind the Color struct
+        lua.new_usertype<Color>(
+            "Color",
+            // ctors: default (white {255,255,255,255}) and full RGBA
+            sol::constructors<
+                Color(), 
+                Color(unsigned char, unsigned char, unsigned char, unsigned char)
+            >(),
+            // fields
+            "r", &Color::r,
+            "g", &Color::g,
+            "b", &Color::b,
+            "a", &Color::a
+        );
+
+        // 2) Optional helper for convenience
+        lua.set_function("Col", [](int r, int g, int b, sol::optional<int> a){
+            return Color{
+                static_cast<unsigned char>(r),
+                static_cast<unsigned char>(g),
+                static_cast<unsigned char>(b),
+                static_cast<unsigned char>(a.value_or(255))
+            };
+        });
+
+        // 3) (If using BindingRecorder)
+        rec.add_type("Color");
+        rec.record_property("Color", {"r", "number", "Red channel (0–255)"});
+        rec.record_property("Color", {"g", "number", "Green channel (0–255)"});
+        rec.record_property("Color", {"b", "number", "Blue channel (0–255)"});
+        rec.record_property("Color", {"a", "number", "Alpha channel (0–255)"});
+
     }
 }

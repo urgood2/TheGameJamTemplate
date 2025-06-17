@@ -1338,6 +1338,28 @@ particle.ParticleAnimationConfig = {
 
 
 ---
+--- 
+---
+---@class Vector2
+Vector2 = {
+    x = number,  -- X component
+    y = number  -- Y component
+}
+
+
+---
+--- 
+---
+---@class Color
+Color = {
+    r = number,  -- Red channel (0–255)
+    g = number,  -- Green channel (0–255)
+    b = number,  -- Blue channel (0–255)
+    a = number  -- Alpha channel (0–255)
+}
+
+
+---
 --- Root table for shader pipeline helpers and types.
 ---
 ---@class shader_pipeline
@@ -4759,7 +4781,6 @@ function particle.CreateParticleEmitter(...) end
 ---
 --- Creates a Particle (and its entity) from a Lua table, with optional animation config.
 ---
----@param registry entt::registry
 ---@param location Vector2
 ---@param size Vector2
 ---@param opts table? # configure any Particle field here

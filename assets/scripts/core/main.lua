@@ -172,6 +172,20 @@ function main.init()
             2.0                                                                    -- target_value
         )
     end, 0, true, nil, "shockwave_uniform_tween")
+    
+    local p = particle.CreateParticle(
+        Vec2(200,200),             -- world position
+        Vec2(8,8),                 -- render size
+        {
+            renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+            velocity   = Vec2(0,-150),
+            lifespan   = 2.0,
+            startColor = util.getColor("BLUE"),
+            endColor   = util.getColor("RED")
+        },
+        nil -- optional animation info
+    )
+    particleComp = registry:get(p, particle.Particle) -- get the particle component, which we can use to manipulate the particle
 
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)

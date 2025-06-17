@@ -177,7 +177,7 @@ function main.init()
         Vec2(200,200),             -- world position
         Vec2(30,30),                 -- render size
         {
-            renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+            renderType = particle.ParticleRenderType.CIRCLE_LINE,
             -- velocity   = Vec2(0,-10), random
             acceleration = 3.0, -- gravity effect
             lifespan   = 10.0,

@@ -384,20 +384,20 @@ namespace particle
                         }, 0);
                     break;
                 case ParticleRenderType::CIRCLE_FILLED:
-                    layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
+                    layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()), shadowColor](auto *cmd)
                                                               {
-                            cmd->x      = -radius/2;
-                            cmd->y      = -radius/2;
+                            cmd->x      = radius/2;
+                            cmd->y      = radius/2;
                             cmd->radius = radius;
                             cmd->color  = shadowColor; 
                                                                 
                         }, 0);
                     break;
                 case ParticleRenderType::CIRCLE_LINE:
-                    layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
+                    layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()), shadowColor](auto *cmd)
                                                                    {
-                            cmd->x      = -radius/2;
-                            cmd->y      = -radius/2;
+                            cmd->x      = radius/2;
+                            cmd->y      = radius/2;
                             cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
                             cmd->outerRadius = radius;
                             cmd->startAngle = 0.0f; // Start angle in radians
@@ -549,20 +549,20 @@ namespace particle
             }
             case ParticleRenderType::CIRCLE_FILLED:
             {
-                layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, color = drawColor](layer::CmdDrawCircleFilled *cmd)
+                layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [radius = std::max(transform.getVisualW(), transform.getVisualH()), color = drawColor](layer::CmdDrawCircleFilled *cmd)
                                                           {
-                        cmd->x = 0;
-                        cmd->y = 0;
+                        cmd->x = radius/2;
+                        cmd->y = radius/2;
                         cmd->radius = radius;
                         cmd->color = color; }, 0);
                 break;
             }
             case ParticleRenderType::CIRCLE_LINE:
             {
-                layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, color = drawColor](layer::CmdDrawCircleLine *cmd)
+                layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [radius = std::max(transform.getVisualW(), transform.getVisualH()), color = drawColor](layer::CmdDrawCircleLine *cmd)
                                                                {
-                        cmd->x = 0;
-                        cmd->y = 0;
+                        cmd->x = radius/2;
+                        cmd->y = radius/2;
                         cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
                         cmd->outerRadius = radius;
                         cmd->startAngle = 0.0f; // Start angle in radians

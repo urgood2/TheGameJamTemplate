@@ -178,17 +178,19 @@ function main.init()
         Vec2(8,8),                 -- render size
         {
             renderType = particle.ParticleRenderType.CIRCLE_FILLED,
-            velocity   = Vec2(0,-150),
-            lifespan   = 2.0,
+            velocity   = Vec2(0,-10),
+            lifespan   = 10.0,
             startColor = util.getColor("BLUE"),
             endColor   = util.getColor("RED")
         },
         nil -- optional animation info
     )
-    particleComp = registry:get(p, particle.Particle) -- get the particle component, which we can use to manipulate the particle
+    
+    particleComp = registry:get(p, Particle) -- get the particle component, which we can use to manipulate the particle
 
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)
+    
 
     transformComp.actualX = 600
     transformComp.actualY = 800
@@ -257,7 +259,7 @@ function main.init()
     -- testing
 
 
-    dump(ai)
+    -- dump(ai)
 
     -- print("DEBUG: ActionResult.SUCCESS is", type(ActionResult.SUCCESS), ActionResult.SUCCESS)
 

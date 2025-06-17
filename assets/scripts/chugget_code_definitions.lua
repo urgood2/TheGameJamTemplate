@@ -1284,26 +1284,6 @@ particle.ParticleRenderType = {
 
 
 ---
---- Single particle instance
----
----@class particle.Particle
-particle.Particle = {
-    renderType = nil,  -- particle.ParticleRenderType: How the particle is drawn.
-    velocity = nil,  -- Vector2?: The particle's current velocity.
-    rotation = nil,  -- number?: The particle's current rotation in degrees.
-    rotationSpeed = nil,  -- number?: How fast the particle rotates.
-    scale = nil,  -- number?: The particle's current scale.
-    lifespan = nil,  -- number?: How long the particle exists in seconds.
-    age = nil,  -- number?: The current age of the particle in seconds.
-    color = nil,  -- Color?: The current color of the particle.
-    gravity = nil,  -- number?: Gravity strength applied to the particle.
-    acceleration = nil,  -- number?: Acceleration applied over the particle's lifetime.
-    startColor = nil,  -- Color?: The color the particle starts with.
-    endColor = nil  -- Color?: The color the particle fades to over its life.
-}
-
-
----
 --- Defines how particles are emitted
 ---
 ---@class particle.ParticleEmitter

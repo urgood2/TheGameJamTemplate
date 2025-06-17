@@ -475,35 +475,41 @@ namespace particle
 
         rec.record_property("particle.ParticleRenderType", {"CIRCLE_FILLED", std::to_string(static_cast<int>(particle::ParticleRenderType::CIRCLE_FILLED)), "Draw a filled circle"});
 
-        p.new_usertype<particle::Particle>("Particle",
-                                           sol::constructors<>(),
-                                           "renderType", &particle::Particle::renderType,
-                                           "velocity", &particle::Particle::velocity,
-                                           "rotation", &particle::Particle::rotation,
-                                           "rotationSpeed", &particle::Particle::rotationSpeed,
-                                           "scale", &particle::Particle::scale,
-                                           "lifespan", &particle::Particle::lifespan,
-                                           "age", &particle::Particle::age,
-                                           "color", &particle::Particle::color,
-                                           "gravity", &particle::Particle::gravity,
-                                           "acceleration", &particle::Particle::acceleration,
-                                           "startColor", &particle::Particle::startColor,
-                                           "endColor", &particle::Particle::endColor,
-                                           "type_id", []()
-                                           { return entt::type_hash<particle::Particle>::value(); });
-        rec.bind_usertype<particle::Particle>(lua, "particle.Particle", "0.1", "Single particle instance");
-        rec.record_property("particle.Particle", {"renderType", "nil", "particle.ParticleRenderType: How the particle is drawn."});
-        rec.record_property("particle.Particle", {"velocity", "nil", "Vector2?: The particle's current velocity."});
-        rec.record_property("particle.Particle", {"rotation", "nil", "number?: The particle's current rotation in degrees."});
-        rec.record_property("particle.Particle", {"rotationSpeed", "nil", "number?: How fast the particle rotates."});
-        rec.record_property("particle.Particle", {"scale", "nil", "number?: The particle's current scale."});
-        rec.record_property("particle.Particle", {"lifespan", "nil", "number?: How long the particle exists in seconds."});
-        rec.record_property("particle.Particle", {"age", "nil", "number?: The current age of the particle in seconds."});
-        rec.record_property("particle.Particle", {"color", "nil", "Color?: The current color of the particle."});
-        rec.record_property("particle.Particle", {"gravity", "nil", "number?: Gravity strength applied to the particle."});
-        rec.record_property("particle.Particle", {"acceleration", "nil", "number?: Acceleration applied over the particle's lifetime."});
-        rec.record_property("particle.Particle", {"startColor", "nil", "Color?: The color the particle starts with."});
-        rec.record_property("particle.Particle", {"endColor", "nil", "Color?: The color the particle fades to over its life."});
+        lua.new_usertype<particle::Particle>("Particle",
+            sol::constructors<particle::Particle()>(),
+            "renderType", &particle::Particle::renderType,
+            "velocity", &particle::Particle::velocity,
+            "rotation", &particle::Particle::rotation,
+            "rotationSpeed", &particle::Particle::rotationSpeed,
+            "scale", &particle::Particle::scale,
+            "lifespan", &particle::Particle::lifespan,
+            "age", &particle::Particle::age,
+            "color", &particle::Particle::color,
+            "gravity", &particle::Particle::gravity,
+            "acceleration", &particle::Particle::acceleration,
+            "startColor", &particle::Particle::startColor,
+            "endColor", &particle::Particle::endColor,
+            sol::meta_function::to_string, [](particle::Particle const &p){
+                std::ostringstream ss;
+                ss 
+                  << "Particle{vel=(" << p.velocity->x << "," << p.velocity->y << ") ";
+                return ss.str();
+            },
+            "type_id", []()
+            { return entt::type_hash<particle::Particle>::value(); });
+        // rec.bind_usertype<particle::Particle>(lua, "Particle", "0.1", "Single particle instance");
+        rec.record_property("Particle", {"renderType", "nil", "particle.ParticleRenderType: How the particle is drawn."});
+        rec.record_property("Particle", {"velocity", "nil", "Vector2?: The particle's current velocity."});
+        rec.record_property("Particle", {"rotation", "nil", "number?: The particle's current rotation in degrees."});
+        rec.record_property("Particle", {"rotationSpeed", "nil", "number?: How fast the particle rotates."});
+        rec.record_property("Particle", {"scale", "nil", "number?: The particle's current scale."});
+        rec.record_property("Particle", {"lifespan", "nil", "number?: How long the particle exists in seconds."});
+        rec.record_property("Particle", {"age", "nil", "number?: The current age of the particle in seconds."});
+        rec.record_property("Particle", {"color", "nil", "Color?: The current color of the particle."});
+        rec.record_property("Particle", {"gravity", "nil", "number?: Gravity strength applied to the particle."});
+        rec.record_property("Particle", {"acceleration", "nil", "number?: Acceleration applied over the particle's lifetime."});
+        rec.record_property("Particle", {"startColor", "nil", "Color?: The color the particle starts with."});
+        rec.record_property("Particle", {"endColor", "nil", "Color?: The color the particle fades to over its life."});
 
         p.new_usertype<particle::ParticleEmitter>("ParticleEmitter",
                                                   sol::constructors<>(),

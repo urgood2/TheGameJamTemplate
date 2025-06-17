@@ -854,7 +854,7 @@ namespace timer
             // Set up the tweening action
             timer.action = [start_value, setter, easing_method, resolved_delay, target_value](std::optional<float> elapsed_time)
             {
-                SPDLOG_DEBUG("Tweening from {} to {} with elapsed time: {}", start_value, target_value, elapsed_time.value_or(0.0f));
+                // SPDLOG_DEBUG("Tweening from {} to {} with elapsed time: {}", start_value, target_value, elapsed_time.value_or(0.0f));
                 float t = std::clamp(elapsed_time.value_or(0.0f) / resolved_delay, 0.0f, 1.0f); // Normalized time
                 float eased_t = easing_method(t);                                               // Apply easing
                 float interpolated_value = math::lerp(start_value, target_value, eased_t);

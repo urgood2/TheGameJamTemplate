@@ -7,12 +7,14 @@ uniform sampler2D texture0;
 uniform vec4 colDiffuse;
 uniform float grayAmount;       // range 0.0 to 1.0
 uniform float desaturateAmount; // range 0.0 to 1.0
-uniform float speedFactor = 2.0;        // e.g. 0.2 = very slow, 2.0 = very fast
+uniform float speedFactor;        // e.g. 0.2 = very slow, 2.0 = very fast
 
 uniform float u_brightness;   // Controls the overall brightness of the effect. Range: 0.0 (black) to 1.0 (full brightness).
 uniform float u_noisiness;    // Controls the amount of wavy distortion. Range: 0.0 (none) to ~1.0 (very wavy).
 uniform float u_hueOffset;    // Shifts the entire color palette. Range: 0.0 to 1.0 for a full spectrum shift.
 uniform float u_donutWidth;   // Controls the thickness of the colored rings. Range: ~0.1 (thin) to 1.0 (thick).
+// ← NEW uniform to control pixelation
+uniform float pixel_filter;
 
 
 uniform float iTime;
@@ -58,10 +60,17 @@ float donutFade(float distToMid, float radius, float thickness) {
 }
 
 void main() {
+    // 1) compute screen-space and pixelate
+    vec2 screenSize = iResolution;
+    float pixel_size   = length(screenSize) / pixel_filter;
+    vec2 screen_coords = fragTexCoord * screenSize;
+    screen_coords      = floor(screen_coords / pixel_size) * pixel_size;
+    vec2 uv            = (screen_coords - 0.5 * screenSize) / screenSize.y;
+    
     // Apply speedFactor to time for animation speed control
     float time = iTime * speedFactor;
     
-    vec2 uv = (fragTexCoord * iResolution - 0.5 * iResolution) / iResolution.y;
+    // uv = (fragTexCoord * iResolution - 0.5 * iResolution) / iResolution.y;
     uv *= 3.0;
 
     // Apply noise distortion using the new uniform

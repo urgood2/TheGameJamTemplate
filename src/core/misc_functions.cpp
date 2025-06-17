@@ -46,6 +46,7 @@ namespace game
         globalShaderUniforms.set("outer_space_donuts_bg", "u_noisiness", 0.22f); // Set initial noisiness
         globalShaderUniforms.set("outer_space_donuts_bg", "u_hueOffset", 0.0f); // Set initial hue offset
         globalShaderUniforms.set("outer_space_donuts_bg", "u_donutWidth", -2.77f); // Set initial donut width
+        globalShaderUniforms.set("outer_space_donuts_bg", "pixel_filter", 150.f); // Set initial hue offset
         
         //TODO: hue offset can be animated with timer
 

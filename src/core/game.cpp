@@ -550,14 +550,14 @@ namespace game
         
         // auto balatro = shaders::getShader("balatro_background");
         // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
-        auto crt = shaders::getShader("crt");
-        shaders::TryApplyUniforms(crt, globals::globalShaderUniforms, "crt");
+        // auto crt = shaders::getShader("crt");
+        // shaders::TryApplyUniforms(crt, globals::globalShaderUniforms, "crt");
         // auto spectrum_circle = shaders::getShader("spectrum_circle");
         // shaders::TryApplyUniforms(spectrum_circle, globals::globalShaderUniforms, "spectrum_circle");
-        auto spectrum_line = shaders::getShader("spectrum_line_background");
-        shaders::TryApplyUniforms(spectrum_line, globals::globalShaderUniforms, "spectrum_line_background");
-        auto outer_space = shaders::getShader("outer_space_donuts_bg");
-        shaders::TryApplyUniforms(outer_space, globals::globalShaderUniforms, "outer_space_donuts_bg");
+        // auto spectrum_line = shaders::getShader("spectrum_line_background");
+        // shaders::TryApplyUniforms(spectrum_line, globals::globalShaderUniforms, "spectrum_line_background");
+        // // auto outer_space = shaders::getShader("outer_space_donuts_bg");
+        // // shaders::TryApplyUniforms(outer_space, globals::globalShaderUniforms, "outer_space_donuts_bg");
         // auto shockwave = shaders::getShader("shockwave");
         // shaders::TryApplyUniforms(shockwave, globalShaderUniforms, "shockwave");
         // auto glitch = shaders::getShader("glitch");
@@ -627,7 +627,7 @@ namespace game
             
             {
                 // ZoneScopedN("Draw canvases to other canvases with shaders");
-                layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, outer_space); // render the background layer main canvas to the screen
+                layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "outer_space_donuts_bg"); // render the background layer main canvas to the screen
 
                 
                 layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
@@ -662,7 +662,7 @@ namespace game
             
             {
                 // ZoneScopedN("Draw canvas to render target (screen)");
-                layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, crt); // render the final output layer main canvas to the screen
+                layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "crt"); // render the final output layer main canvas to the screen
             }
             
             {
@@ -672,15 +672,12 @@ namespace game
                     #ifdef __EMSCRIPTEN__
                     rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
                     #endif
-                    Shader sh = shaders::getShader(shaderName);
-                    // this will look up the uniform set you populated from Lua
-                    shaders::TryApplyUniforms(sh, globals::globalShaderUniforms, shaderName);
-
+                    
                     // draw the full-screen canvas through that shader
                     layer::DrawCanvasToCurrentRenderTargetWithTransform(
                         finalOutput, "main", 
                         0, 0, 0, 1, 1, WHITE,
-                        sh
+                        shaderName
                     );
                 }
             }

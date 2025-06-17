@@ -15,6 +15,6 @@ out vec4 finalColor;
 void main()
 {
     
-    finalColor = texture(atlas,fragTexCoord) * fragColor;
+    finalColor = texture(atlas,fragTexCoord);
  
 }

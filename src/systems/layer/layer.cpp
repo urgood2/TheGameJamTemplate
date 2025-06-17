@@ -1433,7 +1433,7 @@ namespace layer
         float x, float y,
         float rotation, float scaleX, float scaleY,
         const Color& tint,
-        Shader shader)
+        std::string shaderName)
     {
         // Check canvas validity
         if (srcLayer->canvases.find(srcCanvasName) == srcLayer->canvases.end()) return;
@@ -1446,8 +1446,16 @@ namespace layer
     
         BeginTextureMode(dstCanvas);
         
-        if (shader.id != 0)
+        Shader shader = shaders::getShader(shaderName);
+        
+        // Optional shader
+        if (shader.id != 0) {
             BeginShaderMode(shader);
+            
+            
+            // texture uniforms need to be set after beginShaderMode
+            shaders::TryApplyUniforms(shader, globals::globalShaderUniforms, shaderName);
+        }
     
         DrawTexturePro(
             srcCanvas.texture,
@@ -2217,14 +2225,25 @@ namespace layer
 
     // in order to make this method stackable inside lamdas, we can't call begindrawing() in here.
     // that must be handled by the user.
-    void DrawCanvasToCurrentRenderTargetWithTransform(const std::shared_ptr<Layer> layer, const std::string &canvasName, float x, float y, float rotation, float scaleX, float scaleY, const Color &color, Shader shader, bool flat)
+    void DrawCanvasToCurrentRenderTargetWithTransform(const std::shared_ptr<Layer> layer, const std::string &canvasName, float x, float y, float rotation, float scaleX, float scaleY, const Color &color, std::string shaderName, bool flat)
     {
+        
+
         if (layer->canvases.find(canvasName) == layer->canvases.end())
             return;
-
+            
+        Shader shader = shaders::getShader(shaderName);
+        
         // Optional shader
-        if (shader.id != 0)
+        if (shader.id != 0) {
             BeginShaderMode(shader);
+            
+            
+            // texture uniforms need to be set after beginShaderMode
+            shaders::TryApplyUniforms(shader, globals::globalShaderUniforms, shaderName);
+        }
+            
+        
 
         // Set color
         DrawTexturePro(
@@ -2242,14 +2261,21 @@ namespace layer
     // Function that uses a destination rectangle
     void DrawCanvasToCurrentRenderTargetWithDestRect(
         const std::shared_ptr<Layer> layer, const std::string &canvasName,
-        const Rectangle &destRect, const Color &color, Shader shader)
+        const Rectangle &destRect, const Color &color, std::string shaderName)
     {
         if (layer->canvases.find(canvasName) == layer->canvases.end())
             return;
 
+        Shader shader = shaders::getShader(shaderName);
+    
         // Optional shader
-        if (shader.id != 0)
+        if (shader.id != 0) {
             BeginShaderMode(shader);
+            
+            
+            // texture uniforms need to be set after beginShaderMode
+            shaders::TryApplyUniforms(shader, globals::globalShaderUniforms, shaderName);
+        }
 
         // Draw the texture to the specified destination rectangle
         DrawTexturePro(

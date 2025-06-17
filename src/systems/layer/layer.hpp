@@ -142,7 +142,7 @@ namespace layer
                                                       float rotation = 0,
                                                       float scaleX = 1, float scaleY = 1,
                                                       const Color &color = WHITE,
-                                                      Shader shader = {},
+                                                      std::string shaderName = "ERROR-404",
                                                       bool flat = false); // render a layer's given canvas to the screen, or whatever target is in use.
     
     auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void;
@@ -162,11 +162,11 @@ namespace layer
         float x, float y,
         float rotation, float scaleX, float scaleY,
         const Color &tint,
-        Shader shader);
+        std::string shaderName = "ERROR-404");
 
     void DrawCanvasToCurrentRenderTargetWithDestRect(
         const std::shared_ptr<Layer> layer, const std::string &canvasName,
-        const Rectangle &destRect, const Color &color, Shader shader);
+        const Rectangle &destRect, const Color &color, std::string shaderName = "ERROR-404");
     void DrawCustomLamdaToSpecificCanvas(const std::shared_ptr<Layer> layer, const std::string &canvasName = "main", std::function<void()> drawActions = []() {}); // render whatever is in the function lambda to a specific canvas within a layer object. Note that you should not call any of the AddXXX functions in the lambda, as they will not be rendered to the canvas. Instead, call the AddXXX functions outside of the lambda, then call things like DrawCanvasToCurrentRenderTargetWithTransform() in the actions lambda to render the commands to the canvas.
     auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void;
     auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void;

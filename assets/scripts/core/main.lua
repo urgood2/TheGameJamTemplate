@@ -154,7 +154,7 @@ function main.init()
 
     -- add optional fullscreen shader which will be applied to the whole screen, can be removed later
     -- add_fullscreen_shader("flash")
-    -- add_fullscreen_shader("shockwave")
+    add_fullscreen_shader("shockwave")
     add_fullscreen_shader("tile_grid_overlay") -- to show tile grid
 
     -- shader uniform manipulation example

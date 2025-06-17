@@ -327,6 +327,7 @@ namespace game
         sprites = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         ui_layer = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
         finalOutput = layer::CreateLayerWithSize(GetScreenWidth(), GetScreenHeight());
+        layer::AddCanvasToLayer(finalOutput, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
 
         // set camera to fill the screen
         globals::camera2D = {0};
@@ -546,45 +547,6 @@ namespace game
             // ZoneScopedN("Particle Draw");
             particle::DrawParticles(globals::registry, ui_layer);
         }
-        
-        
-        // auto balatro = shaders::getShader("balatro_background");
-        // shaders::TryApplyUniforms(balatro, globalShaderUniforms, "balatro_background");
-        // auto crt = shaders::getShader("crt");
-        // shaders::TryApplyUniforms(crt, globals::globalShaderUniforms, "crt");
-        // auto spectrum_circle = shaders::getShader("spectrum_circle");
-        // shaders::TryApplyUniforms(spectrum_circle, globals::globalShaderUniforms, "spectrum_circle");
-        // auto spectrum_line = shaders::getShader("spectrum_line_background");
-        // shaders::TryApplyUniforms(spectrum_line, globals::globalShaderUniforms, "spectrum_line_background");
-        // // auto outer_space = shaders::getShader("outer_space_donuts_bg");
-        // // shaders::TryApplyUniforms(outer_space, globals::globalShaderUniforms, "outer_space_donuts_bg");
-        // auto shockwave = shaders::getShader("shockwave");
-        // shaders::TryApplyUniforms(shockwave, globalShaderUniforms, "shockwave");
-        // auto glitch = shaders::getShader("glitch");
-        // shaders::TryApplyUniforms(glitch, globalShaderUniforms, "glitch");
-        // auto wind = shaders::getShader("wind");
-        // shaders::TryApplyUniforms(wind, globalShaderUniforms, "wind");
-        // auto skew = shaders::getShader("3d_skew");
-        // shaders::TryApplyUniforms(skew, globalShaderUniforms, "3d_skew");
-        // auto squish = shaders::getShader("squish");
-        // shaders::TryApplyUniforms(squish, globalShaderUniforms, "squish");
-        // auto peaches = shaders::getShader("peaches_background");
-        // shaders::TryApplyUniforms(peaches, globals::globalShaderUniforms, "peaches_background");
-        // auto fade = shaders::getShader("fade");
-        // shaders::TryApplyUniforms(fade, globalShaderUniforms, "fade");
-        // auto fade_zoom = shaders::getShader("fade_zoom");
-        // shaders::TryApplyUniforms(fade_zoom, globalShaderUniforms, "fade_zoom");
-        // auto foil = shaders::getShader("foil");
-        // shaders::TryApplyUniforms(foil, globalShaderUniforms, "foil");
-        // auto holo = shaders::getShader("holo");
-        // shaders::TryApplyUniforms(holo, globalShaderUniforms, "holo");
-        // auto polychrome = shaders::getShader("polychrome");
-        // shaders::TryApplyUniforms(polychrome, globalShaderUniforms, "polychrome");
-        // auto negative_shine = shaders::getShader("negative_shine");
-        // shaders::TryApplyUniforms(negative_shine, globalShaderUniforms, "negative_shine");
-        // auto negative = shaders::getShader("negative");
-        // shaders::TryApplyUniforms(negative, globalShaderUniforms, "negative");
-
 
         {
             // ZoneScopedN("LayerCommandsToCanvas Draw");
@@ -660,7 +622,7 @@ namespace game
             // clear screen
             ClearBackground(BLACK);
             
-            {
+            { // build final output layer
                 // ZoneScopedN("Draw canvas to render target (screen)");
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "crt"); // render the final output layer main canvas to the screen
             }
@@ -668,18 +630,60 @@ namespace game
             {
                 // ZoneScopedN("injected lua shaders (fullscreen)");
                 
-                for (auto &shaderName : fullscreenShaders) {
-                    #ifdef __EMSCRIPTEN__
-                    rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
-                    #endif
+                // for (auto &shaderName : fullscreenShaders) {
+                //     #ifdef __EMSCRIPTEN__
+                //     rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
+                //     #endif
                     
-                    // draw the full-screen canvas through that shader
-                    layer::DrawCanvasToCurrentRenderTargetWithTransform(
-                        finalOutput, "main", 
-                        0, 0, 0, 1, 1, WHITE,
+                //     // draw the full-screen canvas through that shader
+                //     layer::DrawCanvasToCurrentRenderTargetWithTransform(
+                //         finalOutput, "main", 
+                //         0, 0, 0, 1, 1, WHITE,
+                //         shaderName
+                //     );
+                    
+                // }
+                // Make sure “render_double_buffer” exists on finalOutput:
+                //   finalOutput->canvases["render_double_buffer"] =
+                //       LoadRenderTexture(screenW, screenH);
+
+                std::string srcName = "main";
+                std::string dstName = "render_double_buffer";
+
+                for (auto &shaderName : fullscreenShaders) {
+                    // draw src → dst through shaderName
+                    layer::DrawCanvasOntoOtherLayerWithShader(
+                        finalOutput,     // src layer
+                        srcName,         // src canvas
+                        finalOutput,     // dst layer (same)
+                        dstName,         // dst canvas
+                        0, 0, 0, 1, 1,   // x, y, rotation, scaleX, scaleY
+                        WHITE,
                         shaderName
                     );
+
+                    // swap for next pass
+                    std::swap(srcName, dstName);
                 }
+
+                // after the loop, `srcName` holds the fully-composited result.
+                // If it isn’t already “main”, copy it back with no shader:
+                if (srcName != "main") {
+                    layer::DrawCanvasOntoOtherLayer(
+                        finalOutput,
+                        srcName,
+                        finalOutput,
+                        "main",
+                        0, 0, 0, 1, 1,
+                        WHITE
+                    );
+                }
+                
+                // Now, `finalOutput` has the final composited result in its “main” canvas. Draw it to the screen:
+                layer::DrawCanvasToCurrentRenderTargetWithTransform(
+                    finalOutput, "main", 
+                    0, 0, 0, 1, 1, WHITE
+                );
             }
             
             {

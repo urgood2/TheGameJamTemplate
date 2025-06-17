@@ -20,7 +20,7 @@ namespace game
         using namespace globals;
         // pre-load shader values for later use
         
-        const int TILE_SIZE = 32; // size of a tile in pixels, temporary
+        const int TILE_SIZE = 64; // size of a tile in pixels, temporary
         
         auto frame = init::getSpriteFrame("tile-grid-boundary.png");
         auto atlasID =  frame.atlasUUID;
@@ -39,14 +39,16 @@ namespace game
             
             globalShaderUniforms.set("tile_grid_overlay", "atlas", atlas);  
             
-            auto shader = shaders::getShader("tile_grid_overlay");
+            // auto shader = shaders::getShader("tile_grid_overlay");
             
-            int atlasLoc = GetShaderLocation(shader, "atlas");
-            SetShaderValueTexture(shader, atlasLoc, atlas);
+            // int atlasLoc = GetShaderLocation(shader, "atlas");
+            // SetShaderValueTexture(shader, atlasLoc, atlas);
             
         });
         
-        
+        float desiredCellSize = TILE_SIZE;             // in world‐units
+        float scale = 1.0f/desiredCellSize;    // how many cells per world‐unit
+
         
         // atlas dims
         globalShaderUniforms.set("tile_grid_overlay", "uImageSize",
@@ -56,10 +58,10 @@ namespace game
                     Vector4{ gridX, gridY, gridW, gridH });
 
         // grid parameters
-        globalShaderUniforms.set("tile_grid_overlay", "scale",             1/16.0f);
-        globalShaderUniforms.set("tile_grid_overlay", "base_opacity",      0.1f);
+        globalShaderUniforms.set("tile_grid_overlay", "scale",             scale);
+        globalShaderUniforms.set("tile_grid_overlay", "base_opacity",      0.0f);
         globalShaderUniforms.set("tile_grid_overlay", "highlight_opacity", 0.4f);
-        globalShaderUniforms.set("tile_grid_overlay", "distance_scaling",  50.0f);
+        globalShaderUniforms.set("tile_grid_overlay", "distance_scaling",  100.0f);
 
         // outer space
 

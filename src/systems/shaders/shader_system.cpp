@@ -560,7 +560,7 @@ namespace shaders
 
         if (loadedShaders.find(shaderName) == loadedShaders.end())
         {
-            SPDLOG_WARN("Shader {} not found.", shaderName);
+            // SPDLOG_WARN("Shader {} not found.", shaderName);
             return;
         }
 
@@ -581,7 +581,7 @@ namespace shaders
     {
         if (loadedShaders.find(shaderName) == loadedShaders.end())
         {
-            SPDLOG_WARN("Shader {} not found.", shaderName);
+            // SPDLOG_WARN("Shader {} not found.", shaderName);
             return {0};
         }
         return loadedShaders[shaderName];
@@ -592,7 +592,7 @@ namespace shaders
     {
         if (loadedShaders.find(shaderName) == loadedShaders.end())
         {
-            SPDLOG_WARN("Shader {} not found. Cannot register uniform update.", shaderName);
+            // SPDLOG_WARN("Shader {} not found. Cannot register uniform update.", shaderName);
             return;
         }
         uniformUpdateCallbacks[shaderName] = updateLambda;
@@ -613,7 +613,7 @@ namespace shaders
             }
             else
             {
-                SPDLOG_WARN("Shader {} not found during uniform update.", shaderName);
+                // SPDLOG_WARN("Shader {} not found during uniform update.", shaderName);
             }
         }
     }

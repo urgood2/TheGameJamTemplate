@@ -392,7 +392,8 @@ namespace layer
         BIND_CMD(AddPop,                 "dummy", &layer::CmdAddPop::dummy)
         BIND_CMD(PushMatrix,             "dummy", &layer::CmdPushMatrix::dummy)
         BIND_CMD(PopMatrix,              "dummy", &layer::CmdPopMatrix::dummy)
-        BIND_CMD(DrawCircle,             "x", &layer::CmdDrawCircle::x, "y", &layer::CmdDrawCircle::y, "radius", &layer::CmdDrawCircle::radius, "color", &layer::CmdDrawCircle::color)
+        BIND_CMD(DrawCircleFilled,             "x", &layer::CmdDrawCircleFilled::x, "y", &layer::CmdDrawCircleFilled::y, "radius", &layer::CmdDrawCircleFilled::radius, "color", &layer::CmdDrawCircleFilled::color)
+        BIND_CMD(DrawCircleLine,        "x", &layer::CmdDrawCircleLine::x, "y", &layer::CmdDrawCircleLine::y, "innerRadius", &layer::CmdDrawCircleLine::innerRadius, "outerRadius", &layer::CmdDrawCircleLine::outerRadius, "startAngle", &layer::CmdDrawCircleLine::startAngle, "endAngle", &layer::CmdDrawCircleLine::endAngle, "segments", &layer::CmdDrawCircleLine::segments, "color", &layer::CmdDrawCircleLine::color)
         BIND_CMD(DrawRectangle,          "x", &layer::CmdDrawRectangle::x, "y", &layer::CmdDrawRectangle::y, "width", &layer::CmdDrawRectangle::width, "height", &layer::CmdDrawRectangle::height, "color", &layer::CmdDrawRectangle::color, "lineWidth", &layer::CmdDrawRectangle::lineWidth)
         BIND_CMD(DrawRectanglePro,       "offsetX", &layer::CmdDrawRectanglePro::offsetX, "offsetY", &layer::CmdDrawRectanglePro::offsetY, "size", &layer::CmdDrawRectanglePro::size, "rotationCenter", &layer::CmdDrawRectanglePro::rotationCenter, "rotation", &layer::CmdDrawRectanglePro::rotation, "color", &layer::CmdDrawRectanglePro::color)
         BIND_CMD(DrawRectangleLinesPro,  "offsetX", &layer::CmdDrawRectangleLinesPro::offsetX, "offsetY", &layer::CmdDrawRectangleLinesPro::offsetY, "size", &layer::CmdDrawRectangleLinesPro::size, "lineThickness", &layer::CmdDrawRectangleLinesPro::lineThickness, "color", &layer::CmdDrawRectangleLinesPro::color)
@@ -467,11 +468,21 @@ namespace layer
         rec.add_type("layer.CmdPopMatrix", true);
         rec.record_property("layer.CmdPopMatrix", { "dummy", "false", "Unused field" });
 
-        rec.add_type("layer.CmdDrawCircle", true);
-        rec.record_property("layer.CmdDrawCircle", { "x", "number", "Center X" });
-        rec.record_property("layer.CmdDrawCircle", { "y", "number", "Center Y" });
-        rec.record_property("layer.CmdDrawCircle", { "radius", "number", "Radius" });
-        rec.record_property("layer.CmdDrawCircle", { "color", "Color", "Fill color" });
+        rec.add_type("layer.CmdDrawCircleFilled", true);
+        rec.record_property("layer.CmdDrawCircleFilled", { "x", "number", "Center X" });
+        rec.record_property("layer.CmdDrawCircleFilled", { "y", "number", "Center Y" });
+        rec.record_property("layer.CmdDrawCircleFilled", { "radius", "number", "Radius" });
+        rec.record_property("layer.CmdDrawCircleFilled", { "color", "Color", "Fill color" });
+        
+        rec.add_type("layer.CmdDrawCircleLine", true);
+        rec.record_property("layer.CmdDrawCircleLine", { "x", "number", "Center X" });
+        rec.record_property("layer.CmdDrawCircleLine", { "y", "number", "Center Y" });
+        rec.record_property("layer.CmdDrawCircleLine", { "innerRadius", "number", "Inner radius" });
+        rec.record_property("layer.CmdDrawCircleLine", { "outerRadius", "number", "Outer radius" });
+        rec.record_property("layer.CmdDrawCircleLine", { "startAngle", "number", "Start angle in degrees" });
+        rec.record_property("layer.CmdDrawCircleLine", { "endAngle", "number", "End angle in degrees" });
+        rec.record_property("layer.CmdDrawCircleLine", { "segments", "number", "Number of segments" });
+        rec.record_property("layer.CmdDrawCircleLine", { "color", "Color", "Line color" });
 
         rec.add_type("layer.CmdDrawRectangle", true);
         rec.record_property("layer.CmdDrawRectangle", { "x", "number", "Top-left X" });
@@ -720,7 +731,7 @@ namespace layer
         QUEUE_CMD(AddPop)
         QUEUE_CMD(PushMatrix)
         QUEUE_CMD(PopMatrix)
-        QUEUE_CMD(DrawCircle)
+        QUEUE_CMD(DrawCircleFilled)
         QUEUE_CMD(DrawRectangle)
         QUEUE_CMD(DrawRectanglePro)
         QUEUE_CMD(DrawRectangleLinesPro)
@@ -872,10 +883,10 @@ namespace layer
         rec.record_free_function({"layer"}, MethodDef{
             .name = "queueDrawCircle",
             .signature = R"(---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawCircle) # Function to initialize the command
+        ---@param init_fn fun(c: layer.CmdDrawCircleFilled) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
         ---@return void)",
-            .doc = R"(Queues a CmdDrawCircle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+            .doc = R"(Queues a CmdDrawCircleFilled into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
             .is_static = true,
             .is_overload = false
         });
@@ -2982,6 +2993,11 @@ namespace layer
     void Circle(float x, float y, float radius, const Color &color)
     {
         DrawCircle(static_cast<int>(x), static_cast<int>(y), radius, {color.r, color.g, color.b, color.a});
+    }
+    
+    void CircleLine(float x, float y, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, const Color &color)
+    {
+        DrawRing({x, y}, innerRadius, outerRadius, startAngle, endAngle, segments, {color.r, color.g, color.b, color.a});
     }
 
     void Line(float x1, float y1, float x2, float y2, const Color &color, float lineWidth)

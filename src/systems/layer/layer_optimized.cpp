@@ -10,8 +10,12 @@ namespace layer
     // Command Execution Functions
     // -------------------------------------------------------------------------------------
     
-    void RenderDrawCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircle* c) {
+    void RenderDrawCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c) {
         DrawCircleV({c->x, c->y}, c->radius, c->color);
+    }
+    
+    void RenderDrawCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c) {
+        DrawRing({c->x, c->y}, c->innerRadius, c->outerRadius, c->startAngle, c->endAngle, c->segments, c->color);
     }
     
     void ExecuteTranslate(std::shared_ptr<layer::Layer> layer, CmdTranslate* c) {
@@ -41,8 +45,12 @@ namespace layer
         PopMatrix();
     }
     
-    void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircle* c) {
+    void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c) {
         Circle(c->x, c->y, c->radius, c->color);
+    }
+    
+    void ExecuteCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c) {
+        CircleLine(c->x, c->y, c->innerRadius, c->outerRadius, c->startAngle, c->endAngle, c->segments, c->color);
     }
     
     void ExecuteRectangle(std::shared_ptr<layer::Layer> layer, CmdDrawRectangle* c) {
@@ -203,7 +211,8 @@ namespace layer
         RegisterRenderer<CmdAddPop>(DrawCommandType::AddPop, ExecuteAddPop);
         RegisterRenderer<CmdPushMatrix>(DrawCommandType::PushMatrix, ExecutePushMatrix);
         RegisterRenderer<CmdPopMatrix>(DrawCommandType::PopMatrix, ExecutePopMatrix);
-        RegisterRenderer<CmdDrawCircle>(DrawCommandType::Circle, ExecuteCircle);
+        RegisterRenderer<CmdDrawCircleFilled>(DrawCommandType::Circle, ExecuteCircle);
+        RegisterRenderer<CmdDrawCircleLine>(DrawCommandType::CircleLine, ExecuteCircleLine);
         RegisterRenderer<CmdDrawRectangle>(DrawCommandType::Rectangle, ExecuteRectangle);
         RegisterRenderer<CmdDrawRectanglePro>(DrawCommandType::RectanglePro, ExecuteRectanglePro);
         RegisterRenderer<CmdDrawRectangleLinesPro>(DrawCommandType::RectangleLinesPro, ExecuteRectangleLinesPro);

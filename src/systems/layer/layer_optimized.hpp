@@ -58,6 +58,7 @@ namespace layer
         PushMatrix,
         PopMatrix,
         Circle,
+        CircleLine,
         Rectangle,
         RectanglePro,
         RectangleLinesPro,
@@ -138,15 +139,21 @@ namespace layer
         bool dummy = false; // Placeholder
     };
 
-    struct CmdDrawCircle {
+    struct CmdDrawCircleFilled {
         float x, y, radius;
+        Color color;
+    };
+    
+    struct CmdDrawCircleLine {
+        float x, y, innerRadius, outerRadius, startAngle, endAngle;
+        int segments;
         Color color;
     };
 
     struct CmdDrawRectangle {
         float x, y, width, height;
         Color color;
-        float lineWidth;
+        float lineWidth = 1.0f;
     };
 
     struct CmdDrawRectanglePro {
@@ -160,21 +167,21 @@ namespace layer
     struct CmdDrawRectangleLinesPro {
         float offsetX, offsetY;
         Vector2 size;
-        float lineThickness;
+        float lineThickness = 1.0f;
         Color color;
     };
 
     struct CmdDrawLine {
         float x1, y1, x2, y2;
         Color color;
-        float lineWidth;
+        float lineWidth = 1.0f;
     };
 
     struct CmdDrawDashedLine {
         float x1, y1, x2, y2;
         float dashSize, gapSize;
         Color color;
-        float lineWidth;
+        float lineWidth = 1.0f;
     };
 
     struct CmdDrawText {
@@ -384,7 +391,8 @@ namespace layer
     // ===========================
     // Render Function Definitions
     // ===========================
-    extern void RenderDrawCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircle* c);
+    extern void RenderDrawCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c);
+    extern void RenderDrawCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c);
     extern void ExecuteTranslate(std::shared_ptr<layer::Layer> layer, CmdTranslate* c);
     extern void ExecuteScale(std::shared_ptr<layer::Layer> layer, CmdScale* c);
     extern void ExecuteRotate(std::shared_ptr<layer::Layer> layer, CmdRotate* c);
@@ -392,7 +400,8 @@ namespace layer
     extern void ExecuteAddPop(std::shared_ptr<layer::Layer> layer, CmdAddPop* c);
     extern void ExecutePushMatrix(std::shared_ptr<layer::Layer> layer, CmdPushMatrix* c);
     extern void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c);
-    extern void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircle* c);
+    extern void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c);
+    extern void ExecuteCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c);
     extern void ExecuteRectangle(std::shared_ptr<layer::Layer> layer, CmdDrawRectangle* c);
     extern void ExecuteRectanglePro(std::shared_ptr<layer::Layer> layer, CmdDrawRectanglePro* c);
     extern void ExecuteRectangleLinesPro(std::shared_ptr<layer::Layer> layer, CmdDrawRectangleLinesPro* c);

@@ -1276,8 +1276,10 @@ particle = {
 ---@class particle.ParticleRenderType
 particle.ParticleRenderType = {
     TEXTURE = 0,  -- Use a sprite texture
-    RECTANGLE = 1,  -- Draw as a rectangle
-    CIRCLE = 2  -- Draw as a circle
+    RECTANGLE_LINE = 1,  -- Draw a rectangle outline
+    RECTANGLE_FILLED = 2,  -- Draw a filled rectangle
+    CIRCLE_LINE = 3,  -- Draw a circle outline
+    CIRCLE_FILLED = 4  -- Draw a filled circle
 }
 
 
@@ -1580,12 +1582,28 @@ layer.CmdPopMatrix = {
 ---
 --- 
 ---
----@class layer.CmdDrawCircle
-layer.CmdDrawCircle = {
+---@class layer.CmdDrawCircleFilled
+layer.CmdDrawCircleFilled = {
     x = nil, -- number Center X
     y = nil, -- number Center Y
     radius = nil, -- number Radius
     color = nil, -- Color Fill color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawCircleLine
+layer.CmdDrawCircleLine = {
+    x = nil, -- number Center X
+    y = nil, -- number Center Y
+    innerRadius = nil, -- number Inner radius
+    outerRadius = nil, -- number Outer radius
+    startAngle = nil, -- number Start angle in degrees
+    endAngle = nil, -- number End angle in degrees
+    segments = nil, -- number Number of segments
+    color = nil, -- Color Line color
 }
 
 
@@ -4333,10 +4351,10 @@ function layer.queuePushMatrix(...) end
 function layer.queuePopMatrix(...) end
 
 ---
---- Queues a CmdDrawCircle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+--- Queues a CmdDrawCircleFilled into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
-        ---@param init_fn fun(c: layer.CmdDrawCircle) # Function to initialize the command
+        ---@param init_fn fun(c: layer.CmdDrawCircleFilled) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
         ---@return void
 function layer.queueDrawCircle(...) end
@@ -4714,14 +4732,6 @@ function localization.onLanguageChanged(...) end
 function localization.setCurrentLanguage(...) end
 
 ---
---- Creates and attaches a particle system to an entity using an emitter's properties.
----
----@param entity Entity # The entity to attach the particle system to.
----@param emitter ParticleEmitter # A pre-configured particle emitter data object.
----@return nil
-function particle.CreateParticle(...) end
-
----
 --- Emits a burst of particles from the specified emitter entity.
 ---
 ---@param emitterEntity Entity # The entity that has the particle emitter component.
@@ -4730,24 +4740,32 @@ function particle.CreateParticle(...) end
 function particle.EmitParticles(...) end
 
 ---
---- Creates and returns a new ParticleEmitter data object with default values.
+--- Attaches an existing emitter to another entity, with optional offset.
 ---
----@return ParticleEmitter # A new ParticleEmitter data object.
+---@param emitter entt::entity---@param target entt::entity---@param opts table? # { offset = Vector2 }
+function particle.AttachEmitter(...) end
+
+---
+--- Creates a ParticleEmitter; pass a table to override any defaults.
+---
+---@overload fun():ParticleEmitter
+---@param opts table? # Optional overrides for any emitter field
+---@field opts.size Vector2
+---@field opts.emissionRate number
+---@field opts.colors Color[]
+---@return ParticleEmitter
 function particle.CreateParticleEmitter(...) end
 
 ---
---- Updates all active particle systems.
+--- Creates a Particle (and its entity) from a Lua table, with optional animation config.
 ---
----@param dt number # The delta time since the last frame.
----@return nil
-function particle.UpdateParticles(...) end
-
----
---- Draws all active particles.
----
----@param layerPtr Layer # The layer to draw the particles on.
----@return nil
-function particle.DrawParticles(...) end
+---@param registry entt::registry
+---@param location Vector2
+---@param size Vector2
+---@param opts table? # configure any Particle field here
+---@param animCfg table? # optional { loop = bool, animationName = string }
+---@return entt::entity
+function particle.CreateParticle(...) end
 
 ---
 --- Sets the seed for deterministic random behavior.

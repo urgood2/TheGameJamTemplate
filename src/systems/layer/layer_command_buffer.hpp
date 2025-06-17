@@ -33,7 +33,8 @@ namespace layer
                     DELETE_COMMAND(layer, AddPop, CmdAddPop)
                     DELETE_COMMAND(layer, PushMatrix, CmdPushMatrix)
                     DELETE_COMMAND(layer, PopMatrix, CmdPopMatrix)
-                    DELETE_COMMAND(layer, Circle, CmdDrawCircle)
+                    DELETE_COMMAND(layer, Circle, CmdDrawCircleFilled)
+                    DELETE_COMMAND(layer, CircleLine, CmdDrawCircleLine)
                     DELETE_COMMAND(layer, Rectangle, CmdDrawRectangle)
                     DELETE_COMMAND(layer, RectanglePro, CmdDrawRectanglePro)
                     DELETE_COMMAND(layer, RectangleLinesPro, CmdDrawRectangleLinesPro)
@@ -96,7 +97,8 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdAddPop>() { return DrawCommandType::AddPop; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPushMatrix>() { return DrawCommandType::PushMatrix; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPopMatrix>() { return DrawCommandType::PopMatrix; }
-        template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircle>() { return DrawCommandType::Circle; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleFilled>() { return DrawCommandType::Circle; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleLine>() { return DrawCommandType::CircleLine; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawRectangle>() { return DrawCommandType::Rectangle; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawRectanglePro>() { return DrawCommandType::RectanglePro; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawRectangleLinesPro>() { return DrawCommandType::RectangleLinesPro; }
@@ -242,7 +244,8 @@ namespace layer
             CmdAddPop,
             CmdPushMatrix,
             CmdPopMatrix,
-            CmdDrawCircle,
+            CmdDrawCircleFilled,
+            CmdDrawCircleLine,
             CmdDrawRectangle,
             CmdDrawRectanglePro,
             CmdDrawRectangleLinesPro,

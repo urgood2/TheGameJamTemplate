@@ -225,6 +225,7 @@ namespace layer
     void ClearBackgroundAction(Color color);
     void DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x, int y);
     void Circle(float x, float y, float radius, const Color &color);
+    void CircleLine(float x, float y, float innerRadius, float outerRadius, float startAngle, float endAngle, int segments, const Color &color);
     void Line(float x1, float y1, float x2, float y2, const Color &color, float lineWidth);
     void RectangleDraw(float x, float y, float width, float height, const Color &color, float lineWidth = 0.0f);
     void Triangle(Vector2 p1, Vector2 p2, Vector2 p3, const Color &color);

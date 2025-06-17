@@ -7,6 +7,7 @@
 #include "systems/transform/transform_functions.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/factory/factory.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -16,16 +17,15 @@
 #include <optional>
 #include <limits>
 
-namespace particle {
+namespace particle
+{
 
-    // Default values for particles
     const float defaultRotation = 0.0f;
     const float defaultRotationSpeed = 0.0f;
     const float defaultScale = 1.0f;
     const float defaultLifespan = 1.0f;
     const float defaultSpeed = 10.0f;
 
-    // Default values for emitters
     const int defaultMaxParticles = 15;
     const float defaultEmissionRate = 0.1f;
     const float defaultParticleLifespan = 1.0f;
@@ -33,14 +33,20 @@ namespace particle {
     const bool defaultFillArea = false;
     const std::vector<Color> defaultColors = {WHITE, GRAY, LIGHTGRAY};
 
-    enum class ParticleRenderType {
+    // TODO: expose to lua
+    enum class ParticleRenderType
+    {
         TEXTURE,
-        RECTANGLE,
-        CIRCLE
+        RECTANGLE_LINE,
+        RECTANGLE_FILLED,
+        CIRCLE_LINE,
+        CIRCLE_FILLED
     };
 
-    struct Particle {
-        ParticleRenderType renderType = ParticleRenderType::RECTANGLE;
+    struct Particle
+    {
+        ParticleRenderType renderType = ParticleRenderType::RECTANGLE_FILLED;
+
         std::optional<Vector2> velocity;
         std::optional<float> rotation;
         std::optional<float> rotationSpeed;
@@ -48,21 +54,19 @@ namespace particle {
         std::optional<float> lifespan;
         std::optional<float> age = 0.0f;
         std::optional<Color> color;
-        std::optional<float> gravity = 0.0f; // New: Gravity effect on particle
-        std::optional<float> acceleration = 0.0f; // New: Acceleration over time
-        std::optional<Color> startColor; // New: Initial color of the particle
-        std::optional<Color> endColor; // New: Final color of the particle
-
-        //TODO: just use animation comp for animations, make it loop only once
+        std::optional<float> gravity = 0.0f;
+        std::optional<float> acceleration = 0.0f;
+        std::optional<Color> startColor;
+        std::optional<Color> endColor;
     };
 
-    struct ParticleEmitter {
+    struct ParticleEmitter
+    {
         Vector2 size;
         float emissionRate = 0.1f;
         float lastEmitTime = 0.0f;
         float particleLifespan = 1.0f;
         float particleSpeed = 1.0f;
-        // int maxParticles = 100;
         bool fillArea = false;
         bool oneShot = false;
         float oneShotParticleCount = 10.f;
@@ -72,53 +76,53 @@ namespace particle {
         float speedScale = 1.0f;
         float explosiveness = 0.0f;
         float randomness = 0.1f;
-        float emissionSpread = 0.0f; // New: Controls angular spread of emitted particles
-        float gravityStrength = 0.0f; // New: Strength of gravity applied to particles
-        Vector2 emissionDirection = {0, -1}; // New: Base direction of emitted particles (default upward)
-        float acceleration = 0.0f; // New: Acceleration applied to particles
+        float emissionSpread = 0.0f;
+        float gravityStrength = 0.0f;
+        Vector2 emissionDirection = {0, -1};
+        float acceleration = 0.0f;
         BlendMode blendMode = BLEND_ALPHA;
         std::vector<Color> colors = {WHITE, GRAY, LIGHTGRAY};
     };
 
-    struct ParticleAnimationConfig {
+    struct ParticleAnimationConfig
+    {
         bool loop = false;
         std::string animationName{};
     };
-    
 
-    inline entt::entity CreateParticle(entt::registry& registry, Vector2 location, Vector2 size, Particle particleData, std::optional<ParticleAnimationConfig> animationConfig = std::nullopt) {
+    inline entt::entity CreateParticle(entt::registry &registry, Vector2 location, Vector2 size, Particle particleData, std::optional<ParticleAnimationConfig> animationConfig = std::nullopt)
+    {
         auto particle = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, location.x, location.y, 0, 0);
-        auto& transform = registry.get<transform::Transform>(particle);
+        auto &transform = registry.get<transform::Transform>(particle);
 
         transform.setActualW(size.x);
         transform.setActualH(size.y);
 
-        auto& particleComp = registry.emplace<Particle>(particle);
+        auto &particleComp = registry.emplace<Particle>(particle);
         particleComp.velocity = particleData.velocity.value_or(Vector2(
-            Random::get<float>(-defaultSpeed, defaultSpeed), 
-            Random::get<float>(-defaultSpeed, defaultSpeed)
-        ));
+            Random::get<float>(-defaultSpeed, defaultSpeed),
+            Random::get<float>(-defaultSpeed, defaultSpeed)));
         particleComp.rotation = particleData.rotation.value_or(defaultRotation);
         particleComp.rotationSpeed = particleData.rotationSpeed.value_or(defaultRotationSpeed);
         particleComp.scale = particleData.scale.value_or(defaultScale);
         particleComp.lifespan = particleData.lifespan.value_or(defaultLifespan);
         particleComp.color = particleData.color.value_or(WHITE);
 
-        if (animationConfig) {
+        if (animationConfig)
+        {
             auto &anim = factory::emplaceAnimationQueue(globals::registry, particle);
-            // anim.defaultAnimation = loading::getAnimationObject(animationConfig->animationName);
-            
+
             anim.defaultAnimation = init::getAnimationObject(animationConfig->animationName);
-            if (animationConfig->loop == false) {
-                // no loop, add to queue and set up callback to remove entity
+            if (animationConfig->loop == false)
+            {
                 anim.animationQueue.push_back(init::getAnimationObject(animationConfig->animationName));
-                anim.onAnimationQueueCompleteCallback = [particle]() {
+                anim.onAnimationQueueCompleteCallback = [particle]()
+                {
                     SPDLOG_DEBUG("Removing particle entity");
                     transform::RemoveEntity(&globals::registry, particle);
                 };
                 anim.useCallbackOnAnimationQueueComplete = true;
             }
-            // override size
             transform.setActualW(anim.defaultAnimation.animationList[0].first.spriteFrame->frame.width);
             transform.setActualH(anim.defaultAnimation.animationList[0].first.spriteFrame->frame.height);
         }
@@ -130,38 +134,38 @@ namespace particle {
 
     inline void EmitParticles(entt::registry &registry, entt::entity emitterEntity, float deltaTime)
     {
-        auto& emitter = registry.get<ParticleEmitter>(emitterEntity);
+        auto &emitter = registry.get<ParticleEmitter>(emitterEntity);
 
-        // Modify emission timing using randomness
-        float randomFactor = 1.0f + (emitter.randomness * ((GetRandomValue(-100, 100) / 100.0f))); 
+        float randomFactor = 1.0f + (emitter.randomness * ((GetRandomValue(-100, 100) / 100.0f)));
         emitter.lastEmitTime += deltaTime * emitter.speedScale * randomFactor;
 
-        // If the emitter is a one-shot, emit all particles at once and stop emitting
-        if (emitter.oneShot) {  
-            if (emitter.lastEmitTime <= 0.0f) {
-                for (int i = 0; i < emitter.oneShotParticleCount; i++) {
+        if (emitter.oneShot)
+        {
+            if (emitter.lastEmitTime <= 0.0f)
+            {
+                for (int i = 0; i < emitter.oneShotParticleCount; i++)
+                {
                     EmitParticleHelper(emitterEntity, registry);
                 }
-                emitter.lastEmitTime = std::numeric_limits<float>::max(); // Prevent further emissions
+                emitter.lastEmitTime = std::numeric_limits<float>::max();
             }
             return;
         }
 
-        // Determine how many particles to emit based on explosiveness
         int particlesToEmit = 1;
-        if (emitter.explosiveness > 0.0f) {
+        if (emitter.explosiveness > 0.0f)
+        {
             particlesToEmit = static_cast<int>(ceil(emitter.explosiveness * emitter.emissionRate * 10));
         }
 
-        for (int i = 0; i < particlesToEmit; i++) {
+        for (int i = 0; i < particlesToEmit; i++)
+        {
             EmitParticleHelper(emitterEntity, registry);
         }
     }
 
     void EmitParticleHelper(entt::entity emitterEntity, entt::registry &registry)
     {
-        // Vector2 spawnPosition = emitter.useGlobalCoords ? Vector2{0, 0} : emitter.size;
-        // TODO: offfset
         auto &emitterTransform = registry.get<transform::Transform>(emitterEntity);
         auto &emitter = registry.get<ParticleEmitter>(emitterEntity);
 
@@ -173,8 +177,7 @@ namespace particle {
             spawnPosition.y += (GetRandomValue(0, 100) / 100.0f) * emitter.size.y - emitter.size.y / 2;
         }
 
-        // Adjust emission angle based on spread
-        float baseAngle = GetRandomValue(0, 360); // Default full-range emission
+        float baseAngle = GetRandomValue(0, 360);
         float angleOffset = (GetRandomValue(-100, 100) / 100.0f) * (emitter.emissionSpread * 180.0f);
         float emissionAngle = baseAngle + angleOffset;
 
@@ -187,34 +190,40 @@ namespace particle {
         p.scale = GetRandomValue(1, 5) / 10.0f * 2.0f;
         p.lifespan = emitter.particleLifespan;
         p.color = emitter.colors[GetRandomValue(0, emitter.colors.size() - 1)];
-        p.gravity = emitter.gravityStrength; // Assign emitter gravity to particle
-        p.acceleration = emitter.acceleration; // Assign acceleration
+        p.gravity = emitter.gravityStrength;
+        p.acceleration = emitter.acceleration;
         p.startColor = emitter.colors[GetRandomValue(0, emitter.colors.size() - 1)];
-        p.endColor = emitter.colors[GetRandomValue(0, emitter.colors.size() - 1)]; // Random transition color
-        p.color = p.startColor; // Start at initial color
+        p.endColor = emitter.colors[GetRandomValue(0, emitter.colors.size() - 1)];
+        p.color = p.startColor;
 
         CreateParticle(registry, spawnPosition, Vector2{10, 10}, p);
     }
 
-    inline void CreateParticleEmitter(entt::registry& registry, Vector2 location, ParticleEmitter emitterData) {
+    inline entt::entity CreateParticleEmitter(entt::registry &registry, Vector2 location, ParticleEmitter emitterData) 
+    {
         auto emitterEntity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, location.x, location.y, 0, 0);
-        
-        auto& emitter = registry.emplace<ParticleEmitter>(emitterEntity);
+
+        auto &emitter = registry.emplace<ParticleEmitter>(emitterEntity);
 
         emitter = emitterData;
 
-        if (emitter.prewarm) {
-            for (int i = 0; i < emitter.prewarmParticleCount; i++) {
+        if (emitter.prewarm)
+        {
+            for (int i = 0; i < emitter.prewarmParticleCount; i++)
+            {
                 EmitParticles(registry, emitterEntity, emitter.particleLifespan);
             }
         }
-
-        //TODO: emitter attachment using tranform:: role
+        
+        auto &transform = registry.get<transform::Transform>(emitterEntity);
+        transform.setActualX(location.x);
+        transform.setActualY(location.y);
+        
+        return emitterEntity;
     }
 
     inline void UpdateParticles(entt::registry &registry, float deltaTime)
     {
-        // ZoneScopedN("UpdateParticles"); // custom label
         auto view = registry.view<Particle>();
         for (auto entity : view)
         {
@@ -228,7 +237,6 @@ namespace particle {
                 continue;
             }
 
-            // Apply acceleration to velocity over time
             if (particle.acceleration.value() != 0.0f)
             {
                 float speedIncrease = particle.acceleration.value() * deltaTime;
@@ -237,7 +245,6 @@ namespace particle {
                 particle.velocity->y += sin(velocityAngle) * speedIncrease;
             }
 
-            // Apply gravity to velocity
             if (particle.gravity.value() != 0.0f)
             {
                 particle.velocity->y += particle.gravity.value() * deltaTime;
@@ -250,7 +257,6 @@ namespace particle {
             float lifeProgress = particle.age.value() / particle.lifespan.value();
             transform.setActualScale(particle.scale.value() * (1.0f - lifeProgress));
 
-            // Apply color transition based on lifespan
             if (particle.startColor.has_value() && particle.endColor.has_value())
             {
                 Color start = particle.startColor.value();
@@ -265,237 +271,495 @@ namespace particle {
         }
     }
 
-
-    inline void DrawParticles(entt::registry& registry, std::shared_ptr<layer::Layer> layerPtr) {
+    inline void DrawParticles(entt::registry &registry, std::shared_ptr<layer::Layer> layerPtr)
+    {
         auto view = registry.view<Particle>();
 
-        for (auto entity : view) {
-            auto& particle = view.get<Particle>(entity);
-            auto& transform = registry.get<transform::Transform>(entity);
+        for (auto entity : view)
+        {
+            auto &particle = view.get<Particle>(entity);
+            auto &transform = registry.get<transform::Transform>(entity);
+            auto &gameObject = registry.get<transform::GameObject>(entity);
+            bool shadowEnabled = false;
+            float shadowDisplacementX{}, shadowDisplacementY{};
+            // half-alpha black
 
-            //TODO: blending mode
+            if (gameObject.shadowDisplacement)
+            {
+                shadowDisplacementX = gameObject.shadowDisplacement->x * 0.4f;
+                shadowDisplacementY = gameObject.shadowDisplacement->y * 0.4f;
+                shadowEnabled = true;
+            }
 
             float alpha = 255 * (1.0f - (particle.age.value() / particle.lifespan.value()));
             Color drawColor = particle.color.value();
             drawColor.a = (unsigned char)alpha;
-            
+
+            Color shadowColor = {0, 0, 0, static_cast<unsigned char>(alpha * 0.5f)};
+
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
-            
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
-                cmd->x = x;
-                cmd->y = y;
-            });
 
-            layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd)
+                                                     {
+                cmd->x = x;
+                cmd->y = y; });
+
+            layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd)
+                                                 {
                 cmd->scaleX = scaleX;
-                cmd->scaleY = scaleY;
-            });
+                cmd->scaleY = scaleY; });
 
-            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
-                cmd->angle = rotation;
-            });
+            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd)
+                                                  { cmd->angle = rotation; });
 
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd)
+                                                     {
                 cmd->x = x;
-                cmd->y = y;
-            });
+                cmd->y = y; });
+                
+            static const float CIRCLE_LINE_WIDTH = 3.0f; // Width of the circle line
 
-            // does it have animation?
-            if (registry.any_of<AnimationQueueComponent>(entity)) {
-                layer::QueueCommand<layer::CmdDrawEntityAnimation>(layerPtr, [entity = entity](layer::CmdDrawEntityAnimation *cmd) {
-                    cmd->e = entity;
-                    cmd->registry = &globals::registry;
-                    cmd->x = 0;
-                    cmd->y = 0;
-                }, 0);
-            } else {
-                // just draw rect
-                layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectangle *cmd) {
-                    cmd->x = 0;
-                    cmd->y = 0;
-                    cmd->width = width;
-                    cmd->height = height;
-                    cmd->color = color;
-                }, 0);
+            // 1) DRAW SHADOW PASS
+            if (shadowEnabled)
+            {
+                switch (particle.renderType)
+                {
+                case ParticleRenderType::RECTANGLE_FILLED:
+                    layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [shadowDisplacementX, shadowDisplacementY, width = transform.getVisualW(), height = transform.getVisualH(), shadowColor](auto *cmd)
+                                                                 {
+                            cmd->x      = shadowDisplacementX;
+                            cmd->y      = shadowDisplacementY;
+                            cmd->width  = width;
+                            cmd->height = height;
+                            cmd->color  = shadowColor; }, 0);
+                    break;
+                    
+                case ParticleRenderType::RECTANGLE_LINE:
+                    layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(layerPtr, [shadowDisplacementX, shadowDisplacementY, width = transform.getVisualW(), height = transform.getVisualH(), shadowColor](auto *cmd)
+                                                                      {
+                            cmd->offsetX      = shadowDisplacementX;
+                            cmd->offsetY      = shadowDisplacementY;
+                            cmd->size.x  = width;
+                            cmd->size.y = height;
+                            cmd->color  = shadowColor; }, 0);
+                    break;
+                case ParticleRenderType::CIRCLE_FILLED:
+                    layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius= transform.getVisualH(), shadowColor](auto *cmd)
+                                                              {
+                            cmd->x      = shadowDisplacementX;
+                            cmd->y      = shadowDisplacementY;
+                            cmd->radius = radius;
+                            cmd->color  = shadowColor; }, 0);
+                    break;
+                case ParticleRenderType::CIRCLE_LINE:
+                    layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = transform.getVisualH(), shadowColor](auto *cmd)
+                                                                   {
+                            cmd->x      = shadowDisplacementX;
+                            cmd->y      = shadowDisplacementY;
+                            cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
+                            cmd->outerRadius = radius;
+                            cmd->startAngle = 0.0f; // Start angle in radians
+                            cmd->endAngle = 2.0f * PI; // Full circle
+                            cmd->segments = 32; // Number of segments for the circle line
+                            cmd->color = shadowColor; }, 0);
+                    break;
+                default:
+                    break; // no shadow for TEXTURE or unknown
+                }
+            }
+
+            // main pass
+            switch (particle.renderType)
+            {
+            case ParticleRenderType::TEXTURE:
+            {
+                if (registry.any_of<AnimationQueueComponent>(entity))
+                {
+                    layer::QueueCommand<layer::CmdDrawEntityAnimation>(layerPtr, [entity = entity](layer::CmdDrawEntityAnimation *cmd)
+                                                                       {
+                            cmd->e = entity;
+                            cmd->registry = &globals::registry;
+                            cmd->x = 0;
+                            cmd->y = 0; }, 0);
+                }
+                else
+                {
+                    SPDLOG_ERROR("Particle entity {} has render type TEXTURE but no AnimationQueueComponent found..", (int)(entity));
+                }
+                break;
+            }
+            case ParticleRenderType::RECTANGLE_FILLED:
+            {
+                layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectangle *cmd)
+                                                             {
+                        cmd->x = 0;
+                        cmd->y = 0;
+                        cmd->width = width;
+                        cmd->height = height;
+                        cmd->color = color; }, 0);
+                break;
+            }
+            case ParticleRenderType::RECTANGLE_LINE:
+            {
+                
+                layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectangleLinesPro *cmd)
+                                                                  {
+                        cmd->offsetX = 0;
+                        cmd->offsetY = 0;
+                        cmd->size.x = width;
+                        cmd->size.y = height;
+                        cmd->color = color; }, 0);
+                break;
+            }
+            case ParticleRenderType::CIRCLE_FILLED:
+            {
+                layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, color = drawColor](layer::CmdDrawCircleFilled *cmd)
+                                                          {
+                        cmd->x = 0;
+                        cmd->y = 0;
+                        cmd->radius = radius;
+                        cmd->color = color; }, 0);
+                break;
+            }
+            case ParticleRenderType::CIRCLE_LINE:
+            {
+                layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, color = drawColor](layer::CmdDrawCircleLine *cmd)
+                                                               {
+                        cmd->x = 0;
+                        cmd->y = 0;
+                        cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
+                        cmd->outerRadius = radius;
+                        cmd->startAngle = 0.0f; // Start angle in radians
+                        cmd->endAngle = 2.0f * PI; // Full circle
+                        cmd->segments = 32; // Number of segments for the circle line
+                        cmd->color = color; }, 0);
+                break;
+            }
+            default:
+                SPDLOG_WARN("Unknown particle render type: {}", static_cast<int>(particle.renderType));
+                break;
             }
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
     }
 
-    inline void exposeToLua(sol::state &lua) {
+    inline void exposeToLua(sol::state &lua)
+    {
 
-        auto& rec = BindingRecorder::instance();
-        auto particlePath = std::vector<std::string>{ "particle" };
+        auto &rec = BindingRecorder::instance();
+        auto particlePath = std::vector<std::string>{"particle"};
 
-        // 1) particle table
         sol::table p = lua["particle"].get_or_create<sol::table>();
-        if (!p.valid()) {
+        if (!p.valid())
+        {
             p = lua.create_table();
             lua["particle"] = p;
         }
 
         rec.add_type("particle");
 
-        // 2) ParticleRenderType enum
         p["ParticleRenderType"] = lua.create_table_with(
-            "TEXTURE",   particle::ParticleRenderType::TEXTURE,
-            "RECTANGLE", particle::ParticleRenderType::RECTANGLE,
-            "CIRCLE",    particle::ParticleRenderType::CIRCLE
-        );
+            "TEXTURE", particle::ParticleRenderType::TEXTURE,
+            "RECTANGLE_LINE", particle::ParticleRenderType::RECTANGLE_LINE,
+            "RECTANGLE_FILLED", particle::ParticleRenderType::RECTANGLE_FILLED,
+            "CIRCLE_LINE", particle::ParticleRenderType::CIRCLE_LINE,
+            "CIRCLE_FILLED", particle::ParticleRenderType::CIRCLE_FILLED);
 
-        // 2b) Record enum as class with fields
-        auto& renderTypeDef = rec.add_type("particle.ParticleRenderType");
+        auto &renderTypeDef = rec.add_type("particle.ParticleRenderType");
         renderTypeDef.doc = "How particles should be rendered";
-        rec.record_property("particle.ParticleRenderType", { "TEXTURE",   std::to_string(static_cast<int>(particle::ParticleRenderType::TEXTURE)),   "Use a sprite texture" });
-        rec.record_property("particle.ParticleRenderType", { "RECTANGLE", std::to_string(static_cast<int>(particle::ParticleRenderType::RECTANGLE)), "Draw as a rectangle" });
-        rec.record_property("particle.ParticleRenderType", { "CIRCLE",    std::to_string(static_cast<int>(particle::ParticleRenderType::CIRCLE)),    "Draw as a circle" });
+        rec.record_property("particle.ParticleRenderType", {"TEXTURE", std::to_string(static_cast<int>(particle::ParticleRenderType::TEXTURE)), "Use a sprite texture"});
+        rec.record_property("particle.ParticleRenderType", {"RECTANGLE_LINE", std::to_string(static_cast<int>(particle::ParticleRenderType::RECTANGLE_LINE)), "Draw a rectangle outline"});
+        rec.record_property("particle.ParticleRenderType", {"RECTANGLE_FILLED", std::to_string(static_cast<int>(particle::ParticleRenderType::RECTANGLE_FILLED)), "Draw a filled rectangle"});
+        rec.record_property("particle.ParticleRenderType", {"CIRCLE_LINE", std::to_string(static_cast<int>(particle::ParticleRenderType::CIRCLE_LINE)), "Draw a circle outline"});
 
-        // 3) Particle usertype
+        rec.record_property("particle.ParticleRenderType", {"CIRCLE_FILLED", std::to_string(static_cast<int>(particle::ParticleRenderType::CIRCLE_FILLED)), "Draw a filled circle"});
+
         p.new_usertype<particle::Particle>("Particle",
-            sol::constructors<>(),
-            "renderType",    &particle::Particle::renderType,
-            "velocity",      &particle::Particle::velocity,
-            "rotation",      &particle::Particle::rotation,
-            "rotationSpeed", &particle::Particle::rotationSpeed,
-            "scale",         &particle::Particle::scale,
-            "lifespan",      &particle::Particle::lifespan,
-            "age",           &particle::Particle::age,
-            "color",         &particle::Particle::color,
-            "gravity",       &particle::Particle::gravity,
-            "acceleration",  &particle::Particle::acceleration,
-            "startColor",    &particle::Particle::startColor,
-            "endColor",      &particle::Particle::endColor,
-            "type_id", []() { return entt::type_hash<particle::Particle>::value(); }
-        );
+                                           sol::constructors<>(),
+                                           "renderType", &particle::Particle::renderType,
+                                           "velocity", &particle::Particle::velocity,
+                                           "rotation", &particle::Particle::rotation,
+                                           "rotationSpeed", &particle::Particle::rotationSpeed,
+                                           "scale", &particle::Particle::scale,
+                                           "lifespan", &particle::Particle::lifespan,
+                                           "age", &particle::Particle::age,
+                                           "color", &particle::Particle::color,
+                                           "gravity", &particle::Particle::gravity,
+                                           "acceleration", &particle::Particle::acceleration,
+                                           "startColor", &particle::Particle::startColor,
+                                           "endColor", &particle::Particle::endColor,
+                                           "type_id", []()
+                                           { return entt::type_hash<particle::Particle>::value(); });
         rec.bind_usertype<particle::Particle>(lua, "particle.Particle", "0.1", "Single particle instance");
-        // Let's create a data class definition for Particle so Lua users get good tooltips
-        rec.record_property("particle.Particle", {"renderType",    "nil", "particle.ParticleRenderType: How the particle is drawn."});
-        rec.record_property("particle.Particle", {"velocity",      "nil", "Vector2?: The particle's current velocity."});
-        rec.record_property("particle.Particle", {"rotation",      "nil", "number?: The particle's current rotation in degrees."});
+        rec.record_property("particle.Particle", {"renderType", "nil", "particle.ParticleRenderType: How the particle is drawn."});
+        rec.record_property("particle.Particle", {"velocity", "nil", "Vector2?: The particle's current velocity."});
+        rec.record_property("particle.Particle", {"rotation", "nil", "number?: The particle's current rotation in degrees."});
         rec.record_property("particle.Particle", {"rotationSpeed", "nil", "number?: How fast the particle rotates."});
-        rec.record_property("particle.Particle", {"scale",         "nil", "number?: The particle's current scale."});
-        rec.record_property("particle.Particle", {"lifespan",      "nil", "number?: How long the particle exists in seconds."});
-        rec.record_property("particle.Particle", {"age",           "nil", "number?: The current age of the particle in seconds."});
-        rec.record_property("particle.Particle", {"color",         "nil", "Color?: The current color of the particle."});
-        rec.record_property("particle.Particle", {"gravity",       "nil", "number?: Gravity strength applied to the particle."});
-        rec.record_property("particle.Particle", {"acceleration",  "nil", "number?: Acceleration applied over the particle's lifetime."});
-        rec.record_property("particle.Particle", {"startColor",    "nil", "Color?: The color the particle starts with."});
-        rec.record_property("particle.Particle", {"endColor",      "nil", "Color?: The color the particle fades to over its life."});
+        rec.record_property("particle.Particle", {"scale", "nil", "number?: The particle's current scale."});
+        rec.record_property("particle.Particle", {"lifespan", "nil", "number?: How long the particle exists in seconds."});
+        rec.record_property("particle.Particle", {"age", "nil", "number?: The current age of the particle in seconds."});
+        rec.record_property("particle.Particle", {"color", "nil", "Color?: The current color of the particle."});
+        rec.record_property("particle.Particle", {"gravity", "nil", "number?: Gravity strength applied to the particle."});
+        rec.record_property("particle.Particle", {"acceleration", "nil", "number?: Acceleration applied over the particle's lifetime."});
+        rec.record_property("particle.Particle", {"startColor", "nil", "Color?: The color the particle starts with."});
+        rec.record_property("particle.Particle", {"endColor", "nil", "Color?: The color the particle fades to over its life."});
 
-
-
-
-        // 4) ParticleEmitter usertype
         p.new_usertype<particle::ParticleEmitter>("ParticleEmitter",
-            sol::constructors<>(),
-            "size",                  &particle::ParticleEmitter::size,
-            "emissionRate",          &particle::ParticleEmitter::emissionRate,
-            "lastEmitTime",          &particle::ParticleEmitter::lastEmitTime,
-            "particleLifespan",      &particle::ParticleEmitter::particleLifespan,
-            "particleSpeed",         &particle::ParticleEmitter::particleSpeed,
-            "fillArea",              &particle::ParticleEmitter::fillArea,
-            "oneShot",               &particle::ParticleEmitter::oneShot,
-            "oneShotParticleCount",  &particle::ParticleEmitter::oneShotParticleCount,
-            "prewarm",               &particle::ParticleEmitter::prewarm,
-            "prewarmParticleCount",  &particle::ParticleEmitter::prewarmParticleCount,
-            "useGlobalCoords",       &particle::ParticleEmitter::useGlobalCoords,
-            "speedScale",            &particle::ParticleEmitter::speedScale,
-            "explosiveness",         &particle::ParticleEmitter::explosiveness,
-            "randomness",            &particle::ParticleEmitter::randomness,
-            "emissionSpread",        &particle::ParticleEmitter::emissionSpread,
-            "gravityStrength",       &particle::ParticleEmitter::gravityStrength,
-            "emissionDirection",     &particle::ParticleEmitter::emissionDirection,
-            "acceleration",          &particle::ParticleEmitter::acceleration,
-            "blendMode",             &particle::ParticleEmitter::blendMode,
-            "colors",                &particle::ParticleEmitter::colors,
-            "type_id", []() { return entt::type_hash<particle::ParticleEmitter>::value(); }
-        );
+                                                  sol::constructors<>(),
+                                                  "size", &particle::ParticleEmitter::size,
+                                                  "emissionRate", &particle::ParticleEmitter::emissionRate,
+                                                  "lastEmitTime", &particle::ParticleEmitter::lastEmitTime,
+                                                  "particleLifespan", &particle::ParticleEmitter::particleLifespan,
+                                                  "particleSpeed", &particle::ParticleEmitter::particleSpeed,
+                                                  "fillArea", &particle::ParticleEmitter::fillArea,
+                                                  "oneShot", &particle::ParticleEmitter::oneShot,
+                                                  "oneShotParticleCount", &particle::ParticleEmitter::oneShotParticleCount,
+                                                  "prewarm", &particle::ParticleEmitter::prewarm,
+                                                  "prewarmParticleCount", &particle::ParticleEmitter::prewarmParticleCount,
+                                                  "useGlobalCoords", &particle::ParticleEmitter::useGlobalCoords,
+                                                  "speedScale", &particle::ParticleEmitter::speedScale,
+                                                  "explosiveness", &particle::ParticleEmitter::explosiveness,
+                                                  "randomness", &particle::ParticleEmitter::randomness,
+                                                  "emissionSpread", &particle::ParticleEmitter::emissionSpread,
+                                                  "gravityStrength", &particle::ParticleEmitter::gravityStrength,
+                                                  "emissionDirection", &particle::ParticleEmitter::emissionDirection,
+                                                  "acceleration", &particle::ParticleEmitter::acceleration,
+                                                  "blendMode", &particle::ParticleEmitter::blendMode,
+                                                  "colors", &particle::ParticleEmitter::colors,
+                                                  "type_id", []()
+                                                  { return entt::type_hash<particle::ParticleEmitter>::value(); });
         rec.bind_usertype<particle::ParticleEmitter>(lua, "particle.ParticleEmitter", "0.1", "Defines how particles are emitted");
-        // Create a data class definition for ParticleEmitter
-        rec.record_property("particle.ParticleEmitter", {"size",                 "nil", "Vector2: The size of the emission area."});
-        rec.record_property("particle.ParticleEmitter", {"emissionRate",         "nil", "number: Time in seconds between emissions."});
-        rec.record_property("particle.ParticleEmitter", {"particleLifespan",     "nil", "number: How long each particle lives."});
-        rec.record_property("particle.ParticleEmitter", {"particleSpeed",        "nil", "number: Initial speed of emitted particles."});
-        rec.record_property("particle.ParticleEmitter", {"fillArea",             "nil", "boolean: If true, emit from anywhere within the size rect."});
-        rec.record_property("particle.ParticleEmitter", {"oneShot",              "nil", "boolean: If true, emits a burst of particles once."});
+        rec.record_property("particle.ParticleEmitter", {"size", "nil", "Vector2: The size of the emission area."});
+        rec.record_property("particle.ParticleEmitter", {"emissionRate", "nil", "number: Time in seconds between emissions."});
+        rec.record_property("particle.ParticleEmitter", {"particleLifespan", "nil", "number: How long each particle lives."});
+        rec.record_property("particle.ParticleEmitter", {"particleSpeed", "nil", "number: Initial speed of emitted particles."});
+        rec.record_property("particle.ParticleEmitter", {"fillArea", "nil", "boolean: If true, emit from anywhere within the size rect."});
+        rec.record_property("particle.ParticleEmitter", {"oneShot", "nil", "boolean: If true, emits a burst of particles once."});
         rec.record_property("particle.ParticleEmitter", {"oneShotParticleCount", "nil", "number: Number of particles for a one-shot burst."});
-        rec.record_property("particle.ParticleEmitter", {"prewarm",              "nil", "boolean: If true, simulates the system on creation."});
+        rec.record_property("particle.ParticleEmitter", {"prewarm", "nil", "boolean: If true, simulates the system on creation."});
         rec.record_property("particle.ParticleEmitter", {"prewarmParticleCount", "nil", "number: Number of particles for prewarming."});
-        rec.record_property("particle.ParticleEmitter", {"useGlobalCoords",      "nil", "boolean: If true, particles operate in world space."});
-        rec.record_property("particle.ParticleEmitter", {"emissionSpread",       "nil", "number: Angular spread of particle emissions in degrees."});
-        rec.record_property("particle.ParticleEmitter", {"gravityStrength",      "nil", "number: Gravity applied to emitted particles."});
-        rec.record_property("particle.ParticleEmitter", {"emissionDirection",    "nil", "Vector2: Base direction for particle emission."});
-        rec.record_property("particle.ParticleEmitter", {"acceleration",         "nil", "number: Acceleration applied to particles."});
-        rec.record_property("particle.ParticleEmitter", {"blendMode",            "nil", "BlendMode: The blend mode for rendering particles."});
-        rec.record_property("particle.ParticleEmitter", {"colors",               "nil", "Color[]: A table of possible colors for particles."});
+        rec.record_property("particle.ParticleEmitter", {"useGlobalCoords", "nil", "boolean: If true, particles operate in world space."});
+        rec.record_property("particle.ParticleEmitter", {"emissionSpread", "nil", "number: Angular spread of particle emissions in degrees."});
+        rec.record_property("particle.ParticleEmitter", {"gravityStrength", "nil", "number: Gravity applied to emitted particles."});
+        rec.record_property("particle.ParticleEmitter", {"emissionDirection", "nil", "Vector2: Base direction for particle emission."});
+        rec.record_property("particle.ParticleEmitter", {"acceleration", "nil", "number: Acceleration applied to particles."});
+        rec.record_property("particle.ParticleEmitter", {"blendMode", "nil", "BlendMode: The blend mode for rendering particles."});
+        rec.record_property("particle.ParticleEmitter", {"colors", "nil", "Color[]: A table of possible colors for particles."});
 
-
-
-
-        // 5) ParticleAnimationConfig
         p.new_usertype<particle::ParticleAnimationConfig>("ParticleAnimationConfig",
-            sol::constructors<>(),
-            "loop",          &particle::ParticleAnimationConfig::loop,
-            "animationName", &particle::ParticleAnimationConfig::animationName,
-            "type_id", []() { return entt::type_hash<particle::ParticleAnimationConfig>::value(); }
-        );
+                                                          sol::constructors<>(),
+                                                          "loop", &particle::ParticleAnimationConfig::loop,
+                                                          "animationName", &particle::ParticleAnimationConfig::animationName,
+                                                          "type_id", []()
+                                                          { return entt::type_hash<particle::ParticleAnimationConfig>::value(); });
         rec.bind_usertype<particle::ParticleAnimationConfig>(lua, "particle.ParticleAnimationConfig", "0.1", "Configuration for animated particle appearance");
         rec.record_property("particle.ParticleAnimationConfig", {"loop", "boolean", "Whether the particle's animation should loop."});
         rec.record_property("particle.ParticleAnimationConfig", {"animationName", "string", "The name of the animation to play."});
 
-
-        // 6) Free functions
-        rec.bind_function(
-            lua,
-            particlePath,
-            "CreateParticle",
-            &particle::CreateParticle, // Note: This likely wraps a different C++ function than the header's CreateParticle.
-            "---@param entity Entity # The entity to attach the particle system to.\n"
-            "---@param emitter ParticleEmitter # A pre-configured particle emitter data object.\n"
-            "---@return nil",
-            "Creates and attaches a particle system to an entity using an emitter's properties."
-        );
+        // rec.bind_function(
+        //     lua,
+        //     particlePath,
+        //     "CreateParticle",
+        //     &particle::CreateParticle,
+        //     "---@param entity Entity # The entity to attach the particle system to.\n"
+        //     "---@param emitter ParticleEmitter # A pre-configured particle emitter data object.\n"
+        //     "---@return nil",
+        //     "Creates and attaches a particle system to an entity using an emitter's properties.");
 
         rec.bind_function(
             lua,
             particlePath,
-            "EmitParticles", // Note: This is a burst emission, unlike the C++ version.
+            "EmitParticles",
             &particle::EmitParticles,
             "---@param emitterEntity Entity # The entity that has the particle emitter component.\n"
             "---@param count integer # The number of particles to emit in a single burst.\n"
             "---@return nil",
-            "Emits a burst of particles from the specified emitter entity."
-        );
+            "Emits a burst of particles from the specified emitter entity.");
 
+        // rec.bind_function(
+        //     lua,
+        //     particlePath,
+        //     "CreateParticleEmitter",
+        //     &particle::CreateParticleEmitter,
+        //     "---@return ParticleEmitter # A new ParticleEmitter data object.",
+        //     "Creates and returns a new ParticleEmitter data object with default values.");
+            
+        auto tableDrivenCreateParticleEmitter = [](Vector2 location,
+            sol::table opts) -> entt::entity
+        {
+            auto e = ParticleEmitter{};
+            // for each field: if opts has it, use it; otherwise keep default
+            e.size = opts.get_or("size", e.size);
+            e.emissionRate = opts.get_or("emissionRate", e.emissionRate);
+            e.particleLifespan = opts.get_or("particleLifespan", e.particleLifespan);
+            e.particleSpeed = opts.get_or("particleSpeed", e.particleSpeed);
+            e.fillArea = opts.get_or("fillArea", e.fillArea);
+            e.oneShot = opts.get_or("oneShot", e.oneShot);
+            e.oneShotParticleCount = opts.get_or("oneShotParticleCount", e.oneShotParticleCount);
+            e.prewarm = opts.get_or("prewarm", e.prewarm);
+            e.prewarmParticleCount = opts.get_or("prewarmParticleCount", e.prewarmParticleCount);
+            e.useGlobalCoords = opts.get_or("useGlobalCoords", e.useGlobalCoords);
+            e.speedScale = opts.get_or("speedScale", e.speedScale);
+            e.explosiveness = opts.get_or("explosiveness", e.explosiveness);
+            e.randomness = opts.get_or("randomness", e.randomness);
+            e.emissionSpread = opts.get_or("emissionSpread", e.emissionSpread);
+            e.gravityStrength = opts.get_or("gravityStrength", e.gravityStrength);
+            e.emissionDirection = opts.get_or("emissionDirection", e.emissionDirection);
+            e.acceleration = opts.get_or("acceleration", e.acceleration);
+            e.blendMode = opts.get_or("blendMode", e.blendMode);
+            e.colors = opts.get_or("colors", e.colors);
+            return CreateParticleEmitter(globals::registry, location, e);
+        };
+        
+        
+        
+        // 4) Attach-emitter helper that sets `attachedTo` + `attachOffset`:
+        auto luaAttachParticleEmitter = [](
+            entt::entity emitterEntity,
+            entt::entity targetEntity,
+            sol::table opts) -> void
+        {
+            // fetch the component
+            
+            std::optional<Vector2> offset = std::nullopt;
+            sol::optional<Vector2> luaPos = opts["offset"];
+            if (luaPos)
+            {
+                offset = *luaPos;
+            }
+            else
+            {
+                offset = std::nullopt;
+            }
+            
+            transform::AssignRole(&globals::registry, emitterEntity, transform::InheritedProperties::Type::RoleInheritor, targetEntity, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong, offset);
+        
+        };
+        
+        // 5) Binder for attachment:
         rec.bind_function(
             lua,
             particlePath,
-            "CreateParticleEmitter",
-            &particle::CreateParticleEmitter,
-            "---@return ParticleEmitter # A new ParticleEmitter data object.",
-            "Creates and returns a new ParticleEmitter data object with default values."
+            "AttachEmitter",
+            luaAttachParticleEmitter,
+            // docstring for Lua
+            "---@param emitter entt::entity" 
+            "---@param target entt::entity"
+            "---@param opts table? # { offset = Vector2 }",
+            "Attaches an existing emitter to another entity, with optional offset."
         );
 
+
+        // 1) overload CreateParticleEmitter to take an options-table
+        rec.bind_function(lua, particlePath, "CreateParticleEmitter",
+                          sol::overload(
+                              // existing zero-arg version
+                              &particle::CreateParticleEmitter,
+                              // new table-driven version
+                              tableDrivenCreateParticleEmitter),
+                          "---@overload fun():ParticleEmitter\n"
+                          "---@param opts table? # Optional overrides for any emitter field\n"
+                          "---@field opts.size Vector2\n"
+                          "---@field opts.emissionRate number\n"
+                          "---@field opts.colors Color[]\n"
+                          "---@return ParticleEmitter",
+                          "Creates a ParticleEmitter; pass a table to override any defaults.");
+
+        // 2) convenience helper that both makes *and* attaches it
+        // rec.bind_function(lua, particlePath, "SpawnEmitter", [](entt::entity ent, sol::table opts)
+        //                   {
+        //     auto em = particle::CreateParticleEmitter(opts);
+        //     particle::CreateParticle(ent, em); 
+    
+        // }, "---@param entity Entity\n"
+        //                        "---@param opts table? # same fields as CreateParticleEmitter\n"
+        //                        "---@return nil",
+        //                   "Builds and attaches a particle emitter to `entity` in one call.");
+        
+        // 2) Table→Particle converter (unchanged)
+        static auto tableDrivenParticleMaker = [](sol::table opts) -> particle::Particle {
+            particle::Particle p;
+            p.renderType    = opts.get_or("renderType",    p.renderType);
+            p.velocity      = opts.get_or("velocity",      p.velocity);
+            p.rotation      = opts.get_or("rotation",      p.rotation);
+            p.rotationSpeed = opts.get_or("rotationSpeed", p.rotationSpeed);
+            p.scale         = opts.get_or("scale",         p.scale);
+            p.lifespan      = opts.get_or("lifespan",      p.lifespan);
+            p.age           = opts.get_or("age",           p.age);
+            p.color         = opts.get_or("color",         p.color);
+            p.gravity       = opts.get_or("gravity",       p.gravity);
+            p.acceleration  = opts.get_or("acceleration",  p.acceleration);
+            p.startColor    = opts.get_or("startColor",    p.startColor);
+            p.endColor      = opts.get_or("endColor",      p.endColor);
+            return p;
+        };
+
+        // 3) New Lua-facing maker that calls CreateParticle with optional animation
+        static auto luaCreateParticle = [](entt::registry &registry,
+                                    Vector2 location,
+                                    Vector2 size,
+                                    sol::table opts,
+                                    sol::optional<sol::table> animOpts) -> entt::entity
+        {
+            // build the Particle
+            particle::Particle p = tableDrivenParticleMaker(opts);
+
+            // build optional animation config
+            std::optional<particle::ParticleAnimationConfig> cfg = std::nullopt;
+            if (animOpts && animOpts->valid()) {
+                particle::ParticleAnimationConfig a;
+                a.loop          = (*animOpts).get_or("loop",          a.loop);
+                a.animationName = (*animOpts).get_or("animationName", a.animationName);
+                cfg = a;
+            }
+
+            // call your function
+            return CreateParticle(registry, location, size, p, cfg);
+        };
+
+        // 4) Bind it
         rec.bind_function(
             lua,
             particlePath,
-            "UpdateParticles",
-            &particle::UpdateParticles,
-            "---@param dt number # The delta time since the last frame.\n"
-            "---@return nil",
-            "Updates all active particle systems."
+            "CreateParticle",
+            luaCreateParticle,
+            // Lua docstring
+            "---@param registry entt::registry\n"
+            "---@param location Vector2\n"
+            "---@param size Vector2\n"
+            "---@param opts table? # configure any Particle field here\n"
+            "---@param animCfg table? # optional { loop = bool, animationName = string }\n"
+            "---@return entt::entity",
+            "Creates a Particle (and its entity) from a Lua table, with optional animation config."
         );
+        // rec.bind_function(lua, particlePath, "EmitParticle", [](entt::entity ent, sol::table opts)
+        //                   {
+        //             auto p = tableDrivenParticleMaker(opts);
+        //             particle::EmitParticles(ent, /* count */ 1, p); 
+        //         }, "---@param entity Entity\n"
+        //                        "---@param opts table? # same fields as MakeParticle\n"
+        //                        "---@return nil",
+        //                   "Spawns a single particle on `entity` with table config.");
 
-        rec.bind_function(
-            lua,
-            particlePath,
-            "DrawParticles",
-            &particle::DrawParticles,
-            "---@param layerPtr Layer # The layer to draw the particles on.\n"
-            "---@return nil",
-            "Draws all active particles."
-        );
+        // rec.bind_function(
+        //     lua,
+        //     particlePath,
+        //     "UpdateParticles",
+        //     &particle::UpdateParticles,
+        //     "---@param dt number # The delta time since the last frame.\n"
+        //     "---@return nil",
+        //     "Updates all active particle systems."
+        // );
 
+        // rec.bind_function(
+        //     lua,
+        //     particlePath,
+        //     "DrawParticles",
+        //     &particle::DrawParticles,
+        //     "---@param layerPtr Layer # The layer to draw the particles on.\n"
+        //     "---@return nil",
+        //     "Draws all active particles."
+        // );
     }
 }

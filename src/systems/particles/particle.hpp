@@ -256,10 +256,14 @@ namespace particle
             }
 
             transform.setActualX(transform.getActualX() + particle.velocity->x * deltaTime);
+            transform.setVisualX(transform.getVisualX());
             transform.setActualY(transform.getActualY() + particle.velocity->y * deltaTime);
+            transform.setVisualY(transform.getVisualY());
             transform.setActualRotation(transform.getActualRotation() + particle.rotationSpeed.value() * deltaTime);
+            transform.setVisualRotation(transform.getActualRotation());
             
             transform.setActualScale(particle.scale.value());
+            transform.setVisualScale(particle.scale.value());
 
             float lifeProgress = particle.age.value() / particle.lifespan.value();
             // transform.setActualScale(particle.scale.value() * (1.0f - lifeProgress));
@@ -314,42 +318,47 @@ namespace particle
 
             Color shadowColor = {0, 0, 0, static_cast<unsigned char>(alpha * 1.0f)};
             
-            // precompute once per-particle:
-            
-            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
-            
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
-                cmd->x = x;
-                cmd->y = y;
-            });
+            static const float CIRCLE_LINE_WIDTH = 3.0f;
+            float visualX = transform.getVisualX();
+            float visualY = transform.getVisualY();
+            float visualW = transform.getVisualW();
+            float visualH = transform.getVisualH();
+            float visualR = transform.getVisualRWithDynamicMotionAndXLeaning(); // Or getActualRotation() to fix swerving
+            float visualScale = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
 
-            layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
-                cmd->scaleX = scaleX;
-                cmd->scaleY = scaleY;
-            });
-
-            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualRWithDynamicMotionAndXLeaning()](layer::CmdRotate *cmd) {
-                cmd->angle = rotation;
-            });
-
-            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
-                cmd->x = x;
-                cmd->y = y;
-            });
-
-                
-            static const float CIRCLE_LINE_WIDTH = 3.0f; // Width of the circle line
-            
-            
-
-            // 1) DRAW SHADOW PASS
-            if (shadowEnabled)
+            // --- 1. DRAW SHADOW PASS ---
+            if (gameObject.shadowDisplacement)
             {
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowDisplacementX, shadowDisplacementY](layer::CmdTranslate *cmd)
-                {
-                    cmd->x = -shadowDisplacementX;
-                    cmd->y = shadowDisplacementY;
+                float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                float heightFactor = 1.0f + gameObject.shadowHeight.value_or(0.f);
+                float shadowDisplacementX = gameObject.shadowDisplacement->x * baseExaggeration * heightFactor;
+                float shadowDisplacementY = gameObject.shadowDisplacement->y * baseExaggeration * heightFactor;
+                Color shadowColor = {0, 0, 0, 128}; // Half-alpha black
+
+                // Set up the entire transform for the shadow
+                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](auto *cmd) {});
+
+                // Move to the SHADOW's position FIRST
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = visualX + visualW * 0.5 - shadowDisplacementX, y = visualY + visualH * 0.5 + shadowDisplacementY](auto *cmd) {
+                    cmd->x = x;
+                    cmd->y = y;
                 });
+                
+                // Then rotate and scale around the shadow's pivot
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [visualScale](auto *cmd) {
+                    cmd->scaleX = visualScale;
+                    cmd->scaleY = visualScale;
+                });
+                layer::QueueCommand<layer::CmdRotate>(layerPtr, [visualR](auto *cmd) {
+                    cmd->angle = visualR;
+                });
+                
+                // Offset by pivot for drawing
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [w = -visualW * 0.5, h = -visualH * 0.5](auto *cmd) {
+                    cmd->x = w;
+                    cmd->y = h;
+                });
+                
                 switch (particle.renderType)
                 {
                 case ParticleRenderType::RECTANGLE_FILLED:
@@ -366,8 +375,8 @@ namespace particle
                 case ParticleRenderType::RECTANGLE_LINE:
                     layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(layerPtr, [shadowDisplacementX, shadowDisplacementY, width = transform.getVisualW(), height = transform.getVisualH(), shadowColor](auto *cmd)
                                                                       {
-                            cmd->offsetX      = shadowDisplacementX;
-                            cmd->offsetY      = shadowDisplacementY;
+                            cmd->offsetX      = 0;
+                            cmd->offsetY      = 0;
                             cmd->size.x  = width;
                             cmd->size.y = height;
                             cmd->color  = shadowColor; 
@@ -377,8 +386,8 @@ namespace particle
                 case ParticleRenderType::CIRCLE_FILLED:
                     layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
                                                               {
-                            cmd->x      = shadowDisplacementX;
-                            cmd->y      = shadowDisplacementY;
+                            cmd->x      = -radius/2;
+                            cmd->y      = -radius/2;
                             cmd->radius = radius;
                             cmd->color  = shadowColor; 
                                                                 
@@ -387,8 +396,8 @@ namespace particle
                 case ParticleRenderType::CIRCLE_LINE:
                     layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
                                                                    {
-                            cmd->x      = shadowDisplacementX;
-                            cmd->y      = shadowDisplacementY;
+                            cmd->x      = -radius/2;
+                            cmd->y      = -radius/2;
                             cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
                             cmd->outerRadius = radius;
                             cmd->startAngle = 0.0f; // Start angle in radians
@@ -399,12 +408,101 @@ namespace particle
                 default:
                     break; // no shadow for TEXTURE or unknown
                 }
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowDisplacementX, shadowDisplacementY](layer::CmdTranslate *cmd)
-                {
-                    cmd->x = shadowDisplacementX;
-                    cmd->y = -shadowDisplacementY;
-                });
+
+                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](auto *cmd) {});
             }
+            
+            // precompute once per-particle:
+            
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {});
+            
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
+
+            layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+                cmd->scaleX = scaleX;
+                cmd->scaleY = scaleY;
+            });
+
+            layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR()](layer::CmdRotate *cmd) {
+                cmd->angle = rotation;
+            });
+
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
+                cmd->x = x;
+                cmd->y = y;
+            });
+
+                
+            // static const float CIRCLE_LINE_WIDTH = 3.0f; // Width of the circle line
+            
+            
+
+            // 1) DRAW SHADOW PASS
+            // if (shadowEnabled)
+            // {
+            //     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowDisplacementX, shadowDisplacementY](layer::CmdTranslate *cmd)
+            //     {
+            //         cmd->x = -shadowDisplacementX;
+            //         cmd->y = shadowDisplacementY;
+            //     });
+            //     switch (particle.renderType)
+            //     {
+            //     case ParticleRenderType::RECTANGLE_FILLED:
+            //         layer::QueueCommand<layer::CmdDrawRectanglePro>(layerPtr, [shadowDisplacementX, shadowDisplacementY, width = transform.getVisualW(), height = transform.getVisualH(), shadowColor](auto *cmd)
+            //                                                      {
+            //                 cmd->offsetX      = 0;
+            //                 cmd->offsetY      = 0;
+            //                 cmd->size.x  = width;
+            //                 cmd->size.y = height;
+            //                 cmd->color  = shadowColor; 
+            //             }, 0);
+            //         break;
+                    
+            //     case ParticleRenderType::RECTANGLE_LINE:
+            //         layer::QueueCommand<layer::CmdDrawRectangleLinesPro>(layerPtr, [shadowDisplacementX, shadowDisplacementY, width = transform.getVisualW(), height = transform.getVisualH(), shadowColor](auto *cmd)
+            //                                                           {
+            //                 cmd->offsetX      = shadowDisplacementX;
+            //                 cmd->offsetY      = shadowDisplacementY;
+            //                 cmd->size.x  = width;
+            //                 cmd->size.y = height;
+            //                 cmd->color  = shadowColor; 
+            //                 cmd->lineThickness = CIRCLE_LINE_WIDTH;  // Set line thickness for rectangle line shadow
+            //             }, 0);
+            //         break;
+            //     case ParticleRenderType::CIRCLE_FILLED:
+            //         layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
+            //                                                   {
+            //                 cmd->x      = shadowDisplacementX;
+            //                 cmd->y      = shadowDisplacementY;
+            //                 cmd->radius = radius;
+            //                 cmd->color  = shadowColor; 
+                                                                
+            //             }, 0);
+            //         break;
+            //     case ParticleRenderType::CIRCLE_LINE:
+            //         layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()) / 2.0f, shadowColor](auto *cmd)
+            //                                                        {
+            //                 cmd->x      = shadowDisplacementX;
+            //                 cmd->y      = shadowDisplacementY;
+            //                 cmd->innerRadius = radius - CIRCLE_LINE_WIDTH; // Inner radius for line circle
+            //                 cmd->outerRadius = radius;
+            //                 cmd->startAngle = 0.0f; // Start angle in radians
+            //                 cmd->endAngle = 360; // Full circle
+            //                 cmd->segments = 32; // Number of segments for the circle line
+            //                 cmd->color = shadowColor; }, 0);
+            //         break;
+            //     default:
+            //         break; // no shadow for TEXTURE or unknown
+            //     }
+            //     layer::QueueCommand<layer::CmdTranslate>(layerPtr, [shadowDisplacementX, shadowDisplacementY](layer::CmdTranslate *cmd)
+            //     {
+            //         cmd->x = shadowDisplacementX;
+            //         cmd->y = -shadowDisplacementY;
+            //     });
+            // }
 
             // main pass
             switch (particle.renderType)

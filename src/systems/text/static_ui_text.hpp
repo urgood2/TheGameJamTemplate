@@ -43,7 +43,7 @@ namespace static_ui_text_system {
     };
 
     // Helper function to parse attributes inside (color=red;background=blue)
-    std::map<std::string, TextSegmentArgumentType> parseAttributes(const std::string& attributeString) {
+    inline std::map<std::string, TextSegmentArgumentType> parseAttributes(const std::string& attributeString) {
         std::map<std::string, TextSegmentArgumentType> attributes;
         std::regex attrRegex(R"((\w+)\s*=\s*([^;]+))");
         auto words_begin = std::sregex_iterator(attributeString.begin(), attributeString.end(), attrRegex);

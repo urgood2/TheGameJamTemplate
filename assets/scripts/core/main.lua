@@ -177,7 +177,7 @@ function main.init()
         Vec2(200,200),             -- world position
         Vec2(30,30),                 -- render size
         {
-            renderType = particle.ParticleRenderType.CIRCLE_LINE,
+            renderType = particle.ParticleRenderType.RECTANGLE_FILLED,
             -- velocity   = Vec2(0,-10), random
             acceleration = 3.0, -- gravity effect
             lifespan   = 10.0,
@@ -196,14 +196,69 @@ function main.init()
                 -- debug("particleComp.scale = ", particleComp.scale)
                 
                 -- spin faster over time
-                particleComp.rotationSpeed = particleComp.rotationSpeed + (dt * 10)
+                particleComp.rotationSpeed = particleComp.rotationSpeed + (dt * 20)
                 
             end,
         },
         nil -- optional animation info
     )
     
-    particleComp = registry:get(p, Particle) -- get the particle component, which we can use to manipulate the particle
+    -- ui
+    
+    local sliderTextMoving = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.slider_text"),  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    
+    sliderTextMoving.config.initFunc = function(registry, entity)
+        localization.onLanguageChanged(function(newLang)
+            TextSystem.Functions.setText(entity, localization.get("ui.slider_text"))
+        end)
+    end
+    
+    local sliderTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            :addProgressBarMaxValue(100.0)
+            :addMinHeight(50)
+            :addNoMovementWhenDragged(true)
+            :addMinWidth(500)
+            :addProgressBar(true)
+            :addProgressBarEmptyColor(util.getColor("WHITE"))
+            :addProgressBarFullColor(util.getColor("BLUE"))
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :build()
+    
+    local newRoot =  UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            :addMinHeight(50)
+            :addMinWidth(500)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(sliderTemplate)
+    :build()
+    
+    
+    -- dump(ui.box)
+    debug(ui)
+    debug(ui.element)
+    
+    local newUIBox = ui.box:Initialize(registry, {600, 10}, newRoot, UIConfig())
+    
 
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)

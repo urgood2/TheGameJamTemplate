@@ -350,6 +350,7 @@ namespace game
         if (!result.valid()) {
             sol::error err = result;
             spdlog::error("Lua init failed: {}", err.what());
+            assert(false);
         }
         
     }

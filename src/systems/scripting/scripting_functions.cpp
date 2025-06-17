@@ -9,6 +9,7 @@
 #include "../sound/sound_system.hpp" 
 #include "../transform/transform_functions.hpp"
 #include "../ui/ui.hpp"
+#include "core/ui_definitions.hpp"
 #include "../text/textVer2.hpp"
 #include "../shaders/shader_system.hpp"
 #include "../shaders/shader_pipeline.hpp"
@@ -204,7 +205,7 @@ namespace scripting {
         //---------------------------------------------------------
         ui::exposeToLua(stateToInit);
 
-
+        ui_defs::exposeToLua(stateToInit);
         
 
         // ------------------------------------------------------

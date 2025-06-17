@@ -8,6 +8,7 @@
 #include "systems/text/textVer2.hpp"
 #include "systems/text/static_ui_text.hpp"
 #include "systems/timer/timer.hpp"
+#include "systems/scripting/binding_recorder.hpp"
 
 #include "systems/ui/ui.hpp"
 #include "core/misc_fuctions.hpp"
@@ -1273,5 +1274,113 @@ namespace ui_defs
 
         
         return masterVerticalContainer;
+    }
+    
+    
+    inline void exposeToLua(sol::state &lua)
+    {
+        sol::table ui    = lua.create_named_table("ui");
+        sol::table elem  = ui.create_named("definitions");
+        
+        auto &rec = BindingRecorder::instance();
+
+        // 1) InputState usertype
+        rec.add_type("ui.definitions");
+        
+        // 1) getNewTextEntry(text[, refEntity[, refComponent[, refValue]]])
+        elem.set_function("getNewTextEntry", sol::overload(
+            [](const std::string& text) {
+                return getNewTextEntry(text);
+            },
+            [](const std::string& text, entt::entity refEntity) {
+                return getNewTextEntry(text, refEntity);
+            },
+            [](const std::string& text, entt::entity refEntity, const std::string& refComponent) {
+                return getNewTextEntry(text, refEntity, refComponent);
+            },
+            [](const std::string& text, entt::entity refEntity, const std::string& refComponent, const std::string& refValue) {
+                return getNewTextEntry(text, refEntity, refComponent, refValue);
+            }
+        ));
+        rec.record_free_function(
+            {"ui","definitions"},
+            {"getNewTextEntry", R"(
+        ---@overload fun(text:string):UIElementTemplateNode
+        ---@overload fun(text:string, refEntity:Entity):UIElementTemplateNode
+        ---@overload fun(text:string, refEntity:Entity, refComponent:string):UIElementTemplateNode
+        ---@param text string
+        ---@param refEntity? Entity
+        ---@param refComponent? string
+        ---@param refValue? string
+        ---@return UIElementTemplateNode
+        )", 
+            "Create a static text‐entry node, with optional entity/component/value refs.", 
+            true, false}
+        );
+
+        // 2) getNewDynamicTextEntry(text, fontSize[, wrapWidth[, textEffect[, refEntity[, refComponent[, refValue]]]]])
+        elem.set_function("getNewDynamicTextEntry", 
+            // use a single lambda with sol::optional to let Lua omit any trailing args
+            [](const std::string& text,
+            float fontSize,
+            sol::optional<float>      wrapWidth,
+            sol::optional<std::string> textEffect,
+            sol::optional<entt::entity> refEntity,
+            sol::optional<std::string>  refComponent,
+            sol::optional<std::string>  refValue)
+            {
+                return getNewDynamicTextEntry(
+                    text,
+                    fontSize,
+                    wrapWidth ? std::make_optional(*wrapWidth) : std::nullopt,
+                    textEffect ? std::make_optional(*textEffect) : std::nullopt,
+                    refEntity ? std::make_optional(*refEntity) : std::nullopt,
+                    refComponent ? std::make_optional(*refComponent) : std::nullopt,
+                    refValue ? std::make_optional(*refValue) : std::nullopt
+                );
+            }
+        );
+        rec.record_free_function(
+            {"ui","definitions"},
+            {"getNewDynamicTextEntry", R"(
+        ---@param text string
+        ---@param fontSize number
+        ---@param wrapWidth? number
+        ---@param textEffect? string
+        ---@param refEntity? Entity
+        ---@param refComponent? string
+        ---@param refValue? string
+        ---@return UIElementTemplateNode
+        )",
+            "Create a text‐entry node with dynamic effects (wrapping, pulse, etc.) and optional refs.",
+            true, false}
+        );
+
+        // 3) getTextFromString(text)
+        elem.set_function("getTextFromString", &getTextFromString);
+        rec.record_free_function(
+            {"ui","definitions"},
+            {"getTextFromString", "---@param text string\n---@return UIElementTemplateNode", 
+            "Wrap a raw string into a UI text node.", 
+            true, false}
+        );
+
+        // 4) putCodedTextBetweenDividers(text, divider)
+        elem.set_function("putCodedTextBetweenDividers", &putCodedTextBetweenDividers);
+        rec.record_free_function(
+            {"ui","definitions"},
+            {"putCodedTextBetweenDividers", "---@param text string\n---@param divider string\n---@return UIElementTemplateNode", 
+            "Embed text between divider markers (for code‐style blocks).", 
+            true, false}
+        );
+
+        // 5) wrapEntityInsideObjectElement(entity)
+        elem.set_function("wrapEntityInsideObjectElement", &wrapEntityInsideObjectElement);
+        rec.record_free_function(
+            {"ui","definitions"},
+            {"wrapEntityInsideObjectElement", "---@param entity Entity\n---@return UIElementTemplateNode", 
+            "Turn an existing entity into a UI object‐element node.", 
+            true, false}
+        );
     }
 }

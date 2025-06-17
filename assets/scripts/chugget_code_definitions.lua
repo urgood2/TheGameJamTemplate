@@ -3802,6 +3802,14 @@ ui.element = {
 ui.box = {
 }
 
+
+---
+--- 
+---
+---@class ui.definitions
+ui.definitions = {
+}
+
 ---
 --- Adds a fullscreen shader to the game.
 ---
@@ -5778,6 +5786,58 @@ function ui.box.buildUIBoxDrawList(...) end
 ---@param calcTransform table
 ---@return nil
 function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
+
+---
+--- Create a static text‐entry node, with optional entity/component/value refs.
+---
+
+        ---@overload fun(text:string):UIElementTemplateNode
+        ---@overload fun(text:string, refEntity:Entity):UIElementTemplateNode
+        ---@overload fun(text:string, refEntity:Entity, refComponent:string):UIElementTemplateNode
+        ---@param text string
+        ---@param refEntity? Entity
+        ---@param refComponent? string
+        ---@param refValue? string
+        ---@return UIElementTemplateNode
+        
+function ui.definitions.getNewTextEntry(...) end
+
+---
+--- Create a text‐entry node with dynamic effects (wrapping, pulse, etc.) and optional refs.
+---
+
+        ---@param text string
+        ---@param fontSize number
+        ---@param wrapWidth? number
+        ---@param textEffect? string
+        ---@param refEntity? Entity
+        ---@param refComponent? string
+        ---@param refValue? string
+        ---@return UIElementTemplateNode
+        
+function ui.definitions.getNewDynamicTextEntry(...) end
+
+---
+--- Wrap a raw string into a UI text node.
+---
+---@param text string
+---@return UIElementTemplateNode
+function ui.definitions.getTextFromString(...) end
+
+---
+--- Embed text between divider markers (for code‐style blocks).
+---
+---@param text string
+---@param divider string
+---@return UIElementTemplateNode
+function ui.definitions.putCodedTextBetweenDividers(...) end
+
+---
+--- Turn an existing entity into a UI object‐element node.
+---
+---@param entity Entity
+---@return UIElementTemplateNode
+function ui.definitions.wrapEntityInsideObjectElement(...) end
 
 ---
 --- Initializes a new UI element.

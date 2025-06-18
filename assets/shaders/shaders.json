@@ -196,5 +196,14 @@
             "vertex": "web/tile_grid_overlay_vertex.vs",
             "fragment": "web/tile_grid_overlay_fragment.fs"
         }
+    },
+    "pixelate_image": {
+        "vertex": "pixelate_image_vertex.vs",
+        "fragment": "pixelate_image_fragment.fs",
+
+        "web": {
+            "vertex": "web/pixelate_image_vertex.vs",
+            "fragment": "web/pixelate_image_fragment.fs"
+        }
     }
 }

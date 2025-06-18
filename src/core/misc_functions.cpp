@@ -19,8 +19,18 @@ namespace game
 
         using namespace globals;
         // pre-load shader values for later use
+
+
         
-        const int TILE_SIZE = 64; // size of a tile in pixels, temporary
+        globalShaderUniforms.set("pixelated_image", "texSize",
+            Vector2{ (float)globals::screenWidth, (float)globals::screenHeight });
+        globalShaderUniforms.set("pixelated_image", "pixelRatio",
+            0.5f);
+
+
+        
+        const int TILE_SIZE = 64; // size of a tile in pixels, temporary, used for tile grid overlay
+
         
         auto frame = init::getSpriteFrame("tile-grid-boundary.png");
         auto atlasID =  frame.atlasUUID;

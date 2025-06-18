@@ -111,6 +111,7 @@ namespace game
     std::shared_ptr<layer::Layer> background;  // background
     std::shared_ptr<layer::Layer> sprites;     // sprites
     std::shared_ptr<layer::Layer> ui_layer;    // ui
+    std::shared_ptr<layer::Layer> particles; 
     std::shared_ptr<layer::Layer> finalOutput; // final output (for post processing)
     
     std::string randomStringText{"HEY HEY!"
@@ -302,6 +303,23 @@ namespace game
     static float testValue = 0.0f;
     static bool   tweenScheduled = false;
 
+    auto exposeToLua(sol::state &lua) -> void
+    {
+        auto &rec = BindingRecorder::instance();
+        // 1) InputState usertype
+        rec.add_type("layers").doc = "Root table for game layers and their components.";
+        lua["layers"] = sol::table(lua, sol::create);
+
+
+        lua["layers"]["background"] = background;
+        lua["layers"]["sprites"] = sprites;
+        lua["layers"]["ui_layer"] = ui_layer;
+        lua["layers"]["finalOutput"] = finalOutput;
+        rec.record_property("layers", {"background", "Layer", "Layer for background elements."});
+        rec.record_property("layers", {"sprites", "Layer", "Layer for sprite elements."});
+        rec.record_property("layers", {"ui_layer", "Layer", "Layer for UI elements."});
+        rec.record_property("layers", {"finalOutput", "Layer", "Layer for final output, used for post-processing effects."});
+    }
 
     // perform game-specific initialization here. This makes it easier to find all the initialization code
     // specific to a game project
@@ -335,6 +353,8 @@ namespace game
         globals::camera2D.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
         globals::camera2D.rotation = 0;
         globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+
+        exposeToLua(ai_system::masterStateLua); // so layer values will be saved after initialization
 
 
         transform::registerDestroyListeners(globals::registry);
@@ -546,29 +566,29 @@ namespace game
         
         {
             // ZoneScopedN("Particle Draw");
-            particle::DrawParticles(globals::registry, ui_layer);
+            particle::DrawParticles(globals::registry, sprites);
         }
 
         {
             // ZoneScopedN("LayerCommandsToCanvas Draw");
             {
                 // ZoneScopedN("background layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(background, "main", nullptr);  // render the background layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", nullptr);  // render the background layer commands to its main canvas
             }
             
             {
                 // ZoneScopedN("ui layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
             }
             
             {
                 // ZoneScopedN("sprites layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
             }
             
             {
                 // ZoneScopedN("final output layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasOptimizedVersion(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
             }
             
 
@@ -596,6 +616,8 @@ namespace game
                 layer::DrawCanvasOntoOtherLayer(ui_layer, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the ui layer main canvas to the screen
 
                 layer::DrawCanvasOntoOtherLayer(sprites, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the sprite layer main canvas to the screen
+
+
 
                 // #ifdef __EMSCRIPTEN__
                 // rlDrawRenderBatchActive(); // Emscripten -- keep batch size down

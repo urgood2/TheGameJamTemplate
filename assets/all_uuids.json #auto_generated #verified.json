@@ -16872,6 +16872,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\holo_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/holo_fragment.fs"
     ],
+    "fragment_image_pixelate": [
+        "pixelate_image_fragment.fs"
+    ],
+    "fragment_image_pixelate_shader": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\pixelate_image_fragment.fs"
+    ],
     "fragment_negative": [
         "negative_fragment.fs"
     ],
@@ -17357,6 +17363,12 @@
     ],
     "icon_keyboard_shift_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_shift_icon.svg"
+    ],
+    "image_pixelate_shader_vertex": [
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\pixelate_image_vertex.vs"
+    ],
+    "image_pixelate_vertex": [
+        "pixelate_image_vertex.vs"
     ],
     "in_juice_shader_window": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/window_juice_in.fs",

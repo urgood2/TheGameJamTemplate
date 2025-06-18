@@ -1494,6 +1494,8 @@ namespace layer
         
     
         BeginTextureMode(dstCanvas);
+
+        ClearBackground(BLANK);
         
         Shader shader = shaders::getShader(shaderName);
         
@@ -1634,7 +1636,7 @@ namespace layer
         
         // 2) Make sure your “ping” buffer exists:
         const std::string ping = canvasName;
-        const std::string pong = "render_double_buffer";
+        const std::string pong = canvasName + "_double";
         if (layerPtr->canvases.find(pong) == layerPtr->canvases.end()) {
             // create it with same size as ping:
             auto &srcTex = layerPtr->canvases.at(ping);
@@ -1644,6 +1646,11 @@ namespace layer
         // 3) Run the full-screen shader chain:
         std::string src = ping, dst = pong;
         for (auto &shaderName : layerPtr->postProcessShaders) {
+            // clear dst
+            BeginTextureMode(layerPtr->canvases.at(dst));
+            ClearBackground(BLANK);
+            EndTextureMode();
+
             layer::DrawCanvasOntoOtherLayerWithShader(
                 layerPtr,  // src layer
                 src,                 // src canvas
@@ -1658,6 +1665,10 @@ namespace layer
         
         // 4) If the final result isn’t back in “main”, copy it home:
         if (src != canvasName) {
+            // clear original ping
+            BeginTextureMode(layerPtr->canvases.at(canvasName));
+            ClearBackground(BLANK);
+            EndTextureMode();
             layer::DrawCanvasOntoOtherLayer(
                 layerPtr,
                 src,

@@ -375,7 +375,7 @@ namespace scripting {
         // game.cpp variables and functions
         // ------------------------------------------------------
         // wherever you bind your scripting API:
-         
+        // game::exposeToLua(stateToInit);
         
         stateToInit.set_function("add_fullscreen_shader", game::add_fullscreen_shader);
         stateToInit.set_function("remove_fullscreen_shader", game::remove_fullscreen_shader);

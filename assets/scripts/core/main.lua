@@ -157,9 +157,14 @@ function main.init()
     add_fullscreen_shader("shockwave")
     add_fullscreen_shader("tile_grid_overlay") -- to show tile grid
 
+    -- add shader to specific layer
+
+    debug(layers)
+    debug(layers.sprites)
+    
+    layers.sprites:addPostProcessShader("flash")
+
     -- shader uniform manipulation example
-    assert(globalShaderUniforms, "globalShaderUniforms not registered!")
-    globalShaderUniforms:set("flash", "randomUniform", 0.5) -- Set a nonexistant uniform for the flash shader)
 
     timer.every(5.0, function()
         -- spawn a new timer that tweens the shader uniform

@@ -18,6 +18,8 @@ namespace game {
         fullscreenShaders.push_back(name);
     }
     
+    auto exposeToLua(sol::state &lua) -> void;
+    
     inline void remove_fullscreen_shader(const std::string &name) {
         fullscreenShaders.erase(
             std::remove(fullscreenShaders.begin(),

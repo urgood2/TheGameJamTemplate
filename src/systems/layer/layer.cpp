@@ -2664,7 +2664,8 @@ namespace layer
         bool drawBackground = !currentSprite->noBackgroundColor;
         bool drawForeground = !currentSprite->noForegroundColor;
         
-        DrawTexturePro(*spriteAtlas, *animationFrame, {0, 0, 500, 500}, {0, 0}, 0, fgColor);
+        //FIXME: this works. why doesn't the rest?
+        DrawTexture(*spriteAtlas, 0, 0, WHITE); // Debug draw the atlas to see if it's loaded correctly
         
         if (!shader_pipeline::IsInitialized() 
             || shader_pipeline::width  < (int) renderWidth 
@@ -2697,8 +2698,7 @@ namespace layer
         RenderTexture2D baseSpriteRender = shader_pipeline::front(); // id 6
         
         //FIXME:
-        DrawTextureRec(baseSpriteRender.texture, {0,0, renderWidth, renderHeight}, { 0, 0 }, WHITE);
-        DrawTexture(baseSpriteRender.texture, 500, 500, WHITE); // debug draw the base sprite result
+        DrawTexture(baseSpriteRender.texture, 30, 30, WHITE);
         
     
         // 3. Apply shader passes
@@ -2785,8 +2785,8 @@ namespace layer
         // DrawTextureRec(shader_pipeline::GetLastRenderTarget()->texture, sourceRect, { 0, 0 }, WHITE);
         
         //FIXME: this is now working.
-        DrawTexture(*spriteAtlas,30, 30, WHITE);
-        DrawCircle(0, 0, 40, RED); // debug draw a circle at the center of the entity
+        // DrawTexture(*spriteAtlas,30, 30, WHITE);
+        // DrawCircle(0, 0, 40, RED); // debug draw a circle at the center of the entity
         PopMatrix();
     }
     

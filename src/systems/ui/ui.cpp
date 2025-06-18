@@ -199,7 +199,7 @@ namespace ui {
         rec.record_property("UIStylingType", {"NinePatchBorders", "1", "A 9-patch texture for scalable borders."});
 
         // 13) UIConfig
-        lua.new_usertype<UIConfig>("UIConfig", sol::constructors<>(),
+        lua.new_usertype<UIConfig>("UIConfig",  sol::call_constructor, sol::constructors<UIConfig>(),
             // Styling
             "stylingType",           &UIConfig::stylingType,
             "nPatchInfo",            &UIConfig::nPatchInfo,
@@ -677,12 +677,20 @@ namespace ui {
         // 1) Create (or get) the 'ui.element' table in Lua
         // Step 1: make `ui = {}` and get it back
         sol::table ui = lua.create_named_table("ui");
-        auto element = lua["ui"].get_or_create<sol::table>();
+        if (!ui.valid()) {
+            SPDLOG_DEBUG("UI table is not valid");
+        }
+        auto element = lua["ui"]["element"].get_or_create<sol::table>();
+        if (!element.valid()) {
+            SPDLOG_DEBUG("UI.ELEMENT table is not valid");
+            ui["element"] = element;
+        }
         rec.add_type("ui").doc = "Top-level namespace for the UI system.";
         rec.add_type("ui.element").doc = "Functions for creating and managing UI elements.";
 
         // 2) Bind every free-function from ui::element into that table
         element.set_function("Initialize",                   &ui::element::Initialize);
+        
         element.set_function("ApplyScalingToSubtree",        &ui::element::ApplyScalingFactorToSizesInSubtree);
         element.set_function("UpdateUIObjectScalingAndRecenter",&ui::element::UpdateUIObjectScalingAndRecnter);
         element.set_function("SetValues",                    &ui::element::SetValues);
@@ -745,6 +753,12 @@ namespace ui {
 
         // 2) Initialization & placement
         box.set_function("Initialize", &ui::box::Initialize);
+        box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) {
+            ui::TransformConfig config{};
+            config.x = table["x"].get_or(0);
+            config.y = table["y"].get_or(0);
+            return ui::box::Initialize(globals::registry, config, temp, ui::UIConfig{});
+        };
         rec.record_free_function({"ui", "box"}, {"Initialize", "---@param registry registry\n---@param transformData table\n---@param definition UIElementTemplateNode\n---@param config? UIConfig\n---@return Entity", "Initializes a new UI box from a definition.", true, false});
 
         box.set_function("placeUIElementsRecursively", &ui::box::placeUIElementsRecursively);

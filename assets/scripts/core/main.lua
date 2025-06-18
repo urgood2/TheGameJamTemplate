@@ -256,8 +256,9 @@ function main.init()
     -- dump(ui.box)
     debug(ui)
     debug(ui.element)
+    -- dump(newRoot)
     
-    local newUIBox = ui.box:Initialize(registry, {600, 10}, newRoot, UIConfig())
+    local newUIBox = ui.box.Initialize({600, 10}, newRoot)
     
 
     -- manipulate the transformComp

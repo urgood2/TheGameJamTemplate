@@ -18469,6 +18469,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/shaders"
     ],
+    "script_sol_with_working": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/working_with_sol.md"
+    ],
     "script_task": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\task"
@@ -18597,6 +18600,9 @@
     ],
     "snow": [
         "SNOW"
+    ],
+    "sol_with_working": [
+        "working_with_sol.md"
     ],
     "sound": [
         "sounds.json"

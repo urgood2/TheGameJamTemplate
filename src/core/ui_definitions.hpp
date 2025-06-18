@@ -1279,7 +1279,7 @@ namespace ui_defs
     
     inline void exposeToLua(sol::state &lua)
     {
-        sol::table ui    = lua.create_named_table("ui");
+        sol::table ui    = lua["ui"].get_or_create<sol::table>();
         sol::table elem  = ui.create_named("definitions");
         
         auto &rec = BindingRecorder::instance();

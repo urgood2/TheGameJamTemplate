@@ -2842,6 +2842,37 @@ namespace layer
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
         Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
         Translate(-origin.x, -origin.y);
+        
+        // shadow rendering first
+        {
+            auto &node = registry.get<transform::GameObject>(e);
+
+            if (node.shadowDisplacement) {
+                float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+                float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
+
+                // Adjust displacement using shadow height
+                float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+                float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+
+                float shadowAlpha = 0.8f;      // 0.0f to 1.0f
+                Color shadowColor = Fade(BLACK, shadowAlpha);
+
+                // Translate to shadow position
+                Translate(-shadowOffsetX, shadowOffsetY);
+                
+                // Draw shadow by rendering the same frame with a black tint and offset
+                DrawTextureRec(toRender.texture, sourceRect, { 0, 0 }, shadowColor);
+
+                // Reset translation to original position
+                Translate(shadowOffsetX, -shadowOffsetY);
+            }
+        }
+        
+        
+        
+
+        
         DrawTextureRec(toRender.texture, sourceRect, { 0, 0 }, WHITE);
         
         PopMatrix();

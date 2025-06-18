@@ -2800,7 +2800,7 @@ namespace layer
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
         Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
         Translate(-origin.x, -origin.y);
-        DrawTextureRec(GetLastRenderTarget().texture, sourceRect, { 0, 0 }, WHITE);
+        DrawTextureRec(GetLastRenderTarget()->texture, sourceRect, { 0, 0 }, WHITE);
         PopMatrix();
     }
     

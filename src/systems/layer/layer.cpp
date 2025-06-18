@@ -2773,6 +2773,13 @@ namespace layer
         // // 🔵 Save post-pass result
         RenderTexture2D postPassRender = *shader_pipeline::GetLastRenderTarget(); // id 6 is now the result of all passes
         
+        // TODO: need two slots: one slot for baseSpriteRender, one for postPassRender, within the shader_pipeline system. It should be initialized with the same size as when the system itself was initialized. api should be like this:
+        
+        // shader_pipeline::GetBaseRenderTextureCache(); // returns the cached base render
+        // shader_pipeline::IsBaseRenderTextureCacheValid(); // returns true if the base render texture is valid
+        // shader_pipeline::GetPostShaderPassRenderTextureCache(); // returns the cached post pass render
+        // shader_pipeline::IsPostShaderPassRenderTextureCacheValid(); // returns true if the
+        
         DrawTexture(postPassRender.texture, 30, 30, WHITE);
     
         // // 4. Overlay draws
@@ -2781,7 +2788,7 @@ namespace layer
     
             Shader shader = shaders::getShader(overlay.shaderName);
             AssertThat(shader.id, IsGreaterThan(0));
-            render_stack_switch_internal::Push(shader_pipeline::back());
+            render_stack_switch_internal::Push(shader_pipeline::front());
             ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
@@ -2792,28 +2799,52 @@ namespace layer
     
             EndShaderMode();
             render_stack_switch_internal::Pop();
+            shader_pipeline::Swap();
+            
+            shader_pipeline::SetLastRenderTarget(shader_pipeline::back()); 
     
-            render_stack_switch_internal::Push(shader_pipeline::front());
-            BeginBlendMode((int)overlay.blendMode);
-            DrawTextureRec(shader_pipeline::back().texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
-            EndBlendMode();
-            render_stack_switch_internal::Pop();
+            // render_stack_switch_internal::Push(shader_pipeline::front());
+            // BeginBlendMode((int)overlay.blendMode);
+            // DrawTextureRec(shader_pipeline::back().texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
+            // EndBlendMode();
+            // render_stack_switch_internal::Pop();
         }
     
-        // shader_pipeline::SetLastRenderTarget(shader_pipeline::front()); // id 6 is now the final result, with no overlay draws
+        
+        
+        if (pipelineComp.passes.empty() && pipelineComp.overlayDraws.empty()) {
+            // Use back() as the target since front() is already used
+            // id 6 is drawn to back(), which has id 7
+            
+            RenderTexture2d toRender{};
+            if (shader_pipeline::HasCachedPostShaderPassRender()) {
+                toRender = shader_pipeline::GetCachedPostShaderPassRender();
+            } else if (shader_pipeline::HasCachedBaseRender()) {
+                toRender = shader_pipeline::GetCachedBaseRender();
+            } else {
+                toRender = shader_pipeline::front(); // use the front texture as a fallback
+            }
+            
+            render_stack_switch_internal::Push(toRender.texture);
+            ClearBackground({0, 0, 0, 0});
+            DrawTextureRec(toRender.texture, 
+                {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, 
+                {0, 0}, WHITE);
+            render_stack_switch_internal::Pop();
 
-        // if (pipelineComp.passes.empty() && pipelineComp.overlayDraws.empty()) {
-        //     // Use back() as the target since front() is already used
-        //     // id 6 is drawn to back(), which has id 7
-        //     render_stack_switch_internal::Push(shader_pipeline::back());
-        //     ClearBackground({0, 0, 0, 0});
-        //     DrawTextureRec(shader_pipeline::front().texture, 
-        //         {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, 
-        //         {0, 0}, WHITE);
-        //     render_stack_switch_internal::Pop();
-
-        //     shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
-        // }
+            shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
+        }
+        
+        
+        
+        RenderTexture toRender{};
+        if (shader_pipeline::HasCachedPostShaderPassRender()) {
+            toRender = shader_pipeline::GetCachedPostShaderPassRender();
+        } else if (shader_pipeline::HasCachedBaseRender()) {
+            toRender = shader_pipeline::GetCachedBaseRender();
+        } else {
+            toRender = shader_pipeline::front(); // use the front texture as a fallback
+        }
     
         // 5. Final draw with transform
         auto& transform = registry.get<transform::Transform>(e);
@@ -2833,11 +2864,8 @@ namespace layer
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
         Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
         Translate(-origin.x, -origin.y);
-        // DrawTextureRec(shader_pipeline::GetLastRenderTarget()->texture, sourceRect, { 0, 0 }, WHITE);
+        DrawTextureRec(toRender.texture, sourceRect, { 0, 0 }, WHITE);
         
-        //FIXME: this is now working.
-        // DrawTexture(*spriteAtlas,30, 30, WHITE);
-        // DrawCircle(0, 0, 40, RED); // debug draw a circle at the center of the entity
         PopMatrix();
     }
     

@@ -11880,7 +11880,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\animation_NOTES.md"
     ],
     "animation_graphic_warning": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animation_WARNINGS.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/animation_WARNINGS.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\animation_WARNINGS.md"
     ],
     "animation_idle": [
         "idle_animation"
@@ -13161,10 +13162,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/sprite_bound_expansion_snippet.md"
     ],
     "boundary_graphic_grid_tile": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/tile-grid-boundary.aseprite"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/tile-grid-boundary.aseprite",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\tile-grid-boundary.png"
     ],
     "boundary_grid_shader_texture_tile": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/shader_textures/tile-grid-boundary.png"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/shader_textures/tile-grid-boundary.png",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\shader_textures\\tile-grid-boundary.png"
     ],
     "boundary_grid_tile": [
         "tile-grid-boundary.png"
@@ -16636,7 +16639,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series"
     ],
     "file_globbed_packing_pre_shader_texture": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/shader_textures"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/shader_textures",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\shader_textures"
     ],
     "firebrick": [
         "FIREBRICK"
@@ -16847,13 +16851,15 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glitch_fragment.fs"
     ],
     "fragment_grid_overlay_shader_tile": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\tile_grid_overlay_fragment.fs"
     ],
     "fragment_grid_overlay_tile": [
         "tile_grid_overlay_fragment.fs"
     ],
     "fragment_grid_overlay_tile_web": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/tile_grid_overlay_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/tile_grid_overlay_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\tile_grid_overlay_fragment.fs"
     ],
     "fragment_holo": [
         "holo_fragment.fs"
@@ -17226,13 +17232,15 @@
         "YELLOW GREEN"
     ],
     "grid_overlay_shader_tile_vertex": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\tile_grid_overlay_vertex.vs"
     ],
     "grid_overlay_tile_vertex": [
         "tile_grid_overlay_vertex.vs"
     ],
     "grid_overlay_tile_vertex_web": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/tile_grid_overlay_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/tile_grid_overlay_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\tile_grid_overlay_vertex.vs"
     ],
     "gui_movable": [
         "movable_gui.vs"
@@ -17410,7 +17418,8 @@
         "JAMEGAM50.md"
     ],
     "jamegam50_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/JAMEGAM50.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/JAMEGAM50.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\JAMEGAM50.md"
     ],
     "k_keyboard": [
         "keyboard_k.png"
@@ -18470,7 +18479,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/shaders"
     ],
     "script_sol_with_working": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/working_with_sol.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/working_with_sol.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\working_with_sol.md"
     ],
     "script_task": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task",

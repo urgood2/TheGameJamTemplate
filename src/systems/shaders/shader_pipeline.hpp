@@ -11,15 +11,15 @@
 
 namespace shader_pipeline {
 
+    // removed storage of shader uniforms from ShaderPass. Just using globals
     struct ShaderPass {
         std::string shaderName;
         bool enabled = true;
         
-        // custom uniforms for this shader pass, applied for this pass only
-        shaders::ShaderUniformSet uniforms;
-        
         // custom lamdna for this shader pass, run before activatingt the shader for this pass
         std::function<void()> customPrePassFunction{};
+
+
     };
     
     enum class OverlayInputSource { BaseSprite, PostPassResult };
@@ -27,7 +27,6 @@ namespace shader_pipeline {
     struct ShaderOverlayDraw {
         OverlayInputSource inputSource;
         std::string shaderName;
-        shaders::ShaderUniformSet uniforms;  // ✅ Now matches ApplyUniformsToShader
         std::function<void()> customPrePassFunction = nullptr;
         BlendMode blendMode = BlendMode::BLEND_ALPHA;
         bool enabled = true;
@@ -37,6 +36,59 @@ namespace shader_pipeline {
         std::vector<ShaderPass> passes;
         std::vector<ShaderOverlayDraw> overlayDraws;
         float padding = 8.0f; // Default padding for each side
+
+        // Add a new shader pass (enabled by default)
+        void addPass(std::string_view name) {
+            passes.emplace_back(ShaderPass{std::string(name), true, nullptr});
+        }
+
+        // Remove a pass by name
+        bool removePass(std::string_view name) {
+            auto it = std::find_if(passes.begin(), passes.end(),
+                [&](auto &p){ return p.shaderName == name; });
+            if (it == passes.end()) return false;
+            passes.erase(it);
+            return true;
+        }
+
+        // Toggle a pass on/off
+        bool togglePass(std::string_view name) {
+            auto it = std::find_if(passes.begin(), passes.end(),
+                [&](auto &p){ return p.shaderName == name; });
+            if (it == passes.end()) return false;
+            it->enabled = !it->enabled;
+            return true;
+        }
+
+        // Add a new overlay draw
+        void addOverlay(OverlayInputSource src, std::string_view name,
+                        BlendMode blend = BlendMode::BLEND_ALPHA) {
+            overlayDraws.emplace_back(ShaderOverlayDraw{src, std::string(name), nullptr, blend, true});
+        }
+
+        // Remove an overlay by shader name
+        bool removeOverlay(std::string_view name) {
+            auto it = std::find_if(overlayDraws.begin(), overlayDraws.end(),
+                [&](auto &o){ return o.shaderName == name; });
+            if (it == overlayDraws.end()) return false;
+            overlayDraws.erase(it);
+            return true;
+        }
+
+        // Toggle an overlay on/off
+        bool toggleOverlay(std::string_view name) {
+            auto it = std::find_if(overlayDraws.begin(), overlayDraws.end(),
+                [&](auto &o){ return o.shaderName == name; });
+            if (it == overlayDraws.end()) return false;
+            it->enabled = !it->enabled;
+            return true;
+        }
+
+        // Clear both passes and overlays
+        void clearAll() {
+            passes.clear();
+            overlayDraws.clear();
+        }
     };
     
     
@@ -87,24 +139,6 @@ namespace shader_pipeline {
         ClearBackground(color);
         EndTextureMode();
     }
-    /*
-        usage:
-        ```
-        shaderPipeline.passes.push_back(createShaderPass("foil", {
-            {"u_color", Vector4{1,1,1,1}},
-            {"u_time", 0.0f},
-            {"u_resolution", Vector2{globals::screenWidth, globals::screenHeight}}
-        }));
-        ```
-    */
-    inline ShaderPass createShaderPass(const std::string& name, std::initializer_list<std::pair<std::string, ShaderUniformValue>> uniformList) {
-        ShaderPass pass;
-        pass.shaderName = name;
-        for (auto& [k, v] : uniformList) {
-            pass.uniforms.set(k, v);
-        }
-        return pass;
-    }
 
     inline void DebugDrawFront(int x = 0, int y = 0) {
         DrawTextureRec(front().texture,
@@ -148,61 +182,132 @@ namespace shader_pipeline {
         // 2) ShaderPass
         sp.new_usertype<shader_pipeline::ShaderPass>("ShaderPass",
             sol::constructors<>(),
-            "shaderName",             &shader_pipeline::ShaderPass::shaderName,
-            "enabled",                &shader_pipeline::ShaderPass::enabled,
-            "uniforms",               &shader_pipeline::ShaderPass::uniforms,
-            "customPrePassFunction",  &shader_pipeline::ShaderPass::customPrePassFunction,
+            "shaderName",            &shader_pipeline::ShaderPass::shaderName,
+            "enabled",               &shader_pipeline::ShaderPass::enabled,
+            "customPrePassFunction", &shader_pipeline::ShaderPass::customPrePassFunction,
             "type_id", []() { return entt::type_hash<shader_pipeline::ShaderPass>::value(); }
         );
-        rec.add_type("shader_pipeline.ShaderPass", /*is_data_class=*/true).doc = "Defines a single shader pass with configurable uniforms.";
-        rec.record_property("shader_pipeline.ShaderPass", { "shaderName", "string", "Name of the shader to use for this pass" });
-        rec.record_property("shader_pipeline.ShaderPass", { "enabled", "bool", "Whether this shader pass is enabled" });
-        rec.record_property("shader_pipeline.ShaderPass", { "uniforms", "UniformSet", "Shader uniforms to apply for this pass" });
-        rec.record_property("shader_pipeline.ShaderPass", { "customPrePassFunction", "fun()", "Custom function to run before activating the shader for this pass" });
+        rec.add_type("shader_pipeline.ShaderPass", /*is_data_class=*/true)
+        .doc = "Defines a single shader pass.";
+        rec.record_property("shader_pipeline.ShaderPass",
+            { "shaderName", "string", "Name of the shader to use for this pass" });
+        rec.record_property("shader_pipeline.ShaderPass",
+            { "enabled", "bool", "Whether this shader pass is enabled" });
+        rec.record_property("shader_pipeline.ShaderPass",
+            { "customPrePassFunction", "fun()", "Function to run before activating this pass" });
 
         // 3) OverlayInputSource enum
         sp["OverlayInputSource"] = lua.create_table_with(
-            "BaseSprite",      shader_pipeline::OverlayInputSource::BaseSprite,
-            "PostPassResult",  shader_pipeline::OverlayInputSource::PostPassResult
+            "BaseSprite",     shader_pipeline::OverlayInputSource::BaseSprite,
+            "PostPassResult", shader_pipeline::OverlayInputSource::PostPassResult
         );
-        auto& enumOverlay = rec.add_type("shader_pipeline.OverlayInputSource");
+        auto &enumOverlay = rec.add_type("shader_pipeline.OverlayInputSource");
         enumOverlay.doc = "Source input for shader overlay drawing.";
-        rec.record_property("shader_pipeline.OverlayInputSource", { "BaseSprite", std::to_string((int)shader_pipeline::OverlayInputSource::BaseSprite), "Use the base sprite" });
-        rec.record_property("shader_pipeline.OverlayInputSource", { "PostPassResult", std::to_string((int)shader_pipeline::OverlayInputSource::PostPassResult), "Use the result from previous pass" });
+        rec.record_property("shader_pipeline.OverlayInputSource",
+            { "BaseSprite",      std::to_string((int)shader_pipeline::OverlayInputSource::BaseSprite),
+            "Use the base sprite" });
+        rec.record_property("shader_pipeline.OverlayInputSource",
+            { "PostPassResult",  std::to_string((int)shader_pipeline::OverlayInputSource::PostPassResult),
+            "Use the result from previous passes" });
 
         // 4) ShaderOverlayDraw
         sp.new_usertype<shader_pipeline::ShaderOverlayDraw>("ShaderOverlayDraw",
             sol::constructors<>(),
-            "inputSource",            &shader_pipeline::ShaderOverlayDraw::inputSource,
-            "shaderName",             &shader_pipeline::ShaderOverlayDraw::shaderName,
-            "uniforms",               &shader_pipeline::ShaderOverlayDraw::uniforms,
-            "customPrePassFunction",  &shader_pipeline::ShaderOverlayDraw::customPrePassFunction,
-            "blendMode",              &shader_pipeline::ShaderOverlayDraw::blendMode,
-            "enabled",                &shader_pipeline::ShaderOverlayDraw::enabled,
+            "inputSource",           &shader_pipeline::ShaderOverlayDraw::inputSource,
+            "shaderName",            &shader_pipeline::ShaderOverlayDraw::shaderName,
+            "customPrePassFunction", &shader_pipeline::ShaderOverlayDraw::customPrePassFunction,
+            "blendMode",             &shader_pipeline::ShaderOverlayDraw::blendMode,
+            "enabled",               &shader_pipeline::ShaderOverlayDraw::enabled,
             "type_id", []() { return entt::type_hash<shader_pipeline::ShaderOverlayDraw>::value(); }
         );
-        rec.add_type("shader_pipeline.ShaderOverlayDraw", /*is_data_class=*/true).doc = "Defines a shader overlay draw operation.";
-        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "inputSource", "OverlayInputSource", "Source input for the overlay draw" });
-        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "shaderName", "string", "Name of the shader to use for this overlay" });
-        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "uniforms", "shaders::ShaderUniformSet", "Shader uniforms to apply for this overlay" });
-        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "customPrePassFunction", "fun()", "Custom function to run before activating the shader for this overlay" });
-        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "blendMode", "BlendMode", "Blend mode to use for this overlay" });
-        rec.record_property("shader_pipeline.ShaderOverlayDraw", { "enabled", "bool", "Whether this overlay draw is enabled" });
+        rec.add_type("shader_pipeline.ShaderOverlayDraw", /*is_data_class=*/true)
+        .doc = "Defines a full-screen shader overlay pass.";
+        rec.record_property("shader_pipeline.ShaderOverlayDraw",
+            { "inputSource",           "OverlayInputSource", "Where to sample input from" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw",
+            { "shaderName",            "string",             "Name of the overlay shader" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw",
+            { "customPrePassFunction", "fun()",              "Function to run before this overlay" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw",
+            { "blendMode",             "BlendMode",          "Blend mode for this overlay" });
+        rec.record_property("shader_pipeline.ShaderOverlayDraw",
+            { "enabled",               "bool",               "Whether this overlay is enabled" });
 
         // 5) ShaderPipelineComponent
         sp.new_usertype<shader_pipeline::ShaderPipelineComponent>("ShaderPipelineComponent",
             sol::constructors<>(),
-            "passes",      &shader_pipeline::ShaderPipelineComponent::passes,
-            "overlayDraws",&shader_pipeline::ShaderPipelineComponent::overlayDraws,
-            "padding",     &shader_pipeline::ShaderPipelineComponent::padding,
+            // core data
+            "passes",        &shader_pipeline::ShaderPipelineComponent::passes,
+            "overlayDraws",  &shader_pipeline::ShaderPipelineComponent::overlayDraws,
+            "padding",       &shader_pipeline::ShaderPipelineComponent::padding,
+            // new methods
+            "addPass",       &shader_pipeline::ShaderPipelineComponent::addPass,
+            "removePass",    &shader_pipeline::ShaderPipelineComponent::removePass,
+            "togglePass",    &shader_pipeline::ShaderPipelineComponent::togglePass,
+            "addOverlay",    &shader_pipeline::ShaderPipelineComponent::addOverlay,
+            "removeOverlay", &shader_pipeline::ShaderPipelineComponent::removeOverlay,
+            "toggleOverlay", &shader_pipeline::ShaderPipelineComponent::toggleOverlay,
+            "clearAll",      &shader_pipeline::ShaderPipelineComponent::clearAll,
             "type_id", []() { return entt::type_hash<shader_pipeline::ShaderPipelineComponent>::value(); }
         );
-        rec.add_type("shader_pipeline.ShaderPipelineComponent", /*is_data_class=*/true).doc = "Holds a set of shader passes and overlays for rendering.";
-        rec.record_property("shader_pipeline.ShaderPipelineComponent", { "passes", "std::vector<ShaderPass>", "List of shader passes to apply" });
-        rec.record_property("shader_pipeline.ShaderPipelineComponent", { "overlayDraws", "std::vector<ShaderOverlayDraw>", "List of shader overlays to apply" });
-        rec.record_property("shader_pipeline.ShaderPipelineComponent", { "padding", "float", "Padding around the shader overlays" });
-        
+        rec.add_type("shader_pipeline.ShaderPipelineComponent", /*is_data_class=*/true)
+        .doc = "Holds a sequence of shader passes and overlays for full-scene rendering.";
+        rec.record_property("shader_pipeline.ShaderPipelineComponent",
+            { "passes",       "std::vector<ShaderPass>",       "Ordered list of shader passes" });
+        rec.record_property("shader_pipeline.ShaderPipelineComponent",
+            { "overlayDraws", "std::vector<ShaderOverlayDraw>", "Ordered list of overlays" });
+        rec.record_property("shader_pipeline.ShaderPipelineComponent",
+            { "padding",      "float",                         "Safe-area padding around overlays" });
 
+        // document your new functions
+        rec.record_free_function(
+            {"shader_pipeline.ShaderPipelineComponent"},
+            {"addPass",
+            "---@param name string\n---@return nil",
+            "Add a new pass at the end"}
+        );
+
+        rec.record_free_function(
+            {"shader_pipeline.ShaderPipelineComponent"},
+            {"removePass",
+            "---@param name string\n---@return boolean",
+            "Remove a pass by name"}
+        );
+
+        rec.record_free_function(
+            {"shader_pipeline.ShaderPipelineComponent"},
+            {"togglePass",
+            "---@param name string\n---@return boolean",
+            "Toggle a pass enabled/disabled"}
+        );
+
+        rec.record_free_function(
+            {"shader_pipeline.ShaderPipelineComponent"},
+            {"addOverlay",
+            "---@param src OverlayInputSource\n---@param name string\n---@param blend? BlendMode\n---@return nil",
+            "Add a new overlay; blend mode is optional"}
+        );
+
+        rec.record_free_function(
+            {"shader_pipeline.ShaderPipelineComponent"},
+            {"removeOverlay",
+            "---@param name string\n---@return boolean",
+            "Remove an overlay by name"}
+        );
+
+        rec.record_free_function(
+            {"shader_pipeline.ShaderPipelineComponent"},
+            {"toggleOverlay",
+            "---@param name string\n---@return boolean",
+            "Toggle an overlay on/off"}
+        );
+
+        rec.record_free_function(
+            {"shader_pipeline.ShaderPipelineComponent"},
+            {"clearAll",
+            "---@return nil",
+            "Clear both passes and overlays"}
+        );
         // 6) Helper to convert table to ShaderUniformValue
         auto to_uniform_value = [&](sol::object obj) -> ShaderUniformValue {
             if (obj.is<float>()) return obj.as<float>();
@@ -217,25 +322,25 @@ namespace shader_pipeline {
             throw std::runtime_error("Unsupported uniform value type");
         };
 
-        // 7) Factory: createShaderPass
-        sp.set_function("createShaderPass", [&](const std::string& name, sol::table tbl) {
-            shader_pipeline::ShaderPass pass;
-            pass.shaderName = name;
-            for (auto& kv : tbl) {
-                std::string key = kv.first.as<std::string>();
-                ShaderUniformValue val = to_uniform_value(kv.second);
-                pass.uniforms.set(key, std::move(val));
-            }
-            return pass;
-        });
-        // Correctly document createShaderPass as a function
-        rec.record_free_function({"shader_pipeline"}, {
-            "createShaderPass",
-            "---@param name string # The name of the shader to use.\n"
-            "---@param uniforms table<string, any> # A Lua table of uniform names to values.\n"
-            "---@return shader_pipeline.ShaderPass",
-            "Factory function to create a new ShaderPass object from a name and a table of uniforms."
-        });
+        // // 7) Factory: createShaderPass
+        // sp.set_function("createShaderPass", [&](const std::string& name, sol::table tbl) {
+        //     shader_pipeline::ShaderPass pass;
+        //     pass.shaderName = name;
+        //     for (auto& kv : tbl) {
+        //         std::string key = kv.first.as<std::string>();
+        //         ShaderUniformValue val = to_uniform_value(kv.second);
+        //         pass.uniforms.set(key, std::move(val));
+        //     }
+        //     return pass;
+        // });
+        // // Correctly document createShaderPass as a function
+        // rec.record_free_function({"shader_pipeline"}, {
+        //     "createShaderPass",
+        //     "---@param name string # The name of the shader to use.\n"
+        //     "---@param uniforms table<string, any> # A Lua table of uniform names to values.\n"
+        //     "---@return shader_pipeline.ShaderPass",
+        //     "Factory function to create a new ShaderPass object from a name and a table of uniforms."
+        // });
 
         // 8) Free functions
         sp.set_function("ShaderPipelineUnload", &shader_pipeline::ShaderPipelineUnload);

@@ -1348,14 +1348,13 @@ shader_pipeline = {
 
 
 ---
---- Defines a single shader pass with configurable uniforms.
+--- Defines a single shader pass.
 ---
 ---@class shader_pipeline.ShaderPass
 shader_pipeline.ShaderPass = {
     shaderName = nil, -- string Name of the shader to use for this pass
     enabled = nil, -- bool Whether this shader pass is enabled
-    uniforms = nil, -- UniformSet Shader uniforms to apply for this pass
-    customPrePassFunction = nil, -- fun() Custom function to run before activating the shader for this pass
+    customPrePassFunction = nil, -- fun() Function to run before activating this pass
 }
 
 
@@ -1365,32 +1364,31 @@ shader_pipeline.ShaderPass = {
 ---@class shader_pipeline.OverlayInputSource
 shader_pipeline.OverlayInputSource = {
     BaseSprite = 0,  -- Use the base sprite
-    PostPassResult = 1  -- Use the result from previous pass
+    PostPassResult = 1  -- Use the result from previous passes
 }
 
 
 ---
---- Defines a shader overlay draw operation.
+--- Defines a full-screen shader overlay pass.
 ---
 ---@class shader_pipeline.ShaderOverlayDraw
 shader_pipeline.ShaderOverlayDraw = {
-    inputSource = nil, -- OverlayInputSource Source input for the overlay draw
-    shaderName = nil, -- string Name of the shader to use for this overlay
-    uniforms = nil, -- shaders::ShaderUniformSet Shader uniforms to apply for this overlay
-    customPrePassFunction = nil, -- fun() Custom function to run before activating the shader for this overlay
-    blendMode = nil, -- BlendMode Blend mode to use for this overlay
-    enabled = nil, -- bool Whether this overlay draw is enabled
+    inputSource = nil, -- OverlayInputSource Where to sample input from
+    shaderName = nil, -- string Name of the overlay shader
+    customPrePassFunction = nil, -- fun() Function to run before this overlay
+    blendMode = nil, -- BlendMode Blend mode for this overlay
+    enabled = nil, -- bool Whether this overlay is enabled
 }
 
 
 ---
---- Holds a set of shader passes and overlays for rendering.
+--- Holds a sequence of shader passes and overlays for full-scene rendering.
 ---
 ---@class shader_pipeline.ShaderPipelineComponent
 shader_pipeline.ShaderPipelineComponent = {
-    passes = nil, -- std::vector<ShaderPass> List of shader passes to apply
-    overlayDraws = nil, -- std::vector<ShaderOverlayDraw> List of shader overlays to apply
-    padding = nil, -- float Padding around the shader overlays
+    passes = nil, -- std::vector<ShaderPass> Ordered list of shader passes
+    overlayDraws = nil, -- std::vector<ShaderOverlayDraw> Ordered list of overlays
+    padding = nil, -- float Safe-area padding around overlays
 }
 
 
@@ -1432,6 +1430,7 @@ layer.Layer = {
     backgroundColor = nil, -- Color Background fill color
     commands = nil, -- table Draw commands list
     isSorted = nil, -- boolean True if layer is sorted
+    postProcessShaders = nil, -- vector List of post-process shaders to run after drawing
 }
 
 
@@ -4685,6 +4684,30 @@ function layer.queueRenderNPatchRect(...) end
 function layer.queueDrawTriangle(...) end
 
 ---
+--- Removes a post-process shader from the layer by name.
+---
+---@param layer Layer # Target layer
+        ---@param shader_name string # Name of the shader to remove
+        ---@return void
+function layer.Layer.removePostProcessShader(...) end
+
+---
+--- Adds a post-process shader to the layer.
+---
+---@param layer Layer # Target layer
+        ---@param shader_name string # Name of the shader to add
+        ---@param shader Shader # Shader instance to add
+        ---@return void
+function layer.Layer.addPostProcessShader(...) end
+
+---
+--- Removes all post-process shaders from the layer.
+---
+---@param layer Layer # Target layer
+        ---@return void
+function layer.Layer.clearPostProcessShaders(...) end
+
+---
 --- Loads a language file for the given language code from a specific path.
 ---
 ---@param languageCode string # The language to load (e.g., 'en_US').
@@ -4990,14 +5013,6 @@ function random_utils.random_weighted_pick_vec2(...) end
 function random_utils.random_weighted_pick_entity(...) end
 
 ---
---- Factory function to create a new ShaderPass object from a name and a table of uniforms.
----
----@param name string # The name of the shader to use.
----@param uniforms table<string, any> # A Lua table of uniform names to values.
----@return shader_pipeline.ShaderPass
-function shader_pipeline.createShaderPass(...) end
-
----
 --- Unloads the pipeline's internal render textures.
 ---
 ---@return nil
@@ -5065,6 +5080,56 @@ function shader_pipeline.SetLastRenderRect(...) end
 ---
 ---@return Rectangle
 function shader_pipeline.GetLastRenderRect(...) end
+
+---
+--- Add a new pass at the end
+---
+---@param name string
+---@return nil
+function shader_pipeline.ShaderPipelineComponent.addPass(...) end
+
+---
+--- Remove a pass by name
+---
+---@param name string
+---@return boolean
+function shader_pipeline.ShaderPipelineComponent.removePass(...) end
+
+---
+--- Toggle a pass enabled/disabled
+---
+---@param name string
+---@return boolean
+function shader_pipeline.ShaderPipelineComponent.togglePass(...) end
+
+---
+--- Add a new overlay; blend mode is optional
+---
+---@param src OverlayInputSource
+---@param name string
+---@param blend? BlendMode
+---@return nil
+function shader_pipeline.ShaderPipelineComponent.addOverlay(...) end
+
+---
+--- Remove an overlay by name
+---
+---@param name string
+---@return boolean
+function shader_pipeline.ShaderPipelineComponent.removeOverlay(...) end
+
+---
+--- Toggle an overlay on/off
+---
+---@param name string
+---@return boolean
+function shader_pipeline.ShaderPipelineComponent.toggleOverlay(...) end
+
+---
+--- Clear both passes and overlays
+---
+---@return nil
+function shader_pipeline.ShaderPipelineComponent.clearAll(...) end
 
 ---
 --- Applies a set of uniforms to a specific shader instance.

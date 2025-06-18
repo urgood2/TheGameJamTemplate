@@ -64,9 +64,15 @@ namespace layer
             "backgroundColor", &layer::Layer::backgroundColor,
             "commands",        &layer::Layer::commands,
             "isSorted",        &layer::Layer::isSorted,
+            "postProcessShaders", &layer::Layer::postProcessShaders,
+            "removePostProcessShader", &layer::Layer::removePostProcessShader,
+            "addPostProcessShader", &layer::Layer::addPostProcessShader,
+            "clearPostProcessShaders", &layer::Layer::clearPostProcessShaders,
             "type_id", []() {
                 return entt::type_hash<layer::Layer>::value(); }
         );
+        std::vector<std::string> postProcessShaders;
+        
         rec.record_property("layer.Layer", {"canvases", "table", "Map of canvas names to textures"});
         rec.record_property("layer.Layer", {"drawCommands", "table", "Command list"});
         rec.record_property("layer.Layer", {"fixed", "boolean", "Whether layer is fixed"});
@@ -74,6 +80,38 @@ namespace layer
         rec.record_property("layer.Layer", {"backgroundColor", "Color", "Background fill color"});
         rec.record_property("layer.Layer", {"commands", "table", "Draw commands list"});
         rec.record_property("layer.Layer", {"isSorted", "boolean", "True if layer is sorted"});
+        rec.record_property("layer.Layer", {"postProcessShaders", "vector", "List of post-process shaders to run after drawing"});
+
+        rec.record_free_function({"layer.Layer"}, MethodDef{
+            .name = "removePostProcessShader",
+            .signature = R"(---@param layer Layer # Target layer
+        ---@param shader_name string # Name of the shader to remove
+        ---@return void)",
+            .doc = R"(Removes a post-process shader from the layer by name.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer.Layer"}, MethodDef{
+            .name = "addPostProcessShader",
+            .signature = R"(---@param layer Layer # Target layer
+        ---@param shader_name string # Name of the shader to add
+        ---@param shader Shader # Shader instance to add
+        ---@return void)",
+            .doc = R"(Adds a post-process shader to the layer.)",
+            .is_static = true,
+            .is_overload = false
+        });
+
+        rec.record_free_function({"layer.Layer"}, MethodDef{
+            .name = "clearPostProcessShaders",
+            .signature = R"(---@param layer Layer # Target layer
+        ---@return void)",
+            .doc = R"(Removes all post-process shaders from the layer.)",
+            .is_static = true,
+            .is_overload = false
+        });
+        
 
         layerTbl["layers"] = &layer::layers;
         rec.record_property("layer", {"layers", "table", "Global list of layers"});
@@ -1573,6 +1611,63 @@ namespace layer
             while (!renderStack.empty()) renderStack.pop();
         }
     }
+
+    
+    /**
+     * @brief Draws all layer commands to a specific canvas and applies all post-process shaders in sequence.
+     *
+     * This function first draws the layer's commands to the specified canvas using an optimized version.
+     * If the layer has any post-process shaders, it ensures a secondary "pong" render texture exists,
+     * then applies each shader in the post-process chain by ping-ponging between the source and destination
+     * render textures. After all shaders are applied, if the final result is not in the original canvas,
+     * it copies the result back.
+     *
+     * @param layerPtr Shared pointer to the Layer object containing canvases and shader information.
+     * @param canvasName The name of the canvas to which the layer commands should be drawn and shaders applied.
+     * @param camera Pointer to the Camera2D object used for rendering.
+     */
+    void DrawLayerCommandsToSpecificCanvasApplyAllShaders(std::shared_ptr<Layer> layerPtr, const std::string &canvasName, Camera2D *camera) {
+        DrawLayerCommandsToSpecificCanvasOptimizedVersion(layerPtr, canvasName, camera);
+
+        // nothing to do if no post-shaders
+        if (layerPtr->postProcessShaders.empty()) return;
+        
+        // 2) Make sure your “ping” buffer exists:
+        const std::string ping = canvasName;
+        const std::string pong = "render_double_buffer";
+        if (layerPtr->canvases.find(pong) == layerPtr->canvases.end()) {
+            // create it with same size as ping:
+            auto &srcTex = layerPtr->canvases.at(ping);
+            layerPtr->canvases[pong] = LoadRenderTexture(srcTex.texture.width, srcTex.texture.height);
+        }
+        
+        // 3) Run the full-screen shader chain:
+        std::string src = ping, dst = pong;
+        for (auto &shaderName : layerPtr->postProcessShaders) {
+            layer::DrawCanvasOntoOtherLayerWithShader(
+                layerPtr,  // src layer
+                src,                 // src canvas
+                layerPtr,  // dst layer
+                dst,                 // dst canvas
+                0, 0, 0, 1, 1,       // x, y, rot, scaleX, scaleY
+                WHITE,
+                shaderName
+            );
+            std::swap(src, dst);
+        }
+        
+        // 4) If the final result isn’t back in “main”, copy it home:
+        if (src != canvasName) {
+            layer::DrawCanvasOntoOtherLayer(
+                layerPtr,
+                src,
+                layerPtr,
+                canvasName,
+                0, 0, 0, 1, 1,
+                WHITE
+            );
+        }
+    }
     
     void DrawLayerCommandsToSpecificCanvasOptimizedVersion(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera)
     {
@@ -2558,7 +2653,10 @@ namespace layer
         bool drawBackground = !currentSprite->noBackgroundColor;
         bool drawForeground = !currentSprite->noForegroundColor;
     
-        if (!IsInitialized() || width < renderWidth || height < renderHeight) {
+        if (!IsInitialized() 
+            || width  != renderWidth 
+            || height != renderHeight) 
+        {
             ShaderPipelineUnload();
             ShaderPipelineInit(renderWidth, renderHeight);
         }
@@ -2595,8 +2693,8 @@ namespace layer
             ClearBackground({0, 0, 0, 0});
             AssertThat(shader.id, IsGreaterThan(0));
             BeginShaderMode(shader);
-            ApplyUniformsToShader(shader, pass.uniforms);
             if (pass.customPrePassFunction) pass.customPrePassFunction();
+            TryApplyUniforms(shader, globals::globalShaderUniforms, pass.shaderName);
             DrawTextureRec(front().texture, {0, 0, (float)width * xFlipModifier, (float)-height * yFlipModifier}, {0, 0}, WHITE); // invert Y 
     
             EndShaderMode();
@@ -2640,8 +2738,8 @@ namespace layer
             BeginTextureMode(back());
             ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
-            ApplyUniformsToShader(shader, overlay.uniforms);
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
+            TryApplyUniforms(shader, globals::globalShaderUniforms, overlay.shaderName);
     
             RenderTexture2D& source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite) ? baseSpriteRender : postPassRender;
             DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);

@@ -102,6 +102,27 @@ namespace layer
 
         // New:
         std::array<std::unique_ptr<IDynamicPool>, static_cast<size_t>(DrawCommandType::Count)> commandPoolsArray = {};
+
+        // NEW: the list of full-screen shaders to run after drawing
+        std::vector<std::string> postProcessShaders;
+        
+        // helper to add one
+        void addPostProcessShader(std::string_view name) {
+            postProcessShaders.emplace_back(name);
+        }
+        // helper to clear them
+        void clearPostProcessShaders() {
+            postProcessShaders.clear();
+        }
+
+        void removePostProcessShader(std::string_view name) {
+            auto it = std::remove(postProcessShaders.begin(), postProcessShaders.end(), name);
+            if (it != postProcessShaders.end()) {
+                postProcessShaders.erase(it, postProcessShaders.end());
+            } else {
+                throw std::runtime_error("Shader not found in post-process shaders");
+            }
+        }
     };
 
     extern std::vector<std::shared_ptr<Layer>> layers;
@@ -137,6 +158,7 @@ namespace layer
     void RenderAllLayersToCurrentRenderTarget(Camera2D *camera = nullptr);
     void DrawLayerCommandsToSpecificCanvas(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera = nullptr); // render commands in a layer to a specific "canvas" within the layer object, which can then be drawn to another layer, the screen, etc.
     void DrawLayerCommandsToSpecificCanvasOptimizedVersion(std::shared_ptr<Layer> layer, const std::string &canvasName, Camera2D *camera);
+    void DrawLayerCommandsToSpecificCanvasApplyAllShaders(std::shared_ptr<Layer> layerPtr, const std::string &canvasName, Camera2D *camera);
     void DrawCanvasToCurrentRenderTargetWithTransform(const std::shared_ptr<Layer> layer, const std::string &canvasName,
                                                       float x = 0, float y = 0,
                                                       float rotation = 0,

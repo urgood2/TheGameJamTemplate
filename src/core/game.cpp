@@ -629,25 +629,6 @@ namespace game
             }
             
             {
-                // ZoneScopedN("injected lua shaders (fullscreen)");
-                
-                // for (auto &shaderName : fullscreenShaders) {
-                //     #ifdef __EMSCRIPTEN__
-                //     rlDrawRenderBatchActive(); // Emscripten -- keep batch size down
-                //     #endif
-                    
-                //     // draw the full-screen canvas through that shader
-                //     layer::DrawCanvasToCurrentRenderTargetWithTransform(
-                //         finalOutput, "main", 
-                //         0, 0, 0, 1, 1, WHITE,
-                //         shaderName
-                //     );
-                    
-                // }
-                // Make sure “render_double_buffer” exists on finalOutput:
-                //   finalOutput->canvases["render_double_buffer"] =
-                //       LoadRenderTexture(screenW, screenH);
-
                 std::string srcName = "main";
                 std::string dstName = "render_double_buffer";
 

@@ -233,6 +233,7 @@ function main.init()
             :addNoMovementWhenDragged(true)
             :addMinWidth(500)
             :addProgressBar(true)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addProgressBarEmptyColor(util.getColor("WHITE"))
             :addProgressBarFullColor(util.getColor("BLUE"))
             :addInitFunc(function(registry, entity)
@@ -269,10 +270,18 @@ function main.init()
 
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)
+    nodeComp = registry:get(bowser, GameObject)
+    
+    gameObjectState = nodeComp.state
+    gameObjectState.clickEnabled = true
+    gameObjectState.hoverEnabled = true
+    gameObjectState.dragEnabled = true
+    gameObjectState.collisionEnabled = true
 
     shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)
     
-    -- shaderPipelineComp:addPass("flash")
+    shaderPipelineComp:addPass("flash")
+    -- shaderPipelineComp:addPass("negative_shine")
 
     transformComp.actualX = 800
     transformComp.actualY = 800

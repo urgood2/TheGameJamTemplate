@@ -472,6 +472,8 @@ namespace init {
 
                 // Load texture
                 Texture2D tex = LoadTexture(path.string().c_str());
+                
+                SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
 
                 // Store in atlas map
                 globals::textureAtlasMap[uuid] = tex;
@@ -493,6 +495,8 @@ namespace init {
                 }
             }
         }
+        
+        
     }
 
     auto loadSounds() -> void {

@@ -1568,7 +1568,7 @@ namespace layer
                 // End the currently active texture mode
                 EndTextureMode();
             }
-
+            SPDLOG_DEBUG("Ending previous render target {} and pushing new target {}", renderStack.empty() ? "none" : std::to_string(renderStack.top().id), target.id);
             renderStack.push(target);
             BeginTextureMode(target);
         }
@@ -2664,8 +2664,45 @@ namespace layer
         bool drawBackground = !currentSprite->noBackgroundColor;
         bool drawForeground = !currentSprite->noForegroundColor;
         
+        // the raw frame in atlas (always positive size)
+        Rectangle srcRec{
+            (float)animationFrame->x,
+            (float)animationFrame->y,
+            (float)animationFrame->width,
+            (float)animationFrame->height
+        };
+        
+        // the destination quad inside your RT, before flipping
+        Rectangle dstRec{
+            pad,
+            pad,
+            baseWidth,
+            baseHeight
+        };
+        
+        // apply flips by moving origin to the other side and negating size:
+        if (flipX) {
+            srcRec.x += srcRec.width;
+            srcRec.width = -srcRec.width;
+            dstRec.x  += dstRec.width;    // move right edge back to pad
+            dstRec.width  = -dstRec.width;
+        }
+        if (flipY) {
+            srcRec.y += srcRec.height;
+            srcRec.height = -srcRec.height;
+            dstRec.y  += dstRec.height;   // move bottom edge back to pad
+            dstRec.height = -dstRec.height;
+        }
+  
+        
+        // hacky fix to ensure entities are not fully transparent
+        if (fgColor.a == 0) {
+            SPDLOG_WARN("Entity {} has a foreground color with alpha 0. Setting to 255.", (int)e);
+            fgColor = WHITE;
+        }
+        
         //FIXME: this works. why doesn't the rest?
-        DrawTexture(*spriteAtlas, 0, 0, WHITE); // Debug draw the atlas to see if it's loaded correctly
+        // DrawTexture(*spriteAtlas, 0, 0, WHITE); // Debug draw the atlas to see if it's loaded correctly
         
         if (!shader_pipeline::IsInitialized() 
             || shader_pipeline::width  < (int) renderWidth 
@@ -2686,7 +2723,18 @@ namespace layer
     
         if (drawForeground) {
             if (animationFrame) {
-                layer::TexturePro(*spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth * xFlipModifier, baseHeight * yFlipModifier}, {0, 0}, 0, fgColor);
+                // layer::TexturePro(*spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
+                // layer::TexturePro(*spriteAtlas, srcRec, drawOffset.x, drawOffset.y, {baseWidth * xFlipModifier , -baseHeight * yFlipModifier }, {0, 0}, 0, {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+                
+                layer::TexturePro(
+                    *spriteAtlas,
+                    {animationFrame->x, animationFrame->y, animationFrame->width  * xFlipModifier, animationFrame->height  * -yFlipModifier},
+                    drawOffset.x, drawOffset.y,
+                    {baseWidth * xFlipModifier, baseHeight * yFlipModifier},
+                    {0, 0},
+                    0,
+                    fgColor
+                );
             } else {
                 layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
             }
@@ -2698,7 +2746,7 @@ namespace layer
         RenderTexture2D baseSpriteRender = shader_pipeline::front(); // id 6
         
         //FIXME:
-        DrawTexture(baseSpriteRender.texture, 30, 30, WHITE);
+        // DrawTexture(shader_pipeline::front().texture, 30, 30, WHITE);
         
     
         // 3. Apply shader passes
@@ -2717,11 +2765,15 @@ namespace layer
             EndShaderMode();
             render_stack_switch_internal::Pop();
             shader_pipeline::Swap();
+            
+            shader_pipeline::SetLastRenderTarget(shader_pipeline::front()); 
     
         }
     
         // // 🔵 Save post-pass result
-        RenderTexture2D postPassRender = shader_pipeline::front(); // if no passes, still id 6
+        RenderTexture2D postPassRender = *shader_pipeline::GetLastRenderTarget(); // id 6 is now the result of all passes
+        
+        DrawTexture(postPassRender.texture, 30, 30, WHITE);
     
         // // 4. Overlay draws
         for (const auto& overlay : pipelineComp.overlayDraws) {
@@ -2729,8 +2781,7 @@ namespace layer
     
             Shader shader = shaders::getShader(overlay.shaderName);
             AssertThat(shader.id, IsGreaterThan(0));
-    
-            BeginTextureMode(shader_pipeline::back());
+            render_stack_switch_internal::Push(shader_pipeline::back());
             ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
@@ -2740,7 +2791,7 @@ namespace layer
             DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
     
             EndShaderMode();
-            EndTextureMode();
+            render_stack_switch_internal::Pop();
     
             render_stack_switch_internal::Push(shader_pipeline::front());
             BeginBlendMode((int)overlay.blendMode);

@@ -162,7 +162,7 @@ function main.init()
     debug(layers)
     debug(layers.sprites)
     
-    layers.sprites:addPostProcessShader("flash")
+    -- layers.sprites:addPostProcessShader("flash")
 
     -- shader uniform manipulation example
 
@@ -185,7 +185,7 @@ function main.init()
             renderType = particle.ParticleRenderType.RECTANGLE_FILLED,
             -- velocity   = Vec2(0,-10), random
             acceleration = 3.0, -- gravity effect
-            lifespan   = 10.0,
+            lifespan   = 30.0,
             startColor = util.getColor("BLUE"),
             endColor   = util.getColor("RED"),
             rotationSpeed = 360,
@@ -240,6 +240,7 @@ function main.init()
             end)
             :build()
     )
+    :addChild(sliderTextMoving)
     :build()
     
     local newRoot =  UIElementTemplateNodeBuilder.create()
@@ -268,32 +269,23 @@ function main.init()
 
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)
-    
 
-    transformComp.actualX = 600
+    shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)
+    
+    -- shaderPipelineComp:addPass("flash")
+
+    transformComp.actualX = 800
     transformComp.actualY = 800
     -- transformComp.actualW = 100
     -- transformComp.actualH = 100
 
     -- use a timer to update the position of Bowser every second
     timer.every(2, function()
-        transformComp.actualX = transformComp.actualX + random_utils.random_int(-30, 30)
-        transformComp.actualY = transformComp.actualY + random_utils.random_int(-30, 30)
+        transformComp.actualX = transformComp.actualX + random_utils.random_int(-1, 1)
+        transformComp.actualY = transformComp.actualY + random_utils.random_int(-1, 1)
         print("Bowser position = " .. transformComp.actualX .. ', ' .. transformComp.actualY)
         print("Bowser size = " .. transformComp.actualW .. ', ' .. transformComp.actualH)
-        
-        -- wrap X
-        transformComp.actualX = wrap(
-            transformComp.actualX,
-            transformComp.actualW,  -- use width for horizontal wrap
-            globals.screenWidth  -- use screen width from globals
-        )
-        -- wrap Y
-        transformComp.actualY = wrap(
-            transformComp.actualY,
-            transformComp.actualH,  -- use height for vertical wrap
-            globals.screenHeight -- use screen height from globals
-        )
+
         
     end, 0, true, nil, "bowser_timer")
 

@@ -194,12 +194,12 @@ namespace game
 
         // Populate the Quadtree Per Frame
         globals::registry.view<transform::Transform>().each([&](entt::entity e, transform::Transform& transform) {
-            if (transform.getActualX() >= expandedBounds.left && transform.getActualY() >= expandedBounds.top &&
-                            transform.getActualX() + transform.getActualW() <= expandedBounds.left + expandedBounds.width &&
-                            transform.getActualY() + transform.getActualH() <= expandedBounds.top + expandedBounds.height) 
-            {
+            
+            auto box = globals::getBox(e);
+            if (expandedBounds.contains(box)) {
+                // Add the entity to the quadtree if it is within the expanded bounds
                 globals::quadtree.add(e);
-            }
+            } 
                 
         });
 

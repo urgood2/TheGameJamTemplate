@@ -116,7 +116,7 @@ namespace shader_pipeline {
     }
 
     inline void ShaderPipelineInit(int w, int h) {
-        if (IsInitialized()) ShaderPipelineUnload(); // Prevent leaks
+        if (IsInitialized()) return; // Only once
         width = w;
         height = h;
         ping = LoadRenderTexture(w, h);

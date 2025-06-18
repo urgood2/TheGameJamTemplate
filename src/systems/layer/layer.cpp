@@ -2663,10 +2663,11 @@ namespace layer
         Color fgColor = currentSprite->fgColor;
         bool drawBackground = !currentSprite->noBackgroundColor;
         bool drawForeground = !currentSprite->noForegroundColor;
+        
     
         if (!IsInitialized() 
-            || width  != renderWidth 
-            || height != renderHeight) 
+            || width  < renderWidth 
+            || height < renderHeight) 
         {
             ShaderPipelineUnload();
             ShaderPipelineInit(renderWidth, renderHeight);
@@ -2766,6 +2767,20 @@ namespace layer
         }
     
         SetLastRenderTarget(front());
+
+        if (pipelineComp.passes.empty() && pipelineComp.overlayDraws.empty()) {
+            // Use back() as the source since front() is already the destination
+            BeginTextureMode(back());
+            ClearBackground({0, 0, 0, 0});
+            BeginBlendMode(BLEND_ALPHA);  // Optional if you want blending
+            DrawTextureRec(front().texture, 
+                {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, 
+                {0, 0}, WHITE);
+            EndBlendMode();
+            EndTextureMode();
+
+            SetLastRenderTarget(back());
+        }
     
         // 5. Final draw with transform
         auto& transform = registry.get<transform::Transform>(e);
@@ -2785,7 +2800,7 @@ namespace layer
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
         Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
         Translate(-origin.x, -origin.y);
-        DrawTextureRec(front().texture, sourceRect, { 0, 0 }, WHITE);
+        DrawTextureRec(GetLastRenderTarget().texture, sourceRect, { 0, 0 }, WHITE);
         PopMatrix();
     }
     
@@ -2808,14 +2823,6 @@ namespace layer
             }
         }
         
-        
-        // if this entity has a master comp that is a ui element, that means it's a ui object and it needs to respect the ui scale
-        // float uiScale = 1.0f;
-        // auto &role = registry.get<transform::InheritedProperties>(e);
-        // if (registry.valid(role.master) && registry.any_of<ui::UIConfig>(role.master))
-        // {
-        //     uiScale = registry.get<ui::UIConfig>(role.master).scale.value_or(1.0f);
-        // }
         
         // this renderscale is from the animation object itself.
         float renderScale = 1.0f;

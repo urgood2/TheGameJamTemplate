@@ -116,9 +116,9 @@ namespace shader_pipeline {
     }
 
     inline void ShaderPipelineInit(int w, int h) {
-        if (IsInitialized()) return; // Only once
         width = w;
         height = h;
+        SPDLOG_DEBUG("Initializing shader pipeline with dimensions: {}x{}", w, h);
         ping = LoadRenderTexture(w, h);
         pong = LoadRenderTexture(w, h);
     }

@@ -2590,10 +2590,10 @@ namespace layer
     //     PopMatrix();
     // }
     
-    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void {
-        using namespace shaders;
-        using namespace shader_pipeline;
     
+    //FIXME: for some reason, draw calls are not being executed inside this function. But they do work in the other versino.
+    auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void {
+        
         // 1. Fetch animation frame and sprite
         Rectangle* animationFrame = nullptr;
         SpriteComponentASCII* currentSprite = nullptr;
@@ -2647,7 +2647,7 @@ namespace layer
         float baseWidth  = animationFrame->width  * renderScale;
         float baseHeight = animationFrame->height * renderScale;
     
-        auto& pipelineComp = registry.get<ShaderPipelineComponent>(e);
+        auto& pipelineComp = registry.get<shader_pipeline::ShaderPipelineComponent>(e);
         float pad = pipelineComp.padding;
     
         float renderWidth = baseWidth + pad * 2.0f;
@@ -2664,17 +2664,18 @@ namespace layer
         bool drawBackground = !currentSprite->noBackgroundColor;
         bool drawForeground = !currentSprite->noForegroundColor;
         
-    
-        if (!IsInitialized() 
-            || width  < renderWidth 
-            || height < renderHeight) 
+        DrawTexturePro(*spriteAtlas, *animationFrame, {0, 0, 500, 500}, {0, 0}, 0, fgColor);
+        
+        if (!shader_pipeline::IsInitialized() 
+            || shader_pipeline::width  < (int) renderWidth 
+            || shader_pipeline::height < (int) renderHeight) 
         {
-            ShaderPipelineUnload();
-            ShaderPipelineInit(renderWidth, renderHeight);
+            shader_pipeline::ShaderPipelineUnload();
+            shader_pipeline::ShaderPipelineInit(renderWidth, renderHeight);
         }
     
-        // 2. Draw base sprite to front() (no transforms)
-        render_stack_switch_internal::Push(front());
+        // 2. Draw base sprite to front() (no transforms) = id 6
+        render_stack_switch_internal::Push(shader_pipeline::front());
         ClearBackground({0, 0, 0, 0});
         Vector2 drawOffset = { pad, pad };
     
@@ -2690,64 +2691,46 @@ namespace layer
             }
         }
     
-        render_stack_switch_internal::Pop();
+        render_stack_switch_internal::Pop(); // turn off id 6
     
         // 🟡 Save base sprite result
-        RenderTexture2D baseSpriteRender = front();
+        RenderTexture2D baseSpriteRender = shader_pipeline::front(); // id 6
+        
+        //FIXME:
+        DrawTextureRec(baseSpriteRender.texture, {0,0, renderWidth, renderHeight}, { 0, 0 }, WHITE);
+        DrawTexture(baseSpriteRender.texture, 500, 500, WHITE); // debug draw the base sprite result
+        
     
         // 3. Apply shader passes
-        int debugPassIndex = 0;
-        for (ShaderPass& pass : pipelineComp.passes) {
+        for (shader_pipeline::ShaderPass& pass : pipelineComp.passes) {
             if (!pass.enabled) continue;
     
-            Shader shader = getShader(pass.shaderName);
-            render_stack_switch_internal::Push(back());
+            Shader shader = shaders::getShader(pass.shaderName);
+            render_stack_switch_internal::Push(shader_pipeline::back());
             ClearBackground({0, 0, 0, 0});
             AssertThat(shader.id, IsGreaterThan(0));
             BeginShaderMode(shader);
             if (pass.customPrePassFunction) pass.customPrePassFunction();
             TryApplyUniforms(shader, globals::globalShaderUniforms, pass.shaderName);
-            DrawTextureRec(front().texture, {0, 0, (float)width * xFlipModifier, (float)-height * yFlipModifier}, {0, 0}, WHITE); // invert Y 
+            DrawTextureRec(shader_pipeline::front().texture, {0, 0, (float)renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE); // invert Y 
     
             EndShaderMode();
             render_stack_switch_internal::Pop();
-            Swap();
+            shader_pipeline::Swap();
     
-            // DEBUG: Show result of each pass visually
-            
-
-            int debugOffsetX = 10;
-            int debugOffsetY = 10 + debugPassIndex * (int)(renderHeight + 10);
-
-            DrawTextureRec(
-                front().texture,
-                { 0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier},  // negative Y to flip
-                { (float)debugOffsetX, (float)debugOffsetY },
-                WHITE
-            );
-            DrawRectangleLines(debugOffsetX, debugOffsetY, (int)renderWidth, (int)renderHeight, RED);
-            DrawText(
-                fmt::format("Pass {}: {}", debugPassIndex, pass.shaderName).c_str(),
-                debugOffsetX + 5,
-                debugOffsetY + 5,
-                10,
-                WHITE
-            );
-
-            debugPassIndex++;
         }
     
-        // 🔵 Save post-pass result
-        RenderTexture2D postPassRender = front();
+        // // 🔵 Save post-pass result
+        RenderTexture2D postPassRender = shader_pipeline::front(); // if no passes, still id 6
     
-        // 4. Overlay draws
+        // // 4. Overlay draws
         for (const auto& overlay : pipelineComp.overlayDraws) {
             if (!overlay.enabled) continue;
     
-            Shader shader = getShader(overlay.shaderName);
+            Shader shader = shaders::getShader(overlay.shaderName);
             AssertThat(shader.id, IsGreaterThan(0));
     
-            BeginTextureMode(back());
+            BeginTextureMode(shader_pipeline::back());
             ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
@@ -2759,35 +2742,34 @@ namespace layer
             EndShaderMode();
             EndTextureMode();
     
-            render_stack_switch_internal::Push(front());
+            render_stack_switch_internal::Push(shader_pipeline::front());
             BeginBlendMode((int)overlay.blendMode);
-            DrawTextureRec(back().texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
+            DrawTextureRec(shader_pipeline::back().texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
             EndBlendMode();
             render_stack_switch_internal::Pop();
         }
     
-        SetLastRenderTarget(front());
+        // shader_pipeline::SetLastRenderTarget(shader_pipeline::front()); // id 6 is now the final result, with no overlay draws
 
-        if (pipelineComp.passes.empty() && pipelineComp.overlayDraws.empty()) {
-            // Use back() as the source since front() is already the destination
-            BeginTextureMode(back());
-            ClearBackground({0, 0, 0, 0});
-            BeginBlendMode(BLEND_ALPHA);  // Optional if you want blending
-            DrawTextureRec(front().texture, 
-                {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, 
-                {0, 0}, WHITE);
-            EndBlendMode();
-            EndTextureMode();
+        // if (pipelineComp.passes.empty() && pipelineComp.overlayDraws.empty()) {
+        //     // Use back() as the target since front() is already used
+        //     // id 6 is drawn to back(), which has id 7
+        //     render_stack_switch_internal::Push(shader_pipeline::back());
+        //     ClearBackground({0, 0, 0, 0});
+        //     DrawTextureRec(shader_pipeline::front().texture, 
+        //         {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, 
+        //         {0, 0}, WHITE);
+        //     render_stack_switch_internal::Pop();
 
-            SetLastRenderTarget(back());
-        }
+        //     shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
+        // }
     
         // 5. Final draw with transform
         auto& transform = registry.get<transform::Transform>(e);
-        Vector2 drawPos = { transform.getVisualX() - pad, transform.getVisualY() - pad };
-        SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
+        Vector2 drawPos = { transform.getVisualX() - pad, transform.getVisualY() - pad }; // why subtract pad here?
+        shader_pipeline::SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight }); // shouldn't this store the last dest rect that was drawn on the last texture?
     
-        Rectangle sourceRect = { 0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier };
+        Rectangle sourceRect = { 0, 0, renderWidth, renderHeight }; // why is origin here?
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
     
@@ -2800,12 +2782,13 @@ namespace layer
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
         Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
         Translate(-origin.x, -origin.y);
-        DrawTextureRec(GetLastRenderTarget()->texture, sourceRect, { 0, 0 }, WHITE);
+        // DrawTextureRec(shader_pipeline::GetLastRenderTarget()->texture, sourceRect, { 0, 0 }, WHITE);
+        
+        //FIXME: this is now working.
+        DrawTexture(*spriteAtlas,30, 30, WHITE);
+        DrawCircle(0, 0, 40, RED); // debug draw a circle at the center of the entity
         PopMatrix();
     }
-    
-    
-    
     
     auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z) -> void
     {
@@ -2896,7 +2879,6 @@ namespace layer
             // FIXME: debug
             drawForeground = true;
         }
-
         
         // fetch transform
         auto &transform = registry.get<transform::Transform>(e);

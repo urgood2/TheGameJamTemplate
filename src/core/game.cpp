@@ -518,10 +518,6 @@ namespace game
                 }
         }
         
-        // draw object area (inventory comp)
-        // auto &objectArea = globals::registry.get<transform::GameObject>(testInventory);
-        // objectArea.drawFunction(ui_layer, globals::registry, testInventory);
-        // transformProfiler.Stop();
 
         // dynamic text
         {
@@ -648,6 +644,9 @@ namespace game
             { // build final output layer
                 // ZoneScopedN("Draw canvas to render target (screen)");
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "crt"); // render the final output layer main canvas to the screen
+                
+                
+                
             }
             
             {
@@ -686,7 +685,7 @@ namespace game
                 // Now, `finalOutput` has the final composited result in its “main” canvas. Draw it to the screen:
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(
                     finalOutput, "main", 
-                    0, 0, 0, 1, 1, WHITE
+                    0, 0, 0, 1, 1, WHITE, "crt"
                 );
             }
             

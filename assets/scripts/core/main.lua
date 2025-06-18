@@ -264,7 +264,7 @@ function main.init()
     debug(ui.element)
     -- dump(newRoot)
     
-    local newUIBox = ui.box.Initialize({600, 10}, newRoot)
+    local newUIBox = ui.box.Initialize({x = 600, y = 10}, newRoot)
     
 
     -- manipulate the transformComp

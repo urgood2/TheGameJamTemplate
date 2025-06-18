@@ -2743,10 +2743,11 @@ namespace layer
         render_stack_switch_internal::Pop(); // turn off id 6
     
         // 🟡 Save base sprite result
-        RenderTexture2D baseSpriteRender = shader_pipeline::front(); // id 6
-        
-        //FIXME:
-        // DrawTexture(shader_pipeline::front().texture, 30, 30, WHITE);
+        RenderTexture2D baseSpriteRender = shader_pipeline::GetBaseRenderTextureCache(); 
+        render_stack_switch_internal::Push(baseSpriteRender);
+        ClearBackground({0, 0, 0, 0});
+        DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+        render_stack_switch_internal::Pop();
         
     
         // 3. Apply shader passes
@@ -2773,14 +2774,14 @@ namespace layer
         // // 🔵 Save post-pass result
         RenderTexture2D postPassRender = *shader_pipeline::GetLastRenderTarget(); // id 6 is now the result of all passes
         
-        // TODO: need two slots: one slot for baseSpriteRender, one for postPassRender, within the shader_pipeline system. It should be initialized with the same size as when the system itself was initialized. api should be like this:
+        // 🟡 Save post shader pass sprite result
+        RenderTexture2D postProcessRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
+        render_stack_switch_internal::Push(postProcessRender);
+        ClearBackground({0, 0, 0, 0});
+        DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+        render_stack_switch_internal::Pop();
         
-        // shader_pipeline::GetBaseRenderTextureCache(); // returns the cached base render
-        // shader_pipeline::IsBaseRenderTextureCacheValid(); // returns true if the base render texture is valid
-        // shader_pipeline::GetPostShaderPassRenderTextureCache(); // returns the cached post pass render
-        // shader_pipeline::IsPostShaderPassRenderTextureCacheValid(); // returns true if the
-        
-        DrawTexture(postPassRender.texture, 30, 30, WHITE);
+        DrawTexture(postPassRender.texture, 90, 30, WHITE);
     
         // // 4. Overlay draws
         for (const auto& overlay : pipelineComp.overlayDraws) {
@@ -2811,47 +2812,24 @@ namespace layer
         }
     
         
-        
-        if (pipelineComp.passes.empty() && pipelineComp.overlayDraws.empty()) {
-            // Use back() as the target since front() is already used
-            // id 6 is drawn to back(), which has id 7
-            
-            RenderTexture2d toRender{};
-            if (shader_pipeline::HasCachedPostShaderPassRender()) {
-                toRender = shader_pipeline::GetCachedPostShaderPassRender();
-            } else if (shader_pipeline::HasCachedBaseRender()) {
-                toRender = shader_pipeline::GetCachedBaseRender();
-            } else {
-                toRender = shader_pipeline::front(); // use the front texture as a fallback
-            }
-            
-            render_stack_switch_internal::Push(toRender.texture);
-            ClearBackground({0, 0, 0, 0});
-            DrawTextureRec(toRender.texture, 
-                {0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier}, 
-                {0, 0}, WHITE);
-            render_stack_switch_internal::Pop();
-
-            shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
-        }
-        
-        
-        
         RenderTexture toRender{};
-        if (shader_pipeline::HasCachedPostShaderPassRender()) {
-            toRender = shader_pipeline::GetCachedPostShaderPassRender();
-        } else if (shader_pipeline::HasCachedBaseRender()) {
-            toRender = shader_pipeline::GetCachedBaseRender();
+        if (pipelineComp.overlayDraws.empty() ==  false) {
+            toRender = shader_pipeline::back(); //  in this case it's the overlay draw result
+        } else if (pipelineComp.passes.empty() == false) {
+            // if there are passes, we use the last render target
+            toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
         } else {
-            toRender = shader_pipeline::front(); // use the front texture as a fallback
+            // nothing?
+            toRender = shader_pipeline::GetBaseRenderTextureCache();
         }
-    
+
+        
         // 5. Final draw with transform
         auto& transform = registry.get<transform::Transform>(e);
         Vector2 drawPos = { transform.getVisualX() - pad, transform.getVisualY() - pad }; // why subtract pad here?
         shader_pipeline::SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight }); // shouldn't this store the last dest rect that was drawn on the last texture?
     
-        Rectangle sourceRect = { 0, 0, renderWidth, renderHeight }; // why is origin here?
+        Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight }; // why is origin here?
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
     

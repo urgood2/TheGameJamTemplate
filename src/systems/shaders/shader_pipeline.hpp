@@ -101,6 +101,26 @@ namespace shader_pipeline {
     inline Rectangle lastRenderRect = {0, 0, 0, 0};
     inline RenderTexture2D& front() { return ping; }
     inline RenderTexture2D& back() { return pong; }
+    //–– New cache state ––//
+    inline RenderTexture2D baseCache             = {};
+    inline bool            baseCacheValid        = false;
+    inline RenderTexture2D postPassCache        = {};
+    inline bool            postPassCacheValid    = false;
+    
+    //–– New API ––//
+    inline RenderTexture2D GetBaseRenderTextureCache() {
+        return baseCache;
+    }
+    inline bool IsBaseRenderTextureCacheValid() {
+        return baseCache.id != 0;
+    }
+
+    inline RenderTexture2D GetPostShaderPassRenderTextureCache() {
+        return postPassCache;
+    }
+    inline bool IsPostShaderPassRenderTextureCacheValid() {
+        return  postPassCache.id != 0;
+    }
 
     inline bool IsInitialized() {
         return ping.id != 0 && pong.id != 0;
@@ -109,6 +129,8 @@ namespace shader_pipeline {
     inline void ShaderPipelineUnload() {
         if (ping.id != 0) UnloadRenderTexture(ping);
         if (pong.id != 0) UnloadRenderTexture(pong);
+        if (baseCache.id != 0) UnloadRenderTexture(baseCache);
+        if (postPassCache.id != 0) UnloadRenderTexture(postPassCache);
         ping = {};
         pong = {};
         width = 0;
@@ -121,6 +143,8 @@ namespace shader_pipeline {
         SPDLOG_DEBUG("Initializing shader pipeline with dimensions: {}x{}", w, h);
         ping = LoadRenderTexture(w, h);
         pong = LoadRenderTexture(w, h);
+        baseCache = LoadRenderTexture(w, h);
+        postPassCache = LoadRenderTexture(w, h);
     }
 
     inline void Resize(int newWidth, int newHeight) {
@@ -136,6 +160,14 @@ namespace shader_pipeline {
         EndTextureMode();
 
         BeginTextureMode(pong);
+        ClearBackground(color);
+        EndTextureMode();
+        
+        BeginTextureMode(baseCache);
+        ClearBackground(color);
+        EndTextureMode();
+        
+        BeginTextureMode(postPassCache);
         ClearBackground(color);
         EndTextureMode();
     }

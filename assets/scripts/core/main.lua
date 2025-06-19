@@ -228,7 +228,7 @@ function main.init()
 
     -- shader uniform manipulation example
 
-    timer.every(5.0, function()
+    timer.every(30, function()
         -- spawn a new timer that tweens the shader uniform
         -- Example 1: fixed 2-second tween
         globalShaderUniforms:set("shockwave", "radius", 0)
@@ -342,7 +342,7 @@ function main.init()
     methods.onClick = function(registry, e) 
         debug("whale clicked!")
         
-        transform.InjectDynamicMotion(e, 1, 30) -- add dynamic motion to the whale
+        transform.InjectDynamicMotion(e, 0.4, 15) -- add dynamic motion to the whale
         
         local transformComp = registry:get(e, Transform)
         

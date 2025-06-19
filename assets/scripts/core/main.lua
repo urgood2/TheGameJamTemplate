@@ -273,7 +273,7 @@ function main.init()
     -- ui
     
     local sliderTextMoving = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.slider_text"),  -- initial text
+        localization.get("ui.currency_text"),  -- initial text
         20.0,                                 -- font size
         nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
@@ -290,14 +290,10 @@ function main.init()
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("GRAY"))
-            :addProgressBarMaxValue(100.0)
             :addMinHeight(50)
             :addNoMovementWhenDragged(true)
             :addMinWidth(500)
-            :addProgressBar(true)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addProgressBarEmptyColor(util.getColor("WHITE"))
-            :addProgressBarFullColor(util.getColor("BLUE"))
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -310,9 +306,9 @@ function main.init()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("BLACK"))
             :addMinHeight(50)
-            :addMinWidth(500)
+            :addMaxWidth(400)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -327,7 +323,7 @@ function main.init()
     debug(ui.element)
     -- dump(newRoot)
     
-    local newUIBox = ui.box.Initialize({x = 600, y = 10}, newRoot)
+    local newUIBox = ui.box.Initialize({x = globals.screenWidth - 500, y = 10}, newRoot)
     
 
     -- manipulate the transformComp

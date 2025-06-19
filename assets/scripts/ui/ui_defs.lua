@@ -29,6 +29,10 @@ function ui_defs.createNewTooltipBox()
     -- generates a new tooltip box. Should be saved and reused on hover.
 end
 
+function ui_defs.makeTextAppearForTime(e)
+    -- creates a text entity that appears for a certain amount of time, then vanishes.
+end
+
 function ui_defs.getSocialsBox()
     
 end

@@ -7,6 +7,7 @@
 		"text_input": "Enter Name:",
 		"tooltip_text": "This is a tooltip,\n{text_type} text at\nthe moment",
 		"tooltip_text_hover": "Hover for tooltip",
-		"tooltip_title": "Tooltip Title"
+		"tooltip_title": "Tooltip Title",
+		"currency_text": "Whale Dust: {currency}"
 	}
 }

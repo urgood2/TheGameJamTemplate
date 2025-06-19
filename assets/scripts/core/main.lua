@@ -813,7 +813,7 @@ function main.init()
     shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)
     
     -- shaderPipelineComp:addPass("flash")
-    shaderPipelineComp:addPass("random_displacement_anim")
+    -- shaderPipelineComp:addPass("random_displacement_anim")
     -- shaderPipelineComp:addPass("negative_shine")
 
     transformComp.actualX = 800

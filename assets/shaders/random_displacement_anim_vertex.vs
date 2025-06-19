@@ -40,7 +40,7 @@ void main() {
                                             offsetY * intensityY,
                                             0.0);
     
-    fragTexCoord  = vertexTexCoord;
+    fragTexCoord = vertexTexCoord;
     fragColor    = vertexColor;
     // transform as normal
     gl_Position  = mvp * vec4(displaced, 1.0);

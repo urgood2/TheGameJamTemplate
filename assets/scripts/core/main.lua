@@ -346,7 +346,7 @@ function main.init()
     methods.onClick = function(registry, e) 
         debug("whale clicked!")
         
-        transform.InjectDynamicMotion(e, 1, 90) -- add dynamic motion to the whale
+        transform.InjectDynamicMotion(e, 1, 30) -- add dynamic motion to the whale
         
         local transformComp = registry:get(e, Transform)
         
@@ -357,7 +357,7 @@ function main.init()
     shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)
     
     shaderPipelineComp:addPass("flash")
-    -- shaderPipelineComp:addPass("random_displacement_anim")
+    shaderPipelineComp:addPass("random_displacement_anim")
     -- shaderPipelineComp:addPass("negative_shine")
 
     transformComp.actualX = 800
@@ -419,6 +419,109 @@ function main.init()
         end, 0, true, nil, "bowser_timer")
     
     -- every now and then, make the whale sing.
+    
+    timer.every(
+    --TODO: the dealy should be configurable 
+        random_utils.random_float(20, 30),
+        function()
+            
+            -- timer after to rotate the whale
+            timer.after(
+                0.5, -- delay in seconds
+                function()
+                    local transform = registry:get(bowser, Transform)
+                    transform.rotation = transform.rotation - 30
+                end,
+                "whale_rotate_after"
+            )
+            
+            timer.after(
+                0.8, -- delay in seconds
+                function()
+                    
+                    
+                    -- spawn particles 
+                    timer.after(
+                        0.1, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX +transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1 
+                            )
+                        end,
+                        nil
+                    )
+                    
+                    timer.after(
+                        0.2, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                0.3 
+                            )
+                        end,
+                        nil
+                    )
+                    
+                    timer.after(
+                        0.3, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
+                    
+                    timer.after(
+                        0.4, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnGrowingCircleParticle(
+                                transform.actualX,
+                                transform.actualY,
+                                100, -- width
+                                100, -- height
+                                1 -- seconds to grow
+                            )
+                        end,
+                        nil
+                    )
+                end,
+                "whale_particles"
+            )
+            
+            timer.after(
+                2.0, -- delay in seconds
+                function()
+                    local transform = registry:get(bowser, Transform)
+                    transform.rotation = 0 -- reset rotation
+                end,
+                "whale_rotate_after_particles"
+            )
+            
+            -- tween volume of whale sound
+            -- TODO:
+        end,
+        0,               -- infinite repetitions
+        true,            -- start immediately
+        nil,             -- no “after” callback
+        "whale_move_timer" -- unique tag per krill
+    )
 
     -- add a task to the scheduler that will fade out the screen for 5 seconds
     local p1 = {

@@ -38,7 +38,7 @@ namespace shader_pipeline {
     struct ShaderPipelineComponent {
         std::vector<ShaderPass> passes;
         std::vector<ShaderOverlayDraw> overlayDraws;
-        float padding = 15.f; // Default padding for each side
+        float padding = 30.f; // Default padding for each side
 
         // Add a new shader pass (enabled by default)
         ShaderPass addPass(std::string_view name) {

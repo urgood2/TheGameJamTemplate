@@ -232,23 +232,32 @@ namespace shaders
         const Rectangle       & gridRect,   // x, y, width, height in pixels
         const Vector2         & imageSize)  // atlasWidth, atlasHeight
     {
-        // pack the rect: (x, y, w, h)
-        component.set(
-            shaderName,
-            "uGridRect",
-            Vector4{ gridRect.x,
-                                gridRect.y,
-                                gridRect.width,
-                                gridRect.height }
-        );
+        // // pack the rect: (x, y, w, h)
+        // component.set(
+        //     shaderName,
+        //     "uGridRect",
+        //     Vector4{ gridRect.x,
+        //                         gridRect.y,
+        //                         gridRect.width,
+        //                         gridRect.height }
+        // );
 
-        // pack the atlas size: (atlasW, atlasH)
-        component.set(
-            shaderName,
-            "uImageSize",
-            Vector2{ imageSize.x,
-                                imageSize.y }
-        );
+        // // pack the atlas size: (atlasW, atlasH)
+        // component.set(
+        //     shaderName,
+        //     "uImageSize",
+        //     Vector2{ imageSize.x,
+        //                         imageSize.y }
+        // );
+        
+        globals::globalShaderUniforms.set(shaderName, "uImageSize",
+            imageSize);
+        // which grid sprite
+        globals::globalShaderUniforms.set(shaderName, "uGridRect",
+            Vector4{ gridRect.x,
+                                        gridRect.y,
+                                        gridRect.width,
+                                        gridRect.height});
         
         // SPDLOG_DEBUG("Injected atlas uniforms for shader '{}': gridRect=({}, {}, {}, {}), imageSize=({}, {})",
         //            shaderName, gridRect.x, gridRect.y, gridRect.width, gridRect.height, imageSize.x, imageSize.y);

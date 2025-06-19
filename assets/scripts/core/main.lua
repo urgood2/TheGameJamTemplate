@@ -188,7 +188,7 @@ function main.init()
         -- kril shaders
         shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
     
-        -- shaderPipelineComp:addPass("random_displacement_anim")
+        shaderPipelineComp:addPass("random_displacement_anim")
 
         -- 3) Randomize its start position
         local tr = registry:get(kr, Transform)
@@ -337,7 +337,7 @@ function main.init()
     gameObjectState = nodeComp.state
     gameObjectState.clickEnabled = true
     gameObjectState.hoverEnabled = true
-    gameObjectState.dragEnabled = true
+    -- gameObjectState.dragEnabled = true
     gameObjectState.collisionEnabled = true
     
     local methods = nodeComp.methods
@@ -364,16 +364,59 @@ function main.init()
     transformComp.actualY = 800
     -- transformComp.actualW = 100
     -- transformComp.actualH = 100
+    
+    -- ===================================================================
+-- 1. Configuration Parameters (Tweak these to change the effect!)
+-- ===================================================================
 
+    -- Define the center of the orbit (e.g., the center of the screen)
+    -- NOTE: Replace 800 and 600 with your actual screen dimensions!
+    local centerX = globals.screenWidth / 2
+    local centerY = globals.screenHeight / 2
+
+    -- Orbit properties
+    local orbitRadius = 300.0  -- How far from the center to orbit, in pixels.
+    local baseSpeed = 0.1      -- The average speed of the orbit (in radians per second).
+
+    -- Speed fluctuation properties
+    local speedFluctuationAmount = 0.5 -- How much the speed varies. 0 is constant, 1 is drastic.
+    local speedFluctuationFrequency = 1.0 -- How quickly the speed oscillates. Higher is faster.
+
+    -- ===================================================================
+    -- 2. State Variables (Do not change these)
+    -- ===================================================================
+    -- We define these outside the timer's function so they "remember" their
+    -- values between each call.
+    local orbitAngle = 0.0     -- The current angle on the circle, in radians.
+    local elapsedTime = 0.0    -- A simple clock to drive the speed fluctuation.
+    local currentSpeed = baseSpeed
+    
+    local loopDelta = 0.01 -- How often to update the position, in seconds.
     -- use a timer to update the position of Bowser every second
-    timer.every(2, function()
-        transformComp.actualX = transformComp.actualX + random_utils.random_int(-1, 1)
-        transformComp.actualY = transformComp.actualY + random_utils.random_int(-1, 1)
-        print("Bowser position = " .. transformComp.actualX .. ', ' .. transformComp.actualY)
-        print("Bowser size = " .. transformComp.actualW .. ', ' .. transformComp.actualH)
-
+    timer.every(loopDelta, function()
         
-    end, 0, true, nil, "bowser_timer")
+        local transformComp = registry:get(bowser, Transform)
+       
+        -- Step A: Update the total elapsed time for this effect
+        elapsedTime = elapsedTime + loopDelta
+
+        -- Step B: Calculate the speed fluctuation using a sine wave
+        -- This creates a smooth "breathing" or "pulsing" effect for the speed.
+        local speedModifier = math.sin(elapsedTime * speedFluctuationFrequency)
+        currentSpeed = baseSpeed + (speedFluctuationAmount * speedModifier)
+        
+        -- Step C: Update the orbit angle based on the current speed
+        -- We multiply by dt to ensure the speed is consistent regardless of the timer interval.
+        orbitAngle = orbitAngle + (currentSpeed * loopDelta)
+        
+        -- Step D: Calculate the new X and Y position on the circle using trigonometry
+        local newX = centerX + orbitRadius * math.cos(orbitAngle)
+        local newY = centerY + orbitRadius * math.sin(orbitAngle)
+        
+        -- Step E: Apply the new position directly to the transform component
+        transformComp.actualX = newX
+        transformComp.actualY = newY        
+        end, 0, true, nil, "bowser_timer")
     
     -- every now and then, make the whale sing.
 

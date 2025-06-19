@@ -2763,12 +2763,16 @@ namespace layer
             ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (pass.injectAtlasUniforms) {
-                injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
+                injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, {0, 0,
+                        (float)renderWidth ,
+                        -(float)renderHeight  }, Vector2{(float)renderWidth, -(float)renderHeight}); // FIXME: not sure why, but it only works when I do this instead of the full texture size
+                
             }
             
             if (pass.customPrePassFunction) pass.customPrePassFunction();
             //TODO: auto inject sprite atlas texture dims and sprite rect here 
             // injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
+            
             TryApplyUniforms(shader, globals::globalShaderUniforms, pass.shaderName);
             DrawTextureRec(shader_pipeline::front().texture, {0, 0, (float)renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE); // invert Y 
     

@@ -195,47 +195,59 @@ namespace localization
 
         // get
         rec.bind_function(lua, path, "get",
-            // Use a lambda to capture the variadic arguments from Lua.
-            [](const std::string& key, sol::variadic_args args) -> std::string {
+            // Lua signature: get(key : string, args? : table<string,any>) -> string
+            [](const std::string &key, sol::object maybeArgs)->std::string {
+                // 1) Fetch the raw template
                 std::string raw = localization::getRaw(key);
-
-                // If there are no extra arguments, just return the raw string.
-                if (args.size() == 0) {
+        
+                // 2) No args?  Just return the raw string
+                if (!maybeArgs.is<sol::table>()) {
                     return raw;
                 }
-
-                try {
-                    // This is the argument store for fmt::format at runtime.
-                    fmt::dynamic_format_arg_store<fmt::format_context> store;
-
-                    // Iterate over the arguments passed from Lua.
-                    for (auto arg : args) {
-                        // Check the type of each Lua argument and add it to the fmt store.
-                        if (arg.is<std::string>()) {
-                            store.push_back(arg.as<std::string>());
-                        } else if (arg.is<double>()) { // Lua numbers are doubles
-                            store.push_back(arg.as<double>());
-                        } else if (arg.is<int>()) {
-                            store.push_back(arg.as<int>());
-                        } else if (arg.is<bool>()) {
-                            store.push_back(arg.as<bool>());
-                        }
-                        // Add more types here if needed.
+        
+                // 3) Otherwise build a dynamic fmt store
+                auto args = maybeArgs.as<sol::table>();
+                fmt::dynamic_format_arg_store<fmt::format_context> store;
+        
+                // 4) Iterate over name→value in the Lua table
+                for (auto &kv : args) {
+                    // key must be string
+                    std::string name = kv.first.as<std::string>();
+                    sol::object val  = kv.second;
+        
+                    if (val.is<std::string>()) {
+                        store.push_back(fmt::arg(name.c_str(), val.as<std::string>()));
                     }
-
-                    // Use fmt::vformat to format the string with the runtime arguments.
+                    else if (val.is<int>()) {
+                        store.push_back(fmt::arg(name.c_str(), val.as<int>()));
+                    }
+                    else if (val.is<double>()) {
+                        store.push_back(fmt::arg(name.c_str(), val.as<double>()));
+                    }
+                    else if (val.is<bool>()) {
+                        store.push_back(fmt::arg(name.c_str(), val.as<bool>()));
+                    }
+                    else if (val.is<float>()) {
+                        store.push_back(fmt::arg(name.c_str(), val.as<float>()));
+                    }
+                    // …add more type branches as needed…
+                }
+        
+                // 5) Format and return
+                try {
                     return fmt::vformat(raw, store);
                 }
-                catch (const fmt::format_error& e) {
+                catch (const fmt::format_error &e) {
                     return "[FORMAT ERROR: " + std::string(e.what()) + "]";
                 }
             },
-            // The documentation for Lua
-            "---@param key string # The localization key.\n"
-            "---@param ... any # Optional arguments for formatting the string.\n"
-            "---@return string # The localized and formatted string.",
-            "Gets the localized string for a key, with optional fmt-style arguments."
+            // Lua-facing documentation
+            "---@param key string                 # Localization key\n"
+            "---@param args table<string,any>?    # Optional named formatting args\n"
+            "---@return string                    # Localized & formatted text\n",
+            "Retrieves a localized string by key, formatting it with an optional Lua table of named parameters."
         );
+        
 
         // getRaw
         rec.bind_function(lua, path, "getRaw", &localization::getRaw,

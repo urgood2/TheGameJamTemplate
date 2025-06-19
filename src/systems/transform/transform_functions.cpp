@@ -1326,6 +1326,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &springH = transform.getHSpring();
         auto &springR = transform.getRSpring();
         auto &springS = transform.getSSpring();
+        
+        // check if buffer is full and if so, flush batch
+        
 
         layer::QueueCommand<layer::CmdPushMatrix>(layer, [](layer::CmdPushMatrix *cmd) {
             // Push the current matrix onto the stack
@@ -2537,6 +2540,19 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     transform_tbl.set_function("AlignToMaster", &transform::AlignToMaster);
     rec.record_free_function({"transform"}, {"AlignToMaster", "---@param registry registry\n---@param e Entity\n---@param force? boolean\n---@return nil", "Aligns an entity to its master.", true, false});
+    
+    transform_tbl.set_function("AssignRole", 
+        [](entt::registry *registry, entt::entity e, InheritedProperties::Type roleType, entt::entity parent, sol::optional<InheritedProperties::Sync> xy, sol::optional<InheritedProperties::Sync> wh, sol::optional<InheritedProperties::Sync> rotation, sol::optional<InheritedProperties::Sync> scale, sol::optional<Vector2> offset) {
+            std::optional<InheritedProperties::Sync> xySync = xy.value_or(InheritedProperties::Sync::Strong);
+            std::optional<InheritedProperties::Sync> whSync = wh.value_or(InheritedProperties::Sync::Strong);
+            std::optional<InheritedProperties::Sync> rotationSync = rotation.value_or(InheritedProperties::Sync::Strong);
+            std::optional<InheritedProperties::Sync> scaleSync = scale.value_or(InheritedProperties::Sync::Strong);
+            std::optional<Vector2> offsetValue = offset.value_or(Vector2(0.0f, 0.0f));
+            transform::AssignRole(registry, e, roleType, parent, xySync, whSync, rotationSync, scaleSync, offsetValue);
+        }
+    );
+    
+    rec.record_free_function({"transform"}, {"AssignRole", "---@param registry registry\n---@param e Entity\n---@param roleType? InheritedPropertiesType\n---@param parent? Entity\n---@param xy? InheritedPropertiesSync\n---@param wh? InheritedPropertiesSync\n---@param rotation? InheritedPropertiesSync\n---@param scale? InheritedPropertiesSync\n---@param offset? Vector2\n---@return nil", "Assigns an inherited properties role to an entity.", true, false});    
 
     transform_tbl.set_function("MoveWithMaster", &transform::MoveWithMaster);
     rec.record_free_function({"transform"}, {"MoveWithMaster", "---@param e Entity\n---@param dt number\n---@param selfTransform Transform\n---@param selfRole InheritedProperties\n---@param selfNode GameObject\n---@return nil", "Updates an entity's position based on its master's movement.", true, false});

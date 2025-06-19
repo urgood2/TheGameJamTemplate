@@ -241,7 +241,7 @@ namespace ui
         std::optional<std::function<void()>> buttonTemp;                     // Temporarily stores the button property while button_delay is active.
 
         // Reference System 
-        std::optional<std::function<void()>> textGetter; // Function to get text for this element, used to update if this is a text UI element
+        std::optional<std::function<std::string()>> textGetter; // Function to get text for this element, used to update if this is a text UI element
         std::optional<entt::entity> ref_entity;       // Entity reference
         std::optional<std::string> ref_component;     // Component name (ref_component)
         std::optional<std::string> ref_value;         // Field name within the above component
@@ -280,7 +280,7 @@ namespace ui
                 return *this;
             }
             
-            Builder& addTextGetter(const std::function<void()>& textGetter) {
+            Builder& addTextGetter(const std::function<std::string()>& textGetter) {
                 uiConfig->textGetter = textGetter;
                 return *this;
             }

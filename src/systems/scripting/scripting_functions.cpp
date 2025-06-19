@@ -450,18 +450,20 @@ namespace scripting {
 
     auto exposeGlobalsToLua(sol::state &lua) -> void{
         auto &rec = BindingRecorder::instance();
-        // 1) create the root table
-        lua.create_named_table("globals");
+        // 1) create the root table (or get it if it already exists)
+        lua["globals"].get_or_create<sol::table>();
 
         // 2) simple bools / ints / floats
         lua["globals"]["isGamePaused"]  = &globals::isGamePaused;
         lua["globals"]["screenWipe"]    = &globals::screenWipe;
-        lua["globals"]["screenWidth"]   = &globals::screenWidth;
-        lua["globals"]["screenHeight"]  = &globals::screenHeight;
+        lua["globals"]["screenWidth"]   = [](){ return globals::screenWidth; };
+        lua["globals"]["screenHeight"]  = [](){ return globals::screenHeight; };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
 
         // 3) entt::entity
-        lua["globals"]["gameWorldContainerEntity"] = &globals::gameWorldContainerEntity;
+        lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {
+            return globals::gameWorldContainerEntity;
+        };
         lua["globals"]["cursor"]                   = &globals::cursor;
         lua["globalShaderUniforms"] = std::ref(globals::globalShaderUniforms);
         

@@ -1,8 +1,18 @@
 -- global variables used by the lua side of the game
 
-local cfg = {
-    screenWidth  = 1440,
-    screenHeight = 900,
-    gravity      = 9.8,
-  }
-return cfg
+globals = globals or {}
+
+-- your defaults in one place
+local defaults = {
+  whale_dust_amount        = 0,
+  timeUntilNextGravityWave = 30,
+  gravityWaveSeconds       = 30,
+  currencyIconForText      = {}
+}
+
+-- merge‐in any missing keys
+for k, v in pairs(defaults) do
+  if globals[k] == nil then
+      globals[k] = v
+  end
+end

@@ -573,6 +573,12 @@ namespace game
             }
             
             {
+                if (rlCheckRenderBatchLimit(3))
+                {
+                    rlEnd();
+                    rlDrawRenderBatchActive(); // push what you have
+                    rlBegin(RL_TRIANGLES);     // start a new batch
+                }
                 // ZoneScopedN("ui layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
             }

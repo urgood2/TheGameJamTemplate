@@ -4724,11 +4724,12 @@ function localization.loadLanguage(...) end
 function localization.setFallbackLanguage(...) end
 
 ---
---- Gets the localized string for a key, with optional fmt-style arguments.
+--- Retrieves a localized string by key, formatting it with an optional Lua table of named parameters.
 ---
----@param key string # The localization key.
----@param ... any # Optional arguments for formatting the string.
----@return string # The localized and formatted string.
+---@param key string                 # Localization key
+---@param args table<string,any>?    # Optional named formatting args
+---@return string                    # Localized & formatted text
+
 function localization.get(...) end
 
 ---
@@ -5511,6 +5512,21 @@ function transform.InjectDynamicMotionDefault(...) end
 ---@param force? boolean
 ---@return nil
 function transform.AlignToMaster(...) end
+
+---
+--- Assigns an inherited properties role to an entity.
+---
+---@param registry registry
+---@param e Entity
+---@param roleType? InheritedPropertiesType
+---@param parent? Entity
+---@param xy? InheritedPropertiesSync
+---@param wh? InheritedPropertiesSync
+---@param rotation? InheritedPropertiesSync
+---@param scale? InheritedPropertiesSync
+---@param offset? Vector2
+---@return nil
+function transform.AssignRole(...) end
 
 ---
 --- Updates an entity's position based on its master's movement.

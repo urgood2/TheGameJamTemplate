@@ -17,10 +17,10 @@ namespace ui
                 .template data<&UIElementComponent::uiBox>("uiBox"_hs)
                 .template data<&UIElementComponent::config>("config"_hs); });
 
-        reflection::registerMetaForComponent<UIBoxComponent>([](auto meta)
-                                                             { meta.type("UIBoxComponent"_hs) // Ensure type name matches the lookup string
-                                                                   .template data<&UIBoxComponent::uiRoot>("uiRoot"_hs)
-                                                                   .template data<&UIBoxComponent::drawLayers>("drawLayers"_hs); });
+        // reflection::registerMetaForComponent<UIBoxComponent>([](auto meta)
+        //                                                      { meta.type("UIBoxComponent"_hs) // Ensure type name matches the lookup string
+        //                                                            .template data<&UIBoxComponent::uiRoot>("uiRoot"_hs)
+        //                                                            .template data<&UIBoxComponent::drawLayers>("drawLayers"_hs); });
 
         reflection::registerMetaForComponent<UIState>([](auto meta)
                                                       { meta.type("UIState"_hs) // Ensure type name matches the

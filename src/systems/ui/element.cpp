@@ -1165,6 +1165,19 @@ namespace ui
             StopHover(registry, entity);
             elementNode->state.isBeingHovered = false;
         }
+        
+        // is the object text?
+        if (globals::registry.any_of<TextSystem::Text>(elementConfig->object.value()) && objectConfig->textGetter)
+        {
+            auto &text = globals::registry.get<TextSystem::Text>(elementConfig->object.value());
+            
+            auto result = objectConfig->textGetter.value()();
+            // compare to text getter
+            if (text.rawText != result)
+            {
+                TextSystem::Functions::setText(elementConfig->object.value(), result);
+            }
+        }
 
         // Step 5: Handle object updates
         if (objectConfig->ui_object_updated)

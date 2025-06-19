@@ -90,7 +90,6 @@ namespace ui {
 
         // 6) UIBoxComponent
         lua.new_usertype<UIBoxComponent>("UIBoxComponent",
-            sol::constructors<>(),
             "uiRoot",     &UIBoxComponent::uiRoot,
             "drawLayers", &UIBoxComponent::drawLayers,
             "type_id", []() { return entt::type_hash<UIBoxComponent>::value(); }
@@ -471,7 +470,10 @@ namespace ui {
             "addMaxWidth",                    &UIConfig::Builder::addMaxWidth,
             "addMaxHeight",                   &UIConfig::Builder::addMaxHeight,
             "addMinWidth",                    &UIConfig::Builder::addMinWidth,
-            "addMinHeight",                   &UIConfig::Builder::addMinHeight,
+            "addMinHeight", [](UIConfig::Builder &b, float h){
+                // cast float → int, then forward to the real method
+                return b.addMinHeight(static_cast<int>(h));
+            },
             "addPadding",                     &UIConfig::Builder::addPadding,
             "addColor",                       &UIConfig::Builder::addColor,
             "addOutlineColor",                &UIConfig::Builder::addOutlineColor,
@@ -752,12 +754,17 @@ namespace ui {
         rec.record_free_function({"ui", "box"}, {"BuildUIElementTree", "---@param registry registry\n---@param uiBoxEntity Entity\n---@param uiElementDef UIElementTemplateNode\n---@param uiElementParent Entity\n---@return nil", "Builds a UI tree from a template definition.", true, false});
 
         // 2) Initialization & placement
-        box.set_function("Initialize", &ui::box::Initialize);
-        box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) {
+        // box.set_function("Initialize", &ui::box::Initialize);
+        box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) -> entt::entity {
             ui::TransformConfig config{};
             config.x = table["x"].get_or(0);
             config.y = table["y"].get_or(0);
-            return ui::box::Initialize(globals::registry, config, temp, ui::UIConfig{});
+            auto result = ui::box::Initialize(globals::registry, config, temp, ui::UIConfig{});
+            SPDLOG_DEBUG("Initialized UI box {} with config: x={}, y={}", static_cast<uint32_t>(result), config.x, config.y);
+            if (globals::registry.any_of<ui::UIBoxComponent>(result)) {
+                SPDLOG_DEBUG("UI box {} has UIBoxComponent", static_cast<uint32_t>(result));
+            }
+            return result;
         };
         rec.record_free_function({"ui", "box"}, {"Initialize", "---@param registry registry\n---@param transformData table\n---@param definition UIElementTemplateNode\n---@param config? UIConfig\n---@return Entity", "Initializes a new UI box from a definition.", true, false});
 

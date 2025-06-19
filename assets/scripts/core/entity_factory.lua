@@ -1,6 +1,6 @@
 
 function spawnCircularBurstParticles(x, y, count, seconds)
-    local initialSize   = 4             -- starting diameter of each circle
+    local initialSize   = 10             -- starting diameter of each circle
     local burstSpeed    = 200           -- pixels per second
     local growRate      = 20            -- how fast scale increases (same as your other function)
     local rotationSpeed = 460           -- same rotation speed
@@ -23,8 +23,6 @@ function spawnCircularBurstParticles(x, y, count, seconds)
                 endColor       = util.getColor("WHITE"),
                 rotationSpeed  = rotationSpeed,
                 onUpdateCallback = function(comp, dt)
-                    -- -- same exponential “growth” you had
-                    -- comp.scale = comp.scale + (dt * growRate)
                 end,
             },
             nil -- no animation
@@ -69,8 +67,8 @@ function spawnWhaleDust(x, y)
         local centerX = tc.visualX + tc.visualW * 0.5
         local centerY = tc.visualY + tc.visualH * 0.5
         -- spawn a growing circle particle
-        spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
-        spawnGrowingCircleParticle(centerX, centerY, 100, 100, 0.5)
+        
+        spawnGrowingCircleParticle(centerX, centerY, 100, 100, 0.2)
         
         debug("whale dust motion injected")
         -- jiggle
@@ -82,6 +80,7 @@ function spawnWhaleDust(x, y)
         debug("whale dust remove timer added")
         -- remove some time later
         timer.after(0.5, function()
+            spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
             registry:destroy(e)
         end,
         "whale_dust_remove")
@@ -89,25 +88,26 @@ function spawnWhaleDust(x, y)
 end
 
 
-function spawnGrowingCircleParticle(x, y, w, h, seconds)
+function spawnGrowingCircleParticle(centerX, centerY, w, h, seconds)
+    -- Compute top-left so that the internal DrawCircle(x + w*0.5, y + h*0.5, ...)
+    -- will end up at (centerX, centerY)
+    local halfW, halfH = w * 0.5, h * 0.5
     local p = particle.CreateParticle(
-        Vec2(x,y),             -- world position
-        Vec2(w,h),                 -- render size
+        Vec2(centerX - halfW, centerY - halfH),  -- world position = top-left
+        Vec2(w, h),                               -- render size
         {
             renderType = particle.ParticleRenderType.CIRCLE_LINE,
-            velocity   = Vec2(0,0), 
-            acceleration = 0, -- gravity effect
-            lifespan   = seconds,
-            startColor = util.getColor("WHITE"),
-            endColor   = util.getColor("WHITE"),
+            velocity      = Vec2(0,0), 
+            acceleration  = 0,
+            lifespan      = seconds,
+            startColor    = util.getColor("WHITE"),
+            endColor      = util.getColor("WHITE"),
             rotationSpeed = 460,
             onUpdateCallback = function(particleComp, dt)
-                
-                -- make size grow exponentially over time
-                particleComp.scale = particleComp.scale + (dt * 20) 
-                
+                particleComp.scale = particleComp.scale + (dt * 10) 
             end,
         },
-        nil -- optional animation info
+        nil
     )
+    return p
 end

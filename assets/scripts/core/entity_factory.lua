@@ -75,15 +75,24 @@ function spawnWhaleDust(x, y)
         transform.InjectDynamicMotion(e, 1, 50)
         
         local transformComp = registry:get(e, Transform)
-        transformComp.scale = 3
+        transformComp.scale = 3 -- make it bigger
+        spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
+        
+        
+        timer.after(0.8, function()
+            -- send it to the top right corner of the screen
+            -- local transformComp = registry:get(e, Transform)
+            transformComp.scale = 1
+            transformComp.actualX = 1300
+            transformComp.actualY = 100
+            
+        end)
         
         debug("whale dust remove timer added")
         -- remove some time later
-        timer.after(0.5, function()
-            spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
+        timer.after(1.5, function()
             registry:destroy(e)
-        end,
-        "whale_dust_remove")
+        end)
     end
 end
 

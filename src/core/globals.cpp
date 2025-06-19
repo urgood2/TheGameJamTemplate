@@ -38,7 +38,7 @@ namespace globals {
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements
 
-    bool drawDebugInfo = true; // set to true to allow debug drawing of transforms
+    bool drawDebugInfo = false; // set to true to allow debug drawing of transforms
     
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 

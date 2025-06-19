@@ -365,10 +365,12 @@ namespace shaders
                 } else if constexpr (std::is_same_v<T, int>) {
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_INT);
                 } else if constexpr (std::is_same_v<T, Vector2>) {
+                    SPDLOG_DEBUG("Setting Vector2 uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC2);
                 } else if constexpr (std::is_same_v<T, Vector3>) {
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC3);
                 } else if constexpr (std::is_same_v<T, Vector4>) {
+                    SPDLOG_DEBUG("Setting Vector4 uniform '{}' at location {} in shader ID {}", name, loc, shader.id);
                     SetShaderValue(shader, loc, &val, SHADER_UNIFORM_VEC4);
                 } else if constexpr (std::is_same_v<T, Texture2D>) {
                     // SPDLOG_DEBUG("Setting texture uniform '{}' at location {} in shader ID {}", name, loc, shader.id);

@@ -350,8 +350,8 @@ function main.init()
         
         local transformComp = registry:get(e, Transform)
         
-        spawnWhaleDust(transformComp.actualX + random_utils.random_int(-50, 50),
-                        transformComp.actualY + random_utils.random_int(-50, 50))
+        spawnWhaleDust(transformComp.actualX + random_utils.random_int(50, 100),
+                        transformComp.actualY + random_utils.random_int(50, 100))
     end
 
     shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)

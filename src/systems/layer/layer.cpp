@@ -2761,10 +2761,11 @@ namespace layer
             }
             render_stack_switch_internal::Push(shader_pipeline::back());
             ClearBackground({0, 0, 0, 0});
+            BeginShaderMode(shader);
             if (pass.injectAtlasUniforms) {
                 injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
             }
-            BeginShaderMode(shader);
+            
             if (pass.customPrePassFunction) pass.customPrePassFunction();
             //TODO: auto inject sprite atlas texture dims and sprite rect here 
             // injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});

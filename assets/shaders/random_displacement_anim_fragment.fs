@@ -22,4 +22,10 @@ void main() {
     // vec4 texel = texture(texture0, atlasUV(fragTexCoord));
     vec4 texel = texture(texture0, fragTexCoord);
     finalColor = texel * colDiffuse * fragColor;
+    
+    vec2 uv = fragTexCoord; // this is already atlas‐mapped if you applied step (1)
+    finalColor = vec4(uv, 0.0, 1.0);
+    
+    // finalColor = vec4(fragTexCoord.x, fragTexCoord.y, 0.0, 1.0);
+
 }

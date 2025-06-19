@@ -99,8 +99,13 @@ namespace particle
 
         transform.setActualW(size.x);
         transform.setActualH(size.y);
+        transform.setVisualW(size.x);
+        transform.setVisualH(size.y);
 
         auto &particleComp = registry.emplace<Particle>(particle, particleData);
+        if (particleData.velocity && particleData.velocity->x == 0) {
+            SPDLOG_DEBUG("Particle velocity is zero");
+        }
         particleComp.velocity = particleData.velocity.value_or(Vector2(
             Random::get<float>(-defaultSpeed, defaultSpeed),
             Random::get<float>(-defaultSpeed, defaultSpeed)));

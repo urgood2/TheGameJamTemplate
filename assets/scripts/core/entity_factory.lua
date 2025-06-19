@@ -1,8 +1,37 @@
 
+function spawnCircularBurstParticles(x, y, count, seconds)
+    local initialSize   = 4             -- starting diameter of each circle
+    local burstSpeed    = 200           -- pixels per second
+    local growRate      = 20            -- how fast scale increases (same as your other function)
+    local rotationSpeed = 460           -- same rotation speed
 
-function spawnCircularBurstParticles(x, y, count, seconds) 
-    
+    for i = 1, count do
+        -- random angle in [0,2π)
+        local angle = math.random() * (2 * math.pi)
+        local vx    = math.cos(angle) * burstSpeed
+        local vy    = math.sin(angle) * burstSpeed
+
+        particle.CreateParticle(
+            Vec2(x, y),                 -- start at the center
+            Vec2(initialSize, initialSize),
+            {
+                renderType     = particle.ParticleRenderType.RECTANGLE_FILLED,
+                velocity       = Vec2(vx, vy),
+                acceleration   = 0,      -- no gravity
+                lifespan       = seconds,
+                startColor     = util.getColor("WHITE"),
+                endColor       = util.getColor("WHITE"),
+                rotationSpeed  = rotationSpeed,
+                onUpdateCallback = function(comp, dt)
+                    -- -- same exponential “growth” you had
+                    -- comp.scale = comp.scale + (dt * growRate)
+                end,
+            },
+            nil -- no animation
+        )
+    end
 end
+
 function spawnWhaleDust(x, y)
     e = animation_system.createAnimatedObjectWithTransform(
         "whale_dust_anim",
@@ -12,6 +41,12 @@ function spawnWhaleDust(x, y)
         nil, -- shader pass
         true -- shadow
     )
+    
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        e,
+        40, -- Width
+        40  -- Height
+    ) 
     
     -- jigglle on spawn
     transform.InjectDynamicMotionDefault(e)
@@ -27,8 +62,15 @@ function spawnWhaleDust(x, y)
     gameObjectMethods.onClick = function(registry, e)
         
         debug("whale dust clicked")
+        -- Get the Transform component you use to track visual X/Y and size:
+        local tc = registry:get(e, Transform)  -- or whatever its name is
+
+        -- Compute the true on-screen center:
+        local centerX = tc.visualX + tc.visualW * 0.5
+        local centerY = tc.visualY + tc.visualH * 0.5
         -- spawn a growing circle particle
-        spawnCircularBurstParticles(x, y, 10, 1.0)
+        spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
+        spawnGrowingCircleParticle(centerX, centerY, 100, 100, 0.5)
         
         debug("whale dust motion injected")
         -- jiggle
@@ -54,16 +96,15 @@ function spawnGrowingCircleParticle(x, y, w, h, seconds)
         {
             renderType = particle.ParticleRenderType.CIRCLE_LINE,
             velocity   = Vec2(0,0), 
-            acceleration = 3.0, -- gravity effect
+            acceleration = 0, -- gravity effect
             lifespan   = seconds,
-            startColor = util.getColor("BLUE"),
-            endColor   = util.getColor("RED"),
-            rotationSpeed = 0,
+            startColor = util.getColor("WHITE"),
+            endColor   = util.getColor("WHITE"),
+            rotationSpeed = 460,
             onUpdateCallback = function(particleComp, dt)
                 
                 -- make size grow exponentially over time
-                particleComp.scale = particleComp.scale * math.exp(-dt * 0.5)  
-                
+                particleComp.scale = particleComp.scale + (dt * 20) 
                 
             end,
         },

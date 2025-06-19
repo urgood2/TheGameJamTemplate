@@ -43,11 +43,8 @@ void main() {
     vec3 displaced = vertexPosition + vec3(offsetX * intensityX,
                                             offsetY * intensityY,
                                             0.0);
-    // -- atlas UV remapping (new) --
-    vec2 atlasUV = (uGridRect.xy + vertexTexCoord * uGridRect.zw) / uImageSize;
-    
-    fragTexCoord = (uGridRect.xy + vertexTexCoord * uGridRect.zw) / uImageSize;
-
+    // pass through your usual attributes
+    fragTexCoord = vertexTexCoord;
     fragColor    = vertexColor;
     // transform as normal
     gl_Position  = mvp * vec4(displaced, 1.0);

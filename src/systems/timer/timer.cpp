@@ -12,30 +12,9 @@ namespace timer
     static void lua_tween4(std::variant<float,std::pair<float,float>> d,
         const std::function<float()>& getter,
         const std::function<void(float)>& setter,
-        float target_value)
+        float target_value, std::string tag )
     {
-        TimerSystem::timer_tween(d, getter, setter, target_value);
-    }
-
-    // 2) Five-arg version (adds easing)
-    static void lua_tween5(std::variant<float,std::pair<float,float>> d,
-        const std::function<float()>& getter,
-        const std::function<void(float)>& setter,
-        float target_value,
-        const std::function<float(float)>& easing_method)
-    {
-        TimerSystem::timer_tween(d, getter, setter, target_value, easing_method);
-    }
-
-    // 3) Six-arg version (adds after)
-    static void lua_tween6(std::variant<float,std::pair<float,float>> d,
-        const std::function<float()>& getter,
-        const std::function<void(float)>& setter,
-        float target_value,
-        const std::function<float(float)>& easing_method,
-        const std::function<void()>& after)
-    {
-        TimerSystem::timer_tween(d, getter, setter, target_value, easing_method, after);
+        TimerSystem::timer_tween(d, getter, setter, target_value, tag);
     }
     
     /*
@@ -211,8 +190,12 @@ namespace timer
         // Now bind them all, *including* the full seven-arg C++ function:
         t.set_function("tween", sol::overload(
             &lua_tween4,
-            &lua_tween5,
-            &lua_tween6,
+            [](std::variant<float,std::pair<float,float>> d,
+                const std::function<float()>& getter,
+                const std::function<void(float)>& setter,
+                float target_value) {
+                return lua_tween4(d, getter, setter, target_value, "");
+                },
             &TimerSystem::timer_tween        // full 7-arg version
         ));
         
@@ -221,8 +204,8 @@ namespace timer
         rec.record_free_function({"timer"}, {
             "run",
             "---@param action fun()\n"
-            "---@param after? fun()\n"
             "---@param tag? string\n"
+            "---@param after? fun()\n"
             "---@return integer # timerHandle",
             "Creates a timer that runs an action once immediately.",
             true, false
@@ -828,9 +811,10 @@ namespace timer
                          const std::function<float()> &getter,
                          const std::function<void(float)> &setter,
                          float target_value,
+                         const std::string &tag,
                          const std::function<float(float)> &easing_method,
-                         const std::function<void()> &after,
-                         const std::string &tag)
+                         const std::function<void()> &after
+                         )
         {
             // Generate a random tag if none is provided
             std::string final_tag = tag.empty() ? random_uid() : tag;

@@ -9,143 +9,143 @@ namespace ui
 
     void util::RegisterMeta()
     {
-        reflection::registerMetaForComponent<UIElementComponent>([](auto meta)
-                                                                 {
-            // .template data<&UIElementComponent::parent>("parent"_hs);
-            meta.type("UIElementComponent"_hs)  // Ensure type name matches the lookup string
-                .template data<&UIElementComponent::UIT>("UIT"_hs)
-                .template data<&UIElementComponent::uiBox>("uiBox"_hs)
-                .template data<&UIElementComponent::config>("config"_hs); });
+        // reflection::registerMetaForComponent<UIElementComponent>([](auto meta)
+        //                                                          {
+        //     // .template data<&UIElementComponent::parent>("parent"_hs);
+        //     meta.type("UIElementComponent"_hs)  // Ensure type name matches the lookup string
+        //         .template data<&UIElementComponent::UIT>("UIT"_hs)
+        //         .template data<&UIElementComponent::uiBox>("uiBox"_hs)
+        //         .template data<&UIElementComponent::config>("config"_hs); });
 
         // reflection::registerMetaForComponent<UIBoxComponent>([](auto meta)
         //                                                      { meta.type("UIBoxComponent"_hs) // Ensure type name matches the lookup string
         //                                                            .template data<&UIBoxComponent::uiRoot>("uiRoot"_hs)
         //                                                            .template data<&UIBoxComponent::drawLayers>("drawLayers"_hs); });
 
-        reflection::registerMetaForComponent<UIState>([](auto meta)
-                                                      { meta.type("UIState"_hs) // Ensure type name matches the
-                                                            .template data<&UIState::contentDimensions>("contentDimensions"_hs)
-                                                            .template data<&UIState::textDrawable>("textDrawable"_hs)
-                                                            .template data<&UIState::last_clicked>("last_clicked"_hs)
-                                                            .template data<&UIState::object_focus_timer>("object_focus_timer"_hs)
-                                                            .template data<&UIState::focus_timer>("focus_timer"_hs); });
+        // reflection::registerMetaForComponent<UIState>([](auto meta)
+        //                                               { meta.type("UIState"_hs) // Ensure type name matches the
+        //                                                     .template data<&UIState::contentDimensions>("contentDimensions"_hs)
+        //                                                     .template data<&UIState::textDrawable>("textDrawable"_hs)
+        //                                                     .template data<&UIState::last_clicked>("last_clicked"_hs)
+        //                                                     .template data<&UIState::object_focus_timer>("object_focus_timer"_hs)
+        //                                                     .template data<&UIState::focus_timer>("focus_timer"_hs); });
 
-        reflection::registerMetaForComponent<Tooltip>([](auto meta)
-                                                      { meta.type("Tooltip"_hs) // Ensure type name matches the lookup string
-                                                            .template data<&Tooltip::title>("title"_hs)
-                                                            .template data<&Tooltip::text>("text"_hs); });
+        // reflection::registerMetaForComponent<Tooltip>([](auto meta)
+        //                                               { meta.type("Tooltip"_hs) // Ensure type name matches the lookup string
+        //                                                     .template data<&Tooltip::title>("title"_hs)
+        //                                                     .template data<&Tooltip::text>("text"_hs); });
 
-        reflection::registerMetaForComponent<UIConfig>([](auto meta)
-                                                       {
-                                                           meta.type("UIConfig"_hs) // Ensure type name matches the lookup string
-                                                               .template data<&UIConfig::id>("id"_hs)
-                                                               .template data<&UIConfig::instanceType>("instanceType"_hs)
-                                                               .template data<&UIConfig::uiType>("uiType"_hs)
-                                                               .template data<&UIConfig::drawLayer>("drawLayer"_hs)
-                                                               .template data<&UIConfig::group>("group"_hs)
+        // reflection::registerMetaForComponent<UIConfig>([](auto meta)
+        //                                                {
+        //                                                    meta.type("UIConfig"_hs) // Ensure type name matches the lookup string
+        //                                                        .template data<&UIConfig::id>("id"_hs)
+        //                                                        .template data<&UIConfig::instanceType>("instanceType"_hs)
+        //                                                        .template data<&UIConfig::uiType>("uiType"_hs)
+        //                                                        .template data<&UIConfig::drawLayer>("drawLayer"_hs)
+        //                                                        .template data<&UIConfig::group>("group"_hs)
 
-                                                               .template data<&UIConfig::location_bond>("location_bond"_hs)
-                                                               .template data<&UIConfig::rotation_bond>("rotation_bond"_hs)
-                                                               .template data<&UIConfig::size_bond>("size_bond"_hs)
-                                                               .template data<&UIConfig::scale_bond>("scale_bond"_hs)
-                                                               .template data<&UIConfig::offset>("offset"_hs)
-                                                               .template data<&UIConfig::scale>("scale"_hs)
-                                                               .template data<&UIConfig::focusWithObject>("focusWithObject"_hs)
-                                                               .template data<&UIConfig::refreshMovement>("refreshMovement"_hs)
-                                                               .template data<&UIConfig::no_recalc>("no_recalc"_hs)
-                                                               .template data<&UIConfig::non_recalc>("non_recalc"_hs)
+        //                                                        .template data<&UIConfig::location_bond>("location_bond"_hs)
+        //                                                        .template data<&UIConfig::rotation_bond>("rotation_bond"_hs)
+        //                                                        .template data<&UIConfig::size_bond>("size_bond"_hs)
+        //                                                        .template data<&UIConfig::scale_bond>("scale_bond"_hs)
+        //                                                        .template data<&UIConfig::offset>("offset"_hs)
+        //                                                        .template data<&UIConfig::scale>("scale"_hs)
+        //                                                        .template data<&UIConfig::focusWithObject>("focusWithObject"_hs)
+        //                                                        .template data<&UIConfig::refreshMovement>("refreshMovement"_hs)
+        //                                                        .template data<&UIConfig::no_recalc>("no_recalc"_hs)
+        //                                                        .template data<&UIConfig::non_recalc>("non_recalc"_hs)
 
-                                                               .template data<&UIConfig::parent>("parent"_hs)
-                                                               // .template data<&UIConfig::nodes>("nodes"_hs)
-                                                               .template data<&UIConfig::object>("object"_hs)
+        //                                                        .template data<&UIConfig::parent>("parent"_hs)
+        //                                                        // .template data<&UIConfig::nodes>("nodes"_hs)
+        //                                                        .template data<&UIConfig::object>("object"_hs)
 
-                                                               .template data<&UIConfig::alignmentFlags>("align"_hs)
-                                                               .template data<&UIConfig::width>("width"_hs)
-                                                               .template data<&UIConfig::height>("height"_hs)
-                                                               .template data<&UIConfig::maxWidth>("max_width"_hs)
-                                                               .template data<&UIConfig::maxHeight>("max_height"_hs)
-                                                               .template data<&UIConfig::minWidth>("min_width"_hs)
-                                                               .template data<&UIConfig::minHeight>("min_height"_hs)
-                                                               .template data<&UIConfig::padding>("padding"_hs)
+        //                                                        .template data<&UIConfig::alignmentFlags>("align"_hs)
+        //                                                        .template data<&UIConfig::width>("width"_hs)
+        //                                                        .template data<&UIConfig::height>("height"_hs)
+        //                                                        .template data<&UIConfig::maxWidth>("max_width"_hs)
+        //                                                        .template data<&UIConfig::maxHeight>("max_height"_hs)
+        //                                                        .template data<&UIConfig::minWidth>("min_width"_hs)
+        //                                                        .template data<&UIConfig::minHeight>("min_height"_hs)
+        //                                                        .template data<&UIConfig::padding>("padding"_hs)
 
-                                                               .template data<&UIConfig::color>("colour"_hs)
-                                                               .template data<&UIConfig::outlineColor>("outlineColour"_hs)
-                                                               .template data<&UIConfig::outlineThickness>("outline"_hs)
-                                                               .template data<&UIConfig::shadow>("shadow"_hs)
-                                                               .template data<&UIConfig::shadowColor>("shadowColour"_hs)
-                                                               .template data<&UIConfig::noFill>("noFill"_hs)
-                                                               .template data<&UIConfig::pixelatedRectangle>("pixelatedRectangle"_hs)
+        //                                                        .template data<&UIConfig::color>("colour"_hs)
+        //                                                        .template data<&UIConfig::outlineColor>("outlineColour"_hs)
+        //                                                        .template data<&UIConfig::outlineThickness>("outline"_hs)
+        //                                                        .template data<&UIConfig::shadow>("shadow"_hs)
+        //                                                        .template data<&UIConfig::shadowColor>("shadowColour"_hs)
+        //                                                        .template data<&UIConfig::noFill>("noFill"_hs)
+        //                                                        .template data<&UIConfig::pixelatedRectangle>("pixelatedRectangle"_hs)
 
-                                                               .template data<&UIConfig::canCollide>("canCollide"_hs)
-                                                               .template data<&UIConfig::collideable>("collideable"_hs)
-                                                               .template data<&UIConfig::forceCollision>("forceCollision"_hs)
-                                                               .template data<&UIConfig::button_UIE>("button_UIE"_hs)
-                                                               .template data<&UIConfig::buttonCallback>("button"_hs)
-                                                               .template data<&UIConfig::buttonTemp>("buttonTemp"_hs)
-                                                               .template data<&UIConfig::disable_button>("disable_button"_hs)
+        //                                                        .template data<&UIConfig::canCollide>("canCollide"_hs)
+        //                                                        .template data<&UIConfig::collideable>("collideable"_hs)
+        //                                                        .template data<&UIConfig::forceCollision>("forceCollision"_hs)
+        //                                                        .template data<&UIConfig::button_UIE>("button_UIE"_hs)
+        //                                                        .template data<&UIConfig::buttonCallback>("button"_hs)
+        //                                                        .template data<&UIConfig::buttonTemp>("buttonTemp"_hs)
+        //                                                        .template data<&UIConfig::disable_button>("disable_button"_hs)
 
-                                                               .template data<&UIConfig::progressBar>("progressBar"_hs)
-                                                               .template data<&UIConfig::progressBarEmptyColor>("progressBarEmptyColor"_hs)
-                                                               .template data<&UIConfig::progressBarFullColor>("progressBarFullColor"_hs)
-                                                               .template data<&UIConfig::progressBarMaxValue>("progressBarMaxValue"_hs)
-                                                               .template data<&UIConfig::progressBarValueComponentName>("progressBarValueComponentName"_hs)
-                                                               .template data<&UIConfig::progressBarValueFieldName>("progressBarValueFieldName"_hs)
-                                                               .template data<&UIConfig::ui_object_updated>("ui_object_updated"_hs)
+        //                                                        .template data<&UIConfig::progressBar>("progressBar"_hs)
+        //                                                        .template data<&UIConfig::progressBarEmptyColor>("progressBarEmptyColor"_hs)
+        //                                                        .template data<&UIConfig::progressBarFullColor>("progressBarFullColor"_hs)
+        //                                                        .template data<&UIConfig::progressBarMaxValue>("progressBarMaxValue"_hs)
+        //                                                        .template data<&UIConfig::progressBarValueComponentName>("progressBarValueComponentName"_hs)
+        //                                                        .template data<&UIConfig::progressBarValueFieldName>("progressBarValueFieldName"_hs)
+        //                                                        .template data<&UIConfig::ui_object_updated>("ui_object_updated"_hs)
 
-                                                               .template data<&UIConfig::buttonDelayStart>("buttonDelayStart"_hs)
-                                                               .template data<&UIConfig::buttonDelay>("buttonDelay"_hs)
-                                                               .template data<&UIConfig::buttonDelayProgress>("buttonDelayProgress"_hs)
-                                                               .template data<&UIConfig::buttonDelayEnd>("buttonDelayEnd"_hs)
-                                                               .template data<&UIConfig::buttonClicked>("buttonClicked"_hs)
-                                                               .template data<&UIConfig::buttonDistance>("buttonDistance"_hs)
+        //                                                        .template data<&UIConfig::buttonDelayStart>("buttonDelayStart"_hs)
+        //                                                        .template data<&UIConfig::buttonDelay>("buttonDelay"_hs)
+        //                                                        .template data<&UIConfig::buttonDelayProgress>("buttonDelayProgress"_hs)
+        //                                                        .template data<&UIConfig::buttonDelayEnd>("buttonDelayEnd"_hs)
+        //                                                        .template data<&UIConfig::buttonClicked>("buttonClicked"_hs)
+        //                                                        .template data<&UIConfig::buttonDistance>("buttonDistance"_hs)
 
-                                                               .template data<&UIConfig::tooltip>("tooltip"_hs)
-                                                               .template data<&UIConfig::detailedTooltip>("detailedTooltip"_hs)
-                                                               .template data<&UIConfig::onDemandTooltip>("onDemandTooltip"_hs)
-                                                               .template data<&UIConfig::hover>("hover"_hs)
+        //                                                        .template data<&UIConfig::tooltip>("tooltip"_hs)
+        //                                                        .template data<&UIConfig::detailedTooltip>("detailedTooltip"_hs)
+        //                                                        .template data<&UIConfig::onDemandTooltip>("onDemandTooltip"_hs)
+        //                                                        .template data<&UIConfig::hover>("hover"_hs)
 
-                                                               .template data<&UIConfig::force_focus>("force_focus"_hs)
-                                                               .template data<&UIConfig::dynamicMotion>("dynamicMotion"_hs)
-                                                               .template data<&UIConfig::choice>("choice"_hs)
-                                                               .template data<&UIConfig::chosen>("chosen"_hs)
-                                                               .template data<&UIConfig::chosen_vert>("chosen_vert"_hs)
-                                                               .template data<&UIConfig::one_press>("one_press"_hs)
-                                                               .template data<&UIConfig::draw_after>("draw_after"_hs)
-                                                               .template data<&UIConfig::focusArgs>("focusArgs"_hs)
-                                                               .template data<&UIConfig::updateFunc>("updateFunc"_hs)
-                                                               .template data<&UIConfig::instaFunc>("instaFunc"_hs)
+        //                                                        .template data<&UIConfig::force_focus>("force_focus"_hs)
+        //                                                        .template data<&UIConfig::dynamicMotion>("dynamicMotion"_hs)
+        //                                                        .template data<&UIConfig::choice>("choice"_hs)
+        //                                                        .template data<&UIConfig::chosen>("chosen"_hs)
+        //                                                        .template data<&UIConfig::chosen_vert>("chosen_vert"_hs)
+        //                                                        .template data<&UIConfig::one_press>("one_press"_hs)
+        //                                                        .template data<&UIConfig::draw_after>("draw_after"_hs)
+        //                                                        .template data<&UIConfig::focusArgs>("focusArgs"_hs)
+        //                                                        .template data<&UIConfig::updateFunc>("updateFunc"_hs)
+        //                                                        .template data<&UIConfig::instaFunc>("instaFunc"_hs)
 
-                                                               .template data<&UIConfig::ref_entity>("ref_entity"_hs)
-                                                               .template data<&UIConfig::ref_component>("ref_component"_hs)
-                                                               .template data<&UIConfig::ref_value>("ref_value"_hs)
-                                                               .template data<&UIConfig::prev_ref_value>("prev_ref_value"_hs)
+        //                                                        .template data<&UIConfig::ref_entity>("ref_entity"_hs)
+        //                                                        .template data<&UIConfig::ref_component>("ref_component"_hs)
+        //                                                        .template data<&UIConfig::ref_value>("ref_value"_hs)
+        //                                                        .template data<&UIConfig::prev_ref_value>("prev_ref_value"_hs)
 
-                                                               .template data<&UIConfig::text>("text"_hs)
-                                                               .template data<&UIConfig::language>("language"_hs)
-                                                               .template data<&UIConfig::verticalText>("verticalText"_hs)
+        //                                                        .template data<&UIConfig::text>("text"_hs)
+        //                                                        .template data<&UIConfig::language>("language"_hs)
+        //                                                        .template data<&UIConfig::verticalText>("verticalText"_hs)
 
-                                                               .template data<&UIConfig::hPopup>("hPopup"_hs)
-                                                               .template data<&UIConfig::hPopupConfig>("hPopupConfig"_hs)
+        //                                                        .template data<&UIConfig::hPopup>("hPopup"_hs)
+        //                                                        .template data<&UIConfig::hPopupConfig>("hPopupConfig"_hs)
 
-                                                               .template data<&UIConfig::extend_up>("extend_up"_hs)
-                                                               .template data<&UIConfig::resolution>("resolution"_hs)
-                                                               .template data<&UIConfig::emboss>("emboss"_hs)
-                                                               .template data<&UIConfig::line_emboss>("line_emboss"_hs)
-                                                               .template data<&UIConfig::mid>("mid"_hs)
-                                                               .template data<&UIConfig::noRole>("noRole"_hs)
-                                                               .template data<&UIConfig::role>("role"_hs);
+        //                                                        .template data<&UIConfig::extend_up>("extend_up"_hs)
+        //                                                        .template data<&UIConfig::resolution>("resolution"_hs)
+        //                                                        .template data<&UIConfig::emboss>("emboss"_hs)
+        //                                                        .template data<&UIConfig::line_emboss>("line_emboss"_hs)
+        //                                                        .template data<&UIConfig::mid>("mid"_hs)
+        //                                                        .template data<&UIConfig::noRole>("noRole"_hs)
+        //                                                        .template data<&UIConfig::role>("role"_hs);
 
-                                                           // static fields not allowed
-                                                           // .template func<&UIConfig::functions>("functions"_hs);
-                                                       });
+        //                                                    // static fields not allowed
+        //                                                    // .template func<&UIConfig::functions>("functions"_hs);
+        //                                                });
 
-        reflection::registerMetaForComponent<TransformConfig>([](auto meta)
-                                                              { meta.type("TransformConfig"_hs) // Ensure type name matches the lookup string
-                                                                    .template data<&TransformConfig::x>("x"_hs)
-                                                                    .template data<&TransformConfig::y>("y"_hs)
-                                                                    .template data<&TransformConfig::w>("w"_hs)
-                                                                    .template data<&TransformConfig::h>("h"_hs)
-                                                                    .template data<&TransformConfig::r>("r"_hs); });
+        // reflection::registerMetaForComponent<TransformConfig>([](auto meta)
+        //                                                       { meta.type("TransformConfig"_hs) // Ensure type name matches the lookup string
+        //                                                             .template data<&TransformConfig::x>("x"_hs)
+        //                                                             .template data<&TransformConfig::y>("y"_hs)
+        //                                                             .template data<&TransformConfig::w>("w"_hs)
+        //                                                             .template data<&TransformConfig::h>("h"_hs)
+        //                                                             .template data<&TransformConfig::r>("r"_hs); });
     }
 
     void util::RemoveAll(entt::registry &registry, entt::entity entity)

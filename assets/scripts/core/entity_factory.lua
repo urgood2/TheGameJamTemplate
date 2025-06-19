@@ -97,6 +97,18 @@ function spawnWhaleDust(x, y)
             
             -- make the target jiibble
             transform.InjectDynamicMotion(globals.currencyIconForText, 1, 50)
+            
+            -- tween the value of globals.whale_dust_amount from its current value to its current value + 1
+            globals.whale_dust_target = (globals.whale_dust_target or 0) + 1
+            local targetAmount = globals.whale_dust_target
+            timer.tween(
+                0.5, -- duration in seconds
+                function() return globals.whale_dust_amount end, -- getter
+                function(v) globals.whale_dust_amount = v end, -- setter
+                globals.whale_dust_target, -- target value
+                "whale_dust_increment"
+            )
+            
         end)
     end
 end

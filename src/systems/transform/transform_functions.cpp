@@ -1309,8 +1309,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     auto DrawBoundingBoxAndDebugInfo(entt::registry *registry, entt::entity e, std::shared_ptr<layer::Layer> layer) -> void
     {
         // ZoneScopedN("DrawBoundingBoxAndDebugInfo");
-        if (debugMode == false)
-            return;
+        // if (debugMode == false)
+        //     return;
 
         auto &node = registry->get<GameObject>(e);
         node.state.isUnderOverlay = globals::under_overlay; // LATER: not sure why this is here. move elsewhere?
@@ -1332,27 +1332,27 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         layer::QueueCommand<layer::CmdPushMatrix>(layer, [](layer::CmdPushMatrix *cmd) {
             // Push the current matrix onto the stack
-        });
+        }, 100); // always on top of the stack
 
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
-        });
+        }, 100);
 
         layer::QueueCommand<layer::CmdScale>(layer, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
             cmd->scaleX = scaleX;
             cmd->scaleY = scaleY;
-        });
+        }, 100);
 
         layer::QueueCommand<layer::CmdRotate>(layer, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
             cmd->angle = rotation;
-        });
+        }, 100);
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
-        });
+        }, 100);
 
         auto scale = 1.0f;
         if (registry->any_of<ui::UIConfig>(e))
@@ -1375,7 +1375,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->fontSize = 15 * scale;
                 cmd->spacing = 1.0f;
                 cmd->color = WHITE;
-            });
+            }), 100;
         }
         else {
             // If ui, get ui type + entity number
@@ -1397,7 +1397,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->fontSize = 15 * scale;
                 cmd->spacing = 1.0f;
                 cmd->color = WHITE;
-            });
+            }, 100);
         }
 
         float lineWidth = 1;
@@ -1433,7 +1433,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->size = Vector2{width, height};
             cmd->lineThickness = lineThickness;
             cmd->color = color;
-        });
+        }, 100);
         
         
         // draw emboss effect rect
@@ -1446,10 +1446,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->offsetY = y;
                 cmd->size = Vector2{width, height};
                 cmd->color = Fade(BLACK, 0.3f);
-            });
+            }, 100);
         }
 
-        layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {});
+        layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {}, 100);
     }
 
     auto CalculateCursorPositionWithinFocus(entt::registry *registry, entt::entity e) -> Vector2

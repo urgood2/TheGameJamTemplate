@@ -506,17 +506,7 @@ namespace game
             ui::box::drawAllBoxes(globals::registry, ui_layer);
         }
         
-        // do transform debug drawing
-        {
-            // ZoneScopedN("Transform Debug Draw");
-            auto view = globals::registry.view<transform::Transform>();
-            if (globals::drawDebugInfo)
-                for (auto e : view)
-                {
-                    
-                    transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
-                }
-        }
+        
         
 
         // dynamic text
@@ -525,9 +515,20 @@ namespace game
             auto textView = globals::registry.view<TextSystem::Text>();
             for (auto e : textView)
             {
-                TextSystem::Functions::renderText(e, ui_layer);
+                TextSystem::Functions::renderText(e, ui_layer, true);
             }
         }
+        
+        // do transform debug drawing
+        
+        auto view = globals::registry.view<transform::Transform>();
+        if (globals::drawDebugInfo)
+            for (auto e : view)
+            {
+                
+                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+            }
+    
 
         //TODO: need to test this
         {
@@ -572,20 +573,17 @@ namespace game
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", nullptr);  // render the background layer commands to its main canvas
             }
             
-            {
-                if (rlCheckRenderBatchLimit(3))
-                {
-                    rlEnd();
-                    rlDrawRenderBatchActive(); // push what you have
-                    rlBegin(RL_TRIANGLES);     // start a new batch
-                }
-                // ZoneScopedN("ui layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
-            }
+            
             
             {
                 // ZoneScopedN("sprites layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+            }
+            
+            {
+                
+                // ZoneScopedN("ui layer commands");
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
             }
             
             {

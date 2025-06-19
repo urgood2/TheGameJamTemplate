@@ -234,27 +234,55 @@ function main.init()
         -- Example 1: fixed 2-second tween
         globalShaderUniforms:set("shockwave", "radius", 0)
         timer.tween(
-            5,                                                                     -- duration in seconds
+            5,      -- duration in seconds
             function() return globalShaderUniforms:get("shockwave", "radius") end, -- getter
             function(v) globalShaderUniforms:set("shockwave", "radius", v) end,    -- setter
-            2.0                                                                    -- target_value
+            2, -- target_value
+            "shockwave_tween_radius" -- unique tag for this tween
         )
         
         -- 4 seconds later, call the whale's onclick method
         timer.after(
             4.0, -- delay in seconds
             function()
-                local whale = registry:get(bowser, GameObject)
-                if whale.methods.onClick then
-                    whale.methods.onClick(registry, bowser) -- call the onClick method of the whale
-                end
+                
                 
                 --TODO: add flash pass to the whale, remove it 4 seconds later
                 local whaleShaderPipeline = registry:get(bowser, shader_pipeline.ShaderPipelineComponent)
                 whaleShaderPipeline:addPass("flash") -- add the shockwave pass to the whale
                 
+                -- run something 3 times in a row
                 timer.after(
-                    4.0, -- delay in seconds
+                    0.5, -- delay in seconds
+                    function()
+                        -- call the whale's onclick method
+                        local whaleGameObject = registry:get(bowser, GameObject)
+                        if whaleGameObject.methods.onClick then
+                            whaleGameObject.methods.onClick(registry, bowser)
+                        end
+                    end
+                )
+                timer.after(
+                    1.0, -- delay in seconds
+                    function()
+                        local whaleGameObject = registry:get(bowser, GameObject)
+                        if whaleGameObject.methods.onClick then
+                            whaleGameObject.methods.onClick(registry, bowser)
+                        end
+                    end
+                )
+                timer.after(
+                    1.9, -- delay in seconds
+                    function()
+                        local whaleGameObject = registry:get(bowser, GameObject)
+                        if whaleGameObject.methods.onClick then
+                            whaleGameObject.methods.onClick(registry, bowser)
+                        end
+                    end
+                )
+                
+                timer.after(
+                    6.0, -- delay in seconds
                     function()
                         local whaleShaderPipeline = registry:get(bowser, shader_pipeline.ShaderPipelineComponent)
                         whaleShaderPipeline:removePass("flash") -- remove the shockwave pass from the whale
@@ -315,12 +343,24 @@ function main.init()
     
     sliderTextMoving.config.initFunc = function(registry, entity)
         localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text"))
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text", {currency = math.floor(globals.whale_dust_amount)}))
         end)
     end
-    sliderTextMoving.config.textGetter = function(entity)
-        -- return the text to be displayed
-        return localization.get("ui.currency_text", {currency = globals.whale_dust_amount})
+    sliderTextMoving.config.updateFunc = function(r, entity, dt)
+        local elementUIConfig = registry:get(entity, UIConfig)
+        local objectEntity = elementUIConfig.object
+        if not registry:valid(objectEntity) then
+            return
+        end
+        
+        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
+        
+        
+        local text = localization.get("ui.currency_text", {currency = math.floor(globals.whale_dust_amount)})
+        
+        if (objectTextComp.rawText ~= text) then
+            TextSystem.Functions.setText(objectEntity, text)
+        end
     end
     
     local sliderTemplate = UIElementTemplateNodeBuilder.create()
@@ -553,7 +593,7 @@ function main.init()
         :addProgressBarEmptyColor(util.getColor("WHITE"))
         :addProgressBarFetchValueLamnda(function(entity)
             -- return the timer value for the gravity wave thing
-            debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
+            -- debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
             return (globals.gravityWaveSeconds - globals.timeUntilNextGravityWave) / (timer.get_delay("shockwave_uniform_tween") or globals.gravityWaveSeconds)
         end)
 
@@ -693,7 +733,9 @@ function main.init()
             end)
             :build()
             
-    ):build()
+    )
+    :addChild(rightButtonText)
+    :build()
     
     buttonsTable[#buttonsTable + 1] = rightButton
     

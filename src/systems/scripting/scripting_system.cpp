@@ -10,6 +10,7 @@
 #include "components/graphics.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
 #include "systems/shaders/shader_system.hpp"
+#include "systems/text/textVer2.hpp"
 #include "components/components.hpp"
 
 // pass both the type and value of an argument to a function
@@ -350,6 +351,7 @@ namespace scripting
             register_meta_component<transform::InheritedProperties>();
             register_meta_component<transform::GameObject>();
             register_meta_component<transform::TreeOrderComponent>();
+            register_meta_component<TextSystem::Text>();
             register_meta_component<ui::ObjectAttachedToUITag>();
             register_meta_component<ui::UIElementComponent>();
             register_meta_component<ui::TextInput>();

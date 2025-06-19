@@ -9,7 +9,7 @@
 		"tooltip_text_hover": "Hover for tooltip",
 		"tooltip_title": "Tooltip Title",
 		"currency_text": "Whale Dust: {currency}",
-		"buy_button": "Buy a building",
+		"buy_button": "Buy an upgrade",
 		"building_text": "Next Gravitational Wave"
 	}
 }

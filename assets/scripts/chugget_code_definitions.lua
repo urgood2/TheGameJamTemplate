@@ -5291,8 +5291,8 @@ function timer.update(...) end
 --- Creates a timer that runs an action once immediately.
 ---
 ---@param action fun()
----@param after? fun()
 ---@param tag? string
+---@param after? fun()
 ---@return integer # timerHandle
 function timer.run(...) end
 

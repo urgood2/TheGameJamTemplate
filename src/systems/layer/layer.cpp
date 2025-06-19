@@ -3213,6 +3213,12 @@ namespace layer
 
     void RectangleDraw(float x, float y, float width, float height, const Color &color, float lineWidth)
     {
+        if (rlCheckRenderBatchLimit(3))
+        {
+            rlEnd();
+            rlDrawRenderBatchActive(); // push what you have
+            rlBegin(RL_TRIANGLES);     // start a new batch
+        }
         if (lineWidth == 0.0f)
         {
             DrawRectangle(static_cast<int>(x - width / 2), static_cast<int>(y - height / 2),
@@ -3511,6 +3517,12 @@ namespace layer
 
     void RectanglePro(float offsetX, float offsetY, const Vector2 &size, const Vector2 &rotationCenter, float rotation, const Color &color)
     {
+        if (rlCheckRenderBatchLimit(3))
+                {
+                    rlEnd();
+                    rlDrawRenderBatchActive(); // push what you have
+                    rlBegin(RL_TRIANGLES);     // start a new batch
+                }
         struct Rectangle rect = {offsetX, offsetY, size.x, size.y};
         DrawRectanglePro(
             rect,
@@ -3543,6 +3555,12 @@ namespace layer
 
     void RectangleLinesPro(float offsetX, float offsetY, const Vector2 &size, float lineThickness, const Color &color)
     {
+        if (rlCheckRenderBatchLimit(3))
+                {
+                    rlEnd();
+                    rlDrawRenderBatchActive(); // push what you have
+                    rlBegin(RL_TRIANGLES);     // start a new batch
+                }
         struct Rectangle rect = {offsetX, offsetY, size.x, size.y};
         DrawRectangleLinesEx(
             rect,

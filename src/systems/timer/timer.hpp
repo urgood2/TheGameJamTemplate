@@ -449,9 +449,9 @@ namespace timer
         extern void timer_every(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, int times = 0, bool immediate = false, const std::function<void()> &after = []() {}, const std::string &tag = "");
         extern void timer_every_step(float start_delay, float end_delay, int times, const std::function<void(std::optional<float>)> &action, bool immediate = false, const std::function<float(float)> &step_method = nullptr, const std::function<void()> &after = []() {}, const std::string &tag = "");
         extern void timer_for(std::variant<float, std::pair<float, float>> duration, const std::function<void(std::optional<float>)> &action, const std::function<void()> &after = []() {}, const std::string &tag = "");
-        extern void timer_tween(std::variant<float, std::pair<float, float>> duration, const std::function<float()> &getter, const std::function<void(float)> &setter, float target_value, const std::function<float(float)> &easing_method = [](float t)
+        extern void timer_tween(std::variant<float, std::pair<float, float>> duration, const std::function<float()> &getter, const std::function<void(float)> &setter, float target_value, const std::string &tag = "", const std::function<float(float)> &easing_method = [](float t)
                                                                                                                                                                                            { return t < 0.5 ? 2 * t * t : t * (4 - 2 * t) - 1; }, // Default easing method (ease-in-out quad)
-                                const std::function<void()> &after = []() {}, const std::string &tag = "");
+                                const std::function<void()> &after = []() {});
 
     }
 

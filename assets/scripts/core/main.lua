@@ -248,6 +248,19 @@ function main.init()
                 if whale.methods.onClick then
                     whale.methods.onClick(registry, bowser) -- call the onClick method of the whale
                 end
+                
+                --TODO: add flash pass to the whale, remove it 4 seconds later
+                local whaleShaderPipeline = registry:get(bowser, shader_pipeline.ShaderPipelineComponent)
+                whaleShaderPipeline:addPass("flash") -- add the shockwave pass to the whale
+                
+                timer.after(
+                    4.0, -- delay in seconds
+                    function()
+                        local whaleShaderPipeline = registry:get(bowser, shader_pipeline.ShaderPipelineComponent)
+                        whaleShaderPipeline:removePass("flash") -- remove the shockwave pass from the whale
+                    end,
+                    "whale_flash_after"
+                )
             end,
             "whale_on_click_after"
         )
@@ -356,7 +369,7 @@ function main.init()
     debug(newUIBox)
     debug(uiBoxComp)
     local uiRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
-    newUIBoxTransform.actualX = globals.screenWidth() - uiRootTransform.actualW
+    newUIBoxTransform.actualX = globals.screenWidth() - uiRootTransform.actualW * 1.5
     
     -- local uiBoxRole = registry:get(newUIBox, InheritedProperties)
     -- transform.AssignRole(registry, newUIBox, InheritedPropertiesType.RoleInheritor, globals.gameWorldContainerEntity());
@@ -573,12 +586,52 @@ function main.init()
     -- create a new UI box for the building text
     local buildingTextUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 600}, buildingTextRoot)
     
+    local buildingTextUIBoxTransform = registry:get(buildingTextUIBox, Transform)
+    local buildingTextuiBoxComp = registry:get(buildingTextUIBox, UIBoxComponent)
+    local buildingUiRootTransform = registry:get(buildingTextuiBoxComp.uiRoot, Transform)
+    buildingTextUIBoxTransform.actualX = globals.screenWidth() - buildingUiRootTransform.actualW * 1.5
+    
     -- long row of buttons along the bottom of the screen for the upgrades
     local numButtons = 8
     local buttonWidth = 50
     local buttonHeight = 50
     
     local buttonsTable = {}
+    
+    -- leftbutton
+    local leftButtonText = ui.definitions.getNewDynamicTextEntry(
+            "<",  -- initial text
+            20.0,                                 -- font size
+            nil,                                  -- no style override
+            "pulse=0.9,1.1"                       -- animation spec
+        )
+    local leftButton = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            :addEmboss(2.0)
+            :addShadow(true)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function(registry, entity)
+                -- button click callback
+                debug("!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(leftButtonText)
+    :build()
+    
+    buttonsTable[#buttonsTable + 1] = leftButton
+    
+    
+    
+    
     for i = 1, numButtons do
         -- create a new button text
         local buttonText = ui.definitions.getNewDynamicTextEntry(
@@ -613,6 +666,36 @@ function main.init()
         -- save in the table
         buttonsTable[#buttonsTable + 1] = buttonTemplate
     end
+    
+    -- right button
+    local rightButtonText = ui.definitions.getNewDynamicTextEntry(
+            ">",  -- initial text
+            20.0,                                 -- font size
+            nil,                                  -- no style override
+            "pulse=0.9,1.1"                       -- animation spec
+        )
+    local rightButton = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            :addEmboss(2.0)
+            :addShadow(true)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function(registry, entity)
+                -- button click callback
+                debug("!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+            
+    ):build()
+    
+    buttonsTable[#buttonsTable + 1] = rightButton
     
     dump(buttonsTable)
     
@@ -687,7 +770,7 @@ function main.init()
 
     shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)
     
-    shaderPipelineComp:addPass("flash")
+    -- shaderPipelineComp:addPass("flash")
     shaderPipelineComp:addPass("random_displacement_anim")
     -- shaderPipelineComp:addPass("negative_shine")
 

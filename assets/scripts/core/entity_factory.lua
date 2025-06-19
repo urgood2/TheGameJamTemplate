@@ -82,9 +82,11 @@ function spawnWhaleDust(x, y)
         timer.after(0.8, function()
             -- send it to the top right corner of the screen
             -- local transformComp = registry:get(e, Transform)
+            targetTransform = registry:get(globals.currencyIconForText, Transform)
+            
             transformComp.scale = 1
-            transformComp.actualX = 1300
-            transformComp.actualY = 100
+            transformComp.actualX = targetTransform.actualX
+            transformComp.actualY = targetTransform.actualY
             
         end)
         
@@ -92,6 +94,9 @@ function spawnWhaleDust(x, y)
         -- remove some time later
         timer.after(1.5, function()
             registry:destroy(e)
+            
+            -- make the target jiibble
+            transform.InjectDynamicMotion(globals.currencyIconForText, 1, 50)
         end)
     end
 end

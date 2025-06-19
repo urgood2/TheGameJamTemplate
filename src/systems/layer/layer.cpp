@@ -2895,6 +2895,14 @@ namespace layer
         
         DrawTextureRec(toRender.texture, sourceRect, { 0, 0 }, WHITE);
         
+        // debug rect
+        if (globals::drawDebugInfo) {
+            shader_pipeline::width;
+            shader_pipeline::height;
+            DrawRectangleLines(-pad, -pad, (int)shader_pipeline::width, (int)shader_pipeline::height, RED);
+            DrawText(fmt::format("SHADER PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 10, RED);
+        }
+        
         PopMatrix();
     }
     

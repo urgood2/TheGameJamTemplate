@@ -879,7 +879,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      */
     auto InjectDynamicMotion(entt::registry *registry, entt::entity e, float amount, float rotationAmount) -> void
     {
-
+        SPDLOG_DEBUG("Injecting dynamic motion for entity {} with amount: {}, rotationAmount: {}", static_cast<int>(e), amount, rotationAmount);
         AssertThat(amount >= 0 && amount <= 1, Is().EqualTo(true));
         
         float startTime = GetTime();

@@ -1,5 +1,8 @@
 
 
+function spawnCircularBurstParticles(x, y, count, seconds) 
+    
+end
 function spawnWhaleDust(x, y)
     e = animation_system.createAnimatedObjectWithTransform(
         "whale_dust_anim",
@@ -21,20 +24,28 @@ function spawnWhaleDust(x, y)
     gameObjectState.collisionEnabled = true
     
     gameObjectMethods = nodeComp.methods
-    gameObjectMethods.onClick = function()
+    gameObjectMethods.onClick = function(registry, e)
         
+        debug("whale dust clicked")
         -- spawn a growing circle particle
-        spawnGrowingCircleParticle(x, y, 100, 100, 2.0)
+        spawnCircularBurstParticles(x, y, 10, 1.0)
         
-        -- play sound effect
-        audio.playSound("whale_dust")
+        debug("whale dust motion injected")
+        -- jiggle
+        transform.InjectDynamicMotion(e, 1, 50)
         
-        -- remove the whale dust entity
-        entity_system.removeEntity(e)
+        local transformComp = registry:get(e, Transform)
+        transformComp.scale = 3
+        
+        debug("whale dust remove timer added")
+        -- remove some time later
+        timer.after(0.5, function()
+            registry:destroy(e)
+        end,
+        "whale_dust_remove")
     end
 end
 
-function 
 
 function spawnGrowingCircleParticle(x, y, w, h, seconds)
     local p = particle.CreateParticle(

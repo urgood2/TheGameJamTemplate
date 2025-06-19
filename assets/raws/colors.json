@@ -1498,5 +1498,77 @@
         "g": 223,
         "name": "RESURRECT_PALETTE_LEAFY_GREEN",
         "r": 205
+    },
+    {
+        "auto_generated_uuid": "blue_federal",
+        "b": 69,
+        "family": "JameGam50",
+        "g": 0,
+        "name": "Federal blue",
+        "r": 11
+    },
+    {
+        "auto_generated_uuid": "ultra_violet",
+        "b": 129,
+        "family": "JameGam50",
+        "g": 81,
+        "name": "Ultra Violet",
+        "r": 110
+    },
+    {
+        "auto_generated_uuid": "glaucou",
+        "b": 166,
+        "family": "JameGam50",
+        "g": 110,
+        "name": "Glaucous",
+        "r": 97
+    },
+    {
+        "auto_generated_uuid": "lapi_lazuli",
+        "b": 154,
+        "family": "JameGam50",
+        "g": 103,
+        "name": "Lapis Lazuli",
+        "r": 22
+    },
+    {
+        "auto_generated_uuid": "blue_nc",
+        "b": 181,
+        "family": "JameGam50",
+        "g": 138,
+        "name": "Blue (NCS)",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "green_persian",
+        "b": 154,
+        "family": "JameGam50",
+        "g": 171,
+        "name": "Persian green",
+        "r": 0
+    },
+    {
+        "auto_generated_uuid": "keppel",
+        "b": 167,
+        "family": "JameGam50",
+        "g": 182,
+        "name": "Keppel",
+        "r": 36
+    },
+    {
+        "auto_generated_uuid": "turquoise",
+        "b": 194,
+        "family": "JameGam50",
+        "g": 213,
+        "name": "Turquoise",
+        "r": 18
+    },
+    {
+        "auto_generated_uuid": "blue_tiffany",
+        "b": 218,
+        "family": "JameGam50",
+        "g": 225,
+        "name": "Tiffany Blue",
+        "r": 151
     }
 ]

@@ -55,7 +55,8 @@ namespace scripting {
         auto& rec = BindingRecorder::instance();
         
         // basic lua state initialization
-        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string);
+        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, 
+                                   sol::lib::math);
         
         std::string base1 = util::getRawAssetPathNoUUID("scripts/");
         std::string base2 = util::getRawAssetPathNoUUID("scripts/core");

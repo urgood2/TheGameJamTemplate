@@ -4,7 +4,6 @@ local task = require("task.task")
 require("ai.init") -- Read in ai scripts and populate the ai table
 require("util.util")
 local shader_prepass = require("shaders.prepass_example")
-
 -- Represents game loop main module
 main = {}
 
@@ -80,7 +79,60 @@ local function wrap(v, size, limit)
   end
   
 function main.init()
-    -- -- entity creation example
+    
+    -- Add black hole to the center of the screen
+    black_hole = create_ai_entity("kobold")
+    
+    animation_system.setupAnimatedObjectOnEntity(
+        black_hole,
+        "black_hole_anim", -- Default animation ID
+        false,             -- ? generate a new still animation from sprite, don't set to true, causes bug
+        nil,               -- shader_prepass, -- Optional shader pass config function
+        true               -- Enable shadow
+    )
+    
+    -- make it spin
+    timer.every(
+        0.1, -- every 0.1 seconds
+        function()
+            local transform = registry:get(black_hole, Transform)
+            transform.rotation = transform.rotation + 10 -- rotate by 10 degrees
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "black_hole_spin"
+    )
+    
+    black_hole_transform = registry:get(black_hole, Transform)
+    black_hole_transform.actualX = globals.screenWidth / 2 - black_hole_transform.actualW / 2
+    black_hole_transform.actualY = globals.screenHeight / 2 - black_hole_transform.actualH / 2
+    
+    
+    -- TODO: not working, need to debug why texture particle not showing
+    -- local black_hole_particle = particle.CreateParticle(
+    --     Vec2(black_hole_transform.actualX,black_hole_transform.actualY),             -- world position
+    --     Vec2(300,300),                 -- render size
+    --     {
+    --         renderType = particle.ParticleRenderType.RECTANGLE_LINE,
+    --         velocity   = Vec2(0,0),
+    --         acceleration = 0, 
+    --         lifespan   = -1, -- lives forever
+    --         color = util.getColor("WHITE"),
+    --         rotationSpeed = 360,
+    --         onUpdateCallback = function(particleComp, dt)
+    --             -- make the rotation speed undulate over time
+    --             local frequency = 2.0 -- controls how fast the undulation happens
+    --             local amplitude = 50  -- controls the range of speed variation
+    --             particleComp.rotationSpeed = 360 + math.sin(os.clock() * frequency) * amplitude
+    --             particleComp.scale = 1.0 + math.sin(os.clock() * frequency) * 0.1 -- make it pulse
+                
+    --         end,
+    --     },
+    --     {animationName = "black_hole_particle_anim"} -- optional animation info
+    -- )
+    
+    -- -- create whale
     bowser = create_ai_entity("kobold")      -- Create a new entity of ai type kobold
 
     registry:add_script(bowser, PlayerLogic) -- Attach the script to the entity

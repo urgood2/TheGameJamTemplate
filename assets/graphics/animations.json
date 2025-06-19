@@ -576,6 +576,16 @@
                 "bg_color": "NONE"
             }
         ]
+    },
+    "black_hole_particle_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "star_01.png",
+                "duration_seconds": 5,
+                "fg_color": "WHITE",
+                "bg_color": "NONE"
+            }
+        ]
     }
     
 }

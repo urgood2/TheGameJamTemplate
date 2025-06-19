@@ -12971,6 +12971,9 @@
     "blue_dodger": [
         "DODGER BLUE"
     ],
+    "blue_federal": [
+        "Federal blue"
+    ],
     "blue_file_globbed_krill_packing_pre_whale_with": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\blue-whale-with-krill"
@@ -12999,6 +13002,9 @@
     ],
     "blue_midnight": [
         "MIDNIGHT BLUE"
+    ],
+    "blue_nc": [
+        "Blue (NCS)"
     ],
     "blue_powder": [
         "POWDER BLUE"
@@ -13059,6 +13065,9 @@
     ],
     "blue_steel": [
         "STEEL BLUE"
+    ],
+    "blue_tiffany": [
+        "Tiffany Blue"
     ],
     "blue_violet": [
         "BLUE VIOLET"
@@ -17055,6 +17064,9 @@
     "ghost_white": [
         "GHOST WHITE"
     ],
+    "glaucou": [
+        "Glaucous"
+    ],
     "glitch_pixelated": [
         "pixelated_glitch.vs"
     ],
@@ -17228,6 +17240,9 @@
     ],
     "green_palette_resurrect_spring": [
         "RESURRECT_PALETTE_SPRING_GREEN"
+    ],
+    "green_persian": [
+        "Persian green"
     ],
     "green_sea": [
         "SEA GREEN"
@@ -17449,6 +17464,9 @@
     ],
     "karmella": [
         "Karmella.otf"
+    ],
+    "keppel": [
+        "Keppel"
     ],
     "key_outline_tab": [
         "key_tab_outline.png"
@@ -17922,6 +17940,9 @@
     ],
     "lace_old": [
         "OLD LACE"
+    ],
+    "lapi_lazuli": [
+        "Lapis Lazuli"
     ],
     "lavender": [
         "LAVENDER"
@@ -18685,7 +18706,11 @@
         "TOMATO"
     ],
     "turquoise": [
-        "TURQUOISE"
+        "TURQUOISE",
+        "Turquoise"
+    ],
+    "ultra_violet": [
+        "Ultra Violet"
     ],
     "updater_worldstate": [
         "worldstate_updaters.lua"

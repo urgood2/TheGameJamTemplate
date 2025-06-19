@@ -108,6 +108,10 @@ namespace particle
         particleComp.rotationSpeed = particleData.rotationSpeed.value_or(defaultRotationSpeed);
         particleComp.scale = particleData.scale.value_or(defaultScale);
         particleComp.lifespan = particleData.lifespan.value_or(defaultLifespan);
+        if (particleComp.lifespan.value() <= 0.0f)
+        {
+            particleComp.lifespan.reset(); // make it live forever
+        }
         particleComp.color = particleData.color.value_or(WHITE);
         particleComp.age = particleData.age.value_or(0.0f);
         particleComp.gravity = particleData.gravity.value_or(0.0f);
@@ -235,8 +239,8 @@ namespace particle
             auto &particle = view.get<Particle>(entity);
             auto &transform = registry.get<transform::Transform>(entity);
             particle.age = particle.age.value() + deltaTime;
-
-            if (particle.age.value() >= particle.lifespan.value())
+     
+            if (particle.lifespan && particle.age.value() >= particle.lifespan.value())
             {
                 transform::RemoveEntity(&registry, entity);
                 continue;
@@ -264,8 +268,10 @@ namespace particle
             
             transform.setActualScale(particle.scale.value());
             transform.setVisualScale(particle.scale.value());
+            
+            float lifespan = particle.lifespan.value_or(std::numeric_limits<float>::max());
 
-            float lifeProgress = particle.age.value() / particle.lifespan.value();
+            float lifeProgress = particle.age.value() / lifespan;
             // transform.setActualScale(particle.scale.value() * (1.0f - lifeProgress));
             // transform.setActualScale(particle.scale.value());
             if (particle.startColor.has_value() && particle.endColor.has_value())

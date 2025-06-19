@@ -1353,6 +1353,7 @@ shader_pipeline = {
 ---@class shader_pipeline.ShaderPass
 shader_pipeline.ShaderPass = {
     shaderName = nil, -- string Name of the shader to use for this pass
+    injectAtlasUniforms = nil, -- bool Whether to inject atlas UV uniforms into this pass
     enabled = nil, -- bool Whether this shader pass is enabled
     customPrePassFunction = nil, -- fun() Function to run before activating this pass
 }
@@ -5485,6 +5486,22 @@ function transform.CreateGameWorldContainerEntity(...) end
 ---@param dt number
 ---@return nil
 function transform.UpdateTransformSmoothingFactors(...) end
+
+---
+--- Injects dynamic motion into a transform's springs.
+---
+---@param e Entity
+---@param amount number
+---@param rotationAmount number
+---@return nil
+function transform.InjectDynamicMotion(...) end
+
+---
+--- Injects default dynamic motion into a transform's springs.
+---
+---@param e Entity
+---@return nil
+function transform.InjectDynamicMotionDefault(...) end
 
 ---
 --- Aligns an entity to its master.

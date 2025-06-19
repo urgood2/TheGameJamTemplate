@@ -48,8 +48,25 @@ namespace animation_system {
         );
 
         // createAnimatedObjectWithTransform(defaultAnimationIDOrSpriteUUID: string, generateNewAnimFromSprite?: boolean, x?: number, y?: number, shaderPassConfigFunc?: fun(entt.entity), shadowEnabled?: boolean) -> entt.entity
+    
         rec.bind_function(lua, {"animation_system"}, "createAnimatedObjectWithTransform",
-            &animation_system::createAnimatedObjectWithTransform,
+        // wrapper lambda to coerce Lua numbers → C++ ints and apply defaults
+            [](const std::string & defaultAnimationIDOrSpriteUUID,
+                sol::optional<bool> generateNewAnimFromSprite,
+                sol::optional<double> x,
+                sol::optional<double> y,
+                sol::optional<std::function<void(entt::entity)>> shaderPassConfigFunc,
+                sol::optional<bool> shadowEnabled
+            ) -> entt::entity {
+                return animation_system::createAnimatedObjectWithTransform(
+                    defaultAnimationIDOrSpriteUUID,
+                    generateNewAnimFromSprite.value_or(false),
+                    static_cast<int>(x.value_or(0.0)),    // force integer
+                    static_cast<int>(y.value_or(0.0)),    // force integer
+                    shaderPassConfigFunc.value_or(nullptr),
+                    shadowEnabled.value_or(true)
+                );
+            },
             "---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID\n"
             "---@param generateNewAnimFromSprite boolean? # Create a new anim from sprite? Default false\n"
             "---@param x number? # Initial X position. Default 0\n"

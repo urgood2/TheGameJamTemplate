@@ -934,8 +934,8 @@ namespace input
                     auto &uiElement = registry.get<ui::UIElementComponent>(inputState.cursor_released_on_target);
                     ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
                 }
-                else if (releasedOnTargetNode.methods->onStopHover)
-                    releasedOnTargetNode.methods->onStopHover(registry, inputState.cursor_released_on_target);
+                else if (releasedOnTargetNode.methods.onStopHover)
+                    releasedOnTargetNode.methods.onStopHover(registry, inputState.cursor_released_on_target);
 
                 inputState.current_designated_hover_target = entt::null;
             }
@@ -946,11 +946,11 @@ namespace input
                 ui::element::Release(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
             }
 
-            if (releasedOnTargetNode.methods->onRelease)
+            if (releasedOnTargetNode.methods.onRelease)
             {
                 SPDLOG_DEBUG("Node {} was released on top of {}", static_cast<int>(inputState.cursor_prev_dragging_target), static_cast<int>(inputState.cursor_released_on_target));
 
-                releasedOnTargetNode.methods->onRelease(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
+                releasedOnTargetNode.methods.onRelease(registry, inputState.cursor_released_on_target, inputState.cursor_prev_dragging_target);
             }
             inputState.cursor_released_on_handled = true;
         }
@@ -976,9 +976,9 @@ namespace input
                         auto &uiElement = registry.get<ui::UIElementComponent>(inputState.current_designated_hover_target);
                         ui::element::ApplyHover(registry, inputState.current_designated_hover_target);
                     }
-                    else if (hoverTargetNode.methods->onHover)
+                    else if (hoverTargetNode.methods.onHover)
                     {
-                        hoverTargetNode.methods->onHover(registry, inputState.current_designated_hover_target);
+                        hoverTargetNode.methods.onHover(registry, inputState.current_designated_hover_target);
                     }
                 }
                 // touch input enabled
@@ -998,9 +998,9 @@ namespace input
                                                                 auto &uiElement = registry.get<ui::UIElementComponent>(hoverTargetAsOfNow);
                                                                 ui::element::ApplyHover(registry, hoverTargetAsOfNow);
                                                             }
-                                                            else if (hoverTargetNode.methods->onHover)
+                                                            else if (hoverTargetNode.methods.onHover)
                                                             {
-                                                                hoverTargetNode.methods->onHover(registry, hoverTargetAsOfNow);
+                                                                hoverTargetNode.methods.onHover(registry, hoverTargetAsOfNow);
                                                             }
                                                         } });
 
@@ -1014,9 +1014,9 @@ namespace input
                             auto &uiElement = registry.get<ui::UIElementComponent>(inputState.prev_designated_hover_target);
                             ui::element::StopHover(registry, inputState.prev_designated_hover_target);
                         }
-                        else if (prevHoverTargetNode.methods->onStopHover)
+                        else if (prevHoverTargetNode.methods.onStopHover)
                         {
-                            prevHoverTargetNode.methods->onStopHover(registry, inputState.prev_designated_hover_target);
+                            prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                         }
                     }
                 }
@@ -1031,9 +1031,9 @@ namespace input
                         auto &uiElement = registry.get<ui::UIElementComponent>(inputState.prev_designated_hover_target);
                         ui::element::StopHover(registry, inputState.prev_designated_hover_target);
                     }
-                    else if (prevHoverTargetNode.methods->onStopHover)
+                    else if (prevHoverTargetNode.methods.onStopHover)
                     {
-                        prevHoverTargetNode.methods->onStopHover(registry, inputState.prev_designated_hover_target);
+                        prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                     }
                 }
             }
@@ -1050,9 +1050,9 @@ namespace input
                     auto &uiElement = registry.get<ui::UIElementComponent>(inputState.prev_designated_hover_target);
                     ui::element::StopHover(registry, inputState.prev_designated_hover_target);
                 }
-                else if (prevHoverTargetNode.methods->onStopHover)
+                else if (prevHoverTargetNode.methods.onStopHover)
                 {
-                    prevHoverTargetNode.methods->onStopHover(registry, inputState.prev_designated_hover_target);
+                    prevHoverTargetNode.methods.onStopHover(registry, inputState.prev_designated_hover_target);
                 }
             }
         }
@@ -1064,9 +1064,9 @@ namespace input
         {
             auto &draggingTargetNode = registry.get<transform::GameObject>(inputState.cursor_dragging_target);
             transform::StartDrag(&registry, inputState.cursor_dragging_target, true);
-            if (draggingTargetNode.methods->onDrag)
+            if (draggingTargetNode.methods.onDrag)
             {
-                draggingTargetNode.methods->onDrag(registry, inputState.cursor_dragging_target);
+                draggingTargetNode.methods.onDrag(registry, inputState.cursor_dragging_target);
             }
             else
             {
@@ -1087,9 +1087,9 @@ namespace input
                 auto &uiElement = registry.get<ui::UIElementComponent>(inputState.current_designated_hover_target);
                 ui::element::StopHover(registry, inputState.current_designated_hover_target);
             }
-            else if (hoverTargetNode.methods->onStopHover)
+            else if (hoverTargetNode.methods.onStopHover)
             {
-                hoverTargetNode.methods->onStopHover(registry, inputState.current_designated_hover_target);
+                hoverTargetNode.methods.onStopHover(registry, inputState.current_designated_hover_target);
             }
         }
     }
@@ -1112,9 +1112,9 @@ namespace input
                     SPDLOG_DEBUG("Clicked on checkbox");
                 }
             }
-            else if (clickedTargetNode.methods->onClick)
+            else if (clickedTargetNode.methods.onClick)
             {
-                clickedTargetNode.methods->onClick(registry, inputState.cursor_clicked_target);
+                clickedTargetNode.methods.onClick(registry, inputState.cursor_clicked_target);
             }
             SPDLOG_DEBUG("Clicked on entity {}", static_cast<int>(inputState.cursor_clicked_target));
             inputState.cursor_click_handled = true; // TODO: perhaps rename these to be more intuitive
@@ -1637,7 +1637,7 @@ namespace input
                     auto &transform = registry.get<transform::Transform>(entry.node);
                     auto &nodeComponent = registry.get<transform::GameObject>(entry.node);
 
-                    if (entry.click && nodeComponent.methods->onClick && entry.menu == overlayMenuActive)
+                    if (entry.click && nodeComponent.methods.onClick && entry.menu == overlayMenuActive)
                     {
                         // Check if the node is within the room bounds
                         if (transform.getActualX() > -2 &&
@@ -1647,7 +1647,7 @@ namespace input
                         {
 
                             // Trigger the node's click behavior
-                            nodeComponent.methods->onClick(registry, entry.node);
+                            nodeComponent.methods.onClick(registry, entry.node);
                         }
                         // Reset the click flag
                         entry.click = false;
@@ -3039,7 +3039,7 @@ namespace input
                         auto &childNode = registry.get<transform::GameObject>(*childrenIterator);
                         // click(childrenIterator->second); //Click left option
                         ui::element::Click(registry, *childrenIterator);
-                        // childNode.methods->onClick(registry, childrenIterator->second);
+                        // childNode.methods.onClick(registry, childrenIterator->second);
                         ret = true;
                     }
                     if ((externButton && button == GAMEPAD_BUTTON_RIGHT_TRIGGER_1) || (!externButton && button == dpadRight))
@@ -3049,7 +3049,7 @@ namespace input
                         auto &childNode = registry.get<transform::GameObject>(*childrenIterator);
                         // click(childrenIterator->second); // Click right option
                         ui::element::Click(registry, *childrenIterator);
-                        // childNode.methods->onClick(registry, childrenIterator->second);
+                        // childNode.methods.onClick(registry, childrenIterator->second);
                         ret = true;
                     }
                 }
@@ -3109,7 +3109,7 @@ namespace input
                             auto &choiceNode = registry.get<transform::GameObject>(choices[nextIndex]);
                             // click(choices[nextIndex]); // Simulate clicking the new tab
                             ui::element::Click(registry, choices[nextIndex]);
-                            // choiceNode.methods->onClick(registry, choices[nextIndex]);
+                            // choiceNode.methods.onClick(registry, choices[nextIndex]);
                             SnapToNode(registry, state, choices[nextIndex]); // Snap cursor to new tab
                             UpdateCursor(state, registry);                   // Refresh cursor position
                             return true;

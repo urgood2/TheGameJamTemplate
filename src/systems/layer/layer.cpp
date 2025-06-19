@@ -1568,7 +1568,7 @@ namespace layer
                 // End the currently active texture mode
                 EndTextureMode();
             }
-            SPDLOG_DEBUG("Ending previous render target {} and pushing new target {}", renderStack.empty() ? "none" : std::to_string(renderStack.top().id), target.id);
+            // SPDLOG_DEBUG("Ending previous render target {} and pushing new target {}", renderStack.empty() ? "none" : std::to_string(renderStack.top().id), target.id);
             renderStack.push(target);
             BeginTextureMode(target);
         }
@@ -2697,7 +2697,7 @@ namespace layer
         
         // hacky fix to ensure entities are not fully transparent
         if (fgColor.a == 0) {
-            SPDLOG_WARN("Entity {} has a foreground color with alpha 0. Setting to 255.", (int)e);
+            // SPDLOG_WARN("Entity {} has a foreground color with alpha 0. Setting to 255.", (int)e);
             fgColor = WHITE;
         }
         
@@ -2755,11 +2755,19 @@ namespace layer
             if (!pass.enabled) continue;
     
             Shader shader = shaders::getShader(pass.shaderName);
+            if (!shader.id) {
+                SPDLOG_WARN("Shader {} not found for entity {}", pass.shaderName, (int)e);
+                continue; // skip if shader is not found
+            }
             render_stack_switch_internal::Push(shader_pipeline::back());
             ClearBackground({0, 0, 0, 0});
-            AssertThat(shader.id, IsGreaterThan(0));
+            if (pass.injectAtlasUniforms) {
+                injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
+            }
             BeginShaderMode(shader);
             if (pass.customPrePassFunction) pass.customPrePassFunction();
+            //TODO: auto inject sprite atlas texture dims and sprite rect here 
+            // injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
             TryApplyUniforms(shader, globals::globalShaderUniforms, pass.shaderName);
             DrawTextureRec(shader_pipeline::front().texture, {0, 0, (float)renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE); // invert Y 
     
@@ -2772,7 +2780,13 @@ namespace layer
         }
     
         // // 🔵 Save post-pass result
-        RenderTexture2D postPassRender = *shader_pipeline::GetLastRenderTarget(); // id 6 is now the result of all passes
+        RenderTexture2D postPassRender = {}; // id 6 is now the result of all passes
+        if (!shader_pipeline::GetLastRenderTarget()) {
+            shader_pipeline::SetLastRenderTarget(shader_pipeline::front()); // if no passes, we use the front texture
+            postPassRender = shader_pipeline::front();
+        } else {
+            postPassRender = *shader_pipeline::GetLastRenderTarget(); // if there are passes, we use the last render target
+        }
         
         // 🟡 Save post shader pass sprite result
         RenderTexture2D postProcessRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
@@ -2781,7 +2795,7 @@ namespace layer
         DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
         render_stack_switch_internal::Pop();
         
-        DrawTexture(postPassRender.texture, 90, 30, WHITE);
+        // DrawTexture(postPassRender.texture, 90, 30, WHITE);
     
         // // 4. Overlay draws
         for (const auto& overlay : pipelineComp.overlayDraws) {
@@ -2793,6 +2807,7 @@ namespace layer
             ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
+            // injectAtlasUniforms(globals::globalShaderUniforms, overlay.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
             TryApplyUniforms(shader, globals::globalShaderUniforms, overlay.shaderName);
     
             RenderTexture2D& source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite) ? baseSpriteRender : postPassRender;

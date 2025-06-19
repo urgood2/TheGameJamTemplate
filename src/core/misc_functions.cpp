@@ -21,6 +21,18 @@ namespace game
         // pre-load shader values for later use
 
 
+        // one-time defaults
+        globalShaderUniforms.set("random_displacement_anim", "interval",   0.5f);
+        globalShaderUniforms.set("random_displacement_anim", "timeDelay",  1.4f);
+        globalShaderUniforms.set("random_displacement_anim", "intensityX", 4.0f);
+        globalShaderUniforms.set("random_displacement_anim", "intensityY", 4.0f);
+        globalShaderUniforms.set("random_displacement_anim", "seed",       42.0f);
+
+        // every frame, drive the time
+        shaders::registerUniformUpdate("random_displacement_anim", [](Shader &shader) {
+            globalShaderUniforms.set("random_displacement_anim", "iTime", (float)GetTime());
+        });
+
         
         globalShaderUniforms.set("pixelated_image", "texSize",
             Vector2{ (float)globals::screenWidth, (float)globals::screenHeight });

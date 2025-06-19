@@ -16,8 +16,11 @@ namespace shader_pipeline {
         std::string shaderName;
         bool enabled = true;
         
+        
         // custom lamdna for this shader pass, run before activatingt the shader for this pass
         std::function<void()> customPrePassFunction{};
+        
+        bool injectAtlasUniforms = false; // whether to inject atlas uniforms into this pass
 
 
     };
@@ -38,8 +41,9 @@ namespace shader_pipeline {
         float padding = 15.f; // Default padding for each side
 
         // Add a new shader pass (enabled by default)
-        void addPass(std::string_view name) {
+        ShaderPass addPass(std::string_view name) {
             passes.emplace_back(ShaderPass{std::string(name), true, nullptr});
+            return passes.back();
         }
 
         // Remove a pass by name
@@ -61,9 +65,10 @@ namespace shader_pipeline {
         }
 
         // Add a new overlay draw
-        void addOverlay(OverlayInputSource src, std::string_view name,
+        ShaderOverlayDraw addOverlay(OverlayInputSource src, std::string_view name,
                         BlendMode blend = BlendMode::BLEND_ALPHA) {
             overlayDraws.emplace_back(ShaderOverlayDraw{src, std::string(name), nullptr, blend, true});
+            return overlayDraws.back();
         }
 
         // Remove an overlay by shader name
@@ -216,6 +221,7 @@ namespace shader_pipeline {
             sol::constructors<>(),
             "shaderName",            &shader_pipeline::ShaderPass::shaderName,
             "enabled",               &shader_pipeline::ShaderPass::enabled,
+            "injectAtlasUniforms", &shader_pipeline::ShaderPass::injectAtlasUniforms,
             "customPrePassFunction", &shader_pipeline::ShaderPass::customPrePassFunction,
             "type_id", []() { return entt::type_hash<shader_pipeline::ShaderPass>::value(); }
         );
@@ -223,6 +229,8 @@ namespace shader_pipeline {
         .doc = "Defines a single shader pass.";
         rec.record_property("shader_pipeline.ShaderPass",
             { "shaderName", "string", "Name of the shader to use for this pass" });
+        rec.record_property("shader_pipeline.ShaderPass",
+            { "injectAtlasUniforms", "bool", "Whether to inject atlas UV uniforms into this pass" });
         rec.record_property("shader_pipeline.ShaderPass",
             { "enabled", "bool", "Whether this shader pass is enabled" });
         rec.record_property("shader_pipeline.ShaderPass",
@@ -273,7 +281,25 @@ namespace shader_pipeline {
             "overlayDraws",  &shader_pipeline::ShaderPipelineComponent::overlayDraws,
             "padding",       &shader_pipeline::ShaderPipelineComponent::padding,
             // new methods
-            "addPass",       &shader_pipeline::ShaderPipelineComponent::addPass,
+            "addPass", sol::overload(
+                // 1) original single-string version
+                
+                &shader_pipeline::ShaderPipelineComponent::addPass,
+
+                // 2) string+bool version, via a lambda
+                [](shader_pipeline::ShaderPipelineComponent &self,
+                const std::string &name,
+                bool injectAtlasUniforms)
+                {
+                    // call the existing addPass(name)
+                    self.addPass(name);
+                    // tweak the just-added pass (assumes passes is a vector)
+                    auto &p = self.passes.back();
+                    p.injectAtlasUniforms = injectAtlasUniforms;
+                    // return the pass for convenience
+                    return p;
+                }
+            ),
             "removePass",    &shader_pipeline::ShaderPipelineComponent::removePass,
             "togglePass",    &shader_pipeline::ShaderPipelineComponent::togglePass,
             "addOverlay",    &shader_pipeline::ShaderPipelineComponent::addOverlay,

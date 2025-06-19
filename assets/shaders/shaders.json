@@ -205,5 +205,14 @@
             "vertex": "web/pixelate_image_vertex.vs",
             "fragment": "web/pixelate_image_fragment.fs"
         }
+    },
+    "random_displacement_anim": {
+        "vertex": "random_displacement_anim_vertex.vs",
+        "fragment": "random_displacement_anim_fragment.fs",
+
+        "web": {
+            "vertex": "web/random_displacement_anim_vertex.vs",
+            "fragment": "web/random_displacement_anim_fragment.fs"
+        }
     }
 }

@@ -135,7 +135,7 @@ namespace transform
     auto setJiggleOnHover(entt::registry *registry, entt::entity e, float jiggleAmount) -> void
     {
         auto &node = registry->get<GameObject>(e);
-        node.methods->onHover = [jiggleAmount](entt::registry &registry, entt::entity e) {
+        node.methods.onHover = [jiggleAmount](entt::registry &registry, entt::entity e) {
             transform::InjectDynamicMotion(&registry, e, jiggleAmount, 1.f);
         };
     }
@@ -173,8 +173,8 @@ namespace transform
         if (registry->valid(e) == false) return; 
         
         auto &node = registry->get<transform::GameObject>(e);
-        if (node.methods->onClick) {
-            node.methods->onClick(*registry, e);
+        if (node.methods.onClick) {
+            node.methods.onClick(*registry, e);
         }
     }
     
@@ -184,8 +184,8 @@ namespace transform
         if (registry->valid(e) == false) return;
         
         auto &node = registry->get<transform::GameObject>(e);
-        if (node.methods->onRelease) {
-            node.methods->onRelease(*registry, e, entt::null);
+        if (node.methods.onRelease) {
+            node.methods.onRelease(*registry, e, entt::null);
         }
     }
 
@@ -205,16 +205,16 @@ namespace transform
                 if (globals::drawDebugInfo)
                     DrawBoundingBoxAndDebugInfo(registry, child, layer);
                 auto &childNode = registry->get<GameObject>(child);
-                if (childNode.state.visible  && childNode.state.visible && childNode.methods->draw) {
-                    childNode.methods->draw(layer, *registry, child);
+                if (childNode.state.visible  && childNode.state.visible && childNode.methods.draw) {
+                    childNode.methods.draw(layer, *registry, child);
                 }
                 
             }
         }
         
         // custom drawing if there is any
-        if (node.methods->draw) {
-            node.methods->draw(layer, *registry, e);
+        if (node.methods.draw) {
+            node.methods.draw(layer, *registry, e);
         }
     }
 
@@ -1194,7 +1194,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         node.state.isColliding = false; // clear flag
         
         // call custom update function if it exists
-        if (node.methods->update) node.methods->update(*registry, e, dt);
+        if (node.methods.update) node.methods.update(*registry, e, dt);
     }
 
     auto SnapTransformValues(entt::registry *registry, entt::entity e, float x, float y, float w, float h) -> void
@@ -1901,8 +1901,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
         
         // custom drag logic
-        if (node.methods->onDrag) {
-            node.methods->onDrag(*registry, e);
+        if (node.methods.onDrag) {
+            node.methods.onDrag(*registry, e);
         }
     }
     
@@ -1944,9 +1944,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &node = registry->get<GameObject>(e);
         
         // use handler if it exists
-        if (node.methods->getObjectToDrag)
+        if (node.methods.getObjectToDrag)
         {
-            return node.methods->getObjectToDrag(*registry, e);
+            return node.methods.getObjectToDrag(*registry, e);
         }
         
         if (node.state.dragEnabled) return e;
@@ -1980,8 +1980,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         node.orderedChildren.erase(it, node.orderedChildren.end());
         
         // custom stop drag logic
-        if (node.methods->onStopDrag) {
-            node.methods->onStopDrag(*registry, e);
+        if (node.methods.onStopDrag) {
+            node.methods.onStopDrag(*registry, e);
         }
     }
 
@@ -2015,8 +2015,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         
         // custom start hover logic
-        if (node.methods->onHover) {
-            node.methods->onHover(*registry, e);
+        if (node.methods.onHover) {
+            node.methods.onHover(*registry, e);
         }
     }
 
@@ -2044,8 +2044,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         node.children.erase("h_popup");
         
         // custom stop hover logic
-        if (node.methods->onStopHover) {
-            node.methods->onStopHover(*registry, e);
+        if (node.methods.onStopHover) {
+            node.methods.onStopHover(*registry, e);
         }
         
     }
@@ -2521,6 +2521,19 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     transform_tbl.set_function("UpdateTransformSmoothingFactors", &transform::UpdateTransformSmoothingFactors);
     rec.record_free_function({"transform"}, {"UpdateTransformSmoothingFactors", "---@param registry registry\n---@param e Entity\n---@param dt number\n---@return nil", "Updates spring smoothing factors for a transform.", true, false});
+    
+    transform_tbl.set_function("InjectDynamicMotion", 
+        [](entt::entity e, float amount, float rotationAmount) {
+            transform::InjectDynamicMotion(&globals::registry, e, amount, rotationAmount);
+        }
+    );
+    transform_tbl.set_function("InjectDynamicMotionDefault", 
+        [](entt::entity e) {
+            transform::InjectDynamicMotion(&globals::registry, e, 1.0f, 0.0f);
+        }
+    );
+    rec.record_free_function({"transform"}, {"InjectDynamicMotion", "---@param e Entity\n---@param amount number\n---@param rotationAmount number\n---@return nil", "Injects dynamic motion into a transform's springs.", true, false});
+    rec.record_free_function({"transform"}, {"InjectDynamicMotionDefault", "---@param e Entity\n---@return nil", "Injects default dynamic motion into a transform's springs.", true, false});
 
     transform_tbl.set_function("AlignToMaster", &transform::AlignToMaster);
     rec.record_free_function({"transform"}, {"AlignToMaster", "---@param registry registry\n---@param e Entity\n---@param force? boolean\n---@return nil", "Aligns an entity to its master.", true, false});

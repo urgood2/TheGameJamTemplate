@@ -660,7 +660,7 @@ namespace ui_defs
                         gameObject.state.clickEnabled = true;
                         gameObject.state.enlargeOnHover = false;
                         gameObject.state.enlargeOnDrag = false;
-                        gameObject.methods->onHover = nullptr; // no jiggle
+                        gameObject.methods.onHover = nullptr; // no jiggle
                         
                         // gameObject.state.hoverEnabled = true;
                     })
@@ -1178,7 +1178,7 @@ namespace ui_defs
                         SPDLOG_DEBUG("Grid rect init called for entity: {}", (int)e);
                         
                         
-                        gameObjectComp.methods->onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
+                        gameObjectComp.methods.onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
                         {
                             SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
                             

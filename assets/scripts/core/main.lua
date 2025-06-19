@@ -4,6 +4,7 @@ local task = require("task.task")
 require("ai.init") -- Read in ai scripts and populate the ai table
 require("util.util")
 local shader_prepass = require("shaders.prepass_example")
+require("core.entity_factory")
 -- Represents game loop main module
 main = {}
 
@@ -90,6 +91,9 @@ function main.init()
         nil,               -- shader_prepass, -- Optional shader pass config function
         true               -- Enable shadow
     )
+    
+    blackholePipeline = registry:emplace(black_hole, shader_pipeline.ShaderPipelineComponent)
+    blackHoleAnimPass = blackholePipeline:addPass("random_displacement_anim", true)-- inject atlas uniforms into the shader pass to allow it to be atlas aware
     
     -- make it spin
     timer.every(
@@ -180,6 +184,11 @@ function main.init()
             30,
             30
         )
+        
+        -- kril shaders
+        shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
+    
+        -- shaderPipelineComp:addPass("random_displacement_anim")
 
         -- 3) Randomize its start position
         local tr = registry:get(kr, Transform)
@@ -208,6 +217,7 @@ function main.init()
     -- add_fullscreen_shader("flash")
     add_fullscreen_shader("shockwave")
     add_fullscreen_shader("tile_grid_overlay") -- to show tile grid
+    
 
     -- add shader to specific layer
 
@@ -329,10 +339,25 @@ function main.init()
     gameObjectState.hoverEnabled = true
     gameObjectState.dragEnabled = true
     gameObjectState.collisionEnabled = true
+    
+    local methods = nodeComp.methods
+    
+    debug (methods)
+    methods.onClick = function(registry, e) 
+        debug("whale clicked!")
+        
+        transform.InjectDynamicMotion(e, 1, 90) -- add dynamic motion to the whale
+        
+        local transformComp = registry:get(e, Transform)
+        
+        spawnWhaleDust(transformComp.actualX + random_utils.random_int(-50, 50),
+                        transformComp.actualY + random_utils.random_int(-50, 50))
+    end
 
     shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)
     
     shaderPipelineComp:addPass("flash")
+    -- shaderPipelineComp:addPass("random_displacement_anim")
     -- shaderPipelineComp:addPass("negative_shine")
 
     transformComp.actualX = 800
@@ -349,6 +374,8 @@ function main.init()
 
         
     end, 0, true, nil, "bowser_timer")
+    
+    -- every now and then, make the whale sing.
 
     -- add a task to the scheduler that will fade out the screen for 5 seconds
     local p1 = {

@@ -224,6 +224,36 @@ namespace shaders
             ApplyUniformsToShader(shader, *uniformSet);
         }
     }
+    
+    /// Injects atlas UV parameters into your ShaderUniformComponent
+    inline void injectAtlasUniforms(
+        ShaderUniformComponent & component,
+        const std::string      & shaderName,
+        const Rectangle       & gridRect,   // x, y, width, height in pixels
+        const Vector2         & imageSize)  // atlasWidth, atlasHeight
+    {
+        // pack the rect: (x, y, w, h)
+        component.set(
+            shaderName,
+            "uGridRect",
+            Vector4{ gridRect.x,
+                                gridRect.y,
+                                gridRect.width,
+                                gridRect.height }
+        );
+
+        // pack the atlas size: (atlasW, atlasH)
+        component.set(
+            shaderName,
+            "uImageSize",
+            Vector2{ imageSize.x,
+                                imageSize.y }
+        );
+        
+        // SPDLOG_DEBUG("Injected atlas uniforms for shader '{}': gridRect=({}, {}, {}, {}), imageSize=({}, {})",
+        //            shaderName, gridRect.x, gridRect.y, gridRect.width, gridRect.height, imageSize.x, imageSize.y);
+    }
+
 
     extern auto loadShadersFromJSON(std::string jsonPath) -> void;
     extern auto unloadShaders() -> void;

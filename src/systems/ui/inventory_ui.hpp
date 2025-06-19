@@ -71,7 +71,7 @@ namespace ui {
             itemGameObject.state.collisionEnabled = true;
             
             // add detection on drag release
-            itemGameObject.methods->onRelease = [newAreaEntity, itemEntity](entt::registry &registry, entt::entity entity, entt::entity entity2) { // REVIEW: not sure what the second one is?
+            itemGameObject.methods.onRelease = [newAreaEntity, itemEntity](entt::registry &registry, entt::entity entity, entt::entity entity2) { // REVIEW: not sure what the second one is?
 
                 
                 SPDLOG_DEBUG("Item {} released in inventory", static_cast<int>(itemEntity));

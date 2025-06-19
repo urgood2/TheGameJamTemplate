@@ -150,7 +150,7 @@ namespace transform
          */
         using MethodTable = std::unordered_map<std::string, std::any>;
 
-        std::optional<Methods> methods;
+        Methods methods;
         MethodTable inheritedMethods;
 
         // TODO: probably need to go through all files and replace references which were originally v.draw(), v.drawself(), and so on

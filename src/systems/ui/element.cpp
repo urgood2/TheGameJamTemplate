@@ -2060,9 +2060,9 @@ namespace ui
         }
 
         // Step 4: Call the base Node hover function
-        if (node->methods->onHover)
+        if (node->methods.onHover)
         {
-            node->methods->onHover(registry, entity);
+            node->methods.onHover(registry, entity);
         }
     }
 
@@ -2074,9 +2074,9 @@ namespace ui
         AssertThat(node, Is().Not().EqualTo(nullptr));
         AssertThat(uiConfig, Is().Not().EqualTo(nullptr));
 
-        if (node->methods->onStopHover)
+        if (node->methods.onStopHover)
         {
-            node->methods->onStopHover(registry, entity);
+            node->methods.onStopHover(registry, entity);
         }
         
         SPDLOG_DEBUG("StopHover(): Stopping hover for entity: {}", static_cast<int>(entity));
@@ -2095,9 +2095,9 @@ namespace ui
 
         // TODO: question, should this call release on the corresponding node? Assuming so, since ui elements are also nodes and transforms.
         // TODO: other seems to be the object being dragged, if any.
-        if (node->methods->onRelease)
+        if (node->methods.onRelease)
         {
-            node->methods->onRelease(registry, entity, objectBeingDragged);
+            node->methods.onRelease(registry, entity, objectBeingDragged);
         }
         
         if (uiElement && registry.valid(*node->parent))

@@ -411,7 +411,7 @@ function main.init()
     debug(newUIBox)
     debug(uiBoxComp)
     local uiRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
-    newUIBoxTransform.actualX = globals.screenWidth() - uiRootTransform.actualW * 1.5
+    newUIBoxTransform.actualX = globals.screenWidth() - uiRootTransform.actualW
     
     -- TODO: test aligning to the inside of the game world container with a delay to let the update run
     timer.after(
@@ -439,6 +439,20 @@ function main.init()
         nil,                                  -- no style override
         "bump"                       -- animation spec
     )
+    
+    -- debug location
+    
+    timer.every(
+        3, 
+        function()
+            local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
+            debug("Prestige UI Box position: actualX = ", uibox_transform.actualX, " actualY = ", uibox_transform.actualY, " screenHeight = ", globals.screenHeight(), " uibox height = ", uibox_transform.actualH, " uibox width = ", uibox_transform.actualW)
+        end,
+        0, -- infinite repetitions
+        false, -- start immediately
+        nil, -- no "after" callback
+        "prestige_button_UIBOX_update_position_debug"
+    )
 
     local prestigeButtonDef = UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -453,19 +467,20 @@ function main.init()
                 debug("Prestige button clicked!")
                 local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
 
-                uibox_transform.actualY = uibox_transform.actualY + 300
+                -- uibox_transform.actualY = uibox_transform.actualY + 300
 
-                -- if globals.ui.prestige_window_open then
-                --     -- close the prestige window
-                --     globals.ui.prestige_window_open = false                    
-                --     uibox_transform.actualY = globals.screenHeight() + 900
-                -- else
-                --     -- open the prestige window
-                --     globals.ui.prestige_window_open = true
-                --     uibox_transform.actualY = 0
-                --     debug("actualY = ", uibox_transform.actualY, " screenHeight = ", globals.screenHeight(), " uibox height = ", uibox_transform.actualH, " uibox width = ", uibox_transform.actualW)
+                if globals.ui.prestige_window_open then
+                    -- close the prestige window
+                    globals.ui.prestige_window_open = false                    
+                    uibox_transform.actualY = globals.screenHeight() + 900
+                    debug("actualY = ", uibox_transform.actualY, " screenHeight = ", globals.screenHeight(), " uibox height = ", uibox_transform.actualH, " uibox width = ", uibox_transform.actualW)
+                else
+                    -- open the prestige window
+                    globals.ui.prestige_window_open = true
+                    uibox_transform.actualY = 0
+                    debug("actualY = ", uibox_transform.actualY, " screenHeight = ", globals.screenHeight(), " uibox height = ", uibox_transform.actualH, " uibox width = ", uibox_transform.actualW)
 
-                -- end
+                end
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)

@@ -284,7 +284,7 @@ namespace ui
         
         // TODO: iterate through all children, save the sizes at scale = 1 for later use
 
-        transform::AlignToMaster(&registry, self);
+        // transform::AlignToMaster(&registry, self);
 
         uiRootRole.offset = uiBoxRole->offset;
 

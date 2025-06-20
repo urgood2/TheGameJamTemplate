@@ -68,6 +68,12 @@ function spawnWhaleDust(x, y)
         local centerY = tc.visualY + tc.visualH * 0.5
         -- spawn a growing circle particle
         
+        local gameObjectComp = registry:get(e, GameObject)
+        -- remove the click and hover enabled state
+        gameObjectComp.state.clickEnabled = false
+        gameObjectComp.state.hoverEnabled = false
+        gameObjectComp.state.collisionEnabled = false
+        
         spawnGrowingCircleParticle(centerX, centerY, 100, 100, 0.2)
         
         debug("whale dust motion injected")

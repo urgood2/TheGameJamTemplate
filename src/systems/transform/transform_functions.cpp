@@ -221,6 +221,10 @@ namespace transform
     // not exposed publicly
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
+        if (registry->any_of<ui::UIBoxComponent>(e))
+        {
+            SPDLOG_DEBUG("AlignToMaster called for UIBoxComponent of entity {}", static_cast<int>(e));
+        }
         // ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
         auto &role = registry->get<InheritedProperties>(e);
@@ -1087,7 +1091,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         else if (role.role_type == InheritedProperties::Type::RoleInheritor)
         {
             // ZoneScopedN("RoleInheritor");
-            if (registry->valid(role.master))
+            if (registry->valid(role.master) && e != role.master) // don't move with self please
             {
                 
                 // recursively move on parent
@@ -1329,6 +1333,20 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         // check if buffer is full and if so, flush batch
         
+        if (node.debug.debugText)
+        {
+            // does debug text contain "uibox"?
+            // if (node.debug.debugText.value().find("UIBox") != std::string::npos)
+            // {
+            //     SPDLOG_DEBUG("Debug text contains 'uibox' for entity {}", static_cast<int>(e));
+            //     SPDLOG_DEBUG("UIbox location: x: {}, y: {}, w: {}, h: {}", 
+            //                 transform.getVisualX(), 
+            //                 transform.getVisualY(), 
+            //                 transform.getVisualW(), 
+            //                 transform.getVisualH());
+                            
+            // }
+        }
 
         layer::QueueCommand<layer::CmdPushMatrix>(layer, [](layer::CmdPushMatrix *cmd) {
             // Push the current matrix onto the stack
@@ -1363,19 +1381,25 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (node.debug.debugText)
         {
-            
+            bool bumpTextUp = false;
+            // does debug text contain "uibox"?
+            if (registry->any_of<ui::UIBoxComponent>(e))
+            {
+                // if so, bump text up
+                bumpTextUp = true;
+            }
             float textWidth = MeasureText(node.debug.debugText.value().c_str(), 15 * scale);
-            layer::QueueCommand<layer::CmdTextPro>(layer, [text = node.debug.debugText.value(), font = GetFontDefault(), textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH()](layer::CmdTextPro *cmd) {
+            layer::QueueCommand<layer::CmdTextPro>(layer, [text = node.debug.debugText.value(), font = GetFontDefault(), textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH(), bumpTextUp](layer::CmdTextPro *cmd) {
                 cmd->text = text.c_str();
                 cmd->font = font;
                 cmd->x = visualW / 2 - textWidth / 2;
-                cmd->y = - visualH * 0.05f;
+                cmd->y = bumpTextUp? - visualH * 0.1f : - visualH * 0.05f;
                 cmd->origin = {0, 0};
                 cmd->rotation = 0;
                 cmd->fontSize = 15 * scale;
                 cmd->spacing = 1.0f;
                 cmd->color = WHITE;
-            }), 100;
+            }, 100);
         }
         else {
             // If ui, get ui type + entity number

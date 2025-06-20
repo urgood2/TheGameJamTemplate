@@ -440,19 +440,6 @@ function main.init()
         "bump"                       -- animation spec
     )
     
-    -- debug location
-    
-    timer.every(
-        3, 
-        function()
-            local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
-            debug("Prestige UI Box position: actualX = ", uibox_transform.actualX, " actualY = ", uibox_transform.actualY, " screenHeight = ", globals.screenHeight(), " uibox height = ", uibox_transform.actualH, " uibox width = ", uibox_transform.actualW)
-        end,
-        0, -- infinite repetitions
-        false, -- start immediately
-        nil, -- no "after" callback
-        "prestige_button_UIBOX_update_position_debug"
-    )
 
     local prestigeButtonDef = UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -472,13 +459,11 @@ function main.init()
                 if globals.ui.prestige_window_open then
                     -- close the prestige window
                     globals.ui.prestige_window_open = false                    
-                    uibox_transform.actualY = globals.screenHeight() + 900
-                    debug("actualY = ", uibox_transform.actualY, " screenHeight = ", globals.screenHeight(), " uibox height = ", uibox_transform.actualH, " uibox width = ", uibox_transform.actualW)
+                    uibox_transform.actualY = globals.screenHeight()
                 else
                     -- open the prestige window
                     globals.ui.prestige_window_open = true
-                    uibox_transform.actualY = 0
-                    debug("actualY = ", uibox_transform.actualY, " screenHeight = ", globals.screenHeight(), " uibox height = ", uibox_transform.actualH, " uibox width = ", uibox_transform.actualW)
+                    uibox_transform.actualY = globals.screenHeight() / 2 - uibox_transform.actualH / 2
 
                 end
             end)
@@ -509,6 +494,11 @@ function main.init()
     :build()
     -- create a new UI box for the prestige button
     local prestigeButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 450}, prestigeButtonRoot)
+    
+    -- right-align the prestige button UI box
+    local prestigeButtonTransform = registry:get(prestigeButtonUIBox, Transform)
+    prestigeButtonTransform.actualX = globals.screenWidth() - prestigeButtonTransform.actualW -- 10 pixels from the right edge
+    
 
 
     -- prestige upgrades window
@@ -543,6 +533,39 @@ function main.init()
 
         return buttonTemplate
     end
+    
+    -- make a red X button 
+    local closeButtonText = ui.definitions.getNewDynamicTextEntry(
+        "Close",  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    -- make a new close button template
+    local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("RED"))
+            :addEmboss(2.0)
+            :addShadow(true)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- close the prestige window
+                debug("Prestige window close button clicked!")
+                globals.ui.prestige_window_open = false
+                local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
+                uibox_transform.actualY = globals.screenHeight()  -- move it out of the screen
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_TOP)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(closeButtonText)
+    :build()
+    
     
     -- vertical container for the prestige upgrades
     local prestigeUpgradesContainer = UIElementTemplateNodeBuilder.create()
@@ -587,6 +610,7 @@ function main.init()
             debug("Prestige upgrade 5 clicked!")
         end
     ))
+    :addChild(closeButtonTemplate)
     :build()
 
     -- uibox for the prestige upgrades
@@ -608,6 +632,10 @@ function main.init()
 
     -- create a new UI box for the prestige upgrades
     globals.ui.prestige_uibox = ui.box.Initialize({x = 350, y = 400}, prestigeUpgradesContainerRoot)
+    
+    -- center the ui box X-axi
+    local prestigeUiboxTransform = registry:get(globals.ui.prestige_uibox, Transform)
+    prestigeUiboxTransform.actualX = globals.screenWidth() / 2 - prestigeUiboxTransform.actualW / 2
 
 
 
@@ -663,6 +691,10 @@ function main.init()
     
     -- create a new UI box for the buy button
     local buyButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, buyButtonRoot)
+    
+    -- right align the buy button UI box
+    local buyButtonTransform = registry:get(buyButtonUIBox, Transform)
+    buyButtonTransform.actualX = globals.screenWidth() - buyButtonTransform.actualW 
     
     
     -- ui for the buildings
@@ -820,14 +852,16 @@ function main.init()
     
     -- create a new UI box for the building text
     local buildingTextUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 600}, buildingTextRoot)
+
     
     local buildingTextUIBoxTransform = registry:get(buildingTextUIBox, Transform)
-    local buildingTextuiBoxComp = registry:get(buildingTextUIBox, UIBoxComponent)
-    local buildingUiRootTransform = registry:get(buildingTextuiBoxComp.uiRoot, Transform)
-    buildingTextUIBoxTransform.actualX = globals.screenWidth() - buildingUiRootTransform.actualW * 1.5
+    -- right align the building text UI box
+    buildingTextUIBoxTransform.actualX = globals.screenWidth() - buildingTextUIBoxTransform.actualW
     
-    -- long row of buttons along the bottom of the screen for the upgrades
-    local numButtons = 8
+    local function updateSelectorTemplate(upgradeButtonText, numUpgrades) 
+        
+        -- long row of buttons along the bottom of the screen for the upgrades
+    local numButtons = numUpgrades
     local buttonWidth = 50
     local buttonHeight = 50
     
@@ -865,12 +899,10 @@ function main.init()
     buttonsTable[#buttonsTable + 1] = leftButton
     
     
-    
-    
     for i = 1, numButtons do
         -- create a new button text
         local buttonText = ui.definitions.getNewDynamicTextEntry(
-            "UP" .. i,  -- initial text
+            upgradeButtonText .. i,  -- initial text
             20.0,                                 -- font size
             nil,                                  -- no style override
             "pulse=0.9,1.1"                       -- animation spec
@@ -973,14 +1005,35 @@ function main.init()
     )
     :addChild(buttonsRow)
     :build()
-    -- create a new UI box for the buttons row
-    local buttonsRowUIBox = ui.box.Initialize({x = 0, y = globals
-.screenHeight() - 85}, buttonsRowRoot)
     
-
-    ui.box.RenewAlignment(registry, 
-    buttonsRowUIBox    )
-
+    return buttonsRowRoot
+        
+    end
+    -- create a new UI box for the buttons row
+    local upgradeRowUIBox = ui.box.Initialize({}, updateSelectorTemplate(
+        localization.get("ui.upgrade_button"),  -- initial text
+        1 -- number of upgrades
+    ))
+    
+    
+    -- bottom-align the buttons row UI box
+    local buttonsRowTransform = registry:get(upgradeRowUIBox, Transform)
+    buttonsRowTransform.actualX = globals.screenWidth() / 2 - buttonsRowTransform.actualW / 2 -- center it on the X-axis
+    buttonsRowTransform.actualY = globals.screenHeight() - buttonsRowTransform.actualH -- 10 pixels from the bottom edge
+    
+    
+    -- new ui box for buildings row
+    local buildingsRowUIBox = ui.box.Initialize({}, updateSelectorTemplate(
+        localization.get("ui.building_button"),  -- initial text
+        1 -- number of buildings
+    ))
+    
+    -- bottom align, but stack on top of the buttons row UI box
+    local buildingsRowTransform = registry:get(buildingsRowUIBox, Transform)
+    buildingsRowTransform.actualX = globals.screenWidth() / 2 - buildingsRowTransform.actualW / 2 -- center it on the X-axis
+    
+    buildingsRowTransform.actualY = globals.screenHeight() - buildingsRowTransform.actualH - buttonsRowTransform.actualH -- 10 pixels from the bottom edge, but above the buttons row
+    
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)
     nodeComp = registry:get(bowser, GameObject)

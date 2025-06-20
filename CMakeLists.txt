@@ -370,6 +370,13 @@ if(EMSCRIPTEN)
     file(GLOB_RECURSE ASSET_FILES RELATIVE ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets/*)
 
     foreach(ASSET_FILE ${ASSET_FILES})
+        # Skip macOS junk files
+        string(FIND "${ASSET_FILE}" ".DS_Store" IS_DS_STORE)
+        if(IS_DS_STORE GREATER -1)
+            continue()
+        endif()
+
+        # Skip the excluded directory
         string(FIND "${ASSET_FILE}" "graphics/pre-packing-files_globbed" FOUND)
         if(FOUND EQUAL -1)
             # Create the destination directory first
@@ -377,7 +384,7 @@ if(EMSCRIPTEN)
             add_custom_command(
                 TARGET copy_assets POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E copy ...
+                COMMAND ${CMAKE_COMMAND} -E copy
                         "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
                         "${BUILD_DIR}/assets/${ASSET_FILE}"
             )

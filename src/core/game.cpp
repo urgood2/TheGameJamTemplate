@@ -410,6 +410,13 @@ namespace game
 
         if (game::isPaused)
             return;
+
+        // auto viewUIBox = globals::registry.view<ui::UIBoxComponent>();
+        // for (auto e : viewUIBox)
+        // {
+        //     auto result = ui::box::DebugPrint(globals::registry, e);
+        //     SPDLOG_DEBUG("UIBox {}: {}", (int)e, result);
+        // }
             
         layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
 
@@ -504,6 +511,9 @@ namespace game
             //     ui::box::Draw(ui_layer, globals::registry, e);
             // }
             ui::box::drawAllBoxes(globals::registry, ui_layer);
+
+            // for each ui box, print debug info
+            
         }
         
         

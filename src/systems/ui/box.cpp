@@ -89,6 +89,11 @@ namespace ui
                 auto* box = registry.try_get<UIBoxComponent>(uiBoxEntity);
                 box->uiRoot = entity;
                 registry.get<transform::GameObject>(entity).parent = uiBoxEntity;
+
+                // assign carbon copy role to the root element, 
+                transform::AssignRole(&registry, entity, transform::InheritedProperties::Type::RoleCarbonCopy, uiBoxEntity,
+                                      transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong,
+                                      transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong);
             } else {
                 auto& thisConfig = registry.get<UIConfig>(entity);
                 if (!thisConfig.id) {

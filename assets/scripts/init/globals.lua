@@ -8,7 +8,16 @@ local defaults = {
   whale_dust_target      = 0,
   timeUntilNextGravityWave = 30,
   gravityWaveSeconds       = 30,
-  currencyIconForText      = {}
+  currencyIconForText      = {},
+
+
+
+  krill_list              = {}, -- list of krill that are active in the current game
+
+  ui = {
+    prestige_uibox = nil,
+    prestige_window_open = false
+  }
 }
 
 -- merge‐in any missing keys

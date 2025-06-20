@@ -10,6 +10,12 @@
 		"tooltip_title": "Tooltip Title",
 		"currency_text": "Whale Dust: {currency}",
 		"buy_button": "Buy an upgrade",
-		"building_text": "Next Gravitational Wave"
+		"building_text": "Next Gravitational Wave",
+		"prestige_button": "Prestige",
+		"prestige_upgrade_1": "Prestige Upgrade 1",
+		"prestige_upgrade_2": "Prestige Upgrade 2",
+		"prestige_upgrade_3": "Prestige Upgrade 3",
+		"prestige_upgrade_4": "Prestige Upgrade 4",
+		"prestige_upgrade_5": "Prestige Upgrade 5"
 	}
 }

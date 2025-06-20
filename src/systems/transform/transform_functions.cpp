@@ -1369,7 +1369,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->text = text.c_str();
                 cmd->font = font;
                 cmd->x = visualW / 2 - textWidth / 2;
-                cmd->y = visualH * 0.05f;
+                cmd->y = - visualH * 0.05f;
                 cmd->origin = {0, 0};
                 cmd->rotation = 0;
                 cmd->fontSize = 15 * scale;
@@ -1391,7 +1391,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->text = debugText.c_str();
                 cmd->font = GetFontDefault();
                 cmd->x = visualW / 2 - textWidth / 2;
-                cmd->y = visualH * 0.05f;
+                cmd->y = - visualH * 0.05f;
                 cmd->origin = {0, 0};
                 cmd->rotation = 0;
                 cmd->fontSize = 15 * scale;

@@ -11867,19 +11867,23 @@
         "random_displacement_anim_fragment.fs"
     ],
     "anim_displacement_fragment_random_shader": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\random_displacement_anim_fragment.fs"
     ],
     "anim_displacement_fragment_random_web": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/random_displacement_anim_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/random_displacement_anim_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\random_displacement_anim_fragment.fs"
     ],
     "anim_displacement_random_shader_vertex": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/random_displacement_anim_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\random_displacement_anim_vertex.vs"
     ],
     "anim_displacement_random_vertex": [
         "random_displacement_anim_vertex.vs"
     ],
     "anim_displacement_random_vertex_web": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/random_displacement_anim_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/random_displacement_anim_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\random_displacement_anim_vertex.vs"
     ],
     "anim_sword": [
         "sword_anim"
@@ -13937,7 +13941,8 @@
         "LIGHT CORAL"
     ],
     "core_entity_factory": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_factory.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_factory.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core\\entity_factory.lua"
     ],
     "core_global": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/globals.lua"

@@ -1,4 +1,3 @@
-// GRID_OVERLAY.fs
 #version 300 es
 precision mediump float;
 

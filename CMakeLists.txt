@@ -377,7 +377,7 @@ if(EMSCRIPTEN)
             add_custom_command(
                 TARGET copy_assets POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                COMMAND ${CMAKE_COMMAND} -E copy ...
                         "${CMAKE_SOURCE_DIR}/assets/${ASSET_FILE}"
                         "${BUILD_DIR}/assets/${ASSET_FILE}"
             )
@@ -392,7 +392,7 @@ add_custom_target(configure_web_build
     COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. 
         -DPLATFORM=Web 
         -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -O0 -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0"
+        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -O3 -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0"
         -DCMAKE_EXECUTABLE_SUFFIX=\".html\"
     WORKING_DIRECTORY ${BUILD_DIR}
     COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"

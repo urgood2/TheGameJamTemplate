@@ -1,4 +1,3 @@
-// fragment.fs
 #version 300 es
 precision mediump float;
 

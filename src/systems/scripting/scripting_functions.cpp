@@ -464,7 +464,9 @@ namespace scripting {
         lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {
             return globals::gameWorldContainerEntity;
         };
-        lua["globals"]["cursor"]                   = &globals::cursor;
+        lua["globals"]["cursor"]                   = []() -> entt::entity {
+            return globals::cursor;
+        };
         lua["globalShaderUniforms"] = std::ref(globals::globalShaderUniforms);
         
         rec.record_property("", {"globalShaderUniforms", "nil", "global ShaderUniformComponent object, used to set shader uniforms globally."});

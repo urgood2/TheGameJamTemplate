@@ -338,7 +338,7 @@ function main.init()
     
     local sliderTextMoving = ui.definitions.getNewDynamicTextEntry(
         localization.get("ui.currency_text"),  -- initial text
-        20.0,                                 -- font size
+        16.0,                                 -- font size
         nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
@@ -410,8 +410,9 @@ function main.init()
     local uiBoxComp = registry:get(newUIBox, UIBoxComponent)
     debug(newUIBox)
     debug(uiBoxComp)
-    local uiRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
-    newUIBoxTransform.actualX = globals.screenWidth() - uiRootTransform.actualW
+    -- anchor to the top right corner of the screen
+    newUIBoxTransform.actualX = globals.screenWidth() - newUIBoxTransform.actualW -- 10 pixels from the right edge
+    newUIBoxTransform.actualY = 10 -- 10 pixels from the top edge
     
     -- TODO: test aligning to the inside of the game world container with a delay to let the update run
     timer.after(
@@ -631,71 +632,11 @@ function main.init()
     :build()
 
     -- create a new UI box for the prestige upgrades
-    globals.ui.prestige_uibox = ui.box.Initialize({x = 350, y = 400}, prestigeUpgradesContainerRoot)
+    globals.ui.prestige_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, prestigeUpgradesContainerRoot)
     
     -- center the ui box X-axi
     local prestigeUiboxTransform = registry:get(globals.ui.prestige_uibox, Transform)
     prestigeUiboxTransform.actualX = globals.screenWidth() / 2 - prestigeUiboxTransform.actualW / 2
-
-
-
-    -- simple buy button example
-    
-    local buyButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.buy_button"),  -- initial text
-        20.0,                                 -- font size
-        nil,                                  -- no style override
-        "rainbow"                       -- animation spec
-    )
-    
-    local buyButtonDef = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
-            :addMinHeight(50)
-            :addMinWidth(200)
-            :addShadow(true)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function(registry, entity)
-                -- button click callback
-                debug("Buy button clicked!")
-                
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(buyButtonText)
-    :build()
-    
-    local buyButtonRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        
-        UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
-            :addMinHeight(50)
-            :addShadow(true)
-            
-            :addMaxWidth(300)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(buyButtonDef)
-    :build()
-    
-    -- create a new UI box for the buy button
-    local buyButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, buyButtonRoot)
-    
-    -- right align the buy button UI box
-    local buyButtonTransform = registry:get(buyButtonUIBox, Transform)
-    buyButtonTransform.actualX = globals.screenWidth() - buyButtonTransform.actualW 
-    
     
     -- ui for the buildings
     local buildingText = ui.definitions.getNewDynamicTextEntry(
@@ -705,109 +646,6 @@ function main.init()
         "float"                       -- animation spec
     )
     
-    --TODO: inventory cell
-    -- auto gridRect = ui::UIElementTemplateNode::Builder::create()
-    --         .addType(ui::UITypeEnum::RECT_SHAPE)
-    --         .addConfig(
-    --             ui::UIConfig::Builder::create()
-    --                 .addColor(WHITE)
-    --                 .addEmboss(2.f)
-    --                 .addMinWidth(60.f)
-    --                 .addMinHeight(60.f)
-    --                 .addOnUIScalingResetToOne(
-    --                     [](entt::registry* registry, entt::entity e)
-    --                     {
-    --                         // set the size of the grid rect to be 60 x 60
-                            
-    --                         auto &transform = globals::registry.get<transform::Transform>(e);
-    --                         transform.setActualW(60.f);
-    --                         transform.setActualH(60.f);
-                            
-    --                         auto &role = globals::registry.get<transform::InheritedProperties>(e);
-    --                         role.offset->x = 0;
-    --                         role.offset->y = 0;
-                            
-    --                     })
-    --                 .addOnUIResizeFunc([](entt::registry* registry, entt::entity e)
-    --                 {
-    --                     // renew centering 
-    --                     auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
-                        
-    --                     if (!inventoryTile.item) return;
-                        
-    --                     SPDLOG_DEBUG("Grid rect resize called for entity: {} with item: {}", (int)e, (int)inventoryTile.item.value());
-                        
-    --                     game::centerInventoryItemOnTargetUI(inventoryTile.item.value(), e);
-    --                 })
-    --                 .addInitFunc([](entt::registry* registry, entt::entity e)
-    --                 { 
-    --                     if (!globals::registry.any_of<ui::InventoryGridTileComponent>(e)) {
-    --                         globals::registry.emplace<ui::InventoryGridTileComponent>(e);   
-    --                     }
-                        
-    --                     auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
-                        
-    --                     auto &gameObjectComp = globals::registry.get<transform::GameObject>(e);
-    --                     gameObjectComp.state.triggerOnReleaseEnabled = true;
-    --                     gameObjectComp.state.collisionEnabled = true;
-    --                     // gameObjectComp.state.hoverEnabled = true;
-    --                     SPDLOG_DEBUG("Grid rect init called for entity: {}", (int)e);
-                        
-                        
-    --                     gameObjectComp.methods.onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
-    --                     {
-    --                         SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
-                            
-    --                         auto &inventoryTileReleasedOn = registry.get<ui::InventoryGridTileComponent>(releasedOn);
-                            
-                            
-                            
-    --                         // set master role for the released entity
-    --                         auto &uiConfigOnReleased = registry.get<ui::UIConfig>(releasedOn);
-    --                         auto &roleReleased = registry.get<transform::InheritedProperties>(released);
-                            
-    --                         // get previous parent (if any)
-    --                         auto prevParent = roleReleased.master;
-                            
-                            
-    --                         if (globals::registry.valid(prevParent))
-    --                         {
-    --                             auto &uiConfig = globals::registry.get<ui::UIConfig>(prevParent);
-    --                             uiConfig.color = globals::uiInventoryEmpty;
-                                
-    --                             auto &prevInventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(prevParent);
-                                
-    --                             // if current tile is occupied, then switch the items
-    --                             //TODO: handle cases where something already exists in the inventory tile
-    --                             if (inventoryTileReleasedOn.item)
-    --                             {
-    --                                 SPDLOG_DEBUG("Inventory tile already occupied, switching");
-                                    
-    --                                 auto temp = inventoryTileReleasedOn.item.value();
-    --                                 inventoryTileReleasedOn.item = released;
-    --                                 prevInventoryTile.item = temp;
-                                    
-    --                                 //TODO: apply the centering & master role switching
-    --                                 moveInventoryItemToNewTile(released, releasedOn);
-    --                                 moveInventoryItemToNewTile(temp, prevParent);
-    --                                 return;
-    --                             }
-    --                             else {
-    --                                 inventoryTileReleasedOn.item = released;
-    --                                 prevInventoryTile.item.reset();
-    --                             }
-                                
-    --                         }
-
-    --                         moveInventoryItemToNewTile(released, releasedOn);
-                            
-                            
-    --                     };
-                        
-    --                 })
-    --                 .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-    --                 .build())
-    --         .build();
     
     local buildingTextTemplate = UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -850,13 +688,13 @@ function main.init()
     :addChild(buildingTextTemplate)
     :build()
     
-    -- create a new UI box for the building text
+    -- create a new UI box for the gravity wave progress bar
     local buildingTextUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 600}, buildingTextRoot)
-
     
-    local buildingTextUIBoxTransform = registry:get(buildingTextUIBox, Transform)
-    -- right align the building text UI box
-    buildingTextUIBoxTransform.actualX = globals.screenWidth() - buildingTextUIBoxTransform.actualW
+    -- align top of the screen, centered
+    local buildingTextTransform = registry:get(buildingTextUIBox, Transform)
+    buildingTextTransform.actualX = globals.screenWidth() / 2 - buildingTextTransform.actualW / 2
+    buildingTextTransform.actualY = 10 -- 10 pixels from the top edge
     
     local function updateSelectorTemplate(upgradeButtonText, numUpgrades) 
         
@@ -966,6 +804,39 @@ function main.init()
     
     buttonsTable[#buttonsTable + 1] = rightButton
     
+    
+    -- new Red button that says "Buy"
+    local buyButtonText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.buy_button"),  -- initial text
+        15,                                 -- font size
+        nil,                                  -- no style override
+        "rainbow"                       -- animation spec
+    )
+    -- make a new buy button template
+    local buyButtonTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("RED"))
+            :addEmboss(2.0)
+            :addShadow(true)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Buy button clicked!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(buyButtonText)
+    :build()
+    
+    -- add the buy button to the buttons table
+    buttonsTable[#buttonsTable + 1] = buyButtonTemplate
+    
     dump(buttonsTable)
     
     -- create a new row for the buttons
@@ -1009,6 +880,17 @@ function main.init()
     return buttonsRowRoot
         
     end
+    
+    -- new text entity that says "Buy a building"
+    local updateSelectorText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.upgrade_selector_title"),  -- initial text
+        10.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    
+    -- make new vertical container for the upgrade selector
+    
     -- create a new UI box for the buttons row
     local upgradeRowUIBox = ui.box.Initialize({}, updateSelectorTemplate(
         localization.get("ui.upgrade_button"),  -- initial text
@@ -1034,6 +916,80 @@ function main.init()
     
     buildingsRowTransform.actualY = globals.screenHeight() - buildingsRowTransform.actualH - buttonsRowTransform.actualH -- 10 pixels from the bottom edge, but above the buttons row
     
+    
+    -- iterate through buildings when making the buildings row
+    for buildingKey, def in pairs(globals.building_upgrade_defs) do
+        print("Building ID:", buildingKey)
+        -- def is the table of { required = {…}, cost = {…}, unlocked = bool }
+        print("  unlocked?", def.unlocked)
+    
+        -- iterate its prerequisites
+        if #def.required > 0 then
+            print("  requires:")
+            for _, req in ipairs(def.required) do
+                print("    • " .. req)
+            end
+        end
+    
+        -- iterate its cost table
+        print("  cost:")
+        for resource, amount in pairs(def.cost) do
+            print(string.format("    %s: %d", resource, amount))
+        end
+    end
+    
+    -- tooltip ui box that will follow the mouse cursor
+    local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("sample tooltip title"),  -- initial text
+        18.0,                                 -- font size
+        nil,                                  -- no style override
+        "rainbow"                       -- animation spec
+    )
+    globals.ui.tooltipTitleText = tooltipTitleText.config.object
+    local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("Sample tooltip body text"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        ""                       -- animation spec
+    )
+    globals.ui.tooltipBodyText = tooltipBodyText.config.object
+    
+    -- make vertical container for the tooltip
+    local tooltipContainer = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.VERTICAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            :addMinHeight(50)
+            :addMinWidth(200)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(tooltipTitleText)
+    :addChild(tooltipBodyText)
+    :build()
+    -- make a new tooltip root
+    local tooltipRoot =  UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("BLACK"))
+            :addMinHeight(50)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(tooltipContainer)
+    :build()
+    -- create a new UI box for the tooltip
+    
+    globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
+    
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)
     nodeComp = registry:get(bowser, GameObject)
@@ -1047,6 +1003,30 @@ function main.init()
     local methods = nodeComp.methods
     
     debug (methods)
+    
+    methods.onHover = function()
+        -- debug("whale hovered!")
+        -- set the tooltip text
+        TextSystem.Functions.setText(globals.ui.tooltipTitleText, localization.get("ui.whale_title"))
+        TextSystem.Functions.setText(globals.ui.tooltipBodyText, localization.get("ui.whale_body"))
+        ui.box.RenewAlignment(registry, globals.ui.tooltipUIBox) -- renew the alignment of the tooltip UI box
+        
+        -- position the tooltip UI box at the mouse cursor
+        local mouseTransform = registry:get(globals.cursor(), Transform)
+        local mouseX, mouseY = mouseTransform.actualX, mouseTransform.actualY
+        local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
+        tooltipTransform.actualX = mouseX + 20 -- offset to the right
+        tooltipTransform.actualY = mouseY + 20 -- offset down
+        
+    end
+    methods.onStopHover = function()
+        -- debug("whale stopped hovering!")
+        -- reset the tooltip text
+        
+        -- hide the tooltip UI box
+        local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
+        tooltipTransform.actualY = globals.screenHeight()  -- move it out of the screen
+    end
     methods.onClick = function(registry, e) 
         debug("whale clicked!")
         

@@ -510,7 +510,7 @@ namespace game
             // {
             //     ui::box::Draw(ui_layer, globals::registry, e);
             // }
-            ui::box::drawAllBoxes(globals::registry, ui_layer);
+            ui::box::drawAllBoxes(globals::registry, sprites);
 
             // for each ui box, print debug info
             
@@ -525,7 +525,7 @@ namespace game
             auto textView = globals::registry.view<TextSystem::Text>();
             for (auto e : textView)
             {
-                TextSystem::Functions::renderText(e, ui_layer, true);
+                TextSystem::Functions::renderText(e, sprites, true);
             }
         }
         

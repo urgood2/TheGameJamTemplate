@@ -1197,7 +1197,7 @@ namespace input
             if (registry.valid(inputState.cursor_dragging_target))
             {
                 SPDLOG_DEBUG("Stop dragging");
-                transform::StopDragging(&registry, inputState.cursor_down_target);
+                transform::StopDragging(&registry, inputState.cursor_dragging_target);
 
                 auto &downTargetNode = registry.get<transform::GameObject>(inputState.cursor_down_target);
                 downTargetNode.state.isBeingDragged = false;

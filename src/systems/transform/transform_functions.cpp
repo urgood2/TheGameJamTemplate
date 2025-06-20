@@ -221,10 +221,6 @@ namespace transform
     // not exposed publicly
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
-        if (registry->any_of<ui::UIBoxComponent>(e))
-        {
-            SPDLOG_DEBUG("AlignToMaster called for UIBoxComponent of entity {}", static_cast<int>(e));
-        }
         // ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
         auto &role = registry->get<InheritedProperties>(e);
@@ -1987,16 +1983,15 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             return;
         }
         
-        if (registry->any_of<ui::UIConfig>(e) == false)
-        {
-            return;
-        }
+        // if (registry->any_of<ui::UIConfig>(e) == false)
+        // {
+        //     return;
+        // }
         
         auto &node = registry->get<GameObject>(e);
-        auto &uiConfig = registry->get<ui::UIConfig>(e);
         
         // drag pop-up (for controlller drag, for instance) exists
-        if (node.children.find("d_popup") == node.children.end()) return;
+        // if (node.children.find("d_popup") == node.children.end()) return;
         
         ui::box::Remove(*registry, node.children["d_popup"]);
         

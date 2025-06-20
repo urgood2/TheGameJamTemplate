@@ -201,10 +201,21 @@ function main.init()
         timer.every(
             random_utils.random_float(0.5, 1.5), -- randomize the delay between 0.5 and 1.5 seconds
             function()
-                -- re-grab its transform each tick (in case component moved or was removed)
-                local t = registry:get(kr, Transform)
-                t.actualX = t.actualX + random_utils.random_int(-30, 30)
-                t.actualY = t.actualY + random_utils.random_int(-30, 30)
+                -- make the krill move a litlte toward the whale
+                local whaleTransform = registry:get(bowser, Transform)
+                local krillTransform = registry:get(kr, Transform)
+                local directionX = whaleTransform.actualX - krillTransform.actualX
+                local directionY = whaleTransform.actualY - krillTransform.actualY
+                -- normalize manually with x and y comps
+                local length = math.sqrt(directionX^2 + directionX^2)
+                if length > 0 then
+                    directionX = directionX / length
+                    directionY = directionY / length
+                end
+                -- move the krill towards the whale
+                krillTransform.actualX = krillTransform.actualX + directionX * 10 -- move 10 pixels towards the whale
+                krillTransform.actualY = krillTransform.actualY + directionY * 10 -- move 10 pixels towards the whale
+                
             end,
             0,               -- infinite repetitions
             true,            -- start immediately
@@ -370,10 +381,8 @@ function main.init()
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("GRAY"))
-            :addMinHeight(50)
             
             :addNoMovementWhenDragged(true)
-            :addMinWidth(500)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
@@ -696,247 +705,6 @@ function main.init()
     buildingTextTransform.actualX = globals.screenWidth() / 2 - buildingTextTransform.actualW / 2
     buildingTextTransform.actualY = 10 -- 10 pixels from the top edge
     
-    local function updateSelectorTemplate(upgradeButtonText, numUpgrades) 
-        
-        -- long row of buttons along the bottom of the screen for the upgrades
-    local numButtons = numUpgrades
-    local buttonWidth = 50
-    local buttonHeight = 50
-    
-    local buttonsTable = {}
-    
-    -- leftbutton
-    local leftButtonText = ui.definitions.getNewDynamicTextEntry(
-            "<",  -- initial text
-            20.0,                                 -- font size
-            nil,                                  -- no style override
-            "pulse=0.9,1.1"                       -- animation spec
-        )
-    local leftButton = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        
-        UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
-            :addEmboss(2.0)
-            :addShadow(true)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function(registry, entity)
-                -- button click callback
-                debug("!")
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(leftButtonText)
-    :build()
-    
-    buttonsTable[#buttonsTable + 1] = leftButton
-    
-    
-    for i = 1, numButtons do
-        -- create a new button text
-        local buttonText = ui.definitions.getNewDynamicTextEntry(
-            upgradeButtonText .. i,  -- initial text
-            20.0,                                 -- font size
-            nil,                                  -- no style override
-            "pulse=0.9,1.1"                       -- animation spec
-        )
-        -- create a new button template
-        local buttonTemplate = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            
-            UIConfigBuilder.create()
-                :addColor(util.getColor("GRAY"))
-                :addEmboss(2.0)
-                :addShadow(true)
-                :addHover(true) -- needed for button effect
-                :addButtonCallback(function(registry, entity)
-                    -- button click callback
-                    debug("Upgrade button " .. i .. " clicked!")
-                end)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
-        :addChild(buttonText)
-        :build()
-        
-        -- save in the table
-        buttonsTable[#buttonsTable + 1] = buttonTemplate
-    end
-    
-    -- right button
-    local rightButtonText = ui.definitions.getNewDynamicTextEntry(
-            ">",  -- initial text
-            20.0,                                 -- font size
-            nil,                                  -- no style override
-            "pulse=0.9,1.1"                       -- animation spec
-        )
-    local rightButton = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        
-        UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
-            :addEmboss(2.0)
-            :addShadow(true)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function(registry, entity)
-                -- button click callback
-                debug("!")
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-            
-    )
-    :addChild(rightButtonText)
-    :build()
-    
-    buttonsTable[#buttonsTable + 1] = rightButton
-    
-    
-    -- new Red button that says "Buy"
-    local buyButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.buy_button"),  -- initial text
-        15,                                 -- font size
-        nil,                                  -- no style override
-        "rainbow"                       -- animation spec
-    )
-    -- make a new buy button template
-    local buyButtonTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("RED"))
-            :addEmboss(2.0)
-            :addShadow(true)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- button click callback
-                debug("Buy button clicked!")
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(buyButtonText)
-    :build()
-    
-    -- add the buy button to the buttons table
-    buttonsTable[#buttonsTable + 1] = buyButtonTemplate
-    
-    dump(buttonsTable)
-    
-    -- create a new row for the buttons
-    local buttonsRow =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("BLUE"))
-            -- :addMinHeight(buttonHeight * 1.3)
-            -- :addMinWidth(globals.screenWidth()) 
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :build()
-    
-    -- cycle through the buttons table and add each button to the row
-    for i, button in ipairs(buttonsTable) do
-        buttonsRow.children:add(button)
-    end
-    
-    -- new root element for the buttons row
-    local buttonsRowRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("GREEN"))
-            :addMinHeight(85)
-            -- :addMaxWidth(globals.screenWidth())
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(buttonsRow)
-    :build()
-    
-    return buttonsRowRoot
-        
-    end
-    
-    -- new text entity that says "Buy a building"
-    local updateSelectorText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.upgrade_selector_title"),  -- initial text
-        10.0,                                 -- font size
-        nil,                                  -- no style override
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    
-    -- make new vertical container for the upgrade selector
-    
-    -- create a new UI box for the buttons row
-    local upgradeRowUIBox = ui.box.Initialize({}, updateSelectorTemplate(
-        localization.get("ui.upgrade_button"),  -- initial text
-        1 -- number of upgrades
-    ))
-    
-    
-    -- bottom-align the buttons row UI box
-    local buttonsRowTransform = registry:get(upgradeRowUIBox, Transform)
-    buttonsRowTransform.actualX = globals.screenWidth() / 2 - buttonsRowTransform.actualW / 2 -- center it on the X-axis
-    buttonsRowTransform.actualY = globals.screenHeight() - buttonsRowTransform.actualH -- 10 pixels from the bottom edge
-    
-    
-    -- new ui box for buildings row
-    local buildingsRowUIBox = ui.box.Initialize({}, updateSelectorTemplate(
-        localization.get("ui.building_button"),  -- initial text
-        1 -- number of buildings
-    ))
-    
-    -- bottom align, but stack on top of the buttons row UI box
-    local buildingsRowTransform = registry:get(buildingsRowUIBox, Transform)
-    buildingsRowTransform.actualX = globals.screenWidth() / 2 - buildingsRowTransform.actualW / 2 -- center it on the X-axis
-    
-    buildingsRowTransform.actualY = globals.screenHeight() - buildingsRowTransform.actualH - buttonsRowTransform.actualH -- 10 pixels from the bottom edge, but above the buttons row
-    
-    
-    -- iterate through buildings when making the buildings row
-    for buildingKey, def in pairs(globals.building_upgrade_defs) do
-        print("Building ID:", buildingKey)
-        -- def is the table of { required = {…}, cost = {…}, unlocked = bool }
-        print("  unlocked?", def.unlocked)
-    
-        -- iterate its prerequisites
-        if #def.required > 0 then
-            print("  requires:")
-            for _, req in ipairs(def.required) do
-                print("    • " .. req)
-            end
-        end
-    
-        -- iterate its cost table
-        print("  cost:")
-        for resource, amount in pairs(def.cost) do
-            print(string.format("    %s: %d", resource, amount))
-        end
-    end
     
     -- tooltip ui box that will follow the mouse cursor
     local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
@@ -989,6 +757,349 @@ function main.init()
     -- create a new UI box for the tooltip
     
     globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
+    
+    
+    
+    
+    
+    
+    -- Make a bottom UI box that will hold the purchase ui
+    
+    
+    -- first upgrade ui (buildings)
+    
+    -- "left" button
+    local leftButtonText = ui.definitions.getNewDynamicTextEntry(
+        "<",  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    -- make new button template
+    local leftButtonTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            -- :addShadow(true)
+            :addEmboss(4.0)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Left button clicked!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(leftButtonText)
+    :build()
+    
+    -- middle text 
+    --TODO: customize this based on update data
+    local middleText = animation_system.createAnimatedObjectWithTransform(
+        "whale_dust_anim", -- animation ID
+        false             -- use animation, not sprite id
+    )
+    local middleTextElement = ui.definitions.wrapEntityInsideObjectElement(middleText) -- wrap the text in an object element
+    
+    
+    -- right button
+    local rightButtonText = ui.definitions.getNewDynamicTextEntry(
+        ">",  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    -- make new button template
+    local rightButtonTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            -- :addShadow(true)
+            :addEmboss(4.0)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Right button clicked!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(rightButtonText)
+    :build()
+    
+    
+    -- buy button
+    local buyButtonText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.buy_button"),  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "rainbow"                       -- animation spec
+    )
+    -- make new button template
+    local buyButtonTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            -- :addShadow(true)
+            :addEmboss(4.0)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Buy button clicked!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(buyButtonText)
+    :build()
+    
+    
+    -- second upgrade ui (converters)
+    
+    -- "left" button
+    local leftButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
+        "<",  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    -- make new button template
+    local leftButtonTemplateConverter = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            -- :addShadow(true)
+            :addEmboss(4.0)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Left button clicked!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(leftButtonTextConverter)
+    :build()
+    
+    -- middle text 
+    --TODO: customize this based on update data
+    local middleTextConverter = animation_system.createAnimatedObjectWithTransform(
+        "whale_dust_anim", -- animation ID
+        false             -- use animation, not sprite id
+    )
+    local middleTextElementConverter = ui.definitions.wrapEntityInsideObjectElement(middleTextConverter) -- wrap the text in an object element
+    
+    
+    -- right button
+    local rightButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
+        ">",  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    -- make new button template
+    local rightButtonTemplateConverter = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            -- :addShadow(true)
+            :addEmboss(4.0)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Right button clicked!")
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(rightButtonTextConverter)
+    :build()
+    
+    
+    -- buy button
+    local buyButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.buy_button"),  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "rainbow"                       -- animation spec
+    )
+    -- make new button template
+    local buyButtonTemplateConverter = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            -- :addShadow(true)
+            :addEmboss(4.0)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Buy button clicked!")
+                
+                -- create a new example converter entity
+                local exampleConverter = create_ai_entity("kobold")
+                
+                animation_system.setupAnimatedObjectOnEntity(
+                    exampleConverter,
+                    "dust_to_crystal_converterAnim", -- Default animation ID
+                    false,             -- ? generate a new still animation from sprite, don't set to true, causes bug
+                    nil,               -- shader_prepass, -- Optional shader pass config function
+                    true               -- Enable shadow
+                )
+                
+                animation_system.resizeAnimationObjectsInEntityToFit(
+                    exampleConverter,
+                    60, -- width
+                    60  -- height
+                )
+                
+                -- make the object draggable
+                local gameObjectState = registry:get(exampleConverter, GameObject).state
+                gameObjectState.dragEnabled = true
+                gameObjectState.clickEnabled = true
+                gameObjectState.hoverEnabled = true
+                gameObjectState.collisionEnabled = true
+                
+                -- create a new text entity
+                local infoText = ui.definitions.getNewDynamicTextEntry(
+                    "Drag me",  -- initial text
+                    15.0,                                 -- font size
+                    nil,                                  -- no style override
+                    "bump"                       -- animation spec
+                ).config.object
+                
+                -- make the text entity follow the converter entity
+                transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, exampleConverter,
+                InheritedPropertiesSync.Strong,
+                InheritedPropertiesSync.Strong,
+                InheritedPropertiesSync.Strong,
+                InheritedPropertiesSync.Strong,
+                Vec2(0, -20) -- offset the text above the converter
+                );
+                
+                -- local textRole = registry:get(infoText, InheritedProperties)
+                -- textRole.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+                
+                
+                -- now locate the converter entity in the game world
+                local transformComp = registry:get(exampleConverter, Transform)
+                transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
+                transformComp.actualY = globals.screenHeight()  - 300
+                
+                
+                -- add onstopdrag method to the converter entity
+                local gameObjectComp = registry:get(exampleConverter, GameObject)
+                gameObjectComp.methods.onHover = function()
+                    debug("Converter entity hovered! WHy not drag?")
+                    
+                end
+                gameObjectComp.methods.onStopDrag = function()
+                    debug("Converter entity stopped dragging!")
+                    
+                    -- get the grid that it's in, grid is 64 pixels wide
+                    local gridX = math.floor(transformComp.actualX / 64)
+                    local gridY = math.floor(transformComp.actualY / 64)
+                    debug("Converter entity is in grid: ", gridX, gridY)
+                    -- snap the entity to the grid
+                    transformComp.actualX = gridX * 64
+                    transformComp.actualY = gridY * 64 
+                    -- make the entity no longer draggable
+                    gameObjectState.dragEnabled = false
+                    gameObjectState.clickEnabled = false
+                    gameObjectState.hoverEnabled = false
+                    gameObjectState.collisionEnabled = false
+                    -- remove the text entity
+                    registry:destroy(infoText)
+                    -- spawn particles at the converter's position center
+                    spawnCircularBurstParticles(
+                        transformComp.actualX + transformComp.actualW / 2,
+                        transformComp.actualY + transformComp.actualH / 2,
+                        20, -- number of particles
+                        0.5 -- particle size
+                    )
+                    
+                end
+                
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(buyButtonTextConverter)
+    :build()
+
+    -- make a horizontal container for all upgrade ui
+    local upgradeUIContainer = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("BLACK"))
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(leftButtonTemplate)
+    :addChild(middleTextElement)
+    :addChild(rightButtonTemplate)
+    :addChild(buyButtonTemplate)
+    :addChild(leftButtonTemplateConverter)
+    :addChild(middleTextElementConverter)
+    :addChild(rightButtonTemplateConverter)
+    :addChild(buyButtonTemplateConverter)
+    :build()
+    
+    -- make a new upgrade UI root
+    local upgradeUIRoot =  UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(upgradeUIContainer)
+    :build()
+    
+    -- create a new UI box for the upgrade UI
+    globals.ui.upgradeUIBox = ui.box.Initialize({x = 0, y = globals.screenHeight() - 50}, upgradeUIRoot)
+    
+    -- align the upgrade UI box to the bottom of the screen
+    local upgradeUIBoxTransform = registry:get(globals.ui.upgradeUIBox, Transform)
+    upgradeUIBoxTransform.actualX = globals.screenWidth() / 2 - upgradeUIBoxTransform.actualW / 2 -- center it horizontally
+    upgradeUIBoxTransform.actualY = globals.screenHeight() - upgradeUIBoxTransform.actualH -- align to the bottom of the screen
+    
+    
+    
+    
+    
+    
     
     -- manipulate the transformComp
     transformComp = registry:get(bowser, Transform)

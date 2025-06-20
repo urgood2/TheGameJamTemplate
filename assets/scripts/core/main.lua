@@ -1015,14 +1015,15 @@ function main.init()
                 end
                 gameObjectComp.methods.onStopDrag = function()
                     debug("Converter entity stopped dragging!")
-                    
+                    local gameObjectComp = registry:get(exampleConverter, GameObject)
                     -- get the grid that it's in, grid is 64 pixels wide
                     local gridX = math.floor(transformComp.actualX / 64)
                     local gridY = math.floor(transformComp.actualY / 64)
                     debug("Converter entity is in grid: ", gridX, gridY)
-                    -- snap the entity to the grid
-                    transformComp.actualX = gridX * 64
-                    transformComp.actualY = gridY * 64 
+                    -- snap the entity to the grid, but center it in the grid cell
+                    local magic_padding = 2
+                    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding-- center it in the grid cell
+                    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
                     -- make the entity no longer draggable
                     gameObjectState.dragEnabled = false
                     gameObjectState.clickEnabled = false
@@ -1037,6 +1038,8 @@ function main.init()
                         20, -- number of particles
                         0.5 -- particle size
                     )
+                    transform.InjectDynamicMotion(exampleConverter, 1.0, 1)
+                    
                     
                 end
                 

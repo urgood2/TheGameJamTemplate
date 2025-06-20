@@ -1993,13 +1993,13 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // drag pop-up (for controlller drag, for instance) exists
         // if (node.children.find("d_popup") == node.children.end()) return;
         
-        ui::box::Remove(*registry, node.children["d_popup"]);
+        // ui::box::Remove(*registry, node.children["d_popup"]);
         
-        // erase
-        node.children.erase("d_popup");
-        // erase from vector as well
-        auto it = std::remove(node.orderedChildren.begin(), node.orderedChildren.end(), node.children["d_popup"]);
-        node.orderedChildren.erase(it, node.orderedChildren.end());
+        // // erase
+        // node.children.erase("d_popup");
+        // // erase from vector as well
+        // auto it = std::remove(node.orderedChildren.begin(), node.orderedChildren.end(), node.children["d_popup"]);
+        // node.orderedChildren.erase(it, node.orderedChildren.end());
         
         // custom stop drag logic
         if (node.methods.onStopDrag) {

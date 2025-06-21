@@ -673,9 +673,19 @@ namespace transform
 
         // Clamp the rotation offset from leaning to ±30 degrees
         transform.rotationOffset = std::clamp(transform.rotationOffset, -30.0f, 30.0f);
-
-        // add dynamic motion
-        transform.rotationOffset += dynamicMotionAddedR;
+        
+        // ignore the above if the rotation is not enabled
+        if (transform.ignoreXLeaning)
+        {
+            transform.rotationOffset = 0.0f; // reset rotation offset if ignoring leaning
+        }
+        
+        if (!transform.ignoreDynamicMotion)
+        {
+            
+            transform.rotationOffset += dynamicMotionAddedR;
+        }
+        
 
         // Check if there is significant rotational difference or velocity
         if (std::abs(transform.rotationOffset - transform.getVisualR()) > 0.001f || std::abs(springR.velocity) > 0.001f)
@@ -2205,6 +2215,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 static_cast<void(Transform::*)(bool)>(&Transform::updateCachedValues),
                 static_cast<void(Transform::*)(const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, const Spring&, bool)>(&Transform::updateCachedValues)
             ),
+            "ignoreDynamicMotion", &Transform::ignoreDynamicMotion,
+            "ignoreXLeaning", &Transform::ignoreXLeaning,
             "actualX",  sol::property(&Transform::getActualX, &Transform::setActualX),
             "visualX",  sol::property(&Transform::getVisualX, &Transform::setVisualX),
             "actualY",  sol::property(&Transform::getActualY, &Transform::setActualY),
@@ -2212,6 +2224,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             "actualW",  sol::property(&Transform::getActualW, &Transform::setActualW),
             "visualW",  sol::property(&Transform::getVisualW, &Transform::setVisualW),
             "actualH",  sol::property(&Transform::getActualH, &Transform::setActualH),
+            "actualR",  sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
             "visualH",  sol::property(&Transform::getVisualH, &Transform::setVisualH),
             "rotation", sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
             "visualR",  &Transform::getVisualR,

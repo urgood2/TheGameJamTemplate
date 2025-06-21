@@ -357,7 +357,11 @@ namespace init {
 
     AnimationObject getAnimationObject(std::string uuid_or_raw_identifier) {
         using namespace snowhouse;
+        if (globals::animationsMap.find(uuid::lookup(uuid_or_raw_identifier)) == globals::animationsMap.end()) {
+            SPDLOG_ERROR("Animation with UUID or identifier '{}' not found in animationsMap", uuid_or_raw_identifier);
+        }
         AssertThat(globals::animationsMap.find(uuid::lookup(uuid_or_raw_identifier)) != globals::animationsMap.end(), IsTrue());
+        
         return globals::animationsMap[uuid::lookup(uuid_or_raw_identifier)]; 
     }
     

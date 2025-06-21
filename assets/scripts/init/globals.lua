@@ -2,10 +2,74 @@
 
 globals = globals or {}
 
+globals.whale_dust_amount      = 0
+globals.whale_dust_target      = 0
+
+globals.song_essence_amount   = 0
+globals.song_essence_target   = 0
+
+globals.crystal_amount        = 0
+globals.crystal_target        = 0
+
+globals.wafer_amount        = 0
+globals.wafer_target        = 0
+
+globals.chips_amount        = 0
+globals.chips_target        = 0
+
+globals.converter_defs = {
+  { -- converts dust to crystal
+    id = "dust_to_crystal", -- the id of the converter
+    required_building = {"whale_song_gatherer"},
+    required_converter = {},
+    required_currencies = {
+      whale_dust_target = 10 -- must hold this much whale dust to unlock
+    },
+    cost = {
+      song_essence = 100  -- the stuff gathered by the whale song gatherer
+    },
+    unlocked = false,
+    anim = "dust_to_crystal_converterAnim", -- the animation for the converter
+    ui_text_title = "ui.dust_to_crystal_converter_name", -- the text to display in the ui for this converter
+    ui_text_body = "ui.dust_to_crystal_converter_description" -- the text to display in the ui for this converter
+  },
+  { -- converts crystal to water
+    id = "crystal_to_wafer", -- the id of the converter
+    required_building = {"whale_song_gatherer"},
+    required_converter = {"dust_to_crystal"},
+    required_currencies = {
+      whale_dust_target = 10 -- must hold this much whale dust to unlock
+    },
+    cost = {
+      crystal = 100  -- the stuff gathered by dust_to_crystal converter
+    },
+    unlocked = false,
+    anim = "crystal_to_wafer_converterAnim", -- the animation for the converter
+    ui_text_title = "ui.crystal_to_wafer_converter_name", -- the text to display in the ui for this converter
+    ui_text_body = "ui.crystal_to_wafer_converter_description" -- the text to display in the ui for this converter
+  },
+  { -- converts water to krill
+    id = "wafer_to_chip", -- the id of the converter
+    required_building = {"whale_song_gatherer"},
+    required_converter = {"crystal_to_wafer"},
+    required_currencies = {
+      whale_dust_target = 10 -- must hold this much whale dust to unlock
+    },
+    cost = {
+      wafer = 100  -- the stuff gathered by  crystal_to_wafer converter
+    },
+    unlocked = false, 
+    anim = "wafer_to_chip_converterAnim", -- the animation for the converter
+    ui_text_title = "ui.wafer_to_chip_converter_name", -- the text to display in the ui for this converter
+    ui_text_body = "ui.wafer_to_chip_converter_description" -- the text to display in the ui for this converter
+  }
+}
+
+
+
 -- your defaults in one place
 local defaults = {
-  whale_dust_amount        = 0,
-  whale_dust_target      = 0,
+  
   timeUntilNextGravityWave = 30,
   gravityWaveSeconds       = 30,
   currencyIconForText      = {},

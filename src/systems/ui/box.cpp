@@ -91,7 +91,7 @@ namespace ui
                 registry.get<transform::GameObject>(entity).parent = uiBoxEntity;
 
                 // assign carbon copy role to the root element, 
-                transform::AssignRole(&registry, entity, transform::InheritedProperties::Type::RoleCarbonCopy, uiBoxEntity,
+                transform::AssignRole(&registry, entity, transform::InheritedProperties::Type::RoleInheritor, uiBoxEntity,
                                       transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong,
                                       transform::InheritedProperties::Sync::Strong, transform::InheritedProperties::Sync::Strong);
             } else {

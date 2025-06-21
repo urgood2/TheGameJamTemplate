@@ -8,7 +8,18 @@
 		"tooltip_text": "This is a tooltip,\n{text_type} text at\nthe moment",
 		"tooltip_text_hover": "Hover for tooltip",
 		"tooltip_title": "Tooltip Title",
+		
+		"new_unlock": "New unlock: {unlock}",
+		
+		
+		"currency_text_song_essence": "Song Essence: {currency}",
 		"currency_text": "Whale Dust: {currency}",
+		"currency_text_crystals": "Crystals: {currency}",
+		"currency_text_wafers": "Wafers: {currency}",
+		"currency_text_chips": "Chips: {currency}",
+		
+		
+		
 		"buy_button": "Buy",
 		"building_text": "Next Gravitational Wave",
 		"prestige_button": "Prestige",
@@ -56,6 +67,6 @@
 		"crystal_to_wafer_converter_description": "Converts Crystals into Wafers at a rate of 1:1000",
 		
 		"wafer_to_chip_converter_name": "Wafer to Chip Converter",
-		"wafer_to_chip_converter_description": "Converts Wafers into Chips at a rate of 1:1000"
+		"wafer_to_chip_converter_description": "Converts Wafers + Song Essence into Chips at a rate of 1:1000"
 	}
 }

@@ -86,7 +86,9 @@ function showTooltip(titleText, bodyText)
 
   -- 5) clamp to screen bounds
   boxT.actualX = clamp(x, 0, screenW - w)
+  boxT.visualX = boxT.actualX
   boxT.actualY = clamp(y, 0, screenH - h)
+  
 end
 
 function newTextPopup(text, x, y, duration)
@@ -153,6 +155,7 @@ function cycleConverter(inc)
       body  = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body)
   end
 
+  debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
   -- 3) hook up hover callbacks
   local converterEntity      = globals.converter_ui_animation_entity
   local converterGameObject  = registry:get(converterEntity, GameObject)
@@ -168,6 +171,7 @@ function cycleConverter(inc)
   -- 4) immediately show it once
   -- showTooltip(title, body)
 
+  debug("swap the animation for converter entity: ", globals.converter_ui_animation_entity)
   -- 5) swap the animation
   local animToShow = globals.converter_defs[globals.selectedConverterIndex].unlocked
                       and globals.converter_defs[globals.selectedConverterIndex].anim
@@ -175,7 +179,9 @@ function cycleConverter(inc)
   animation_system.replaceAnimatedObjectOnEntity(
       globals.converter_ui_animation_entity,
       animToShow,
-      false
+      false,
+      nil, -- shader_prepass, -- Optional shader pass config function
+      true  -- Enable shadow
   )
 
   -- 6) add a jiggle
@@ -455,4 +461,20 @@ function buyBuildingButtonCallback()
           hideTooltip()
       end
   end
+end
+
+
+
+--- Find a table entry by a given field name/value.
+-- @param list  An array-like table of records.
+-- @param field The field name to test (string).
+-- @param value The value to match against.
+-- @return      The first entry whose entry[field] == value, or nil if none.
+function findInTable(list, field, value)
+  for _, entry in ipairs(list) do
+      if entry[field] == value then
+          return entry
+      end
+  end
+  return nil
 end

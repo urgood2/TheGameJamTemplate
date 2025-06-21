@@ -656,5 +656,45 @@
                 "bg_color": "NONE"
             }
         ]
+    },
+    "crystal_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "4037-TheRoguelike_1_10_alpha_830.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "wafer_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "4033-TheRoguelike_1_10_alpha_826.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "chip_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "4071-TheRoguelike_1_10_alpha_864.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "song_essence_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "4002-TheRoguelike_1_10_alpha_795.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
     }
 }

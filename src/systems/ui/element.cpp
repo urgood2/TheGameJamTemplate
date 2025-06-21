@@ -21,6 +21,10 @@ namespace ui
         std::optional<UIConfig> config)
     {
         entt::entity entity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, 0, 0); // values are set up in set_values
+        
+        // don't let ui X-lean
+        auto &transform = registry.get<transform::Transform>(entity);
+        transform.ignoreXLeaning = true; // don't let UI elements x-lean, they should always be aligned to the parent
 
         // Save configuration
         if (config)

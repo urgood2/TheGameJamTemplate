@@ -354,7 +354,9 @@ namespace transform
     struct Transform
     {
         entt::entity self; // the entity this transform is attached to, for convenience
-
+        
+        bool ignoreDynamicMotion = false; // set to true if the entity should not be affected by dynamic motion 
+        bool ignoreXLeaning = false; // set to true if the entity should not be affected by x leaning (tilting based on velocity)
         float rotationOffset = 0.f; // offset for rotation, used for tilting the entity based on its velocity. This also incorporates dynaaic motion and x leaning. Use this value (add to VT rotation) for rendering.
 
         // these are used in frame calculations to determine if the transform needs to be updated

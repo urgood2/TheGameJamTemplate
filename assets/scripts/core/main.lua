@@ -354,6 +354,7 @@ function main.init()
         "pulse=0.9,1.1"                       -- animation spec
     )
     
+    --TODO do this later
     sliderTextMoving.config.initFunc = function(registry, entity)
         localization.onLanguageChanged(function(newLang)
             TextSystem.Functions.setText(entity, localization.get("ui.currency_text", {currency = math.floor(globals.whale_dust_amount)}))
@@ -376,12 +377,142 @@ function main.init()
         end
     end
     
-    local sliderTemplate = UIElementTemplateNodeBuilder.create()
+    -- create other entries for crystals, wafers, chips
+    globals.currencyIconForWafers = animation_system.createAnimatedObjectWithTransform(
+        "wafer_anim", -- animation ID
+        false             -- use animation, not sprite id
+    )
+    globals.currencyIconForChips = animation_system.createAnimatedObjectWithTransform(
+        "chip_anim", -- animation ID
+        false             -- use animation, not sprite id
+    )
+    globals.currencyIconForCrystals = animation_system.createAnimatedObjectWithTransform(
+        "crystal_anim", -- animation ID
+        false             -- use animation, not sprite id
+    )
+    globals.currencyIconForSongEssence = animation_system.createAnimatedObjectWithTransform(
+        "song_essence_anim", -- animation ID
+        false             -- use animation, not sprite id
+    )
+    
+    -- now make the text entries for the other currencies
+    local textSongEssence = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.currency_text_song_essence"),  -- initial text
+        16.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    textSongEssence.config.initFunc = function(registry, entity)
+        localization.onLanguageChanged(function(newLang)
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.song_essence_amount)}))
+        end)
+    end
+    
+    textSongEssence.config.updateFunc = function(r, entity, dt)
+        local elementUIConfig = registry:get(entity, UIConfig)
+        local objectEntity = elementUIConfig.object
+        if not registry:valid(objectEntity) then
+            return
+        end
+        
+        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
+        
+        local text = localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.song_essence_amount)})
+        
+        if (objectTextComp.rawText ~= text) then
+            TextSystem.Functions.setText(objectEntity, text)
+        end
+    end
+    
+    local textWafers = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.currency_text_wafers"),  -- initial text
+        16.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    
+    textWafers.config.initFunc = function(registry, entity)
+        localization.onLanguageChanged(function(newLang)
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_wafers", {currency = math.floor(globals.wafer_amount)}))
+        end)
+    end
+    
+    textWafers.config.updateFunc = function(r, entity, dt)
+        local elementUIConfig = registry:get(entity, UIConfig)
+        local objectEntity = elementUIConfig.object
+        if not registry:valid(objectEntity) then
+            return
+        end
+        
+        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
+        
+        local text = localization.get("ui.currency_text_wafers", {currency = math.floor(globals.wafer_amount)})
+        
+        if (objectTextComp.rawText ~= text) then
+            TextSystem.Functions.setText(objectEntity, text)
+        end
+    end
+    
+    local textCrystals = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.currency_text_crystals"),  -- initial text
+        16.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    textCrystals.config.initFunc = function(registry, entity)
+        localization.onLanguageChanged(function(newLang)
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_crystals", {currency = math.floor(globals.crystal_amount)}))
+        end)
+    end
+    textCrystals.config.updateFunc = function(r, entity, dt)
+        local elementUIConfig = registry:get(entity, UIConfig)
+        local objectEntity = elementUIConfig.object
+        if not registry:valid(objectEntity) then
+            return
+        end
+        
+        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
+        
+        local text = localization.get("ui.currency_text_crystals", {currency = math.floor(globals.crystal_amount)})
+        
+        if (objectTextComp.rawText ~= text) then
+            TextSystem.Functions.setText(objectEntity, text)
+        end
+    end
+    
+    local textChips = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.currency_text_chips"),  -- initial text
+        16.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    textChips.config.initFunc = function(registry, entity)
+        localization.onLanguageChanged(function(newLang)
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_chips", {currency = math.floor(globals.chip_amount)}))
+        end)
+    end
+    textChips.config.updateFunc = function(r, entity, dt)
+        local elementUIConfig = registry:get(entity, UIConfig)
+        local objectEntity = elementUIConfig.object
+        if not registry:valid(objectEntity) then
+            return
+        end
+        
+        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
+        
+        local text = localization.get("ui.currency_text_chips", {currency = math.floor(globals.chips_amount)})
+        
+        if (objectTextComp.rawText ~= text) then
+            TextSystem.Functions.setText(objectEntity, text)
+        end
+    end
+    
+    -- now wrap each icon + text in a row
+    local currencyWhaleDustRow = UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("lapi_lazuli"))
-            
             :addNoMovementWhenDragged(true)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -393,12 +524,97 @@ function main.init()
     :addChild(sliderTextMoving)
     :build()
     
+    local currencyWafersRow = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            :addNoMovementWhenDragged(true)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForWafers))
+    :addChild(textWafers)
+    :build()
+    
+    local currencyChipsRow = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            :addNoMovementWhenDragged(true)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForChips))
+    :addChild(textChips)
+    
+    :build()
+    
+    local currencyCrystalsRow = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            :addNoMovementWhenDragged(true)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForCrystals))
+    :addChild(textCrystals)
+    :build()
+    
+    local currencySongEssenceRow = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            :addNoMovementWhenDragged(true)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForSongEssence))
+    :addChild(textSongEssence)
+    :build()
+    
+    
+    local sliderTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.VERTICAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            
+            :addNoMovementWhenDragged(true)
+            :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(currencySongEssenceRow)
+    :addChild(currencyWhaleDustRow)
+    :addChild(currencyCrystalsRow)
+    :addChild(currencyWafersRow)
+    :addChild(currencyChipsRow)
+    :build()
+    
     local newRoot =  UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("keppel"))
-            :addMinHeight(50)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
             end)
@@ -724,7 +940,7 @@ function main.init()
           id = "basic_dust_collector", -- the id of the building
           required = {},
           cost = {
-            whale_dust = 30  -- cost in whale dust
+            whale_dust = 10  -- cost in whale dust
           },
           unlocked = true,
           anim = "resonance_beacon_anim",
@@ -736,6 +952,9 @@ function main.init()
         {
           id = "MK2_dust_collector", -- the id of the building
           required = {"basic_dust_collector"},
+          required_currencies = {
+            whale_dust_target = 10 -- must hold this much whale dust to unlock
+          },
           cost = {
             whale_dust = 100  -- cost in whale dust
           },
@@ -764,6 +983,9 @@ function main.init()
           cost = {
             whale_dust = 400  -- cost in whale dust
           },
+          required_currencies = {
+            whale_dust_target = 10 -- must hold this much whale dust to unlock
+          },
           unlocked = false,
           anim = "krillHomeLargeAnim", -- the animation for the building
           ui_text_title = "ui.krill_farm_name", -- the ui text for the building
@@ -776,6 +998,9 @@ function main.init()
           cost = {
             whale_dust = 1000  -- cost in whale dust
           },
+          required_currencies = {
+            whale_dust_target = 10 -- must hold this much whale dust to unlock
+          },
           unlocked = false,
           anim = "dream_weaver_antenna_anim", -- the animation for the building,
           ui_text_title = "ui.whale_song_gatherer_name", -- the ui text for the building
@@ -783,6 +1008,137 @@ function main.init()
           animation_entity = nil -- 
         }
       }
+      
+    
+    
+    timer.every(
+        4, -- every 4 seconds
+        function()
+            -- check building unlock conditions
+            -- loop through the table. for each required table, check if the building with that id is unlocked. If all required buildings are unlocked, set the building to unlocked
+            local yLocationIncrement = 0 -- used to offset the y position of the text notification
+            for i, building in ipairs(globals.building_upgrade_defs) do
+                -- remember previous state so we can detect a flip
+                local wasUnlocked = building.unlocked
+            
+                -- only consider those with any requirements
+                if not building.unlocked and building.required then
+                    local allRequiredUnlocked = true
+            
+                    -- 1) dependency check
+                    for _, reqId in ipairs(building.required) do
+                        local reqB = findInTable(globals.building_upgrade_defs, "id", reqId)
+                        if not reqB or not reqB.unlocked then
+                            allRequiredUnlocked = false
+                            break
+                        end
+                    end
+            
+                    -- 2) currency check (only if deps passed)
+                    if allRequiredUnlocked and building.required_currencies then
+                        for currencyKey, reqAmount in pairs(building.required_currencies) do
+                            local have = globals[currencyKey] or 0
+                            if have < reqAmount then
+                                allRequiredUnlocked = false
+                                break
+                            end
+                        end
+                    end
+            
+                    -- 3) if status flipped, show popup
+                    if wasUnlocked ~= allRequiredUnlocked then
+                        debug("Building ", building.id,
+                              " unlocked status changed to: ", allRequiredUnlocked)
+                        if allRequiredUnlocked then
+                            newTextPopup(
+                                localization.get(
+                                    "ui.new_unlock",
+                                    { unlock = localization.get(building.ui_text_title) }
+                                ),
+                                globals.screenWidth() / 2,
+                                globals.screenHeight() / 2 + yLocationIncrement,
+                                4
+                            )
+                            yLocationIncrement = yLocationIncrement + 30 -- increment the y location for the next popup
+                            
+                            -- reset the building UI to the first building
+                            cycleBuilding(0) -- reset the building UI to the first building
+                        end
+                    end
+            
+                    -- 4) store new state
+                    building.unlocked = allRequiredUnlocked
+                end
+            end
+            
+            -- now do the same for converters
+            for i, conv in ipairs(globals.converter_defs) do
+                local wasUnlocked = conv.unlocked
+
+                -- only test those still locked and with requirements
+                if not conv.unlocked then
+                    local allReqsOK = true
+
+                    -- 1) building-dependency check
+                    for _, bId in ipairs(conv.required_building) do
+                        local b = findInTable(globals.building_upgrade_defs, "id", bId)
+                        if not b or not b.unlocked then
+                            allReqsOK = false
+                            break
+                        end
+                    end
+
+                    -- 2) converter-dependency check (only if buildings passed)
+                    if allReqsOK and conv.required_converter then
+                        for _, cId in ipairs(conv.required_converter) do
+                            local c = findInTable(globals.converter_defs, "id", cId)
+                            if not c or not c.unlocked then
+                                allReqsOK = false
+                                break
+                            end
+                        end
+                    end
+
+                    -- 3) currency check (only if all deps passed)
+                    if allReqsOK and conv.required_currencies then
+                        for key, amount in pairs(conv.required_currencies) do
+                            local have = globals[key] or 0
+                            if have < amount then
+                                allReqsOK = false
+                                break
+                            end
+                        end
+                    end
+
+                    -- 4) flip-detect and popup
+                    if wasUnlocked ~= allReqsOK then
+                        debug("Converter ", conv.id,
+                            " unlocked status changed to: ", allReqsOK)
+                        if allReqsOK then
+                            newTextPopup(
+                                localization.get(
+                                    "ui.new_unlock",
+                                    { unlock = localization.get(conv.ui_text_title) }
+                                ),
+                                globals.screenWidth() / 2,
+                                globals.screenHeight() / 2 + yLocationIncrement,
+                                4
+                            )
+                            yLocationIncrement = yLocationIncrement + 30
+                            cycleConverter(0) -- reset the converter UI to the first converter
+                        end
+                    end
+
+                    -- 5) store new state
+                    conv.unlocked = allReqsOK
+                end
+            end
+        end,
+        0,-- repeat forever,
+        false,-- run immediately
+        nil,
+        "building_unlock_check" -- timer name
+    )
       
     globals.selectedBuildingIndex = 1 -- the index of the currently selected building in the upgrade list
     
@@ -894,45 +1250,6 @@ function main.init()
     -- second upgrade ui (converters)
     
     globals.converter_ui_animation_entity = nil
-    globals.converter_defs = {
-        { -- converts dust to crystal
-          id = "dust_to_crystal", -- the id of the converter
-          required_building = {"whale_song_gatherer"},
-          required_converter = {},
-          cost = {
-            song_essence = 100  -- the stuff gathered by the whale song gatherer
-          },
-          unlocked = false,
-          anim = "dust_to_crystal_converterAnim", -- the animation for the converter
-          ui_text_title = "ui.dust_to_crystal_converter_name", -- the text to display in the ui for this converter
-          ui_text_body = "ui.dust_to_crystal_converter_description" -- the text to display in the ui for this converter
-        },
-        { -- converts crystal to water
-          id = "crystal_to_wafer", -- the id of the converter
-          required_building = {"whale_song_gatherer"},
-          required_converter = {"dust_to_crystal"},
-          cost = {
-            crystal = 100  -- the stuff gathered by dust_to_crystal converter
-          },
-          unlocked = false,
-          anim = "3972-TheRoguelike_1_10_alpha_765.png", -- the animation for the converter
-          ui_text_title = "ui.crystal_to_wafer_converter_name", -- the text to display in the ui for this converter
-          ui_text_body = "ui.crystal_to_wafer_converter_description" -- the text to display in the ui for this converter
-        },
-        { -- converts water to krill
-          id = "wafer_to_chip", -- the id of the converter
-          required_building = {"whale_song_gatherer"},
-          required_converter = {"crystal_to_wafer"},
-          cost = {
-            wafer = 100  -- the stuff gathered by  crystal_to_wafer converter
-          },
-          unlocked = false, 
-          anim = "wafer_to_chip_converterAnim", -- the animation for the converter
-          ui_text_title = "ui.wafer_to_chip_converter_name", -- the text to display in the ui for this converter
-          ui_text_body = "ui.wafer_to_chip_converter_description" -- the text to display in the ui for this converter
-        }
-      }
-      
     
     globals.selectedConverterIndex = 1 -- the index of the currently selected building in the upgrade list
     
@@ -1143,6 +1460,13 @@ function main.init()
     -- create a new UI box for the tooltip
     
     globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
+    
+    -- get transform for the tooltip UI box
+    local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
+    tooltipTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
+    local uiBoxComp = registry:get(globals.ui.tooltipUIBox, UIBoxComponent)
+    local uiTooltipRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
+    uiTooltipRootTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
     
     
     

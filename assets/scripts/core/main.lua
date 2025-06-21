@@ -608,18 +608,6 @@ function main.init()
             debug("Prestige upgrade 3 clicked!")
         end
     ))
-    :addChild(makePrestigeWindowUpgradeButton(
-        localization.get("ui.prestige_upgrade_4"),  -- initial text
-        function(registry, entity)
-            debug("Prestige upgrade 4 clicked!")
-        end
-    ))
-    :addChild(makePrestigeWindowUpgradeButton(
-        localization.get("ui.prestige_upgrade_5"),  -- initial text
-        function(registry, entity)
-            debug("Prestige upgrade 5 clicked!")
-        end
-    ))
     :addChild(closeButtonTemplate)
     :build()
 
@@ -654,6 +642,20 @@ function main.init()
         nil,                                  -- no style override
         "float"                       -- animation spec
     )
+    
+    local buildingTextGameObject = registry:get(buildingText.config.object, GameObject)
+    -- set onhover & stop hover callbacks to show tooltip
+    buildingTextGameObject.methods.onHover = function()
+        debug("Building text entity hovered!")
+        showTooltip(localization.get("ui.grav_wave_title"), localization.get("ui.grav_wave_desc"))
+    end
+    buildingTextGameObject.methods.onStopHover = function()
+        debug("Building text entity stopped hovering!")
+        hideTooltip()
+    end
+    -- make hoverable
+    buildingTextGameObject.state.hoverEnabled = true
+    buildingTextGameObject.state.collisionEnabled = true -- enable collision for the hover to work
     
     
     local buildingTextTemplate = UIElementTemplateNodeBuilder.create()
@@ -706,57 +708,7 @@ function main.init()
     buildingTextTransform.actualY = 10 -- 10 pixels from the top edge
     
     
-    -- tooltip ui box that will follow the mouse cursor
-    local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("sample tooltip title"),  -- initial text
-        18.0,                                 -- font size
-        nil,                                  -- no style override
-        "rainbow"                       -- animation spec
-    )
-    globals.ui.tooltipTitleText = tooltipTitleText.config.object
-    local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("Sample tooltip body text"),  -- initial text
-        15.0,                                 -- font size
-        nil,                                  -- no style override
-        ""                       -- animation spec
-    )
-    globals.ui.tooltipBodyText = tooltipBodyText.config.object
     
-    -- make vertical container for the tooltip
-    local tooltipContainer = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.VERTICAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
-            :addMinHeight(50)
-            :addMinWidth(200)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(tooltipTitleText)
-    :addChild(tooltipBodyText)
-    :build()
-    -- make a new tooltip root
-    local tooltipRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
-            :addMinHeight(50)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(tooltipContainer)
-    :build()
-    -- create a new UI box for the tooltip
-    
-    globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
     
     
     
@@ -767,6 +719,72 @@ function main.init()
     
     
     -- first upgrade ui (buildings)
+    globals.building_upgrade_defs = {
+        {
+          id = "basic_dust_collector", -- the id of the building
+          required = {},
+          cost = {
+            whale_dust = 30  -- cost in whale dust
+          },
+          unlocked = true,
+          anim = "resonance_beacon_anim",
+          ui_text_title = "ui.dust_collector_name", -- the ui text for the building
+          ui_text_body = "ui.dust_collector_desc", -- the ui text for the building
+        
+          animation_entity = nil -- 
+        },
+        {
+          id = "MK2_dust_collector", -- the id of the building
+          required = {"basic_dust_collector"},
+          cost = {
+            whale_dust = 100  -- cost in whale dust
+          },
+          unlocked = false,
+          anim = "gathererMK2Anim", -- the animation for the building
+            ui_text_title = "ui.MK2_dust_collector_name", -- the ui text for the building
+            ui_text_body = "ui.MK2_dust_collector_desc", -- the ui text for the building
+          animation_entity = nil -- 
+          
+        },
+        {
+          id = "krill_home", -- the id of the building
+          required = {},
+          cost = {
+            whale_dust = 50  -- cost in whale dust
+          },
+          unlocked = false,
+          anim = "krillHomeSmallAnim", -- the animation for the building
+          ui_text_title = "ui.krill_home_name", -- the ui text for the building
+          ui_text_body = "ui.krill_home_desc", -- the ui text for the building
+          animation_entity = nil -- 
+        },
+        {
+          id = "krill_farm", -- the id of the building
+          required = {"krill_home"},
+          cost = {
+            whale_dust = 400  -- cost in whale dust
+          },
+          unlocked = false,
+          anim = "krillHomeLargeAnim", -- the animation for the building
+          ui_text_title = "ui.krill_farm_name", -- the ui text for the building
+          ui_text_body = "ui.krill_farm_desc", -- the ui text for the building
+          animation_entity = nil -- 
+        },
+        {
+          id = "whale_song_gatherer", -- the id of the building
+          required = {"krill_farm", "basic_dust_collector", "MK2_dust_collector"},
+          cost = {
+            whale_dust = 1000  -- cost in whale dust
+          },
+          unlocked = false,
+          anim = "dream_weaver_antenna_anim", -- the animation for the building,
+          ui_text_title = "ui.whale_song_gatherer_name", -- the ui text for the building
+            ui_text_body = "ui.whale_song_gatherer_desc", -- the ui text for the building
+          animation_entity = nil -- 
+        }
+      }
+      
+    globals.selectedBuildingIndex = 1 -- the index of the currently selected building in the upgrade list
     
     -- "left" button
     local leftButtonText = ui.definitions.getNewDynamicTextEntry(
@@ -785,8 +803,8 @@ function main.init()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
-                -- button click callback
-                debug("Left button clicked!")
+                cycleBuilding(-1) -- decrement the selected building index
+                -- debug("Left button clicked! Current building index: ", globals.selectedBuildingIndex)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -799,11 +817,20 @@ function main.init()
     
     -- middle text 
     --TODO: customize this based on update data
-    local middleText = animation_system.createAnimatedObjectWithTransform(
-        "whale_dust_anim", -- animation ID
+    globals.building_ui_animation_entity = animation_system.createAnimatedObjectWithTransform(
+        globals.building_upgrade_defs[1].anim, -- animation ID
         false             -- use animation, not sprite id
     )
-    local middleTextElement = ui.definitions.wrapEntityInsideObjectElement(middleText) -- wrap the text in an object element
+    local middleTextElement = ui.definitions.wrapEntityInsideObjectElement(globals.building_ui_animation_entity) -- wrap the text in an object element
+    cycleBuilding(0) -- initialize the building UI with the first building
+    
+    -- make animatino hoverable
+    local buildingUIAnimGameObject = registry:get(globals.building_ui_animation_entity, GameObject)
+    buildingUIAnimGameObject.state.dragEnabled = false
+    buildingUIAnimGameObject.state.hoverEnabled = true
+    buildingUIAnimGameObject.state.clickEnabled = false
+    buildingUIAnimGameObject.state.collisionEnabled = true
+    
     
     
     -- right button
@@ -823,8 +850,7 @@ function main.init()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
-                -- button click callback
-                debug("Right button clicked!")
+                cycleBuilding(1) -- increment the selected building index
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -868,6 +894,49 @@ function main.init()
     
     -- second upgrade ui (converters)
     
+    globals.converter_ui_animation_entity = nil
+    globals.converter_defs = {
+        { -- converts dust to crystal
+          id = "dust_to_crystal", -- the id of the converter
+          required_building = {"whale_song_gatherer"},
+          required_converter = {},
+          cost = {
+            song_essence = 100  -- the stuff gathered by the whale song gatherer
+          },
+          unlocked = false,
+          anim = "dust_to_crystal_converterAnim", -- the animation for the converter
+          ui_text_title = "ui.dust_to_crystal_converter_name", -- the text to display in the ui for this converter
+          ui_text_body = "ui.dust_to_crystal_converter_description" -- the text to display in the ui for this converter
+        },
+        { -- converts crystal to water
+          id = "crystal_to_wafer", -- the id of the converter
+          required_building = {"whale_song_gatherer"},
+          required_converter = {"dust_to_crystal"},
+          cost = {
+            crystal = 100  -- the stuff gathered by dust_to_crystal converter
+          },
+          unlocked = false,
+          anim = "3972-TheRoguelike_1_10_alpha_765.png", -- the animation for the converter
+          ui_text_title = "ui.crystal_to_wafer_converter_name", -- the text to display in the ui for this converter
+          ui_text_body = "ui.crystal_to_wafer_converter_description" -- the text to display in the ui for this converter
+        },
+        { -- converts water to krill
+          id = "wafer_to_chip", -- the id of the converter
+          required_building = {"whale_song_gatherer"},
+          required_converter = {"crystal_to_wafer"},
+          cost = {
+            wafer = 100  -- the stuff gathered by  crystal_to_wafer converter
+          },
+          unlocked = false, 
+          anim = "wafer_to_chip_converterAnim", -- the animation for the converter
+          ui_text_title = "ui.wafer_to_chip_converter_name", -- the text to display in the ui for this converter
+          ui_text_body = "ui.wafer_to_chip_converter_description" -- the text to display in the ui for this converter
+        }
+      }
+      
+    
+    globals.selectedConverterIndex = 1 -- the index of the currently selected building in the upgrade list
+    
     -- "left" button
     local leftButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
         "<",  -- initial text
@@ -885,8 +954,7 @@ function main.init()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
-                -- button click callback
-                debug("Left button clicked!")
+                cycleConverter(-1)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -899,11 +967,21 @@ function main.init()
     
     -- middle text 
     --TODO: customize this based on update data
-    local middleTextConverter = animation_system.createAnimatedObjectWithTransform(
-        "whale_dust_anim", -- animation ID
+    globals.converter_ui_animation_entity = animation_system.createAnimatedObjectWithTransform(
+        "locked_upgrade_anim", -- animation ID
         false             -- use animation, not sprite id
     )
-    local middleTextElementConverter = ui.definitions.wrapEntityInsideObjectElement(middleTextConverter) -- wrap the text in an object element
+    
+    -- make globals.converter_ui_animation_entity hoverable
+    local converterGameObject = registry:get(globals.converter_ui_animation_entity, GameObject)
+    converterGameObject.state.dragEnabled = false
+    converterGameObject.state.clickEnabled = false
+    converterGameObject.state.hoverEnabled = true
+    converterGameObject.state.collisionEnabled = true
+    
+    local middleTextElementConverter = ui.definitions.wrapEntityInsideObjectElement(globals.converter_ui_animation_entity) -- wrap the text in an object element
+    
+    cycleConverter(0) -- cycle to the first converter
     
     
     -- right button
@@ -925,6 +1003,7 @@ function main.init()
             :addButtonCallback(function()
                 -- button click callback
                 debug("Right button clicked!")
+                cycleConverter(1)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -1099,7 +1178,57 @@ function main.init()
     upgradeUIBoxTransform.actualY = globals.screenHeight() - upgradeUIBoxTransform.actualH -- align to the bottom of the screen
     
     
+    -- tooltip ui box that will follow the mouse cursor
+    local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("sample tooltip title"),  -- initial text
+        18.0,                                 -- font size
+        nil,                                  -- no style override
+        "rainbow"                       -- animation spec
+    )
+    globals.ui.tooltipTitleText = tooltipTitleText.config.object
+    local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("Sample tooltip body text"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        ""                       -- animation spec
+    )
+    globals.ui.tooltipBodyText = tooltipBodyText.config.object
     
+    -- make vertical container for the tooltip
+    local tooltipContainer = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.VERTICAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("GRAY"))
+            :addMinHeight(50)
+            :addMinWidth(200)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(tooltipTitleText)
+    :addChild(tooltipBodyText)
+    :build()
+    -- make a new tooltip root
+    local tooltipRoot =  UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("BLACK"))
+            :addMinHeight(50)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(tooltipContainer)
+    :build()
+    -- create a new UI box for the tooltip
+    
+    globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
     
     
     
@@ -1120,17 +1249,10 @@ function main.init()
     
     methods.onHover = function()
         -- debug("whale hovered!")
-        -- set the tooltip text
-        TextSystem.Functions.setText(globals.ui.tooltipTitleText, localization.get("ui.whale_title"))
-        TextSystem.Functions.setText(globals.ui.tooltipBodyText, localization.get("ui.whale_body"))
-        ui.box.RenewAlignment(registry, globals.ui.tooltipUIBox) -- renew the alignment of the tooltip UI box
-        
-        -- position the tooltip UI box at the mouse cursor
-        local mouseTransform = registry:get(globals.cursor(), Transform)
-        local mouseX, mouseY = mouseTransform.actualX, mouseTransform.actualY
-        local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
-        tooltipTransform.actualX = mouseX + 20 -- offset to the right
-        tooltipTransform.actualY = mouseY + 20 -- offset down
+        showTooltip(
+            localization.get("ui.whale_title"), 
+            localization.get("ui.whale_body")
+        )
         
     end
     methods.onStopHover = function()
@@ -1138,8 +1260,8 @@ function main.init()
         -- reset the tooltip text
         
         -- hide the tooltip UI box
-        local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
-        tooltipTransform.actualY = globals.screenHeight()  -- move it out of the screen
+        
+        hideTooltip()
     end
     methods.onClick = function(registry, e) 
         debug("whale clicked!")

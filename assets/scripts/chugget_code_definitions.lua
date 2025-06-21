@@ -4014,6 +4014,17 @@ function animation_system.getNinepatchUIBorderInfo(...) end
 function animation_system.createAnimatedObjectWithTransform(...) end
 
 ---
+--- Replaces the animated object on an entity, optionally regenerating it from a sprite UUID and applying shader‐pass & shadow settings
+---
+---@param e entt.entity                                             # Entity to replace animated object on
+---@param defaultAnimationIDOrSpriteUUID string                      # Animation ID or sprite UUID
+---@param generateNewAnimFromSprite boolean?                         # Regenerate animation from sprite? Default false
+---@param shaderPassConfigFunc fun(entt_entity: entt.entity)?        # Optional shader pass configuration callback
+---@param shadowEnabled boolean?                                    # Enable shadow? Default true
+---@return entt.entity                                             # Entity whose animated object was replaced
+function animation_system.replaceAnimatedObjectOnEntity(...) end
+
+---
 --- Configures an existing entity with Transform, AnimationQueueComponent, and optional shader‐pass + shadow settings
 ---
 

@@ -689,14 +689,14 @@ namespace ai_system
         // Example 1: Set a fallback goal (e.g., wandering)
         goap_worldstate_clear(&goapStruct.goal);
         goap_worldstate_set(&goapStruct.ap, &goapStruct.goal, "wandering", true);
-        SPDLOG_DEBUG("No valid plan found, setting goal to wander.");
+        // SPDLOG_DEBUG("No valid plan found, setting goal to wander.");
         // replan(entity);
 
         if (goapStruct.planSize == 0)
         {
             // Still no plan found, perhaps enter an idle state or default action
             // Example: Log the error or set the creature to an idle state
-            SPDLOG_DEBUG("- No valid plan found.");
+            // SPDLOG_DEBUG("- No valid plan found.");
             // You can implement an idle behavior or log the issue here.
         }
     }
@@ -781,14 +781,14 @@ namespace ai_system
 
         if (goapComponent.actionQueue.empty())
         {
-            SPDLOG_DEBUG("Action queue is empty");
+            // SPDLOG_DEBUG("Action queue is empty");
             return std::nullopt;
         }
 
         Action &currentAction = goapComponent.actionQueue.front();
         if (!currentAction.is_running)
         {
-            SPDLOG_DEBUG("Current action is not running");
+            // SPDLOG_DEBUG("Current action is not running");
             return std::nullopt;
         }
 
@@ -811,7 +811,7 @@ namespace ai_system
         // if the coroutine has yielded, return running
         if (luaResult.status() == sol::call_status::yielded)
         {
-            SPDLOG_DEBUG("Action {} is still running (yielded)", goapComponent.plan[goapComponent.current_action]);
+            // SPDLOG_DEBUG("Action {} is still running (yielded)", goapComponent.plan[goapComponent.current_action]);
             return Action::Result::RUNNING;
         }
 
@@ -843,7 +843,7 @@ namespace ai_system
         // move on to next action if current action is successful
         if (result == Action::Result::SUCCESS)
         {
-            SPDLOG_DEBUG("Action {} completed, calling start() on next action", goapComponent.plan[goapComponent.current_action]);
+            // SPDLOG_DEBUG("Action {} completed, calling start() on next action", goapComponent.plan[goapComponent.current_action]);
 
             currentAction.finish(entity);
             goapComponent.actionQueue.pop();
@@ -858,7 +858,7 @@ namespace ai_system
                 const std::string post_key = postCondition.first;
                 const bool post_value = postCondition.second;
                 goap_worldstate_set(&goapComponent.ap, &goapComponent.current_state, post_key.c_str(), post_value);
-                SPDLOG_DEBUG("Automatically setting postcondition {} to {}", post_key, post_value);
+                // SPDLOG_DEBUG("Automatically setting postcondition {} to {}", post_key, post_value);
             }
 
             // Move to the next action
@@ -872,7 +872,7 @@ namespace ai_system
             }
             else
             {
-                SPDLOG_DEBUG("Action queue is now empty");
+                // SPDLOG_DEBUG("Action queue is now empty");
                 return std::nullopt; // this will force caller to replan
             }
         }
@@ -883,10 +883,10 @@ namespace ai_system
             if (goapComponent.retries >= goapComponent.max_retries)
             {
                 // If retries exceed max_retries, re-plan
-                SPDLOG_DEBUG("Maximum retries exceeded, re-planning...");
+                // SPDLOG_DEBUG("Maximum retries exceeded, re-planning...");
                 return std::nullopt; // this will force caller to replan
             }
-            SPDLOG_DEBUG("Action {} failed, retrying", goapComponent.plan[goapComponent.current_action]);
+            // SPDLOG_DEBUG("Action {} failed, retrying", goapComponent.plan[goapComponent.current_action]);
             // reset blackboard and rerun start REVIEW: re-attempting an action shouldn't reset the blackboard, right?
             // goapComponent.blackboard.clear();
             // goapComponent.blackboardInit(goapComponent.blackboard);
@@ -894,7 +894,7 @@ namespace ai_system
         }
         else
         {
-            SPDLOG_DEBUG("Action {} is still running", goapComponent.plan[goapComponent.current_action]);
+            // SPDLOG_DEBUG("Action {} is still running", goapComponent.plan[goapComponent.current_action]);
         }
         // let caller know the result of the action too
         return result;
@@ -1131,7 +1131,7 @@ namespace ai_system
         // Check if re-planning is necessary based on action failure or mismatch with expected state / plan is empty
         if (is_goap_info_valid == false && plan_is_running_valid == false)
         { // plan might be running one action, but plan can be empty otherwise
-            SPDLOG_DEBUG("GOAP plan is empty, re-selecting goal...");
+            // SPDLOG_DEBUG("GOAP plan is empty, re-selecting goal...");
             select_goal(entity);
         }
         // if plan is running, but the world state has changed since the plan was made, then replan
@@ -1139,14 +1139,14 @@ namespace ai_system
         {
             if (!goap_worldstate_match(&goapStruct.ap, goapStruct.current_state, goapStruct.cached_current_state))
             {
-                SPDLOG_DEBUG("World state has changed, re-planning required...");
+                // SPDLOG_DEBUG("World state has changed, re-planning required...");
                 // print current state
                 char desc[4096];
                 goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
-                SPDLOG_DEBUG("Current world state: {}", desc);
+                // SPDLOG_DEBUG("Current world state: {}", desc);
                 // compare to next state
                 goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
-                SPDLOG_DEBUG("Cached current state: {}", desc);
+                // SPDLOG_DEBUG("Cached current state: {}", desc);
                 select_goal(entity);
             }
         }
@@ -1154,7 +1154,7 @@ namespace ai_system
         else if (plan_is_running_valid == false)
         {
             // If the plan is not running, re-plan
-            SPDLOG_DEBUG("Plan is not running properly, re-planning...");
+            // SPDLOG_DEBUG("Plan is not running properly, re-planning...");
             select_goal(entity);
         }
 
@@ -1162,7 +1162,7 @@ namespace ai_system
         goapStruct.cached_current_state = goapStruct.current_state;
 
         // debug output of current plan and world state
-        debugPrintGOAPStruct(goapStruct);
+        // debugPrintGOAPStruct(goapStruct);
     }
 
     // void runWorldStateUpdaters(entt::entity &entity)
@@ -1277,7 +1277,7 @@ namespace ai_system
         goapStruct.planCost = astar_plan(&goapStruct.ap, goapStruct.current_state, goapStruct.goal, goapStruct.plan, goapStruct.states, &goapStruct.planSize);
         char desc[4096];
         goap_description(&goapStruct.ap, desc, sizeof(desc));
-        SPDLOG_DEBUG("replan() called for entity {}", static_cast<int>(entity));
+        // SPDLOG_DEBUG("replan() called for entity {}", static_cast<int>(entity));
         // SPDLOG_INFO("Action planner description: {}", desc);
 
         // SPDLOG_INFO("plancost = {}", goapStruct.planCost);
@@ -1303,7 +1303,7 @@ namespace ai_system
         }
         else
         {
-            SPDLOG_ERROR("Call to replan() produced no plan... There are no actions to take.");
+            // SPDLOG_ERROR("Call to replan() produced no plan... There are no actions to take.");
 
             handle_no_plan(entity); // Call a function to handle this scenario
         }
@@ -1330,7 +1330,7 @@ namespace ai_system
         for (auto entity : view)
         {
 
-            SPDLOG_DEBUG("Updating AI for entity: {}", static_cast<int>(entity));
+            // SPDLOG_DEBUG("Updating AI for entity: {}", static_cast<int>(entity));
 
             // update the goap logic
             update_goap(entity);

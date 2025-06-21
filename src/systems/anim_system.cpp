@@ -76,6 +76,32 @@ namespace animation_system {
             "---@return entt.entity entity # Created animation entity",
             "Creates an animated object with a transform"
         );
+        
+        rec.bind_function(lua, {"animation_system"}, "replaceAnimatedObjectOnEntity",
+            // wrapper lambda to apply defaults
+            [](entt::entity entity, const std::string& defaultAnimationIDOrSpriteUUID,
+               sol::optional<bool> generateNewAnimFromSprite,
+               sol::optional<std::function<void(entt::entity)>> shaderPassConfigFunc,
+               sol::optional<bool> shadowEnabled
+            ) -> void {
+                animation_system::replaceAnimatedObjectOnEntity(
+                    entity,
+                    defaultAnimationIDOrSpriteUUID,
+                    generateNewAnimFromSprite.value_or(false),
+                    shaderPassConfigFunc.value_or(nullptr),
+                    shadowEnabled.value_or(true)
+                );
+            },
+            // Updated doc-comments:
+            "---@param e entt.entity                                             # Entity to replace animated object on\n"
+            "---@param defaultAnimationIDOrSpriteUUID string                      # Animation ID or sprite UUID\n"
+            "---@param generateNewAnimFromSprite boolean?                         # Regenerate animation from sprite? Default false\n"
+            "---@param shaderPassConfigFunc fun(entt_entity: entt.entity)?        # Optional shader pass configuration callback\n"
+            "---@param shadowEnabled boolean?                                    # Enable shadow? Default true\n"
+            "---@return entt.entity                                             # Entity whose animated object was replaced",
+            "Replaces the animated object on an entity, optionally regenerating it from a sprite UUID and applying shader‐pass & shadow settings"
+        );
+        
 
         // setupAnimatedObjectOnEntity(
         //    e: entt.entity,
@@ -227,6 +253,36 @@ namespace animation_system {
             shaderPassConfig(e); // pass the entity to the shader pass config function
         
         return e;
+    }
+    
+    auto replaceAnimatedObjectOnEntity(
+        entt::entity                            e,
+        std::string                             defaultAnimationIDorSpriteUUID,
+        bool                                    generateNewAnimFromSprite,
+        std::function<void(entt::entity)>       shaderPassConfig,
+        bool                                    shadowEnabled
+    ) -> void
+    {
+        // --- ASSUME: `e` already has a transform::Transform attached ---
+        auto &registry  = globals::registry;
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        auto &gameObject = registry.get<transform::GameObject>(e);
+        if (generateNewAnimFromSprite) {
+            // create a new animation object from the sprite UUID
+            animQueue.defaultAnimation = createStillAnimationFromSpriteUUID(defaultAnimationIDorSpriteUUID, std::nullopt, std::nullopt);
+        }
+        else {
+            // use the default animation object
+            animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationIDorSpriteUUID);
+        }
+        
+        if (shaderPassConfig)
+            shaderPassConfig(e); // pass the entity to the shader pass config function
+            
+        if (!shadowEnabled) {
+            gameObject.shadowDisplacement.reset();
+        }
+        
     }
 
     auto setupAnimatedObjectOnEntity(

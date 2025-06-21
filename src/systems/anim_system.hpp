@@ -16,6 +16,13 @@ namespace animation_system {
     
     // pass a function which sets up shader pipeline if desired.
     extern auto createAnimatedObjectWithTransform (std::string defaultAnimationIDOrSpriteUUID, bool generateNewAnimFromSprite = false, int x = 0, int y = 0, std::function<void(entt::entity)> shaderPassConfigFunc = [](entt::entity e){}, bool shadowEnabled = true) ->  entt::entity;
+    auto replaceAnimatedObjectOnEntity(
+        entt::entity                            e,
+        std::string                             defaultAnimationIDorSpriteUUID,
+        bool                                    generateNewAnimFromSprite,
+        std::function<void(entt::entity)>       shaderPassConfig,
+        bool                                    shadowEnabled
+    ) -> void;
     
     // convenience function to create a still animation object from a sprite UUID
     auto createStillAnimationFromSpriteUUID(std::string spriteUUID, std::optional<Color> fg = std::nullopt, std::optional<Color> bg = std::nullopt) -> AnimationObject;

@@ -289,6 +289,7 @@ function buyConverterButtonCallback()
   ).config.object
   
   -- make the text entity follow the converter entity
+  local transformComp = registry:get(exampleConverter, Transform)
   transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, exampleConverter,
   InheritedPropertiesSync.Strong,
   InheritedPropertiesSync.Strong,
@@ -316,6 +317,7 @@ function buyConverterButtonCallback()
   gameObjectComp.methods.onStopDrag = function()
       debug("Converter entity stopped dragging!")
       local gameObjectComp = registry:get(exampleConverter, GameObject)
+      local transformComp = registry:get(exampleConverter, Transform)
       -- get the grid that it's in, grid is 64 pixels wide
       local gridX = math.floor(transformComp.actualX / 64)
       local gridY = math.floor(transformComp.actualY / 64)

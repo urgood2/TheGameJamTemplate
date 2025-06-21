@@ -316,7 +316,7 @@ function main.init()
             acceleration = 3.0, -- gravity effect
             lifespan   = 30.0,
             startColor = util.getColor("BLUE"),
-            endColor   = util.getColor("RED"),
+            endColor   = util.getColor("glaucou"),
             rotationSpeed = 360,
             onUpdateCallback = function(particleComp, dt)
                 
@@ -380,7 +380,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             
             :addNoMovementWhenDragged(true)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -397,7 +397,7 @@ function main.init()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
+            :addColor(util.getColor("keppel"))
             :addMinHeight(50)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
@@ -455,7 +455,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             -- :addShadow(true)
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
@@ -490,7 +490,7 @@ function main.init()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
+            :addColor(util.getColor("keppel"))
             :addMinHeight(50)
             :addShadow(true)
             :addMaxWidth(300)
@@ -526,7 +526,7 @@ function main.init()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("GRAY"))
+                :addColor(util.getColor("lapi_lazuli"))
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -556,7 +556,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("RED"))
+            :addColor(util.getColor("glaucou"))
             :addEmboss(2.0)
             :addShadow(true)
             :addHover(true) -- needed for button effect
@@ -582,7 +582,7 @@ function main.init()
     :addType(UITypeEnum.VERTICAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
+            :addColor(util.getColor("keppel"))
             :addMinWidth(300)
             :addMinHeight(400)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -616,7 +616,7 @@ function main.init()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             :addMinHeight(400)
             :addMinWidth(300)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -662,7 +662,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
     UIConfigBuilder.create()
-        :addColor(util.getColor("GRAY"))
+        :addColor(util.getColor("lapi_lazuli"))
         :addMinHeight(50)
         :addProgressBar(true) -- enable progress bar effect
         :addProgressBarFullColor(util.getColor("BLUE"))
@@ -688,7 +688,7 @@ function main.init()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
+            :addColor(util.getColor("keppel"))
             :addMinHeight(50)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -752,7 +752,7 @@ function main.init()
           cost = {
             whale_dust = 50  -- cost in whale dust
           },
-          unlocked = false,
+          unlocked = true,
           anim = "krillHomeSmallAnim", -- the animation for the building
           ui_text_title = "ui.krill_home_name", -- the ui text for the building
           ui_text_body = "ui.krill_home_desc", -- the ui text for the building
@@ -798,7 +798,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             -- :addShadow(true)
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
@@ -845,7 +845,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             -- :addShadow(true)
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
@@ -874,7 +874,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             -- :addShadow(true)
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
@@ -948,7 +948,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             -- :addShadow(true)
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
@@ -995,7 +995,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             -- :addShadow(true)
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
@@ -1026,7 +1026,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             -- :addShadow(true)
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
@@ -1051,7 +1051,7 @@ function main.init()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
+            :addColor(util.getColor("keppel"))
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
@@ -1073,7 +1073,7 @@ function main.init()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
@@ -1113,7 +1113,7 @@ function main.init()
     :addType(UITypeEnum.VERTICAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("GRAY"))
+            :addColor(util.getColor("lapi_lazuli"))
             :addMinHeight(50)
             :addMinWidth(200)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -1130,7 +1130,7 @@ function main.init()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("BLACK"))
+            :addColor(util.getColor("keppel"))
             :addMinHeight(50)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)

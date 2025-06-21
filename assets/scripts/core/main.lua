@@ -879,8 +879,7 @@ function main.init()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
-                -- button click callback
-                debug("Buy button clicked!")
+                buyBuildingButtonCallback()
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -1035,92 +1034,7 @@ function main.init()
                 -- button click callback
                 debug("Buy button clicked!")
                 
-                -- create a new example converter entity
-                local exampleConverter = create_ai_entity("kobold")
-                
-                animation_system.setupAnimatedObjectOnEntity(
-                    exampleConverter,
-                    "dust_to_crystal_converterAnim", -- Default animation ID
-                    false,             -- ? generate a new still animation from sprite, don't set to true, causes bug
-                    nil,               -- shader_prepass, -- Optional shader pass config function
-                    true               -- Enable shadow
-                )
-                
-                animation_system.resizeAnimationObjectsInEntityToFit(
-                    exampleConverter,
-                    60, -- width
-                    60  -- height
-                )
-                
-                -- make the object draggable
-                local gameObjectState = registry:get(exampleConverter, GameObject).state
-                gameObjectState.dragEnabled = true
-                gameObjectState.clickEnabled = true
-                gameObjectState.hoverEnabled = true
-                gameObjectState.collisionEnabled = true
-                
-                -- create a new text entity
-                local infoText = ui.definitions.getNewDynamicTextEntry(
-                    "Drag me",  -- initial text
-                    15.0,                                 -- font size
-                    nil,                                  -- no style override
-                    "bump"                       -- animation spec
-                ).config.object
-                
-                -- make the text entity follow the converter entity
-                transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, exampleConverter,
-                InheritedPropertiesSync.Strong,
-                InheritedPropertiesSync.Strong,
-                InheritedPropertiesSync.Strong,
-                InheritedPropertiesSync.Strong,
-                Vec2(0, -20) -- offset the text above the converter
-                );
-                
-                -- local textRole = registry:get(infoText, InheritedProperties)
-                -- textRole.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
-                
-                
-                -- now locate the converter entity in the game world
-                local transformComp = registry:get(exampleConverter, Transform)
-                transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
-                transformComp.actualY = globals.screenHeight()  - 300
-                
-                
-                -- add onstopdrag method to the converter entity
-                local gameObjectComp = registry:get(exampleConverter, GameObject)
-                gameObjectComp.methods.onHover = function()
-                    debug("Converter entity hovered! WHy not drag?")
-                    
-                end
-                gameObjectComp.methods.onStopDrag = function()
-                    debug("Converter entity stopped dragging!")
-                    local gameObjectComp = registry:get(exampleConverter, GameObject)
-                    -- get the grid that it's in, grid is 64 pixels wide
-                    local gridX = math.floor(transformComp.actualX / 64)
-                    local gridY = math.floor(transformComp.actualY / 64)
-                    debug("Converter entity is in grid: ", gridX, gridY)
-                    -- snap the entity to the grid, but center it in the grid cell
-                    local magic_padding = 2
-                    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding-- center it in the grid cell
-                    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
-                    -- make the entity no longer draggable
-                    gameObjectState.dragEnabled = false
-                    gameObjectState.clickEnabled = false
-                    gameObjectState.hoverEnabled = false
-                    gameObjectState.collisionEnabled = false
-                    -- remove the text entity
-                    registry:destroy(infoText)
-                    -- spawn particles at the converter's position center
-                    spawnCircularBurstParticles(
-                        transformComp.actualX + transformComp.actualW / 2,
-                        transformComp.actualY + transformComp.actualH / 2,
-                        20, -- number of particles
-                        0.5 -- particle size
-                    )
-                    transform.InjectDynamicMotion(exampleConverter, 1.0, 1)
-                    
-                    
-                end
+                buyConverterButtonCallback()
                 
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -1295,12 +1209,12 @@ function main.init()
     local centerY = globals.screenHeight() / 2
 
     -- Orbit properties
-    local orbitRadius = 300.0  -- How far from the center to orbit, in pixels.
+    local orbitRadius = 200.0  -- How far from the center to orbit, in pixels.
     local baseSpeed = 0.1      -- The average speed of the orbit (in radians per second).
 
     -- Speed fluctuation properties
-    local speedFluctuationAmount = 0.5 -- How much the speed varies. 0 is constant, 1 is drastic.
-    local speedFluctuationFrequency = 1.0 -- How quickly the speed oscillates. Higher is faster.
+    local speedFluctuationAmount = 0.8 -- How much the speed varies. 0 is constant, 1 is drastic.
+    local speedFluctuationFrequency = 0.5 -- How quickly the speed oscillates. Higher is faster.
 
     -- ===================================================================
     -- 2. State Variables (Do not change these)

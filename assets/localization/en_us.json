@@ -19,8 +19,10 @@
 		"grav_wave_title": "Gravitational Wave Indicator",
 		"grav_wave_desc": "The black hole is unstable!\nAt regular intervals, it emits gravitational waves\nthat jostle any whales nearby.",
 		
+		"not_unlocked_msg": "Not unlocked yet",
 		
 		
+		"drag_me": "Drag me",
 		
 		
 		"whale_title": "Whale",

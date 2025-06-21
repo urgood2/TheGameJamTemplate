@@ -109,6 +109,7 @@
         "latch": "cpp",
         "scoped_allocator": "cpp",
         "__config": "cpp",
-        "*.hpp11": "cpp"
+        "*.hpp11": "cpp",
+        "expected": "cpp"
     }
 }

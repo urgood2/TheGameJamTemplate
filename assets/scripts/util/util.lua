@@ -89,6 +89,43 @@ function showTooltip(titleText, bodyText)
   boxT.actualY = clamp(y, 0, screenH - h)
 end
 
+function newTextPopup(text, x, y, duration)
+  -- create a new text popup entity
+  local text = ui.definitions.getNewDynamicTextEntry(
+    text,  -- initial text
+    15.0,                                 -- font size
+    nil,                                  -- no style override
+    "bump"                       -- animation spec
+  ).config.object
+
+  -- set position
+  local transformComp = registry:get(text, Transform)
+  transformComp.actualX = x or globals.screenWidth() / 2
+  transformComp.actualY = y or globals.screenHeight() / 2
+  transformComp.visualX = transformComp.actualX
+  transformComp.visualY = transformComp.actualY
+  
+  -- inject dynamic motion
+  transform.InjectDynamicMotion(text, 0.7, 16)
+
+  -- timer to make it disappear
+  timer.after(duration or 2.0, function()
+    
+    local transformComp = registry:get(text, Transform)
+    
+    spawnCircularBurstParticles(
+      transformComp.actualX + transformComp.actualW / 2,
+      transformComp.actualY + transformComp.actualH / 2,
+      5,
+      0.2)
+    
+    if registry:valid(text) then
+      registry:destroy(text)  -- remove the text entity after the duration
+    end
+      
+  end)
+end
+
 function hideTooltip()
   local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
   tooltipTransform.actualY = globals.screenHeight()  -- move it out of the screen
@@ -129,7 +166,7 @@ function cycleConverter(inc)
   end
 
   -- 4) immediately show it once
-  showTooltip(title, body)
+  -- showTooltip(title, body)
 
   -- 5) swap the animation
   local animToShow = globals.converter_defs[globals.selectedConverterIndex].unlocked
@@ -178,7 +215,7 @@ function cycleBuilding(inc)
   end
 
   -- 4) immediately show it once
-  showTooltip(title, body)
+  -- showTooltip(title, body)
 
   -- 5) swap the animation
   local animToShow = globals.building_upgrade_defs[globals.selectedBuildingIndex].unlocked
@@ -192,4 +229,230 @@ function cycleBuilding(inc)
 
   -- 6) add a jiggle
   transform.InjectDynamicMotion(globals.building_ui_animation_entity, 0.7, 16)
+end
+
+
+function buyConverterButtonCallback()
+  -- id of currently selected converter
+  local selectedConverter = globals.converter_defs[globals.selectedConverterIndex]
+                
+  local uiTransformComp = registry:get(globals.converter_ui_animation_entity, Transform)
+  
+  if not selectedConverter.unlocked then
+      debug("Converter is not unlocked yet!")
+      newTextPopup(
+          localization.get("ui.not_unlocked_msg"),
+          uiTransformComp.actualX + uiTransformComp.actualW / 2,
+          uiTransformComp.actualY - uiTransformComp.actualH * 2.5,
+          2
+      )
+      return
+  end
+  
+  -- create a new example converter entity
+  local exampleConverter = create_ai_entity("kobold")
+  
+  
+  animation_system.setupAnimatedObjectOnEntity(
+      exampleConverter,
+      selectedConverter.anim, -- Default animation ID
+      false,             -- ? generate a new still animation from sprite, don't set to true, causes bug
+      nil,               -- shader_prepass, -- Optional shader pass config function
+      true               -- Enable shadow
+  )
+  
+  animation_system.resizeAnimationObjectsInEntityToFit(
+      exampleConverter,
+      60, -- width
+      60  -- height
+  )
+  
+  -- make the object draggable
+  local gameObjectState = registry:get(exampleConverter, GameObject).state
+  gameObjectState.dragEnabled = true
+  gameObjectState.clickEnabled = true
+  gameObjectState.hoverEnabled = true
+  gameObjectState.collisionEnabled = true
+  
+  -- create a new text entity
+  local infoText = ui.definitions.getNewDynamicTextEntry(
+      localization.get("ui.drag_me"),  -- initial text
+      15.0,                                 -- font size
+      nil,                                  -- no style override
+      "bump"                       -- animation spec
+  ).config.object
+  
+  -- make the text entity follow the converter entity
+  transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, exampleConverter,
+  InheritedPropertiesSync.Strong,
+  InheritedPropertiesSync.Strong,
+  InheritedPropertiesSync.Strong,
+  InheritedPropertiesSync.Strong,
+  Vec2(0, -20) -- offset the text above the converter
+  );
+  
+  -- local textRole = registry:get(infoText, InheritedProperties)
+  -- textRole.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+  
+  
+  -- now locate the converter entity in the game world
+  
+  transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
+  transformComp.actualY = globals.screenHeight()  - 300
+  
+  
+  -- add onstopdrag method to the converter entity
+  local gameObjectComp = registry:get(exampleConverter, GameObject)
+  gameObjectComp.methods.onHover = function()
+      debug("Converter entity hovered! WHy not drag?")
+      
+  end
+  gameObjectComp.methods.onStopDrag = function()
+      debug("Converter entity stopped dragging!")
+      local gameObjectComp = registry:get(exampleConverter, GameObject)
+      -- get the grid that it's in, grid is 64 pixels wide
+      local gridX = math.floor(transformComp.actualX / 64)
+      local gridY = math.floor(transformComp.actualY / 64)
+      debug("Converter entity is in grid: ", gridX, gridY)
+      -- snap the entity to the grid, but center it in the grid cell
+      local magic_padding = 2
+      transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding-- center it in the grid cell
+      transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
+      -- make the entity no longer draggable
+      gameObjectState.dragEnabled = false
+      gameObjectState.clickEnabled = false
+      gameObjectState.hoverEnabled = false
+      gameObjectState.collisionEnabled = false
+      -- remove the text entity
+      registry:destroy(infoText)
+      -- spawn particles at the converter's position center
+      spawnCircularBurstParticles(
+          transformComp.actualX + transformComp.actualW / 2,
+          transformComp.actualY + transformComp.actualH / 2,
+          20, -- number of particles
+          0.5 -- particle size
+      )
+      transform.InjectDynamicMotion(exampleConverter, 1.0, 1)
+      
+      
+  end
+end
+
+
+function buyBuildingButtonCallback()
+  -- id of currently selected converter
+  local selectedBuilding = globals.building_upgrade_defs[globals.selectedBuildingIndex]
+                
+  local uiTransformComp = registry:get(globals.building_ui_animation_entity, Transform)
+  
+  if not selectedBuilding.unlocked then
+      debug("Building is not unlocked yet!")
+      newTextPopup(
+          localization.get("ui.not_unlocked_msg"),
+          uiTransformComp.actualX + uiTransformComp.actualW / 2,
+          uiTransformComp.actualY - uiTransformComp.actualH * 2.5,
+          2
+      )
+      return
+  end
+  
+  -- create a new example converter entity
+  local exampleBuilding = create_ai_entity("kobold")
+  
+  
+  animation_system.setupAnimatedObjectOnEntity(
+    exampleBuilding,
+      selectedBuilding.anim, -- Default animation ID
+      false,             -- ? generate a new still animation from sprite, don't set to true, causes bug
+      nil,               -- shader_prepass, -- Optional shader pass config function
+      true               -- Enable shadow
+  )
+  
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    exampleBuilding,
+      60, -- width
+      60  -- height
+  )
+  
+  -- make the object draggable
+  local gameObjectState = registry:get(exampleBuilding, GameObject).state
+  gameObjectState.dragEnabled = true
+  gameObjectState.clickEnabled = true
+  gameObjectState.hoverEnabled = true
+  gameObjectState.collisionEnabled = true
+  
+  -- create a new text entity
+  local infoText = ui.definitions.getNewDynamicTextEntry(
+      localization.get("ui.drag_me"),  -- initial text
+      15.0,                                 -- font size
+      nil,                                  -- no style override
+      "bump"                       -- animation spec
+  ).config.object
+  
+  -- make the text entity follow the converter entity
+  transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, exampleBuilding,
+  InheritedPropertiesSync.Strong,
+  InheritedPropertiesSync.Strong,
+  InheritedPropertiesSync.Strong,
+  InheritedPropertiesSync.Strong,
+  Vec2(0, -20) -- offset the text above the converter
+  );
+  
+  -- local textRole = registry:get(infoText, InheritedProperties)
+  -- textRole.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+  
+  
+  -- now locate the converter entity in the game world
+  
+  local transformComp = registry:get(exampleBuilding, Transform)
+  transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
+  transformComp.actualY = globals.screenHeight()  - 300
+  
+  
+  -- add onstopdrag method to the converter entity
+  local gameObjectComp = registry:get(exampleBuilding, GameObject)
+  gameObjectComp.methods.onHover = function()
+      debug("Converter entity hovered! WHy not drag?")
+      
+  end
+  gameObjectComp.methods.onStopDrag = function()
+      debug("Converter entity stopped dragging!")
+      local gameObjectComp = registry:get(exampleBuilding, GameObject)
+      -- get the grid that it's in, grid is 64 pixels wide
+      local gridX = math.floor(transformComp.actualX / 64)
+      local gridY = math.floor(transformComp.actualY / 64)
+      debug("Converter entity is in grid: ", gridX, gridY)
+      -- snap the entity to the grid, but center it in the grid cell
+      local magic_padding = 2
+      transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding-- center it in the grid cell
+      transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
+      -- make the entity no longer draggable
+      gameObjectState.dragEnabled = false
+      gameObjectState.clickEnabled = false
+      gameObjectState.hoverEnabled = true
+      gameObjectState.collisionEnabled = true
+      -- remove the text entity
+      registry:destroy(infoText)
+      -- spawn particles at the converter's position center
+      spawnCircularBurstParticles(
+          transformComp.actualX + transformComp.actualW / 2,
+          transformComp.actualY + transformComp.actualH / 2,
+          20, -- number of particles
+          0.5 -- particle size
+      )
+      transform.InjectDynamicMotion(exampleBuilding, 1.0, 1)
+      
+      -- add on hover/stop hover methods to the building entity
+      gameObjectComp.methods.onHover = function()
+          debug("Building entity hovered!")
+          showTooltip(
+              localization.get(selectedBuilding.ui_text_title),
+              localization.get(selectedBuilding.ui_text_body)
+          )
+      end
+      gameObjectComp.methods.onStopHover = function()
+          debug("Building entity stopped hovering!")
+          hideTooltip()
+      end
+  end
 end

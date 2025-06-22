@@ -27,6 +27,7 @@
 		"space_krill_body": "These little guys are your automated workers.\nThey will do the dirty work and bug the whale for you.\nAll you have to do then is pick the dust up afterward.",
 		"not_enough_currency": "Can't afford!",
 		"cost_tooltip_postfix": "\n{cost} {currencyName}",
+		"requirement_unlock_postfix": "\nRequires: {number} {requirement}",
 		"material_requirement_tooltip_postfix": "\n{cost} {currencyName}",
 		"start_game_logo": "Echoes of the Void: Homesong",
 		"start_game_button": "Start Game",

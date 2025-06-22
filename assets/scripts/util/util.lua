@@ -168,15 +168,15 @@ function newTextPopup(text, x, y, duration)
   -- create a new text popup entity
   local text = ui.definitions.getNewDynamicTextEntry(
     text,  -- initial text
-    15.0,  -- font size
+    30.0,  -- font size
     nil,   -- no style override
-    "bump" -- animation spec
+    "rainbow" -- animation spec
   ).config.object
 
   -- set position
   local transformComp = registry:get(text, Transform)
-  transformComp.actualX = x or globals.screenWidth() / 2
-  transformComp.actualY = y or globals.screenHeight() / 2
+  transformComp.actualX = globals.screenWidth() / 2
+  transformComp.actualY = globals.screenHeight() / 2 - 100
   transformComp.visualX = transformComp.actualX
   transformComp.visualY = transformComp.actualY
 
@@ -469,6 +469,10 @@ function getCostStringForBuildingOrConverter(buildingOrConverterDef)
     costString = costString .. localization.get("ui.cost_tooltip_postfix", {cost = amount, currencyName = globals.currencies[currency].human_readable_name}) .. " "
   end
   return costString
+end
+
+function getUnlockStrinForBuildingOrConverter(buildingOrConverterDef)
+  
 end
 
 -- pass in the converter definition used to output the material

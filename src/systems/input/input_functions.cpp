@@ -2341,12 +2341,12 @@ namespace input
             if (entity == globals::gameWorldContainerEntity || entity == globals::cursor)
                 continue; // skip container
 
-            auto &node = registry.get<transform::GameObject>(entity);
-            if (!node.state.collisionEnabled)
+            auto node = registry.try_get<transform::GameObject>(entity);
+            if (!node || !node->state.collisionEnabled)
                 continue; // skip disabled collision
 
-            node.state.isColliding = false;    // Clear collision state
-            node.state.isBeingHovered = false; // Clear hover state
+            node->state.isColliding = false;    // Clear collision state
+            node->state.isBeingHovered = false; // Clear hover state
         }
     }
 

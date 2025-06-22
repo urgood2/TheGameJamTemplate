@@ -498,7 +498,7 @@ namespace TextSystem
             {
                 textComp.rawText = textComp.get_value_callback();
 
-                SPDLOG_DEBUG("Text value callback returned: {}", textComp.rawText);
+                // SPDLOG_DEBUG("Text value callback returned: {}", textComp.rawText);
             }
             
             if (effectFunctions.empty())
@@ -513,7 +513,7 @@ namespace TextSystem
                 for (auto &tag : textComp.effectStringsToApplyGloballyOnTextChange)
                 {
                     applyGlobalEffects(entity, tag);
-                    SPDLOG_DEBUG("Applying global effects for tag: {}", tag);
+                    // SPDLOG_DEBUG("Applying global effects for tag: {}", tag);
                 }
             }
 
@@ -690,7 +690,7 @@ namespace TextSystem
             character.rotation = 0.0f;
             character.createdTime = text.createdTime;
 
-            SPDLOG_DEBUG("Creating character: '{}' (codepoint: {}), x={}, y={}, line={}, offsetY={}, offsetX={}", characterString, codepoint, currentX, currentY, lineNumber, character.offset.y, character.offset.x);
+            // SPDLOG_DEBUG("Creating character: '{}' (codepoint: {}), x={}, y={}, line={}, offsetY={}, offsetX={}", characterString, codepoint, currentX, currentY, lineNumber, character.offset.y, character.offset.x);
             if (text.pop_in_enabled)
             {
                 character.pop_in = 0.0f;
@@ -855,7 +855,7 @@ namespace TextSystem
             imgChar.rotation = 0.0f;
             imgChar.createdTime = text.createdTime;
 
-            SPDLOG_DEBUG("Creating image character '{}' @ {},{} size {}x{}", uuid, currentX, currentY, scaledWidth, scaledHeight);
+            // SPDLOG_DEBUG("Creating image character '{}' @ {},{} size {}x{}", uuid, currentX, currentY, scaledWidth, scaledHeight);
 
             if (text.pop_in_enabled)
             {

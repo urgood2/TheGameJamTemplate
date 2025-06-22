@@ -30,6 +30,76 @@ function spawnCircularBurstParticles(x, y, count, seconds)
     end
 end
 
+function spawnCurrencyAutoCollect(x, y, currencyName)
+    local e = animation_system.createAnimatedObjectWithTransform(
+        globals.currencies[currencyName].anim,
+        false,
+        x, 
+        y, 
+        nil, -- shader pass
+        true -- shadow
+    )
+    
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        e,
+        40, -- Width
+        40  -- Height
+    ) 
+    
+    local gameObjectState = nodeComp.state
+    
+    -- jigglle on spawn
+    transform.InjectDynamicMotionDefault(e)
+    
+    debug("currency", currencyName, "clicked")
+    -- Get the Transform component you use to track visual X/Y and size:
+    local tc = registry:get(e, Transform)  -- or whatever its name is
+
+    -- Compute the true on-screen center:
+    local centerX = tc.visualX + tc.visualW * 0.5
+    local centerY = tc.visualY + tc.visualH * 0.5
+    -- spawn a growing circle particle
+    
+    local gameObjectComp = registry:get(e, GameObject)
+    -- remove the click and hover enabled state
+    
+    transform.InjectDynamicMotion(e, 1, 50)
+    
+    timer.after(0.2, function()
+        local transformComp = registry:get(e, Transform)
+        -- send it to the top right corner of the screen
+        -- local transformComp = registry:get(e, Transform)
+        local targetTransform = registry:get(globals.currencies[currencyName].ui_icon_entity, Transform)
+        
+        transformComp.scale = 0.8
+        transformComp.actualX = targetTransform.actualX
+        transformComp.actualY = targetTransform.actualY
+        
+    end)
+    
+    debug("currency", currencyName, "remove timer added")
+    -- remove some time later
+    timer.after(0.8, function()
+        local transformComp = registry:get(e, Transform)
+        if (registry:valid(e) == true) then
+            registry:destroy(e)
+        end
+        
+        globals.currencies[currencyName].target = globals.currencies[currencyName].target + 1 -- increment the target amount
+        
+        -- make the target jiibble
+        transform.InjectDynamicMotion(globals.currencies[currencyName].ui_icon_entity, 1, 50)
+
+        -- tween the value of globals.whale_dust_amount from its current value to its current value + 1
+        timer.tween(
+            0.5, -- duration in seconds
+            function() return globals.currencies[currencyName].amount end, -- getter
+            function(v) globals.currencies[currencyName].amount = v end, -- setter
+            globals.currencies[currencyName].target -- target value
+        )
+        
+    end)
+end
 
 function spawnCurrency(x, y, currencyName)
     

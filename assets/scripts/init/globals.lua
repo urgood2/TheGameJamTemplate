@@ -187,8 +187,11 @@ globals.converter_defs = {
     required_currencies = {
       whale_dust = 10 -- must hold this much whale dust to unlock
     },
+    output = {
+      crystal = 1 -- amount of crystal produced by the conversion
+    },
     cost = {
-      song_essence = 100  -- the stuff gathered by the whale song gatherer
+      song_essence = 100  -- this is the buy cost
     },
     unlocked = false,
     anim = "dust_to_crystal_converterAnim", -- the animation for the converter
@@ -205,6 +208,9 @@ globals.converter_defs = {
     cost = {
       crystal = 100  -- the stuff gathered by dust_to_crystal converter
     },
+    output = {
+      wafer = 1 -- amount of wafer produced by the conversion
+    },
     unlocked = false,
     anim = "crystal_to_wafer_converterAnim", -- the animation for the converter
     ui_text_title = "ui.crystal_to_wafer_converter_name", -- the text to display in the ui for this converter
@@ -219,6 +225,9 @@ globals.converter_defs = {
     },
     cost = {
       wafer = 100  -- the stuff gathered by  crystal_to_wafer converter
+    },
+    output = {
+      chip = 1 -- amount of chips produced by the conversion
     },
     unlocked = false, 
     anim = "wafer_to_chip_converterAnim", -- the animation for the converter

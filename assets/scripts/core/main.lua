@@ -79,8 +79,6 @@ function main.init()
     add_fullscreen_shader("shockwave")
     add_fullscreen_shader("tile_grid_overlay") -- to show tile grid
     
-    spawnNewKrill() -- spawn a new krill entity
-    spawnNewKrill() -- spawn another krill entity
 
     -- add shader to specific layer
 
@@ -165,35 +163,50 @@ function main.init()
     
     ui_defs.generateUI() -- generate the UI for the game
     
+    --FIXME: inject more whale dust for testing
+    timer.every(
+        1.0, -- every 1 second
+        function()
+            globals.currencies.whale_dust.target = globals.currencies.whale_dust.target + 100 -- increment the target by 1
+        end,
+        0,
+        true, -- start immediately
+        nil,
+        "testing"
+    )
     
-    -- now let's make each building & converter do something
-    for converterID, converterTable in pairs(globals.converters) do
-        -- loop through each converter and create an entity for it
-        -- is it a dust_to_crystal?
-        if (converterID == "dust_to_crystal") then
-            for i = 1, #converterTable do
-                local converter = converterTable[i]
-                
-                
+    -- for each currency type
+    timer.every(
+        1.0, -- every 1 second
+        function()
+            for currencyName, currency in pairs(globals.currencies) do
+                timer.tween(
+                    0.5, -- duration in seconds
+                    function() return globals.currencies[currencyName].amount end, -- getter
+                    function(v) globals.currencies[currencyName].amount = v end, -- setter
+                    globals.currencies[currencyName].target, -- target value
+                    "increment" .. currencyName -- unique tag for this tween
+                )
             end
-        end
-        
-        if (converterID == "crystal_to_wafer") then
-            for i = 1, #converterTable do
-                local converter = converterTable[i]
-                
-                
-            end
-        end
-        
-        if (converterID == "wafer_to_chip") then
-            for i = 1, #converterTable do
-                local converter = converterTable[i]
-                
-                
-            end
-        end
-    end
+        end,
+        0,
+        true, -- start immediately
+        nil,
+        "currency_target_increment_global"
+    )
+    
+    -- TODO: now let's make each building & converter do something
+    timer.every(
+        1.0, -- every 1 second
+        function()
+            updateConverters()
+        end,
+        0,
+        false, -- don't start right away
+        nil,
+        "building_currency_production"
+    )
+    
 
     -- add a task to the scheduler that will fade out the screen for 5 seconds
     local p1 = {

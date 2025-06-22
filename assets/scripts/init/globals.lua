@@ -95,6 +95,10 @@ globals.currencies.chip = {
   ui_text_body = "ui.chip_description" -- text to display in the ui for this currency
 }
 
+globals.currencies_not_picked_up = {
+  whale_dust = {} -- only whale dust is not picked up by default
+}
+
 
 globals.crystal_amount        = 0
 globals.crystal_target        = 0
@@ -112,6 +116,9 @@ globals.building_upgrade_defs = {
     cost = {
       whale_dust = 10  -- cost in whale dust
     },
+    resource_collection_rate = {
+      whale_dust = 1 -- amount of whale dust collected per tick
+    },
     unlocked = true,
     anim = "resonance_beacon_anim",
     ui_text_title = "ui.dust_collector_name", -- the ui text for the building
@@ -127,6 +134,9 @@ globals.building_upgrade_defs = {
     },
     cost = {
       whale_dust = 100  -- cost in whale dust
+    },
+    resource_collection_rate = {
+      whale_dust = 1 -- amount of whale dust collected per tick
     },
     unlocked = false,
     anim = "gathererMK2Anim", -- the animation for the building

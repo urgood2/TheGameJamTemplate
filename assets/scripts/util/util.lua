@@ -502,6 +502,80 @@ function findInTable(list, field, value)
   return nil
 end
 
+function updateBuildings()
+  
+  for buildingID, buildingTable in pairs(globals.buildings) do
+    
+    -- loop through each building type
+    for i = 1, #buildingTable do
+      local buildingEntity = buildingTable[i]
+      
+      -- ensure building has been placed
+      local gameObject = registry:get(buildingEntity, GameObject)
+      if gameObject.state.dragEnabled then
+        debug("Building", buildingID, "is not placed yet, skipping")
+        goto continue
+      end
+      
+      local buildingTransform = registry:get(buildingEntity, Transform)
+      local buildingDefTable = findInTable(globals.building_upgrade_defs, "id", buildingID)
+      
+      
+      -- check the resource collection rate
+      local resourceCollectionRate = buildingDefTable.resource_collection_rate
+      if not resourceCollectionRate then
+        debug("Building", buildingID, "has no resource collection rate defined, skipping")
+        goto continue
+      end
+      for resource, amount in pairs(resourceCollectionRate) do
+        -- find the entry in the currencies_not_picked_up table
+        local currencyEntitiesNotPickedUp = globals.currencies_not_picked_up[resource]
+        if currencyEntitiesNotPickedUp then
+          -- get as many as the amount specified
+          for j = 1, amount do
+            if #currencyEntitiesNotPickedUp > 0 then
+              local currencyEntity = table.remove(currencyEntitiesNotPickedUp, 1)
+              
+              debug("Building", buildingID, "gathered", resource, "from entity", currencyEntity)
+              
+              --TODO: move the currency entity to the building's position
+              local currencyTransform = registry:get(currencyEntity, Transform)
+              currencyTransform.actualX = buildingTransform.actualX + buildingTransform.actualW / 2
+              currencyTransform.actualY = buildingTransform.actualY + buildingTransform.actualH / 2
+              
+              
+              
+              timer.after(
+                0.8,           -- delay in seconds
+                function()
+                  -- increment the global currency count
+                  globals.currencies[resource].target = globals.currencies[resource].target + 1
+                  -- spawn particles at the building's position center
+                  spawnCircularBurstParticles(
+                    buildingTransform.actualX + buildingTransform.actualW / 2,
+                    buildingTransform.actualY + buildingTransform.actualH / 2,
+                    10,     -- number of particles
+                    0.5     -- seconds
+                    )
+                  -- remove the currency entity from the registry
+                  registry:destroy(currencyEntity)
+                end
+              )
+              
+            else
+              debug("No more", resource, "entities to gather from")
+              break
+            end
+          end
+        end
+      end
+      
+      ::continue::
+    end
+    
+  end
+  
+end
 function updateConverters()
   for converterID, converterTable in pairs(globals.converters) do
     -- loop through each converter type
@@ -557,4 +631,15 @@ function updateConverters()
 
     end
   end
+end
+
+
+function removeValueFromTable(t, value)
+  for i, v in ipairs(t) do
+    if v == value then
+      table.remove(t, i)
+      return true
+    end
+  end
+  return false
 end

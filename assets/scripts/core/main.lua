@@ -164,16 +164,16 @@ function main.init()
     ui_defs.generateUI() -- generate the UI for the game
     
     --FIXME: inject more whale dust for testing
-    timer.every(
-        1.0, -- every 1 second
-        function()
-            globals.currencies.whale_dust.target = globals.currencies.whale_dust.target + 100 -- increment the target by 1
-        end,
-        0,
-        true, -- start immediately
-        nil,
-        "testing"
-    )
+    -- timer.every(
+    --     1.0, -- every 1 second
+    --     function()
+    --         globals.currencies.whale_dust.target = globals.currencies.whale_dust.target + 100 -- increment the target by 1
+    --     end,
+    --     0,
+    --     true, -- start immediately
+    --     nil,
+    --     "testing"
+    -- )
     
     -- for each currency type
     timer.every(
@@ -197,9 +197,10 @@ function main.init()
     
     -- TODO: now let's make each building & converter do something
     timer.every(
-        1.0, -- every 1 second
+        5.0, -- every 1 second
         function()
             updateConverters()
+            updateBuildings()
         end,
         0,
         false, -- don't start right away

@@ -129,6 +129,9 @@ function spawnCurrency(x, y, currencyName)
     gameObjectState.collisionEnabled = true
     
     gameObjectMethods = nodeComp.methods
+    
+    table.insert(globals.currencies_not_picked_up[currencyName], e) -- add to the list of entities for this currency
+    debug("currency", currencyName, "spawned at", x, y)
     gameObjectMethods.onClick = function(registry, e)
         
         debug("currency", currencyName, "clicked")
@@ -174,6 +177,8 @@ function spawnCurrency(x, y, currencyName)
             if (registry:valid(e) == true) then
                 registry:destroy(e)
             end
+            removeValueFromTable(globals.currencies_not_picked_up[currencyName], e) -- remove from the list of entities for this currency
+            debug("currency", currencyName, "removed from not picked up list")
             
             globals.currencies[currencyName].target = globals.currencies[currencyName].target + 1 -- increment the target amount
             

@@ -18532,6 +18532,21 @@
     "mouse_vertical": [
         "mouse_vertical.png"
     ],
+    "musicnote1": [
+        "musicnote1.png"
+    ],
+    "musicnote2": [
+        "musicnote2.png"
+    ],
+    "musicnote3": [
+        "musicnote3.png"
+    ],
+    "musicnote4": [
+        "musicnote4.png"
+    ],
+    "musicnote5": [
+        "musicnote5.png"
+    ],
     "muted_palette_resurrect_rosewood": [
         "RESURRECT_PALETTE_MUTED_ROSEWOOD"
     ],
@@ -19066,6 +19081,9 @@
     ],
     "title": [
         "Title.png"
+    ],
+    "title3": [
+        "title3.png"
     ],
     "tomato": [
         "TOMATO"

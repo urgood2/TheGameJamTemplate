@@ -742,6 +742,7 @@ function updateBuildings()
               currencyTransform.actualX = buildingTransform.actualX + buildingTransform.actualW / 2
               currencyTransform.actualY = buildingTransform.actualY + buildingTransform.actualH / 2
               
+              debug("playing sound effect with ID", buildingID)
               playSoundEffect("effects", buildingID)
               
               timer.after(

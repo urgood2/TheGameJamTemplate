@@ -407,7 +407,7 @@ function ui_defs.generateUI()
                 -- button click callback
                 debug("Prestige button clicked!")
                 local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
-
+                playSoundEffect("effects", "button-click") -- play button click sound
                 -- uibox_transform.actualY = uibox_transform.actualY + 300
 
                 if globals.ui.prestige_window_open then
@@ -512,6 +512,7 @@ function ui_defs.generateUI()
             UIConfigBuilder.create()
                 :addColor(util.getColor("lapi_lazuli"))
                 :addNoMovementWhenDragged(true)
+                :addEmboss(2.0)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -524,8 +525,11 @@ function ui_defs.generateUI()
         -- add the achievement icon to the current row
         currentRow.children:add(imageContainer)
         
+        
+        
         -- if we passed the sixth achievement, we need to start a new row
         if i % 6 == 0 and i > 1 then
+            debug("Reached sixth achievement with index: ", i, ", starting a new row.")
             -- save the current row to the achievement rows
             table.insert(achievementRows, currentRow)
             -- start a new row
@@ -534,7 +538,6 @@ function ui_defs.generateUI()
             :addConfig(
                 UIConfigBuilder.create()
                     :addColor(util.getColor("keppel"))
-                    :addNoMovementWhenDragged(true)
                     :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                     :addInitFunc(function(registry, entity)
                         -- something init-related here
@@ -547,6 +550,7 @@ function ui_defs.generateUI()
     
     -- if there are any remaining achievements in the current row, add it to the achievement rows
     if #currentRow.children > 0 and achievementRows[#achievementRows] ~= currentRow then
+        debug ("Adding last row with achievements, index: ", #achievementRows + 1)
         table.insert(achievementRows, currentRow)
     end
     
@@ -1235,6 +1239,7 @@ function ui_defs.generateUI()
         UIConfigBuilder.create()
             :addColor(util.getColor("keppel"))
             :addMinHeight(50)
+            :addShadow(true)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
                 -- something init-related here

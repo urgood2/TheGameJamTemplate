@@ -609,79 +609,7 @@ function ui_defs.generateUI()
     
     
     -- first upgrade ui (buildings)
-    globals.building_upgrade_defs = {
-        {
-          id = "basic_dust_collector", -- the id of the building
-          required = {},
-          cost = {
-            whale_dust = 10  -- cost in whale dust
-          },
-          unlocked = true,
-          anim = "resonance_beacon_anim",
-          ui_text_title = "ui.dust_collector_name", -- the ui text for the building
-          ui_text_body = "ui.dust_collector_desc", -- the ui text for the building
-        
-          animation_entity = nil -- 
-        },
-        {
-          id = "MK2_dust_collector", -- the id of the building
-          required = {"basic_dust_collector"},
-          required_currencies = {
-            whale_dust = 10 -- must hold this much whale dust to unlock
-          },
-          cost = {
-            whale_dust = 100  -- cost in whale dust
-          },
-          unlocked = false,
-          anim = "gathererMK2Anim", -- the animation for the building
-            ui_text_title = "ui.MK2_dust_collector_name", -- the ui text for the building
-            ui_text_body = "ui.MK2_dust_collector_desc", -- the ui text for the building
-          animation_entity = nil -- 
-          
-        },
-        {
-          id = "krill_home", -- the id of the building
-          required = {},
-          cost = {
-            whale_dust = 50  -- cost in whale dust
-          },
-          unlocked = true,
-          anim = "krillHomeSmallAnim", -- the animation for the building
-          ui_text_title = "ui.krill_home_name", -- the ui text for the building
-          ui_text_body = "ui.krill_home_desc", -- the ui text for the building
-          animation_entity = nil -- 
-        },
-        {
-          id = "krill_farm", -- the id of the building
-          required = {"krill_home"},
-          cost = {
-            whale_dust = 400  -- cost in whale dust
-          },
-          required_currencies = {
-            whale_dust = 10 -- must hold this much whale dust to unlock
-          },
-          unlocked = false,
-          anim = "krillHomeLargeAnim", -- the animation for the building
-          ui_text_title = "ui.krill_farm_name", -- the ui text for the building
-          ui_text_body = "ui.krill_farm_desc", -- the ui text for the building
-          animation_entity = nil -- 
-        },
-        {
-          id = "whale_song_gatherer", -- the id of the building
-          required = {"krill_farm", "basic_dust_collector", "MK2_dust_collector"},
-          cost = {
-            whale_dust = 1000  -- cost in whale dust
-          },
-          required_currencies = {
-            whale_dust = 10 -- must hold this much whale dust to unlock
-          },
-          unlocked = false,
-          anim = "dream_weaver_antenna_anim", -- the animation for the building,
-          ui_text_title = "ui.whale_song_gatherer_name", -- the ui text for the building
-            ui_text_body = "ui.whale_song_gatherer_desc", -- the ui text for the building
-          animation_entity = nil -- 
-        }
-      }
+    
       
     
     
@@ -776,7 +704,7 @@ function ui_defs.generateUI()
                     -- 3) currency check (only if all deps passed)
                     if allReqsOK and conv.required_currencies then
                         for key, amount in pairs(conv.required_currencies) do
-                            local have = globals.currencies[currencyKey].target or 0
+                            local have = globals.currencies[key].target or 0
                             if have < amount then
                                 allReqsOK = false
                                 break

@@ -339,7 +339,7 @@ function buyConverterButtonCallback()
       -- make the entity no longer draggable
       gameObjectState.dragEnabled = false
       gameObjectState.clickEnabled = false
-      gameObjectState.hoverEnabled = false
+      gameObjectState.hoverEnabled = true
       gameObjectState.collisionEnabled = false
       -- remove the text entity
       registry:destroy(infoText)
@@ -351,7 +351,7 @@ function buyConverterButtonCallback()
           0.5 -- particle size
       )
       transform.InjectDynamicMotion(exampleConverter, 1.0, 1)
-      
+      debug("add on hover/stop hover methods to the converter entity")
       -- add on hover/stop hover methods to the building entity
       gameObjectComp.methods.onHover = function()
         showTooltip(
@@ -477,6 +477,7 @@ function buyBuildingButtonCallback()
       )
       transform.InjectDynamicMotion(exampleBuilding, 1.0, 1)
       
+      debug("add on hover/stop hover methods to the building entity")
       -- add on hover/stop hover methods to the building entity
       gameObjectComp.methods.onHover = function()
           debug("Building entity hovered!")

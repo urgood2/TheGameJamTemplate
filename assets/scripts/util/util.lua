@@ -164,6 +164,8 @@ function showNewAchievementPopup(achievementID)
   )
 end
 
+
+
 function newTextPopup(text, x, y, duration)
   -- create a new text popup entity
   local text = ui.definitions.getNewDynamicTextEntry(
@@ -220,11 +222,13 @@ function cycleConverter(inc)
   local title, body
   if locked then
     title = localization.get("ui.converter_locked_title")
-    body  = localization.get("ui.converter_locked_body")
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
+    body  = localization.get("ui.converter_locked_body") .. requirementString
   else
     local costString = getCostStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
     title = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_title) 
-    body  = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body) .. costString
+    body  = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body) .. costString .. requirementString
   end
 
   debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
@@ -275,12 +279,14 @@ function cycleBuilding(inc)
   local title, body
   if locked then
     title = localization.get("ui.building_locked_title")
-    body  = localization.get("ui.building_locked_body")
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
+    body  = localization.get("ui.building_locked_body") .. requirementString
   else
     local costString = getCostStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
     debug("Cost string for building: ", costString)
     title = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_title)
-    body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body) .. costString
+    body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body) .. costString .. requirementString
   end
 
   -- 3) hook up hover callbacks
@@ -460,6 +466,42 @@ function buyConverterButtonCallback()
     end
   end
 end
+
+function getRequirementStringForBuildingOrConverter(def)
+  local reqString = "\nRequirements:\n"
+  
+  -- 1) currency requirements
+  if def.required_currencies then
+    for currencyKey, amount in pairs(def.required_currencies) do
+      debug("Requirement currency:", currencyKey, "amount:", amount)
+      local currencyName = globals.currencies[currencyKey].human_readable_name
+      reqString = reqString
+        .. localization.get(
+             "ui.requirement_unlock_postfix",
+             { number = amount, requirement = currencyName }
+           )
+    end
+  end
+
+  -- 2) building or converter requirements
+  if def.required_building_or_converter then
+    for reqId, amount in pairs(def.required_building_or_converter) do
+      debug("Requirement building/converter:", reqId, "amount:", amount)
+      -- look up the human‐readable name
+      local reqDef = findInTable(globals.building_upgrade_defs, "id", reqId)
+                  or findInTable(globals.converter_defs,        "id", reqId)
+      local reqName = localization.get(reqDef.ui_text_title)
+      reqString = reqString
+        .. localization.get(
+             "ui.requirement_unlock_postfix",
+             { number = amount, requirement = reqName }
+           )
+    end
+  end
+
+  return reqString
+end
+
 
 function getCostStringForBuildingOrConverter(buildingOrConverterDef)
   local costString = "\nCost:\n"

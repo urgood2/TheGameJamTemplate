@@ -451,6 +451,12 @@ namespace scripting {
     auto exposeGlobalsToLua(sol::state &lua) -> void{
         auto &rec = BindingRecorder::instance();
         // 1) create the root table (or get it if it already exists)
+        
+        // bind the OpenURL(const char *url) method
+        lua.set_function("OpenURL", [](const std::string &url) {
+            OpenURL(url.c_str());
+        });
+        
         lua["globals"].get_or_create<sol::table>();
 
         // 2) simple bools / ints / floats

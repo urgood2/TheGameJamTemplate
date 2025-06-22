@@ -696,5 +696,25 @@
                 "bg_color": "NONE"
             }
         ]
+    },
+    "discord_icon_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "Socials 16x16_Discord.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
+    },
+    "bluesky_icon_anim": {
+        "frames": [
+            {
+                "sprite_UUID": "Socials 16x16_Bsky.png",
+                "duration_seconds": 5,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            }
+        ]
     }
 }

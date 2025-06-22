@@ -1908,6 +1908,18 @@
     "10_smoke": [
         "smoke_10.png"
     ],
+    "16x16_bsky_social": [
+        "Socials 16x16_Bsky.png"
+    ],
+    "16x16_bsky_social_social": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/socials/Socials 16x16_Bsky.png"
+    ],
+    "16x16_discord_social": [
+        "Socials 16x16_Discord.png"
+    ],
+    "16x16_discord_social_social": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/socials/Socials 16x16_Discord.png"
+    ],
     "1_10_100_3307_alpha_file_globbed_packing_pre_theroguelike": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/pre-packing-files_globbed/3307-TheRoguelike_1_10_alpha_100.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\pre-packing-files_globbed\\3307-TheRoguelike_1_10_alpha_100.png",
@@ -16679,6 +16691,9 @@
     "file_globbed_packing_pre_shader_texture": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/shader_textures",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\shader_textures"
+    ],
+    "file_globbed_packing_pre_social": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/socials"
     ],
     "firebrick": [
         "FIREBRICK"

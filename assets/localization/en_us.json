@@ -1,5 +1,10 @@
 {
 	"ui": {
+		
+		"start_game_logo": "Echoes of the Void: Homesong",
+		"start_game_button": "Start Game",
+		"start_game_feedback": "Give Feedback",
+		"start_game_follow": "Follow on",
 		"alert_button_text": "Alert on top right corner",
 		"cycle_text": "Cycle",
 		"disabled_button": "Button (disabled)",

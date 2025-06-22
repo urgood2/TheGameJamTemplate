@@ -1641,6 +1641,8 @@
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
             <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
             <key type="filename">rounded_rect_very_small.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -3588,6 +3590,8 @@
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/krill.png</filename>
                     <filename>pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</filename>
+                    <filename>pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</filename>
+                    <filename>pre-packing-files_globbed/socials/Socials 16x16_Discord.png</filename>
                 </array>
             </struct>
         </map>

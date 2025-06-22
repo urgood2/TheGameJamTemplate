@@ -1086,8 +1086,8 @@ globals.converter_defs        = {
       whale_dust = 100 -- input required to convert
     },
     required_building_or_converter = {
-      krill_home = 10,
-      krill_farm = 10
+      krill_home = 5,
+      krill_farm = 5
     },
     output = {
       crystal = 1 -- amount of crystal produced by the conversion
@@ -1109,8 +1109,8 @@ globals.converter_defs        = {
       crystal = 50     -- input required to convert
     },
     required_building_or_converter = {
-      krill_home = 10,
-      krill_farm = 10,
+      krill_home = 5,
+      krill_farm = 5,
       dust_to_crystal = 1
     },
     cost = {
@@ -1136,8 +1136,8 @@ globals.converter_defs        = {
       song_essence = 100 -- input required to convert
     },
     required_building_or_converter = {
-      krill_home = 10,
-      krill_farm = 10,
+      krill_home = 5,
+      krill_farm = 5,
       crystal_to_wafer = 1
     },
     cost = {

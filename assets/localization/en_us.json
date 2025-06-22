@@ -1,6 +1,14 @@
 {
 	"ui": {
 		
+		"tip_title": "How to Play",
+		"tip_body": "Stuck? The basic mechanic is to click the whale.",
+		"tip_body_2": "You can place krill homes to automate clicking.",
+		"tip_body_3": "You can buy buildings to automatically collect resources.",
+		"tip_body_4": "You can also convert resources into other resources\nwhen you unlock converters, on the right bottom menu.",
+		"tip_body_5": "Try for the achievements in the game.\nHovering will tell you their requirements.",
+		"tip_body_6": "Biggest tip: Get as many buildings you can!",
+		
 		"new_achievement_title": "New Achievement Unlocked!",
 		
 		"tooltip_currency_whale_dust_title": "Whale Dust",

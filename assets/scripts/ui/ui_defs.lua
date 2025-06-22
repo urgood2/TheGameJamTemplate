@@ -449,6 +449,66 @@ function ui_defs.generateUI()
     -- create a new UI box for the prestige button
     local prestigeButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 450}, prestigeButtonRoot)
     
+    
+    -- help button
+    local helpButtonText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_title"),  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "bump"                       -- animation spec
+    )
+    
+    local helpButtonDef = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            -- :addShadow(true)
+            :addEmboss(4.0)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- button click callback
+                debug("Help button clicked!")
+                playSoundEffect("effects", "button-click") -- play button click sound
+                globals.ui.help_window_open = not globals.ui.help_window_open
+                helpuiboxTransform = registry:get(globals.ui.helpTextUIBox, Transform)
+                if globals.ui.help_window_open then
+                    helpuiboxTransform.actualY = globals.screenHeight() / 2 - helpuiboxTransform.actualH / 2
+                else
+                    helpuiboxTransform.actualY = globals.screenHeight() -- move it out of the screen
+                end
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(helpButtonText)
+    :build()
+    local helpButtonRoot =  UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("keppel"))
+            :addShadow(true)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(helpButtonDef)
+    :build()
+    -- create a new UI box for the help button
+    local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)
+    -- align the help button UI box to the right edge of the screen
+    local helpButtonTransform = registry:get(helpButtonUIBox, Transform)
+    local prestigeButtonTransform = registry:get(prestigeButtonUIBox, Transform)
+    helpButtonTransform.actualX = globals.screenWidth() - helpButtonTransform.actualW -- 10 pixels from the right edge
+    helpButtonTransform.actualY = prestigeButtonTransform.actualY + prestigeButtonTransform.actualH + 10 -- 10 pixels below the prestige button_UIE
+    
+    
     -- right-align the prestige button UI box
     local prestigeButtonTransform = registry:get(prestigeButtonUIBox, Transform)
     prestigeButtonTransform.actualX = globals.screenWidth() - prestigeButtonTransform.actualW -- 10 pixels from the right edge
@@ -1192,6 +1252,130 @@ function ui_defs.generateUI()
     upgradeUIBoxTransform.actualX = globals.screenWidth() / 2 - upgradeUIBoxTransform.actualW / 2 -- center it horizontally
     upgradeUIBoxTransform.actualY = globals.screenHeight() - upgradeUIBoxTransform.actualH -- align to the bottom of the screen
     
+    
+    -- new help window
+    local helpTextTitle = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_title"),  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "rainbow"                       -- animation spec
+    )
+    local helpTextBody1 = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_body"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        ""                       -- animation spec
+    )
+    local helpTextBody2 = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_body_2"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        ""                       -- animation spec
+    )
+    local helpTextBody3 = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_body_3"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        ""                       -- animation spec
+    )
+    local helpTextBody4 = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_body_4"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        ""                       -- animation spec
+    )
+    local helpTextBody5 = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_body_5"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        ""                       -- animation spec
+    )
+    local helpTextBody6 = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.tip_body_6"),  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        "fade"                       -- animation spec
+    )
+    
+    -- new close button
+    local closeHelpButtonText = ui.definitions.getNewDynamicTextEntry(
+        "Close",  -- initial text
+        15.0,                                 -- font size
+        nil,                                  -- no style override
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    -- make a new close button template
+    local closeHelpButtonTemplate = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            :addEmboss(2.0)
+            :addShadow(true)
+            :addHover(true) -- needed for button effect
+            :addButtonCallback(function()
+                -- close the help window    
+                debug("Help window close button clicked!")
+                playSoundEffect("effects", "button-click") -- play button click sound
+                globals.ui.help_window_open = false
+                local uibox_transform = registry:get(globals.ui.helpTextUIBox, Transform)
+                uibox_transform.actualY = globals.screenHeight() + 500 -- move it out offset
+            end)
+            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_TOP)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(closeHelpButtonText)
+    :build()
+    
+    -- new row for the help text
+    local helpTextRow = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.VERTICAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            :addMinHeight(50)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(helpTextBody1)
+    :addChild(helpTextBody2)
+    :addChild(helpTextBody3)
+    :addChild(helpTextBody4)
+    :addChild(helpTextBody5)
+    :addChild(helpTextBody6)
+    :addChild(closeHelpButtonTemplate) -- add the close button
+    :build()
+    
+    -- new help text root
+    local helpTextRoot =  UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("keppel"))
+            :addMinHeight(50)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(helpTextTitle) -- add the title
+    :addChild(helpTextRow) -- add the help text row
+    :build()
+    
+    -- create a new UI box for the help text
+    globals.ui.helpTextUIBox = ui.box.Initialize({x = 0, y = globals.screenHeight() - 200}, helpTextRoot)
+    
+    -- align the help text UI box to the bottom of the screen
+    local helpTextUIBoxTransform = registry:get(globals.ui.helpTextUIBox, Transform)
+    helpTextUIBoxTransform.actualX = globals.screenWidth() / 2 - helpTextUIBoxTransform.actualW / 2 -- center it horizontally
+    helpTextUIBoxTransform.actualY = globals.screenHeight() + 500 -- align to the bottom of the screenWidth
     
     
     -- new achivement window

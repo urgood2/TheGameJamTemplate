@@ -130,7 +130,7 @@ function showNewAchievementPopup(achievementID)
   gameObject.state.collisionEnabled = true
   
   -- renew the alignment of the achievement UI box
-  ui.box.RenewAlignment(registry, globals.ui.newAchievementUIBox)
+  -- ui.box.RenewAlignment(registry, globals.ui.newAchievementUIBox)
   
   -- play sound
   playSoundEffect("effects", "new_achievement")

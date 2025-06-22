@@ -1173,6 +1173,9 @@ local defaults = {
     prestige_uibox = nil,
     prestige_window_open = false,
     
+    helpTextUIBox = nil,
+    help_window_open = false,
+    
     newAchievementUIBox = nil,
     achievementIconEntity = nil,
     achievementTitleTextEntity = nil,

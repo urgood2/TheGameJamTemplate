@@ -661,6 +661,13 @@ function ui_defs.generateUI()
                                 globals.screenHeight() / 2 + yLocationIncrement,
                                 4
                             )
+                            timer.after(
+                                0.1, 
+                                function()
+                                    local pitch = random_utils.random_float(0.8, 1.2)
+                                    playSoundEffect("effects", "new-unlock", pitch)
+                                end
+                            )
                             yLocationIncrement = yLocationIncrement + 30 -- increment the y location for the next popup
                             
                             -- reset the building UI to the first building
@@ -725,6 +732,13 @@ function ui_defs.generateUI()
                                 globals.screenWidth() / 2,
                                 globals.screenHeight() / 2 + yLocationIncrement,
                                 4
+                            )
+                            timer.after(
+                                0.1, 
+                                function()
+                                    local pitch = random_utils.random_float(0.8, 1.2)
+                                    playSoundEffect("effects", "new-unlock", pitch)
+                                end
                             )
                             yLocationIncrement = yLocationIncrement + 30
                             cycleConverter(0) -- reset the converter UI to the first converter

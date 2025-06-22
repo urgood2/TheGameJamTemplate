@@ -252,7 +252,7 @@ globals.converter_defs = {
 local defaults = {
   
   timeUntilNextGravityWave = 0,
-  gravityWaveSeconds       = 10,
+  gravityWaveSeconds       = 50,
   currencyIconForText      = {},
 
 

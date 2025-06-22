@@ -254,6 +254,7 @@ function buyConverterButtonCallback()
       uiTransformComp.actualY - uiTransformComp.actualH * 2.5,
       2
     )
+    playSoundEffect("effects", "cannot-buy")
     return
   end
 
@@ -306,6 +307,7 @@ function buyConverterButtonCallback()
   -- local textRole = registry:get(infoText, InheritedProperties)
   -- textRole.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
 
+  playSoundEffect("effects", "buy-building")
 
   -- now locate the converter entity in the game world
 
@@ -336,6 +338,10 @@ function buyConverterButtonCallback()
     gameObjectState.clickEnabled = false
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
+    
+    -- play sound
+    playSoundEffect("effects", "place-building")
+    
     -- remove the text entity
     registry:destroy(infoText)
     -- spawn particles at the converter's position center
@@ -376,6 +382,7 @@ function buyBuildingButtonCallback()
       uiTransformComp.actualY - uiTransformComp.actualH * 2.5,
       2
     )
+    playSoundEffect("effects", "cannot-buy")
     return
   end
 
@@ -387,6 +394,8 @@ function buyBuildingButtonCallback()
   -- add to the table in the buildings table with the id of the building
   table.insert(globals.buildings[selectedBuilding.id], exampleBuilding)
   debug("Added building entity to globals.buildings: ", exampleBuilding, " for id: ", selectedBuilding.id)
+  
+  playSoundEffect("effects", "buy-building")
 
 
   animation_system.setupAnimatedObjectOnEntity(
@@ -471,6 +480,8 @@ function buyBuildingButtonCallback()
       0.5     -- particle size
     )
     transform.InjectDynamicMotion(exampleBuilding, 1.0, 1)
+    
+    playSoundEffect("effects", "place-building")
 
     debug("add on hover/stop hover methods to the building entity")
     -- add on hover/stop hover methods to the building entity

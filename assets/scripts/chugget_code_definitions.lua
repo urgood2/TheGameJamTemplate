@@ -198,10 +198,19 @@ function displayIndicatorAroundEntity(...) end
 function displayIndicatorAroundEntity(...) end
 
 ---
---- Plays a sound effect from the specified category.
+--- Plays a sound effect from the specified category (default pitch = 1.0).
 ---
 ---@param category string # The category of the sound.
----@param soundName string # The name of the sound effect to play.
+---@param soundName string # The name of the sound effect.
+---@return nil
+function playSoundEffect(...) end
+
+---
+--- Plays a sound effect with custom pitch (no Lua callback).
+---
+---@param category string # The category of the sound.
+---@param soundName string # The name of the sound effect.
+---@param pitch number # Playback pitch multiplier.
 ---@return nil
 function playSoundEffect(...) end
 

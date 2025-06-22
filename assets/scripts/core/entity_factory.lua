@@ -130,6 +130,8 @@ function spawnCurrency(x, y, currencyName)
     
     gameObjectMethods = nodeComp.methods
     
+    playSoundEffect("effects", "item-drop") -- play the currency spawn sound effect
+    
     table.insert(globals.currencies_not_picked_up[currencyName], e) -- add to the list of entities for this currency
     debug("currency", currencyName, "spawned at", x, y)
     gameObjectMethods.onClick = function(registry, e)
@@ -234,6 +236,8 @@ function spawnNewKrill()
     
     -- 1) Spawn a new kobold AI entity
     local kr = create_ai_entity("kobold")
+    
+    playSoundEffect("effects", "krill_spawn") -- play the krill spawn sound effect
 
     globals.entities.krill[#globals.entities.krill+1] = kr -- add to the global krill list
 
@@ -314,6 +318,8 @@ function spawnNewKrill()
                 end
                 -- inject dynamic motion to the krill
                 transform.InjectDynamicMotion(kr, 0.4, 15) -- add dynamic
+                
+                playSoundEffect("effects", "krill-hit") -- play the krill tickle sound effect
             end
             
         end,
@@ -446,6 +452,8 @@ function spawnNewWhale()
         debug("whale clicked!")
         
         transform.InjectDynamicMotion(e, 0.4, 15) -- add dynamic motion to the whale
+        
+        playSoundEffect("effects", "whale-click") -- play the whale hit sound effect
         
         local transformComp = registry:get(e, Transform)
         

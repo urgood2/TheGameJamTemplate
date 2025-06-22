@@ -404,9 +404,25 @@ function initMainGame()
             "shockwave_tween_radius" -- unique tag for this tween
         )
         
-        -- 4 seconds later, call the whale's onclick method
+        -- play black hole sound
         timer.after(
-            4.0, -- delay in seconds
+            0.5, -- delay in seconds
+            function()
+                playSoundEffect("effects", "black-hole-after") -- play the black hole sound
+            end
+        )
+        
+        -- play lead-up sound 4 seconds before the shockwave
+        timer.after(
+            globals.gravityWaveSeconds - 4, -- delay in seconds
+            function()
+                playSoundEffect("effects", "black-hole-before") -- play the lead-up sound
+            end
+        )
+        
+        -- 3 seconds later, call the whale's onclick method
+        timer.after(
+            3.0, -- delay in seconds
             function()
                 
                 -- for each whale in globals.entities.whales

@@ -43,13 +43,38 @@ namespace sound_system {
         // BindingRecorder instance
         auto& rec = BindingRecorder::instance();
 
-        lua.set_function("playSoundEffect", &PlaySoundEffectSimple);
+        lua.set_function("playSoundEffect",
+            sol::overload(
+                // 2-arg version → no callback, default pitch = 1.0
+                [](const std::string& category,
+                   const std::string& soundName) {
+                    PlaySoundEffectSimple(category, soundName);
+                },
+                // 3-arg version → specify pitch
+                [](const std::string& category,
+                   const std::string& soundName,
+                   float pitch) {
+                    PlaySoundEffectNoCallBack(category, soundName, pitch);
+                }
+            )
+        );
+    
+        // Now record both signatures in your .lua_defs
         rec.record_free_function({}, {
-            "playSoundEffect", 
+            "playSoundEffect",
             "---@param category string # The category of the sound.\n"
-            "---@param soundName string # The name of the sound effect to play.\n"
-            "---@return nil", 
-            "Plays a sound effect from the specified category.", 
+            "---@param soundName string # The name of the sound effect.\n"
+            "---@return nil",
+            "Plays a sound effect from the specified category (default pitch = 1.0).",
+            true, false
+        });
+        rec.record_free_function({}, {
+            "playSoundEffect",
+            "---@param category string # The category of the sound.\n"
+            "---@param soundName string # The name of the sound effect.\n"
+            "---@param pitch number # Playback pitch multiplier.\n"
+            "---@return nil",
+            "Plays a sound effect with custom pitch (no Lua callback).",
             true, false
         });
 

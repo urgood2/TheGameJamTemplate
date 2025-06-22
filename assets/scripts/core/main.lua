@@ -165,6 +165,35 @@ function main.init()
     
     ui_defs.generateUI() -- generate the UI for the game
     
+    
+    -- now let's make each building & converter do something
+    for converterID, converterTable in pairs(globals.converters) do
+        -- loop through each converter and create an entity for it
+        -- is it a dust_to_crystal?
+        if (converterID == "dust_to_crystal") then
+            for i = 1, #converterTable do
+                local converter = converterTable[i]
+                
+                
+            end
+        end
+        
+        if (converterID == "crystal_to_wafer") then
+            for i = 1, #converterTable do
+                local converter = converterTable[i]
+                
+                
+            end
+        end
+        
+        if (converterID == "wafer_to_chip") then
+            for i = 1, #converterTable do
+                local converter = converterTable[i]
+                
+                
+            end
+        end
+    end
 
     -- add a task to the scheduler that will fade out the screen for 5 seconds
     local p1 = {

@@ -21,11 +21,80 @@ globals.converters.crystal_to_wafer = {}
 globals.converters.wafer_to_chip = {}
 
 
+globals.conversion_reqs = globals.conversion_reqs or {}
+globals.conversion_reqs.dust_to_crystal = {
+  cost = {
+    whale_dust = 10, -- amount of whale dust required to convert
+  },
+  output = {
+    crystal = 1 -- amount of crystal produced by the conversion
+  }
+}
+globals.conversion_reqs.crystal_to_wafer = {
+  cost = {
+    crystal = 10, -- amount of crystal required to convert
+  },
+  output = {
+    wafer = 1 -- amount of wafer produced by the conversion
+  }
+}
+globals.conversion_reqs.wafer_to_chip = {
+  cost = {
+    wafer = 10, -- amount of wafer required to convert
+  },
+  output = {
+    chip = 1 -- amount of chips produced by the conversion
+  }
+}
+
 globals.whale_dust_amount      = 0
 globals.whale_dust_target      = 0
 
 globals.song_essence_amount   = 0
 globals.song_essence_target   = 0
+
+globals.currencies = globals.currencies or {}
+globals.currencies.whale_dust = {
+  amount = 0, -- current amount of whale dust
+  target = 0, -- target amount of whale dust to reach
+  anim = "whale_dust_anim", -- icon for the whale dust currency
+  ui_icon_entity = {}, -- entity to use for the icon in the ui
+  ui_text_title = "ui.whale_dust_name", -- text to display in the ui for this currency
+  ui_text_body = "ui.whale_dust_description" -- text to display in the ui for this currency
+}
+globals.currencies.song_essence = {
+  amount = 0, -- current amount of song essence
+  target = 0, -- target amount of song essence to reach
+  anim = "song_essence_anim", -- icon for the song essence currency
+  ui_icon_entity = {}, -- entity to use for the icon in the ui
+  ui_text_title = "ui.song_essence_name", -- text to display in the ui for this currency
+  ui_text_body = "ui.song_essence_description" -- text to display in the ui for this currency
+}
+globals.currencies.crystal = {
+  amount = 0, -- current amount of crystal
+  target = 0, -- target amount of crystal to reach
+  anim = "crystal_anim", -- icon for the crystal currency
+  ui_icon_entity = {}, -- entity to use for the icon in the ui
+  ui_text_title = "ui.crystal_name", -- text to display in the ui for this currency
+  ui_text_body = "ui.crystal_description" -- text to display in the ui for this currency
+}
+globals.currencies.wafer = {
+  amount = 0, -- current amount of wafer
+  target = 0, -- target amount of wafer to reach
+  anim = "wafer_anim", -- icon for the wafer currency
+  ui_icon_entity = {}, -- entity to use for the icon in the ui
+  ui_text_title = "ui.wafer_name", -- text to display in the ui for this currency
+  ui_text_body = "ui.wafer_description" -- text to display in the ui for this currency
+}
+globals.currencies.chip = {
+  amount = 0, -- current amount of chips
+  target = 0, -- target amount of chips to reach
+  anim = "chip_anim", -- icon for the chips currency
+  ui_icon_entity = {}, -- entity to use for the icon in the ui
+  ui_text_title = "ui.chip_name", -- text to display in the ui for this currency
+  ui_text_body = "ui.chip_description" -- text to display in the ui for this currency
+}
+
 
 globals.crystal_amount        = 0
 globals.crystal_target        = 0

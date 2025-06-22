@@ -30,9 +30,11 @@ function spawnCircularBurstParticles(x, y, count, seconds)
     end
 end
 
-function spawnWhaleDust(x, y)
+
+function spawnCurrency(x, y, currencyName)
+    
     e = animation_system.createAnimatedObjectWithTransform(
-        "whale_dust_anim",
+        globals.currencies[currencyName].anim,
         false,
         x, 
         y, 
@@ -59,7 +61,7 @@ function spawnWhaleDust(x, y)
     gameObjectMethods = nodeComp.methods
     gameObjectMethods.onClick = function(registry, e)
         
-        debug("whale dust clicked")
+        debug("currency", currencyName, "clicked")
         -- Get the Transform component you use to track visual X/Y and size:
         local tc = registry:get(e, Transform)  -- or whatever its name is
 
@@ -76,7 +78,7 @@ function spawnWhaleDust(x, y)
         
         spawnGrowingCircleParticle(centerX, centerY, 100, 100, 0.2)
         
-        debug("whale dust motion injected")
+        debug("currency", currencyName, "motion injected")
         -- jiggle
         transform.InjectDynamicMotion(e, 1, 50)
         
@@ -85,10 +87,10 @@ function spawnWhaleDust(x, y)
         spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
         
         
-        timer.after(0.8, function()
+        timer.after(0.2, function()
             -- send it to the top right corner of the screen
             -- local transformComp = registry:get(e, Transform)
-            targetTransform = registry:get(globals.currencyIconForText, Transform)
+            targetTransform = registry:get(globals.currencies[currencyName].ui_icon_entity, Transform)
             
             transformComp.scale = 0.8
             transformComp.actualX = targetTransform.actualX
@@ -96,24 +98,24 @@ function spawnWhaleDust(x, y)
             
         end)
         
-        debug("whale dust remove timer added")
+        debug("currency", currencyName, "remove timer added")
         -- remove some time later
-        timer.after(1.5, function()
+        timer.after(0.8, function()
             if (registry:valid(e) == true) then
                 registry:destroy(e)
             end
             
-            -- make the target jiibble
-            transform.InjectDynamicMotion(globals.currencyIconForText, 1, 50)
+            globals.currencies[currencyName].target = globals.currencies[currencyName].target + 1 -- increment the target amount
             
+            -- make the target jiibble
+            transform.InjectDynamicMotion(globals.currencies[currencyName].ui_icon_entity, 1, 50)
+
             -- tween the value of globals.whale_dust_amount from its current value to its current value + 1
-            globals.whale_dust_target = (globals.whale_dust_target or 0) + 1
-            local targetAmount = globals.whale_dust_target
             timer.tween(
                 0.5, -- duration in seconds
-                function() return globals.whale_dust_amount end, -- getter
-                function(v) globals.whale_dust_amount = v end, -- setter
-                globals.whale_dust_target, -- target value
+                function() return globals.currencies[currencyName].amount end, -- getter
+                function(v) globals.currencies[currencyName].amount = v end, -- setter
+                globals.currencies[currencyName].target, -- target value
                 "whale_dust_increment"
             )
             
@@ -365,8 +367,9 @@ function spawnNewWhale()
         
         local transformComp = registry:get(e, Transform)
         
-        spawnWhaleDust(transformComp.actualX + random_utils.random_int(50, 100),
-                        transformComp.actualY + random_utils.random_int(50, 100))
+        spawnCurrency(transformComp.actualX + random_utils.random_int(50, 100),
+                        transformComp.actualY + random_utils.random_int(50, 100),
+                        "whale_dust")
     end
 
     shaderPipelineComp = registry:emplace(bowser, shader_pipeline.ShaderPipelineComponent)

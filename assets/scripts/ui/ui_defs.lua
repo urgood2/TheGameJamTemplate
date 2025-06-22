@@ -13,13 +13,13 @@ end
 function ui_defs.generateUI() 
     -- ui
     
-    globals.currencyIconForText = animation_system.createAnimatedObjectWithTransform(
+    globals.currencies["whale_dust"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "whale_dust_anim", -- animation ID
         false             -- use animation, not sprite id
     )
     
     local currencyIconDef = ui.definitions.wrapEntityInsideObjectElement(
-        globals.currencyIconForText)
+        globals.currencies["whale_dust"].ui_icon_entity)
     
     local sliderTextMoving = ui.definitions.getNewDynamicTextEntry(
         localization.get("ui.currency_text"),  -- initial text
@@ -31,7 +31,7 @@ function ui_defs.generateUI()
     --TODO do this later
     sliderTextMoving.config.initFunc = function(registry, entity)
         localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text", {currency = math.floor(globals.whale_dust_amount)}))
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text", {currency = math.floor(globals.currencies.whale_dust.amount)}))
         end)
     end
     sliderTextMoving.config.updateFunc = function(r, entity, dt)
@@ -44,7 +44,7 @@ function ui_defs.generateUI()
         local objectTextComp = registry:get(objectEntity, TextSystem.Text)
         
         
-        local text = localization.get("ui.currency_text", {currency = math.floor(globals.whale_dust_amount)})
+        local text = localization.get("ui.currency_text", {currency = math.floor(globals.currencies.whale_dust.amount)})
         
         if (objectTextComp.rawText ~= text) then
             TextSystem.Functions.setText(objectEntity, text)
@@ -52,19 +52,19 @@ function ui_defs.generateUI()
     end
     
     -- create other entries for crystals, wafers, chips
-    globals.currencyIconForWafers = animation_system.createAnimatedObjectWithTransform(
+    globals.currencies["wafer"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "wafer_anim", -- animation ID
         false             -- use animation, not sprite id
     )
-    globals.currencyIconForChips = animation_system.createAnimatedObjectWithTransform(
+    globals.currencies["chip"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "chip_anim", -- animation ID
         false             -- use animation, not sprite id
     )
-    globals.currencyIconForCrystals = animation_system.createAnimatedObjectWithTransform(
+    globals.currencies["crystal"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "crystal_anim", -- animation ID
         false             -- use animation, not sprite id
     )
-    globals.currencyIconForSongEssence = animation_system.createAnimatedObjectWithTransform(
+    globals.currencies["song_essence"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "song_essence_anim", -- animation ID
         false             -- use animation, not sprite id
     )
@@ -78,7 +78,7 @@ function ui_defs.generateUI()
     )
     textSongEssence.config.initFunc = function(registry, entity)
         localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.song_essence_amount)}))
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.currencies.song_essence.amount)}))
         end)
     end
     
@@ -91,7 +91,7 @@ function ui_defs.generateUI()
         
         local objectTextComp = registry:get(objectEntity, TextSystem.Text)
         
-        local text = localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.song_essence_amount)})
+        local text = localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.currencies.song_essence.amount)})
         
         if (objectTextComp.rawText ~= text) then
             TextSystem.Functions.setText(objectEntity, text)
@@ -107,7 +107,7 @@ function ui_defs.generateUI()
     
     textWafers.config.initFunc = function(registry, entity)
         localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_wafers", {currency = math.floor(globals.wafer_amount)}))
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_wafers", {currency = math.floor(globals.currencies.wafer.amount)}))
         end)
     end
     
@@ -120,7 +120,7 @@ function ui_defs.generateUI()
         
         local objectTextComp = registry:get(objectEntity, TextSystem.Text)
         
-        local text = localization.get("ui.currency_text_wafers", {currency = math.floor(globals.wafer_amount)})
+        local text = localization.get("ui.currency_text_wafers", {currency = math.floor(globals.currencies.wafer.amount)})
         
         if (objectTextComp.rawText ~= text) then
             TextSystem.Functions.setText(objectEntity, text)
@@ -135,7 +135,7 @@ function ui_defs.generateUI()
     )
     textCrystals.config.initFunc = function(registry, entity)
         localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_crystals", {currency = math.floor(globals.crystal_amount)}))
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_crystals", {currency = math.floor(globals.currencies.crystal.amount)}))
         end)
     end
     textCrystals.config.updateFunc = function(r, entity, dt)
@@ -147,7 +147,7 @@ function ui_defs.generateUI()
         
         local objectTextComp = registry:get(objectEntity, TextSystem.Text)
         
-        local text = localization.get("ui.currency_text_crystals", {currency = math.floor(globals.crystal_amount)})
+        local text = localization.get("ui.currency_text_crystals", {currency = math.floor(globals.currencies.crystal.amount)})
         
         if (objectTextComp.rawText ~= text) then
             TextSystem.Functions.setText(objectEntity, text)
@@ -162,7 +162,7 @@ function ui_defs.generateUI()
     )
     textChips.config.initFunc = function(registry, entity)
         localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_chips", {currency = math.floor(globals.chip_amount)}))
+            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_chips", {currency = math.floor(globals.currencies.chip.amount)}))
         end)
     end
     textChips.config.updateFunc = function(r, entity, dt)
@@ -174,7 +174,7 @@ function ui_defs.generateUI()
         
         local objectTextComp = registry:get(objectEntity, TextSystem.Text)
         
-        local text = localization.get("ui.currency_text_chips", {currency = math.floor(globals.chips_amount)})
+        local text = localization.get("ui.currency_text_chips", {currency = math.floor(globals.currencies.chip.amount)})
         
         if (objectTextComp.rawText ~= text) then
             TextSystem.Functions.setText(objectEntity, text)
@@ -210,7 +210,7 @@ function ui_defs.generateUI()
             end)
             :build()
     )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForWafers))
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["wafer"].ui_icon_entity))
     :addChild(textWafers)
     :build()
     
@@ -226,7 +226,7 @@ function ui_defs.generateUI()
             end)
             :build()
     )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForChips))
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["chip"].ui_icon_entity))
     :addChild(textChips)
     
     :build()
@@ -243,7 +243,7 @@ function ui_defs.generateUI()
             end)
             :build()
     )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForCrystals))
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["crystal"].ui_icon_entity))
     :addChild(textCrystals)
     :build()
     
@@ -259,7 +259,7 @@ function ui_defs.generateUI()
             end)
             :build()
     )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencyIconForSongEssence))
+    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["song_essence"].ui_icon_entity))
     :addChild(textSongEssence)
     :build()
     
@@ -627,7 +627,7 @@ function ui_defs.generateUI()
           id = "MK2_dust_collector", -- the id of the building
           required = {"basic_dust_collector"},
           required_currencies = {
-            whale_dust_target = 10 -- must hold this much whale dust to unlock
+            whale_dust = 10 -- must hold this much whale dust to unlock
           },
           cost = {
             whale_dust = 100  -- cost in whale dust
@@ -658,7 +658,7 @@ function ui_defs.generateUI()
             whale_dust = 400  -- cost in whale dust
           },
           required_currencies = {
-            whale_dust_target = 10 -- must hold this much whale dust to unlock
+            whale_dust = 10 -- must hold this much whale dust to unlock
           },
           unlocked = false,
           anim = "krillHomeLargeAnim", -- the animation for the building
@@ -673,7 +673,7 @@ function ui_defs.generateUI()
             whale_dust = 1000  -- cost in whale dust
           },
           required_currencies = {
-            whale_dust_target = 10 -- must hold this much whale dust to unlock
+            whale_dust = 10 -- must hold this much whale dust to unlock
           },
           unlocked = false,
           anim = "dream_weaver_antenna_anim", -- the animation for the building,
@@ -711,7 +711,7 @@ function ui_defs.generateUI()
                     -- 2) currency check (only if deps passed)
                     if allRequiredUnlocked and building.required_currencies then
                         for currencyKey, reqAmount in pairs(building.required_currencies) do
-                            local have = globals[currencyKey] or 0
+                            local have = globals.currencies[currencyKey].target or 0
                             if have < reqAmount then
                                 allRequiredUnlocked = false
                                 break
@@ -776,7 +776,7 @@ function ui_defs.generateUI()
                     -- 3) currency check (only if all deps passed)
                     if allReqsOK and conv.required_currencies then
                         for key, amount in pairs(conv.required_currencies) do
-                            local have = globals[key] or 0
+                            local have = globals.currencies[currencyKey].target or 0
                             if have < amount then
                                 allReqsOK = false
                                 break

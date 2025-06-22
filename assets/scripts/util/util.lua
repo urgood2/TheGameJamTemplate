@@ -265,6 +265,9 @@ function buyConverterButtonCallback()
   -- create a new example converter entity
   local exampleConverter = create_ai_entity("kobold")
   
+  -- add the converter to the end of the table in the converters table with the id of the converter
+  table.insert(globals.converters[selectedConverter.id], exampleConverter)
+  debug("Added converter entity to globals.converters: ", exampleConverter, " for id: ", selectedConverter.id)
   
   animation_system.setupAnimatedObjectOnEntity(
       exampleConverter,
@@ -349,7 +352,18 @@ function buyConverterButtonCallback()
       )
       transform.InjectDynamicMotion(exampleConverter, 1.0, 1)
       
-      
+      -- add on hover/stop hover methods to the building entity
+      gameObjectComp.methods.onHover = function()
+        showTooltip(
+        
+            localization.get(selectedConverter.ui_text_title),
+            localization.get(selectedConverter.ui_text_body)
+        )
+      end
+      gameObjectComp.methods.onStopHover = function()
+          debug("Converter entity stopped hovering!")
+          hideTooltip()
+      end
   end
 end
 
@@ -371,8 +385,14 @@ function buyBuildingButtonCallback()
       return
   end
   
+
+  
   -- create a new example converter entity
   local exampleBuilding = create_ai_entity("kobold")
+  
+  -- add to the table in the buildings table with the id of the building
+  table.insert(globals.buildings[selectedBuilding.id], exampleBuilding)
+  debug("Added building entity to globals.buildings: ", exampleBuilding, " for id: ", selectedBuilding.id)
   
   
   animation_system.setupAnimatedObjectOnEntity(

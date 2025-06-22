@@ -6,6 +6,10 @@ ui_defs = {
     
 }
 
+function ui_defs.placeBuilding(buildingName)
+    
+end
+
 function ui_defs.generateUI() 
     -- ui
     

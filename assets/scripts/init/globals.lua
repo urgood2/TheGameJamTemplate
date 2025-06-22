@@ -2,7 +2,7 @@
 
 globals = globals or {}
 
-globals.krill_tickle_distance = 90 -- distance at which whale can be tickled
+globals.krill_tickle_distance = 50 -- distance at which whale can be tickled
 
 globals.entities = globals.entities or {}
 globals.entities.whales = {}

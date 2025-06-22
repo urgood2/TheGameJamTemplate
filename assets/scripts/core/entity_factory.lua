@@ -223,6 +223,12 @@ function spawnGrowingCircleParticle(centerX, centerY, w, h, seconds)
     return p
 end
 
+function spawnNewKrillAtLocation(x, y)
+    local krill = spawnNewKrill() -- spawn a new krill
+    local transform = registry:get(krill, Transform) -- get the transform component of the
+    transform.actualX = x
+    transform.actualY = y -- set its position to the given x and y
+end
 
 function spawnNewKrill()
     
@@ -317,6 +323,7 @@ function spawnNewKrill()
         "krill_move_timer_" .. #globals.entities.krill -- unique tag per krill
     )
     
+    return kr
 end
 
 
@@ -601,8 +608,26 @@ function spawnNewWhale()
             timer.after(
                 2.0, -- delay in seconds
                 function()
-                    local transform = registry:get(bowser, Transform)
-                    transform.rotation = 0 -- reset rotation
+                    local transformComp = registry:get(bowser, Transform)
+                    transformComp.rotation = 0 -- reset rotation
+                    
+                    -- are there any song collectors?
+                    if globals.buildings.whale_song_gatherer then
+                        -- for each whale song gatherer
+                        for _, whaleSongGatherer in ipairs(globals.buildings.whale_song_gatherer) do
+                            -- call the whale song gatherer's onClick method
+                            
+                            -- jiggle and add a currency
+                            transform.InjectDynamicMotion(whaleSongGatherer, 0.9, 1)
+                            
+                            local whalesonggathererTransform = registry:get(whaleSongGatherer, Transform)
+                            
+                            spawnCurrencyAutoCollect(whalesonggathererTransform.actualX, whalesonggathererTransform.actualY,
+                             "song_essence")
+                            
+                        end
+                        
+                    end
                 end,
                 "whale_rotate_after_particles"
             )

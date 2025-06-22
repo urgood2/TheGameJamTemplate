@@ -52,7 +52,7 @@
 		"krill_farm_desc": "Houses three Space Krill",
 		
 		"whale_song_gatherer_name": "Whale Song Gatherer",
-		"whale_song_gatherer_desc": "Collects Whale Songs from Whales. Produces a new resource: Song Essence",
+		"whale_song_gatherer_desc": "Collects Whale Songs from Whales.\nProduces a new resource: Song Essence,\nwhich is required for creating chips",
 		
 		"converter_locked_title": "Locked",
 		"converter_locked_body": "You need to unlock this converter first",
@@ -61,12 +61,12 @@
 		"building_locked_body": "You need to unlock this building first",
 		
 		"dust_to_crystal_converter_name": "Dust to Crystal Converter",
-		"dust_to_crystal_converter_description": "Converts Whale Dust into Crystals at a rate of 1:1000",
+		"dust_to_crystal_converter_description": "Converts Whale Dust into Crystals at a rate of 10:1",
 		
 		"crystal_to_wafer_converter_name": "Crystal to Wafer Converter",
-		"crystal_to_wafer_converter_description": "Converts Crystals into Wafers at a rate of 1:1000",
+		"crystal_to_wafer_converter_description": "Converts Crystals into Wafers at a rate of 10:1",
 		
 		"wafer_to_chip_converter_name": "Wafer to Chip Converter",
-		"wafer_to_chip_converter_description": "Converts Wafers + Song Essence into Chips at a rate of 1:1000"
+		"wafer_to_chip_converter_description": "Converts Wafers + Song Essence into Chips at a rate of 10:1"
 	}
 }

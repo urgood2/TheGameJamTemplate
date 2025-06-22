@@ -485,6 +485,54 @@ function buyBuildingButtonCallback()
       debug("Building entity stopped hovering!")
       hideTooltip()
     end
+    
+    
+    -- is the building a krill home or krill farm?
+    if selectedBuilding.id == "krill_home" then
+      -- spawn a krill entity at the building's position
+      timer.after(
+        0.4,           -- delay in seconds
+        function()
+          spawnNewKrillAtLocation(
+            transformComp.actualX + transformComp.actualW / 2,
+            transformComp.actualY + transformComp.actualH / 2
+          )
+          
+          -- spawn particles at the building's position center
+          spawnCircularBurstParticles(
+            transformComp.actualX + transformComp.actualW / 2,
+            transformComp.actualY + transformComp.actualH / 2,
+            50,     -- number of particles
+            0.5     -- seconds
+          )
+          
+          debug("Spawned a krill entity at the building's position")
+        end
+      )
+    elseif selectedBuilding.id == "krill_farm" then
+      -- spawn 3
+      for j = 1, 3 do
+        timer.after(
+          j * 0.2,           -- delay in seconds
+          function()
+            spawnNewKrillAtLocation(
+              transformComp.actualX + transformComp.actualW / 2,
+              transformComp.actualY + transformComp.actualH / 2
+            )
+            -- spawn particles at the building's position center
+            spawnCircularBurstParticles(
+              
+              
+              transformComp.actualX + transformComp.actualW / 2,
+              transformComp.actualY + transformComp.actualH / 2,
+              50,     -- number of particles
+              0.5     -- seconds
+            )
+            debug("Spawned a krill entity at the building's position")
+          end
+        )
+      end
+    end
   end
 end
 
@@ -558,7 +606,9 @@ function updateBuildings()
                     0.5     -- seconds
                     )
                   -- remove the currency entity from the registry
-                  registry:destroy(currencyEntity)
+                  if (registry:valid(currencyEntity) == true) then
+                    registry:destroy(currencyEntity)
+                  end
                 end
               )
               

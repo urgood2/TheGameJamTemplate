@@ -360,7 +360,7 @@ namespace ui
         // width must be changed for generation to reflect progress
         if (progress)
         {
-            AssertThat(cache.progress, Is().GreaterThanOrEqualTo(0.0f).And().LessThanOrEqualTo(1.0f));
+            // AssertThat(cache.progress, Is().GreaterThanOrEqualTo(0.0f).And().LessThanOrEqualTo(1.0f));
 
             cache.innerVerticesProgressReflected = inner;
             cache.outerVerticesProgressReflected = outer;

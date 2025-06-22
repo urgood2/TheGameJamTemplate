@@ -136,7 +136,7 @@ globals.building_upgrade_defs = {
       whale_dust = 100  -- cost in whale dust
     },
     resource_collection_rate = {
-      whale_dust = 1 -- amount of whale dust collected per tick
+      whale_dust = 2 -- amount of whale dust collected per tick
     },
     unlocked = false,
     anim = "gathererMK2Anim", -- the animation for the building
@@ -251,8 +251,8 @@ globals.converter_defs = {
 -- your defaults in one place
 local defaults = {
   
-  timeUntilNextGravityWave = 30,
-  gravityWaveSeconds       = 30,
+  timeUntilNextGravityWave = 0,
+  gravityWaveSeconds       = 10,
   currencyIconForText      = {},
 
 

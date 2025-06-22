@@ -333,197 +333,197 @@ function ui_defs.generateUI()
     
     
     -- prestige button
-    local prestigeButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.prestige_button"),  -- initial text
-        20.0,                                 -- font size
-        nil,                                  -- no style override
-        "bump"                       -- animation spec
-    )
+    -- local prestigeButtonText = ui.definitions.getNewDynamicTextEntry(
+    --     localization.get("ui.prestige_button"),  -- initial text
+    --     20.0,                                 -- font size
+    --     nil,                                  -- no style override
+    --     "bump"                       -- animation spec
+    -- )
     
 
-    local prestigeButtonDef = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- button click callback
-                debug("Prestige button clicked!")
-                local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
+    -- local prestigeButtonDef = UIElementTemplateNodeBuilder.create()
+    -- :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    -- :addConfig(
+    --     UIConfigBuilder.create()
+    --         :addColor(util.getColor("lapi_lazuli"))
+    --         -- :addShadow(true)
+    --         :addEmboss(4.0)
+    --         :addHover(true) -- needed for button effect
+    --         :addButtonCallback(function()
+    --             -- button click callback
+    --             debug("Prestige button clicked!")
+    --             local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
 
-                -- uibox_transform.actualY = uibox_transform.actualY + 300
+    --             -- uibox_transform.actualY = uibox_transform.actualY + 300
 
-                if globals.ui.prestige_window_open then
-                    -- close the prestige window
-                    globals.ui.prestige_window_open = false                    
-                    uibox_transform.actualY = globals.screenHeight()
-                else
-                    -- open the prestige window
-                    globals.ui.prestige_window_open = true
-                    uibox_transform.actualY = globals.screenHeight() / 2 - uibox_transform.actualH / 2
+    --             if globals.ui.prestige_window_open then
+    --                 -- close the prestige window
+    --                 globals.ui.prestige_window_open = false                    
+    --                 uibox_transform.actualY = globals.screenHeight()
+    --             else
+    --                 -- open the prestige window
+    --                 globals.ui.prestige_window_open = true
+    --                 uibox_transform.actualY = globals.screenHeight() / 2 - uibox_transform.actualH / 2
 
-                end
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(prestigeButtonText)
-    :build()
+    --             end
+    --         end)
+    --         :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+    --         :addInitFunc(function(registry, entity)
+    --             -- something init-related here
+    --         end)
+    --         :build()
+    -- )
+    -- :addChild(prestigeButtonText)
+    -- :build()
 
-    local prestigeButtonRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addMinHeight(50)
-            :addShadow(true)
-            :addMaxWidth(300)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(prestigeButtonDef)
-    :build()
-    -- create a new UI box for the prestige button
-    local prestigeButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 450}, prestigeButtonRoot)
+    -- local prestigeButtonRoot =  UIElementTemplateNodeBuilder.create()
+    -- :addType(UITypeEnum.ROOT)
+    -- :addConfig(
+    --     UIConfigBuilder.create()
+    --         :addColor(util.getColor("keppel"))
+    --         :addMinHeight(50)
+    --         :addShadow(true)
+    --         :addMaxWidth(300)
+    --         :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+    --         :addInitFunc(function(registry, entity)
+    --             -- something init-related here
+    --         end)
+    --         :build()
+    -- )
+    -- :addChild(prestigeButtonDef)
+    -- :build()
+    -- -- create a new UI box for the prestige button
+    -- local prestigeButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 450}, prestigeButtonRoot)
     
-    -- right-align the prestige button UI box
-    local prestigeButtonTransform = registry:get(prestigeButtonUIBox, Transform)
-    prestigeButtonTransform.actualX = globals.screenWidth() - prestigeButtonTransform.actualW -- 10 pixels from the right edge
+    -- -- right-align the prestige button UI box
+    -- local prestigeButtonTransform = registry:get(prestigeButtonUIBox, Transform)
+    -- prestigeButtonTransform.actualX = globals.screenWidth() - prestigeButtonTransform.actualW -- 10 pixels from the right edge
     
 
 
     -- prestige upgrades window
     
-    local function makePrestigeWindowUpgradeButton(text, func)
-        -- make new button text
-        local buttonText = ui.definitions.getNewDynamicTextEntry(
-            text,  -- initial text
-            20.0,                                 -- font size
-            nil,                                  -- no style override
-            "pulse=0.9,1.1"                       -- animation spec
-        )
-        -- make new button template
-        local buttonTemplate = UIElementTemplateNodeBuilder.create()
-        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-        :addConfig(
-            UIConfigBuilder.create()
-                :addColor(util.getColor("lapi_lazuli"))
-                :addEmboss(2.0)
-                :addShadow(true)
-                :addHover(true) -- needed for button effect
-                :addButtonCallback(func)
-                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-                :addInitFunc(function(registry, entity)
-                    -- something init-related here
-                end)
-                :build()
-        )
+    -- local function makePrestigeWindowUpgradeButton(text, func)
+    --     -- make new button text
+    --     local buttonText = ui.definitions.getNewDynamicTextEntry(
+    --         text,  -- initial text
+    --         20.0,                                 -- font size
+    --         nil,                                  -- no style override
+    --         "pulse=0.9,1.1"                       -- animation spec
+    --     )
+    --     -- make new button template
+    --     local buttonTemplate = UIElementTemplateNodeBuilder.create()
+    --     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    --     :addConfig(
+    --         UIConfigBuilder.create()
+    --             :addColor(util.getColor("lapi_lazuli"))
+    --             :addEmboss(2.0)
+    --             :addShadow(true)
+    --             :addHover(true) -- needed for button effect
+    --             :addButtonCallback(func)
+    --             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+    --             :addInitFunc(function(registry, entity)
+    --                 -- something init-related here
+    --             end)
+    --             :build()
+    --     )
 
-        :addChild(buttonText)
-        :build()
+    --     :addChild(buttonText)
+    --     :build()
 
-        return buttonTemplate
-    end
+    --     return buttonTemplate
+    -- end
     
-    -- make a red X button 
-    local closeButtonText = ui.definitions.getNewDynamicTextEntry(
-        "Close",  -- initial text
-        15.0,                                 -- font size
-        nil,                                  -- no style override
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    -- make a new close button template
-    local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("glaucou"))
-            :addEmboss(2.0)
-            :addShadow(true)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- close the prestige window
-                debug("Prestige window close button clicked!")
-                globals.ui.prestige_window_open = false
-                local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
-                uibox_transform.actualY = globals.screenHeight()  -- move it out of the screen
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_TOP)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(closeButtonText)
-    :build()
+    -- -- make a red X button 
+    -- local closeButtonText = ui.definitions.getNewDynamicTextEntry(
+    --     "Close",  -- initial text
+    --     15.0,                                 -- font size
+    --     nil,                                  -- no style override
+    --     "pulse=0.9,1.1"                       -- animation spec
+    -- )
+    -- -- make a new close button template
+    -- local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
+    -- :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    -- :addConfig(
+    --     UIConfigBuilder.create()
+    --         :addColor(util.getColor("glaucou"))
+    --         :addEmboss(2.0)
+    --         :addShadow(true)
+    --         :addHover(true) -- needed for button effect
+    --         :addButtonCallback(function()
+    --             -- close the prestige window
+    --             debug("Prestige window close button clicked!")
+    --             globals.ui.prestige_window_open = false
+    --             local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
+    --             uibox_transform.actualY = globals.screenHeight()  -- move it out of the screen
+    --         end)
+    --         :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_TOP)
+    --         :addInitFunc(function(registry, entity)
+    --             -- something init-related here
+    --         end)
+    --         :build()
+    -- )
+    -- :addChild(closeButtonText)
+    -- :build()
     
     
-    -- vertical container for the prestige upgrades
-    local prestigeUpgradesContainer = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.VERTICAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addMinWidth(300)
-            :addMinHeight(400)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(makePrestigeWindowUpgradeButton(
-        localization.get("ui.prestige_upgrade_1"),  -- initial text
-        function(registry, entity)
-        end
-    ))
-    :addChild(makePrestigeWindowUpgradeButton(
-        localization.get("ui.prestige_upgrade_2"),  -- initial text
-        function(registry, entity)
-            debug("Prestige upgrade 2 clicked!")
-        end
-    ))
-    :addChild(makePrestigeWindowUpgradeButton(
-        localization.get("ui.prestige_upgrade_3"),  -- initial text
-        function(registry, entity)
-            debug("Prestige upgrade 3 clicked!")
-        end
-    ))
-    :addChild(closeButtonTemplate)
-    :build()
+    -- -- vertical container for the prestige upgrades
+    -- local prestigeUpgradesContainer = UIElementTemplateNodeBuilder.create()
+    -- :addType(UITypeEnum.VERTICAL_CONTAINER)
+    -- :addConfig(
+    --     UIConfigBuilder.create()
+    --         :addColor(util.getColor("keppel"))
+    --         :addMinWidth(300)
+    --         :addMinHeight(400)
+    --         :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+    --         :addInitFunc(function(registry, entity)
+    --             -- something init-related here
+    --         end)
+    --         :build()
+    -- )
+    -- :addChild(makePrestigeWindowUpgradeButton(
+    --     localization.get("ui.prestige_upgrade_1"),  -- initial text
+    --     function(registry, entity)
+    --     end
+    -- ))
+    -- :addChild(makePrestigeWindowUpgradeButton(
+    --     localization.get("ui.prestige_upgrade_2"),  -- initial text
+    --     function(registry, entity)
+    --         debug("Prestige upgrade 2 clicked!")
+    --     end
+    -- ))
+    -- :addChild(makePrestigeWindowUpgradeButton(
+    --     localization.get("ui.prestige_upgrade_3"),  -- initial text
+    --     function(registry, entity)
+    --         debug("Prestige upgrade 3 clicked!")
+    --     end
+    -- ))
+    -- :addChild(closeButtonTemplate)
+    -- :build()
 
-    -- uibox for the prestige upgrades
-    local prestigeUpgradesContainerRoot = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addMinHeight(400)
-            :addMinWidth(300)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(prestigeUpgradesContainer)
-    :build()
+    -- -- uibox for the prestige upgrades
+    -- local prestigeUpgradesContainerRoot = UIElementTemplateNodeBuilder.create()
+    -- :addType(UITypeEnum.ROOT)
+    -- :addConfig(
+    --     UIConfigBuilder.create()
+    --         :addColor(util.getColor("lapi_lazuli"))
+    --         :addMinHeight(400)
+    --         :addMinWidth(300)
+    --         :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+    --         :addInitFunc(function(registry, entity)
+    --             -- something init-related here
+    --         end)
+    --         :build()
+    -- )
+    -- :addChild(prestigeUpgradesContainer)
+    -- :build()
 
-    -- create a new UI box for the prestige upgrades
-    globals.ui.prestige_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, prestigeUpgradesContainerRoot)
+    -- -- create a new UI box for the prestige upgrades
+    -- globals.ui.prestige_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, prestigeUpgradesContainerRoot)
     
-    -- center the ui box X-axi
-    local prestigeUiboxTransform = registry:get(globals.ui.prestige_uibox, Transform)
-    prestigeUiboxTransform.actualX = globals.screenWidth() / 2 - prestigeUiboxTransform.actualW / 2
+    -- -- center the ui box X-axi
+    -- local prestigeUiboxTransform = registry:get(globals.ui.prestige_uibox, Transform)
+    -- prestigeUiboxTransform.actualX = globals.screenWidth() / 2 - prestigeUiboxTransform.actualW / 2
     
     -- ui for the buildings
     local buildingText = ui.definitions.getNewDynamicTextEntry(

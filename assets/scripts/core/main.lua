@@ -140,6 +140,9 @@ function main.init()
                             if whaleGameObject.methods.onClick then
                                 whaleGameObject.methods.onClick(registry, bowser)
                             end
+                            
+                            
+                            
                         end
                     )
                     

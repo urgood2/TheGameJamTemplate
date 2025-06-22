@@ -112,6 +112,11 @@ function showNewAchievementPopup(achievementID)
     nil,                   -- shader_prepass, -- Optional shader pass config function
     true                   -- Enable shadow
   )
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    globals.ui.achievementIconEntity,
+    60,   -- width
+    60    -- height
+  )
   
   -- set tooltip
   local gameObject = registry:get(globals.ui.achievementIconEntity, GameObject)
@@ -132,11 +137,9 @@ function showNewAchievementPopup(achievementID)
   
   -- if not already at bottom of the screen, move it to the center
   local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
-  if not transformComp.actualY >= globals.screenHeight() then
-    transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
-    transformComp.visualX = transformComp.actualX -- snap X
-    transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
-  end
+  transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
+  transformComp.visualX = transformComp.actualX -- snap X
+  transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
   
   
   -- spawn particles at the center of the box

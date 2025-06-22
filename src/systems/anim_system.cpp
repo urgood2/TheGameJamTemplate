@@ -280,25 +280,13 @@ namespace animation_system {
         } else {
             animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationIDorSpriteUUID);
         }
+        // 4) size the transform to match the first frame
+        const auto &firstFrame = animQueue.defaultAnimation.animationList.at(0).first.spriteFrame->frame;
+        transform.setActualW(firstFrame.width);
+        transform.setActualH(firstFrame.height);
 
-        // 2) figure out the new animation’s native size
-        auto newW = animQueue
-        .defaultAnimation
-        .animationList
-        .at(0)
-        .first
-        .spriteFrame
-        ->frame.width;
-        auto newH = animQueue
-        .defaultAnimation
-        .animationList
-        .at(0)
-        .first
-        .spriteFrame
-        ->frame.height;
-
-        transform.setActualW(newW);
-        transform.setActualH(newH);
+        // transform.setActualW(newW);
+        // transform.setActualH(newH);
 
         if (shaderPassConfig)
             shaderPassConfig(e); // pass the entity to the shader pass config function
@@ -306,8 +294,6 @@ namespace animation_system {
         if (!shadowEnabled) {
             gameObject.shadowDisplacement.reset();
         }
-        // change back to the enlarged size
-        resizeAnimationObjectsInEntityToFit(e, storedW, storedH);
     }
 
     auto setupAnimatedObjectOnEntity(
@@ -337,6 +323,8 @@ namespace animation_system {
             animQueue.defaultAnimation =
                 init::getAnimationObject(defaultAnimationIDorSpriteUUID);
         }
+        
+        
 
         // 2) grab the GameObject (should already exist via your Transform→GameObject mapping)
         auto &gameObject = registry.get<transform::GameObject>(e);

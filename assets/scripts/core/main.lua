@@ -625,8 +625,13 @@ function initMainGame()
                             nil,   -- shader_prepass, -- Optional shader pass config function
                             true   -- Enable shadow
                         )
+                        animation_system.resizeAnimationObjectsInEntityToFit(
+                            achievement.anim_entity,
+                            48,   -- width
+                            48    -- height
+                        )
                         
-                        -- showNewAchievementPopup(achievement.id)
+                        showNewAchievementPopup(achievement.id)
                     else
                         
                     end

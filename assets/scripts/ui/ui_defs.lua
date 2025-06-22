@@ -1199,18 +1199,18 @@ function ui_defs.generateUI()
     )
     
     -- make new animated entity
-    globals.achievementIconEntity = animation_system.createAnimatedObjectWithTransform(
+    globals.ui.achievementIconEntity = animation_system.createAnimatedObjectWithTransform(
         "locked_anim", -- animation ID
         false             -- use animation, not sprite id
     )
     -- resize
     animation_system.resizeAnimationObjectsInEntityToFit(
-        globals.achievementIconEntity,
+        globals.ui.achievementIconEntity,
         60,
         60
     )
     -- wrap the animated entity in an object element
-    local newAchievementAnimDef = ui.definitions.wrapEntityInsideObjectElement(globals.achievementIconEntity)
+    local newAchievementAnimDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui.achievementIconEntity)
     
     -- make a new horizontal container for the new achievement text
     local newAchievementAnimContainer = UIElementTemplateNodeBuilder.create()

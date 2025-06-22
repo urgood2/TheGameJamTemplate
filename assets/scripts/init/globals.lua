@@ -2,6 +2,25 @@
 
 globals = globals or {}
 
+globals.krill_tickle_distance = 90 -- distance at which whale can be tickled
+
+globals.entities = globals.entities or {}
+globals.entities.whales = {}
+globals.entities.krill = {}
+
+globals.buildings = globals.buildings or {}
+globals.buildings.basic_dust_collector = {}
+globals.buildings.MK2_dust_collector = {}
+globals.buildings.krill_home = {}
+globals.buildings.krill_farm = {}
+globals.buildings.whale_song_gatherer = {}
+
+globals.converters = globals.converters or {}
+globals.converters.dust_to_crystal = {}
+globals.converters.crystal_to_wafer = {}
+globals.converters.wafer_to_chip = {}
+
+
 globals.whale_dust_amount      = 0
 globals.whale_dust_target      = 0
 

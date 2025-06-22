@@ -1,3 +1,10 @@
+-- Wraps v into the interval [−size, limit]
+function wrap(v, size, limit)
+  if v > limit          then return -size end
+  if v < -size           then return limit end
+  return v
+end
+
 -- Recursively prints any table (with cycle detection)
 function print_table(tbl, indent, seen)
     indent = indent or ""                 -- current indentation

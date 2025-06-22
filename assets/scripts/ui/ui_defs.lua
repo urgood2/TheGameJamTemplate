@@ -478,7 +478,7 @@ function ui_defs.generateUI()
         debug("Adding achievement: ", achivementDef.id, " with animation: ", achivementDef.anim)
         -- make a new achievement animation entity
         local achievementAnimEntity = animation_system.createAnimatedObjectWithTransform(
-            achivementDef.unlocked and "locked_anim" or achivementDef.lua, -- animation ID
+            achivementDef.unlocked and  achivementDef.anim or "locked_anim", -- animation ID
             false             -- use animation, not sprite id
         )
         

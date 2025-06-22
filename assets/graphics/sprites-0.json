@@ -22424,7 +22424,7 @@
             "frame": {
                 "h": 36,
                 "w": 192,
-                "x": 3432,
+                "x": 3477,
                 "y": 415
             },
             "rotated": false,
@@ -22468,7 +22468,7 @@
             "frame": {
                 "h": 36,
                 "w": 192,
-                "x": 3635,
+                "x": 3680,
                 "y": 415
             },
             "rotated": false,
@@ -22556,7 +22556,7 @@
             "frame": {
                 "h": 36,
                 "w": 192,
-                "x": 3838,
+                "x": 3883,
                 "y": 415
             },
             "rotated": false,
@@ -27695,6 +27695,28 @@
                 "w": 42,
                 "x": 29,
                 "y": 17
+            },
+            "trimmed": true
+        },
+        {
+            "auto_generated_uuid": "locked",
+            "filename": "locked.png",
+            "frame": {
+                "h": 34,
+                "w": 34,
+                "x": 3066,
+                "y": 415
+            },
+            "rotated": false,
+            "sourceSize": {
+                "h": 50,
+                "w": 50
+            },
+            "spriteSourceSize": {
+                "h": 34,
+                "w": 34,
+                "x": 9,
+                "y": 9
             },
             "trimmed": true
         },
@@ -32984,7 +33006,7 @@
             "frame": {
                 "h": 34,
                 "w": 50,
-                "x": 3066,
+                "x": 3111,
                 "y": 415
             },
             "rotated": false,
@@ -33006,7 +33028,7 @@
             "frame": {
                 "h": 34,
                 "w": 50,
-                "x": 3127,
+                "x": 3172,
                 "y": 415
             },
             "rotated": false,
@@ -33666,7 +33688,7 @@
             "frame": {
                 "h": 34,
                 "w": 50,
-                "x": 3188,
+                "x": 3233,
                 "y": 415
             },
             "rotated": false,
@@ -33688,7 +33710,7 @@
             "frame": {
                 "h": 34,
                 "w": 50,
-                "x": 3249,
+                "x": 3294,
                 "y": 415
             },
             "rotated": false,
@@ -33798,7 +33820,7 @@
             "frame": {
                 "h": 34,
                 "w": 50,
-                "x": 3310,
+                "x": 3355,
                 "y": 415
             },
             "rotated": false,
@@ -33820,7 +33842,7 @@
             "frame": {
                 "h": 34,
                 "w": 50,
-                "x": 3371,
+                "x": 3416,
                 "y": 415
             },
             "rotated": false,
@@ -34377,7 +34399,7 @@
             "h": 4096,
             "w": 4096
         },
-        "smartupdate": "$TexturePacker:SmartUpdate:de2592a09d2da4f3b044b518b6e1b9d5:8601155b7cc79273b2312563a41c046d:fb621859b6cce529c0bd0d09d2a566ff$",
+        "smartupdate": "$TexturePacker:SmartUpdate:e7f6053419e5ee163915bf4814728cc3:8f9a45ad1fab3a61149bf45084fea3d2:fb621859b6cce529c0bd0d09d2a566ff$",
         "version": "1.0"
     }
 }

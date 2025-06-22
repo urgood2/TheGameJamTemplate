@@ -173,6 +173,21 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>13,13,25,25</rect>
+                <key>scale9Paddings</key>
+                <rect>13,13,25,25</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/3207-TheRoguelike_1_10_alpha_0.png</key>
             <key type="filename">pre-packing-files_globbed/3208-TheRoguelike_1_10_alpha_1.png</key>
             <key type="filename">pre-packing-files_globbed/3209-TheRoguelike_1_10_alpha_2.png</key>
@@ -3646,6 +3661,7 @@
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0013.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0014.png</filename>
                     <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0015.png</filename>
+                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</filename>
                 </array>
             </struct>
         </map>

@@ -18361,6 +18361,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/ui_strings.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\ui_strings.json"
     ],
+    "locked": [
+        "locked.png"
+    ],
     "logic_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/logic",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\logic",

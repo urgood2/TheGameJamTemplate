@@ -70,7 +70,9 @@ globals.achievements                     = {
     end,
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_whale_tooltip_title"), -- title of the tooltip
+        findInTable(globals.achievements, "id", "first_whale").unlocked
+      and localization.get("ui.first_whale_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_whale_tooltip_body")   -- body of the tooltip
       )
     end,
@@ -95,7 +97,9 @@ globals.achievements                     = {
     end,
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_spark_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_spark").unlocked
+      and localization.get("ui.first_spark_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_spark_tooltip_body")
       )
     end,
@@ -119,7 +123,9 @@ globals.achievements                     = {
     end,
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_krill_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_krill").unlocked
+        and localization.get("ui.first_krill_tooltip_title")
+        or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_krill_tooltip_body")
       )
     end,
@@ -145,7 +151,9 @@ globals.achievements                     = {
     end,
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_dust_collector_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_dust_collector").unlocked
+      and localization.get("ui.first_dust_collector_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_dust_collector_tooltip_body")
       )
     end,
@@ -173,7 +181,9 @@ globals.achievements                     = {
     -- first_converter
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_converter_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_converter").unlocked
+      and localization.get("ui.first_converter_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_converter_tooltip_body")
       )
     end,
@@ -199,7 +209,9 @@ globals.achievements                     = {
     -- first_song_gatherer
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_song_gatherer_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_song_gatherer").unlocked
+      and localization.get("ui.first_song_gatherer_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_song_gatherer_tooltip_body")
       )
     end,
@@ -228,7 +240,9 @@ globals.achievements                     = {
     -- main_menu
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.main_menu_tooltip_title"),
+        findInTable(globals.achievements, "id", "main_menu").unlocked
+      and localization.get("ui.main_menu_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.main_menu_tooltip_body")
       )
     end,
@@ -254,7 +268,9 @@ globals.achievements                     = {
     -- first_song_essence
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_song_essence_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_song_essence").unlocked
+      and localization.get("ui.first_song_essence_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_song_essence_tooltip_body")
       )
     end,
@@ -280,7 +296,9 @@ globals.achievements                     = {
     -- first_crystal
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_crystal_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_crystal").unlocked
+      and localization.get("ui.first_crystal_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_crystal_tooltip_body")
       )
     end,
@@ -306,7 +324,9 @@ globals.achievements                     = {
     -- first_wafer
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_wafer_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_wafer").unlocked
+      and localization.get("ui.first_wafer_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_wafer_tooltip_body")
       )
     end,
@@ -331,7 +351,9 @@ globals.achievements                     = {
     -- first_chip
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_chip_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_wafer_to_chip_converter").unlocked
+      and localization.get("ui.first_wafer_to_chip_converter_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_chip_tooltip_body")
       )
     end,
@@ -357,7 +379,9 @@ globals.achievements                     = {
     -- first_wafer_to_chip_converter
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_wafer_to_chip_converter_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_wafer_to_chip_converter").unlocked
+      and localization.get("ui.first_wafer_to_chip_converter_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_wafer_to_chip_converter_tooltip_body")
       )
     end,
@@ -383,7 +407,9 @@ globals.achievements                     = {
     -- first_crystal_to_wafer_converter
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.first_crystal_to_wafer_converter_tooltip_title"),
+        findInTable(globals.achievements, "id", "first_crystal_to_wafer_converter").unlocked
+      and localization.get("ui.first_crystal_to_wafer_converter_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.first_crystal_to_wafer_converter_tooltip_body")
       )
     end,
@@ -410,7 +436,9 @@ globals.achievements                     = {
     -- grav_surfer
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.grav_surfer_tooltip_title"),
+        findInTable(globals.achievements, "id", "grav_surfer").unlocked
+      and localization.get("ui.grav_surfer_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.grav_surfer_tooltip_body")
       )
     end,
@@ -436,7 +464,9 @@ globals.achievements                     = {
     -- whale_dust_30
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.whale_dust_30_tooltip_title"),
+        findInTable(globals.achievements, "id", "whale_dust_30").unlocked
+      and localization.get("ui.whale_dust_30_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.whale_dust_30_tooltip_body")
       )
     end,
@@ -463,7 +493,9 @@ globals.achievements                     = {
     -- whale_dust_100
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.whale_dust_100_tooltip_title"),
+        findInTable(globals.achievements, "id", "whale_dust_100").unlocked
+      and localization.get("ui.whale_dust_100_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.whale_dust_100_tooltip_body")
       )
     end,
@@ -489,7 +521,9 @@ globals.achievements                     = {
     -- whale_dust_500
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.whale_dust_500_tooltip_title"),
+        findInTable(globals.achievements, "id", "whale_dust_500").unlocked
+      and localization.get("ui.whale_dust_500_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.whale_dust_500_tooltip_body")
       )
     end,
@@ -516,7 +550,9 @@ globals.achievements                     = {
     -- whale_dust_1000
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.whale_dust_1000_tooltip_title"),
+        findInTable(globals.achievements, "id", "whale_dust_1000").unlocked
+      and localization.get("ui.whale_dust_1000_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.whale_dust_1000_tooltip_body")
       )
     end,
@@ -542,7 +578,9 @@ globals.achievements                     = {
     -- song_essence_30
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.song_essence_30_tooltip_title"),
+        findInTable(globals.achievements, "id", "song_essence_30").unlocked
+      and localization.get("ui.song_essence_30_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.song_essence_30_tooltip_body")
       )
     end,
@@ -569,7 +607,9 @@ globals.achievements                     = {
     -- song_essence_100
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.song_essence_100_tooltip_title"),
+        findInTable(globals.achievements, "id", "song_essence_100").unlocked
+      and localization.get("ui.song_essence_100_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.song_essence_100_tooltip_body")
       )
     end,
@@ -596,7 +636,9 @@ globals.achievements                     = {
     -- song_essence_500
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.song_essence_500_tooltip_title"),
+        findInTable(globals.achievements, "id", "song_essence_500").unlocked
+      and localization.get("ui.song_essence_500_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.song_essence_500_tooltip_body")
       )
     end,
@@ -623,7 +665,9 @@ globals.achievements                     = {
     -- crystal_30
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.crystal_30_tooltip_title"),
+        findInTable(globals.achievements, "id", "crystal_30").unlocked
+        and localization.get("ui.crystal_30_tooltip_title")
+        or localization.get("ui.converter_locked_title"),
         localization.get("ui.crystal_30_tooltip_body")
       )
     end,
@@ -649,7 +693,9 @@ globals.achievements                     = {
     -- crystal_100
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.crystal_100_tooltip_title"),
+        findInTable(globals.achievements, "id", "crystal_100").unlocked
+        and localization.get("ui.crystal_100_tooltip_title")
+        or localization.get("ui.converter_locked_title"),
         localization.get("ui.crystal_100_tooltip_body")
       )
     end,
@@ -675,7 +721,9 @@ globals.achievements                     = {
     -- crystal_500
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.crystal_500_tooltip_title"),
+        findInTable(globals.achievements, "id", "crystal_500").unlocked
+      and localization.get("ui.crystal_500_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.crystal_500_tooltip_body")
       )
     end,
@@ -701,7 +749,9 @@ globals.achievements                     = {
     -- wafer_30
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.wafer_30_tooltip_title"),
+        findInTable(globals.achievements, "id", "wafer_30").unlocked
+      and localization.get("ui.wafer_30_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.wafer_30_tooltip_body")
       )
     end,
@@ -727,7 +777,9 @@ globals.achievements                     = {
     -- wafer_100
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.wafer_100_tooltip_title"),
+        findInTable(globals.achievements, "id", "wafer_100").unlocked
+      and localization.get("ui.wafer_100_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.wafer_100_tooltip_body")
       )
     end,
@@ -754,7 +806,9 @@ globals.achievements                     = {
     -- wafer_500
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.wafer_500_tooltip_title"),
+        findInTable(globals.achievements, "id", "wafer_500").unlocked
+      and localization.get("ui.wafer_500_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.wafer_500_tooltip_body")
       )
     end,
@@ -781,7 +835,9 @@ globals.achievements                     = {
     -- chip_10
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.chip_10_tooltip_title"),
+        findInTable(globals.achievements, "id", "chip_10").unlocked
+      and localization.get("ui.chip_10_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.chip_10_tooltip_body")
       )
     end,
@@ -808,7 +864,9 @@ globals.achievements                     = {
     -- chip_100
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.chip_100_tooltip_title"),
+        findInTable(globals.achievements, "id", "chip_100").unlocked
+      and localization.get("ui.chip_100_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.chip_100_tooltip_body")
       )
     end,
@@ -835,7 +893,9 @@ globals.achievements                     = {
     -- chip_500
     tooltipFunc = function()
       showTooltip(
-        localization.get("ui.chip_500_tooltip_title"),
+        findInTable(globals.achievements, "id", "chip_500").unlocked
+      and localization.get("ui.chip_500_tooltip_title")
+      or localization.get("ui.converter_locked_title"),
         localization.get("ui.chip_500_tooltip_body")
       )
     end,
@@ -1094,6 +1154,7 @@ globals.converter_defs        = {
     ui_text_body = "ui.wafer_to_chip_converter_description" -- the text to display in the ui for this converter
   }
 }
+
 
 
 

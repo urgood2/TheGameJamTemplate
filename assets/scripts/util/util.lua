@@ -100,6 +100,67 @@ function showTooltip(titleText, bodyText)
   boxT.actualY           = clamp(y, 0, screenH - h)
 end
 
+function showNewAchievementPopup(achievementID)
+  -- get the achievement definition
+  local achievementDef = findInTable(globals.achievements, "id", achievementID)
+  
+  -- replace the animation
+  animation_system.replaceAnimatedObjectOnEntity(
+    globals.ui.achievementIconEntity,
+    achievementDef.anim,   -- Default animation ID
+    false,                 -- ? generate a new still animation from sprite, don't set to true, causes bug
+    nil,                   -- shader_prepass, -- Optional shader pass config function
+    true                   -- Enable shadow
+  )
+  
+  -- set tooltip
+  local gameObject = registry:get(globals.ui.achievementIconEntity, GameObject)
+  gameObject.methods.onHover = function()
+    achievementDef.tooltipFunc()
+  end
+  gameObject.methods.onStopHover = function()
+    hideTooltip()
+  end
+  gameObject.state.hoverEnabled = true
+  gameObject.state.collisionEnabled = true
+  
+  -- renew the alignment of the achievement UI box
+  ui.box.RenewAlignment(registry, globals.ui.newAchievementUIBox)
+  
+  -- play sound
+  playSoundEffect("effects", "new_achievement")
+  
+  -- if not already at bottom of the screen, move it to the center
+  local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
+  if not transformComp.actualY >= globals.screenHeight() then
+    transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
+    transformComp.visualX = transformComp.actualX -- snap X
+    transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
+  end
+  
+  
+  -- spawn particles at the center of the box
+  spawnCircularBurstParticles(
+    transformComp.actualX + transformComp.actualW / 2,
+    transformComp.actualY + transformComp.actualH / 2,
+    40,     -- number of particles
+    0.5     -- particle size
+  )
+  
+  -- dismiss after 5 seconds
+  timer.after(
+    5.0,           -- delay in seconds
+    function()
+      debug("Dismissing achievement popup: ", achievementID)
+      -- move the box out of the screen
+      local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
+      transformComp.actualY = globals.screenHeight() + 500
+  
+    end,
+    "dismiss_achievement_popup" -- timer name
+  )
+end
+
 function newTextPopup(text, x, y, duration)
   -- create a new text popup entity
   local text = ui.definitions.getNewDynamicTextEntry(

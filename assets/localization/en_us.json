@@ -1,5 +1,8 @@
 {
 	"ui": {
+		
+		"new_achievement_title": "New Achievement Unlocked!",
+		
 		"tooltip_currency_whale_dust_title": "Whale Dust",
 		"tooltip_currency_whale_dust": "The main resource in the game.\nIt is used to buy buildings and upgrades.\nSpace whales are the only konwn source of Whale Dust.",
 		"tooltip_currency_song_essence_title": "Song Essence",

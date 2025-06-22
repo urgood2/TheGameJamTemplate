@@ -1189,6 +1189,68 @@ function ui_defs.generateUI()
     upgradeUIBoxTransform.actualY = globals.screenHeight() - upgradeUIBoxTransform.actualH -- align to the bottom of the screen
     
     
+    
+    -- new achivement window
+    local newAchievementText = ui.definitions.getNewDynamicTextEntry(
+        localization.get("ui.new_achievement_title"),  -- initial text
+        20.0,                                 -- font size
+        nil,                                  -- no style override
+        "rainbow"                       -- animation spec
+    )
+    
+    -- make new animated entity
+    globals.achievementIconEntity = animation_system.createAnimatedObjectWithTransform(
+        "locked_anim", -- animation ID
+        false             -- use animation, not sprite id
+    )
+    -- resize
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        globals.achievementIconEntity,
+        60,
+        60
+    )
+    -- wrap the animated entity in an object element
+    local newAchievementAnimDef = ui.definitions.wrapEntityInsideObjectElement(globals.achievementIconEntity)
+    
+    -- make a new horizontal container for the new achievement text
+    local newAchievementAnimContainer = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("lapi_lazuli"))
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)        
+            :build()
+    )
+    :addChild(newAchievementAnimDef) -- add the achievement icon
+    :build()
+    
+    
+    -- make a new root for the new achievement text
+    local newAchievementTextRoot =  UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("keppel"))
+            :addMinHeight(50)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()        
+    )
+    :addChild(newAchievementText)
+    :addChild(newAchievementAnimContainer)
+    :build()
+    
+    -- create a new UI box for the new achievement text
+    globals.ui.newAchievementUIBox = ui.box.Initialize({x = 0, y = globals.screenHeight() + 400}, newAchievementTextRoot)   
+    
+    
+    
+    
     -- tooltip ui box that will follow the mouse cursor
     local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
         localization.get("sample tooltip title"),  -- initial text
@@ -1237,6 +1299,13 @@ function ui_defs.generateUI()
     )
     :addChild(tooltipContainer)
     :build()
+    
+    
+    
+    
+    
+    
+    
     -- create a new UI box for the tooltip
     
     globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
@@ -1247,4 +1316,9 @@ function ui_defs.generateUI()
     local uiBoxComp = registry:get(globals.ui.tooltipUIBox, UIBoxComponent)
     local uiTooltipRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
     uiTooltipRootTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
+    
+    
+    
+    
+    
 end

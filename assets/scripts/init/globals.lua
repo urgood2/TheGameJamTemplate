@@ -1172,6 +1172,11 @@ local defaults = {
   ui                             = {
     prestige_uibox = nil,
     prestige_window_open = false,
+    
+    newAchievementUIBox = nil,
+    achievementIconEntity = nil,
+    achievementTitleTextEntity = nil,
+    achievementBodyTextEntity = nil,
 
     --TODO: change the global tooltip text with settext, then call renewAlignment on the uibox.
     tooltipUIBox = nil,

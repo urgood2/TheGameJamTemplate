@@ -433,12 +433,11 @@ function initMainGame()
                 
                 -- for each whale in globals.entities.whales
                 for _, bowser in ipairs(globals.entities.whales) do
-                    --TODO: add flash pass to the whale, remove it 4 seconds later
+                    
                     local whaleShaderPipeline = registry:get(bowser, shader_pipeline.ShaderPipelineComponent)
                     whaleShaderPipeline:addPass("flash") -- add the shockwave pass to the whale
                     
                     -- run something 3 times in a row
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         0.5, -- delay in seconds
                         function()
@@ -449,7 +448,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.0, -- delay in seconds
                         function()
@@ -459,7 +457,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.1, -- delay in seconds
                         function()
@@ -469,7 +466,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.2, -- delay in seconds
                         function()
@@ -479,7 +475,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.3, -- delay in seconds
                         function()
@@ -489,7 +484,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.4, -- delay in seconds
                         function()
@@ -499,7 +493,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.5, -- delay in seconds
                         function()
@@ -509,7 +502,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.6, -- delay in seconds
                         function()
@@ -519,7 +511,6 @@ function initMainGame()
                             end
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.9, -- delay in seconds
                         function()
@@ -532,7 +523,6 @@ function initMainGame()
                             
                         end
                     )
-                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         6.0, -- delay in seconds
                         function()
@@ -635,6 +625,8 @@ function initMainGame()
                             nil,   -- shader_prepass, -- Optional shader pass config function
                             true   -- Enable shadow
                         )
+                        
+                        -- showNewAchievementPopup(achievement.id)
                     else
                         
                     end
@@ -642,7 +634,7 @@ function initMainGame()
             end
         end,
         0,
-        false, -- start immediately
+        true, -- start immediately
         nil,
         "achievement_check"
     )

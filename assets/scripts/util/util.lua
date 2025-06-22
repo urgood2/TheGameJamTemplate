@@ -335,7 +335,7 @@ function buyConverterButtonCallback()
     gameObjectState.dragEnabled = false
     gameObjectState.clickEnabled = false
     gameObjectState.hoverEnabled = true
-    gameObjectState.collisionEnabled = false
+    gameObjectState.collisionEnabled = true
     -- remove the text entity
     registry:destroy(infoText)
     -- spawn particles at the converter's position center

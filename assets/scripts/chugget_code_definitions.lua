@@ -222,6 +222,22 @@ function playMusic(...) end
 function queueMusic(...) end
 
 ---
+--- Sets the volume for a specific music track.
+---
+---@param name string # The name of the music track.
+---@param vol number # The volume level for this track (0.0 to 1.0).
+---@return nil
+function setTrackVolume(...) end
+
+---
+--- Gets the volume for a specific music track.
+---
+---@param name string # The name of the music track.
+---@return number # The current volume level for this track (0.0 to 1.0).
+
+function getTrackVolume(...) end
+
+---
 --- Fades in and plays a music track over a duration.
 ---
 ---@param musicName string # The music track to fade in.

@@ -18,23 +18,24 @@ using json = nlohmann::json;
 
 namespace sound_system {
     std::unordered_map<std::string, SoundCategory> categories;
-    Music currentMusic;
+    
+    std::vector<MusicEntry> activeMusic;
+    std::queue<std::pair<std::string,bool>> musicQueue; // legacy queue for “next” tracks
+
     std::map<std::string, std::string> musicFiles;
-    std::queue<std::pair<std::string, bool>> musicQueue;
-    float globalVolume = 1.0f;
+    float globalVolume = 1.0f; // global volume (0.0–1.0)
+    float musicVolume  = 1.0f;  // global music volume (0.0–1.0)
     bool isMusicLooping = false;
 
     bool isFading = false;
     bool isPausingSmooth = false;
     float fadeTime = 0.0f;
     float fadeDuration = 0.0f;
-    float musicVolume = 1.0f;
     float pauseTargetVolume = 0.0f;
 
     SoundCallback musicCompletionCallback = nullptr;
     std::map<std::string, SoundCallback> soundCallbacks;
 
-    enum FadeState { None, FadeIn, FadeOut };
     FadeState fadeState = None;
 
     void ExposeToLua(sol::state &lua) {
@@ -71,6 +72,25 @@ namespace sound_system {
             "---@param loop? boolean # If the queued music should loop. Defaults to false.\n"
             "---@return nil", 
             "Adds a music track to the queue to be played next.", 
+            true, false
+        });
+        
+        lua.set_function("setTrackVolume", &SetTrackVolume);
+        rec.record_free_function({}, {
+            "setTrackVolume", 
+            "---@param name string # The name of the music track.\n"
+            "---@param vol number # The volume level for this track (0.0 to 1.0).\n"
+            "---@return nil", 
+            "Sets the volume for a specific music track.", 
+            true, false
+        });
+        
+        lua.set_function("getTrackVolume", &GetTrackVolume);
+        rec.record_free_function({}, {
+            "getTrackVolume", 
+            "---@param name string # The name of the music track.\n"
+            "---@return number # The current volume level for this track (0.0 to 1.0).\n",
+            "Gets the volume for a specific music track.", 
             true, false
         });
 
@@ -219,9 +239,6 @@ namespace sound_system {
         if (musicFiles.empty()) {
             SPDLOG_WARN("[SOUND] No music files loaded");
         }
-        else {
-            currentMusic = LoadMusicStream(musicFiles.begin()->second.c_str()); // just load first track for now
-        }
     }
 
     void PlaySoundEffect(const std::string& category, const std::string& soundName, float pitch, SoundCallback callback) {
@@ -246,64 +263,198 @@ namespace sound_system {
         PlaySoundEffect(category, soundName, 1.0f, SoundCallback());
     }
 
-    void PlayMusic(const std::string& musicName, bool loop) {
-        StopMusicStream(currentMusic);
-        currentMusic = LoadMusicStream(musicFiles[musicName].c_str());
-        isMusicLooping = loop;
-        SetMusicVolume(currentMusic, musicVolume);
+    // Play a new music track immediately
+    void PlayMusic(const std::string& name, bool loop) {
+        Music m = LoadMusicStream(musicFiles[name].c_str());
+        // apply combined volume: per-track * musicVolume * globalVolume
+        SetMusicVolume(m, 1.0f * musicVolume * globalVolume);
+        PlayMusicStream(m);
 
-        PlayMusicStream(currentMusic);
+        activeMusic.push_back({
+            .name       = name,
+            .stream     = m,
+            .loop       = loop,
+            .volume     = 1.0f,
+            .onComplete = musicCompletionCallback
+        });
     }
 
-    void QueueMusic(const std::string& musicName, bool loop) {
-        musicQueue.push({ musicName, loop });
+    // Queue up a track if nothing is playing
+    void QueueMusic(const std::string& name, bool loop) {
+        musicQueue.push({ name, loop });
     }
 
-    void FadeInMusic(const std::string& musicName, float duration) {
-        StopMusicStream(currentMusic);
-        currentMusic = LoadMusicStream(musicName.c_str());
-        fadeState = FadeIn;
-        fadeDuration = duration;
-        fadeTime = 0.0f;
-        isFading = true;
-        SetMusicVolume(currentMusic, 0.0f);
-        PlayMusicStream(currentMusic);
+    // Fade out a named track
+    void FadeOutMusic(const std::string& name, float duration) {
+        for (auto &me : activeMusic) {
+            if (me.name == name) {
+                me.fadeState = FadeOut;
+                me.fadeDur   = duration;
+                me.fadeTime  = 0.f;
+            }
+        }
+    }
+    // Set per-track volume (0.0–1.0)
+    void SetTrackVolume(const std::string& name, float vol) {
+        float v = std::clamp(vol, 0.f, 1.f);
+        for (auto &me : activeMusic) {
+            if (me.name == name) {
+                me.volume = v;
+                if (me.fadeState == None) {
+                    SetMusicVolume(me.stream, me.volume * musicVolume * globalVolume);
+                }
+                break;
+            }
+        }
     }
 
-    void FadeOutMusic(float duration) {
-        fadeState = FadeOut;
-        fadeDuration = duration;
-        fadeTime = 0.0f;
-        isFading = true;
+    // Get effective volume of a named track
+    float GetTrackVolume(const std::string& name) {
+        for (auto &me : activeMusic) {
+            if (me.name == name) {
+                return me.volume * musicVolume * globalVolume;
+            }
+        }
+        return 0.f;
     }
 
+    // Set the global music volume (affects all tracks)
+    void SetMusicVolume(float vol) {
+        musicVolume = std::clamp(vol, 0.f, 1.f);
+        for (auto &me : activeMusic) {
+            if (me.fadeState == None) {
+                SetMusicVolume(me.stream, me.volume * musicVolume * globalVolume);
+            }
+        }
+    }
+
+    // Set the master volume (affects all audio including music and sfx)
+    void SetglobalVolume(float vol) {
+        globalVolume = std::clamp(vol, 0.f, 1.f);
+        // update music streams
+        for (auto &me : activeMusic) {
+            if (me.fadeState == None) {
+                SetMusicVolume(me.stream, me.volume * musicVolume * globalVolume);
+            }
+        }
+        // NOTE: also apply to sound effects when playing
+    }
+    
+    // Fade in a new music track over `duration`, pushes into activeMusic list
+    auto FadeInMusic (const std::string &musicName, float duration) -> void{
+        // Load and start at zero volume
+        Music m = LoadMusicStream(musicFiles[musicName].c_str());
+        SetMusicVolume(m, 0.0f);
+        PlayMusicStream(m);
+        // Track this stream in our active list
+        activeMusic.push_back({
+            .stream     = m,
+            .loop       = false,
+            .fadeState  = FadeIn,
+            .fadeTime   = 0.0f,
+            .fadeDur    = duration,
+            .onComplete = musicCompletionCallback
+        });
+    }
+
+    // Pause all active streams (smooth fade-out or immediate pause)
     void PauseMusic(bool smooth, float fadeDuration) {
-        if (smooth) {
-            isPausingSmooth = true;
-            FadeOutMusic(fadeDuration);
-        } else {
-            PauseMusicStream(currentMusic);
+        for (auto &me : activeMusic) {
+            if (smooth) {
+                me.fadeState = FadeOut;
+                me.fadeDur   = fadeDuration;
+                me.fadeTime  = 0.0f;
+            } else {
+                PauseMusicStream(me.stream);
+            }
         }
     }
 
+    // Resume all paused streams (smooth fade-in or immediate resume)
     void ResumeMusic(bool smooth, float fadeDuration) {
-        if (smooth) {
-            isPausingSmooth = false;
-            FadeInMusic("", fadeDuration);
-        } else {
-            ResumeMusicStream(currentMusic);
+        for (auto &me : activeMusic) {
+            if (smooth) {
+                // Reset fade parameters and restart stream
+                me.fadeState = FadeIn;
+                me.fadeDur   = fadeDuration;
+                me.fadeTime  = 0.0f;
+                PlayMusicStream(me.stream);
+                SetMusicVolume(me.stream, 0.0f);
+            } else {
+                ResumeMusicStream(me.stream);
+            }
         }
     }
 
+    // Set global volume and apply to all non-fading streams
     void SetVolume(float volume) {
         globalVolume = volume;
-        SetMusicVolume(currentMusic, volume);
+        for (auto &me : activeMusic) {
+            if (me.fadeState == None) {
+                SetMusicVolume(me.stream, globalVolume * musicVolume);
+            }
+        }
     }
 
-    void SetMusicVolume(float volume) {
-        musicVolume = volume;
-        SetMusicVolume(currentMusic, volume);
+    // Main update: advance streams, handle fades and completion
+    void Update() {
+        float dt = GetFrameTime();
+        for (auto it = activeMusic.begin(); it != activeMusic.end();) {
+            auto &me = *it;
+            UpdateMusicStream(me.stream);
+
+            // fading
+            if (me.fadeState != None) {
+                me.fadeTime += dt;
+                float t = std::clamp(me.fadeTime / me.fadeDur, 0.f, 1.f);
+                float target = me.volume * musicVolume * globalVolume;
+                float vol = (me.fadeState == FadeIn ? t : (1.f - t)) * target;
+                SetMusicVolume(me.stream, vol);
+                if (t >= 1.f) {
+                    if (me.fadeState == FadeOut) {
+                        StopMusicStream(me.stream);
+                    }
+                    me.fadeState = None;
+                }
+            }
+
+            // completion / looping
+            bool playing = IsMusicStreamPlaying(me.stream);
+            if (!playing && me.loop && me.fadeState == None) {
+                PlayMusicStream(me.stream);
+            } else if (!playing && !me.loop && me.fadeState == None) {
+                if (me.onComplete) me.onComplete();
+                UnloadMusicStream(me.stream);
+                it = activeMusic.erase(it);
+                continue;
+            }
+            ++it;
+        }
+
+        // if no active streams, pop from legacy queue
+        if (activeMusic.empty() && !musicQueue.empty()) {
+            auto [nextName, nextLoop] = musicQueue.front();
+            musicQueue.pop();
+            PlayMusic(nextName, nextLoop);
+        }
     }
+
+
+    // Unload all active streams on shutdown
+    void Unload() {
+        for (auto &me : activeMusic) {
+            UnloadMusicStream(me.stream);
+        }
+        activeMusic.clear();
+        // Existing Sound unloads as before...
+        for (auto & [categoryName, cat] : categories) {
+            for (auto & [soundName, snd] : cat.sounds) {
+                UnloadSound(snd);
+            }
+        }
+    }
+
+
 
     void SetCategoryVolume(const std::string& category, float volume) {
         if (categories.find(category) != categories.end()) {
@@ -317,61 +468,11 @@ namespace sound_system {
         }
     }
 
-    void Update() {
-
-        //TODO: debug this stuff, music not playing
-        UpdateMusicStream(currentMusic);
-
-        // Check for music completion and callback
-        if (IsMusicStreamPlaying(currentMusic) == false && musicQueue.empty() == false) {
-            auto nextTrack = musicQueue.front();
-            musicQueue.pop();
-            PlayMusic(nextTrack.first, nextTrack.second);
-        }
-
-        UpdateFading();
-    }
-
-    void UpdateFading() {
-        if (!isFading) return;
-
-        fadeTime += GetFrameTime();
-        float progress = fadeTime / fadeDuration;
-
-        float volumeToUse = (globalVolume != musicVolume) ? musicVolume : globalVolume;
-
-        if (fadeState == FadeIn) {
-            SetMusicVolume(currentMusic, progress * volumeToUse);
-            if (progress >= 1.0f) {
-                isFading = false;
-            }
-        } else if (fadeState == FadeOut) {
-            SetMusicVolume(currentMusic, (1.0f - progress) * volumeToUse);
-            if (progress >= 1.0f) {
-                if (isPausingSmooth) {
-                    PauseMusicStream(currentMusic);
-                } else {
-                    StopMusicStream(currentMusic);
-                }
-                isFading = false;
-            }
-        }
-    }
-
     void RegisterMusicCallback(SoundCallback callback) {
         musicCompletionCallback = callback;
     }
 
     void RegisterSoundCallback(const std::string& soundName, SoundCallback callback) {
         soundCallbacks[soundName] = callback;
-    }
-
-    void Unload() {
-        for (auto& [categoryName, category] : categories) {
-            for (auto& [soundName, sound] : category.sounds) {
-                UnloadSound(sound);
-            }
-        }
-        UnloadMusicStream(currentMusic);
     }
 }

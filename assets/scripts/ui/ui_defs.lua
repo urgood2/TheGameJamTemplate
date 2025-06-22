@@ -477,23 +477,23 @@ function ui_defs.generateUI()
     for i, achivementDef in ipairs(globals.achievements) do
         debug("Adding achievement: ", achivementDef.id, " with animation: ", achivementDef.anim)
         -- make a new achievement animation entity
-        local achievementAnimEntity = animation_system.createAnimatedObjectWithTransform(
+        achivementDef.anim_entity = animation_system.createAnimatedObjectWithTransform(
             achivementDef.unlocked and  achivementDef.anim or "locked_anim", -- animation ID
             false             -- use animation, not sprite id
         )
         
         -- resize to fit 48 x 48
         animation_system.resizeAnimationObjectsInEntityToFit(
-            achievementAnimEntity,
+            achivementDef.anim_entity,
             48, -- Width
             48  -- Height
         ) 
         
         -- wrap 
-        local achievementAnimDef = ui.definitions.wrapEntityInsideObjectElement(achievementAnimEntity)
+        local achievementAnimDef = ui.definitions.wrapEntityInsideObjectElement(achivementDef.anim_entity)
         
         -- make it hoverable
-        local achievementGameObject = registry:get(achievementAnimEntity, GameObject)
+        local achievementGameObject = registry:get(achivementDef.anim_entity, GameObject)
         achievementGameObject.methods.onHover = function()
             debug("Achievement entity hovered!")
             achivementDef.tooltipFunc()

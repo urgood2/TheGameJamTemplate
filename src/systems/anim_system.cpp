@@ -267,22 +267,47 @@ namespace animation_system {
         auto &registry  = globals::registry;
         auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
         auto &gameObject = registry.get<transform::GameObject>(e);
+        auto &transform = registry.get<transform::Transform>(e);
+        
+        // 0) remember how big this entity *really* is right now:
+        auto storedW = transform.getActualW();
+        auto storedH = transform.getActualH();
+
+        // 1) swap in the new animation
         if (generateNewAnimFromSprite) {
-            // create a new animation object from the sprite UUID
-            animQueue.defaultAnimation = createStillAnimationFromSpriteUUID(defaultAnimationIDorSpriteUUID, std::nullopt, std::nullopt);
-        }
-        else {
-            // use the default animation object
+            animQueue.defaultAnimation =
+            createStillAnimationFromSpriteUUID(defaultAnimationIDorSpriteUUID, std::nullopt, std::nullopt);
+        } else {
             animQueue.defaultAnimation = init::getAnimationObject(defaultAnimationIDorSpriteUUID);
         }
-        
+
+        // 2) figure out the new animation’s native size
+        auto newW = animQueue
+        .defaultAnimation
+        .animationList
+        .at(0)
+        .first
+        .spriteFrame
+        ->frame.width;
+        auto newH = animQueue
+        .defaultAnimation
+        .animationList
+        .at(0)
+        .first
+        .spriteFrame
+        ->frame.height;
+
+        transform.setActualW(newW);
+        transform.setActualH(newH);
+
         if (shaderPassConfig)
             shaderPassConfig(e); // pass the entity to the shader pass config function
             
         if (!shadowEnabled) {
             gameObject.shadowDisplacement.reset();
         }
-        
+        // change back to the enlarged size
+        resizeAnimationObjectsInEntityToFit(e, storedW, storedH);
     }
 
     auto setupAnimatedObjectOnEntity(

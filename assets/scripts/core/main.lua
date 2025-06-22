@@ -598,6 +598,55 @@ function initMainGame()
         "building_currency_production"
     )
     
+    --FIXME: remove this timer after testing
+    timer.every(
+        3,
+        function()
+            -- update all currencies by 40
+            for currencyName, currency in pairs(globals.currencies) do
+                globals.currencies[currencyName].target = globals.currencies[currencyName].target + 40 -- increment the target by 1
+            end
+        end,
+        0,
+        false, -- don't start right away
+        nil,
+        "currency_bugfixing_update"
+    )
+    
+    timer.every(
+        4,
+        function()
+            
+            -- looop through global achievements table
+            for _, achievement in pairs(globals.achievements) do
+                if not achievement.unlocked then
+                    -- check if the achievement is unlocked
+                    if achievement.require_check() then 
+                        --TODO: new achievement unlocked. do a new window thing, play sounds, make particles, etc.
+                        
+                        achievement.unlocked = true -- mark the achievement as unlocked
+                        achievement.rewardFunc(globals.screenWidth() / 2, globals.screenHeight() / 2 + 300) -- call the reward function with the screen center as the position
+                        
+                        --TODO: update the achievement UI window with the right animation
+                        animation_system.replaceAnimatedObjectOnEntity(
+                            achievement.anim_entity,
+                            achievement.anim,
+                            false,
+                            nil,   -- shader_prepass, -- Optional shader pass config function
+                            true   -- Enable shadow
+                        )
+                    else
+                        
+                    end
+                end
+            end
+        end,
+        0,
+        false, -- start immediately
+        nil,
+        "achievement_check"
+    )
+    
 
     -- add a task to the scheduler that will fade out the screen for 5 seconds
     local p1 = {

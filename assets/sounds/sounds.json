@@ -31,7 +31,8 @@
                 "whale_song_gatherer": "NOTIFICATION_Pop_03_mono.wav",
                 "dust_to_crystal" : "NOTIFICATION_Pop_04_mono.wav",
                 "crystal_to_wafer" : "NOTIFICATION_Pop_05_mono.wav",
-                "wafer_to_chip" : "NOTIFICATION_Pop_06_mono.wav"
+                "wafer_to_chip" : "NOTIFICATION_Pop_06_mono.wav",
+                "new_achievement": "UI_Notification_Triple_Drops_01_stereo.wav"
                 
             },
             "volume": 0.3

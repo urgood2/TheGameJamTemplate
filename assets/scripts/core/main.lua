@@ -589,19 +589,19 @@ function initMainGame()
     )
     
     --FIXME: remove this timer after testing
-    timer.every(
-        3,
-        function()
-            -- update all currencies by 40
-            for currencyName, currency in pairs(globals.currencies) do
-                globals.currencies[currencyName].target = globals.currencies[currencyName].target + 40 -- increment the target by 1
-            end
-        end,
-        0,
-        false, -- don't start right away
-        nil,
-        "currency_bugfixing_update"
-    )
+    -- timer.every(
+    --     3,
+    --     function()
+    --         -- update all currencies by 40
+    --         for currencyName, currency in pairs(globals.currencies) do
+    --             globals.currencies[currencyName].target = globals.currencies[currencyName].target + 40 -- increment the target by 1
+    --         end
+    --     end,
+    --     0,
+    --     false, -- don't start right away
+    --     nil,
+    --     "currency_bugfixing_update"
+    -- )
     
     timer.every(
         4,

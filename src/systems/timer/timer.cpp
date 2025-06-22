@@ -177,9 +177,16 @@ namespace timer
 
         // 6) Creation APIs
         t.set_function("run",        &timer::TimerSystem::timer_run);
-        t.set_function("after", [](std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, std::optional<std::string> tag) {
-            timer::TimerSystem::timer_after(delay, action, tag.value_or(""));
-        });
+        t.set_function("after",
+            [](std::variant<float, std::pair<float, float>> delay,
+               const std::function<void(std::optional<float>)>& action,
+               sol::optional<std::string> maybeTag) 
+            {
+              // if the user passed nil (i.e. no 3rd arg), maybeTag will be empty
+              std::string tag = maybeTag.value_or("");
+              timer::TimerSystem::timer_after(delay, action, tag);
+            }
+          );
         t.set_function("cooldown",   &timer::TimerSystem::timer_cooldown);
         t.set_function("every",      &timer::TimerSystem::timer_every);
         t.set_function("every_step", &timer::TimerSystem::timer_every_step);

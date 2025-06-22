@@ -287,7 +287,8 @@ function startGameButtonCallback()
         function()
             remove_fullscreen_shader("screen_tone_transition") -- Remove the fade out shader
             changeGameState(GAMESTATE.IN_GAME) -- Change the game state to IN_GAME
-        end
+        end,
+        "main_menu_to_game_state_change" -- unique tag for this timer
     )
     
 end
@@ -396,6 +397,7 @@ function initMainGame()
     -- shader uniform manipulation example
     debug(globals.gravityWaveSeconds)
     timer.every(globals.gravityWaveSeconds, function()
+        globals.gravity_wave_count = globals.gravity_wave_count + 1 -- increment the gravity wave count
         globals.timeUntilNextGravityWave = globals.gravityWaveSeconds -- reset the timer for the next gravity wave
         -- spawn a new timer that tweens the shader uniform
         -- Example 1: fixed 2-second tween
@@ -436,6 +438,7 @@ function initMainGame()
                     whaleShaderPipeline:addPass("flash") -- add the shockwave pass to the whale
                     
                     -- run something 3 times in a row
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         0.5, -- delay in seconds
                         function()
@@ -446,6 +449,7 @@ function initMainGame()
                             end
                         end
                     )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.0, -- delay in seconds
                         function()
@@ -455,6 +459,67 @@ function initMainGame()
                             end
                         end
                     )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
+                    timer.after(
+                        1.1, -- delay in seconds
+                        function()
+                            local whaleGameObject = registry:get(bowser, GameObject)
+                            if whaleGameObject.methods.onClick then
+                                whaleGameObject.methods.onClick(registry, bowser)
+                            end
+                        end
+                    )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
+                    timer.after(
+                        1.2, -- delay in seconds
+                        function()
+                            local whaleGameObject = registry:get(bowser, GameObject)
+                            if whaleGameObject.methods.onClick then
+                                whaleGameObject.methods.onClick(registry, bowser)
+                            end
+                        end
+                    )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
+                    timer.after(
+                        1.3, -- delay in seconds
+                        function()
+                            local whaleGameObject = registry:get(bowser, GameObject)
+                            if whaleGameObject.methods.onClick then
+                                whaleGameObject.methods.onClick(registry, bowser)
+                            end
+                        end
+                    )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
+                    timer.after(
+                        1.4, -- delay in seconds
+                        function()
+                            local whaleGameObject = registry:get(bowser, GameObject)
+                            if whaleGameObject.methods.onClick then
+                                whaleGameObject.methods.onClick(registry, bowser)
+                            end
+                        end
+                    )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
+                    timer.after(
+                        1.5, -- delay in seconds
+                        function()
+                            local whaleGameObject = registry:get(bowser, GameObject)
+                            if whaleGameObject.methods.onClick then
+                                whaleGameObject.methods.onClick(registry, bowser)
+                            end
+                        end
+                    )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
+                    timer.after(
+                        1.6, -- delay in seconds
+                        function()
+                            local whaleGameObject = registry:get(bowser, GameObject)
+                            if whaleGameObject.methods.onClick then
+                                whaleGameObject.methods.onClick(registry, bowser)
+                            end
+                        end
+                    )
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         1.9, -- delay in seconds
                         function()
@@ -467,7 +532,7 @@ function initMainGame()
                             
                         end
                     )
-                    
+                    debug("Running whale onClick method for entity: " .. tostring(bowser))
                     timer.after(
                         6.0, -- delay in seconds
                         function()
@@ -624,6 +689,9 @@ function main.init()
 end
 
 function main.update(dt)
+    if (currentGameState == GAMESTATE.MAIN_MENU) then
+        globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
+    end
     globals.timeUntilNextGravityWave = globals.timeUntilNextGravityWave - dt
     -- entity iteration example
     -- local view = registry:runtime_view(Transform)

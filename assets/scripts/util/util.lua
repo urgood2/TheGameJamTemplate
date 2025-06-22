@@ -71,7 +71,10 @@ function showTooltip(titleText, bodyText)
   end
 
   -- 1) set the texts
+  
   TextSystem.Functions.setText(titleEnt, titleText)
+  TextSystem.Functions.clearAllEffects(titleEnt) -- clear any previous effects
+  TextSystem.Functions.applyGlobalEffects(titleEnt, "fade") -- apply the tooltip title effects
   TextSystem.Functions.setText(bodyEnt, bodyText)
 
   -- 2) re-calc the box layout to fit new text

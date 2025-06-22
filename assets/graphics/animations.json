@@ -704,5 +704,316 @@
                 "bg_color": "NONE"
             }
         ]
+    },
+    "blue_whale9_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "blue-whale9.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3654_TheRoguelike_1_10_alpha_447_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3654-TheRoguelike_1_10_alpha_447.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "krill_2_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "krill-2.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3916_TheRoguelike_1_10_alpha_709_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3916-TheRoguelike_1_10_alpha_709.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3535_TheRoguelike_1_10_alpha_328_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3535-TheRoguelike_1_10_alpha_328.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "4067_TheRoguelike_1_10_alpha_860_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4067-TheRoguelike_1_10_alpha_860.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3676_TheRoguelike_1_10_alpha_469_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3676-TheRoguelike_1_10_alpha_469.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "4069_TheRoguelike_1_10_alpha_862_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4069-TheRoguelike_1_10_alpha_862.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3881_TheRoguelike_1_10_alpha_674_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3881-TheRoguelike_1_10_alpha_674.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "4160_TheRoguelike_1_10_alpha_953_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4160-TheRoguelike_1_10_alpha_953.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "4071_TheRoguelike_1_10_alpha_864_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4071-TheRoguelike_1_10_alpha_864.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3635_TheRoguelike_1_10_alpha_428_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3635-TheRoguelike_1_10_alpha_428.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3640_TheRoguelike_1_10_alpha_433_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3640-TheRoguelike_1_10_alpha_433.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3738_TheRoguelike_1_10_alpha_531_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3738-TheRoguelike_1_10_alpha_531.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3761_TheRoguelike_1_10_alpha_554_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3761-TheRoguelike_1_10_alpha_554.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3886_TheRoguelike_1_10_alpha_679_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3886-TheRoguelike_1_10_alpha_679.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3887_TheRoguelike_1_10_alpha_680_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3887-TheRoguelike_1_10_alpha_680.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3888_TheRoguelike_1_10_alpha_681_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3888-TheRoguelike_1_10_alpha_681.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "4065_TheRoguelike_1_10_alpha_858_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4065-TheRoguelike_1_10_alpha_858.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3902_TheRoguelike_1_10_alpha_695_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3902-TheRoguelike_1_10_alpha_695.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3849_TheRoguelike_1_10_alpha_642_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3849-TheRoguelike_1_10_alpha_642.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3847_TheRoguelike_1_10_alpha_640_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3847-TheRoguelike_1_10_alpha_640.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3628_TheRoguelike_1_10_alpha_421_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3628-TheRoguelike_1_10_alpha_421.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3631_TheRoguelike_1_10_alpha_424_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3631-TheRoguelike_1_10_alpha_424.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "4092_TheRoguelike_1_10_alpha_885_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "4092-TheRoguelike_1_10_alpha_885.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3911_TheRoguelike_1_10_alpha_704_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3911-TheRoguelike_1_10_alpha_704.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3850_TheRoguelike_1_10_alpha_643_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3850-TheRoguelike_1_10_alpha_643.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3730_TheRoguelike_1_10_alpha_523_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3730-TheRoguelike_1_10_alpha_523.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3741_TheRoguelike_1_10_alpha_534_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3741-TheRoguelike_1_10_alpha_534.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "3826_TheRoguelike_1_10_alpha_619_anim": {
+    "frames": [
+      {
+        "sprite_UUID": "3826-TheRoguelike_1_10_alpha_619.png",
+        "duration_seconds": 5,
+        "fg_color": "NONE",
+        "bg_color": "NONE"
+      }
+    ]
+  },
+  "locked_anim":
+    {
+        "frames": [
+        {
+            "sprite_UUID": "locked.png",
+            "duration_seconds": 5,
+            "fg_color": "NONE",
+            "bg_color": "NONE"
+        }
+        ]
     }
 }

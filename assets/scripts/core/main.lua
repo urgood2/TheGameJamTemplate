@@ -22,6 +22,7 @@ local mainMenuEntities = {
 function initMainMenu()
     currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     
+    setCategoryVolume("effects", 0.2) -- Set the effects volume to 0.5
     -- change the background by setting a shader transform
     -- u_noisiness to -3
     -- gray_amount to 1.92
@@ -106,6 +107,7 @@ function initMainMenu()
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
                 :addButtonCallback(function ()
+                    playSoundEffect("effects", "button-click") -- play button click sound
                     startGameButtonCallback() -- callback for the start game button
                 end)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -143,6 +145,7 @@ function initMainMenu()
                 :addColor(util.getColor("green_persian"))
                 :addEmboss(2.0)
                 :addButtonCallback(function ()
+                    playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Discord link
                     OpenURL("https://discord.gg/urpjVuPwjW") 
                 end)
@@ -181,6 +184,7 @@ function initMainMenu()
                 :addColor(util.getColor("green_persian"))
                 :addEmboss(2.0)
                 :addButtonCallback(function ()
+                    playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Bluesky link
                     OpenURL("https://bsky.app/profile/chugget.itch.io") 
                 end)

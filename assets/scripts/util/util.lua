@@ -155,8 +155,9 @@ function cycleConverter(inc)
     title = localization.get("ui.converter_locked_title")
     body  = localization.get("ui.converter_locked_body")
   else
-    title = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_title)
-    body  = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body)
+    local costString = getCostStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
+    title = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_title) 
+    body  = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body) .. costString
   end
 
   debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
@@ -209,8 +210,10 @@ function cycleBuilding(inc)
     title = localization.get("ui.building_locked_title")
     body  = localization.get("ui.building_locked_body")
   else
+    local costString = getCostStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
+    debug("Cost string for building: ", costString)
     title = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_title)
-    body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body)
+    body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body) .. costString
   end
 
   -- 3) hook up hover callbacks
@@ -257,6 +260,29 @@ function buyConverterButtonCallback()
     playSoundEffect("effects", "cannot-buy")
     return
   end
+  
+  -- check if the player has enough resources to buy the converter
+  local cost = selectedConverter.cost
+  for currency, amount in pairs(cost) do
+    if globals.currencies[currency].target < amount then
+      debug("Not enough", currency, "to buy converter", selectedConverter.id)
+      newTextPopup(
+        localization.get("ui.not_enough_currency"),
+        uiTransformComp.actualX + uiTransformComp.actualW / 2,
+        uiTransformComp.actualY - uiTransformComp.actualH * 2.5,
+        2
+      )
+      playSoundEffect("effects", "cannot-buy")
+      return
+    end
+  end
+  
+  -- deduct the cost from the player's resources
+  for currency, amount in pairs(cost) do
+    globals.currencies[currency].target = globals.currencies[currency].target - amount
+    debug("Deducted", amount, currency, "from player's resources")
+  end
+      
 
   -- create a new example converter entity
   local exampleConverter = create_ai_entity("kobold")
@@ -368,6 +394,29 @@ function buyConverterButtonCallback()
   end
 end
 
+function getCostStringForBuildingOrConverter(buildingOrConverterDef)
+  local costString = "\nCost:\n"
+  local cost = buildingOrConverterDef.cost
+  for currency, amount in pairs(cost) do
+    debug("Cost for currency: ", currency, " amount: ", amount)
+    costString = costString .. localization.get("ui.cost_tooltip_postfix", {cost = amount, currencyName = globals.currencies[currency].human_readable_name}) .. " "
+  end
+  return costString
+end
+
+-- pass in the converter definition used to output the material
+function getCostStringForMaterial(converterDef)
+  
+  local costString = "\nCost:\n"
+  local cost = converterDef.required_currencies
+  debug("debug printing cost string for material: ", converterDef.id)
+  print_table(cost)
+  for currency, amount in pairs(cost) do
+    costString = costString .. localization.get("ui.material_requirement_tooltip_postfix", {cost = amount, currencyName = globals.currencies[currency].human_readable_name}) .. " "
+  end
+  return costString
+end
+
 function buyBuildingButtonCallback()
   -- id of currently selected converter
   local selectedBuilding = globals.building_upgrade_defs[globals.selectedBuildingIndex]
@@ -385,7 +434,28 @@ function buyBuildingButtonCallback()
     playSoundEffect("effects", "cannot-buy")
     return
   end
-
+  
+  -- check if the player has enough resources to buy the building
+  local cost = selectedBuilding.cost
+  for currency, amount in pairs(cost) do
+    if globals.currencies[currency].target < amount then
+      debug("Not enough", currency, "to buy building", selectedBuilding.id)
+      newTextPopup(
+        localization.get("ui.not_enough_currency"),
+        uiTransformComp.actualX + uiTransformComp.actualW / 2,
+        uiTransformComp.actualY - uiTransformComp.actualH * 2.5,
+        2
+      )
+      playSoundEffect("effects", "cannot-buy")
+      return
+    end
+  end
+  
+  -- deduct the cost from the player's resources
+  for currency, amount in pairs(cost) do
+    globals.currencies[currency].target = globals.currencies[currency].target - amount
+    debug("Deducted", amount, currency, "from player's resources")
+  end
 
 
   -- create a new example converter entity
@@ -485,6 +555,9 @@ function buyBuildingButtonCallback()
 
     debug("add on hover/stop hover methods to the building entity")
     -- add on hover/stop hover methods to the building entity
+    
+    -- localization.get("ui.currency_text", {currency = math.floor(globals.currencies.whale_dust.amount)})
+    
     gameObjectComp.methods.onHover = function()
       debug("Building entity hovered!")
       showTooltip(
@@ -602,7 +675,7 @@ function updateBuildings()
               currencyTransform.actualX = buildingTransform.actualX + buildingTransform.actualW / 2
               currencyTransform.actualY = buildingTransform.actualY + buildingTransform.actualH / 2
               
-              
+              playSoundEffect("effects", buildingID)
               
               timer.after(
                 0.8,           -- delay in seconds
@@ -673,6 +746,8 @@ function updateConverters()
         -- spawn the new currency at the converter's position, in converter table's output field
         for currency, amount in pairs(converterDefTable.output) do
           debug("Converter", converterID, "added", amount, currency, "to target")
+          
+          playSoundEffect("effects", converterID)
 
           for j = 1, amount do
             timer.after(

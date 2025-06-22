@@ -55,6 +55,7 @@ globals.song_essence_target   = 0
 
 globals.currencies = globals.currencies or {}
 globals.currencies.whale_dust = {
+  human_readable_name = "Whale Dust", -- name of the currency
   amount = 0, -- current amount of whale dust
   target = 0, -- target amount of whale dust to reach
   anim = "whale_dust_anim", -- icon for the whale dust currency
@@ -63,6 +64,7 @@ globals.currencies.whale_dust = {
   ui_text_body = "ui.whale_dust_description" -- text to display in the ui for this currency
 }
 globals.currencies.song_essence = {
+  human_readable_name = "Song Essence", -- name of the currency
   amount = 0, -- current amount of song essence
   target = 0, -- target amount of song essence to reach
   anim = "song_essence_anim", -- icon for the song essence currency
@@ -71,6 +73,7 @@ globals.currencies.song_essence = {
   ui_text_body = "ui.song_essence_description" -- text to display in the ui for this currency
 }
 globals.currencies.crystal = {
+  human_readable_name = "Crystal", -- name of the currency
   amount = 0, -- current amount of crystal
   target = 0, -- target amount of crystal to reach
   anim = "crystal_anim", -- icon for the crystal currency
@@ -79,6 +82,7 @@ globals.currencies.crystal = {
   ui_text_body = "ui.crystal_description" -- text to display in the ui for this currency
 }
 globals.currencies.wafer = {
+  human_readable_name = "Wafer", -- name of the currency
   amount = 0, -- current amount of wafer
   target = 0, -- target amount of wafer to reach
   anim = "wafer_anim", -- icon for the wafer currency
@@ -87,6 +91,7 @@ globals.currencies.wafer = {
   ui_text_body = "ui.wafer_description" -- text to display in the ui for this currency
 }
 globals.currencies.chip = {
+  human_readable_name = "Chips", -- name of the currency
   amount = 0, -- current amount of chips
   target = 0, -- target amount of chips to reach
   anim = "chip_anim", -- icon for the chips currency
@@ -114,7 +119,10 @@ globals.building_upgrade_defs = {
     id = "basic_dust_collector", -- the id of the building
     required = {},
     cost = {
-      whale_dust = 10  -- cost in whale dust
+      whale_dust = 50  -- cost in whale dust
+    },
+    required_currencies = {
+      whale_dust = 30 -- must hold this much whale dust to unlock
     },
     resource_collection_rate = {
       whale_dust = 1 -- amount of whale dust collected per tick
@@ -130,7 +138,7 @@ globals.building_upgrade_defs = {
     id = "MK2_dust_collector", -- the id of the building
     required = {"basic_dust_collector"},
     required_currencies = {
-      whale_dust = 10 -- must hold this much whale dust to unlock
+      whale_dust = 100 -- must hold this much whale dust to unlock
     },
     cost = {
       whale_dust = 100  -- cost in whale dust
@@ -151,6 +159,10 @@ globals.building_upgrade_defs = {
     cost = {
       whale_dust = 50  -- cost in whale dust
     },
+    required_building_or_converter = {
+      MK2_dust_collector = 1,
+      basic_dust_collector = 5
+    },
     unlocked = true,
     anim = "krillHomeSmallAnim", -- the animation for the building
     ui_text_title = "ui.krill_home_name", -- the ui text for the building
@@ -161,10 +173,15 @@ globals.building_upgrade_defs = {
     id = "krill_farm", -- the id of the building
     required = {"krill_home"},
     cost = {
-      whale_dust = 400  -- cost in whale dust
+      whale_dust = 150  -- cost in whale dust
     },
     required_currencies = {
       whale_dust = 10 -- must hold this much whale dust to unlock
+    },
+    required_building_or_converter = {
+      MK2_dust_collector = 1,
+      basic_dust_collector = 5,
+      krill_home = 5
     },
     unlocked = false,
     anim = "krillHomeLargeAnim", -- the animation for the building
@@ -181,6 +198,12 @@ globals.building_upgrade_defs = {
     required_currencies = {
       whale_dust = 10 -- must hold this much whale dust to unlock
     },
+    required_building_or_converter = {
+      MK2_dust_collector = 1,
+      basic_dust_collector = 5,
+      krill_home = 5,
+      krill_farm = 5
+    },
     unlocked = false,
     anim = "dream_weaver_antenna_anim", -- the animation for the building,
     ui_text_title = "ui.whale_song_gatherer_name", -- the ui text for the building
@@ -195,13 +218,17 @@ globals.converter_defs = {
     required_building = {"whale_song_gatherer"},
     required_converter = {},
     required_currencies = {
-      whale_dust = 10 -- must hold this much whale dust to unlock
+      whale_dust = 100 -- input required to convert
+    },
+    required_building_or_converter = {
+      krill_home = 10,
+      krill_farm = 10
     },
     output = {
       crystal = 1 -- amount of crystal produced by the conversion
     },
     cost = {
-      song_essence = 100  -- this is the buy cost
+      song_essence = 10  -- this is the buy cost
     },
     unlocked = false,
     anim = "dust_to_crystal_converterAnim", -- the animation for the converter
@@ -213,9 +240,16 @@ globals.converter_defs = {
     required_building = {"whale_song_gatherer"},
     required_converter = {"dust_to_crystal"},
     required_currencies = {
-      whale_dust = 10 -- must hold this much whale dust to unlock
+      whale_dust = 50, -- input required to convert
+      crystal = 50 -- input required to convert
+    },
+    required_building_or_converter = {
+      krill_home = 10,
+      krill_farm = 10,
+      dust_to_crystal = 1
     },
     cost = {
+      song_essence = 100,
       crystal = 100  -- the stuff gathered by dust_to_crystal converter
     },
     output = {
@@ -231,9 +265,19 @@ globals.converter_defs = {
     required_building = {"whale_song_gatherer"},
     required_converter = {"crystal_to_wafer"},
     required_currencies = {
-      whale_dust = 10 -- must hold this much whale dust to unlock
+      crystal = 100,
+      wafer = 10, -- input required to converting
+      whale_dust = 1000, -- input required to convert
+      song_essence = 100 -- input required to convert
+    },
+    required_building_or_converter = {
+      krill_home = 10,
+      krill_farm = 10,
+      crystal_to_wafer = 1
     },
     cost = {
+      song_essence = 100,
+      crystal = 100,  -- the stuff gathered by dust_to_crystal converter
       wafer = 100  -- the stuff gathered by  crystal_to_wafer converter
     },
     output = {
@@ -252,7 +296,7 @@ globals.converter_defs = {
 local defaults = {
   
   timeUntilNextGravityWave = 0,
-  gravityWaveSeconds       = 50,
+  gravityWaveSeconds       = 70, -- gravity wave will happen every 70 seconds
   currencyIconForText      = {},
 
 

@@ -98,6 +98,14 @@ function spawnCurrencyAutoCollect(x, y, currencyName)
             globals.currencies[currencyName].target -- target value
         )
         
+        local soundEffects = {
+            "currency-click-1",
+            "currency-click-2",
+            "currency-click-3",
+            "currency-click-4"
+        }
+        playSoundEffect("effects", random_utils.random_element_string(soundEffects)) -- play a random currency click sound effect
+        
     end)
 end
 
@@ -161,6 +169,9 @@ function spawnCurrency(x, y, currencyName)
         transformComp.scale = 3 -- make it bigger
         spawnCircularBurstParticles(centerX, centerY, 10, 1.0)
         
+        playSoundEffect("effects", "button-click") -- play a random currency click sound effect
+            
+        
         
         timer.after(0.2, function()
             -- send it to the top right corner of the screen
@@ -195,6 +206,17 @@ function spawnCurrency(x, y, currencyName)
                 globals.currencies[currencyName].target, -- target value
                 "whale_dust_increment"
             )
+            
+            
+            
+            local soundEffects = {
+                "currency-click-1",
+                "currency-click-2",
+                "currency-click-3",
+                "currency-click-4"
+            }
+            playSoundEffect("effects", random_utils.random_element_string(soundEffects)) -- play a random currency click sound effect
+            
             
         end)
     end

@@ -17,6 +17,16 @@ function ui_defs.generateUI()
         "whale_dust_anim", -- animation ID
         false             -- use animation, not sprite id
     )
+    -- add tooltip
+    local whaleDustGameObject = registry:get(globals.currencies["whale_dust"].ui_icon_entity, GameObject)
+    whaleDustGameObject.methods.onHover = function()
+        showTooltip(localization.get("ui.tooltip_currency_whale_dust_title"), localization.get("ui.tooltip_currency_whale_dust"))
+    end
+    whaleDustGameObject.methods.onStopHover = function()
+        hideTooltip()
+    end
+    whaleDustGameObject.state.hoverEnabled = true
+    whaleDustGameObject.state.collisionEnabled = true -- enable collision for the hover to work
     
     local currencyIconDef = ui.definitions.wrapEntityInsideObjectElement(
         globals.currencies["whale_dust"].ui_icon_entity)
@@ -56,18 +66,62 @@ function ui_defs.generateUI()
         "wafer_anim", -- animation ID
         false             -- use animation, not sprite id
     )
+    -- add tooltip
+    local waferGameObject = registry:get(globals.currencies["wafer"].ui_icon_entity, GameObject)
+    local converterDef = findInTable(globals.converter_defs, "id", "crystal_to_wafer")
+    waferGameObject.methods.onHover = function()
+        showTooltip(localization.get("ui.tooltip_currency_wafers_title"), localization.get("ui.tooltip_currency_wafers") .. getCostStringForMaterial(converterDef))
+    end
+    waferGameObject.methods.onStopHover = function()
+        hideTooltip()
+    end
+    waferGameObject.state.hoverEnabled = true
+    waferGameObject.state.collisionEnabled = true -- enable collision for the hover to work
+    
     globals.currencies["chip"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "chip_anim", -- animation ID
         false             -- use animation, not sprite id
     )
+    local converterDef = findInTable(globals.converter_defs, "id", "wafer_to_chip")
+    local chipGameObject = registry:get(globals.currencies["chip"].ui_icon_entity, GameObject)
+    chipGameObject.methods.onHover = function()
+        showTooltip(localization.get("ui.tooltip_currency_chips_title"), localization.get("ui.tooltip_currency_chips") .. getCostStringForMaterial(converterDef))
+    end
+    chipGameObject.methods.onStopHover = function()
+        hideTooltip()
+    end
+    chipGameObject.state.hoverEnabled = true
+    chipGameObject.state.collisionEnabled = true -- enable collision for the hover to work
+    
     globals.currencies["crystal"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "crystal_anim", -- animation ID
         false             -- use animation, not sprite id
     )
+    local converterDef = findInTable(globals.converter_defs, "id", "dust_to_crystal")
+    local crystalGameObject = registry:get(globals.currencies["crystal"].ui_icon_entity, GameObject)
+    crystalGameObject.methods.onHover = function()
+        showTooltip(localization.get("ui.tooltip_currency_crystals_title"), localization.get("ui.tooltip_currency_crystals") .. getCostStringForMaterial(converterDef))
+    end
+    crystalGameObject.methods.onStopHover = function()
+        hideTooltip()
+    end
+    crystalGameObject.state.hoverEnabled = true
+    crystalGameObject.state.collisionEnabled = true -- enable collision for the hover to work
+    
+    
     globals.currencies["song_essence"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
         "song_essence_anim", -- animation ID
         false             -- use animation, not sprite id
     )
+    local songEssenceGameObject = registry:get(globals.currencies["song_essence"].ui_icon_entity, GameObject)
+    songEssenceGameObject.methods.onHover = function()
+        showTooltip(localization.get("ui.tooltip_currency_song_essence_title"), localization.get("ui.tooltip_currency_song_essence"))
+    end
+    songEssenceGameObject.methods.onStopHover = function()
+        hideTooltip()
+    end
+    songEssenceGameObject.state.hoverEnabled = true
+    songEssenceGameObject.state.collisionEnabled = true -- enable collision for the hover to work
     
     -- now make the text entries for the other currencies
     local textSongEssence = ui.definitions.getNewDynamicTextEntry(
@@ -646,6 +700,18 @@ function ui_defs.generateUI()
                             end
                         end
                     end
+                    
+                    -- 3) building_or_converter check
+                    if allRequiredUnlocked and building.required_building_or_converter then
+                        for reqId, reqCount in pairs(building.required_building_or_converter) do
+                            local owned = # (globals.buildings[reqId] or {})
+                            if owned < reqCount then
+                                allRequiredUnlocked = false
+                                break
+                            end
+                        end
+                    end
+
             
                     -- 3) if status flipped, show popup
                     if wasUnlocked ~= allRequiredUnlocked then
@@ -707,6 +773,18 @@ function ui_defs.generateUI()
                             end
                         end
                     end
+                    
+                    -- 3) building_or_converter check
+                    if allReqsOK and conv.required_building_or_converter then
+                        for reqId, reqCount in pairs(conv.required_building_or_converter) do
+                            local owned = # (globals.converters[reqId] or {})
+                            if owned < reqCount then
+                                allReqsOK = false
+                                break
+                            end
+                        end
+                    end
+
 
                     -- 3) currency check (only if all deps passed)
                     if allReqsOK and conv.required_currencies then
@@ -775,6 +853,7 @@ function ui_defs.generateUI()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
+                playSoundEffect("effects", "button-click") -- play button click sound
                 cycleBuilding(-1) -- decrement the selected building index
                 -- debug("Left button clicked! Current building index: ", globals.selectedBuildingIndex)
             end)
@@ -822,6 +901,7 @@ function ui_defs.generateUI()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
+                playSoundEffect("effects", "button-click") -- play button click sound
                 cycleBuilding(1) -- increment the selected building index
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
@@ -851,6 +931,7 @@ function ui_defs.generateUI()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
+                playSoundEffect("effects", "button-click") -- play button click sound
                 buyBuildingButtonCallback()
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -886,6 +967,7 @@ function ui_defs.generateUI()
             :addEmboss(4.0)
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
+                playSoundEffect("effects", "button-click") -- play button click sound
                 cycleConverter(-1)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
@@ -934,6 +1016,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- button click callback
+                playSoundEffect("effects", "button-click") -- play button click sound
                 debug("Right button clicked!")
                 cycleConverter(1)
             end)
@@ -965,6 +1048,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- button click callback
+                playSoundEffect("effects", "button-click") -- play button click sound
                 debug("Buy button clicked!")
                 
                 buyConverterButtonCallback()

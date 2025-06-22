@@ -259,7 +259,7 @@ function spawnNewKrill()
     -- 1) Spawn a new kobold AI entity
     local kr = create_ai_entity("kobold")
     
-    playSoundEffect("effects", "krill_spawn") -- play the krill spawn sound effect
+    playSoundEffect("effects", "krill-spawn") -- play the krill spawn sound effect
 
     globals.entities.krill[#globals.entities.krill+1] = kr -- add to the global krill list
 
@@ -283,6 +283,24 @@ function spawnNewKrill()
         30,
         30
     )
+    
+    -- make them hoverable
+    local nodeComp = registry:get(kr, GameObject)
+    local gameObjectState = nodeComp.state
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true
+    nodeComp.methods.onHover = function()
+        -- debug("krill hovered!")
+        showTooltip(
+            localization.get("ui.space_krill_title"), 
+            localization.get("ui.space_krill_body")
+        )
+    end
+    nodeComp.methods.onStopHover = function()
+        -- debug("krill stopped hovering!")
+        -- reset the tooltip text
+        hideTooltip()
+    end
     
     -- kril shaders
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)

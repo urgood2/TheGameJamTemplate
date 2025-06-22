@@ -1607,6 +1607,33 @@
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale7.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale8.png</key>
             <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/blue-whale9.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0001.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0002.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0003.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0004.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0005.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0006.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0007.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0008.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0009.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0010.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0011.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0012.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0001.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0002.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0003.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0004.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0005.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0006.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0007.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0008.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0009.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0010.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0011.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0012.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0013.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0014.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0015.png</key>
             <key type="filename">rounded_rect.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -3592,6 +3619,33 @@
                     <filename>pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</filename>
                     <filename>pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</filename>
                     <filename>pre-packing-files_globbed/socials/Socials 16x16_Discord.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0001.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0002.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0003.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0004.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0005.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0006.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0007.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0008.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0009.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0010.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0011.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0012.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0001.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0002.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0003.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0004.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0005.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0006.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0007.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0008.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0009.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0010.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0011.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0012.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0013.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0014.png</filename>
+                    <filename>pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0015.png</filename>
                 </array>
             </struct>
         </map>

@@ -6,7 +6,6 @@
                 "duration_seconds": 0.5,
                 "fg_color": "WHITE",
                 "bg_color": "NONE",
-                
                 "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
             },
             {
@@ -14,7 +13,6 @@
                 "duration_seconds": 0.5,
                 "fg_color": "WHITE",
                 "bg_color": "NONE",
-                
                 "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
             },
             {
@@ -22,7 +20,6 @@
                 "duration_seconds": 0.5,
                 "fg_color": "WHITE",
                 "bg_color": "NONE",
-                
                 "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
             },
             {
@@ -30,13 +27,10 @@
                 "duration_seconds": 0.5,
                 "fg_color": "WHITE",
                 "bg_color": "NONE",
-                
                 "__comment": "The uuid can be the filename from sprites.json, or if you have the uuid for it, the uuid. Colors are from colors.json, uuid from sprites.json. fg_color is the tint color of the sprite, bg_color is the color of the background rect. Frames are repeated in order."
             }
-            
         ]
     },
-
     "example_char": {
         "frames": [
             {
@@ -47,7 +41,6 @@
             }
         ]
     },
-
     "sword_anim": {
         "frames": [
             {
@@ -112,7 +105,6 @@
             }
         ]
     },
-
     "checkbox": {
         "frames": [
             {
@@ -123,7 +115,6 @@
             }
         ]
     },
-
     "divider_anim_000": {
         "frames": [
             {
@@ -134,7 +125,6 @@
             }
         ]
     },
-
     "divider_anim_001": {
         "frames": [
             {
@@ -145,7 +135,6 @@
             }
         ]
     },
-
     "divider_anim_002": {
         "frames": [
             {
@@ -156,7 +145,6 @@
             }
         ]
     },
-
     "divider_anim_003": {
         "frames": [
             {
@@ -167,7 +155,6 @@
             }
         ]
     },
-
     "divider_anim_004": {
         "frames": [
             {
@@ -178,7 +165,6 @@
             }
         ]
     },
-
     "divider_anim_005": {
         "frames": [
             {
@@ -189,7 +175,6 @@
             }
         ]
     },
-
     "divider_anim_fade_000": {
         "frames": [
             {
@@ -200,7 +185,6 @@
             }
         ]
     },
-    
     "divider_anim_fade_001": {
         "frames": [
             {
@@ -211,7 +195,6 @@
             }
         ]
     },
-
     "divider_anim_fade_002": {
         "frames": [
             {
@@ -222,7 +205,6 @@
             }
         ]
     },
-
     "divider_anim_fade_003": {
         "frames": [
             {
@@ -233,7 +215,6 @@
             }
         ]
     },
-
     "divider_anim_fade_004": {
         "frames": [
             {
@@ -244,7 +225,6 @@
             }
         ]
     },
-
     "divider_anim_fade_005": {
         "frames": [
             {
@@ -255,8 +235,6 @@
             }
         ]
     },
-
-
     "right_arrow": {
         "frames": [
             {
@@ -267,7 +245,6 @@
             }
         ]
     },
-
     "left_arrow": {
         "frames": [
             {
@@ -278,7 +255,6 @@
             }
         ]
     },
-
     "gear_icon_anim": {
         "frames": [
             {
@@ -289,7 +265,6 @@
             }
         ]
     },
-
     "mouse_left_outline_anim": {
         "frames": [
             {
@@ -300,7 +275,6 @@
             }
         ]
     },
-
     "mouse_right_outline_anim": {
         "frames": [
             {
@@ -311,7 +285,6 @@
             }
         ]
     },
-
     "keyboard_enter_outline_anim": {
         "frames": [
             {
@@ -332,161 +305,176 @@
             }
         ]
     },
-
     "blue_whale_anim": {
         "frames": [
             {
-                "sprite_UUID": "blue-whale1.png",
+                "sprite_UUID": "whaleidle(1)_0001.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale2.png",
+                "sprite_UUID": "whaleidle(1)_0002.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale3.png",
+                "sprite_UUID": "whaleidle(1)_0003.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale4.png",
+                "sprite_UUID": "whaleidle(1)_0004.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale5.png",
+                "sprite_UUID": "whaleidle(1)_0005.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale6.png",
+                "sprite_UUID": "whaleidle(1)_0006.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale7.png",
+                "sprite_UUID": "whaleidle(1)_0007.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale8.png",
+                "sprite_UUID": "whaleidle(1)_0008.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale9.png",
+                "sprite_UUID": "whaleidle(1)_0009.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale10.png",
+                "sprite_UUID": "whaleidle(1)_0010.png",
+                "duration_seconds": 0.33,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            },
+            {
+                "sprite_UUID": "whaleidle(1)_0011.png",
+                "duration_seconds": 0.33,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            },
+            {
+                "sprite_UUID": "whaleidle(1)_0012.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             }
         ]
     },
-    "blue_whale_smile_anim": {
+    "whalesinging_anim": {
         "frames": [
             {
-                "sprite_UUID": "blue-whale-smile1.png",
+                "sprite_UUID": "whalesinging_0001.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile2.png",
+                "sprite_UUID": "whalesinging_0002.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile3.png",
+                "sprite_UUID": "whalesinging_0003.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile4.png",
+                "sprite_UUID": "whalesinging_0004.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile5.png",
+                "sprite_UUID": "whalesinging_0005.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile6.png",
+                "sprite_UUID": "whalesinging_0006.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile7.png",
+                "sprite_UUID": "whalesinging_0007.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile8.png",
+                "sprite_UUID": "whalesinging_0008.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile9.png",
+                "sprite_UUID": "whalesinging_0009.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile10.png",
+                "sprite_UUID": "whalesinging_0010.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile11.png",
+                "sprite_UUID": "whalesinging_0011.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile12.png",
+                "sprite_UUID": "whalesinging_0012.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile13.png",
+                "sprite_UUID": "whalesinging_0013.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             },
             {
-                "sprite_UUID": "blue-whale-smile14.png",
+                "sprite_UUID": "whalesinging_0014.png",
+                "duration_seconds": 0.33,
+                "fg_color": "NONE",
+                "bg_color": "NONE"
+            },
+            {
+                "sprite_UUID": "whalesinging_0015.png",
                 "duration_seconds": 0.33,
                 "fg_color": "NONE",
                 "bg_color": "NONE"
             }
-            
         ]
     },
-    
     "krill_1_anim": {
         "frames": [
             {

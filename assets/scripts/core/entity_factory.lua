@@ -531,6 +531,7 @@ function spawnNewWhale()
                 function()
                     local transform = registry:get(bowser, Transform)
                     transform.rotation = transform.rotation - 30
+                
                 end,
                 "whale_rotate_after"
             )
@@ -610,6 +611,7 @@ function spawnNewWhale()
                 function()
                     local transformComp = registry:get(bowser, Transform)
                     transformComp.rotation = 0 -- reset rotation
+                    
                     
                     -- are there any song collectors?
                     if globals.buildings.whale_song_gatherer then

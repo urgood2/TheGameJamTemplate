@@ -1,6 +1,18 @@
 {
 	"ui": {
 		
+		"tooltip_currency_whale_dust": "The main resource in the game.\nIt is used to buy buildings and upgrades.\nSpace whales are the only konwn source of Whale Dust.",
+		"tooltip_currency_song_essence": "A new resource.\nIt is required to create chips.\nSong Essence is collected from whales singing\nthough the exact mechanism is unknown.",
+		"tooltip_currency_crystals": "Recently discovered resource.\nIt is a required component for chips\nCrystals are created by collecting the energy of whale songs",
+		"tooltip_currency_wafers": "A rare resource.\nWafers, along with song essence, are used to create chips.",
+		"tooltip_currency_chips": "The rarest resource.\nChips don't do anything (short jams, am I rite?)\nbut you can show off how many you made!\nDon't tell the whale what you did.",
+		
+		"tooltip_buy_menu_title": "Buy Menu",
+		"tooltip_buy_menu_body": "This is where you can buy and place buildings.\nCycle through your options.\nNot all of them will be available at the start.\nUnlock new buildings by gathering more resources.",
+		
+		"space_krill_title": "Space Krill",
+		"space_krill_body": "These little guys are your automated workers.\nThey will do the dirty work and bug the whale for you.\nAll you have to do then is pick the dust up afterward.",
+		
 		"start_game_logo": "Echoes of the Void: Homesong",
 		"start_game_button": "Start Game",
 		"start_game_feedback": "Give Feedback",

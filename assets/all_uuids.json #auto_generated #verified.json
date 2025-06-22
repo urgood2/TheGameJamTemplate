@@ -21,6 +21,15 @@
     "&_keyboard_mouse_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector"
     ],
+    "0001_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0001.png"
+    ],
+    "0001_1_whaleidle": [
+        "whaleidle(1)_0001.png"
+    ],
+    "0001_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0001.png"
+    ],
     "0001_spine_sprite": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/spine/Sprite-0001.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\Sprite-0001.json",
@@ -29,6 +38,105 @@
     ],
     "0001_sprite": [
         "Sprite-0001.json"
+    ],
+    "0001_whalesinging": [
+        "whalesinging_0001.png"
+    ],
+    "0002_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0002.png"
+    ],
+    "0002_1_whaleidle": [
+        "whaleidle(1)_0002.png"
+    ],
+    "0002_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0002.png"
+    ],
+    "0002_whalesinging": [
+        "whalesinging_0002.png"
+    ],
+    "0003_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0003.png"
+    ],
+    "0003_1_whaleidle": [
+        "whaleidle(1)_0003.png"
+    ],
+    "0003_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0003.png"
+    ],
+    "0003_whalesinging": [
+        "whalesinging_0003.png"
+    ],
+    "0004_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0004.png"
+    ],
+    "0004_1_whaleidle": [
+        "whaleidle(1)_0004.png"
+    ],
+    "0004_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0004.png"
+    ],
+    "0004_whalesinging": [
+        "whalesinging_0004.png"
+    ],
+    "0005_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0005.png"
+    ],
+    "0005_1_whaleidle": [
+        "whaleidle(1)_0005.png"
+    ],
+    "0005_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0005.png"
+    ],
+    "0005_whalesinging": [
+        "whalesinging_0005.png"
+    ],
+    "0006_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0006.png"
+    ],
+    "0006_1_whaleidle": [
+        "whaleidle(1)_0006.png"
+    ],
+    "0006_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0006.png"
+    ],
+    "0006_whalesinging": [
+        "whalesinging_0006.png"
+    ],
+    "0007_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0007.png"
+    ],
+    "0007_1_whaleidle": [
+        "whaleidle(1)_0007.png"
+    ],
+    "0007_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0007.png"
+    ],
+    "0007_whalesinging": [
+        "whalesinging_0007.png"
+    ],
+    "0008_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0008.png"
+    ],
+    "0008_1_whaleidle": [
+        "whaleidle(1)_0008.png"
+    ],
+    "0008_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0008.png"
+    ],
+    "0008_whalesinging": [
+        "whalesinging_0008.png"
+    ],
+    "0009_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0009.png"
+    ],
+    "0009_1_whaleidle": [
+        "whaleidle(1)_0009.png"
+    ],
+    "0009_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0009.png"
+    ],
+    "0009_whalesinging": [
+        "whalesinging_0009.png"
     ],
     "000_border_border_panel": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-000.png",
@@ -71,6 +179,60 @@
     "000_panel_panel": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-000.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\Double\\Panel\\panel-000.png"
+    ],
+    "0010_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0010.png"
+    ],
+    "0010_1_whaleidle": [
+        "whaleidle(1)_0010.png"
+    ],
+    "0010_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0010.png"
+    ],
+    "0010_whalesinging": [
+        "whalesinging_0010.png"
+    ],
+    "0011_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0011.png"
+    ],
+    "0011_1_whaleidle": [
+        "whaleidle(1)_0011.png"
+    ],
+    "0011_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0011.png"
+    ],
+    "0011_whalesinging": [
+        "whalesinging_0011.png"
+    ],
+    "0012_1_blue_krill_whale_whaleidle_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whaleidle(1)_0012.png"
+    ],
+    "0012_1_whaleidle": [
+        "whaleidle(1)_0012.png"
+    ],
+    "0012_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0012.png"
+    ],
+    "0012_whalesinging": [
+        "whalesinging_0012.png"
+    ],
+    "0013_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0013.png"
+    ],
+    "0013_whalesinging": [
+        "whalesinging_0013.png"
+    ],
+    "0014_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0014.png"
+    ],
+    "0014_whalesinging": [
+        "whalesinging_0014.png"
+    ],
+    "0015_blue_krill_whale_whalesinging_with": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/blue-whale-with-krill/whalesinging_0015.png"
+    ],
+    "0015_whalesinging": [
+        "whalesinging_0015.png"
     ],
     "001_border_border_panel": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-001.png",
@@ -755,6 +917,12 @@
     "01_9_buff_debuff_n_p3": [
         "Buff n Debuff P3 01_9.png"
     ],
+    "01_button_light_sound_stereo_switch": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Light_Switch_01_stereo.wav"
+    ],
+    "01_button_light_stereo_switch": [
+        "BUTTON_Light_Switch_01_stereo.wav"
+    ],
     "01_circle": [
         "circle_01.png"
     ],
@@ -809,6 +977,18 @@
     "01_magic_particle": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_01.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_01.png"
+    ],
+    "01_mono_notification_pop": [
+        "NOTIFICATION_Pop_01_mono.wav"
+    ],
+    "01_mono_notification_pop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NOTIFICATION_Pop_01_mono.wav"
+    ],
+    "01_mono_scifi_sound_up": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/SCIFI_Up_01_mono.wav"
+    ],
+    "01_mono_scifi_up": [
+        "SCIFI_Up_01_mono.wav"
     ],
     "01_muzzle": [
         "muzzle_01.png"
@@ -1181,6 +1361,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-029.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\Double\\Panel\\panel-029.png"
     ],
+    "02_button_light_sound_stereo_switch": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Light_Switch_02_stereo.wav"
+    ],
+    "02_button_light_stereo_switch": [
+        "BUTTON_Light_Switch_02_stereo.wav"
+    ],
     "02_case_latch_mono_open_sound_storage": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/STORAGE_CASE_Open_Latch_02_mono.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\STORAGE_CASE_Open_Latch_02_mono.wav",
@@ -1234,6 +1420,12 @@
     "02_magic_particle": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_02.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_02.png"
+    ],
+    "02_mono_notification_pop": [
+        "NOTIFICATION_Pop_02_mono.wav"
+    ],
+    "02_mono_notification_pop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NOTIFICATION_Pop_02_mono.wav"
     ],
     "02_muzzle": [
         "muzzle_02.png"
@@ -1375,6 +1567,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Panel/panel-031.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\Double\\Panel\\panel-031.png"
     ],
+    "03_button_light_sound_stereo_switch": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Light_Switch_03_stereo.wav"
+    ],
+    "03_button_light_stereo_switch": [
+        "BUTTON_Light_Switch_03_stereo.wav"
+    ],
     "03_circle": [
         "circle_03.png"
     ],
@@ -1409,6 +1607,12 @@
     "03_magic_particle": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_03.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_03.png"
+    ],
+    "03_mono_notification_pop": [
+        "NOTIFICATION_Pop_03_mono.wav"
+    ],
+    "03_mono_notification_pop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NOTIFICATION_Pop_03_mono.wav"
     ],
     "03_muzzle": [
         "muzzle_03.png"
@@ -1493,6 +1697,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MUSIC_EFFECT_Platform_Positive_03c_Fast_stereo.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MUSIC_EFFECT_Platform_Positive_03c_Fast_stereo.wav"
     ],
+    "04_button_light_sound_stereo_switch": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Light_Switch_04_stereo.wav"
+    ],
+    "04_button_light_stereo_switch": [
+        "BUTTON_Light_Switch_04_stereo.wav"
+    ],
     "04_circle": [
         "circle_04.png"
     ],
@@ -1513,6 +1723,12 @@
     "04_magic_particle": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_04.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_04.png"
+    ],
+    "04_mono_notification_pop": [
+        "NOTIFICATION_Pop_04_mono.wav"
+    ],
+    "04_mono_notification_pop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NOTIFICATION_Pop_04_mono.wav"
     ],
     "04_muzzle": [
         "muzzle_04.png"
@@ -1605,6 +1821,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\magic_05.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/particles/magic_05.png"
     ],
+    "05_mono_notification_pop": [
+        "NOTIFICATION_Pop_05_mono.wav"
+    ],
+    "05_mono_notification_pop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NOTIFICATION_Pop_05_mono.wav"
+    ],
     "05_muzzle": [
         "muzzle_05.png"
     ],
@@ -1674,6 +1896,12 @@
     ],
     "06_flame_rotated": [
         "flame_06_rotated.png"
+    ],
+    "06_mono_notification_pop": [
+        "NOTIFICATION_Pop_06_mono.wav"
+    ],
+    "06_mono_notification_pop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NOTIFICATION_Pop_06_mono.wav"
     ],
     "06_particle_rotated_spark": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\spark_06_rotated.png",
@@ -1900,6 +2128,12 @@
     "0_sprite": [
         "sprites-0.png",
         "sprites-0.json"
+    ],
+    "1000m_12_charge_fi_high_pas_sci_semi_sound_stereo_sweep_up": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CHARGE_Sci-Fi_High_Pass_Sweep_12_Semi_Up_1000ms_stereo.wav"
+    ],
+    "1000m_12_charge_fi_high_pas_sci_semi_stereo_sweep_up": [
+        "CHARGE_Sci-Fi_High_Pass_Sweep_12_Semi_Up_1000ms_stereo.wav"
     ],
     "10_particle_smoke": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\smoke_10.png",
@@ -11721,6 +11955,12 @@
     "ai_worldstate": [
         "ai_worldstate.json"
     ],
+    "air_fast_mono_rr1_sound_subtle_whoosh": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/WHOOSH_Air_Fast_Subtle_RR1_mono.wav"
+    ],
+    "air_fast_mono_rr1_subtle_whoosh": [
+        "WHOOSH_Air_Fast_Subtle_RR1_mono.wav"
+    ],
     "air_fast_mono_sound_whoosh": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/WHOOSH_Fast_Air_mono.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\WHOOSH_Fast_Air_mono.wav",
@@ -11899,6 +12139,18 @@
     ],
     "anim_sword": [
         "sword_anim"
+    ],
+    "animate_appear_dirty_sound_stereo_ui_whistle": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Animate_Dirty_Whistle_Appear_stereo.wav"
+    ],
+    "animate_appear_dirty_stereo_ui_whistle": [
+        "UI_Animate_Dirty_Whistle_Appear_stereo.wav"
+    ],
+    "animate_dirty_disappear_sound_stereo_ui_whistle": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Animate_Dirty_Whistle_Disappear_stereo.wav"
+    ],
+    "animate_dirty_disappear_stereo_ui_whistle": [
+        "UI_Animate_Dirty_Whistle_Disappear_stereo.wav"
     ],
     "animation": [
         "animations.json"
@@ -12669,6 +12921,9 @@
     "back_keyboard_slash_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_slash_back.svg"
     ],
+    "background": [
+        "background.ogg"
+    ],
     "background_balatro_fragment": [
         "balatro_background_fragment.fs"
     ],
@@ -12748,6 +13003,9 @@
     "background_peache_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\peaches_background_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/peaches_background_vertex.vs"
+    ],
+    "background_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/background.ogg"
     ],
     "backspace_default_icon_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_backspace_icon.png",
@@ -13327,6 +13585,12 @@
     "bracket_keyboard_open_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_bracket_open.svg"
     ],
+    "bras_error_orchestral_sound_stereo_ui": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Error_Orchestral_Brass_stereo.wav"
+    ],
+    "bras_error_orchestral_stereo_ui": [
+        "UI_Error_Orchestral_Brass_stereo.wav"
+    ],
     "brick_palette_red_resurrect": [
         "RESURRECT_PALETTE_BRICK_RED"
     ],
@@ -13341,6 +13605,12 @@
     ],
     "brown_sandy": [
         "SANDY BROWN"
+    ],
+    "bubbling_deep_magic_sound_spell_stereo_subtle_tone_zap": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MAGIC_SPELL_Deep_Tone_Bubbling_Zaps_Subtle_stereo.wav"
+    ],
+    "bubbling_deep_magic_spell_stereo_subtle_tone_zap": [
+        "MAGIC_SPELL_Deep_Tone_Bubbling_Zaps_Subtle_stereo.wav"
     ],
     "burlywood": [
         "BURLYWOOD"
@@ -13366,6 +13636,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\BUTTON_Clean_with_Tail_mono.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Clean_with_Tail_mono.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\BUTTON_Clean_with_Tail_mono.wav"
+    ],
+    "button_click_deep_mono_smooth": [
+        "BUTTON_Deep_Smooth_Click_mono.wav"
+    ],
+    "button_click_deep_mono_smooth_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Deep_Smooth_Click_mono.wav"
     ],
     "button_color_default_outline_x_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Default/xbox_button_color_x_outline.png",
@@ -13825,6 +14101,18 @@
     "circle_spectrum_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\spectrum_circle_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/spectrum_circle_vertex.vs"
+    ],
+    "click_mono_short_sound_tap_ui": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Click_Tap_Short_mono.wav"
+    ],
+    "click_mono_short_tap_ui": [
+        "UI_Click_Tap_Short_mono.wav"
+    ],
+    "click_mono_snappy_sound_ui": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/UI_Click_Snappy_mono.wav"
+    ],
+    "click_mono_snappy_ui": [
+        "UI_Click_Snappy_mono.wav"
     ],
     "colon_default_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_colon.png",
@@ -17333,6 +17621,12 @@
     "h_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_h.svg"
     ],
+    "harp_magic_morphing_scale_sound_spell_stereo_subtle_synth": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MAGIC_SPELL_Morphing_Synth_Harp_Scales_Subtle_stereo.wav"
+    ],
+    "harp_magic_morphing_scale_spell_stereo_subtle_synth": [
+        "MAGIC_SPELL_Morphing_Synth_Harp_Scales_Subtle_stereo.wav"
+    ],
     "holo_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/holo_vertex.vs"
@@ -18087,6 +18381,12 @@
     "lt_xbox": [
         "xbox_lt.png"
     ],
+    "magic_mono_sound_spawn_spell": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MAGIC_SPELL_Spawn_mono.wav"
+    ],
+    "magic_mono_spawn_spell": [
+        "MAGIC_SPELL_Spawn_mono.wav"
+    ],
     "main": [
         "main.lua"
     ],
@@ -18113,6 +18413,12 @@
     ],
     "medium_turquoise": [
         "MEDIUM TURQUOISE"
+    ],
+    "melody_sound_whale": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/whale_melody.ogg"
+    ],
+    "melody_whale": [
+        "whale_melody.ogg"
     ],
     "miner": [
         "miner.png"
@@ -18259,6 +18565,12 @@
     ],
     "npatch": [
         "npatch.json"
+    ],
+    "nyctophobia": [
+        "NyctoPhobia.ogg"
+    ],
+    "nyctophobia_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NyctoPhobia.ogg"
     ],
     "orange": [
         "ORANGE"

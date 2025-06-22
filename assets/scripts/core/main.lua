@@ -25,6 +25,8 @@ function initMainMenu()
     -- change the background by setting a shader transform
     -- u_noisiness to -3
     -- gray_amount to 1.92
+    
+    playMusic("main-menu", true) -- Play the main menu music
 
     timer.tween(
         5,      -- duration in seconds
@@ -249,6 +251,8 @@ function startGameButtonCallback()
     --TODO: add full screeen transition shader, tween the value of that
     add_fullscreen_shader("screen_tone_transition") -- Add the fade out shader
     
+    fadeOutMusic("main-menu", 1.0) -- Fade out the main menu music over 1 second
+    
     -- 0 is dark, 1 is light
     globalShaderUniforms:set("screen_tone_transition", "position", 1)
     
@@ -302,6 +306,14 @@ end
 function initMainGame()
     debug("Initializing main game...") -- Debug message to indicate the game is starting
     currentGameState = GAMESTATE.IN_GAME -- Set the game state to IN_GAME
+    
+    playMusic("main-game", true) -- Play the main game music
+    playMusic("whale-song", true) -- Play the whale song music, but mute it
+    setTrackVolume("whale-song", 0.0) -- Mute the whale song music
+    
+    
+    
+    -- Set the background shader to the main game background
     
     
     spawnNewWhale() -- spawn a new whale entity

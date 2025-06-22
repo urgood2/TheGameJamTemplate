@@ -386,6 +386,7 @@ auto updateSystems(float dt) -> void
     
     input::Update(globals::registry, globals::inputState, dt);
     globals::updateGlobalVariables();
+    sound_system::Update(dt); // update sound system
     
     // systems
     shaders::update(dt);

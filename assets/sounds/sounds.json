@@ -3,7 +3,9 @@
 
     "music": 
     {
-        
+        "main-menu": "NyctoPhobia.ogg",
+        "main-game": "background.ogg",
+        "whale-song": "whale_melody.ogg"
     },
     "music_volume": 0.5,
     "categories": {
@@ -35,11 +37,6 @@
             "volume": 0.8
         },
         "ui": {
-            "sounds": {
-            },
-            "volume": 0.5
-        },
-        "music": {
             "sounds": {
             },
             "volume": 0.5

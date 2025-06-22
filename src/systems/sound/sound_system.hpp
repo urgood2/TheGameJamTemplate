@@ -64,7 +64,7 @@ namespace sound_system {
     void ExposeToLua(sol::state &lua);
 
     // Update function to be called in game loop
-    void Update();
+    void Update(float dt);
 
     // Clean up resources
     void Unload();

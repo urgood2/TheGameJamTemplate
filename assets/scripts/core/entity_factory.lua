@@ -531,6 +531,13 @@ function spawnNewWhale()
                 function()
                     local transform = registry:get(bowser, Transform)
                     transform.rotation = transform.rotation - 30
+                    
+                    timer.tween(
+                        0.5, -- duration in seconds
+                        function() return getTrackVolume("whale-song") end, -- getter
+                        function(v) setTrackVolume("whale-song", v) end, -- setter
+                        1 -- target value
+                    )
                 
                 end,
                 "whale_rotate_after"
@@ -588,7 +595,7 @@ function spawnNewWhale()
                     )
                     
                     timer.after(
-                        0.4, -- delay in seconds
+                        0.9, -- delay in seconds
                         function()
                             local transform = registry:get(bowser, Transform)
                             -- spawn particles 
@@ -602,16 +609,138 @@ function spawnNewWhale()
                         end,
                         nil
                     )
+                    
+                    timer.after(
+                        1.5, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
+                    
+                    timer.after(
+                        2.1, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
+                    
+                    timer.after(
+                        2.9, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
+                    timer.after(
+                        3.5, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnGrowingCircleParticle(
+                                transform.actualX,
+                                transform.actualY,
+                                100, -- width
+                                100, -- height
+                                1 -- seconds to grow
+                            )
+                        end,
+                        nil
+                    )
+                    timer.after(
+                        3.9, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
+                    timer.after(
+                        4.0, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
+                    timer.after(
+                        4.3, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
+                    timer.after(
+                        4.4, -- delay in seconds
+                        function()
+                            local transform = registry:get(bowser, Transform)
+                            -- spawn particles 
+                            spawnCircularBurstParticles(
+                                transform.actualX + transform.actualW / 2 ,
+                                transform.actualY + transform.actualH / 2 ,
+                                40, -- number of particles
+                                1.5 
+                            )
+                        end,
+                        nil
+                    )
                 end,
                 "whale_particles"
             )
             
             timer.after(
-                2.0, -- delay in seconds
+                5.0, -- delay in seconds
                 function()
                     local transformComp = registry:get(bowser, Transform)
                     transformComp.rotation = 0 -- reset rotation
                     
+                    timer.tween(
+                        2.0, -- duration in seconds
+                        function() return getTrackVolume("whale-song") end, -- getter
+                        function(v) setTrackVolume("whale-song", v) end, -- setter
+                        0 -- target value
+                    )
                     
                     -- are there any song collectors?
                     if globals.buildings.whale_song_gatherer then

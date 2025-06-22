@@ -207,7 +207,7 @@ namespace sound_system {
                 for (const auto& sound : category.value()["sounds"].items()) {
                     std::string soundName = sound.key();
                     std::string filePath = sound.value().get<std::string>();
-                    filePath = util::getRawAssetPathNoUUID(filePath);
+                    filePath = util::getRawAssetPathNoUUID("sounds/" + filePath);
                     categories[categoryName].sounds[soundName] = LoadSound(filePath.c_str());
                     SPDLOG_DEBUG("[SOUND] Loaded sound: {} from {}", soundName, filePath);
                 }
@@ -216,10 +216,6 @@ namespace sound_system {
             else if (category.value().contains("volume")) {
                 categories[categoryName].volume = category.value()["volume"].get<float>();
                 SPDLOG_DEBUG("[SOUND] Set volume for category {}: {}", categoryName, categories[categoryName].volume);
-            }
-
-            else if (category.value().contains("music") && category.value()["music"].is_object()) {
-
             }
         }
 
@@ -230,7 +226,7 @@ namespace sound_system {
             for (const auto& music : soundData.at("music").items()) {
                 std::string musicName = music.key();
                 std::string musicPath = music.value().get<std::string>();
-                musicFiles[musicName] = util::getRawAssetPathNoUUID(musicPath);
+                musicFiles[musicName] = util::getRawAssetPathNoUUID("sounds/" + musicPath);
                 SPDLOG_DEBUG("[SOUND] Loaded music {} with file name: {}", musicName, musicPath);
             }
         }
@@ -265,7 +261,7 @@ namespace sound_system {
 
     // Play a new music track immediately
     void PlayMusic(const std::string& name, bool loop) {
-        Music m = LoadMusicStream(musicFiles[name].c_str());
+        Music m = LoadMusicStream(musicFiles.at(name).c_str());
         // apply combined volume: per-track * musicVolume * globalVolume
         SetMusicVolume(m, 1.0f * musicVolume * globalVolume);
         PlayMusicStream(m);
@@ -397,8 +393,7 @@ namespace sound_system {
     }
 
     // Main update: advance streams, handle fades and completion
-    void Update() {
-        float dt = GetFrameTime();
+    void Update(float dt) {
         for (auto it = activeMusic.begin(); it != activeMusic.end();) {
             auto &me = *it;
             UpdateMusicStream(me.stream);

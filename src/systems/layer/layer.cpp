@@ -2740,7 +2740,7 @@ namespace layer
         PopMatrix();
         
         // draw the mini pipeline view + ALL rects
-        shader_pipeline::DebugDrawAllRects(10, 10);
+        // shader_pipeline::DebugDrawAllRects(10, 10);
 
         
         

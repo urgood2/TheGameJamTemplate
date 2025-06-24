@@ -6,6 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] palette shader needs configurable file-based system to make adding palettes easier
 - [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
 - [ ] delete paletteTex when program ends
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes

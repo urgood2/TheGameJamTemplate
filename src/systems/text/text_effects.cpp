@@ -1,5 +1,5 @@
 #include "text_effects.hpp"
-
+#include "util/utilities.hpp"
 
 namespace TextSystem {
 

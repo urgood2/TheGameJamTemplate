@@ -2513,6 +2513,8 @@ namespace layer
             dstRec.y  += dstRec.height;   // move bottom edge back to pad
             dstRec.height = -dstRec.height;
         }
+        
+        auto& transform = registry.get<transform::Transform>(e);
   
         // right after you compute renderWidth/renderHeight:
         shader_pipeline::ResetDebugRects();
@@ -2593,6 +2595,9 @@ namespace layer
                         (float)renderWidth,
                         (float)renderHeight}, Vector2{(float)renderWidth, (float)renderHeight}); // FIXME: not sure why, but it only works when I do this instead of the full texture size
                 
+                // float drawnH = frameHeight*renderScale + pad*2.f;
+                // globals::globalShaderUniforms.set(pass.shaderName, "uTransformHeight",
+                //     transform.getVisualH());
             }
             
             if (pass.customPrePassFunction) pass.customPrePassFunction();
@@ -2677,7 +2682,7 @@ namespace layer
 
         
         // 5. Final draw with transform
-        auto& transform = registry.get<transform::Transform>(e);
+        
         Vector2 drawPos = { transform.getVisualX() - pad, transform.getVisualY() - pad }; // why subtract pad here?
         shader_pipeline::SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight }); // shouldn't this store the last dest rect that was drawn on the last texture?
     

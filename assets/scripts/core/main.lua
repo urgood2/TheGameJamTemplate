@@ -27,15 +27,15 @@ function initMainMenu()
     -- 2) Set up its animation & sizing
     animation_system.setupAnimatedObjectOnEntity(
         kr,
-        "blue_whale_anim",
+        "krill_2_anim",
         false,
         nil,
         true
     )
     animation_system.resizeAnimationObjectsInEntityToFit(
         kr,
-        200,
-        200
+        600,
+        600
     )
     
     -- make them hoverable
@@ -48,7 +48,7 @@ function initMainMenu()
     -- kril shaders
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
 
-    -- shaderPipelineComp:addPass("random_displacement_anim")
+    shaderPipelineComp:addPass("random_displacement_anim")
 end
 
 function initMainGame()

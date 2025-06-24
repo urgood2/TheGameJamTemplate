@@ -20,7 +20,7 @@ namespace shader_pipeline {
         // custom lamdna for this shader pass, run before activatingt the shader for this pass
         std::function<void()> customPrePassFunction{};
         
-        bool injectAtlasUniforms = false; // whether to inject atlas uniforms into this pass
+        bool injectAtlasUniforms = true; // whether to inject atlas uniforms into this pass / true by default to avoid bugs
 
 
     };

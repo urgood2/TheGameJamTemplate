@@ -6,6 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] document what injectAtlasUniforms does (injects uDrawnHeight too)
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] use backgrounds & images for the tooltip text
 - [ ] transform alignment settings not working. need to ed ebug

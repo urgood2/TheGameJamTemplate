@@ -2411,187 +2411,7 @@ namespace layer
         AddDrawCommand(layer, "draw_transform_entity_animation_pipeline", {e, registry}, z);
     }
     
-    // auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void {
-    //     using namespace shaders;
-    //     using namespace shader_pipeline;
-
     
-    //     // 1. Fetch animation frame and sprite
-    //     Rectangle* animationFrame = nullptr;
-    //     SpriteComponentASCII* currentSprite = nullptr;
-
-        
-    //     bool flipX{false}, flipY{false};
-    
-    //     if (registry.any_of<AnimationQueueComponent>(e)) {
-            
-    //         auto& aqc = registry.get<AnimationQueueComponent>(e);
-            
-    //         if (aqc.noDraw)
-    //         {
-    //             return;
-    //         }
-            
-    //         if (aqc.animationQueue.empty()) {
-    //             if (!aqc.defaultAnimation.animationList.empty()) {
-    //                 animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
-    //                 currentSprite = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
-    //                 flipX = aqc.defaultAnimation.flippedHorizontally;
-    //                 flipY = aqc.defaultAnimation.flippedVertically;
-    //             }
-    //         } else {
-    //             auto& currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-    //             animationFrame = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first.spriteData.frame;
-    //             currentSprite = &currentAnimObject.animationList[currentAnimObject.currentAnimIndex].first;
-    //             flipX = currentAnimObject.flippedHorizontally;
-    //             flipY = currentAnimObject.flippedVertically;
-    //         }
-    //     }
-    
-    //     AssertThat(animationFrame, Is().Not().Null());
-    //     AssertThat(currentSprite, Is().Not().Null());
-
-    //     auto spriteAtlas = currentSprite->spriteData.texture;
-    
-    //     float baseWidth = animationFrame->width;
-    //     float baseHeight = animationFrame->height;
-    
-    //     auto& pipelineComp = registry.get<ShaderPipelineComponent>(e);
-    //     float pad = pipelineComp.padding;
-    
-    //     float renderWidth = baseWidth + pad * 2.0f;
-    //     float renderHeight = baseHeight + pad * 2.0f;
-
-    //     float xFlipModifier = flipX ? -1.0f : 1.0f;
-    //     float yFlipModifier = flipY ? -1.0f : 1.0f;
-    
-    //     AssertThat(renderWidth, IsGreaterThan(0.0f));
-    //     AssertThat(renderHeight, IsGreaterThan(0.0f));
-    
-    //     Color bgColor = currentSprite->bgColor;
-    //     Color fgColor = currentSprite->fgColor;
-    //     bool drawBackground = !currentSprite->noBackgroundColor;
-    //     bool drawForeground = !currentSprite->noForegroundColor;
-    
-    //     // 2. Init pipeline buffer if needed
-    //     if (!IsInitialized() || width < renderWidth || height < renderHeight) {
-    //         shader_pipeline::ShaderPipelineUnload();
-    //         ShaderPipelineInit(renderWidth, renderHeight);
-    //     }
-    
-    //     // 3. Draw base sprite to ping texture (no transforms!)
-    //     // BeginTextureMode(front());
-    //     render_stack_switch_internal::Push(front());
-    //     ClearBackground({0, 0, 0, 0});
-    
-    //     Vector2 drawOffset = { pad, pad };
-    
-    //     if (drawBackground) {
-    //         layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, bgColor);
-    //     }
-    
-    //     if (drawForeground) {
-    //         if (animationFrame) {
-    //             layer::TexturePro(*spriteAtlas, *animationFrame, drawOffset.x, drawOffset.y, {baseWidth * xFlipModifier, baseHeight * yFlipModifier}, {0, 0}, 0, fgColor);
-    //             // debug draw rect
-    //             // layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
-                
-    //         } else {
-    //             layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
-    //         }
-    //     }
-        
-    //     render_stack_switch_internal::Pop();
-        
-    //     // render the result of front() to the screen for debugging
-        
-    
-    //     // 4. Apply shader passes
-        
-    //     int debugPassIndex = 0;  // you can reset this outside if needed
-    
-    //     for (ShaderPass& pass : pipelineComp.passes) {
-    //         if (!pass.enabled) continue;
-    
-    //         Shader shader = getShader(pass.shaderName);
-            
-    //         render_stack_switch_internal::Push(back());
-    //         // BeginTextureMode(back());
-    //         ClearBackground({0, 0, 0, 0});
-            
-    //         AssertThat(shader.id, IsGreaterThan(0));
-    //         //FIXME: commenting out shader for debugging
-    //         BeginShaderMode(shader);
-
-    //         shaders::ApplyUniformsToShader(shader, pass.uniforms);
-    //         // run optional lambda pre-pass
-    //         if (pass.customPrePassFunction) {
-    //             pass.customPrePassFunction();
-    //         }
-    
-    //         DrawTextureRec(front().texture, {0, 0, (float)width * xFlipModifier, (float)-height * yFlipModifier}, {0, 0}, WHITE); // invert Y 
-    
-    //         EndShaderMode();
-    //         render_stack_switch_internal::Pop();
-    
-    //         Swap();
-            
-    //         // DEBUG: Show result of each pass visually
-            
-
-    //         int debugOffsetX = 10;
-    //         int debugOffsetY = 10 + debugPassIndex * (int)(renderHeight + 10);
-
-    //         DrawTextureRec(
-    //             front().texture,
-    //             { 0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier},  // negative Y to flip
-    //             { (float)debugOffsetX, (float)debugOffsetY },
-    //             WHITE
-    //         );
-    //         DrawRectangleLines(debugOffsetX, debugOffsetY, (int)renderWidth, (int)renderHeight, RED);
-    //         DrawText(
-    //             fmt::format("Pass {}: {}", debugPassIndex, pass.shaderName).c_str(),
-    //             debugOffsetX + 5,
-    //             debugOffsetY + 5,
-    //             10,
-    //             WHITE
-    //         );
-
-    //         debugPassIndex++;
-    //     }
-    
-    //     SetLastRenderTarget(front());
-    
-    //     // 5. Final draw with transform
-    //     auto& transform = registry.get<transform::Transform>(e);
-    
-    //     // Where we want the final (padded) texture drawn on screen
-    //     Vector2 drawPos = {
-    //         transform.getVisualX() - pad,
-    //         transform.getVisualY() - pad
-    //     };
-    
-    //     // Update for use elsewhere
-    //     SetLastRenderRect({ drawPos.x, drawPos.y, renderWidth, renderHeight });
-    
-    //     Rectangle sourceRect = { 0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier};  // Negative height to flip Y
-    //     Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
-    //     Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
-        
-    //     PushMatrix();
-    //     Translate(position.x, position.y);
-    //     Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
-    //     Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
-    //     Translate(-origin.x, -origin.y);
-    
-    //     DrawTextureRec(front().texture, sourceRect, { 0, 0 }, WHITE);
-    //     // debug rect
-    
-    //     PopMatrix();
-    // }
-    
-    
-    //FIXME: for some reason, draw calls are not being executed inside this function. But they do work in the other versino.
     auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void {
         
         // 1. Fetch animation frame and sprite
@@ -2694,6 +2514,8 @@ namespace layer
             dstRec.height = -dstRec.height;
         }
   
+        // right after you compute renderWidth/renderHeight:
+        shader_pipeline::ResetDebugRects();
         
         // hacky fix to ensure entities are not fully transparent
         if (fgColor.a == 0) {
@@ -2735,6 +2557,10 @@ namespace layer
                     0,
                     fgColor
                 );
+                
+                shader_pipeline::SetLastRenderRect({drawOffset.x, drawOffset.y, baseWidth * xFlipModifier, baseHeight * yFlipModifier});
+                shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
+
             } else {
                 layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
             }
@@ -2775,6 +2601,9 @@ namespace layer
             
             TryApplyUniforms(shader, globals::globalShaderUniforms, pass.shaderName);
             DrawTextureRec(shader_pipeline::front().texture, {0, 0, (float)renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE); // invert Y 
+            
+            shader_pipeline::SetLastRenderRect({0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
+            shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
     
             EndShaderMode();
             render_stack_switch_internal::Pop();
@@ -2822,6 +2651,9 @@ namespace layer
             render_stack_switch_internal::Pop();
             shader_pipeline::Swap();
             
+            shader_pipeline::SetLastRenderRect({0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
+            shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
+            
             shader_pipeline::SetLastRenderTarget(shader_pipeline::back()); 
     
             // render_stack_switch_internal::Push(shader_pipeline::front());
@@ -2853,10 +2685,6 @@ namespace layer
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
     
-        if (static_cast<int>(e) == 235)
-        {
-            SPDLOG_DEBUG("DrawTransformEntityWithAnimationWithPipeline > Entity ID: {}, getVisualY: {}, getVisualX: {}, getVisualW: {}, getVisualH: {}", static_cast<int>(e), transform.getVisualY(), transform.getVisualX(), transform.getVisualW(), transform.getVisualH());
-        }
         PushMatrix();
         Translate(position.x, position.y);
         Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(), transform.getVisualScaleWithHoverAndDynamicMotionReflected());
@@ -2900,10 +2728,17 @@ namespace layer
             shader_pipeline::width;
             shader_pipeline::height;
             DrawRectangleLines(-pad, -pad, (int)shader_pipeline::width, (int)shader_pipeline::height, RED);
-            DrawText(fmt::format("SHADER PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 10, RED);
+            DrawText(fmt::format("SHADER PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 15, RED);
+
         }
         
         PopMatrix();
+        
+        // draw the mini pipeline view + ALL rects
+        shader_pipeline::DebugDrawAllRects(10, 10);
+
+        
+        
     }
     
     auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z) -> void

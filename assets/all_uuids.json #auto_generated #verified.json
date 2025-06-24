@@ -11464,6 +11464,15 @@
     "4_snow": [
         "SNOW 4"
     ],
+    "50_archived_gam_jame_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50"
+    ],
+    "50_core_gam_jame": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/core"
+    ],
+    "50_gam_jame_ui": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/ui"
+    ],
     "5_circle_default_flair": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Flairs/Default/flair_circle_5.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Flairs\\Default\\flair_circle_5.png"
@@ -12248,6 +12257,9 @@
     ],
     "aquamarine_medium": [
         "MEDIUM AQUAMARINE"
+    ],
+    "archived_asset_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived"
     ],
     "archived_background_balatro_fragment": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\archived\\balatro_background_fragment.fs",
@@ -14248,14 +14260,16 @@
     ],
     "core_entity_factory": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_factory.lua",
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core\\entity_factory.lua"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core\\entity_factory.lua",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/core/entity_factory.lua"
     ],
     "core_global": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/globals.lua"
     ],
     "core_main": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/main.lua",
-        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core\\main.lua"
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core\\main.lua",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/core/main.lua"
     ],
     "core_script": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core",
@@ -14529,7 +14543,8 @@
     ],
     "def_ui_ui": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ui\\ui_defs.lua",
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ui/ui_defs.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ui/ui_defs.lua",
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/ui/ui_defs.lua"
     ],
     "default": [
         "default.lua"

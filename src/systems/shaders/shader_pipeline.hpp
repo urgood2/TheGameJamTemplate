@@ -141,6 +141,60 @@ namespace shader_pipeline {
         width = 0;
         height = 0;
     }
+    
+    // — in shader_pipeline namespace — add debug storage & helpers:
+    inline std::vector<Rectangle> debugRects;
+
+    inline void ResetDebugRects() {
+        debugRects.clear();
+    }
+
+    inline void RecordDebugRect(const Rectangle &r) {
+        debugRects.push_back(r);
+    }
+
+    inline void DebugDrawAllRects(int screenX = 0, int screenY = 0) {
+        // 1) draw the whole front() canvas in the corner
+        (screenX, screenY);
+
+        // 2) overlay each recorded rect with a distinct color
+        const Color colors[] = { RED, GREEN, BLUE, YELLOW, MAGENTA, GRAY };
+        for (size_t i = 0; i < debugRects.size(); ++i) {
+            Rectangle r = debugRects[i];
+            // remember: DebugDrawFront flips Y internally, so flip back:
+            float drawY = screenY + (height - (r.y + r.height));
+            DrawRectangleLines(
+                screenX + r.x,
+                drawY,
+                r.width,
+                r.height,
+                colors[i % (sizeof(colors)/sizeof(colors[0]))]
+            );
+        }
+    }
+
+    
+    inline void DebugDrawLastRenderRect(int screenX = 0, int screenY = 0) {
+        // draw the entire front() texture so you can see the full canvas
+        DrawTextureRec(
+            front().texture,
+            { 0, 0, (float)width, -(float)height },
+            { (float)screenX, (float)screenY },
+            WHITE
+        );
+    
+        // overlay the exact sub‐rectangle you just rendered, in red
+        Rectangle r = lastRenderRect;
+        // because DebugDrawFront flips Y internally, r.y is from top of that texture
+        DrawRectangleLines(
+            screenX + r.x,
+            screenY + (height - r.y - r.height),  // flip Y back for screen coords
+            r.width,
+            r.height,
+            RED
+        );
+    }
+    
 
     inline void ShaderPipelineInit(int w, int h) {
         width = w;

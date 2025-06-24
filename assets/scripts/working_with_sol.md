@@ -2,7 +2,6 @@
 
 ```cpp
 lua.new_usertype<UIConfig>("UIConfig",  
-    sol::call_constructor, sol::constructors<UIConfig>(),
-...
+    sol::call_constructor, sol::constructors<UIConfig>())
 
 ```

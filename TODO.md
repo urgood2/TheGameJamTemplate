@@ -6,6 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+-  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] use backgrounds & images for the tooltip text
 - [ ] transform alignment settings not working. need to ed ebug
 - [ ] Way to “tag” particles with a tag component, then remove them all at once

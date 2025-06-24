@@ -1,4 +1,13 @@
 - automate web shader loading somehow?
+- Material (for 3 rarities?) - https://chatgpt.com/share/68521752-7898-800a-8d76-d30affc26ca0 try this
+- Outline https://godotshaders.com/shader/efficient-2d-pixel-outlines/
+- spotlight shader for tutorials - https://godotshaders.com/shader/spotlight-effect-transition-with-feathering-position/
+- quasicrystal + hue shift + alpha blending http://pixelshaders.com/examples/ 
+- shadet snippet snippet https://www.plane9.com/wiki/shadersnippets
+- ambient lighting shader would be nice
+- use this shader for buildings. https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
+- pixelate? https://www.shadertoy.com/view/4lXGzS
+- [ ] Shader for particles pixelation? https://www.shadertoy.com/view/4lXGzS
 
 
 More shaders to implement

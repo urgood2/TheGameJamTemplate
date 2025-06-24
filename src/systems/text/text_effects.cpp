@@ -24,14 +24,16 @@ namespace TextSystem {
             {
                 std::string colorName = args[0];
                 // spdlog::debug("Applying color effect: {}", colorName);
-                if (colorName == "red")
+                try
                 {
-                    character.color = RED;
+                    auto color= util::getColor(colorName);
+                    character.color = color;
                 }
-                else if (colorName == "blue")
+                catch(const std::exception& e)
                 {
-                    character.color = BLUE;
+                    std::cerr << e.what() << '\n';
                 }
+                
             }
         };
 

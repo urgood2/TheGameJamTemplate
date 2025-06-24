@@ -19,6 +19,14 @@ namespace game
 
         using namespace globals;
         // pre-load shader values for later use
+        
+        // palette shader
+        //TODO: must delete this later
+        static auto paletteTex = LoadTexture(util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png").c_str());
+        SetTextureFilter(paletteTex, TEXTURE_FILTER_POINT);
+        globalShaderUniforms.set("palette_quantize", "palette", paletteTex);
+        globalShaderUniforms.set("palette_quantize", "palette_size", 256.f); // size of the palette
+        
 
 
         // one-time defaults

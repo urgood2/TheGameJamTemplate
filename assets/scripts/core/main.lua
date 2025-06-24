@@ -47,8 +47,15 @@ function initMainMenu()
     
     -- kril shaders
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
-
     shaderPipelineComp:addPass("random_displacement_anim")
+    -- shaderPipelineComp:addPass("palette_quantize")
+    
+    -- test layer shaders
+    -- add_fullscreen_shader("random_displacement_anim")
+    add_fullscreen_shader("palette_quantize")
+    -- add_fullscreen_shader("flash")
+    -- layers.finalOutput:addPostProcessShader("palette_quantize")
+    -- layers.finalOutput:addPostProcessShader("flash")
 end
 
 function initMainGame()

@@ -6,7 +6,8 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] document what injectAtlasUniforms does (injects uDrawnHeight too)
+- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
+- [ ] delete paletteTex when program ends
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] use backgrounds & images for the tooltip text
 - [ ] transform alignment settings not working. need to ed ebug
@@ -36,8 +37,6 @@
 - [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
 - [ ] pause functionality
 ## Shaders
-- [ ] gotta make the jitter shader more perfect, test with non atlases and clear bounding boxes?
-- [ ] something wrong with the random_displacement shader. makes it impossible to render exactly on the transform. Can't figure out. Has to do with my pipeline system.
 
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it

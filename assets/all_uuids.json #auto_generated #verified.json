@@ -11054,6 +11054,18 @@
         "sprites-1.png",
         "sprites-1.json"
     ],
+    "1x_64_palette_resurrect": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/palettes/resurrect-64-1x.png"
+    ],
+    "1x_64_resurrect": [
+        "resurrect-64-1x.png"
+    ],
+    "1x_duel": [
+        "duel-1x.png"
+    ],
+    "1x_duel_palette": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/palettes/duel-1x.png"
+    ],
     "20x20_cp437_for_graphic_sprite_viewing": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/cp437_20x20_sprites_for_viewing.png",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\cp437_20x20_sprites_for_viewing.png",
@@ -17263,6 +17275,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\negative_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/negative_fragment.fs"
     ],
+    "fragment_palette_quantize": [
+        "palette_quantize_fragment.fs"
+    ],
+    "fragment_palette_quantize_shader": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_quantize_fragment.fs"
+    ],
     "fragment_polychrome": [
         "polychrome_fragment.fs"
     ],
@@ -17512,6 +17530,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\npatch.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/npatch.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\npatch.json"
+    ],
+    "graphic_palette": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/palettes"
     ],
     "graphic_rect_rounded": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect.png",
@@ -18663,6 +18684,12 @@
     ],
     "palette_pure_resurrect_white": [
         "RESURRECT_PALETTE_PURE_WHITE"
+    ],
+    "palette_quantize_shader_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_quantize_vertex.vs"
+    ],
+    "palette_quantize_vertex": [
+        "palette_quantize_vertex.vs"
     ],
     "palette_raspberry_resurrect_wine": [
         "RESURRECT_PALETTE_RASPBERRY_WINE"

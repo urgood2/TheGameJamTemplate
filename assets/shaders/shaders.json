@@ -214,5 +214,14 @@
             "vertex": "web/random_displacement_anim_vertex.vs",
             "fragment": "web/random_displacement_anim_fragment.fs"
         }
+    },
+    "palette_quantize": {
+        "vertex": "palette_quantize_vertex.vs",
+        "fragment": "palette_quantize_fragment.fs",
+
+        "web": {
+            "vertex": "web/palette_quantize_vertex.vs",
+            "fragment": "web/palette_quantize_fragment.fs"
+        }
     }
 }

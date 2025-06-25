@@ -2663,13 +2663,14 @@ namespace layer
             if (!overlay.enabled) continue;
     
             Shader shader = shaders::getShader(overlay.shaderName);
+            if (shader.id <= 0) continue;
             AssertThat(shader.id, IsGreaterThan(0));
             render_stack_switch_internal::Push(shader_pipeline::front());
             // ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
             if (overlay.injectAtlasUniforms) {
-                injectAtlasUniforms(globals::globalShaderUniforms, overlay.shaderName, {0, drawOffset.y / 2,
+                injectAtlasUniforms(globals::globalShaderUniforms, overlay.shaderName, {0, 0,
                         (float)renderWidth,
                         (float)renderHeight}, Vector2{(float)renderWidth, (float)renderHeight}); // FIXME: not sure why, but it only works when I do this instead of the full texture size
                 
@@ -2684,7 +2685,7 @@ namespace layer
             // shader_pipeline::Swap();
             // don't swap, we draw onto the front texture, which is the last render target.
             
-            shader_pipeline::SetLastRenderRect({0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
+            shader_pipeline::SetLastRenderRect({0, 0, renderWidth * xFlipModifier, -renderHeight * yFlipModifier});
             // shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
             
             shader_pipeline::SetLastRenderTarget(shader_pipeline::back()); 

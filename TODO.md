@@ -43,6 +43,7 @@
 
 ## Shaders
 - [ ] document the fact that only the first overlay's setting will be respected for an entity whether to use the base sprite or the post-processed sprite when using overlays. also, when there are both passes & overlays, overlay will overwrite the passes unless you use the passes as a source.
+- [ ] test jitter shader again.
 - [ ] use this as a base: https://chatgpt.com/share/68521752-7898-800a-8d76-d30affc26ca0 
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it

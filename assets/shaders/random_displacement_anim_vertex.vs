@@ -76,7 +76,7 @@ void main() {
     //float h       = uTransformHeight;              // the drawn sprite height
     //float ratio   = getRatio(h);              // picks & evaluates the right poly
     //float customOffsetY = ratio * h;                // in‐shader pixel offset
-    displaced.y  -= 15; // this magic number is necessary to offset the y, which veers off for some reason.
+    // displaced.y  -= 15; // this magic number is necessary to offset the y, which veers off for some reason.
     
     fragTexCoord = vertexTexCoord;
     fragColor    = vertexColor;

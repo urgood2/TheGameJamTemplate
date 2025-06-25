@@ -166,26 +166,49 @@ void main() {
                                vec3(0.450,0.372,0.271),
                                vec3(0.540,0.442,0.264),
                                vec3(0.038,0.350,0.107));
+    
+    // throw away negative values
+    bandColor = max(bandColor, vec3(0.0));
+    ringColor = max(ringColor, vec3(0.0));
 
     vec3 foilColor = bandColor + ringColor;
     // blend shimmer onto the sprite
     // tex.rgb        = mix(tex.rgb, foilColor, 0.5);
     
-    float shimmerStrength = 0.9; // Adjust this value to control shimmer intensity
+    float shimmerStrength = 0.7; // Adjust this value to control shimmer intensity
     
-    float minAlpha = 0.2;         // e.g. 0.2 → fully faded where there’s no shimmer
+    float minAlpha = 0.0;         // e.g. 0.2 → fully faded where there’s no shimmer
     float maxAlphaModifier = 0.99; // e.g. 1.0 → full α×1.0 where shimmer is strong
 
     
     // compute how “bright” the shimmer is
     float shimmerLum = max(max(foilColor.r, foilColor.g), foilColor.b);
 
-    // build a smooth mask that is 0 when foilColor is (nearly) black,
-    // and ramps up to 1 at some tiny brightness threshold
-    float mask = smoothstep(0.01, 0.9, shimmerLum);
+    // new “bite-sharpened” mask
+    float maskLow   = 0.35;             // nothing under 0.25 even starts
+    float maskHigh  = 0.99;             // full strength by 0.85
+    float rawMask   = smoothstep(maskLow, maskHigh, shimmerLum);
+    // optional gamma-sharpen:
+    float mask2     = pow(rawMask, 2.0);
+    
+    // lighten
+    // vec3 shimmer = foilColor * shimmerStrength * mask;
+    // tex.rgb = 1.0 - (1.0 - tex.rgb) * (1.0 - shimmer);
+    
+    // throw away small values
+    float colorFloor = 0.1;            // tune this up to cut out more low-level shimmer
+    vec3 hpFoil = max(foilColor - vec3(colorFloor), vec3(0.0));
 
+    // build shimmer from the high-passed color
+    vec3 shimmer    = hpFoil * shimmerStrength * mask2;
+    tex.rgb         = max(tex.rgb, shimmer);
+    
+    // screen blend
+    // vec3 shimmer = foilColor * shimmerStrength * mask;
+    // tex.rgb = max(tex.rgb, shimmer);
+    
     // only blend where mask > 0
-    tex.rgb = mix(tex.rgb, foilColor, shimmerStrength * mask);
+    // tex.rgb = mix(tex.rgb, foilColor, shimmerStrength * mask);
     
     
     // tex.a         *= 0.9 + 0.1 * pct;
@@ -198,7 +221,7 @@ void main() {
     float alpha = mix(
         minAlpha,             // mask=0 → fully faded
         baseA * maxAlphaModifier,  // mask=1 → full α (or even boosted)
-        mask
+        mask2
     );
 
     tex.a = alpha;

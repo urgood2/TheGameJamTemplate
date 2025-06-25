@@ -81,6 +81,7 @@ using json = nlohmann::json;
 #include "systems/localization/localization.hpp"
 #include "systems/scripting/scripting_system.hpp"
 #include "systems/fade/fade_system.hpp"
+#include "systems/palette/palette_quantizer.hpp"
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;
@@ -359,6 +360,8 @@ int main(void)
     // De-Initialization
 
     //TODO: unload all textures & sprite atlas & sounds
+    //TODO: unload all layer commands as welll.
+    palette_quantizer::unloadPaletteTexture(); // unload palette texture if any
     layer::UnloadAllLayers();
     shaders::unloadShaders();
     sound_system::Unload();

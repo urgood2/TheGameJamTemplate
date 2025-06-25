@@ -6,7 +6,7 @@
 #include "core/game.hpp"
 #include "core/init.hpp"
 #include "systems/shaders/shader_system.hpp"
-
+#include "systems/palette/palette_quantizer.hpp"
 namespace game
 {
     std::function<void()> OnUIScaleChanged = []() {
@@ -22,10 +22,12 @@ namespace game
         
         // palette shader
         //TODO: must delete this later
-        static auto paletteTex = LoadTexture(util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png").c_str());
-        SetTextureFilter(paletteTex, TEXTURE_FILTER_POINT);
-        globalShaderUniforms.set("palette_quantize", "palette", paletteTex);
-        globalShaderUniforms.set("palette_quantize", "palette_size", 256.f); // size of the palette
+        
+        palette_quantizer::setPaletteTexture("palette_quantize", util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png"));
+        // static auto paletteTex = LoadTexture(util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png").c_str());
+        // SetTextureFilter(paletteTex, TEXTURE_FILTER_POINT);
+        // globalShaderUniforms.set("palette_quantize", "palette", paletteTex);
+        // globalShaderUniforms.set("palette_quantize", "palette_size", 256.f); // size of the palette
         
 
 

@@ -371,9 +371,9 @@ namespace sound_system {
         activeMusic.push_back({
             .stream     = m,
             .loop       = false,
-            .fadeState  = FadeIn,
             .fadeTime   = 0.0f,
             .fadeDur    = duration,
+            .fadeState  = FadeIn,
             .onComplete = musicCompletionCallback
         });
     }

@@ -148,86 +148,55 @@ void main() {
                    + cos(time) - 4.0;
     float d        = f - r;
 
-    // glow bands
-    vec3 bandColor = (vec3(
-                         smoothstep(fract(d), fract(d) - 0.200, 0.160))
-                     - vec3(
-                         smoothstep(fract(d), fract(d) - 1.184, 0.160)))
-                   * pal(f,
+    // 4) Build the two band ramps
+    float innerBand = smoothstep(fract(d), fract(d) - 0.200, 0.160);
+    float outerBand = smoothstep(fract(d), fract(d) - 1.184, 0.160);
+
+    // 5) Positive mask for colored bands and white mask for negative bands
+    float colorMask = max(innerBand - outerBand, 0.0);
+    float whiteMask = max(outerBand - innerBand, 0.0);
+
+    // 6) Compute bandColor and ringColor (both ≥ 0)
+    vec3 bandColor = colorMask * pal(f,
                          vec3(0.725,0.475,0.440),
                          vec3(0.605,0.587,0.007),
                          vec3(1.0,1.0,1.0),
                          vec3(0.310,0.410,0.154));
 
-    // ring pulse
     float pct     = plot(r * 0.272, fract(d * (sin(time)*0.45 + 0.5)));
-    vec3 ringColor = pct * pal(r,
+    vec3 ringColor = max(pct, 0.0) * pal(r,
                                vec3(0.750,0.360,0.352),
                                vec3(0.450,0.372,0.271),
                                vec3(0.540,0.442,0.264),
                                vec3(0.038,0.350,0.107));
-    
-    // throw away negative values
-    bandColor = max(bandColor, vec3(0.0));
-    ringColor = max(ringColor, vec3(0.0));
 
     vec3 foilColor = bandColor + ringColor;
-    // blend shimmer onto the sprite
-    // tex.rgb        = mix(tex.rgb, foilColor, 0.5);
-    
-    float shimmerStrength = 0.7; // Adjust this value to control shimmer intensity
-    
-    float minAlpha = 0.0;         // e.g. 0.2 → fully faded where there’s no shimmer
-    float maxAlphaModifier = 0.99; // e.g. 1.0 → full α×1.0 where shimmer is strong
 
-    
-    // compute how “bright” the shimmer is
+    // 7) Sharpen a shimmer mask
     float shimmerLum = max(max(foilColor.r, foilColor.g), foilColor.b);
-
-    // new “bite-sharpened” mask
-    float maskLow   = 0.35;             // nothing under 0.25 even starts
-    float maskHigh  = 0.99;             // full strength by 0.85
-    float rawMask   = smoothstep(maskLow, maskHigh, shimmerLum);
-    // optional gamma-sharpen:
+    float rawMask   = smoothstep(0.35, 0.99, shimmerLum);
     float mask2     = pow(rawMask, 2.0);
-    
-    // lighten
-    // vec3 shimmer = foilColor * shimmerStrength * mask;
-    // tex.rgb = 1.0 - (1.0 - tex.rgb) * (1.0 - shimmer);
-    
-    // throw away small values
-    float colorFloor = 0.1;            // tune this up to cut out more low-level shimmer
-    vec3 hpFoil = max(foilColor - vec3(colorFloor), vec3(0.0));
 
-    // build shimmer from the high-passed color
-    vec3 shimmer    = hpFoil * shimmerStrength * mask2;
-    tex.rgb         = max(tex.rgb, shimmer);
-    
-    // screen blend
-    // vec3 shimmer = foilColor * shimmerStrength * mask;
-    // tex.rgb = max(tex.rgb, shimmer);
-    
-    // only blend where mask > 0
-    // tex.rgb = mix(tex.rgb, foilColor, shimmerStrength * mask);
-    
-    
-    // tex.a         *= 0.9 + 0.1 * pct;
-    
-    // original sprite α
-    float baseA = tex.a;
+    // 8) High-pass floor so faint bits vanish
+    vec3 hpFoil     = max(foilColor - vec3(0.10), vec3(0.0));
 
-    // compute a per-pixel α between minAlpha and baseA*maxAlphaModifier,
-    // driven by your shimmer mask [0..1]
-    float alpha = mix(
-        minAlpha,             // mask=0 → fully faded
-        baseA * maxAlphaModifier,  // mask=1 → full α (or even boosted)
-        mask2
-    );
+    // 9) Build shimmer and lighten-blend
+    float shimmerStrength = 0.7;
+    vec3 shimmer = hpFoil * shimmerStrength * mask2;
+    vec3 colorHit = max(tex.rgb, shimmer);
 
-    tex.a = alpha;
+    // 10) Overlay white where whiteMask > 0
+    float whiteIntensity = 0.9;
+    colorHit = mix(colorHit, vec3(1.0), whiteMask * whiteIntensity);
 
-    // 4) Finally, hand off into your existing dissolve_mask
-    //    (we pass spriteUV and uv_scaled == spriteUV so that border/noise
-    //     logic still uses per-sprite coords)
+    // 11) Write back color
+    tex.rgb = colorHit;
+
+    // 12) Compute alpha driven by the refined mask
+    float minAlpha        = 0.0;
+    float maxAlphaModifier= 0.99;
+    tex.a = mix(minAlpha, tex.a * maxAlphaModifier, mask2);
+
+    // 13) Finally, hand off into your existing dissolve_mask
     finalColor = dissolve_mask(tex, spriteUV, spriteUV);
 }

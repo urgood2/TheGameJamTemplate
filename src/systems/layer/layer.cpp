@@ -2591,7 +2591,7 @@ namespace layer
             ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (pass.injectAtlasUniforms) {
-                injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, {0, drawOffset.y / 2,
+                injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName, {0, 0,
                         (float)renderWidth,
                         (float)renderHeight}, Vector2{(float)renderWidth, (float)renderHeight}); // FIXME: not sure why, but it only works when I do this instead of the full texture size
                 
@@ -2614,7 +2614,7 @@ namespace layer
             render_stack_switch_internal::Pop();
             shader_pipeline::Swap();
             
-            shader_pipeline::SetLastRenderTarget(shader_pipeline::front()); 
+            shader_pipeline::SetLastRenderTarget(shader_pipeline::back()); 
     
         }
     
@@ -2631,10 +2631,10 @@ namespace layer
         RenderTexture2D postProcessRender = shader_pipeline::GetPostShaderPassRenderTextureCache();
         render_stack_switch_internal::Push(postProcessRender);
         ClearBackground({0, 0, 0, 0});
-        DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+        DrawTexture(postPassRender.texture, 0, 0, WHITE);
         render_stack_switch_internal::Pop();
         
-        // DrawTexture(postPassRender.texture, 90, 30, WHITE);
+        DrawTexture(postPassRender.texture, 90, 30, WHITE);
         
         // if there is an overlay draw at all, we need to draw the base sprite to the front texture first.
         if (!pipelineComp.overlayDraws.empty()) {
@@ -2653,7 +2653,7 @@ namespace layer
                 render_stack_switch_internal::Push(shader_pipeline::front());
                 ClearBackground({0, 0, 0, 0});
                 // no shader
-                DrawTextureRec(postPassRender.texture, {0, 0, renderWidth * xFlipModifier, -(float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
+                DrawTextureRec(postPassRender.texture, {0, 0, renderWidth * xFlipModifier, (float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
                 render_stack_switch_internal::Pop();
             }
         }

@@ -33,6 +33,7 @@ namespace shader_pipeline {
         std::function<void()> customPrePassFunction = nullptr;
         BlendMode blendMode = BlendMode::BLEND_ALPHA;
         bool enabled = true;
+        bool injectAtlasUniforms = true; // whether to inject atlas uniforms into this overlay draw (uGridSize, uImageSize for location within atlas)
     };
 
     struct ShaderPipelineComponent {
@@ -356,12 +357,31 @@ namespace shader_pipeline {
             ),
             "removePass",    &shader_pipeline::ShaderPipelineComponent::removePass,
             "togglePass",    &shader_pipeline::ShaderPipelineComponent::togglePass,
-            "addOverlay",    &shader_pipeline::ShaderPipelineComponent::addOverlay,
+                        
             "removeOverlay", &shader_pipeline::ShaderPipelineComponent::removeOverlay,
             "toggleOverlay", &shader_pipeline::ShaderPipelineComponent::toggleOverlay,
             "clearAll",      &shader_pipeline::ShaderPipelineComponent::clearAll,
             "type_id", []() { return entt::type_hash<shader_pipeline::ShaderPipelineComponent>::value(); }
         );
+        rec.bind_function(lua, {"shader_pipeline", "ShaderPipelineComponent"}, "addOverlay",
+            // wrapper lambda so last parameter is optional in Lua
+            [](shader_pipeline::ShaderPipelineComponent &self,
+               OverlayInputSource src,
+               std::string_view name,
+               sol::optional<BlendMode> blendOpt
+            ) -> ShaderOverlayDraw {
+                return self.addOverlay(
+                    src,
+                    name,
+                    blendOpt.value_or(BlendMode::BLEND_ALPHA)
+                );
+            },
+            // EmmyLua docs: mark blend as nullable/optional
+            "---@param src ShaderOverlayInputSource    # where the overlay samples from\n"
+            "---@param name string                      # your overlay’s name\n"
+            "---@param blend BlendMode?                 # optional blend mode (default BLEND_ALPHA)\n"
+            "---@return ShaderOverlayDraw               # the newly-added overlay draw\n"
+        ),
         rec.add_type("shader_pipeline.ShaderPipelineComponent", /*is_data_class=*/true)
         .doc = "Holds a sequence of shader passes and overlays for full-scene rendering.";
         rec.record_property("shader_pipeline.ShaderPipelineComponent",

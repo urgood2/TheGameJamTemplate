@@ -2635,29 +2635,57 @@ namespace layer
         render_stack_switch_internal::Pop();
         
         // DrawTexture(postPassRender.texture, 90, 30, WHITE);
+        
+        // if there is an overlay draw at all, we need to draw the base sprite to the front texture first.
+        if (!pipelineComp.overlayDraws.empty()) {
+            // get the first through an iterator
+            auto firstOverlay = pipelineComp.overlayDraws.begin();
+            if (firstOverlay != pipelineComp.overlayDraws.end() && firstOverlay->inputSource == shader_pipeline::OverlayInputSource::BaseSprite) {
+                // if the first overlay is a base sprite, we need to draw the base sprite to the front texture.
+                render_stack_switch_internal::Push(shader_pipeline::front());
+                ClearBackground({0, 0, 0, 0});
+                // no shader
+                DrawTextureRec(baseSpriteRender.texture, {0, 0, renderWidth * xFlipModifier, -(float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
+                render_stack_switch_internal::Pop();
+            }
+            else {
+                // if the first overlay is not a base sprite, we need to draw the post pass render to the front texture.
+                render_stack_switch_internal::Push(shader_pipeline::front());
+                ClearBackground({0, 0, 0, 0});
+                // no shader
+                DrawTextureRec(postPassRender.texture, {0, 0, renderWidth * xFlipModifier, (float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
+                render_stack_switch_internal::Pop();
+            }
+        }
     
-        // // 4. Overlay draws
+        // 4. Overlay draws, which can be optioanll used together with the shader passes above.
         for (const auto& overlay : pipelineComp.overlayDraws) {
             if (!overlay.enabled) continue;
     
             Shader shader = shaders::getShader(overlay.shaderName);
             AssertThat(shader.id, IsGreaterThan(0));
             render_stack_switch_internal::Push(shader_pipeline::front());
-            ClearBackground({0, 0, 0, 0});
+            // ClearBackground({0, 0, 0, 0});
             BeginShaderMode(shader);
             if (overlay.customPrePassFunction) overlay.customPrePassFunction();
-            // injectAtlasUniforms(globals::globalShaderUniforms, overlay.shaderName, srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
+            if (overlay.injectAtlasUniforms) {
+                injectAtlasUniforms(globals::globalShaderUniforms, overlay.shaderName, {0, drawOffset.y / 2,
+                        (float)renderWidth,
+                        (float)renderHeight}, Vector2{(float)renderWidth, (float)renderHeight}); // FIXME: not sure why, but it only works when I do this instead of the full texture size
+                
+            }
             TryApplyUniforms(shader, globals::globalShaderUniforms, overlay.shaderName);
     
             RenderTexture2D& source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite) ? baseSpriteRender : postPassRender;
-            DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, (float)-renderHeight * yFlipModifier}, {0, 0}, WHITE);
+            DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, (float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
     
             EndShaderMode();
             render_stack_switch_internal::Pop();
-            shader_pipeline::Swap();
+            // shader_pipeline::Swap();
+            // don't swap, we draw onto the front texture, which is the last render target.
             
             shader_pipeline::SetLastRenderRect({0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
-            shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
+            // shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
             
             shader_pipeline::SetLastRenderTarget(shader_pipeline::back()); 
     
@@ -2671,7 +2699,7 @@ namespace layer
         
         RenderTexture toRender{};
         if (pipelineComp.overlayDraws.empty() ==  false) {
-            toRender = shader_pipeline::back(); //  in this case it's the overlay draw result
+            toRender = shader_pipeline::front(); //  in this case it's the overlay draw result
         } else if (pipelineComp.passes.empty() == false) {
             // if there are passes, we use the last render target
             toRender = shader_pipeline::GetPostShaderPassRenderTextureCache();

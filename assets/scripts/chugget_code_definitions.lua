@@ -5120,6 +5120,16 @@ function shader_pipeline.SetLastRenderRect(...) end
 function shader_pipeline.GetLastRenderRect(...) end
 
 ---
+--- 
+---
+---@param src ShaderOverlayInputSource    # where the overlay samples from
+---@param name string                      # your overlay’s name
+---@param blend BlendMode?                 # optional blend mode (default BLEND_ALPHA)
+---@return ShaderOverlayDraw               # the newly-added overlay draw
+
+function shader_pipeline.ShaderPipelineComponent.addOverlay(...) end
+
+---
 --- Add a new pass at the end
 ---
 ---@param name string

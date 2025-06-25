@@ -48,7 +48,10 @@ function initMainMenu()
     -- kril shaders
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
     -- shaderPipelineComp:addPass("random_displacement_anim")
-    shaderPipelineComp:addPass("gamejam")
+    -- shaderPipelineComp:addPass("gamejam")
+    
+    -- try overlay over base sprite
+    shaderPipelineComp:addOverlay(shader_pipeline.OverlayInputSource.BaseSprite, "gamejam")
     
     -- every frame
     shaders.registerUniformUpdate("gamejam", function ()
@@ -63,34 +66,34 @@ function initMainMenu()
     -- layers.finalOutput:addPostProcessShader("flash")
     
     
-    -- make second krill
-    local kr2 = create_ai_entity("kobold")
-    -- 2) Set up its animation & sizing
-    animation_system.setupAnimatedObjectOnEntity(
+    -- -- make second krill
+    -- local kr2 = create_ai_entity("kobold")
+    -- -- 2) Set up its animation & sizing
+    -- animation_system.setupAnimatedObjectOnEntity(
         
-        kr2,
-        "krill_2_anim",
-        false,
-        nil,
-        true
-    )
-    animation_system.resizeAnimationObjectsInEntityToFit(
-        kr2,
-        200,
-        200
-    )
+    --     kr2,
+    --     "krill_2_anim",
+    --     false,
+    --     nil,
+    --     true
+    -- )
+    -- animation_system.resizeAnimationObjectsInEntityToFit(
+    --     kr2,
+    --     200,
+    --     200
+    -- )
     
-    transform.AssignRole(registry, kr2, InheritedPropertiesType.RoleInheritor, kr, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong)
+    -- transform.AssignRole(registry, kr2, InheritedPropertiesType.RoleInheritor, kr, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong)
     
-    debug("Created second krill entity with role inheritor, id:", kr2) -- Debug message to confirm creation of second krill
+    -- debug("Created second krill entity with role inheritor, id:", kr2) -- Debug message to confirm creation of second krill
     
-    kr2Role = registry:get(kr2, InheritedProperties)
+    -- kr2Role = registry:get(kr2, InheritedProperties)
     
-    debug("krill 2 role flags before assignment:", kr2Role.flags.alignment) -- Debug message to check initial flags
+    -- debug("krill 2 role flags before assignment:", kr2Role.flags.alignment) -- Debug message to check initial flags
     
-    kr2Role.flags:addFlag(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP | AlignmentFlag.ALIGN_TO_INNER_EDGES)
+    -- kr2Role.flags:addFlag(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP | AlignmentFlag.ALIGN_TO_INNER_EDGES)
     
-    debug("krill 2 role flags after assignment:", kr2Role.flags.alignment) -- Debug message to check flags after assignment
+    -- debug("krill 2 role flags after assignment:", kr2Role.flags.alignment) -- Debug message to check flags after assignment
 end
 
 function initMainGame()

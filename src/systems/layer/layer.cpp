@@ -2634,7 +2634,7 @@ namespace layer
         DrawTexture(postPassRender.texture, 0, 0, WHITE);
         render_stack_switch_internal::Pop();
         
-        DrawTexture(postPassRender.texture, 90, 30, WHITE);
+        // DrawTexture(postPassRender.texture, 90, 30, WHITE);
         
         // if there is an overlay draw at all, we need to draw the base sprite to the front texture first.
         if (!pipelineComp.overlayDraws.empty()) {
@@ -2653,7 +2653,7 @@ namespace layer
                 render_stack_switch_internal::Push(shader_pipeline::front());
                 ClearBackground({0, 0, 0, 0});
                 // no shader
-                DrawTextureRec(postPassRender.texture, {0, 0, renderWidth * xFlipModifier, (float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
+                DrawTextureRec(postProcessRender.texture, {0, 0, renderWidth * xFlipModifier, -(float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
                 render_stack_switch_internal::Pop();
             }
         }

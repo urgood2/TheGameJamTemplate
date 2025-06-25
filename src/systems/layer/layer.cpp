@@ -2614,7 +2614,7 @@ namespace layer
             render_stack_switch_internal::Pop();
             shader_pipeline::Swap();
             
-            shader_pipeline::SetLastRenderTarget(shader_pipeline::back()); 
+            shader_pipeline::SetLastRenderTarget(shader_pipeline::front()); 
     
         }
     

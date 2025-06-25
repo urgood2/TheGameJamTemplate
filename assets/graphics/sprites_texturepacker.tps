@@ -1179,6 +1179,31 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_2.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_3.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_4.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_5.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_6.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_7.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_8.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_9.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>12,16,24,32</rect>
+                <key>scale9Paddings</key>
+                <rect>12,16,24,32</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -1281,30 +1306,6 @@
                 <rect>10,10,20,20</rect>
                 <key>scale9Paddings</key>
                 <rect>10,10,20,20</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_2.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_3.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_4.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_5.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_6.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_7.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_8.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_9.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>12,16,24,32</rect>
-                <key>scale9Paddings</key>
-                <rect>12,16,24,32</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -3688,6 +3689,7 @@
                     <filename>../../../../../Downloads/musicnote4.png</filename>
                     <filename>../../../../../Downloads/musicnote5.png</filename>
                     <filename>../../../../../Downloads/title3.png</filename>
+                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</filename>
                 </array>
             </struct>
         </map>

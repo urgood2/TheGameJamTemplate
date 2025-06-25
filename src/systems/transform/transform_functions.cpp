@@ -222,11 +222,6 @@ namespace transform
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
         
-        if ((int) e == 14) 
-        {
-            SPDLOG_DEBUG("AlignToMaster called for entity 14 ");
-        }
-        
         // ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
         auto &role = registry->get<InheritedProperties>(e);

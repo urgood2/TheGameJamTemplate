@@ -27,10 +27,10 @@ function initMainMenu()
     -- 2) Set up its animation & sizing
     animation_system.setupAnimatedObjectOnEntity(
         kr,
-        "krill_2_anim",
-        false,
+        "verdant_guardian.png",
+        true, -- true if this is just an image rather than an animation
         nil,
-        true
+        false -- shadow?
     )
     animation_system.resizeAnimationObjectsInEntityToFit(
         kr,
@@ -47,8 +47,13 @@ function initMainMenu()
     
     -- kril shaders
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
-    shaderPipelineComp:addPass("random_displacement_anim")
-    -- shaderPipelineComp:addPass("palette_quantize")
+    -- shaderPipelineComp:addPass("random_displacement_anim")
+    shaderPipelineComp:addPass("gamejam")
+    
+    -- every frame
+    shaders.registerUniformUpdate("gamejam", function ()
+        globalShaderUniforms:set("gamejam", "time", os.clock())
+    end)
     
     -- test layer shaders
     -- add_fullscreen_shader("random_displacement_anim")
@@ -75,16 +80,6 @@ function initMainMenu()
         200
     )
     
-    ---@param e Entity
----@param roleType? InheritedPropertiesType
----@param parent? Entity
----@param xy? InheritedPropertiesSync
----@param wh? InheritedPropertiesSync
----@param rotation? InheritedPropertiesSync
----@param scale? InheritedPropertiesSync
----@param offset? Vector2
----@return nil
----@
     transform.AssignRole(registry, kr2, InheritedPropertiesType.RoleInheritor, kr, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong)
     
     debug("Created second krill entity with role inheritor, id:", kr2) -- Debug message to confirm creation of second krill

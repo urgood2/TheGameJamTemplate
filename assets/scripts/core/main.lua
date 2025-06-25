@@ -56,6 +56,46 @@ function initMainMenu()
     -- add_fullscreen_shader("flash")
     -- layers.finalOutput:addPostProcessShader("palette_quantize")
     -- layers.finalOutput:addPostProcessShader("flash")
+    
+    
+    -- make second krill
+    local kr2 = create_ai_entity("kobold")
+    -- 2) Set up its animation & sizing
+    animation_system.setupAnimatedObjectOnEntity(
+        
+        kr2,
+        "krill_2_anim",
+        false,
+        nil,
+        true
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        kr2,
+        200,
+        200
+    )
+    
+    ---@param e Entity
+---@param roleType? InheritedPropertiesType
+---@param parent? Entity
+---@param xy? InheritedPropertiesSync
+---@param wh? InheritedPropertiesSync
+---@param rotation? InheritedPropertiesSync
+---@param scale? InheritedPropertiesSync
+---@param offset? Vector2
+---@return nil
+---@
+    transform.AssignRole(registry, kr2, InheritedPropertiesType.RoleInheritor, kr, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong, InheritedPropertiesSync.Strong)
+    
+    debug("Created second krill entity with role inheritor, id:", kr2) -- Debug message to confirm creation of second krill
+    
+    kr2Role = registry:get(kr2, InheritedProperties)
+    
+    debug("krill 2 role flags before assignment:", kr2Role.flags.alignment) -- Debug message to check initial flags
+    
+    kr2Role.flags:addFlag(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP | AlignmentFlag.ALIGN_TO_INNER_EDGES)
+    
+    debug("krill 2 role flags after assignment:", kr2Role.flags.alignment) -- Debug message to check flags after assignment
 end
 
 function initMainGame()

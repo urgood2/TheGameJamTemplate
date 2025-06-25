@@ -271,7 +271,7 @@ namespace transform
             int prevAlignment = NONE;       // No alignment by default
         };
 
-        std::optional<Alignment> flags;
+        std::optional<Alignment> flags{Alignment{}}; // Alignment flags, used to align the entity to its master entity. If not set, the entity is not aligned to anything.
 
         // ==== BUILDER CLASS ====
         struct Builder

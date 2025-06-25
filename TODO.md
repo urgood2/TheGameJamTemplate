@@ -6,6 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 - [ ] palette shader needs configurable file-based system to make adding palettes easier
 - [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
 - [ ] delete paletteTex when program ends
@@ -14,7 +15,6 @@
 - [ ] transform alignment settings not working. need to ed ebug
 - [ ] Way to “tag” particles with a tag component, then remove them all at once
 - [ ] Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
-- [ ] #to-process 12:31 automatic palette customization shader
 - [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
 - [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc. I don't actually know if I need it right now, and I don't have entity-to-entity collision-just broad box based collision. If that's accurate enough, so be it. otherwise it's going to require checking whether something is collideable first, then checking if the two collide.
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
@@ -38,7 +38,7 @@
 - [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
 - [ ] pause functionality
 ## Shaders
-
+- [ ] use this as a base: https://chatgpt.com/share/68521752-7898-800a-8d76-d30affc26ca0 
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 

@@ -221,10 +221,18 @@ namespace transform
     // not exposed publicly
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
+        
+        if ((int) e == 14) 
+        {
+            SPDLOG_DEBUG("AlignToMaster called for entity 14 ");
+        }
+        
         // ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
         auto &role = registry->get<InheritedProperties>(e);
         auto &transform = registry->get<Transform>(e);
+        
+        if (!role.flags) return; // no flags, no alignment
 
         // if alignment and offset unchanged
         if (role.flags->alignment == role.flags->prevAlignment && role.offset->x == role.prevOffset->x && role.offset->y == role.prevOffset->y && forceAlign == false && transform.frameCalculation.alignmentChanged == false)
@@ -2356,7 +2364,17 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         "size_bond",       &InheritedProperties::size_bond,
         "rotation_bond",   &InheritedProperties::rotation_bond,
         "scale_bond",      &InheritedProperties::scale_bond,
-        "flags",           &InheritedProperties::flags,
+        "flags", sol::property(
+            // getter: default-construct if needed, then return ref
+            [](InheritedProperties &p)->InheritedProperties::Alignment& {
+                if (!p.flags) p.flags.emplace();
+                return *p.flags;
+            },
+            // setter: replace the entire Alignment
+            [](InheritedProperties &p, InheritedProperties::Alignment v) {
+                p.flags = v;
+            }
+        ),
         "type_id",         []() { return entt::type_hash<InheritedProperties>::value(); }
     );
     auto& ipDef = rec.add_type("InheritedProperties", /*is_data_class=*/true);

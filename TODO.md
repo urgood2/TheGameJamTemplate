@@ -7,26 +7,29 @@
 
 ## Kinda high priority
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
-- [ ] palette shader needs configurable file-based system to make adding palettes easier
-- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
-- [ ] delete paletteTex when program ends
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
-- [ ] use backgrounds & images for the tooltip text
-- [ ] transform alignment settings not working. need to ed ebug
 - [ ] Way to “tag” particles with a tag component, then remove them all at once
-- [ ] Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
-- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
-- [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc. I don't actually know if I need it right now, and I don't have entity-to-entity collision-just broad box based collision. If that's accurate enough, so be it. otherwise it's going to require checking whether something is collideable first, then checking if the two collide.
-- [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
-- [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code)
+- [ ] particles - Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
 - [ ] maybe some way to remove boilerplace for lua ui generation?
 - [ ] maybe some way to reduce registry:get boilerplace? (is there one already in place?)
 - [ ] an option to have text centered the moment it's created
 - [ ] same with windows
-- [ ] transform alignment issue
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
 - [ ] Also, how to do tags for dynamic text? Or mix so that only part of the text is dynamic, and everything else static? How to update static text? Easy way to access text & elements on already created ui?
 - [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss
+
+- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
+
+- [ ] use backgrounds & images for the tooltip text
+
+
+- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
+- [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc. I don't actually know if I need it right now, and I don't have entity-to-entity collision-just broad box based collision. If that's accurate enough, so be it. otherwise it's going to require checking whether something is collideable first, then checking if the two collide.
+- [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
+- [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code)
+
+
+## Game todos (Jame Gam 50)
 - [ ] progression way too slow.
 - [ ]  1. First part(Long idea) (Second part easy fix) Just an idea, could go any way though: Well, we have done speech bubble tutorials for are game jams, but it doesnt really work that well nor is it very engaging if not done right, you have to find a way to integrate it. I would say maybe a cool way to do so would be to start the game off without the whale, and then have an astronought guy in a mask(so you dont gotta draw a face) in very short but effective diaglog prompts informs the player that they have been tracking down a "Species name here" space whale as it produces a rare resource that makes hyper space possible for spaceships. Somehting along those lines(could be very different, but just as a jist) then the space whale appears through a rift or smthg and the guy tells the player they must use some sort of tool(replace cursor with that tool) to harvest the resources. and then must collect the resource. Then after you collect like X amount of resources the space whale dissapears into another rift(that it creates) then the guy says resource can also be used to create other space technologies some very useful in collection, he then says place a collection thing after you do so, then he says ok seems like you got the hang of things and then leaves. (Since the theme seems to be more symbyotic, you would maybe want to explain that in the tutorial, and have the tutor person be some alien species or smthg. (edited)
     THen after a bit the gravitational wave spawns in and the guy repears and explains it a bit and disappears. That is just a rough idea of what i think could fit. I do think you should add some sort of whale teleportation since that is one of the things space whales are known for, and it could help provide lore for some of the upgrades and purpose of the collection. (you could tell the character they are in the 4th dimension that is where space folds over on itself granting faster than light travel and it is the fabric the space whales use to travel. which would explain colorful bg, and then you could add multiple whales (some rarer, like they have stripes or spots idk, and then a log book that shows species discovered as well as a satisfying rarirty border like legendary.mythicals common, rare, etc it also has some cool lore facts about each species,) different whales could drop different amounts of the resources, and you could then also add upgrades for having the player more likely to find rarer whales which would increase production. Stuff like that. I just dumped a ton, if you just want to get it a a bit mor intuitive i would say:
@@ -34,9 +37,10 @@
     The first idea would be a lot to add. So i would say the magnifying glass would work well if you just want to get it working.
     SOme fixes/improvments: -make grid appear only when placing. -notify user when a building is unlocked, otherwise they have no idea
 - [ ] relocate tooltips for krill & whale
-- [ ] #to-process 12:31 automatic palette customization shader
-- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
+
 - [ ] pause functionality
+
+
 ## Shaders
 - [ ] use this as a base: https://chatgpt.com/share/68521752-7898-800a-8d76-d30affc26ca0 
 - [ ] make variations of texture shaders based on voucher sheen/polychrome

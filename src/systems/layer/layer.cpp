@@ -2653,7 +2653,7 @@ namespace layer
                 render_stack_switch_internal::Push(shader_pipeline::front());
                 ClearBackground({0, 0, 0, 0});
                 // no shader
-                DrawTextureRec(postPassRender.texture, {0, 0, renderWidth * xFlipModifier, (float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
+                DrawTextureRec(postPassRender.texture, {0, 0, renderWidth * xFlipModifier, -(float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
                 render_stack_switch_internal::Pop();
             }
         }
@@ -2678,7 +2678,7 @@ namespace layer
             TryApplyUniforms(shader, globals::globalShaderUniforms, overlay.shaderName);
     
             RenderTexture2D& source = (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite) ? baseSpriteRender : postPassRender;
-            DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, (float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
+            DrawTextureRec(source.texture, {0, 0, renderWidth * xFlipModifier, -(float)renderHeight * yFlipModifier}, {0, 0}, WHITE);
     
             EndShaderMode();
             render_stack_switch_internal::Pop();

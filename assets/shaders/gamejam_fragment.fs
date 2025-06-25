@@ -195,7 +195,8 @@ void main() {
     // 12) Compute alpha driven by the refined mask
     float minAlpha        = 0.0;
     float maxAlphaModifier= 0.99;
-    tex.a = mix(minAlpha, tex.a * maxAlphaModifier, mask2);
+    // tex.a = mix(minAlpha, tex.a * maxAlphaModifier, mask2);
+    // tex.a = 1; // this is kEY For removing the black fade-in!!!!
 
     // 13) Finally, hand off into your existing dissolve_mask
     finalColor = dissolve_mask(tex, spriteUV, spriteUV);

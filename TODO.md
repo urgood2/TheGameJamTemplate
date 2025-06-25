@@ -7,6 +7,7 @@
 
 ## Kinda high priority
 - [ ] test jitter shader again
+- [ ] figure out- how does balatro do these shaders without darkening?
 - [ ] test overlay + passes workign together as intended (try multiple numbers)
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes

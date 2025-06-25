@@ -6,9 +6,6 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] test jitter shader again
-- [ ] figure out- how does balatro do these shaders without darkening?
-- [ ] test overlay + passes workign together as intended (try multiple numbers)
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] Way to “tag” particles with a tag component, then remove them all at once
@@ -45,8 +42,7 @@
 
 
 ## Shaders
-- [ ] document the fact that only the first overlay's setting will be respected for an entity whether to use the base sprite or the post-processed sprite when using overlays. also, when there are both passes & overlays, overlay will overwrite the passes unless you use the passes as a source.
-- [ ] use this as a base: https://chatgpt.com/share/68521752-7898-800a-8d76-d30affc26ca0 
+- [ ] use this as a base for future shaders: https://chatgpt.com/share/68521752-7898-800a-8d76-d30affc26ca0  / or "gamejam" shader in shader folder
 - [ ] make variations of texture shaders based on voucher sheen/polychrome
 - [ ] implement voucher sheen -> use new overlay draw system to do it
 

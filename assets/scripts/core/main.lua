@@ -48,10 +48,11 @@ function initMainMenu()
     -- kril shaders
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
     shaderPipelineComp:addPass("random_displacement_anim")
-    -- shaderPipelineComp:addPass("gamejam")
+    -- shaderPipelineComp:addPass("flash")
     
     -- try overlay over base sprite
     shaderPipelineComp:addOverlay(shader_pipeline.OverlayInputSource.PostPassResult, "gamejam")
+    -- shaderPipelineComp:addOverlay(shader_pipeline.OverlayInputSource.BaseSprite, "foil")
     
     -- every frame
     shaders.registerUniformUpdate("gamejam", function ()

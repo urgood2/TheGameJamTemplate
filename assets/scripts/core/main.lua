@@ -61,7 +61,7 @@ function initMainMenu()
     
     -- test layer shaders
     -- add_fullscreen_shader("random_displacement_anim")
-    add_fullscreen_shader("palette_quantize")
+    -- add_fullscreen_shader("palette_quantize")
     -- add_fullscreen_shader("flash")
     -- layers.finalOutput:addPostProcessShader("palette_quantize")
     -- layers.finalOutput:addPostProcessShader("flash")

@@ -223,5 +223,14 @@
             "vertex": "web/palette_quantize_vertex.vs",
             "fragment": "web/palette_quantize_fragment.fs"
         }
+    },
+    "sakura_overlay": {
+        "vertex": "sakura_overlay_vertex.vs",
+        "fragment": "sakura_overlay_fragment.fs",
+
+        "web": {
+            "vertex": "web/sakura_overlay_vertex.vs",
+            "fragment": "web/sakura_overlay_fragment.fs"
+        }
     }
 }

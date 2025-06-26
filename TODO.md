@@ -7,6 +7,11 @@
 
 ## Kinda high priority
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
+- [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter?
+- [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines
+- [ ] Dont update text and ui that is out of bounds
+- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both?
+- [ ] 
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] Way to “tag” particles with a tag component, then remove them all at once
 - [ ] particles - Shadow or no shadow specifier - also, give the shadow its own z layer in the render code

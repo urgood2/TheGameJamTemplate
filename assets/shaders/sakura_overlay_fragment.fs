@@ -1,5 +1,5 @@
 #version 330 core
-precision highp float;
+precision mediump float;
 
 in vec2    fragTexCoord;
 in vec4    fragColor;
@@ -17,29 +17,6 @@ uniform vec2  image_details; // can remove?
 uniform bool  shadow;
 uniform vec4 burn_colour_1;
 uniform vec4 burn_colour_2;
-
-
-// Shadertoy-exact macros
-#define R      uGridRect.zw
-#define T      (time/5.0 + 3.0)
-
-#define rot(p,a)         \
-  vec2 sc = sin(vec2(a, a + 1.6)); \
-  p *= mat2(sc.y, -sc.x, sc.x, sc.y);
-
-#define A vec3(0.0, 1.0, 157.0)
-
-#define B {                                                                   \
-  vec2 m = fract(p),                                                         \
-       l = dot(p - m, A.yz) + A.xz,                                           \
-       r = mix(                                                               \
-         fract(57.0 * sin(l++)),                                              \
-         fract(57.0 * sin(l)),                                                \
-         (m *= m * (3.0 - m - m)).x                                           \
-       );                                                                      \
-  k += mix(r.x, r.y, m.y) / (s += s);                                         \
-  p *= mat2(1.0, 1.0, 1.0, -1.0);                                              \
-}
 
 //────────────────────────────────────────────────────────
 // HSL ↔ RGB helpers  (unchanged)
@@ -139,12 +116,7 @@ vec4 dissolve_mask(vec4 tex, vec2 /*texcoord*/, vec2 uv_scaled) {
 
 //────────────────────────────────────────────────────────
 // HSV-style palette & plot helper
-vec3 pal(in float t,
-         in vec3 a,  // base color offset
-         in vec3 b,  // amplitude (how strong each channel’s wave is)
-         in vec3 c,  // frequency (how rapidly each channel oscillates)
-         in vec3 d)  // phase offsets per channel
-{
+vec3 pal(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
     return a + b * cos(6.28318 * (c * t + d));
 }
 float plot(float r, float pct) {
@@ -152,46 +124,80 @@ float plot(float r, float pct) {
          - smoothstep(pct, pct + 0.2, r);
 }
 
+//────────────────────────────────────────────────────────
 void main() {
-    // ─── Tune these ─────────────────────────────────────────────────
-    float stripeFreq  = 0.6;   // how many stripes across the sprite
-    float waveFreq    = 1.9;   // how “wavy” each stripe is
-    float waveAmp     = 0.4;   // how far stripes deviate
-    float waveSpeed   = 0.7;   // how fast they slide
-    float stripeWidth = 1.0;   // width of each stripe
-    float hueSpeed    = 0.1;   // how fast the rainbow shifts
-    // ────────────────────────────────────────────────────────────────
+    // 1) Compute sprite-local UV
+    vec2 spriteUV  = getSpriteUV(fragTexCoord);
+    // 2) Sample atlas
+    vec4 tex       = texture(texture0, spriteUV);
 
-    // 1) Convert full‐atlas UV to sprite‐local UV
-    vec2 spriteUV = getSpriteUV(fragTexCoord);
+    // 3) Now run Reva’s radial shimmer in place of the old foil logic:
+    //    — “uv” for Reva is FULLSCREEN UV [0..1], but since we want it to
+    //      track the sprite’s center, we can remap spriteUV back into [0..1]:
+    vec2 uv        = spriteUV;
+    //    — aspect correction from atlas-to-screen:
+    vec2 pos       = vec2(0.5) - uv;
+    pos.x         *= (uImageSize.x / uGridRect.z) 
+                   / (uImageSize.y / uGridRect.w);
+    pos          *= cos(time) + 1.5;
 
-    // 2) Sample your sprite at that local UV
-    vec4 srcColor = texture(texture0, spriteUV);
+    float r        = length(pos) * 2.0;
+    float a        = atan(pos.y, pos.x);
+    float f        = abs(cos(a * 2.5 + time * 0.5))
+                   * sin(time * 2.0) * 0.698
+                   + cos(time) - 4.0;
+    float d        = f - r;
 
-    // 3) Compute a wavy offset in Y
-    float yOffset = sin(spriteUV.y * waveFreq + time * waveSpeed) * waveAmp;
+    // 4) Build the two band ramps
+    float innerBand = smoothstep(fract(d), fract(d) - 0.200, 0.160);
+    float outerBand = smoothstep(fract(d), fract(d) - 1.184, 0.160);
 
-    // 4) Build a repeating stripe coordinate in [0..1]
-    float coord = fract(spriteUV.x * stripeFreq + yOffset);
+    // 5) Positive mask for colored bands and white mask for negative bands
+    float colorMask = max(innerBand - outerBand, 0.0);
+    float whiteMask = max(outerBand - innerBand, 0.0);
 
-    // 5) Carve out the stripe mask
-    float m0   = smoothstep(0.5 - stripeWidth*0.5, 0.5, coord);
-    float m1   = smoothstep(0.5, 0.5 + stripeWidth*0.5, coord);
-    float mask = m0 - m1;
+    // 6) Compute bandColor and ringColor (both ≥ 0)
+    vec3 bandColor = colorMask * pal(f,
+                         vec3(0.725,0.475,0.440),
+                         vec3(0.605,0.587,0.007),
+                         vec3(1.0,1.0,1.0),
+                         vec3(0.310,0.410,0.154));
 
-    // 6) Generate the rainbow via your palette
-    float phase   = mask + time * hueSpeed;
-    vec3  rainbow = pal(
-        phase,
-        vec3(0.5),             // base offset
-        vec3(0.5),             // amplitude
-        vec3(1.0),             // frequency
-        vec3(0.0, 0.33, 0.67)   // R/G/B phase
-    );
+    float pct     = plot(r * 0.272, fract(d * (sin(time)*0.45 + 0.5)));
+    vec3 ringColor = max(pct, 0.0) * pal(r,
+                               vec3(0.750,0.360,0.352),
+                               vec3(0.450,0.372,0.271),
+                               vec3(0.540,0.442,0.264),
+                               vec3(0.038,0.350,0.107));
 
-    // 7) Composite: tint your sprite with rainbow stripes
-    vec3 outRgb = mix(srcColor.rgb, rainbow, mask);
+    vec3 foilColor = bandColor + ringColor;
 
-    // 8) Write it out
-    finalColor = vec4(outRgb, srcColor.a);
+    // 7) Sharpen a shimmer mask
+    float shimmerLum = max(max(foilColor.r, foilColor.g), foilColor.b);
+    float rawMask   = smoothstep(0.35, 0.99, shimmerLum);
+    float mask2     = pow(rawMask, 2.0);
+
+    // 8) High-pass floor so faint bits vanish
+    vec3 hpFoil     = max(foilColor - vec3(0.10), vec3(0.0));
+
+    // 9) Build shimmer and lighten-blend
+    float shimmerStrength = 0.7;
+    vec3 shimmer = hpFoil * shimmerStrength * mask2;
+    vec3 colorHit = max(tex.rgb, shimmer);
+
+    // 10) Overlay white where whiteMask > 0
+    float whiteIntensity = 0.9;
+    colorHit = mix(colorHit, vec3(1.0), whiteMask * whiteIntensity);
+
+    // 11) Write back color
+    tex.rgb = colorHit;
+
+    // 12) Compute alpha driven by the refined mask
+    float minAlpha        = 0.0;
+    float maxAlphaModifier= 0.99;
+    // tex.a = mix(minAlpha, tex.a * maxAlphaModifier, mask2);
+    // tex.a = 1; // this is kEY For removing the black fade-in!!!!
+
+    // 13) Finally, hand off into your existing dissolve_mask
+    finalColor = dissolve_mask(tex, spriteUV, spriteUV);
 }

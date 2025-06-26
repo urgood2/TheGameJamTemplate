@@ -17239,6 +17239,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\fonts.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/fonts.json"
     ],
+    "for_later_shader_snippet": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/SNIPPETS_FOR_LATER.md"
+    ],
+    "for_later_snippet": [
+        "SNIPPETS_FOR_LATER.md"
+    ],
     "forest_green": [
         "FOREST GREEN"
     ],

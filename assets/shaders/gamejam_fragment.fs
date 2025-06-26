@@ -154,34 +154,39 @@ float plot(float r, float pct) {
 
 void main() {
     // ─── Tune these ─────────────────────────────────────────────────
-    float stripeFreq  = 0.6;   // how many stripes across the sprite
-    float waveFreq    = 1.9;   // how “wavy” each stripe is
+    vec2 polychrome = vec2(0.9, 0.5); // .x = base hue offset (0, 1), .y = time-drift multiplier
+    float stripeFreq  = 0.3;   // how many stripes across the sprite
+    float waveFreq    = 2.0;   // how “wavy” each stripe is
     float waveAmp     = 0.4;   // how far stripes deviate
-    float waveSpeed   = 0.7;   // how fast they slide
-    float stripeWidth = 1.0;   // width of each stripe
+    float waveSpeed   = 0.1;   // how fast they slide
+    float stripeWidth = 01.0;   // width of each stripe
     float hueSpeed    = 0.1;   // how fast the rainbow shifts
     // ────────────────────────────────────────────────────────────────
 
-    // 1) Convert full‐atlas UV to sprite‐local UV
-    vec2 spriteUV = getSpriteUV(fragTexCoord);
+    // 1) sprite‐local UV & sample
+    vec2  spriteUV = getSpriteUV(fragTexCoord);
+    vec4  srcColor = texture(texture0, spriteUV);
 
-    // 2) Sample your sprite at that local UV
-    vec4 srcColor = texture(texture0, spriteUV);
-
-    // 3) Compute a wavy offset in Y
+    // 2) wavy offset
     float yOffset = sin(spriteUV.y * waveFreq + time * waveSpeed) * waveAmp;
 
-    // 4) Build a repeating stripe coordinate in [0..1]
+    // 3) stripe coord
     float coord = fract(spriteUV.x * stripeFreq + yOffset);
 
-    // 5) Carve out the stripe mask
+    // 4) stripe mask
     float m0   = smoothstep(0.5 - stripeWidth*0.5, 0.5, coord);
     float m1   = smoothstep(0.5, 0.5 + stripeWidth*0.5, coord);
     float mask = m0 - m1;
 
-    // 6) Generate the rainbow via your palette
-    float phase   = mask + time * hueSpeed;
-    vec3  rainbow = pal(
+    // ─── Here’s where we use polychrome instead of a fixed hueSpeed ───
+    // .x shifts the entire rainbow phase, .y controls how fast it drifts
+    float phase = mask 
+                + polychrome.x             // base hue‐phase offset
+                + time * polychrome.y;     // ongoing hue drift
+    // ────────────────────────────────────────────────────────────────
+
+    // 5) palette lookup
+    vec3 rainbow = pal(
         phase,
         vec3(0.5),             // base offset
         vec3(0.5),             // amplitude
@@ -189,9 +194,8 @@ void main() {
         vec3(0.0, 0.33, 0.67)   // R/G/B phase
     );
 
-    // 7) Composite: tint your sprite with rainbow stripes
+    // 6) composite
     vec3 outRgb = mix(srcColor.rgb, rainbow, mask);
 
-    // 8) Write it out
     finalColor = vec4(outRgb, srcColor.a);
 }

@@ -6,6 +6,7 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
+- [ ] copy out gamejam shader as polychrome, expose polychrome uniform
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 - [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter?
 - [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines

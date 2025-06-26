@@ -6,8 +6,6 @@
 ## 🧠 General Design / Architecture
 
 ## Kinda high priority
-- [ ] finish exposing custom_polychrome uniforms & hooking them up
-- [ ] copy out gamejam shader as polychrome, expose polychrome uniform
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 - [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter?
 - [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines
@@ -56,8 +54,6 @@
 - [ ] inventory drag & drop broken
 - [ ] highlight outline size is wrong. how to fix?
 - [ ] link onscreen keyboard with text input -> click text field -> show keyboard -> link keyboard buttons with string stored -> enter pressed, close keyboard -> https://www.raylib.com/examples/text/loader.html?name=text_input_box / use this example for text input gui
-- [ ] Need to test pipeline rendering w/ scaling for animations 
-
 
 - [ ] Implement more UI element types:
   
@@ -81,9 +77,6 @@
 ### LAUNCH CODE
 - [ ] Shader materials, choose 2 or 3 and make them work for sprites (apply sprite sheet scaling) - including maybe an overall shadow pass like in snkrx?
 - [ ] Participate in game jam or do a little test game jam on my own to make everything ready
-- [ ] make everything compile for web
-- [ ] overall pruning pass to delete code that isn't used/outdated
-- [ ] I probably need to smoothen the ui api, to make it faster to iterate with.
 
 ---
 

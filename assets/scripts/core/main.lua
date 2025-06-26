@@ -51,12 +51,12 @@ function initMainMenu()
     -- shaderPipelineComp:addPass("flash")
     
     -- try overlay over base sprite
-    shaderPipelineComp:addOverlay(shader_pipeline.OverlayInputSource.PostPassResult, "gamejam")
+    shaderPipelineComp:addOverlay(shader_pipeline.OverlayInputSource.PostPassResult, "custom_polychrome")
     -- shaderPipelineComp:addOverlay(shader_pipeline.OverlayInputSource.BaseSprite, "foil")
     
     -- every frame
-    shaders.registerUniformUpdate("gamejam", function ()
-        globalShaderUniforms:set("gamejam", "time", os.clock())
+    shaders.registerUniformUpdate("custom_polychrome", function ()
+        globalShaderUniforms:set("custom_polychrome", "time", os.clock())
     end)
     
     -- test layer shaders

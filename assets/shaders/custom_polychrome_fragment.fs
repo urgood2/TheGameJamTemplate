@@ -6,13 +6,19 @@ in vec4    fragColor;
 
 out vec4 finalColor;
 
-uniform sampler2D texture0;    // Atlas texture
-uniform vec2      uImageSize;  // Atlas dimensions (px)
-uniform vec4      uGridRect; // x,y = top-left (px), z,w = size (px)
+uniform sampler2D texture0;     // Atlas texture
+uniform vec2      uImageSize;   // Atlas dimensions (px)
+uniform vec4      uGridRect;    // x,y = top-left (px), z,w = size (px)
 
-uniform vec2 polychrome; // .x = base hue phase, .y = hue drift speed
+// new tunable uniforms
+uniform float stripeFreq;       // how many stripes across the sprite
+uniform float waveFreq;         // how “wavy” each stripe is
+uniform float waveAmp;          // how far stripes deviate
+uniform float waveSpeed;        // how fast they slide
+uniform float stripeWidth;      // width of each stripe
+
+uniform vec2  polychrome;       // .x = base hue phase, .y = hue drift speed
 uniform float time;
-
 
 //────────────────────────────────────────────────────────
 // HSL ↔ RGB helpers  (unchanged)
@@ -50,37 +56,20 @@ vec4 HSL(vec4 c) {
 }
 
 //────────────────────────────────────────────────────────
-// Sprite-local UV helper
+// Sprite-local UV helper (unchanged)
 vec2 getSpriteUV(vec2 uv) {
-    // uv in [0..1] over the full atlas
     vec2 pixelUV   = uv * uImageSize;
     vec2 spriteLoc = pixelUV - uGridRect.xy;
     return spriteLoc / uGridRect.zw;
 }
 
-
 //────────────────────────────────────────────────────────
-// HSV-style palette & plot helper
-vec3 pal(in float t,
-         in vec3 a,  // base color offset
-         in vec3 b,  // amplitude (how strong each channel’s wave is)
-         in vec3 c,  // frequency (how rapidly each channel oscillates)
-         in vec3 d)  // phase offsets per channel
-{
+// HSV-style palette & plot helper (unchanged)
+vec3 pal(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
     return a + b * cos(6.28318 * (c * t + d));
 }
 
 void main() {
-    // ─── Tune these ─────────────────────────────────────────────────
-    
-    float stripeFreq  = 0.3;   // how many stripes across the sprite
-    float waveFreq    = 2.0;   // how “wavy” each stripe is
-    float waveAmp     = 0.4;   // how far stripes deviate
-    float waveSpeed   = 0.1;   // how fast they slide
-    float stripeWidth = 01.0;   // width of each stripe
-    float hueSpeed    = 0.1;   // how fast the rainbow shifts
-    // ────────────────────────────────────────────────────────────────
-
     // 1) sprite‐local UV & sample
     vec2  spriteUV = getSpriteUV(fragTexCoord);
     vec4  srcColor = texture(texture0, spriteUV);
@@ -92,28 +81,21 @@ void main() {
     float coord = fract(spriteUV.x * stripeFreq + yOffset);
 
     // 4) stripe mask
-    float m0   = smoothstep(0.5 - stripeWidth*0.5, 0.5, coord);
-    float m1   = smoothstep(0.5, 0.5 + stripeWidth*0.5, coord);
+    float m0   = smoothstep(0.5 - stripeWidth * 0.5, 0.5, coord);
+    float m1   = smoothstep(0.5, 0.5 + stripeWidth * 0.5, coord);
     float mask = m0 - m1;
 
-    // ─── Here’s where we use polychrome instead of a fixed hueSpeed ───
-    // .x shifts the entire rainbow phase, .y controls how fast it drifts
-    float phase = mask 
-                + polychrome.x             // base hue‐phase offset
-                + time * polychrome.y;     // ongoing hue drift
-    // ────────────────────────────────────────────────────────────────
-
-    // 5) palette lookup
-    vec3 rainbow = pal(
+    // 5) compute rainbow phase & lookup
+    float phase = mask + polychrome.x + time * polychrome.y;
+    vec3  rainbow = pal(
         phase,
-        vec3(0.5),             // base offset
-        vec3(0.5),             // amplitude
-        vec3(1.0),             // frequency
-        vec3(0.0, 0.33, 0.67)   // R/G/B phase
+        vec3(0.5),           // base offset
+        vec3(0.5),           // amplitude
+        vec3(1.0),           // frequency
+        vec3(0.0,0.33,0.67)  // R/G/B phase
     );
 
     // 6) composite
     vec3 outRgb = mix(srcColor.rgb, rainbow, mask);
-
     finalColor = vec4(outRgb, srcColor.a);
 }

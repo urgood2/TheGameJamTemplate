@@ -241,5 +241,14 @@
             "vertex": "web/spotlight_vertex.vs",
             "fragment": "web/spotlight_fragment.fs"
         }
+    },
+    "custom_polychrome": {
+        "vertex": "custom_polychrome_vertex.vs",
+        "fragment": "custom_polychrome_fragment.fs",
+
+        "web": {
+            "vertex": "web/custom_polychrome_vertex.vs",
+            "fragment": "web/custom_polychrome_fragment.fs"
+        }
     }
 }

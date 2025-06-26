@@ -20,6 +20,21 @@ namespace game
         using namespace globals;
         // pre-load shader values for later use
         
+        // my own polychrome
+        // register frame‐time‐dependent uniforms
+        shaders::registerUniformUpdate("custom_polychrome", [](Shader &sh) {
+            // if you ever need to animate waveSpeed or time, update here
+            globalShaderUniforms.set("custom_polychrome", "time",    (float)GetTime());
+        });
+
+        // one‐time defaults
+        globalShaderUniforms.set("custom_polychrome", "stripeFreq",  0.3f);
+        globalShaderUniforms.set("custom_polychrome", "waveFreq",    2.0f);
+        globalShaderUniforms.set("custom_polychrome", "waveAmp",     0.4f);
+        globalShaderUniforms.set("custom_polychrome", "waveSpeed",   0.1f);
+        globalShaderUniforms.set("custom_polychrome", "stripeWidth", 1.0f);
+        globalShaderUniforms.set("custom_polychrome", "polychrome",  Vector2{0.0f, 0.1f});
+        
         
         // spotlight shader
         // one‐time defaults

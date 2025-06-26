@@ -7,14 +7,14 @@
 
 ## Kinda high priority
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
-- [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter?
+- [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter? -> https://chatgpt.com/share/685d3104-e724-800a-90d8-08ac15bd9bdc 
 - [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines
 - [ ] Dont update text and ui that is out of bounds
-- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both?
+- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/685d2fb9-9b88-800a-a2f5-580a172bb94e 
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] Way to “tag” particles with a tag component, then remove them all at once
 - [ ] particles - Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
-- [ ] maybe some way to remove boilerplace for lua ui generation?
+- [ ] maybe some way to remove boilerplace for lua ui generation? -> https://chatgpt.com/share/685d31e0-282c-800a-8805-65dcbdc6de9a
 - [ ] maybe some way to reduce registry:get boilerplace? (is there one already in place?)
 - [ ] an option to have text centered the moment it's created
 - [ ] same with windows
@@ -22,10 +22,11 @@
 - [ ] Also, how to do tags for dynamic text? Or mix so that only part of the text is dynamic, and everything else static? How to update static text? Easy way to access text & elements on already created ui?
 - [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss
 - [ ] use backgrounds & images for the tooltip text
-- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
+- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision) -> https://chatgpt.com/share/685d2e0c-f11c-800a-b0fd-f76e4fb7c701
 - [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc. I don't actually know if I need it right now, and I don't have entity-to-entity collision-just broad box based collision. If that's accurate enough, so be it. otherwise it's going to require checking whether something is collideable first, then checking if the two collide.
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
-- [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code)
+- [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code) - > ui code optimization (https://chatgpt.com/share/685d32c8-ca0c-800a-bf66-eb3ff96fa4a6)
+- [ ] general code optimizations: https://chatgpt.com/share/685d33b6-129c-800a-86f4-a4f708f4ad50 
 
 
 # Documentation

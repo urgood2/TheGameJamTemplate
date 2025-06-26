@@ -232,5 +232,14 @@
             "vertex": "web/sakura_overlay_vertex.vs",
             "fragment": "web/sakura_overlay_fragment.fs"
         }
+    },
+    "spotlight": {
+        "vertex": "spotlight_vertex.vs",
+        "fragment": "spotlight_fragment.fs",
+
+        "web": {
+            "vertex": "web/spotlight_vertex.vs",
+            "fragment": "web/spotlight_fragment.fs"
+        }
     }
 }

@@ -10,13 +10,8 @@ uniform sampler2D texture0;    // Atlas texture
 uniform vec2      uImageSize;  // Atlas dimensions (px)
 uniform vec4      uGridRect; // x,y = top-left (px), z,w = size (px)
 
-uniform float dissolve;
+uniform vec2 polychrome; // .x = base hue phase, .y = hue drift speed
 uniform float time;
-uniform vec4 texture_details;  // can remove?
-uniform vec2  image_details; // can remove?
-uniform bool  shadow;
-uniform vec4 burn_colour_1;
-uniform vec4 burn_colour_2;
 
 
 //────────────────────────────────────────────────────────
@@ -77,7 +72,7 @@ vec3 pal(in float t,
 
 void main() {
     // ─── Tune these ─────────────────────────────────────────────────
-    vec2 polychrome = vec2(0.9, 0.5); // .x = base hue offset (0, 1), .y = time-drift multiplier
+    
     float stripeFreq  = 0.3;   // how many stripes across the sprite
     float waveFreq    = 2.0;   // how “wavy” each stripe is
     float waveAmp     = 0.4;   // how far stripes deviate

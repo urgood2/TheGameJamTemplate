@@ -20,8 +20,18 @@ namespace game
         using namespace globals;
         // pre-load shader values for later use
         
+        
+        // spotlight shader
+        // one‐time defaults
+        // update on every frame in case of resize
+        globalShaderUniforms.set("spotlight", "screen_width",  static_cast<float>(GetScreenWidth()));
+        globalShaderUniforms.set("spotlight", "screen_height", static_cast<float>(GetScreenHeight()));
+        globalShaderUniforms.set("spotlight", "circle_size",      0.5f);
+        globalShaderUniforms.set("spotlight", "feather",          0.05f);
+        globalShaderUniforms.set("spotlight", "circle_position",  Vector2{0.5f, 0.5f});
+        
+        
         // palette shader
-        //TODO: must delete this later
         
         palette_quantizer::setPaletteTexture("palette_quantize", util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png"));
         // static auto paletteTex = LoadTexture(util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png").c_str());

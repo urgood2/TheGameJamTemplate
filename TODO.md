@@ -11,7 +11,6 @@
 - [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines
 - [ ] Dont update text and ui that is out of bounds
 - [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both?
-- [ ] 
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] Way to “tag” particles with a tag component, then remove them all at once
 - [ ] particles - Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
@@ -22,16 +21,17 @@
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
 - [ ] Also, how to do tags for dynamic text? Or mix so that only part of the text is dynamic, and everything else static? How to update static text? Easy way to access text & elements on already created ui?
 - [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss
-
-- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
-
 - [ ] use backgrounds & images for the tooltip text
-
-
 - [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision)
 - [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc. I don't actually know if I need it right now, and I don't have entity-to-entity collision-just broad box based collision. If that's accurate enough, so be it. otherwise it's going to require checking whether something is collideable first, then checking if the two collide.
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
 - [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code)
+
+
+# Documentation
+- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
+
+
 
 
 ## Game todos (Jame Gam 50)

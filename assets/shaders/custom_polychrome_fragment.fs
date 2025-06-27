@@ -20,6 +20,14 @@ uniform float stripeWidth;      // width of each stripe
 uniform vec2  polychrome;       // .x = base hue phase, .y = hue drift speed
 uniform float time;
 
+// add these uniforms up top:
+uniform float circleFreq = 1.3;     // controls spacing of rings
+uniform float noiseScale = 2.5;     // scale of the 2D noise sampling
+uniform float noiseAmp = 1;       // how much the noise perturbs the radius
+uniform float noiseSpeed = 0.01;     // how fast the noise field drifts
+uniform vec2 noisePan = vec2(0, 1);    // e.g. in [−1..1] UV units or noise units
+
+
 //────────────────────────────────────────────────────────
 // HSL ↔ RGB helpers  (unchanged)
 float hue(float s, float t, float h) {
@@ -69,33 +77,55 @@ vec3 pal(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
     return a + b * cos(6.28318 * (c * t + d));
 }
 
+float hash(vec2 p) { p = fract(p*vec2(123.34, 456.21)); p += dot(p, p+45.32); return fract(p.x*p.y); }
+float noise2d(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    // four corners
+    float a = hash(i);
+    float b = hash(i+vec2(1,0));
+    float c = hash(i+vec2(0,1));
+    float d = hash(i+vec2(1,1));
+    // smooth interpolation
+    vec2 u = f*f*(3.0-2.0*f);
+    return mix(a, b, u.x) + (c - a)*u.y*(1.0 - u.x) + (d - b)*u.x*u.y;
+}
+
 void main() {
-    // 1) sprite‐local UV & sample
-    vec2  spriteUV = getSpriteUV(fragTexCoord);
-    vec4  srcColor = texture(texture0, spriteUV);
+    vec2 uv    = getSpriteUV(fragTexCoord);
+    vec4 src   = texture(texture0, uv);
 
-    // 2) wavy offset
-    float yOffset = sin(spriteUV.y * waveFreq + time * waveSpeed) * waveAmp;
+    // compute a perturbed radius
+    // adjust for non‐square sprites if needed
+    float aspect = uImageSize.x/uImageSize.y;
+    vec2  centered = (uv - 0.5) * vec2(aspect, 1.0);
 
-    // 3) stripe coord
-    float coord = fract(spriteUV.x * stripeFreq + yOffset);
+    float baseR = length(centered);
+    // sample noise field
+    // new:
+    float n = noise2d(
+        centered * noiseScale
+    + noisePan              // <-- pan offset
+    + time * noiseSpeed
+    );
+    float perturbedR = baseR + (n - 0.5) * noiseAmp;
 
-    // 4) stripe mask
-    float m0   = smoothstep(0.5 - stripeWidth * 0.5, 0.5, coord);
-    float m1   = smoothstep(0.5, 0.5 + stripeWidth * 0.5, coord);
+    // turn that into a ring pattern
+    float ring = fract(perturbedR * circleFreq);
+
+    // mask for the ring (soft edges)
+    float m0 = smoothstep(0.5 - stripeWidth*0.5, 0.5, ring);
+    float m1 = smoothstep(0.5, 0.5 + stripeWidth*0.5, ring);
     float mask = m0 - m1;
 
-    // 5) compute rainbow phase & lookup
+    // hue phase & lookup (unchanged)
     float phase = mask + polychrome.x + time * polychrome.y;
-    vec3  rainbow = pal(
-        phase,
-        vec3(0.5),           // base offset
-        vec3(0.5),           // amplitude
-        vec3(1.0),           // frequency
-        vec3(0.0,0.33,0.67)  // R/G/B phase
-    );
+    vec3  rainbow = pal(phase, vec3(0.5), vec3(0.5), vec3(1.0), vec3(0.0,0.33,0.67));
 
-    // 6) composite
-    vec3 outRgb = mix(srcColor.rgb, rainbow, mask);
-    finalColor = vec4(outRgb, srcColor.a);
+    // blend as before
+    float blendStrength = 0.4; // default blend strength
+    float finalMask = mask * blendStrength;
+    vec3 outRgb = mix(src.rgb, rainbow, finalMask);
+
+    finalColor = vec4(outRgb, src.a);
 }

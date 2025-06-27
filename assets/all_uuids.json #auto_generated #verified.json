@@ -14526,10 +14526,12 @@
         "custom_polychrome_fragment.fs"
     ],
     "custom_fragment_polychrome_shader": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\custom_polychrome_fragment.fs"
     ],
     "custom_polychrome_shader_vertex": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/custom_polychrome_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\custom_polychrome_vertex.vs"
     ],
     "custom_polychrome_vertex": [
         "custom_polychrome_vertex.vs"
@@ -17252,7 +17254,8 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/fonts.json"
     ],
     "for_later_shader_snippet": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/SNIPPETS_FOR_LATER.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/SNIPPETS_FOR_LATER.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\SNIPPETS_FOR_LATER.md"
     ],
     "for_later_snippet": [
         "SNIPPETS_FOR_LATER.md"
@@ -17359,7 +17362,8 @@
         "sakura_overlay_fragment.fs"
     ],
     "fragment_overlay_sakura_shader": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sakura_overlay_fragment.fs"
     ],
     "fragment_palette_quantize": [
         "palette_quantize_fragment.fs"
@@ -17407,7 +17411,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\shockwave_fragment.fs"
     ],
     "fragment_shader_spotlight": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spotlight_fragment.fs"
     ],
     "fragment_shader_squish": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/squish_fragment.fs",
@@ -18778,7 +18783,8 @@
         "xbox_rt_outline.png"
     ],
     "overlay_sakura_shader_vertex": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/sakura_overlay_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\sakura_overlay_vertex.vs"
     ],
     "overlay_sakura_vertex": [
         "sakura_overlay_vertex.vs"
@@ -19111,7 +19117,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\shockwave_vertex.vs"
     ],
     "shader_spotlight_vertex": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/spotlight_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\spotlight_vertex.vs"
     ],
     "shader_squish_vertex": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/squish_vertex.vs",

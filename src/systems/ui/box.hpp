@@ -25,6 +25,10 @@
 namespace ui {
 
     namespace box {
+        void AddTemplateToUIBox(entt::registry &registry,
+                            entt::entity uiBoxEntity,
+                            UIElementTemplateNode &templateDef,
+                            std::optional<entt::entity> maybeParent = std::nullopt);
         auto handleAlignment(entt::registry &registry, entt::entity root) -> void;
         auto BuildUIElementTree(entt::registry& registry, entt::entity uiBoxEntity, UIElementTemplateNode &uiElementDef, entt::entity uiElementParent) -> void;
         auto Initialize(entt::registry &registry, const TransformConfig &transformData, UIElementTemplateNode definition, std::optional<UIConfig> config = std::nullopt) -> entt::entity;

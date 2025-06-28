@@ -9,6 +9,7 @@
 
 
 ## Kinda high priority
+- [ ] need functionality to completely reset game state right from the game, via a debug menu, and reload scripts
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 - [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter? -> https://chatgpt.com/share/685d3104-e724-800a-90d8-08ac15bd9bdc 
 - [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines

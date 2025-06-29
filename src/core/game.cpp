@@ -324,6 +324,11 @@ namespace game
     // specific to a game project
     auto init() -> void
     {
+            // always make container entity by default
+        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
+        auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
+        gameMapNode.debug.debugText = "Map Container";
+        
         // set camera to fill the screen
         globals::camera = {0};
         globals::camera.zoom = 1;
@@ -735,6 +740,18 @@ namespace game
         }
 
         // fade
+    }
+
+
+    void unload() {
+        // unload all layers
+        layer::UnloadAllLayers();
+
+        // unload all lua scripts
+        ai_system::masterStateLua.collect_garbage();
+        
+        // destroy all entities
+        globals::registry.clear(); // clear all entities in the registry
     }
 
 }

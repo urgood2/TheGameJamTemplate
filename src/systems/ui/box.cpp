@@ -2060,22 +2060,25 @@ namespace ui
         // 3) build the tree under that parent
         box::BuildUIElementTree(registry, uiBoxEntity, templateDef, parent);
 
-        // 4) recalc sizes & alignment on the whole subtree
-        //    grab the transform of uiRoot to get its current bounds
-        auto &rootT = registry.get<transform::Transform>(uiRoot);
-        Rectangle rootRect{
-            rootT.getActualX(),
-            rootT.getActualY(),
-            rootT.getActualW(),
-            rootT.getActualH()};
-        ui::LocalTransform calcTransform{rootRect.x, rootRect.y, rootRect.width, rootRect.height};
-        CalcTreeSizes(registry, uiRoot, calcTransform, /* topLevel = */ true);
-        handleAlignment(registry, uiRoot);
-        ui::element::InitializeVisualTransform(registry, uiRoot);
+        // // 4) recalc sizes & alignment on the whole subtree
+        // //    grab the transform of uiRoot to get its current bounds
+        // auto &rootT = registry.get<transform::Transform>(uiRoot);
+        // Rectangle rootRect{
+        //     rootT.getActualX(),
+        //     rootT.getActualY(),
+        //     rootT.getActualW(),
+        //     rootT.getActualH()};
+        // ui::LocalTransform calcTransform{rootRect.x, rootRect.y, rootRect.width, rootRect.height};
+        // CalcTreeSizes(registry, uiRoot, calcTransform, /* topLevel = */ true);
+        // handleAlignment(registry, uiRoot);
+        // ui::element::InitializeVisualTransform(registry, uiRoot);
 
-        // 5) assign ordering so your new widgets sort & draw correctly
-        AssignLayerOrderComponents(registry, uiBoxEntity);
-        AssignTreeOrderComponents(registry, uiRoot);
+        // // 5) assign ordering so your new widgets sort & draw correctly
+        // AssignLayerOrderComponents(registry, uiBoxEntity);
+        // AssignTreeOrderComponents(registry, uiRoot);
+
+        // call renew alignment to ensure all elements are aligned correctly
+        RenewAlignment(registry, uiBoxEntity);
     }
     std::string box::DebugPrint(entt::registry &registry, entt::entity self, int indent)
     {

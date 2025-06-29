@@ -28,6 +28,8 @@ namespace game {
             fullscreenShaders.end());
     }
 
+    extern void unload();
+
     // make layers to draw to
     extern std::shared_ptr<layer::Layer> background;  // background
     extern std::shared_ptr<layer::Layer> sprites;     // sprites

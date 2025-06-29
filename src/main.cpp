@@ -321,10 +321,7 @@ int main(void)
     init::startInit();
     main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
     
-    // always make container entity by default
-    globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
-    auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
-    gameMapNode.debug.debugText = "Map Container";
+
 
     game::init();
     

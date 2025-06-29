@@ -1109,11 +1109,23 @@ namespace ui
                 if (!config->no_recalc && config->prev_ref_value && reflection::meta_any_to_string(config->prev_ref_value).size() != config->text->size())
                 {
                     //TODO: doesn't this  need to be a uibox?
-                    ui::box::Recalculate(registry, entity);
+                    ui::box::RenewAlignment(registry, entity);
                 }
 
                 // Store updated text
                 config->prev_ref_value = value;
+            }
+        }
+        else if (config->textGetter)
+        {
+            auto result = config->textGetter.value()();
+            // compare to text getter
+            if (config->text != result)
+            {
+                config->text = result;
+                // renew alignment if text changed
+                
+                ui::box::RenewAlignment(registry, entity);
             }
         }
     }

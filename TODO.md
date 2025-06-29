@@ -12,7 +12,7 @@
 - [ ] need functionality to completely reset game state right from the game, via a debug menu, and reload scripts
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 - [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter? -> https://chatgpt.com/share/685d3104-e724-800a-90d8-08ac15bd9bdc 
-- [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines
+- [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines -> try https://chatgpt.com/share/6860daff-9b78-800a-ae2f-6131aa0c8344
 - [ ] Dont update text and ui that is out of bounds
 - [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/685d2fb9-9b88-800a-a2f5-580a172bb94e 
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
@@ -23,11 +23,47 @@
 - [ ] an option to have text centered the moment it's created
 - [ ] same with windows
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
-- [ ] Also, how to do tags for dynamic text? Or mix so that only part of the text is dynamic, and everything else static? How to update static text? Easy way to access text & elements on already created ui?
+- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3
+- [ ]  Easy way to access text & elements on already created ui? -> I already have getUIEbyID, document it, also get a way to ensure I'm interacting with the text/animation object itself, rather than the object uielement that wraps it -> https://chatgpt.com/share/6860e021-29d4-800a-9b4e-aaa7bc0ed4ae
 - [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss
 - [ ] use backgrounds & images for the tooltip text
-- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision) -> https://chatgpt.com/share/685d2e0c-f11c-800a-b0fd-f76e4fb7c701
-- [ ] on_collision hook needs to be set up properly - also, it double-notifies? how to handle? - fine tune collision between transforms, check for collision enabled, etc. I don't actually know if I need it right now, and I don't have entity-to-entity collision-just broad box based collision. If that's accurate enough, so be it. otherwise it's going to require checking whether something is collideable first, then checking if the two collide.
+- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision) need to ignore transform components which aren't collision enabled in an efficient manner -> https://chatgpt.com/share/6860eae3-67a8-800a-b105-849b6c82de32
+
+```lua
+
+-- create custom collider entity which is always, underneath, a transform. But it should have custom types like (circle) which will decide how the collision system resolves the collision
+local collider = create_collider(Colliders.TRANSFORM)
+
+-- "attach" to a location or another transform entity
+attach_collider_to_transform(collider, {offsetX = 0, offsetY = 50})
+
+-- give it a ScriptComponent with an onCollision method
+local ColliderLogic = {
+    -- Custom data carried by this table
+    speed        = 150, -- pixels / second
+    hp           = 10,
+
+    -- Called once, right after the component is attached.
+    init         = function(self)
+    end,
+
+    -- Called every frame by script_system_update()
+    update       = function(self, dt)
+    end,
+
+    on_collision = function(self, other)
+    end,
+
+    -- Called just before the entity is destroyed
+    destroy      = function(self)
+    end
+}
+registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
+
+-- now it will be checked in collision.
+
+```
+
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
 - [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code) - > ui code optimization (https://chatgpt.com/share/685d32c8-ca0c-800a-bf66-eb3ff96fa4a6)
 - [ ] general code optimizations: https://chatgpt.com/share/685d33b6-129c-800a-86f4-a4f708f4ad50 

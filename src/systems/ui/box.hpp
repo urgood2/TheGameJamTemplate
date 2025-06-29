@@ -66,7 +66,105 @@ namespace ui {
                 entt::registry &registry,
                 entt::entity        boxEntity,
                 std::vector<entt::entity> &out);
+                
+        
 
     }
+    
+    // a ui element wrapper that can be used to access UI elements in a more convenient way from lua            
+    struct UIElementHandle {
+        entt::registry* reg;
+        entt::entity   elem;
+
+        UIElementHandle(entt::registry* r = nullptr, entt::entity e = entt::null)
+            : reg(r), elem(e) {}
+
+        // Fetch by string id under a UIBox entity
+        static std::optional<UIElementHandle>
+        getById(entt::registry& r, entt::entity boxEntity, const std::string& id) {
+            auto result = ui::box::GetUIEByID(r, boxEntity, id);
+            if (result) return UIElementHandle(&r, *result);
+            return std::nullopt;
+        }
+
+        // Get parent UI element (or null)
+        UIElementHandle parent() const {
+            if (!reg || elem == entt::null) return {reg, entt::null};
+            auto &node = reg->get<transform::GameObject>(elem);
+            if (node.parent) return UIElementHandle(reg, node.parent.value());
+            return {reg, entt::null};
+        }
+
+        // Get all direct children handles
+        std::vector<UIElementHandle> children() const {
+            std::vector<UIElementHandle> out;
+            if (!reg || elem == entt::null) return out;
+            auto &node = reg->get<transform::GameObject>(elem);
+            for (auto child : node.orderedChildren) {
+                out.emplace_back(reg, child);
+            }
+            return out;
+        }
+
+        // Move this element (and its subtree) under a new parent
+        void moveTo(const UIElementHandle& newParent) const {
+            if (!reg || elem == entt::null) return;
+            // Remove from old parent's containers
+            auto &selfNode = reg->get<transform::GameObject>(elem);
+            if (selfNode.parent) {
+                auto oldParent = selfNode.parent.value();
+                auto &oldGO = reg->get<transform::GameObject>(oldParent);
+                // erase from map and vector
+                if (auto* cfg = reg->try_get<UIConfig>(elem)) {
+                    oldGO.children.erase(cfg->id.value());
+                }
+                oldGO.orderedChildren.erase(
+                    std::remove(oldGO.orderedChildren.begin(), oldGO.orderedChildren.end(), elem),
+                    oldGO.orderedChildren.end());
+            }
+            
+            // Attach to new parent
+            selfNode.parent = newParent.elem;
+            if (auto* cfg = reg->try_get<UIConfig>(elem)) {
+                auto &newGO = reg->get<transform::GameObject>(newParent.elem);
+                newGO.children[cfg->id.value()] = elem;
+                newGO.orderedChildren.push_back(elem);
+                cfg->groupParent = newParent.elem;
+            }
+        }
+
+        // Recursively destroy this element and any attached UI object
+        void destroyRecursive() const {
+            if (!reg || elem == entt::null) return;
+            // post-order traversal
+            ui::box::TraverseUITreeBottomUp(*reg, elem, [&](entt::entity e) {
+                // destroy associated GameObject if present
+                if (auto* cfg = reg->try_get<UIConfig>(e)) {
+                    if (cfg->object) {
+                        reg->destroy(cfg->object.value());
+                    }
+                }
+                reg->destroy(e);
+            });
+        }
+
+        // True if this element wraps a GameObject
+        bool isObjectWrapper() const {
+            if (!reg || elem == entt::null) return false;
+            if (auto* cfg = reg->try_get<UIConfig>(elem)) {
+                return cfg->uiType == UITypeEnum::OBJECT && cfg->object.has_value();
+            }
+            return false;
+        }
+
+        // Return the wrapped GameObject entity (undefined if not a wrapper)
+        entt::entity getWrappedObject() const {
+            if (auto* cfg = reg->try_get<UIConfig>(elem)) {
+                return cfg->object.value_or(entt::null);
+            }
+            return entt::null;
+        }
+    };
+                
 
 }

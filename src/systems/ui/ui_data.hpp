@@ -13,6 +13,7 @@
 #include "systems/layer/layer.hpp"
 #include "systems/reflection/reflection.hpp"
 
+
 //Note: uibox is master to all ui elements within it, including the root element.
 // UI box does not have any children within the ui hierarchy.
 // Each ui element can have a parent (root ui element or some other element below that)
@@ -878,5 +879,6 @@ namespace ui
                    transform::GameObject,
                    transform::Transform
                  >()) globalUIGroup;
-
+    
+    
 }

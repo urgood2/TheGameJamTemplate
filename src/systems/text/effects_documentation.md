@@ -1,4 +1,5 @@
 🔤 **Text Effects Quick Reference**
+Note this is only for dynamic text, not static ui text.
 
 | Effect     | Description                  | Arguments (in order)                                      |
 |------------|------------------------------|------------------------------------------------------------|

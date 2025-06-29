@@ -6,27 +6,14 @@
 ## 🧠 General Design / Architecture
 
 ## to test:
+- [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter? -> https://chatgpt.com/share/685d3104-e724-800a-90d8-08ac15bd9bdc 
+
+- [ ] need functionality to completely reset game state right from the game, via a debug menu, and reload script
+- [ ]  Easy way to access text & elements on already created ui? -> I already have getUIEbyID, document it, also get a way to ensure I'm interacting with the text/animation object itself, rather than the object uielement that wraps it -> https://chatgpt.com/share/6860e021-29d4-800a-9b4e-aaa7bc0ed4ae
 
 
 ## Kinda high priority
-- [ ] need functionality to completely reset game state right from the game, via a debug menu, and reload scripts
-- [ ] function that takes two entities and ensures one will appear above the other using layer order comp
-- [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter? -> https://chatgpt.com/share/685d3104-e724-800a-90d8-08ac15bd9bdc 
-- [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines -> try https://chatgpt.com/share/6860daff-9b78-800a-ae2f-6131aa0c8344
-- [ ] Dont update text and ui that is out of bounds
-- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/685d2fb9-9b88-800a-a2f5-580a172bb94e 
--  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
-- [ ] Way to “tag” particles with a tag component, then remove them all at once
-- [ ] particles - Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
-- [ ] maybe some way to remove boilerplace for lua ui generation? -> https://chatgpt.com/share/685d31e0-282c-800a-8805-65dcbdc6de9a
-- [ ] maybe some way to reduce registry:get boilerplace? (is there one already in place?)
-- [ ] an option to have text centered the moment it's created
-- [ ] same with windows
-- [ ] way to keep track of y-values for successive test mesages so they don't overlap
-- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3
-- [ ]  Easy way to access text & elements on already created ui? -> I already have getUIEbyID, document it, also get a way to ensure I'm interacting with the text/animation object itself, rather than the object uielement that wraps it -> https://chatgpt.com/share/6860e021-29d4-800a-9b4e-aaa7bc0ed4ae
-- [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss
-- [ ] use backgrounds & images for the tooltip text
+
 - [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision) need to ignore transform components which aren't collision enabled in an efficient manner -> https://chatgpt.com/share/6860eae3-67a8-800a-b105-849b6c82de32
 
 ```lua
@@ -64,10 +51,24 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 
 ```
 
-- [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
+- [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines -> try https://chatgpt.com/share/6860daff-9b78-800a-ae2f-6131aa0c8344
+- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3
+- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/685d2fb9-9b88-800a-a2f5-580a172bb94e
+
+- [ ] function that takes two entities and ensures one will appear above the other using layer order comp
+- [ ] Dont update text and ui that is out of bounds 
+-  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
+- [ ] Way to “tag” particles with a tag component, then remove them all at once
+- [ ] particles - Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
+- [ ] maybe some way to remove boilerplate for lua ui generation? -> https://chatgpt.com/share/685d31e0-282c-800a-8805-65dcbdc6de9a
+- [ ] maybe some way to reduce registry:get boilerplate? (is there one already in place?)
+- [ ] an option to have text centered the moment it's created
+- [ ] same with windows
+- [ ] way to keep track of y-values for successive test mesages so they don't overlap
+- [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss
+- [ ] use backgrounds & images for the tooltip text
 - [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code) - > ui code optimization (https://chatgpt.com/share/685d32c8-ca0c-800a-bf66-eb3ff96fa4a6)
 - [ ] general code optimizations: https://chatgpt.com/share/685d33b6-129c-800a-86f4-a4f708f4ad50 
-
 
 # Documentation
 - [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
@@ -83,7 +84,6 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
     The first idea would be a lot to add. So i would say the magnifying glass would work well if you just want to get it working.
     SOme fixes/improvments: -make grid appear only when placing. -notify user when a building is unlocked, otherwise they have no idea
 - [ ] relocate tooltips for krill & whale
-
 - [ ] pause functionality
 
 
@@ -122,6 +122,8 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 ---
 
 ## Immediate laters
+
+- [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
 - [ ] how to request a new GOAP plan and run it from lua?
 - [ ] Utilize controller focus interactivity focus funneling in the above ui
     - [ ] redirect_focus_to: "When navigating focus, skip me and send it to this node instead."

@@ -52,24 +52,26 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 
 ## Kinda high priority
 
+- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/68624700-963c-800a-b35e-53d2c4699da2 -> additional quadtree. needs to be implemented.
+- [ ] maybe some way to remove boilerplate for lua ui generation? -> https://chatgpt.com/share/685d31e0-282c-800a-8805-65dcbdc6de9a
+- [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code) - > ui code optimization (https://chatgpt.com/share/685d32c8-ca0c-800a-bf66-eb3ff96fa4a6)
+- [ ] general code optimizations: https://chatgpt.com/share/685d33b6-129c-800a-86f4-a4f708f4ad50 
 
-
-- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/685d2fb9-9b88-800a-a2f5-580a172bb94e
 
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp
 - [ ] Dont update text and ui that is out of bounds 
 -  [ ] lua utility with table specifying anim, hoverable/clickable/draggable, size, shader passes
 - [ ] Way to “tag” particles with a tag component, then remove them all at once
 - [ ] particles - Shadow or no shadow specifier - also, give the shadow its own z layer in the render code
-- [ ] maybe some way to remove boilerplate for lua ui generation? -> https://chatgpt.com/share/685d31e0-282c-800a-8805-65dcbdc6de9a
+
 - [ ] maybe some way to reduce registry:get boilerplate? (is there one already in place?)
 - [ ] an option to have text centered the moment it's created
 - [ ] same with windows
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
-- [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss
-- [ ] use backgrounds & images for the tooltip text
-- [ ] do an overview of the lua code, see what bindings I can improve, what calls I can combine (for instance, the animation replaceing & resizing code) - > ui code optimization (https://chatgpt.com/share/685d32c8-ca0c-800a-bf66-eb3ff96fa4a6)
-- [ ] general code optimizations: https://chatgpt.com/share/685d33b6-129c-800a-86f4-a4f708f4ad50 
+- [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss\
+
+
+
 
 # Documentation
 - [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.

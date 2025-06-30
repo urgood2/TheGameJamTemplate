@@ -118,13 +118,15 @@ namespace globals
     
     // collision detection
     // Function to get the bounding box of an entity
-    extern std::function<quadtree::Box<float>(entt::entity)> getBox;
+    extern std::function<quadtree::Box<float>(entt::entity)> getBoxWorld;
+    extern std::function<quadtree::Box<float>(entt::entity)> getBoxUI;
 
     // Define the world bounds for the quadtree
     extern quadtree::Box<float> worldBounds;
 
     // Quadtree instance for collision detection
-    extern quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree;
+    extern quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeWorld;
+    extern quadtree::Quadtree<entt::entity, decltype(getBoxUI)> quadtreeUI;
 
     //---------------------------------------------------------
     // variables

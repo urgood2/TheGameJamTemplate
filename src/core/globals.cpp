@@ -71,7 +71,7 @@ namespace globals {
     int worldWidth{}, worldHeight{}; // world dimensions
     
     // collision detection
-    std::function<quadtree::Box<float>(entt::entity)> getBox = [](entt::entity e) -> quadtree::Box<float> {
+    std::function<quadtree::Box<float>(entt::entity)> getBoxWorld = [](entt::entity e) -> quadtree::Box<float> {
         auto &transform = globals::registry.get<transform::Transform>(e);
     
         const float x = transform.getActualX();
@@ -97,7 +97,8 @@ namespace globals {
     };
     
     quadtree::Box<float> worldBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the world bounds for the quadtree
-    quadtree::Quadtree<entt::entity, decltype(getBox)> quadtree(worldBounds, getBox);
+    quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeWorld(worldBounds, getBoxWorld);
+    quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeUI(worldBounds, getBoxWorld);
 
     // Keep track of loading messages
     std::map<int, std::string> loadingStages;

@@ -5,6 +5,7 @@
 #include "core/globals.hpp"
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
+#include "systems/collision/broad_phase.hpp"
 
 #include "systems/layer/layer_command_buffer.hpp"
 

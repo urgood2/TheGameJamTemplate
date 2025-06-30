@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
-
+#include "systems/collision/broad_phase.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
@@ -1657,7 +1657,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         if (!globals::worldBounds.contains(queryBox)) return {};
     
         // 1) broadphase
-        auto candidates = globals::quadtree.query(queryBox);
+        auto candidates = globals::quadtreeWorld.query(queryBox);
     
         // 2) precise filter
         std::vector<entt::entity> filtered;
@@ -1795,7 +1795,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
     
         // Query quadtree for potential candidates
-        auto results = globals::quadtree.query(queryBox);
+        auto results = globals::quadtreeWorld.query(queryBox);
     
         // Sort by layer order (topmost last)
         std::sort(results.begin(), results.end(), [](entt::entity a, entt::entity b) {

@@ -17,6 +17,7 @@
 #include "util/utilities.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/transform/transform.hpp"
+#include "systems/collision/broad_phase.hpp"
 
 #include "core/init.hpp"
 

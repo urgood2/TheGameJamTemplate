@@ -16,7 +16,16 @@
 
 namespace collision {
     
-    using namespace transform; // for Transform, GameObject, etc.
+    using namespace transform; // for Transform, GameObject, etc
+
+
+    
+    struct ScreenSpaceCollisionMarker {}; // for the ui quadtree. anything thatd doesn't have this is preusmed world space
+
+    // This is for screen space objects that shouuld be added to the world space quadtree temporarily
+    struct CrossSpaceCollisionMarker {
+    };
+
     
     // shape tags:
     enum class ColliderType { AABB, Circle /*, Capsule, Polygon…*/ };

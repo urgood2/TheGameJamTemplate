@@ -194,6 +194,13 @@ namespace game
         return out;
     };
 
+    bool shouldGoInWorldSpace(entt::entity e) {
+    return !globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e) || globals::registry.all_of<collision::CrossSpaceCollisionMarker(e);
+}
+bool shouldGoInScreenSpace(entt::entity e) {
+    return globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e) || globals::registry.all_of<collision::CrossSpaceCollisionMarker(e);
+}
+
     auto initCollisionEveryFrame() -> void
     {
         using namespace quadtree;
@@ -209,18 +216,18 @@ namespace game
         expandedBounds.height = globals::worldBounds.getSize().y + 2 * buffer;
 
         // 2) reset the quadtree using the bigger area
-        globals::quadtree = Quadtree<entt::entity, decltype(globals::getBox)>(
+        globals::quadtreeWorld = Quadtree<entt::entity, decltype(globals::getBoxWorld)>(
             expandedBounds,
-            globals::getBox
+            globals::getBoxWorld
         );
 
         // Populate the Quadtree Per Frame
         globals::registry.view<transform::Transform>(entt::exclude<collision::ColliderComponent>).each([&](entt::entity e, transform::Transform& transform) {
             
-            auto box = globals::getBox(e);
+            auto box = globals::getBoxWorld(e);
             if (expandedBounds.contains(box)) {
                 // Add the entity to the quadtree if it is within the expanded bounds
-                globals::quadtree.add(e);
+                globals::quadtreeWorld.add(e);
             } 
                 
         });
@@ -229,15 +236,15 @@ namespace game
         globals::registry.view<collision::ColliderComponent, transform::GameObject>()
             .each([&](entt::entity e, auto &col, auto &go){
                 if (!go.state.collisionEnabled) return;
-                auto box = globals::getBox(e);
+                auto box = globals::getBoxWorld(e);
                 if (expandedBounds.contains(box)) {
                     // Add the entity to the quadtree if it is within the expanded bounds
-                    globals::quadtree.add(e);
+                    globals::quadtreeWorld.add(e);
                 } ;
             });
             
         // broad phase collision detection
-        auto raw = globals::quadtree.findAllIntersections();
+        auto raw = globals::quadtreeWorld.findAllIntersections();
         
         // Deduplicate & normalize the pairs
         auto pairs = dedupePairs(raw);
@@ -433,6 +440,8 @@ namespace game
 
         if (game::isPaused)
             return;
+
+        // TODO: anything that ha s
 
         // auto viewUIBox = globals::registry.view<ui::UIBoxComponent>();
         // for (auto e : viewUIBox)

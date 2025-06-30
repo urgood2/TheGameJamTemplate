@@ -2,6 +2,7 @@
 
 #include "systems/text/textVer2.hpp"
 #include "systems/layer/layer_order_system.hpp"
+#include "systems/collision/broad_phase.hpp"
 #include "components/graphics.hpp"
 #include "inventory_ui.hpp"
 #include "core/globals.hpp"
@@ -28,7 +29,10 @@ namespace ui
         {
             UIElementTemplateNode *def;
             entt::entity parent;
-        };
+        }; 
+
+        // make ui box screen space as well
+        registry.emplace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
 
         std::stack<StackEntry> stack;
         std::unordered_map<UIElementTemplateNode *, entt::entity> nodeToEntity;
@@ -42,6 +46,8 @@ namespace ui
 
             // Create new UI element
             entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def->type, def->config);
+            // make screen space  no matter what
+            registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
             nodeToEntity[def] = entity;
             auto *config = registry.try_get<UIConfig>(entity);
 
@@ -85,6 +91,9 @@ namespace ui
             {
                 auto &node = registry.get<transform::GameObject>(config->object.value());
                 node.state.clickEnabled = false;
+
+                // make the object also screen space
+                registry.emplace<collision::ScreenSpaceCollisionMarker>(config->object.value());
             }
 
             // If text, pre-calculate text bounds
@@ -2038,7 +2047,7 @@ namespace ui
         // TODO: document what a container is relative to hierarchy too
 
         // so this sets the uiRoot hierarchy (all ui elements in ui box) to be inside container
-        // then it sets the uibox itself to be inside container as well.
+        // then it sets the uibox itself to be inside containerp as well.
         transform::ConfigureContainerForEntity(&registry, uiBox->uiRoot.value(), container);
         transform::ConfigureContainerForEntity(&registry, self, container);
     }

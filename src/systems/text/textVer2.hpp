@@ -120,6 +120,18 @@ namespace TextSystem
         
         
         bool applyTransformRotationAndScale = true; // whether to apply the transform rotation and scale to this character. If false, dynamic motion, rotation, scale changes to the base transform will not affect the final output.
+        
+        // NEW: enable typing effect, with arbitrary pauses
+        float       typingSpeed       = 0.1f;
+        struct WaitPoint {
+            size_t    charIndex;    // index **after** which we pause
+            enum Type { Key, Mouse, Lua } type;
+            std::string id;         // e.g. "KEY_RIGHT" or "callbackID"
+            bool      triggered     = false;
+        };
+        std::vector<WaitPoint> waitPoints;
+        std::unordered_map<std::string, sol::coroutine> luaWaiters;
+
     };
 
     namespace Builders
@@ -205,6 +217,8 @@ namespace TextSystem
     {
 
         // extern void initEffects();
+        
+        extern void preprocessTypingInlineTags(Text &txt);
 
         extern Character createCharacter(entt::entity textEntity, int codepoint, const Vector2 &startPosition, const Font &font, float fontSize,
             float &currentX, float &currentY, float wrapWidth, Text::Alignment alignment,
@@ -214,7 +228,7 @@ namespace TextSystem
 
         extern ParsedEffectArguments splitEffects(const std::string &effects);
         
-        extern auto createTextEntity(const Text &text, float x, float y) -> entt::entity;
+        extern auto createTextEntity(const Text &text, float x, float y, sol::optional<sol::table> waitersOpt = sol::nullopt) -> entt::entity;
         
         extern Vector2 calculateBoundingBox (entt::entity textEntity);
 
@@ -230,6 +244,10 @@ namespace TextSystem
             int index, int &lineNumber);
 
         extern void parseText(entt::entity textEntity);
+        void handleWaitSentinelChar(int codepoint, TextSystem::Text &text,
+                                    int &codepointIndex,
+                                    const char *&currentPos, int codepointSize,
+                                    int &retFlag);
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments);
         extern void updateText(entt::entity textEntity, float dt);
 

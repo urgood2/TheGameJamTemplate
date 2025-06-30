@@ -3895,12 +3895,16 @@ function TextSystem.Functions.adjustAlignment(...) end
 function TextSystem.Functions.splitEffects(...) end
 
 ---
---- Creates a new text entity in the world.
+--- Creates a new text entity in the world.  If you pass a table of callbacks—
+each value must be a function that returns true when its wait condition is met—
+they will be stored in the Text component under txt.luaWaiters[alias].
 ---
----@param text TextSystem.Text # The text configuration object.
----@param x number # The initial x-position.
----@param y number # The initial y-position.
----@return Entity
+---@param text TextSystem.Text                # The text configuration object.
+---@param x number                            # The initial x-position.
+---@param y number                            # The initial y-position.
+---@param[opt] waiters table<string,function> # Optional map of wait-callbacks by alias.
+---@return Entity                             # The newly created text entity.
+
 function TextSystem.Functions.createTextEntity(...) end
 
 ---

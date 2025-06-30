@@ -359,12 +359,16 @@ namespace TextSystem
         );
 
         rec.bind_function(lua, {"TextSystem","Functions"}, "createTextEntity",
-            &TextSystem::Functions::createTextEntity,
-            "---@param text TextSystem.Text # The text configuration object.\n"
-            "---@param x number # The initial x-position.\n"
-            "---@param y number # The initial y-position.\n"
-            "---@return Entity",
-            "Creates a new text entity in the world."
+                &TextSystem::Functions::createTextEntity,
+            // LuaDoc
+            "---@param text TextSystem.Text                # The text configuration object.\n"
+            "---@param x number                            # The initial x-position.\n"
+            "---@param y number                            # The initial y-position.\n"
+            "---@param[opt] waiters table<string,function> # Optional map of wait-callbacks by alias.\n"
+            "---@return Entity                             # The newly created text entity.\n",
+            "Creates a new text entity in the world.  If you pass a table of callbacks—\n"
+            "each value must be a function that returns true when its wait condition is met—\n"
+            "they will be stored in the Text component under txt.luaWaiters[alias]."
         );
 
         rec.bind_function(lua, {"TextSystem","Functions"}, "calculateBoundingBox",
@@ -485,7 +489,7 @@ namespace TextSystem
     {
         
         // automatically runs parseText() on the given text configuration and returns a transform-enabled entity
-        auto createTextEntity(const Text &text, float x, float y) -> entt::entity
+        auto createTextEntity(const Text &text, float x, float y, sol::optional<sol::table> waitersOpt) -> entt::entity
         {
             auto entity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, x, y, 1, 1);
             auto &transform = globals::registry.get<transform::Transform>(entity);
@@ -516,6 +520,33 @@ namespace TextSystem
                     // SPDLOG_DEBUG("Applying global effects for tag: {}", tag);
                 }
             }
+            
+            // 2) stash any lua callbacks into your Text component
+            auto &txtComp = globals::registry.get<Text>(entity);
+            if (waitersOpt) {
+                sol::table tbl = *waitersOpt;
+                for (auto &kv : tbl) {
+                    // alias, raw Lua function
+                    std::string alias     = kv.first.as<std::string>();
+                    sol::function raw_fn  = kv.second;
+        
+                    // --- COROUTINE BOILERPLATE ---
+                    // create a new thread (so each waiter has its own stack)
+                    sol::thread thr = sol::thread::create(raw_fn.lua_state());
+                    sol::state_view thread_view{ thr.state() };
+                    // bind the raw function into that thread
+                    thread_view["__waiter_fn"] = raw_fn;
+                    // grab it back as a thread-local function
+                    sol::function thread_fn  = thread_view["__waiter_fn"];
+                    // finally wrap it in a coroutine
+                    sol::coroutine co{ thread_fn };
+                    // -------------------------------
+        
+                    // store it under its alias
+                    txtComp.luaWaiters[alias] = std::move(co);
+                }
+            }
+        
 
             //TODO: testing
             // gameObject.state.dragEnabled = true;
@@ -928,6 +959,17 @@ namespace TextSystem
             Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
             
             // spdlog::debug("Parsing text: {}", text.rawText);
+            spdlog::debug("[preprocess] before: `{}`", text.rawText);
+            preprocessTypingInlineTags(text);
+            spdlog::debug("[preprocess] after: `{}`", text.rawText);
+            
+            for (size_t i = 0; i < text.waitPoints.size(); ++i) {
+            spdlog::debug(" waitPoint[{}] → type={}, id=`{}`, charIndex={}",
+                            i,
+                            magic_enum::enum_name<Text::WaitPoint::Type>(text.waitPoints[i].type),
+                            text.waitPoints[i].id,
+                            text.waitPoints[i].charIndex);
+            }
 
             const char *rawText = text.rawText.c_str();
 
@@ -963,6 +1005,24 @@ namespace TextSystem
 
                     int codepointSize = 0;
                     int codepoint = GetCodepointNext(currentPos, &codepointSize);
+                    if (codepoint == 0x01) {
+                        // This is a wait-sentinel.  The *next* real character will have index=codepointIndex.
+                        // Tie it back to the first unfilled waitPoint in FIFO order:
+                        for (size_t w = 0; w < text.waitPoints.size(); ++w) {
+                            auto &wp = text.waitPoints[w];
+                            if (wp.charIndex == SIZE_MAX) {
+                                wp.charIndex = codepointIndex;
+                                spdlog::debug("[parseText] waitPoint[{}] → charIndex = {}",
+                                              w, codepointIndex);
+                                break;
+                            }
+                        }
+                        // don’t produce a visible Character for the sentinel:
+                        currentPos += codepointSize; // Advance pointer
+                        codepointIndex++;
+                        continue;
+                    }
+                    
 
                     if (codepoint == '\n') // Handle line breaks
                     {
@@ -986,6 +1046,15 @@ namespace TextSystem
                         {
                             int lookaheadCodepointSize = 0;
                             int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadCodepointSize);
+                            
+                            if (codepoint == 0x01) {
+                                // This is a wait-sentinel. 
+                                // skip it and continue to the next character
+                                
+                                // Advance the lookahead pointer
+                                lookaheadPos += lookaheadCodepointSize;
+                                continue;
+                            }
 
                             // Measure the size of the character and add to the word's width
                             lookaheadChar = CodepointToString(lookaheadCodepoint);
@@ -1126,6 +1195,24 @@ namespace TextSystem
 
                 int codepointSize = 0;
                 int codepoint = GetCodepointNext(currentPos, &codepointSize);
+                
+                if (codepoint == 0x01) {
+                    // tie back to the first unfilled waitPoint
+                    for (size_t w = 0; w < text.waitPoints.size(); ++w) {
+                        auto &wp = text.waitPoints[w];
+                        if (wp.charIndex == SIZE_MAX) {
+                            wp.charIndex = codepointIndex;
+                            spdlog::debug("[parseText] waitPoint[{}] → charIndex = {}",
+                                          w, codepointIndex);
+                            break;
+                        }
+                    }
+                    // advance past sentinel
+                    currentPos += codepointSize;
+                    codepointIndex++;
+                    continue;
+                }
+                
 
                 if (codepoint == '\n') // Handle line breaks
                 {
@@ -1149,6 +1236,15 @@ namespace TextSystem
                     {
                         int lookaheadCodepointSize = 0;
                         int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadCodepointSize);
+                        
+                        if (lookaheadCodepoint == 0x01) {
+                            // This is a wait-sentinel. 
+                            // skip it and continue to the next character
+                            
+                            // Advance the lookahead pointer
+                            lookaheadPos += lookaheadCodepointSize;
+                            continue;
+                        }
 
                         // Measure the size of the character and add to the word's width
                         lookaheadChar = CodepointToString(lookaheadCodepoint);
@@ -1245,11 +1341,29 @@ namespace TextSystem
                 auto &lastCharacter = text.characters.back();
                 lastCharacter.isFinalCharacterInText = true;
             }
+            
+            // enable pop-in effect if specified
+            if (text.pop_in_enabled) {
+                for (size_t i = 0; i < text.characters.size(); ++i) {
+                    auto &ch = text.characters[i];
+                    ch.pop_in       = 0.0f;
+                    ch.pop_in_delay = i * text.typingSpeed;
+                }
+            }
+              
         
             // gotta reflect final width and height
             auto [width, height] = calculateBoundingBox(textEntity);
             transform.setActualW(width);
             transform.setActualH(height);
+            
+            
+            spdlog::debug("— finished parseText(), total chars = {}", codepointIndex);
+            for (size_t w = 0; w < text.waitPoints.size(); ++w) {
+                auto &wp = text.waitPoints[w];
+                spdlog::debug(" waitPoint[{}] id=`{}` → charIndex={}",
+                            w, wp.id, wp.charIndex);
+            }
         }
 
         void handleEffectSegment(const char *&effectPos, std::vector<float> &lineWidths, float &currentLineWidth, float &currentX, entt::entity textEntity, float &currentY, int &lineNumber, int &codepointIndex, TextSystem::ParsedEffectArguments &parsedArguments)
@@ -1265,6 +1379,24 @@ namespace TextSystem
             {
                 int codepointSize = 0;
                 int codepoint = GetCodepointNext(effectPos, &codepointSize);
+                
+                if (codepoint == 0x01) {
+                    // This is a wait-sentinel.  The *next* real character will have index=codepointIndex.
+                    // Tie it back to the first unfilled waitPoint in FIFO order:
+                    for (size_t w = 0; w < text.waitPoints.size(); ++w) {
+                        auto &wp = text.waitPoints[w];
+                        if (wp.charIndex == SIZE_MAX) {
+                            wp.charIndex = codepointIndex;
+                            spdlog::debug("[parseText] waitPoint[{}] → charIndex = {}",
+                                          w, codepointIndex);
+                            break;
+                        }
+                    }
+                    // don’t produce a visible Character for the sentinel:
+                    effectPos += codepointSize;
+                    codepointIndex++;
+                    continue;
+                }
 
                 // check wrapping for first character
                 if (firstCharacter && text.wrapMode == Text::WrapMode::CHARACTER) {
@@ -1279,6 +1411,14 @@ namespace TextSystem
                     {
                         int lookaheadSize = 0;
                         int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadSize);
+                        if (lookaheadCodepoint == 0x01) {
+                            // This is a wait-sentinel. 
+                            // skip it and continue to the next character
+                            
+                            // Advance the lookahead pointer
+                            lookaheadPos += lookaheadSize;
+                            continue;
+                        }
                         std::string utf8Char = CodepointToString(lookaheadCodepoint);
                         //TODO: spacing should omitted if the previous character is a space or the first character of the string
                         nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x  * text.renderScale;
@@ -1318,6 +1458,14 @@ namespace TextSystem
                         {
                             int lookaheadSize = 0;
                             int lookaheadCodepoint = GetCodepointNext(lookaheadPos, &lookaheadSize);
+                            if (lookaheadCodepoint == 0x01) {
+                                // This is a wait-sentinel. 
+                                // skip it and continue to the next character
+                                
+                                // Advance the lookahead pointer
+                                lookaheadPos += lookaheadSize;
+                                continue;
+                            }
                             std::string utf8Char = CodepointToString(lookaheadCodepoint);
                             //TODO: spacing should omitted if the previous character is a space or the first character of the string
                             nextWordWidth += text.fontData.spacing + MeasureTextEx(text.fontData.font, utf8Char.c_str(), text.fontSize, 1.0f).x * text.renderScale;
@@ -1373,6 +1521,40 @@ namespace TextSystem
                 firstCharacter = false;
             }
         }
+    
+        void preprocessTypingInlineTags(Text &txt) {
+            std::regex tagRe(R"(<(\w+)(?:=([^,>]+)(?:,([^>]+))?)?>)");
+            std::smatch m;
+            std::string s = txt.rawText;
+        
+            while (std::regex_search(s, m, tagRe)) {
+                std::string name = m[1].str();
+                std::string arg1 = m[2].matched ? m[2].str() : "";
+                std::string arg2 = m[3].matched ? m[3].str() : "";
+        
+                if (name == "typing") {
+                    txt.pop_in_enabled = true;
+                    if (arg1.rfind("speed=",0) == 0)
+                    txt.typingSpeed = std::stof(arg1.substr(6));
+                    else if (arg2.rfind("speed=",0) == 0)
+                    txt.typingSpeed = std::stof(arg2.substr(6));
+                }
+                else if (name == "wait") {
+                    Text::WaitPoint wp;
+                    wp.type      = (arg1 == "key"   ? Text::WaitPoint::Key
+                                    : arg1 == "mouse" ? Text::WaitPoint::Mouse
+                                                    : Text::WaitPoint::Lua);
+                    wp.id        = arg2;          // e.g. "KEY_RIGHT" or "myLuaCallback"
+                    wp.charIndex = SIZE_MAX;      // mark “not known yet”
+                    txt.waitPoints.push_back(wp);
+                }
+        
+                // Replace the entire tag with exactly 1 sentinel character:
+                s.replace(m.position(0), m.length(0), "\x01");
+            }
+            txt.rawText = std::move(s);
+        }
+        
         
         void setText(entt::entity textEntity, const std::string &text)
         {
@@ -1442,16 +1624,58 @@ namespace TextSystem
                 character.shadowDisplacement.x = ((textTransform.getActualX() + textTransform.getActualW() / 2) - (gameWorldTransform.getActualX() + gameWorldTransform.getActualW() / 2)) / (gameWorldTransform.getActualW() / 2) * 1.5f;
 
                 // Apply Pop-in Animation
-                //TODO: deprecated, use pop effect instead
-                // if (character.pop_in && character.pop_in < 1.0f)
-                // {
-                //     float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
-                //     if (elapsedTime > 0)
-                //     {
-                //         character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
-                //         character.pop_in = character.pop_in.value() * character.pop_in.value(); // Ease-in effect
-                //     }
-                // }
+                if (character.pop_in && character.pop_in < 1.0f)
+                {
+                    float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
+                    if (elapsedTime > 0)
+                    {
+                        character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
+                        character.pop_in = character.pop_in.value() * character.pop_in.value(); // Ease-in effect
+                    }
+                }
+                
+                // 1) see if any pending wait should fire
+                for (auto &wp : text.waitPoints) {
+                    if (!wp.triggered && wp.charIndex < text.characters.size() && character.index == wp.charIndex) {
+                    auto &ch = text.characters[ wp.charIndex ];
+                    // only start waiting once that char is fully popped in
+                    if (ch.pop_in >= 1.0f) {
+                        bool fired = false;
+                        switch (wp.type) {
+                            case Text::WaitPoint::Key:
+                                fired = IsKeyPressed(
+                                magic_enum::enum_cast<KeyboardKey>(wp.id).value()
+                                );
+                                break;
+                            case Text::WaitPoint::Mouse:
+                                fired = IsMouseButtonPressed(
+                                magic_enum::enum_cast<MouseButton>(wp.id).value()
+                                );
+                                break;
+                            case Text::WaitPoint::Lua:
+                                
+                                auto alias = wp.id;
+                                auto &co = text.luaWaiters.at(alias);
+                                sol::protected_function_result result = co();        // resume it
+                                if (!result.valid()) { /* handle error */ 
+                                    SPDLOG_ERROR("Lua coroutine error: {}", result.get<std::string>());
+                                }
+                                else if (co.status() == sol::call_status::yielded) {
+                                    // still yielding (e.g. user did `wait(5)` internally)
+                                    fired = false; // do not set wp.triggered to true
+                                }
+                                else {
+                                    // coroutine finished; get its return value
+                                    bool done = result.get<bool>();
+                                    fired = true;
+                                }
+                                break;
+                            }
+                            if (fired) wp.triggered = true;
+                            else        return;   // block *everything* until they press
+                        }
+                    }
+                }
 
                 // Apply all effects to the character
                 for (const auto &[effectName, effectFunction] : character.effects)

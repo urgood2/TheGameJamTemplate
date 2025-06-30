@@ -1647,79 +1647,118 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      * @return A sorted vector of entities at the specified point, from lowest to highest zIndex.
      *         Entities without a zIndex are placed after those with a zIndex.
      */
-    std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& point) {
+    std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& mouseScreen, Camera2D * camera)
+    {
         using namespace quadtree;
         constexpr float pointBoxSize = 1.0f;
-        Box<float> queryBox{ 
-            {point.x - pointBoxSize*0.5f, point.y - pointBoxSize*0.5f}, 
-            {pointBoxSize, pointBoxSize} 
+
+        // ——— 1) UI pass (screen-space) ———
+        // Build a tiny AABB around the mouse in screen coords
+        Box<float> uiQuery{
+            { mouseScreen.x - 0.5f * pointBoxSize,
+            mouseScreen.y - 0.5f * pointBoxSize },
+            { pointBoxSize, pointBoxSize }
         };
-        if (!globals::worldBounds.contains(queryBox)) return {};
-    
-        // 1) broadphase
-        auto candidates = globals::quadtreeWorld.query(queryBox);
-    
-        // 2) precise filter
-        std::vector<entt::entity> filtered;
-        filtered.reserve(candidates.size());
-        for (auto e : candidates) {
-            if (e == globals::cursor) continue;
-            if (transform::CheckCollisionWithPoint(&globals::registry, e, point)) {
-                filtered.push_back(e);
+
+        std::vector<entt::entity> hits;
+        hits.reserve(32);
+
+        // Only query if inside screen bounds (you can adjust this check if needed)
+        if (globals::uiBounds.contains(uiQuery))
+        {
+            auto uiCands = globals::quadtreeUI.query(uiQuery);
+            for (auto e : uiCands)
+            {
+                // cursor is never in the UI quadtree, but if you store it for some reason:
+                if (e == globals::cursor) continue;
+
+                // precise, rotated‐AABB / SAT test in screen‐space
+                if (transform::CheckCollisionWithPoint(&globals::registry, e, mouseScreen))
+                    hits.push_back(e);
             }
         }
-    
-        // 3) pre‐compute order info so the comparator is fast
-        struct CollisionOrderInfo { bool hasCollisionOrder=false; entt::entity parentBox=entt::null; int treeOrder=0; int layerOrder=0; };
-        auto GetInfo = [&](entt::entity e){
-            CollisionOrderInfo info{};
+
+        // ——— 2) World pass (world-space) ———
+        // Convert the screen‐space mouse to world‐space
+        ::Vector2 mouseWorld = camera ? GetScreenToWorld2D(mouseScreen, *camera) : mouseScreen;
+        Box<float> worldQuery{
+            { mouseWorld.x - 0.5f * pointBoxSize,
+            mouseWorld.y - 0.5f * pointBoxSize },
+            { pointBoxSize, pointBoxSize }
+        };
+
+        if (globals::worldBounds.contains(worldQuery))
+        {
+            auto worldCands = globals::quadtreeWorld.query(worldQuery);
+            for (auto e : worldCands)
+            {
+                // again, cursor is not in quadtreeWorld
+                // but if you ever put it there, you can skip it:
+                if (e == globals::cursor) continue;
+
+                if (transform::CheckCollisionWithPoint(&globals::registry, e, mouseWorld))
+                    hits.push_back(e);
+            }
+        }
+
+        // ——— 3) Sort by your existing layer/tree order ———
+        struct OrderInfo {
+            bool hasOrder = false;
+            entt::entity parentBox = entt::null;
+            int treeOrder  = 0;
+            int layerOrder = 0;
+        };
+        auto getInfo = [&](entt::entity e){
+            OrderInfo info;
             auto &r = globals::registry;
             if (!r.valid(e)) return info;
             if (!r.all_of<transform::GameObject, transform::InheritedProperties>(e))
                 return info;
-    
+
+            // detect UI or world by presence of UIElementComponent
             auto uiElem = r.try_get<ui::UIElementComponent>(e);
-            bool hasAny = r.any_of<transform::TreeOrderComponent, layer::LayerOrderComponent>(e);
-            if (!hasAny) return info;
-            info.hasCollisionOrder = true;
-    
+            bool hasSortComp = r.any_of<transform::TreeOrderComponent, layer::LayerOrderComponent>(e);
+            if (!hasSortComp) return info;
+
+            info.hasOrder = true;
             if (uiElem) info.parentBox = uiElem->uiBox;
             if (!r.valid(info.parentBox)) return info;
-    
+
             if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
                 info.treeOrder = toc->order;
             if (auto loc = r.try_get<layer::LayerOrderComponent>(info.parentBox))
                 info.layerOrder = loc->zIndex;
+
             return info;
         };
-    
-        // 4) stash them in a map to avoid recomputing in the sort
-        std::unordered_map<entt::entity, CollisionOrderInfo> infoMap;
-        infoMap.reserve(filtered.size());
-        for (auto e : filtered) {
-            infoMap.emplace(e, GetInfo(e));
+
+        // cache OrderInfo for each hit
+        std::unordered_map<entt::entity, OrderInfo> infoMap;
+        infoMap.reserve(hits.size());
+        for (auto e : hits) {
+            infoMap.emplace(e, getInfo(e));
         }
-    
-        // 5) sort by (layerOrder, treeOrder)
-        std::sort(filtered.begin(), filtered.end(),
-          [&](entt::entity a, entt::entity b){
-            const auto &ia = infoMap[a];
-            const auto &ib = infoMap[b];
-    
-            // entities without any collision‐order info go last
-            if (ia.hasCollisionOrder != ib.hasCollisionOrder)
-                return ia.hasCollisionOrder;  
-    
-            // then by layerOrder
-            if (ia.layerOrder != ib.layerOrder)
-                return ia.layerOrder < ib.layerOrder;
-    
-            // then by treeOrder
-            return ia.treeOrder < ib.treeOrder;
-          }
+
+        // final sort
+        std::sort(hits.begin(), hits.end(),
+            [&](entt::entity a, entt::entity b) {
+                auto &ia = infoMap[a];
+                auto &ib = infoMap[b];
+
+                // entities without any sorting info go last
+                if (ia.hasOrder != ib.hasOrder)
+                    return ia.hasOrder;
+
+                // then by layerOrder
+                if (ia.layerOrder != ib.layerOrder)
+                    return ia.layerOrder < ib.layerOrder;
+
+                // then by treeOrder
+                return ia.treeOrder < ib.treeOrder;
+            }
         );
-    
-        return filtered;
+
+        return hits;
     }
     
     auto GetCollisionOrderInfo(entt::registry& registry, entt::entity e) -> CollisionOrderInfo {

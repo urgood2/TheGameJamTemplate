@@ -229,6 +229,12 @@ namespace ui_defs
                     auto &gameObjectComp = globals::registry.get<transform::GameObject>(imageObject);
                     if (shadow == false) gameObjectComp.shadowDisplacement.reset();
                     
+                    std::optional<std::string> elementID{std::nullopt};
+                    
+                    if (auto it = segment.attributes.find("elementID"); it != segment.attributes.end()) {
+                        elementID = std::get<std::string>(it->second);
+                    }
+                    
                     // add to an object node
                     auto imageDef = ui::UIElementTemplateNode::Builder::create()
                         .addType(ui::UITypeEnum::OBJECT)
@@ -242,6 +248,9 @@ namespace ui_defs
                                 .build())
                         .build();
                         
+                    if (elementID) {
+                        imageDef.config.id = *elementID;
+                    }
                     textSegmentDefs.push_back(imageDef);
                     
                     continue;
@@ -255,6 +264,11 @@ namespace ui_defs
                     auto shadow = segment.attributes.find("shadow") != segment.attributes.end() ? (std::get<std::string>(segment.attributes["shadow"]) == "true" ? true : false) : false;
                     auto fgColor = util::getColor(fgColorString);
                     
+                    std::optional<std::string> elementID{std::nullopt};
+                    
+                    if (auto it = segment.attributes.find("elementID"); it != segment.attributes.end()) {
+                        elementID = std::get<std::string>(it->second);
+                    }
                     
                     // now create a animation object with uuid (animations.json)
                     auto imageObject = animation_system::createAnimatedObjectWithTransform(uuid, false, 0, 0);
@@ -276,6 +290,9 @@ namespace ui_defs
                                 .build())
                         .build();
                         
+                    if (elementID) {
+                        imageDef.config.id = *elementID;
+                    }
                     textSegmentDefs.push_back(imageDef);
                     
                     continue;
@@ -283,6 +300,16 @@ namespace ui_defs
 
 
                 auto textSegmentDef = getNewTextEntry(segment.text);
+                
+                std::optional<std::string> elementID{std::nullopt};
+                    
+                if (auto it = segment.attributes.find("elementID"); it != segment.attributes.end()) {
+                    elementID = std::get<std::string>(it->second);
+                }
+                
+                if (elementID) {
+                    textSegmentDef.config.id = *elementID;
+                }
 
                 if (segment.attributes.find("color") != segment.attributes.end()) {
                     auto colorString = std::get<std::string>(segment.attributes["color"]);

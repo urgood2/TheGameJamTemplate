@@ -48,10 +48,12 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 
 - [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines -> try https://chatgpt.com/share/6860daff-9b78-800a-ae2f-6131aa0c8344 / new bindings must be exposed for createTextEntity, need new documentation for typing effect. typing waitpoints & lua injection must also be tested.
 
+- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3 -> document the use of the tag "elementID" with getTextFromString. For updating such multi-line tagged static ui, 1) just delete everything (including animations /etc ) and inject again with new definition when something changes.; 2) alternatively inject short text and attach a getter to it (static ui can also have getters, see: textGetter) 3) fetch the segment in question after it becomes a uielement through the id assigned via the raw text ("elementID") -> eg. [Warning!](background=yellow;elementID=warning_box)  
+
 ## Kinda high priority
 
 
-- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3
+
 - [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/685d2fb9-9b88-800a-a2f5-580a172bb94e
 
 - [ ] function that takes two entities and ensures one will appear above the other using layer order comp

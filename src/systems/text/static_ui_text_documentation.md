@@ -2,6 +2,12 @@
 
 This document describes the specific tags and options supported by your **Static UI Text System**, reflecting exactly the segments handled in your `getTextFromString` implementation and the `parseText` logic.
 
+Tested example:
+```
+"[Hello here's a longer test\nNow test this](color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)"
+
+```
+
 ---
 
 ## Tag Overview

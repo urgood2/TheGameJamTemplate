@@ -1073,7 +1073,8 @@ namespace ui
             }
         }
     }
-
+    
+    //Updates for UITYpeEnum::TEXT elements (different from dynamic text objects)
     void element::UpdateText(entt::registry &registry, entt::entity entity, UIConfig *config, UIState *state)
     {
 

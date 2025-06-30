@@ -12,17 +12,12 @@
 - [ ]  Easy way to access text & elements on already created ui? -> I already have getUIEbyID, document it, also get a way to ensure I'm interacting with the text/animation object itself, rather than the object uielement that wraps it -> https://chatgpt.com/share/6860e021-29d4-800a-9b4e-aaa7bc0ed4ae
 
 
-## Kinda high priority
-
-- [ ] #to-process 12:58 ability ti add arbitrary colliders and link them to an event (on collision) need to ignore transform components which aren't collision enabled in an efficient manner -> https://chatgpt.com/share/6860eae3-67a8-800a-b105-849b6c82de32
+- [ ] ability ti add arbitrary colliders and link them to an event (on collision) need to ignore transform components which aren't collision enabled in an efficient manner -> https://chatgpt.com/share/6860eae3-67a8-800a-b105-849b6c82de32 -> done, expose to lua, document, and test
 
 ```lua
 
 -- create custom collider entity which is always, underneath, a transform. But it should have custom types like (circle) which will decide how the collision system resolves the collision
-local collider = create_collider(Colliders.TRANSFORM)
-
--- "attach" to a location or another transform entity
-attach_collider_to_transform(collider, {offsetX = 0, offsetY = 50})
+local collider = create_collider_for_entity(e, Colliders.TRANSFORM, {offsetX = 0, offsetY = 50, width = 50, height = 50})
 
 -- give it a ScriptComponent with an onCollision method
 local ColliderLogic = {
@@ -50,6 +45,10 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 -- now it will be checked in collision.
 
 ```
+
+
+## Kinda high priority
+
 
 - [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines -> try https://chatgpt.com/share/6860daff-9b78-800a-ae2f-6131aa0c8344
 - how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3

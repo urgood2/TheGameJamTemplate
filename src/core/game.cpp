@@ -170,6 +170,29 @@ namespace game
     entt::entity textEntity{entt::null};
 
     
+    // Somewhere at file-scope or in your collision namespace:
+    static auto dedupePairs = [](const std::vector<std::pair<entt::entity, entt::entity>>& raw) {
+        std::vector<std::pair<entt::entity, entt::entity>> out;
+        out.reserve(raw.size());
+
+        // Normalize (a,b) so a < b, skip self-pairs
+        for (auto &p : raw) {
+            auto a = p.first;
+            auto b = p.second;
+            if (a == b) continue;
+            if (a > b) std::swap(a, b);
+            out.emplace_back(a, b);
+        }
+
+        // Sort & unique
+        std::sort(out.begin(), out.end(),
+            [](auto &x, auto &y){
+                return x.first < y.first
+                    || (x.first == y.first && x.second < y.second);
+            });
+        out.erase(std::unique(out.begin(), out.end()), out.end());
+        return out;
+    };
 
     auto initCollisionEveryFrame() -> void
     {
@@ -192,7 +215,7 @@ namespace game
         );
 
         // Populate the Quadtree Per Frame
-        globals::registry.view<transform::Transform>().each([&](entt::entity e, transform::Transform& transform) {
+        globals::registry.view<transform::Transform>(entt::exclude<collision::ColliderComponent>).each([&](entt::entity e, transform::Transform& transform) {
             
             auto box = globals::getBox(e);
             if (expandedBounds.contains(box)) {
@@ -201,6 +224,43 @@ namespace game
             } 
                 
         });
+        
+        // add colliders as well
+        globals::registry.view<collision::ColliderComponent, transform::GameObject>()
+            .each([&](entt::entity e, auto &col, auto &go){
+                if (!go.state.collisionEnabled) return;
+                auto box = globals::getBox(e);
+                if (expandedBounds.contains(box)) {
+                    // Add the entity to the quadtree if it is within the expanded bounds
+                    globals::quadtree.add(e);
+                } ;
+            });
+            
+        // broad phase collision detection
+        auto raw = globals::quadtree.findAllIntersections();
+        
+        // Deduplicate & normalize the pairs
+        auto pairs = dedupePairs(raw);
+
+        // Single pass: notify each entity exactly once per partner
+        for (auto [a,b] : pairs) {
+            if (!globals::registry.valid(a) || !globals::registry.valid(b))
+                continue;
+                
+            if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+                continue;
+
+            // A → B
+            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+                if (sc->hooks.on_collision.valid())
+                    sc->hooks.on_collision(sc->self, b);
+            }
+            // B → A
+            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+                if (sc->hooks.on_collision.valid())
+                    sc->hooks.on_collision(sc->self, a);
+            }
+        }
 
         // all entities intersecting a region
         
@@ -253,48 +313,7 @@ namespace game
         //         (int)e, queryArea.getTopLeft().x, queryArea.getTopLeft().y);
         // }
 
-        // broad phase collision detection
-        // auto overlaps = globals::quadtree.findAllIntersections();
-
-        // for (const auto& [a, b] : overlaps)
-        // {
-        //     // Entity A
-        //     if (globals::registry.valid(a) && globals::registry.all_of<scripting::ScriptComponent>(a))
-        //     {
-        //         auto& scriptA = globals::registry.get<scripting::ScriptComponent>(a);
-        //         if (scriptA.hooks.on_collision.valid())
-        //             scriptA.hooks.on_collision(scriptA.self, b);  // self, other
-        //     }
-
-        //     // Entity B
-        //     if (globals::registry.valid(b) && globals::registry.all_of<scripting::ScriptComponent>(b))
-        //     {
-        //         auto& scriptB = globals::registry.get<scripting::ScriptComponent>(b);
-        //         if (scriptB.hooks.on_collision.valid())
-        //             scriptB.hooks.on_collision(scriptB.self, a);  // self, other
-        //     }
-        // }
-
-        // for (auto &pair : overlaps) {
-        //     auto a = pair.first;
-        //     auto b = pair.second;
-
-        //     if (globals::registry.valid(a) && globals::registry.valid(b)) {
-        //         if (globals::registry.all_of<ScriptComponent>(a)) {
-        //             auto &scriptA = globals::registry.get<ScriptComponent>(a);
-        //             if (scriptA.hooks.on_collision.valid()) {
-        //                 scriptA.hooks.on_collision(scriptA.self, b);  // self, other
-        //             }
-        //         }
-
-        //         if (globals::registry.all_of<ScriptComponent>(b)) {
-        //             auto &scriptB = globals::registry.get<ScriptComponent>(b);
-        //             if (scriptB.hooks.on_collision.valid()) {
-        //                 scriptB.hooks.on_collision(scriptB.self, a);  // self, other
-        //             }
-        //         }
-        //     }
-        // }
+        
 
     }
     

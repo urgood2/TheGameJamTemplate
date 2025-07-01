@@ -111,5 +111,6 @@
         "__config": "cpp",
         "*.hpp11": "cpp",
         "expected": "cpp"
-    }
+    },
+     "C_Cpp.intelliSenseEngine": "disabled"
 }

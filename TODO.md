@@ -59,7 +59,6 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 - [ ] Dont update text and ui that is out of bounds 
 
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
-- [ ] tooltips don't always show. -> check hid device ever x seconds, if not hovering over anything, just dismiss\
 
 
 

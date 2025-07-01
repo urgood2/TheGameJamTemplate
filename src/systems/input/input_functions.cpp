@@ -38,7 +38,7 @@ namespace input
 
         // Sol2 binding for input::InputState struct
         auto &L = lua;
-        L.new_usertype<input::InputState>("InputState",
+        auto inputStateType = L.new_usertype<input::InputState>("InputState",
                                           sol::no_constructor,
                                           // Cursor targets and interaction
                                           "cursor_clicked_target", &input::InputState::cursor_clicked_target,
@@ -126,6 +126,14 @@ namespace input
                                           "overlay_menu_active_timer", &input::InputState::overlay_menu_active_timer,
                                           "overlay_menu_active", &input::InputState::overlay_menu_active,
                                           "screen_keyboard", &input::InputState::screen_keyboard);
+                                          
+        inputStateType["cursor_hovering_target"] = sol::property(
+            [](input::InputState &state) -> entt::entity {
+                return state.cursor_hovering_target;
+            },
+            [](input::InputState &state, entt::entity target) {
+                state.cursor_hovering_target = target;
+            });
 
         // Finally assign the singleton instance to globals.input.state
         // lua["globals"]["inputstate"] = &globals::inputState;
@@ -343,26 +351,6 @@ namespace input
                                    "mouse_enabled", &HIDFlags::mouse_enabled,
                                    "axis_cursor_enabled", &HIDFlags::axis_cursor_enabled);
 
-        // 3. InputState (bind optional and complex fields alongside earlier simple fields)
-        L.new_usertype<input::InputState>("InputState",
-                                          sol::no_constructor,
-                                          // Optionals
-                                          "cursor_down_position", &input::InputState::cursor_down_position,
-                                          "cursor_up_position", &input::InputState::cursor_up_position,
-                                          "focus_cursor_pos", &input::InputState::focus_cursor_pos,
-                                          "text_input_hook", &input::InputState::text_input_hook,
-
-                                          // Axis buttons map
-                                          "axis_buttons", &input::InputState::axis_buttons,
-
-                                          // Cursor context & HID
-                                          "cursor_context", &input::InputState::cursor_context,
-                                          "hid", &input::InputState::hid,
-
-                                          // Gamepad state
-                                          "gamepad", &input::InputState::gamepad
-                                          // (Remaining fields inherited from previous snippet)
-        );
 
         // raylib input
 

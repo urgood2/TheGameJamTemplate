@@ -120,7 +120,7 @@ function main.init()
     
     -- create a timer that checks for open tooltips
     timer.every(1, function()
-        if registry:valid(InputState.cursor_hovering_target) == false then
+        if registry:valid(globals.inputState.cursor_hovering_target) == false then
             hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
         end
     end)

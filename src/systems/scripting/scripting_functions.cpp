@@ -473,9 +473,7 @@ namespace scripting {
         lua["globals"]["screenHeight"]  = [](){ return GetScreenHeight(); };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
         
-        lua["globals"]["inputState"] = []() -> input::InputState& {
-            return globals::inputState;
-        };
+        lua["globals"]["inputState"] = &(globals::inputState);
 
         // 3) entt::entity
         lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {

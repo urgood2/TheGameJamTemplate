@@ -164,6 +164,14 @@ function showNewAchievementPopup(achievementID)
   )
 end
 
+function centerTransformOnScreen(entity)
+  -- center the transform of the entity on the screen
+  local transformComp = registry:get(entity, Transform)
+  transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
+  transformComp.visualX = transformComp.actualX -- snap X
+  transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
+  transformComp.visualY = transformComp.actualY -- snap Y
+end
 
 
 function newTextPopup(text, x, y, duration)

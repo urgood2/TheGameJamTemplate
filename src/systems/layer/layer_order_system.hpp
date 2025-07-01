@@ -132,7 +132,6 @@ namespace layer
             }
             );
         }
-    }
 
 
     } // namespace layer_order_system

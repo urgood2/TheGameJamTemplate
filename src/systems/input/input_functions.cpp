@@ -128,7 +128,7 @@ namespace input
                                           "screen_keyboard", &input::InputState::screen_keyboard);
 
         // Finally assign the singleton instance to globals.input.state
-        lua["globals"]["inputstate"] = &globals::inputState;
+        // lua["globals"]["inputstate"] = &globals::inputState;
 
         // Replacing large enums with safe Lua table creation to avoid sol2 argument overflow
 

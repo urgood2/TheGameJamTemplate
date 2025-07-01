@@ -42,6 +42,11 @@ namespace particle
         CIRCLE_LINE,
         CIRCLE_FILLED
     };
+    
+    // tag component lives alongside Particle, only on entities you explicitly tag
+    struct ParticleTag {
+        std::string name;
+    };
 
     struct Particle
     {
@@ -92,7 +97,8 @@ namespace particle
         std::string animationName{};
     };
 
-    inline entt::entity CreateParticle(entt::registry &registry, Vector2 location, Vector2 size, Particle particleData, std::optional<ParticleAnimationConfig> animationConfig = std::nullopt)
+    inline entt::entity CreateParticle(entt::registry &registry, Vector2 location, Vector2 size, Particle particleData, std::optional<ParticleAnimationConfig> animationConfig = std::nullopt, const std::string &tag = ""        //<— new parameter
+    )
     {
         auto particle = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, location.x, location.y, 0, 0);
         auto &transform = registry.get<transform::Transform>(particle);
@@ -139,6 +145,11 @@ namespace particle
             }
             transform.setActualW(anim.defaultAnimation.animationList[0].first.spriteFrame->frame.width);
             transform.setActualH(anim.defaultAnimation.animationList[0].first.spriteFrame->frame.height);
+        }
+        
+        // if the user provided a non-empty tag, attach the tag component
+        if (!tag.empty()) {
+            registry.emplace<ParticleTag>(particle, tag);
         }
 
         return particle;
@@ -590,6 +601,24 @@ namespace particle
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {});
         }
     }
+    
+    // destroys every live particle
+    inline void WipeAll() {
+        auto view = globals::registry.view<Particle>();
+        for (auto e : view) {
+            globals::registry.destroy(e);
+        }
+    }
+
+    // destroys only those particles whose ParticleTag.name == tag
+    inline void WipeTagged(const std::string &tag) {
+        auto view = globals::registry.view<Particle, ParticleTag>();
+        for (auto [e, p, t] : view.each()) {
+            if (t.name == tag) {
+                globals::registry.destroy(e);
+            }
+        }
+    }
 
     inline void exposeToLua(sol::state &lua)
     {
@@ -788,6 +817,29 @@ namespace particle
             "---@param opts table? # { offset = Vector2 }",
             "Attaches an existing emitter to another entity, with optional offset."
         );
+        
+        rec.bind_function(
+            lua,
+            particlePath,
+            "WipeAll",
+            &particle::WipeAll,
+            // docstring for Lua
+            "---@return void\n"
+            "---Destroys every live particle in the registry.",
+            "Destroys all live particles."
+        );
+        
+        rec.bind_function(
+            lua,
+            particlePath,
+            "WipeTagged",
+            &particle::WipeTagged,
+            // docstring for Lua
+            "---@param tag string # The tag to match\n"
+            "---@return void\n"
+            "---Destroys only those particles whose ParticleTag.name == tag.",
+            "Destroys all particles with the given string tag."
+        );        
 
 
         // 1) overload CreateParticleEmitter to take an options-table
@@ -829,10 +881,14 @@ namespace particle
                                     Vector2 location,
                                     Vector2 size,
                                     sol::table opts,
-                                    sol::optional<sol::table> animOpts) -> entt::entity
+                                    sol::optional<sol::table> animOpts,
+                                    sol::optional<std::string> tag = std::nullopt
+                                ) -> entt::entity
         {
             // build the Particle
             particle::Particle p = tableDrivenParticleMaker(opts);
+            
+            bool shadow = opts.get_or("shadow", true);
 
             // build optional animation config
             std::optional<particle::ParticleAnimationConfig> cfg = std::nullopt;
@@ -842,9 +898,14 @@ namespace particle
                 a.animationName = (*animOpts).get_or("animationName", a.animationName);
                 cfg = a;
             }
-
             // call your function
-            return CreateParticle(globals::registry, location, size, p, cfg);
+            auto e =  CreateParticle(globals::registry, location, size, p, cfg, tag.value_or(""));
+            
+            auto &gameObject = globals::registry.get<transform::GameObject>(e);
+            if (shadow == false) {
+                // disable shadow displacement, thereby removing shadow
+                gameObject.shadowDisplacement.reset();
+            }
         };
 
         // 4) Bind it
@@ -853,14 +914,32 @@ namespace particle
             particlePath,
             "CreateParticle",
             luaCreateParticle,
-            // Lua docstring
-            "---@param location Vector2\n"
-            "---@param size Vector2\n"
-            "---@param opts table? # configure any Particle field here\n"
-            "---@param animCfg table? # optional { loop = bool, animationName = string }\n"
-            "---@return entt::entity",
-            "Creates a Particle (and its entity) from a Lua table, with optional animation config."
+            // detailed EmmyLua docstring
+            "---@param location Vector2                        # world-space spawn position\n"
+            "---@param size     Vector2                        # initial width/height of the particle\n"
+            "---@param opts     table?                         # optional config table with any of:\n"
+            " -- renderType        ParticleRenderType        # TEXTURE, RECTANGLE_LINE, RECTANGLE_FILLED, etc.\n"
+            " -- velocity          Vector2                   # initial (vx,vy)\n"
+            " -- rotation          number                    # starting rotation in degrees\n"
+            " -- rotationSpeed     number                    # degrees/sec\n"
+            " -- scale             number                    # uniform scale multiplier\n"
+            " -- lifespan          number                    # seconds until auto-destroy (≤0 = infinite)\n"
+            " -- age               number                    # initial age in seconds\n"
+            " -- color             Color                     # immediately applied tint\n"
+            " -- gravity           number                    # downward acceleration per second\n"
+            " -- acceleration      number                    # acceleration along velocity vector\n"
+            " -- startColor        Color                     # tint at birth\n"
+            " -- endColor          Color                     # tint at death\n"
+            " -- onUpdateCallback  function(particle,dt)      # run each frame\n"
+            " -- shadow            boolean                   # draw or disable shadow (default = true)\n"
+            "---@param animCfg  table?                         # optional animation config:\n"
+            " -- loop              boolean                   # whether to loop the animation\n"
+            " -- animationName     string                    # which animation to play\n"
+            "---@param tag      string?                        # optional string tag to attach to this particle\n"
+            "---@return entt::entity                            # the newly created particle entity",
+            "Creates a Particle from Lua, applies optional animation & tag."
         );
+        
         
         // 1) Create a new usertype for Vector2
         lua.new_usertype<Vector2>(

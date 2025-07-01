@@ -4,6 +4,7 @@
 #include "layer.hpp"
 
 #include "systems/ui/box.hpp"
+#include "systems/scripting/binding_recorder.hpp"
 
 
 namespace layer
@@ -20,6 +21,19 @@ namespace layer
                 globals::registry.emplace<LayerOrderComponent>(entity, newZIndex);
             }
             newZIndex++; // Increment the global Z-index counter
+        }
+        
+        inline void PutAOverB(entt::entity a, entt::entity b) {
+            if (globals::registry.any_of<LayerOrderComponent>(a) && globals::registry.any_of<LayerOrderComponent>(b)) {
+                auto &aLayer = globals::registry.get<LayerOrderComponent>(a);
+                auto &bLayer = globals::registry.get<LayerOrderComponent>(b);
+                
+                if (aLayer.zIndex <= bLayer.zIndex) {
+                    aLayer.zIndex = bLayer.zIndex + 1; // Ensure A is above B
+                }
+            } else {
+                SetToTopZIndex(a);
+            }
         }
         
         // call every frame to update the Z-indexes of all UIBoxComponents that do not have a LayerOrderComponent
@@ -45,6 +59,80 @@ namespace layer
                 globals::registry.emplace<LayerOrderComponent>(entity, zIndex);
             }
         }
+        
+        inline void exposeToLua(sol::state &lua) {
+            BindingRecorder &rec = BindingRecorder::instance();
+            
+            // Create or grab the table
+            sol::table sys = lua["layer_order_system"].get_or(
+                sol::table(lua.lua_state(), sol::create) );
+
+            // setToTopZIndex(entity, incrementIndexAfterwards = true)
+            sys.set_function("setToTopZIndex", &SetToTopZIndex);
+            rec.record_free_function(
+                /* module path */ {"layer", "layer_order_system"},
+                /* name + docs */ {
+                    "setToTopZIndex",
+                    "---@param registry registry\n"
+                    "---@param e Entity\n"
+                    "---@param incrementIndexAfterwards boolean Defaults to true\n"
+                    "---@return nil",
+                    "Assigns the given entity the current top Z-index and increments the counter."
+                }
+            );
+
+            // putAOverB(a, b)
+            sys.set_function("putAOverB", &PutAOverB);
+            rec.record_free_function(
+                {"layer", "layer_order_system"},
+                {
+                    "putAOverB",
+                    "---@param registry registry\n"
+                    "---@param a Entity The entity to move above b\n"
+                    "---@param b Entity The reference entity\n"
+                    "---@return nil",
+                    "Ensures entity a’s zIndex is at least one above b’s."
+                }
+            );
+
+            // updateLayerZIndexesAsNecessary()
+            sys.set_function("updateLayerZIndexesAsNecessary", &UpdateLayerZIndexesAsNecessary);
+            rec.record_free_function(
+                {"layer", "layer_order_system"},
+                {
+                    "updateLayerZIndexesAsNecessary",
+                    "---@param registry registry\n"
+                    "---@return nil",
+                    "Walks all UIBoxComponents without a LayerOrderComponent and pushes them to the top Z-stack."
+                }
+            );
+
+            // resetRunningZIndex()
+            sys.set_function("resetRunningZIndex", &ResetRunningZIndex);
+            rec.record_free_function(
+                {"layer", "layer_order_system"},
+                {
+                    "resetRunningZIndex",
+                    "---@return nil",
+                    "Resets the global Z-index counter back to zero."
+                }
+            );
+
+            // assignZIndexToEntity(entity, zIndex)
+            sys.set_function("assignZIndexToEntity", &AssignZIndexToEntity);
+            rec.record_free_function(
+                {"layer", "layer_order_system"},
+                {
+                    "assignZIndexToEntity",
+                    "---@param registry registry\n"
+                    "---@param e Entity\n"
+                    "---@param zIndex number The exact zIndex to assign\n"
+                    "---@return nil",
+                    "Force-sets an entity’s zIndex to the given value."
+            }
+            );
+        }
+
 
     } // namespace layer_order_system
 }

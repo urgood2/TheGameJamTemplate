@@ -96,6 +96,8 @@ namespace globals {
         };
     };
     
+    
+    quadtree::Box<float> uiBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the ui space bounds for the quadtree
     quadtree::Box<float> worldBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the world bounds for the quadtree
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeWorld(worldBounds, getBoxWorld);
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeUI(worldBounds, getBoxWorld);

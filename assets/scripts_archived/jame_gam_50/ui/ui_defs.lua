@@ -23,7 +23,7 @@ function ui_defs.generateUI()
         showTooltip(localization.get("ui.tooltip_currency_whale_dust_title"), localization.get("ui.tooltip_currency_whale_dust"))
     end
     whaleDustGameObject.methods.onStopHover = function()
-        hideTooltip()
+        -- hideTooltip()
     end
     whaleDustGameObject.state.hoverEnabled = true
     whaleDustGameObject.state.collisionEnabled = true -- enable collision for the hover to work
@@ -73,7 +73,7 @@ function ui_defs.generateUI()
         showTooltip(localization.get("ui.tooltip_currency_wafers_title"), localization.get("ui.tooltip_currency_wafers") .. getCostStringForMaterial(converterDef))
     end
     waferGameObject.methods.onStopHover = function()
-        hideTooltip()
+        -- hideTooltip()
     end
     waferGameObject.state.hoverEnabled = true
     waferGameObject.state.collisionEnabled = true -- enable collision for the hover to work
@@ -88,7 +88,7 @@ function ui_defs.generateUI()
         showTooltip(localization.get("ui.tooltip_currency_chips_title"), localization.get("ui.tooltip_currency_chips") .. getCostStringForMaterial(converterDef))
     end
     chipGameObject.methods.onStopHover = function()
-        hideTooltip()
+        -- hideTooltip()
     end
     chipGameObject.state.hoverEnabled = true
     chipGameObject.state.collisionEnabled = true -- enable collision for the hover to work
@@ -103,7 +103,7 @@ function ui_defs.generateUI()
         showTooltip(localization.get("ui.tooltip_currency_crystals_title"), localization.get("ui.tooltip_currency_crystals") .. getCostStringForMaterial(converterDef))
     end
     crystalGameObject.methods.onStopHover = function()
-        hideTooltip()
+        -- hideTooltip()
     end
     crystalGameObject.state.hoverEnabled = true
     crystalGameObject.state.collisionEnabled = true -- enable collision for the hover to work
@@ -118,7 +118,7 @@ function ui_defs.generateUI()
         showTooltip(localization.get("ui.tooltip_currency_song_essence_title"), localization.get("ui.tooltip_currency_song_essence"))
     end
     songEssenceGameObject.methods.onStopHover = function()
-        hideTooltip()
+        -- hideTooltip()
     end
     songEssenceGameObject.state.hoverEnabled = true
     songEssenceGameObject.state.collisionEnabled = true -- enable collision for the hover to work
@@ -560,7 +560,7 @@ function ui_defs.generateUI()
         end
         achievementGameObject.methods.onStopHover = function()
             debug("Achievement entity stopped hovering!")
-            hideTooltip()
+            -- hideTooltip()
         end
         achievementGameObject.state.hoverEnabled = true
         achievementGameObject.state.collisionEnabled = true -- enable collision for the hover to work
@@ -739,7 +739,7 @@ function ui_defs.generateUI()
     end
     buildingTextGameObject.methods.onStopHover = function()
         debug("Building text entity stopped hovering!")
-        hideTooltip()
+        -- hideTooltip()
     end
     -- make hoverable
     buildingTextGameObject.state.hoverEnabled = true

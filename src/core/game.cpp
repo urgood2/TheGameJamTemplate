@@ -194,18 +194,16 @@ namespace game
         return out;
     };
 
-    bool shouldGoInWorldSpace(entt::entity e) {
-    return !globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e) || globals::registry.all_of<collision::CrossSpaceCollisionMarker(e);
-}
-bool shouldGoInScreenSpace(entt::entity e) {
-    return globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e) || globals::registry.all_of<collision::CrossSpaceCollisionMarker(e);
-}
-
-    auto initCollisionEveryFrame() -> void
+    auto initAndResolveCollisionEveryFrame() -> void
     {
         using namespace quadtree;
         
         constexpr float buffer = 200.f;
+        
+        
+        // world space collision detection
+        
+        
 
         // 1) build an expanded bounds rectangle
         //    (assumes worldBounds.x,y is the top-left and width/height are positive)
@@ -222,19 +220,8 @@ bool shouldGoInScreenSpace(entt::entity e) {
         );
 
         // Populate the Quadtree Per Frame
-        globals::registry.view<transform::Transform>(entt::exclude<collision::ColliderComponent>).each([&](entt::entity e, transform::Transform& transform) {
-            
-            auto box = globals::getBoxWorld(e);
-            if (expandedBounds.contains(box)) {
-                // Add the entity to the quadtree if it is within the expanded bounds
-                globals::quadtreeWorld.add(e);
-            } 
-                
-        });
-        
-        // add colliders as well
-        globals::registry.view<collision::ColliderComponent, transform::GameObject>()
-            .each([&](entt::entity e, auto &col, auto &go){
+        globals::registry.view<transform::Transform, transform::GameObject>(entt::exclude<collision::ScreenSpaceCollisionMarker>)
+            .each([&](entt::entity e, auto &transform, auto &go){
                 if (!go.state.collisionEnabled) return;
                 auto box = globals::getBoxWorld(e);
                 if (expandedBounds.contains(box)) {
@@ -251,6 +238,59 @@ bool shouldGoInScreenSpace(entt::entity e) {
 
         // Single pass: notify each entity exactly once per partner
         for (auto [a,b] : pairs) {
+            if (!globals::registry.valid(a) || !globals::registry.valid(b))
+                continue;
+                
+            if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+                continue;
+
+            // A → B
+            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+                if (sc->hooks.on_collision.valid())
+                    sc->hooks.on_collision(sc->self, b);
+            }
+            // B → A
+            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+                if (sc->hooks.on_collision.valid())
+                    sc->hooks.on_collision(sc->self, a);
+            }
+        }
+        
+        // -------------------------------------------------
+        // ui space collision detection
+        // --------------------------------------------------
+        
+        
+        
+        // 2) reset the quadtree using the bigger area
+        expandedBounds.top = globals::uiBounds.getTopLeft().y - buffer;
+        expandedBounds.left = globals::uiBounds.getTopLeft().x - buffer;
+        expandedBounds.width = globals::uiBounds.getSize().x + 2 * buffer;
+        expandedBounds.height = globals::uiBounds.getSize().y + 2 * buffer;
+        
+        globals::quadtreeUI = Quadtree<entt::entity, decltype(globals::getBoxWorld)>(
+            expandedBounds,
+            globals::getBoxWorld
+        );
+                
+        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker>()
+            .each([&](entt::entity e, auto &transform, auto &go){
+                if (!go.state.collisionEnabled) return;
+                auto box = globals::getBoxWorld(e);
+                if (expandedBounds.contains(box)) {
+                    // Add the entity to the quadtree if it is within the expanded bounds
+                    globals::quadtreeUI.add(e);
+                } ;
+            });
+            
+        // broad phase collision detection
+        auto rawUI = globals::quadtreeWorld.findAllIntersections();
+        
+        // Deduplicate & normalize the pairs
+        auto pairsUI = dedupePairs(rawUI);
+
+        // Single pass: notify each entity exactly once per partner
+        for (auto [a,b] : pairsUI) {
             if (!globals::registry.valid(a) || !globals::registry.valid(b))
                 continue;
                 
@@ -472,7 +512,7 @@ bool shouldGoInScreenSpace(entt::entity e) {
         // }
         {
             // ZoneScopedN("Collison quadtree populate Update");
-            initCollisionEveryFrame();
+            initAndResolveCollisionEveryFrame();
         }
         
 

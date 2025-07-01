@@ -20,11 +20,7 @@ namespace collision {
 
 
     
-    struct ScreenSpaceCollisionMarker {}; // for the ui quadtree. anything thatd doesn't have this is preusmed world space
-
-    // This is for screen space objects that shouuld be added to the world space quadtree temporarily
-    struct CrossSpaceCollisionMarker {
-    };
+    struct ScreenSpaceCollisionMarker {}; // for the ui quadtree. anything thatd doesn't have this is preusmed world space. REmove it from ui if the ui should share collision checking with the world space quadtree.
 
     
     // shape tags:

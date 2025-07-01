@@ -208,7 +208,7 @@ namespace transform
     
     extern std::optional<entt::entity> FindTopEntityAtPoint(const Vector2& point);    
     
-    extern std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& point);    
+    std::vector<entt::entity> FindAllEntitiesAtPoint(const Vector2& mouseScreen, Camera2D *camera = nullptr);    
     
     extern auto GetCollisionOrderInfo(entt::registry& registry, entt::entity e) -> CollisionOrderInfo;
     

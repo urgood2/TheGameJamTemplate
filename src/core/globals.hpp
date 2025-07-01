@@ -122,7 +122,7 @@ namespace globals
     extern std::function<quadtree::Box<float>(entt::entity)> getBoxUI;
 
     // Define the world bounds for the quadtree
-    extern quadtree::Box<float> worldBounds;
+    extern quadtree::Box<float> worldBounds, uiBounds;
 
     // Quadtree instance for collision detection
     extern quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeWorld;

@@ -752,6 +752,61 @@ function ai:force_interrupt(...) end
 ---@return string[]
 function ai:list_lua_files(...) end
 
+---
+--- Sets a single world-state flag on the entity’s current state.
+---
+---@param e Entity
+---@param key string
+---@param value boolean
+---@return nil
+function ai:set_worldstate(...) end
+
+---
+--- Clears the existing goal and sets new goal flags for the entity.
+---
+---@param e Entity
+---@param goal table<string,boolean>
+---@return nil
+function ai:set_goal(...) end
+
+---
+--- Patches one world-state flag without clearing other flags.
+---
+---@param e Entity
+---@param key string
+---@param value boolean
+---@return nil
+function ai:patch_worldstate(...) end
+
+---
+--- Patches multiple goal flags without clearing the existing goal.
+---
+---@param e Entity
+---@param tbl table<string,boolean>
+---@return nil
+function ai:patch_goal(...) end
+
+---
+--- Returns the entity’s Blackboard component.
+---
+---@param e Entity
+---@return Blackboard
+function ai:get_blackboard(...) end
+
+---
+--- Immediately interrupts the entity’s current GOAP action.
+---
+---@param e Entity
+---@return nil
+function ai:force_interrupt(...) end
+
+---
+--- Lists all Lua files (no extension) in the given scripts directory.
+---
+---@param dir string
+---@return string[]
+function ai:list_lua_files(...) end
+
 
 ---
 --- Task scheduler.
@@ -3835,6 +3890,338 @@ ui.box = {
 ui.definitions = {
 }
 
+
+---
+--- 
+---
+---@class InputState
+InputState = {
+    cursor_clicked_target = Entity,  -- Entity clicked this frame
+    cursor_prev_clicked_target = Entity,  -- Entity clicked in previous frame
+    cursor_focused_target = Entity,  -- Entity under cursor focus now
+    cursor_prev_focused_target = Entity,  -- Entity under cursor focus last frame
+    cursor_focused_target_area = Rectangle,  -- Bounds of the focused target
+    cursor_dragging_target = Entity,  -- Entity currently being dragged
+    cursor_prev_dragging_target = Entity,  -- Entity dragged last frame
+    cursor_prev_released_on_target = Entity,  -- Entity released on target last frame
+    cursor_released_on_target = Entity,  -- Entity released on target this frame
+    current_designated_hover_target = Entity,  -- Entity designated for hover handling
+    prev_designated_hover_target = Entity,  -- Previously designated hover target
+    cursor_hovering_target = Entity,  -- Entity being hovered now
+    cursor_prev_hovering_target = Entity,  -- Entity hovered last frame
+    cursor_hovering_handled = bool,  -- Whether hover was already handled
+    collision_list = std::vector<Entity>,  -- All entities colliding with cursor
+    nodes_at_cursor = std::vector<NodeData>,  -- All UI nodes under cursor
+    cursor_position = Vector2,  -- Current cursor position
+    cursor_down_position = Vector2,  -- Position where cursor was pressed
+    cursor_up_position = Vector2,  -- Position where cursor was released
+    focus_cursor_pos = Vector2,  -- Cursor pos used for gamepad/keyboard focus
+    cursor_down_time = float,  -- Time of last cursor press
+    cursor_up_time = float,  -- Time of last cursor release
+    cursor_down_handled = bool,  -- Down event handled flag
+    cursor_down_target = Entity,  -- Entity pressed down on
+    cursor_down_target_click_timeout = float,  -- Click timeout interval
+    cursor_up_handled = bool,  -- Up event handled flag
+    cursor_up_target = Entity,  -- Entity released on
+    cursor_released_on_handled = bool,  -- Release handled flag
+    cursor_click_handled = bool,  -- Click handled flag
+    is_cursor_down = bool,  -- Is cursor currently down?
+    frame_buttonpress = std::vector<InputButton>,  -- Buttons pressed this frame
+    repress_timer = std::unordered_map<InputButton,float>,  -- Cooldown per button
+    no_holdcap = bool,  -- Disable repeated hold events
+    text_input_hook = std::function<void(int)>,  -- Callback for text input events
+    capslock = bool,  -- Is caps-lock active
+    coyote_focus = bool,  -- Allow focus grace period
+    cursor_hover_transform = Transform,  -- Transform under cursor
+    cursor_hover_time = float,  -- Hover duration
+    L_cursor_queue = std::deque<Entity>,  -- Recent cursor targets queue
+    keysPressedThisFrame = std::vector<KeyboardKey>,  -- Keys pressed this frame
+    keysHeldThisFrame = std::vector<KeyboardKey>,  -- Keys held down
+    heldKeyDurations = std::unordered_map<KeyboardKey,float>,  -- Hold durations per key
+    keysReleasedThisFrame = std::vector<KeyboardKey>,  -- Keys released this frame
+    gamepadButtonsPressedThisFrame = std::vector<GamepadButton>,  -- Gamepad buttons pressed this frame
+    gamepadButtonsHeldThisFrame = std::vector<GamepadButton>,  -- Held gamepad buttons
+    gamepadHeldButtonDurations = std::unordered_map<GamepadButton,float>,  -- Hold durations per button
+    gamepadButtonsReleasedThisFrame = std::vector<GamepadButton>,  -- Released gamepad buttons
+    focus_interrupt = bool,  -- Interrupt focus navigation
+    activeInputLocks = std::vector<InputLock>,  -- Currently active input locks
+    inputLocked = bool,  -- Is global input locked
+    axis_buttons = std::unordered_map<GamepadAxis,AxisButtonState>,  -- Axis-as-button states
+    axis_cursor_speed = float,  -- Cursor speed from gamepad axis
+    button_registry = ButtonRegistry,  -- Action-to-button mapping
+    snap_cursor_to = SnapTarget,  -- Cursor snap target
+    cursor_context = CursorContext,  -- Nested cursor focus contexts
+    hid = HIDFlags,  -- Current HID flags
+    gamepad = GamepadState,  -- Latest gamepad info
+    overlay_menu_active_timer = float,  -- Overlay menu timer
+    overlay_menu_active = bool,  -- Is overlay menu active
+    screen_keyboard = ScreenKeyboard  -- On-screen keyboard state
+}
+
+
+---
+--- Per-frame snapshot of cursor, keyboard, mouse, and gamepad state.
+---
+---@class InputState
+InputState = {
+}
+
+
+---
+--- 
+---
+---@class KeyboardKey
+KeyboardKey = {
+    KEY_NULL = 0,  -- Keyboard key enum
+    KEY_APOSTROPHE = 39,  -- Keyboard key enum
+    KEY_COMMA = 44,  -- Keyboard key enum
+    KEY_MINUS = 45,  -- Keyboard key enum
+    KEY_PERIOD = 46,  -- Keyboard key enum
+    KEY_SLASH = 47,  -- Keyboard key enum
+    KEY_ZERO = 48,  -- Keyboard key enum
+    KEY_ONE = 49,  -- Keyboard key enum
+    KEY_TWO = 50,  -- Keyboard key enum
+    KEY_THREE = 51,  -- Keyboard key enum
+    KEY_FOUR = 52,  -- Keyboard key enum
+    KEY_FIVE = 53,  -- Keyboard key enum
+    KEY_SIX = 54,  -- Keyboard key enum
+    KEY_SEVEN = 55,  -- Keyboard key enum
+    KEY_EIGHT = 56,  -- Keyboard key enum
+    KEY_NINE = 57,  -- Keyboard key enum
+    KEY_SEMICOLON = 59,  -- Keyboard key enum
+    KEY_EQUAL = 61,  -- Keyboard key enum
+    KEY_A = 65,  -- Keyboard key enum
+    KEY_B = 66,  -- Keyboard key enum
+    KEY_C = 67,  -- Keyboard key enum
+    KEY_D = 68,  -- Keyboard key enum
+    KEY_E = 69,  -- Keyboard key enum
+    KEY_F = 70,  -- Keyboard key enum
+    KEY_G = 71,  -- Keyboard key enum
+    KEY_H = 72,  -- Keyboard key enum
+    KEY_I = 73,  -- Keyboard key enum
+    KEY_J = 74,  -- Keyboard key enum
+    KEY_K = 75,  -- Keyboard key enum
+    KEY_L = 76,  -- Keyboard key enum
+    KEY_M = 77,  -- Keyboard key enum
+    KEY_N = 78,  -- Keyboard key enum
+    KEY_O = 79,  -- Keyboard key enum
+    KEY_P = 80,  -- Keyboard key enum
+    KEY_Q = 81,  -- Keyboard key enum
+    KEY_R = 82,  -- Keyboard key enum
+    KEY_S = 83,  -- Keyboard key enum
+    KEY_T = 84,  -- Keyboard key enum
+    KEY_U = 85,  -- Keyboard key enum
+    KEY_V = 86,  -- Keyboard key enum
+    KEY_W = 87,  -- Keyboard key enum
+    KEY_X = 88,  -- Keyboard key enum
+    KEY_Y = 89,  -- Keyboard key enum
+    KEY_Z = 90,  -- Keyboard key enum
+    KEY_LEFT_BRACKET = 91,  -- Keyboard key enum
+    KEY_BACKSLASH = 92,  -- Keyboard key enum
+    KEY_RIGHT_BRACKET = 93,  -- Keyboard key enum
+    KEY_GRAVE = 96,  -- Keyboard key enum
+    KEY_SPACE = 32,  -- Keyboard key enum
+    KEY_ESCAPE = 256,  -- Keyboard key enum
+    KEY_ENTER = 257,  -- Keyboard key enum
+    KEY_TAB = 258,  -- Keyboard key enum
+    KEY_BACKSPACE = 259,  -- Keyboard key enum
+    KEY_INSERT = 260,  -- Keyboard key enum
+    KEY_DELETE = 261,  -- Keyboard key enum
+    KEY_RIGHT = 262,  -- Keyboard key enum
+    KEY_LEFT = 263,  -- Keyboard key enum
+    KEY_DOWN = 264,  -- Keyboard key enum
+    KEY_UP = 265,  -- Keyboard key enum
+    KEY_PAGE_UP = 266,  -- Keyboard key enum
+    KEY_PAGE_DOWN = 267,  -- Keyboard key enum
+    KEY_HOME = 268,  -- Keyboard key enum
+    KEY_END = 269,  -- Keyboard key enum
+    KEY_CAPS_LOCK = 280,  -- Keyboard key enum
+    KEY_SCROLL_LOCK = 281,  -- Keyboard key enum
+    KEY_NUM_LOCK = 282,  -- Keyboard key enum
+    KEY_PRINT_SCREEN = 283,  -- Keyboard key enum
+    KEY_PAUSE = 284,  -- Keyboard key enum
+    KEY_F1 = 290,  -- Keyboard key enum
+    KEY_F2 = 291,  -- Keyboard key enum
+    KEY_F3 = 292,  -- Keyboard key enum
+    KEY_F4 = 293,  -- Keyboard key enum
+    KEY_F5 = 294,  -- Keyboard key enum
+    KEY_F6 = 295,  -- Keyboard key enum
+    KEY_F7 = 296,  -- Keyboard key enum
+    KEY_F8 = 297,  -- Keyboard key enum
+    KEY_F9 = 298,  -- Keyboard key enum
+    KEY_F10 = 299,  -- Keyboard key enum
+    KEY_F11 = 300,  -- Keyboard key enum
+    KEY_F12 = 301,  -- Keyboard key enum
+    KEY_LEFT_SHIFT = 340,  -- Keyboard key enum
+    KEY_LEFT_CONTROL = 341,  -- Keyboard key enum
+    KEY_LEFT_ALT = 342,  -- Keyboard key enum
+    KEY_LEFT_SUPER = 343,  -- Keyboard key enum
+    KEY_RIGHT_SHIFT = 344,  -- Keyboard key enum
+    KEY_RIGHT_CONTROL = 345,  -- Keyboard key enum
+    KEY_RIGHT_ALT = 346,  -- Keyboard key enum
+    KEY_RIGHT_SUPER = 347,  -- Keyboard key enum
+    KEY_KB_MENU = 348  -- Keyboard key enum
+}
+
+
+---
+--- Raylib keyboard key codes
+---
+---@class KeyboardKey
+KeyboardKey = {
+}
+
+
+---
+--- 
+---
+---@class MouseButton
+MouseButton = {
+    MOUSE_BUTTON_LEFT = 0,  -- Left mouse button
+    MOUSE_BUTTON_RIGHT = 1,  -- Right mouse button
+    MOUSE_BUTTON_MIDDLE = 2,  -- Middle mouse button
+    MOUSE_BUTTON_SIDE = 3,  -- Side mouse button
+    MOUSE_BUTTON_EXTRA = 4,  -- Extra mouse button
+    MOUSE_BUTTON_FORWARD = 5,  -- Forward mouse button
+    MOUSE_BUTTON_BACK = 6  -- Back mouse button
+}
+
+
+---
+--- 
+---
+---@class GamepadButton
+GamepadButton = {
+    GAMEPAD_BUTTON_UNKNOWN = 0,  -- Gamepad button enum
+    GAMEPAD_BUTTON_LEFT_FACE_UP = 1,  -- Gamepad button enum
+    GAMEPAD_BUTTON_LEFT_FACE_RIGHT = 2,  -- Gamepad button enum
+    GAMEPAD_BUTTON_LEFT_FACE_DOWN = 3,  -- Gamepad button enum
+    GAMEPAD_BUTTON_LEFT_FACE_LEFT = 4,  -- Gamepad button enum
+    GAMEPAD_BUTTON_RIGHT_FACE_UP = 5,  -- Gamepad button enum
+    GAMEPAD_BUTTON_RIGHT_FACE_RIGHT = 6,  -- Gamepad button enum
+    GAMEPAD_BUTTON_RIGHT_FACE_DOWN = 7,  -- Gamepad button enum
+    GAMEPAD_BUTTON_RIGHT_FACE_LEFT = 8,  -- Gamepad button enum
+    GAMEPAD_BUTTON_LEFT_TRIGGER_1 = 9,  -- Gamepad button enum
+    GAMEPAD_BUTTON_LEFT_TRIGGER_2 = 10,  -- Gamepad button enum
+    GAMEPAD_BUTTON_RIGHT_TRIGGER_1 = 11,  -- Gamepad button enum
+    GAMEPAD_BUTTON_RIGHT_TRIGGER_2 = 12,  -- Gamepad button enum
+    GAMEPAD_BUTTON_MIDDLE_LEFT = 13,  -- Gamepad button enum
+    GAMEPAD_BUTTON_MIDDLE = 14,  -- Gamepad button enum
+    GAMEPAD_BUTTON_MIDDLE_RIGHT = 15,  -- Gamepad button enum
+    GAMEPAD_BUTTON_LEFT_THUMB = 16,  -- Gamepad button enum
+    GAMEPAD_BUTTON_RIGHT_THUMB = 17  -- Gamepad button enum
+}
+
+
+---
+--- 
+---
+---@class GamepadAxis
+GamepadAxis = {
+    GAMEPAD_AXIS_LEFT_X = 0,  -- Gamepad axis enum
+    GAMEPAD_AXIS_LEFT_Y = 1,  -- Gamepad axis enum
+    GAMEPAD_AXIS_RIGHT_X = 2,  -- Gamepad axis enum
+    GAMEPAD_AXIS_RIGHT_Y = 3,  -- Gamepad axis enum
+    GAMEPAD_AXIS_LEFT_TRIGGER = 4,  -- Gamepad axis enum
+    GAMEPAD_AXIS_RIGHT_TRIGGER = 5  -- Gamepad axis enum
+}
+
+
+---
+--- 
+---
+---@class InputDeviceInputCategory
+InputDeviceInputCategory = {
+    NONE = 0,  -- No input category
+    GAMEPAD_AXIS_CURSOR = 1,  -- Axis-driven cursor category
+    GAMEPAD_AXIS = 2,  -- Gamepad axis category
+    GAMEPAD_BUTTON = 3,  -- Gamepad button category
+    MOUSE = 4,  -- Mouse input category
+    TOUCH = 5  -- Touch input category
+}
+
+
+---
+--- 
+---
+---@class AxisButtonState
+AxisButtonState = {
+    current = bool,  -- Is axis beyond threshold this frame?
+    previous = bool  -- Was axis beyond threshold last frame?
+}
+
+
+---
+--- 
+---
+---@class NodeData
+NodeData = {
+    node = Entity,  -- UI node entity
+    click = bool,  -- Was node clicked?
+    menu = bool,  -- Is menu open on node?
+    under_overlay = bool  -- Is node under overlay?
+}
+
+
+---
+--- 
+---
+---@class SnapTarget
+SnapTarget = {
+    node = Entity,  -- Target entity to snap cursor to
+    transform = Transform,  -- Target’s transform
+    type = SnapType  -- Snap behavior type
+}
+
+
+---
+--- 
+---
+---@class CursorContext::CursorLayer
+CursorContext::CursorLayer = {
+    cursor_focused_target = Entity,  -- Layer’s focused target entity
+    cursor_position = Vector2,  -- Layer’s cursor position
+    focus_interrupt = bool  -- Interrupt flag for this layer
+}
+
+
+---
+--- 
+---
+---@class CursorContext
+CursorContext = {
+    layer = CursorContext::CursorLayer,  -- Current layer
+    stack = std::vector<CursorContext::CursorLayer>  -- Layer stack
+}
+
+
+---
+--- 
+---
+---@class GamepadState
+GamepadState = {
+    object = GamepadObject,  -- Raw gamepad object
+    mapping = GamepadMapping,  -- Button/axis mapping
+    name = std::string,  -- Gamepad name
+    console = bool,  -- Is console gamepad?
+    id = int  -- System device ID
+}
+
+
+---
+--- 
+---
+---@class HIDFlags
+HIDFlags = {
+    last_type = InputDeviceInputCategory,  -- Last HID type used
+    dpad_enabled = bool,  -- D-pad navigation enabled
+    pointer_enabled = bool,  -- Pointer input enabled
+    touch_enabled = bool,  -- Touch input enabled
+    controller_enabled = bool,  -- Controller navigation enabled
+    mouse_enabled = bool,  -- Mouse navigation enabled
+    axis_cursor_enabled = bool  -- Axis-as-cursor enabled
+}
+
 ---
 --- Adds a fullscreen shader to the game.
 ---
@@ -4725,6 +5112,46 @@ function layer.queueRenderNPatchRect(...) end
 function layer.queueDrawTriangle(...) end
 
 ---
+--- Assigns the given entity the current top Z-index and increments the counter.
+---
+---@param registry registry
+---@param e Entity
+---@param incrementIndexAfterwards boolean Defaults to true
+---@return nil
+function layer.layer_order_system.setToTopZIndex(...) end
+
+---
+--- Ensures entity a’s zIndex is at least one above b’s.
+---
+---@param registry registry
+---@param a Entity The entity to move above b
+---@param b Entity The reference entity
+---@return nil
+function layer.layer_order_system.putAOverB(...) end
+
+---
+--- Walks all UIBoxComponents without a LayerOrderComponent and pushes them to the top Z-stack.
+---
+---@param registry registry
+---@return nil
+function layer.layer_order_system.updateLayerZIndexesAsNecessary(...) end
+
+---
+--- Resets the global Z-index counter back to zero.
+---
+---@return nil
+function layer.layer_order_system.resetRunningZIndex(...) end
+
+---
+--- Force-sets an entity’s zIndex to the given value.
+---
+---@param registry registry
+---@param e Entity
+---@param zIndex number The exact zIndex to assign
+---@return nil
+function layer.layer_order_system.assignZIndexToEntity(...) end
+
+---
 --- Removes a post-process shader from the layer by name.
 ---
 ---@param layer Layer # Target layer
@@ -4821,6 +5248,21 @@ function particle.EmitParticles(...) end
 function particle.AttachEmitter(...) end
 
 ---
+--- Destroys all live particles.
+---
+---@return void
+---Destroys every live particle in the registry.
+function particle.WipeAll(...) end
+
+---
+--- Destroys all particles with the given string tag.
+---
+---@param tag string # The tag to match
+---@return void
+---Destroys only those particles whose ParticleTag.name == tag.
+function particle.WipeTagged(...) end
+
+---
 --- Creates a ParticleEmitter; pass a table to override any defaults.
 ---
 ---@overload fun():ParticleEmitter
@@ -4832,13 +5274,30 @@ function particle.AttachEmitter(...) end
 function particle.CreateParticleEmitter(...) end
 
 ---
---- Creates a Particle (and its entity) from a Lua table, with optional animation config.
+--- Creates a Particle from Lua, applies optional animation & tag.
 ---
----@param location Vector2
----@param size Vector2
----@param opts table? # configure any Particle field here
----@param animCfg table? # optional { loop = bool, animationName = string }
----@return entt::entity
+---@param location Vector2                        # world-space spawn position
+---@param size     Vector2                        # initial width/height of the particle
+---@param opts     table?                         # optional config table with any of:
+ -- renderType        ParticleRenderType        # TEXTURE, RECTANGLE_LINE, RECTANGLE_FILLED, etc.
+ -- velocity          Vector2                   # initial (vx,vy)
+ -- rotation          number                    # starting rotation in degrees
+ -- rotationSpeed     number                    # degrees/sec
+ -- scale             number                    # uniform scale multiplier
+ -- lifespan          number                    # seconds until auto-destroy (≤0 = infinite)
+ -- age               number                    # initial age in seconds
+ -- color             Color                     # immediately applied tint
+ -- gravity           number                    # downward acceleration per second
+ -- acceleration      number                    # acceleration along velocity vector
+ -- startColor        Color                     # tint at birth
+ -- endColor          Color                     # tint at death
+ -- onUpdateCallback  function(particle,dt)      # run each frame
+ -- shadow            boolean                   # draw or disable shadow (default = true)
+---@param animCfg  table?                         # optional animation config:
+ -- loop              boolean                   # whether to loop the animation
+ -- animationName     string                    # which animation to play
+---@param tag      string?                        # optional string tag to attach to this particle
+---@return entt::entity                            # the newly created particle entity
 function particle.CreateParticle(...) end
 
 ---

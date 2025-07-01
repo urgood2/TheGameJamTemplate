@@ -123,9 +123,9 @@ function showNewAchievementPopup(achievementID)
   gameObject.methods.onHover = function()
     achievementDef.tooltipFunc()
   end
-  gameObject.methods.onStopHover = function()
-    hideTooltip()
-  end
+  -- gameObject.methods.onStopHover = function()
+  --   hideTooltip()
+  -- end
   gameObject.state.hoverEnabled = true
   gameObject.state.collisionEnabled = true
   
@@ -164,6 +164,14 @@ function showNewAchievementPopup(achievementID)
   )
 end
 
+function centerTransformOnScreen(entity)
+  -- center the transform of the entity on the screen
+  local transformComp = registry:get(entity, Transform)
+  transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
+  transformComp.visualX = transformComp.actualX -- snap X
+  transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
+  transformComp.visualY = transformComp.actualY -- snap Y
+end
 
 
 function newTextPopup(text, x, y, duration)
@@ -241,7 +249,7 @@ function cycleConverter(inc)
   end
   converterGameObject.methods.onStopHover = function()
     debug("Converter entity stopped hovering!")
-    hideTooltip()
+    -- hideTooltip()
   end
 
   -- 4) immediately show it once
@@ -296,7 +304,7 @@ function cycleBuilding(inc)
     showTooltip(title, body)
   end
   converterGameObject.methods.onStopHover = function()
-    hideTooltip()
+    -- hideTooltip()
   end
 
   -- 4) immediately show it once
@@ -462,7 +470,7 @@ function buyConverterButtonCallback()
     end
     gameObjectComp.methods.onStopHover = function()
       debug("Converter entity stopped hovering!")
-      hideTooltip()
+      -- hideTooltip()
     end
   end
 end
@@ -680,7 +688,7 @@ function buyBuildingButtonCallback()
     end
     gameObjectComp.methods.onStopHover = function()
       debug("Building entity stopped hovering!")
-      hideTooltip()
+      -- hideTooltip()
     end
     
     

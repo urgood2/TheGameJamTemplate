@@ -2,6 +2,7 @@
 
 #include "../../util/common_headers.hpp"
 
+#include "raylib.h"
 #include "sol/sol.hpp"
 #include "../ai/ai_system.hpp"
 #include "../event/event_system.hpp"
@@ -17,6 +18,7 @@
 #include "../particles/particle.hpp"
 #include "../random/random.hpp"
 #include "../timer/timer.hpp"
+#include "../layer/layer_order_system.hpp"
 
 #include "binding_recorder.hpp"
 
@@ -396,7 +398,12 @@ namespace scripting {
         // ------------------------------------------------------
         // input functions
         // ------------------------------------------------------
-
+        input::exposeToLua(stateToInit);
+        
+        // -------------------------------------------------------
+        // layer order functions
+        // --------------------------------------------------------
+        layer::layer_order_system::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
         // Expose global variables to Lua
@@ -462,9 +469,11 @@ namespace scripting {
         // 2) simple bools / ints / floats
         lua["globals"]["isGamePaused"]  = &globals::isGamePaused;
         lua["globals"]["screenWipe"]    = &globals::screenWipe;
-        lua["globals"]["screenWidth"]   = [](){ return globals::screenWidth; };
-        lua["globals"]["screenHeight"]  = [](){ return globals::screenHeight; };
+        lua["globals"]["screenWidth"]   = [](){ return GetScreenWidth(); };
+        lua["globals"]["screenHeight"]  = [](){ return GetScreenHeight(); };
         lua["globals"]["currentGameState"] = &globals::currentGameState;
+        
+        lua["globals"]["inputState"] = &(globals::inputState);
 
         // 3) entt::entity
         lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {

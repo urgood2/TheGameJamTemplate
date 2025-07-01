@@ -296,11 +296,11 @@ function spawnNewKrill()
             localization.get("ui.space_krill_body")
         )
     end
-    nodeComp.methods.onStopHover = function()
-        -- debug("krill stopped hovering!")
-        -- reset the tooltip text
-        hideTooltip()
-    end
+    -- nodeComp.methods.onStopHover = function()
+    --     -- debug("krill stopped hovering!")
+    --     -- reset the tooltip text
+    --     hideTooltip()
+    -- end
     
     -- kril shaders
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
@@ -480,14 +480,14 @@ function spawnNewWhale()
         )
         
     end
-    methods.onStopHover = function()
-        -- debug("whale stopped hovering!")
-        -- reset the tooltip text
+    -- methods.onStopHover = function()
+    --     -- debug("whale stopped hovering!")
+    --     -- reset the tooltip text
         
-        -- hide the tooltip UI box
+    --     -- hide the tooltip UI box
         
-        hideTooltip()
-    end
+    --     hideTooltip()
+    -- end
     methods.onClick = function(registry, e) 
         debug("whale clicked!")
         

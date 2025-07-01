@@ -55,8 +55,6 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 - [ ] test all of the above to make sure it's working
 - [ ] have all shadows for sprites, text, etc. in the same layer, below the sprites, text, etc.
 
-- [ ] function that takes two entities and ensures one will appear above the other using layer order comp
-
 - [ ] Dont update text and ui that is out of bounds 
 
 - [ ] an option to have text centered the moment it's created

@@ -17,6 +17,7 @@
 #include "../particles/particle.hpp"
 #include "../random/random.hpp"
 #include "../timer/timer.hpp"
+#include "../layer/layer_order_system.hpp"
 
 #include "binding_recorder.hpp"
 
@@ -397,6 +398,11 @@ namespace scripting {
         // input functions
         // ------------------------------------------------------
 
+        
+        // -------------------------------------------------------
+        // layer order functions
+        // --------------------------------------------------------
+        layer_order_system::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
         // Expose global variables to Lua

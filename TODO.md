@@ -52,6 +52,7 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 - [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/68624700-963c-800a-b35e-53d2c4699da2 -> additional quadtree. needs to be implemented. 
 
 ## Kinda high priority
+- [ ] update the gamejam 50 branch with the new branch, then test
 - [ ] test all of the above to make sure it's working
 - [ ] have all shadows for sprites, text, etc. in the same layer, below the sprites, text, etc.
 

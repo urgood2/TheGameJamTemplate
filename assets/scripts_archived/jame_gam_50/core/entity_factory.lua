@@ -299,7 +299,7 @@ function spawnNewKrill()
     nodeComp.methods.onStopHover = function()
         -- debug("krill stopped hovering!")
         -- reset the tooltip text
-        hideTooltip()
+        -- hideTooltip()
     end
     
     -- kril shaders
@@ -486,7 +486,7 @@ function spawnNewWhale()
         
         -- hide the tooltip UI box
         
-        hideTooltip()
+        -- hideTooltip()
     end
     methods.onClick = function(registry, e) 
         debug("whale clicked!")

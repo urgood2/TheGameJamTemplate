@@ -123,9 +123,9 @@ function showNewAchievementPopup(achievementID)
   gameObject.methods.onHover = function()
     achievementDef.tooltipFunc()
   end
-  gameObject.methods.onStopHover = function()
-    hideTooltip()
-  end
+  -- gameObject.methods.onStopHover = function()
+  --   hideTooltip()
+  -- end
   gameObject.state.hoverEnabled = true
   gameObject.state.collisionEnabled = true
   
@@ -249,7 +249,7 @@ function cycleConverter(inc)
   end
   converterGameObject.methods.onStopHover = function()
     debug("Converter entity stopped hovering!")
-    hideTooltip()
+    -- hideTooltip()
   end
 
   -- 4) immediately show it once
@@ -304,7 +304,7 @@ function cycleBuilding(inc)
     showTooltip(title, body)
   end
   converterGameObject.methods.onStopHover = function()
-    hideTooltip()
+    -- hideTooltip()
   end
 
   -- 4) immediately show it once
@@ -470,7 +470,7 @@ function buyConverterButtonCallback()
     end
     gameObjectComp.methods.onStopHover = function()
       debug("Converter entity stopped hovering!")
-      hideTooltip()
+      -- hideTooltip()
     end
   end
 end
@@ -688,7 +688,7 @@ function buyBuildingButtonCallback()
     end
     gameObjectComp.methods.onStopHover = function()
       debug("Building entity stopped hovering!")
-      hideTooltip()
+      -- hideTooltip()
     end
     
     

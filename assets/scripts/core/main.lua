@@ -115,7 +115,16 @@ function changeGameState(newState)
     globals.currentGameState = newState -- Update the current game state
 end
   
+-- Main function to initialize the game. Called at the start of the game.
 function main.init()
+    
+    -- create a timer that checks for open tooltips
+    timer.every(1, function()
+        if registry:valid(InputState.cursor_hovering_target) == false then
+            hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
+        end
+    end)
+    
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 end
 

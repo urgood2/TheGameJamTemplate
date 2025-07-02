@@ -55,6 +55,7 @@ Hello, brave hero! <wait=mouse,id=MOUSE_BUTTON_LEFT>
 Press ENTER to continue…<wait=lua,id=myCustomCallback>
 And now the rest…
 ```
+speed tag doesn't work.
 Mouse & keyboard are tested.
 problem: Text pop-in updaitng past waypoint. Then it flashes to full.
 

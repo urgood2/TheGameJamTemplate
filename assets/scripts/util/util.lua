@@ -210,6 +210,10 @@ function newTextPopup(text, x, y, duration)
 end
 
 function hideTooltip()
+  if (globals.ui.tooltipUIBox == nil) then
+    debug("hideTooltip: tooltipUIBox is not set up, skipping")
+    return
+  end
   local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
   tooltipTransform.actualY = globals.screenHeight() -- move it out of the screen
 end

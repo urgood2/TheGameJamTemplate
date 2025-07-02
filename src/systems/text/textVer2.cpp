@@ -1562,6 +1562,13 @@ namespace TextSystem
         }
     
         void preprocessTypingInlineTags(Text &txt) {
+            // canonicalize <typing,speed=...> → <typing=speed=...>
+            auto interim = txt.rawText;
+            interim = std::regex_replace(interim,
+                std::regex(R"(<typing,speed=)"),
+                "<typing=speed=");
+            txt.rawText = interim;
+            
             std::regex tagRe(R"(<(\w+)(?:=([^,>]+)(?:,([^>]+))?)?>)");
             std::smatch m;
             std::string s = txt.rawText;

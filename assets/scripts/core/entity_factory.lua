@@ -458,7 +458,7 @@ function spawnNewWhale()
         120, -- Width
         120  -- Height
     ) 
-    
+
     transformComp = registry:get(bowser, Transform)
     nodeComp = registry:get(bowser, GameObject)
     

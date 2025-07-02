@@ -12,7 +12,7 @@
 #include "../components/graphics.hpp"
 
 #include "game.hpp" // game.hpp must be included after components.hpp
-#include "magic_enum/magic_enum.hpp"
+
 #include "gui.hpp"
 #include "raymath.h"
 

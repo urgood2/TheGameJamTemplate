@@ -11,6 +11,7 @@
 
 #include "rlgl.h"
 
+#include "systems/main_loop_enhancement/main_loop.hpp"
 #include "text_effects.hpp"
 
 #include "util/common_headers.hpp"
@@ -547,6 +548,8 @@ namespace TextSystem
                     txtComp.luaWaiters[alias] = std::move(co);
                 }
             }
+            
+            textComp.createdTime = main_loop::mainLoop.realtimeTimer;
         
 
             //TODO: testing
@@ -1020,7 +1023,7 @@ namespace TextSystem
                         }
                         // don’t produce a visible Character for the sentinel:
                         currentPos += codepointSize; // Advance pointer
-                        codepointIndex++;
+                        // codepointIndex++;
                         continue;
                     }
                     
@@ -1210,7 +1213,7 @@ namespace TextSystem
                     }
                     // advance past sentinel
                     currentPos += codepointSize;
-                    codepointIndex++;
+                    // codepointIndex++;
                     continue;
                 }
                 
@@ -1395,7 +1398,7 @@ namespace TextSystem
                     }
                     // don’t produce a visible Character for the sentinel:
                     effectPos += codepointSize;
-                    codepointIndex++;
+                    // codepointIndex++;
                     continue;
                 }
 
@@ -1539,19 +1542,30 @@ namespace TextSystem
                     txt.typingSpeed = std::stof(arg1.substr(6));
                     else if (arg2.rfind("speed=",0) == 0)
                     txt.typingSpeed = std::stof(arg2.substr(6));
+                    
+                    // Replace the entire tag with nothing
+                    s.replace(m.position(0), m.length(0), "");
                 }
                 else if (name == "wait") {
                     Text::WaitPoint wp;
                     wp.type      = (arg1 == "key"   ? Text::WaitPoint::Key
                                     : arg1 == "mouse" ? Text::WaitPoint::Mouse
                                                     : Text::WaitPoint::Lua);
-                    wp.id        = arg2;          // e.g. "KEY_RIGHT" or "myLuaCallback"
+                                                    
+                    // strip leading "id=" if present
+                    std::string idPart = arg2;  
+                    if (idPart.rfind("id=", 0) == 0) {
+                        idPart.erase(0, 3);
+                    }
+                    wp.id = idPart;                // now just "KEY_ENTER" or your callback ID
                     wp.charIndex = SIZE_MAX;      // mark “not known yet”
                     txt.waitPoints.push_back(wp);
+                    
+                    
+                    // Replace the entire tag with exactly 1 sentinel character:
+                    s.replace(m.position(0), m.length(0), "\x01");
                 }
         
-                // Replace the entire tag with exactly 1 sentinel character:
-                s.replace(m.position(0), m.length(0), "\x01");
             }
             txt.rawText = std::move(s);
         }
@@ -1638,39 +1652,64 @@ namespace TextSystem
                 // 1) see if any pending wait should fire
                 for (auto &wp : text.waitPoints) {
                     if (!wp.triggered && wp.charIndex < text.characters.size() && character.index == wp.charIndex) {
-                    auto &ch = text.characters[ wp.charIndex ];
-                    // only start waiting once that char is fully popped in
-                    if (ch.pop_in >= 1.0f) {
-                        bool fired = false;
-                        switch (wp.type) {
-                            case Text::WaitPoint::Key:
-                                fired = IsKeyPressed(
-                                magic_enum::enum_cast<KeyboardKey>(wp.id).value()
-                                );
-                                break;
-                            case Text::WaitPoint::Mouse:
-                                fired = IsMouseButtonPressed(
-                                magic_enum::enum_cast<MouseButton>(wp.id).value()
-                                );
-                                break;
-                            case Text::WaitPoint::Lua:
+                        auto &ch = text.characters[ wp.charIndex ];
+                        // only start waiting once that char is fully popped in
+                        if (ch.pop_in >= 1.0f) {
+                            bool fired = false;
+                            switch (wp.type) {
+                                case Text::WaitPoint::Key:
+                                {
                                 
-                                auto alias = wp.id;
-                                auto &co = text.luaWaiters.at(alias);
-                                sol::protected_function_result result = co();        // resume it
-                                if (!result.valid()) { /* handle error */ 
-                                    SPDLOG_ERROR("Lua coroutine error: {}", result.get<std::string>());
+                                    // strip any stray whitespace
+                                    auto id = wp.id;
+                                    id .erase(0, id.find_first_not_of(" \t\n\r"));
+                                    id .erase(id.find_last_not_of(" \t\n\r") + 1);
+
+                                    // try the cast
+                                    auto maybeKey = magic_enum::enum_cast<KeyboardKey>(id, magic_enum::case_insensitive);
+
+                                    if (!maybeKey) {
+                                        spdlog::error("enum_cast failed for '{}', defaulting to KEY_NULL", id);
+                                        // wp.key = KEY_NULL;
+                                    } else {
+                                        // wp.key = *maybeKey;
+                                    }
+
+                                    fired = IsKeyPressed(
+                                        magic_enum::enum_cast<KeyboardKey>(wp.id, magic_enum::case_insensitive).value_or(KeyboardKey::KEY_NULL)
+                                        );
+                                    break;
                                 }
-                                else if (co.status() == sol::call_status::yielded) {
-                                    // still yielding (e.g. user did `wait(5)` internally)
-                                    fired = false; // do not set wp.triggered to true
+                                case Text::WaitPoint::Mouse:
+                                {
+                                    fired = IsMouseButtonPressed(
+                                    magic_enum::enum_cast<MouseButton>(wp.id).value_or(MouseButton::MOUSE_BUTTON_SIDE)
+                                    );
+                                    break;
                                 }
-                                else {
-                                    // coroutine finished; get its return value
-                                    bool done = result.get<bool>();
-                                    fired = true;
+                                case Text::WaitPoint::Lua:
+                                {
+                                    auto alias = wp.id;
+                                    auto &co = text.luaWaiters.at(alias);
+                                    sol::protected_function_result result = co();        // resume it
+                                    if (!result.valid()) { /* handle error */ 
+                                        SPDLOG_ERROR("Lua coroutine error: {}", result.get<std::string>());
+                                    }
+                                    else if (co.status() == sol::call_status::yielded) {
+                                        // still yielding (e.g. user did `wait(5)` internally)
+                                        fired = false; // do not set wp.triggered to true
+                                    }
+                                    else {
+                                        // coroutine finished; get its return value
+                                        bool done = result.get<bool>();
+                                        fired = true;
+                                    }
+                                    break;
                                 }
-                                break;
+                                default: 
+                                {
+                                    
+                                }
                             }
                             if (fired) wp.triggered = true;
                             else        return;   // block *everything* until they press

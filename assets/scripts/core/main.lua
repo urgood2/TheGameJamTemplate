@@ -733,8 +733,6 @@ end
 function main.init()
     
     timer.every(1, function()
-        debug("Input state cursor hovering target: " .. tostring(globals.inputState.cursor_hovering_target))
-        debug("World containter entity: " .. tostring(globals.gameWorldContainerEntity()))
         if registry:valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
             hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
         end

@@ -17,6 +17,30 @@ namespace timer
         TimerSystem::timer_tween(d, getter, setter, target_value, tag);
     }
     
+    static std::function<void(std::optional<float>)>
+wrap_timer_action(sol::function action) {
+        // move the raw Lua function into a protected wrapper
+        sol::protected_function protectedAction(std::move(action));
+
+        // return a std::function that checks dt and handles errors
+        return [protectedAction = std::move(protectedAction)]
+            (std::optional<float> dt) mutable
+        {
+            sol::protected_function_result result;
+            if (dt.has_value()) {
+                result = protectedAction(*dt);
+            } else {
+                result = protectedAction();  // call with no args
+            }
+
+            if (!result.valid()) {
+                sol::error err = result;
+                SPDLOG_ERROR("Timer action failed: {}", err.what());
+            }
+        };
+    }
+
+    
     /*
     local ed = EventQueueSystem.EaseDataBuilder()
                   :Type(EaseType.QUAD_OUT)
@@ -197,14 +221,7 @@ namespace timer
            sol::optional<std::function<void()>> maybeAfter,
            sol::optional<std::string> maybeTag) 
         {
-            
-            std::function<void(std::optional<float>)> actionWrapper = [action](std::optional<float> dt) {
-                if (dt.has_value()) {
-                    action(dt);
-                } else {
-                    action(std::nullopt); // Call with no dt if not provided
-                }
-            };
+            std::function<void(std::optional<float>)> actionWrapper = wrap_timer_action(action);
             // if the user passed nil (i.e. no 3rd arg), maybeTimes will be empty
             int times = maybeTimes.value_or(0);
             bool immediate = maybeImmediate.value_or(false);

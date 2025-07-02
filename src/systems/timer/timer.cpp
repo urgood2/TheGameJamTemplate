@@ -188,22 +188,7 @@ namespace timer
             }
           );
         t.set_function("cooldown",   &timer::TimerSystem::timer_cooldown);
-        // t.set_function("every",      &timer::TimerSystem::timer_every);
-        t.set_function("every",
-        [](std::variant<float, std::pair<float, float>> interval,
-           const std::function<void(std::optional<float>)>& action,
-           sol::optional<int> maybeTimes,
-           sol::optional<bool> maybeImmediate,
-           sol::optional<std::function<void()>> maybeAfter,
-           sol::optional<std::string> maybeTag) 
-        {
-            // if the user passed nil (i.e. no 3rd arg), maybeTimes will be empty
-            int times = maybeTimes.value_or(0);
-            bool immediate = maybeImmediate.value_or(false);
-            std::function<void()> after = maybeAfter.value_or([](){});
-            std::string tag = maybeTag.value_or("");
-            timer::TimerSystem::timer_every(interval, action, times, immediate, after, tag);
-        });
+        t.set_function("every",      &timer::TimerSystem::timer_every);
         t.set_function("every_step", &timer::TimerSystem::timer_every_step);
         t.set_function("for_time",        &timer::TimerSystem::timer_for);
         

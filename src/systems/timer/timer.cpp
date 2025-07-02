@@ -5,6 +5,7 @@
 #include "../../core/game.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
+#include <cstdlib>
 
 namespace timer
 {
@@ -17,6 +18,58 @@ namespace timer
         TimerSystem::timer_tween(d, getter, setter, target_value, tag);
     }
     
+    static std::function<bool()>
+wrap_condition(sol::function f) {
+    sol::protected_function pf(std::move(f));
+    return [pf=std::move(pf)]() mutable {
+        auto r = pf();
+        if (!r.valid()) {
+            sol::error err = r; SPDLOG_ERROR("Timer condition failed: {}", err.what());
+            std::abort();
+            return false;
+        }
+        return r.get<bool>();
+    };
+}
+
+static std::function<float(float)>
+wrap_ff(sol::function f) {
+    sol::protected_function pf(std::move(f));
+    return [pf=std::move(pf)](float x) mutable {
+        auto r = pf(x);
+        if (!r.valid()) {
+            sol::error err = r; SPDLOG_ERROR("Timer float→float failed: {}", err.what());
+            std::abort();
+            return 0.f;
+        }
+        return r.get<float>();
+    };
+}
+    
+    // for use with after() functions optionally provided in timer functions
+    static std::function<void()>
+wrap_noarg_callback(sol::function luaFunc) {
+    
+    
+    if (!luaFunc.valid()) {
+        SPDLOG_ERROR("wrap_noarg_callback: Invalid Lua function provided");
+        return []() {};  // Return a no-op function if the Lua function is invalid
+    }
+    // Move the raw sol::function into a protected_function for error handling
+    sol::protected_function protectedFn(std::move(luaFunc));
+
+    // Return a zero-arg std::function that calls the protected function
+    return [protectedFn = std::move(protectedFn)]() mutable {
+        sol::protected_function_result result = protectedFn();
+        if (!result.valid()) {
+            sol::error err = result;
+            SPDLOG_ERROR("Lua callback failed: {}", err.what());
+            std::abort();
+        }
+    };
+}
+
+    // for main actions in timers
     static std::function<void(std::optional<float>)>
 wrap_timer_action(sol::function action) {
         // move the raw Lua function into a protected wrapper
@@ -36,6 +89,7 @@ wrap_timer_action(sol::function action) {
             if (!result.valid()) {
                 sol::error err = result;
                 SPDLOG_ERROR("Timer action failed: {}", err.what());
+                std::abort();
             }
         };
     }
@@ -218,16 +272,17 @@ wrap_timer_action(sol::function action) {
            sol::function action,
            sol::optional<int> maybeTimes,
            sol::optional<bool> maybeImmediate,
-           sol::optional<std::function<void()>> maybeAfter,
+           sol::function maybeAfter,
            sol::optional<std::string> maybeTag) 
         {
             std::function<void(std::optional<float>)> actionWrapper = wrap_timer_action(action);
             // if the user passed nil (i.e. no 3rd arg), maybeTimes will be empty
             int times = maybeTimes.value_or(0);
             bool immediate = maybeImmediate.value_or(false);
-            std::function<void()> after = maybeAfter.value_or([](){});
+            // std::function<void()> after = maybeAfter.value_or(sol::function{});
+            auto maybeAfterWrapper = wrap_noarg_callback(maybeAfter);
             std::string tag = maybeTag.value_or("");
-            timer::TimerSystem::timer_every(interval, actionWrapper, times, immediate, after, tag);
+            timer::TimerSystem::timer_every(interval, actionWrapper, times, immediate, maybeAfterWrapper, tag);
         });
         t.set_function("every_step", &timer::TimerSystem::timer_every_step);
         t.set_function("for_time",        &timer::TimerSystem::timer_for);

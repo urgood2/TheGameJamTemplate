@@ -19,6 +19,12 @@ local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN
 local mainMenuEntities = {
 }
 
+function myCustomCallback()
+    -- a test to see if the callback works for text typing
+    wait(5)
+    return true
+end
+
 function initMainMenu()
     currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     

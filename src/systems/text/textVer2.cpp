@@ -1,6 +1,7 @@
 #include "textVer2.hpp"
 
 #include "raylib.h"
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <map>
@@ -11,6 +12,7 @@
 
 #include "rlgl.h"
 
+#include "systems/ai/ai_system.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "text_effects.hpp"
 
@@ -523,6 +525,7 @@ namespace TextSystem
                 }
             }
             
+            
             // 2) stash any lua callbacks into your Text component
             auto &txtComp = globals::registry.get<Text>(entity);
             if (waitersOpt) {
@@ -544,6 +547,38 @@ namespace TextSystem
                     sol::coroutine co{ thread_fn };
                     // -------------------------------
         
+                    // store it under its alias
+                    txtComp.luaWaiters[alias] = std::move(co);
+                }
+            } else {
+                // no table provided, search in the lua state
+                
+                // iterate through text.waitpoints and get the ones which are lua callbacks as a list
+                std::vector<std::string> luaWaiters;
+                for (const auto &wp : textComp.waitPoints) {
+                    if (wp.type == Text::WaitPoint::Type::Lua) {
+                        luaWaiters.push_back(wp.id);
+                    }
+                }
+                
+                for (const auto &alias : luaWaiters) {
+                    sol::function raw_fn  = ai_system::masterStateLua[alias];
+                    if (!raw_fn.valid()) {
+                        spdlog::warn("TextSystem::createTextEntity: Lua callback '{}' not found in the global state, skipping.", alias);
+                        continue;
+                    }
+                    // --- COROUTINE BOILERPLATE ---
+                    // create a new thread (so each waiter has its own stack)
+                    sol::thread thr = sol::thread::create(raw_fn.lua_state());
+                    sol::state_view thread_view{ thr.state() };
+                    // bind the raw function into that thread
+                    thread_view["__waiter_fn"] = raw_fn;
+                    // grab it back as a thread-local function
+                    sol::function thread_fn  = thread_view["__waiter_fn"];
+                    // finally wrap it in a coroutine
+                    sol::coroutine co{ thread_fn };
+                    // -------------------------------  
+                    
                     // store it under its alias
                     txtComp.luaWaiters[alias] = std::move(co);
                 }
@@ -1638,23 +1673,14 @@ namespace TextSystem
                 // update shadow
                 character.shadowDisplacement.x = ((textTransform.getActualX() + textTransform.getActualW() / 2) - (gameWorldTransform.getActualX() + gameWorldTransform.getActualW() / 2)) / (gameWorldTransform.getActualW() / 2) * 1.5f;
 
-                // Apply Pop-in Animation
-                if (character.pop_in && character.pop_in < 1.0f)
-                {
-                    float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
-                    if (elapsedTime > 0)
-                    {
-                        character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
-                        character.pop_in = character.pop_in.value() * character.pop_in.value(); // Ease-in effect
-                    }
-                }
+                
                 
                 // 1) see if any pending wait should fire
                 for (auto &wp : text.waitPoints) {
                     if (!wp.triggered && wp.charIndex < text.characters.size() && character.index == wp.charIndex) {
                         auto &ch = text.characters[ wp.charIndex ];
                         // only start waiting once that char is fully popped in
-                        if (ch.pop_in >= 1.0f) {
+                        // if (ch.pop_in >= 1.0f) {
                             bool fired = false;
                             switch (wp.type) {
                                 case Text::WaitPoint::Key:
@@ -1678,6 +1704,10 @@ namespace TextSystem
                                     fired = IsKeyPressed(
                                         magic_enum::enum_cast<KeyboardKey>(wp.id, magic_enum::case_insensitive).value_or(KeyboardKey::KEY_NULL)
                                         );
+                                    if (fired) {
+                                        // update text created time to ensure pop-in animation is not blocked
+                                        text.createdTime = GetTime();
+                                    }
                                     break;
                                 }
                                 case Text::WaitPoint::Mouse:
@@ -1685,6 +1715,14 @@ namespace TextSystem
                                     fired = IsMouseButtonPressed(
                                     magic_enum::enum_cast<MouseButton>(wp.id).value_or(MouseButton::MOUSE_BUTTON_SIDE)
                                     );
+                                    if (fired) {
+                                        // update text created time to ensure pop-in animation is not blocked
+                                        text.createdTime = GetTime();
+                                    }
+                                    else {
+                                        // if not fired, block everything until they press
+                                        spdlog::debug("Mouse button '{}' not pressed, blocking text rendering", wp.id);
+                                    }
                                     break;
                                 }
                                 case Text::WaitPoint::Lua:
@@ -1694,6 +1732,7 @@ namespace TextSystem
                                     sol::protected_function_result result = co();        // resume it
                                     if (!result.valid()) { /* handle error */ 
                                         SPDLOG_ERROR("Lua coroutine error: {}", result.get<std::string>());
+                                        std::abort();
                                     }
                                     else if (co.status() == sol::call_status::yielded) {
                                         // still yielding (e.g. user did `wait(5)` internally)
@@ -1703,6 +1742,9 @@ namespace TextSystem
                                         // coroutine finished; get its return value
                                         bool done = result.get<bool>();
                                         fired = true;
+                                        
+                                        // update text created time to ensure pop-in animation is not blocked
+                                        text.createdTime = GetTime();
                                     }
                                     break;
                                 }
@@ -1712,8 +1754,21 @@ namespace TextSystem
                                 }
                             }
                             if (fired) wp.triggered = true;
-                            else        return;   // block *everything* until they press
-                        }
+                            else        {
+                                
+                                return;   // block *everything* until they press
+                            }
+                        // }
+                    }
+                }
+                // Apply Pop-in Animation
+                if (character.pop_in && character.pop_in < 1.0f)
+                {
+                    float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
+                    if (elapsedTime > 0)
+                    {
+                        character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
+                        character.pop_in = character.pop_in.value() * character.pop_in.value(); // Ease-in effect
                     }
                 }
 

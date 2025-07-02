@@ -29,7 +29,7 @@
 		"cost_tooltip_postfix": "\n{cost} {currencyName}",
 		"requirement_unlock_postfix": "\nRequires: {number} {requirement}",
 		"material_requirement_tooltip_postfix": "\n{cost} {currencyName}",
-		"start_game_logo": "<typing>Echoes of the Void:<wait=key,id=KEY_ENTER> Homesong",
+		"start_game_logo": "<typing>Echoes of the Void:<wait=lua,id=myCustomCallback> Homesong",
 		"start_game_button": "Start Game",
 		"start_game_feedback": "Give Feedback",
 		"start_game_follow": "Follow on",

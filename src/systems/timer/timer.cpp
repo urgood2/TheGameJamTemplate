@@ -20,6 +20,9 @@ namespace timer
     
     static std::function<bool()>
 wrap_condition(sol::function f) {
+    if (!f.valid()) {
+        return []() { return false; };  // Return a no-op condition if the Lua function is invalid
+    }
     sol::protected_function pf(std::move(f));
     return [pf=std::move(pf)]() mutable {
         auto r = pf();
@@ -34,6 +37,9 @@ wrap_condition(sol::function f) {
 
 static std::function<float(float)>
 wrap_ff(sol::function f) {
+    if (!f.valid()) {
+        return [](float x) { return x; };  // Return identity function if the Lua function is invalid
+    }
     sol::protected_function pf(std::move(f));
     return [pf=std::move(pf)](float x) mutable {
         auto r = pf(x);
@@ -52,7 +58,6 @@ wrap_noarg_callback(sol::function luaFunc) {
     
     
     if (!luaFunc.valid()) {
-        SPDLOG_ERROR("wrap_noarg_callback: Invalid Lua function provided");
         return []() {};  // Return a no-op function if the Lua function is invalid
     }
     // Move the raw sol::function into a protected_function for error handling
@@ -254,18 +259,44 @@ wrap_timer_action(sol::function action) {
         rec.record_free_function({"timer"}, {"update", "---@param dt number # Delta time.\n---@return nil", "Updates all active timers, should be called once per frame.", true, false});
 
         // 6) Creation APIs
-        t.set_function("run",        &timer::TimerSystem::timer_run);
-        t.set_function("after",
-            [](std::variant<float, std::pair<float, float>> delay,
-               const std::function<void(std::optional<float>)>& action,
-               sol::optional<std::string> maybeTag) 
+        // timer_run(action, after, tag)
+        t.set_function("run",
+            [](sol::function action,
+            sol::function after,
+            sol::optional<std::string> maybeTag)
             {
-              // if the user passed nil (i.e. no 3rd arg), maybeTag will be empty
-              std::string tag = maybeTag.value_or("");
-              timer::TimerSystem::timer_after(delay, action, tag);
-            }
-          );
-        t.set_function("cooldown",   &timer::TimerSystem::timer_cooldown);
+                auto actionWrapper = wrap_timer_action(std::move(action));
+                auto afterWrapper  = wrap_noarg_callback(std::move(after));
+                std::string tag = maybeTag.value_or("");
+                timer::TimerSystem::timer_run(actionWrapper, afterWrapper, tag);
+            });
+        // timer_after(delay, action, tag)
+        t.set_function("after",
+            [](std::variant<float,std::pair<float,float>> delay,
+            sol::function action,
+            sol::optional<std::string> maybeTag)
+            {
+                auto actionWrapper = wrap_timer_action(std::move(action));
+                std::string tag = maybeTag.value_or("");
+                timer::TimerSystem::timer_after(delay, actionWrapper, tag);
+            });
+        // timer_cooldown(delay, condition, action, times, after, tag)
+        t.set_function("cooldown",
+            [](std::variant<float,std::pair<float,float>> delay,
+            sol::function condition,
+            sol::function action,
+            sol::optional<int> maybeTimes,
+            sol::function after,
+            sol::optional<std::string> maybeTag)
+            {
+                int times = maybeTimes.value_or(0);
+                auto condWrapper   = wrap_condition(std::move(condition));
+                auto actionWrapper = wrap_timer_action(std::move(action));
+                auto afterWrapper  = wrap_noarg_callback(std::move(after));
+                std::string tag = maybeTag.value_or("");
+                timer::TimerSystem::timer_cooldown(
+                    delay, condWrapper, actionWrapper, times, afterWrapper, tag);
+            });
         // t.set_function("every",      &timer::TimerSystem::timer_every);
         t.set_function("every",
         [](std::variant<float, std::pair<float, float>> interval,
@@ -284,22 +315,91 @@ wrap_timer_action(sol::function action) {
             std::string tag = maybeTag.value_or("");
             timer::TimerSystem::timer_every(interval, actionWrapper, times, immediate, maybeAfterWrapper, tag);
         });
-        t.set_function("every_step", &timer::TimerSystem::timer_every_step);
-        t.set_function("for_time",        &timer::TimerSystem::timer_for);
+        // timer_every_step(start, end, times, action, immediate, step, after, tag)
+        t.set_function("every_step",
+            [](float start_delay,
+            float end_delay,
+            int times,
+            sol::function action,
+            sol::optional<bool> maybeImmediate,
+            sol::function step_method,
+            sol::function after,
+            sol::optional<std::string> maybeTag)
+            {
+                bool immediate = maybeImmediate.value_or(false);
+                auto actionWrapper = wrap_timer_action(std::move(action));
+                auto stepWrapper   = wrap_ff(std::move(step_method));
+                auto afterWrapper  = wrap_noarg_callback(std::move(after));
+                std::string tag = maybeTag.value_or("");
+                timer::TimerSystem::timer_every_step(
+                    start_delay, end_delay, times,
+                    actionWrapper, immediate,
+                    stepWrapper, afterWrapper,
+                    tag);
+            });
+        t.set_function("for",
+            [](std::variant<float,std::pair<float,float>> duration,
+                sol::function action,
+                sol::function after,
+                sol::optional<std::string> maybeTag)
+            {
+                auto actionWrapper = wrap_timer_action(std::move(action));
+                auto afterWrapper  = wrap_noarg_callback(std::move(after));
+                std::string tag = maybeTag.value_or("");
+                timer::TimerSystem::timer_for(duration, actionWrapper, afterWrapper, tag);
+            });
         
         
         
         // Now bind them all, *including* the full seven-arg C++ function:
-        t.set_function("tween", sol::overload(
-            &lua_tween4,
-            [](std::variant<float,std::pair<float,float>> d,
-                const std::function<float()>& getter,
-                const std::function<void(float)>& setter,
-                float target_value) {
-                return lua_tween4(d, getter, setter, target_value, "");
-                },
-            &TimerSystem::timer_tween        // full 7-arg version
-        ));
+        // timer_tween(duration, getter, setter, target, tag, easing, after)
+        t.set_function("tween",
+            [](std::variant<float,std::pair<float,float>> duration,
+            sol::function getter,
+            sol::function setter,
+            float target_value,
+            sol::optional<std::string> maybeTag,
+            sol::function easing_method,
+            sol::function after)
+            {
+                auto getWrapper = [] (sol::function f) {
+                    sol::protected_function pf(std::move(f));
+                    return [pf=std::move(pf)]() mutable {
+                        auto r = pf();
+                        if (!r.valid()) {
+                            sol::error err = r; SPDLOG_ERROR("Tween getter failed: {}", err.what());
+                            return 0.f;
+                        }
+                        return r.get<float>();
+                    };
+                }(std::move(getter));
+
+                auto setWrapper = [] (sol::function f) {
+                    sol::protected_function pf(std::move(f));
+                    return [pf=std::move(pf)](float v) mutable {
+                        auto r = pf(v);
+                        if (!r.valid()) {
+                            sol::error err = r; SPDLOG_ERROR("Tween setter failed: {}", err.what());
+                        }
+                    };
+                }(std::move(setter));
+
+                auto easeWrapper = easing_method.valid() ?
+                    wrap_ff(std::move(easing_method)) :
+                    [](float t) { return t < 0.5 ? 2 * t * t : t * (4 - 2 * t) - 1; }; // Default easing method (ease-in-out quad)
+                auto afterWrapper = wrap_noarg_callback(std::move(after));
+                std::string tag = maybeTag.value_or("");
+
+                timer::TimerSystem::timer_tween(
+                    duration,
+                    getWrapper,
+                    setWrapper,
+                    target_value,
+                    tag,
+                    easeWrapper,
+                    afterWrapper
+                );
+            });
         
 
         // Recorder: creation functions
@@ -700,7 +800,7 @@ wrap_timer_action(sol::function action) {
             add_timer(final_tag, std::move(timer));
 
             // Debug: Notify the timer was added
-            SPDLOG_DEBUG("Added 'run' timer with tag: {}", final_tag);
+            // SPDLOG_DEBUG("Added 'run' timer with tag: {}", final_tag);
         }
 
         // Timer After: Calls an action after a delay
@@ -724,14 +824,14 @@ wrap_timer_action(sol::function action) {
             add_timer(final_tag, std::move(timer));
 
             // Debug: Notify the timer was added
-            SPDLOG_DEBUG("Added 'after' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
-                                                                                                 {
-                    using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, float>) {
-                        return fmt::format("{}", arg); // Single float
-                    } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
-                        return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
-                    } }, delay));
+            // SPDLOG_DEBUG("Added 'after' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
+                    //                                                                              {
+                    // using T = std::decay_t<decltype(arg)>;
+                    // if constexpr (std::is_same_v<T, float>) {
+                    //     return fmt::format("{}", arg); // Single float
+                    // } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
+                    //     return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
+                    // } }, delay));
         }
 
         // Timer Cooldown: Calls an action every delay seconds until a condition is met
@@ -756,14 +856,14 @@ wrap_timer_action(sol::function action) {
             add_timer(final_tag, std::move(timer));
 
             // Debug: Notify the timer was added
-            SPDLOG_DEBUG("Added 'cooldown' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
-                                                                                                    {
-                    using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, float>) {
-                        return fmt::format("{}", arg); // Single float
-                    } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
-                        return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
-                    } }, delay));
+            // SPDLOG_DEBUG("Added 'cooldown' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
+            //                                                                                         {
+            //         using T = std::decay_t<decltype(arg)>;
+            //         if constexpr (std::is_same_v<T, float>) {
+            //             return fmt::format("{}", arg); // Single float
+            //         } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
+            //             return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
+            //         } }, delay));
         }
 
         // Timer Every: Calls an action every delay seconds, potentially a limited number of times
@@ -793,14 +893,14 @@ wrap_timer_action(sol::function action) {
             }
 
             // Debug: Notify the timer was added
-            SPDLOG_DEBUG("Added 'every' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
-                                                                                                 {
-                    using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, float>) {
-                        return fmt::format("{}", arg); // Single float
-                    } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
-                        return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
-                    } }, delay));
+            // SPDLOG_DEBUG("Added 'every' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
+            //                                                                                      {
+            //         using T = std::decay_t<decltype(arg)>;
+            //         if constexpr (std::is_same_v<T, float>) {
+            //             return fmt::format("{}", arg); // Single float
+            //         } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
+            //             return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
+            //         } }, delay));
         }
 
         // Timer Every Step: Calls an action at regular intervals, potentially a limited number of times
@@ -853,7 +953,7 @@ wrap_timer_action(sol::function action) {
             }
 
             // Debug: Notify the timer was added
-            SPDLOG_DEBUG("Added 'every_step' timer with tag: {} from {} to {} with {} steps", final_tag, start_delay, end_delay, times);
+            // SPDLOG_DEBUG("Added 'every_step' timer with tag: {} from {} to {} with {} steps", final_tag, start_delay, end_delay, times);
         }
 
         // Timer For: Calls an action every frame for a duration
@@ -876,14 +976,14 @@ wrap_timer_action(sol::function action) {
             add_timer(final_tag, std::move(timer));
 
             // Debug: Notify the timer was added
-            SPDLOG_DEBUG("Added 'for' timer with tag: {} and duration: {}", final_tag, std::visit([](auto &&arg) -> std::string
-                                                                                                  {
-                    using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, float>) {
-                        return fmt::format("{}", arg); // Single float
-                    } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
-                        return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
-                    } }, duration));
+            // SPDLOG_DEBUG("Added 'for' timer with tag: {} and duration: {}", final_tag, std::visit([](auto &&arg) -> std::string
+            //                                                                                       {
+            //         using T = std::decay_t<decltype(arg)>;
+            //         if constexpr (std::is_same_v<T, float>) {
+            //             return fmt::format("{}", arg); // Single float
+            //         } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
+            //             return fmt::format("[{}, {}]", arg.first, arg.second); // Pair of floats
+            //         } }, duration));
         }
 
         /**
@@ -953,15 +1053,15 @@ wrap_timer_action(sol::function action) {
             add_timer(final_tag, std::move(timer));
 
             // Debug: Notify the timer was added
-            SPDLOG_DEBUG("Added 'tween' timer with tag: {} to tween from {} to {} over {} seconds", final_tag, start_value, target_value,
-                         std::visit([](auto &&arg) -> std::string
-                                    {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, float>) {
-                return fmt::format("{}", arg);
-            } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
-                return fmt::format("[{}, {}]", arg.first, arg.second);
-            } }, duration));
+            // SPDLOG_DEBUG("Added 'tween' timer with tag: {} to tween from {} to {} over {} seconds", final_tag, start_value, target_value,
+            //              std::visit([](auto &&arg) -> std::string
+            //                         {
+            // using T = std::decay_t<decltype(arg)>;
+            // if constexpr (std::is_same_v<T, float>) {
+            //     return fmt::format("{}", arg);
+            // } else if constexpr (std::is_same_v<T, std::pair<float, float>>) {
+            //     return fmt::format("[{}, {}]", arg.first, arg.second);
+            // } }, duration));
         }
 
     }

@@ -19,6 +19,7 @@
 #include "../random/random.hpp"
 #include "../timer/timer.hpp"
 #include "../layer/layer_order_system.hpp"
+#include "../collision/broad_phase.hpp"
 
 #include "binding_recorder.hpp"
 
@@ -143,6 +144,11 @@ namespace scripting {
         // methods from anim_system.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         animation_system::exposeToLua(stateToInit);
+        
+        //------------------------------------------------------
+        // methods from broad_phase.hpp. These can be called from lua ✅
+        //------------------------------------------------------
+        collision::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
         // methods from tutorial_system_v2.cpp. These can be called from lua ✅

@@ -1343,6 +1343,24 @@ animation_system = {
 
 
 ---
+--- Namespace for creating colliders and performing collision‐tests.
+---
+---@class collision
+collision = {
+}
+
+
+---
+--- Enum of supported collider shapes.
+---
+---@class ColliderType
+ColliderType = {
+    AABB = 0,  -- Axis-aligned bounding box.
+    Circle = 1  -- Circle collider.
+}
+
+
+---
 --- 
 ---
 ---@class particle
@@ -4497,6 +4515,30 @@ function animation_system.resetAnimationUIRenderScale(...) end
 ---@param targetHeight number # Desired height
 ---@return nil
 function animation_system.resizeAnimationObjectToFit(...) end
+
+---
+--- Creates a child entity under `master` with a Transform, GameObject (collision enabled),
+and a ColliderComponent of the given `type`, applying all provided offsets, sizes, rotation,
+scale and alignment flags.
+---
+---@param master entt.entity               # Parent entity to attach collider to
+---@param type collision.ColliderType       # Shape of the new collider
+---@param t table                           # Config table:
+                                          #   offsetX?, offsetY?, width?, height?, rotation?, scale?
+                                          #   alignment? (bitmask), alignOffset { x?, y? }
+---@return entt.entity                      # Newly created collider entity
+function collision.create_collider_for_entity(...) end
+
+---
+--- Runs a Separating Axis Theorem (SAT) test—or AABB test if both are unrotated—
+on entities `a` and `b`, returning whether they intersect based on their ColliderComponents
+and Transforms.
+---
+---@param registry entt.registry*           # Pointer to your entity registry
+---@param a entt.entity                      # First entity to test
+---@param b entt.entity                      # Second entity to test
+---@return boolean                           # True if their collider OBBs/AABBs overlap
+function collision.CheckCollisionBetweenTransforms(...) end
 
 ---
 --- Sorts all layers by their Z-index.

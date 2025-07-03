@@ -458,6 +458,8 @@ function spawnNewWhale()
         120, -- Width
         120  -- Height
     ) 
+    
+    local collider = collision.create_collider_for_entity(bowser, {width = 50, height = 50, alignment = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM})
 
     transformComp = registry:get(bowser, Transform)
     nodeComp = registry:get(bowser, GameObject)

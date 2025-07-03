@@ -519,6 +519,8 @@ function ui_defs.generateUI()
     
     -- there will be six ui elements in each row, and as many rows as needed to fit all the upgrades
     
+    debug("building achievements window...")
+    
     local achievementRows = {}
     local currentRow = UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -654,8 +656,6 @@ function ui_defs.generateUI()
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("keppel"))
-            :addMinWidth(300)
-            :addMinHeight(400)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
@@ -677,7 +677,6 @@ function ui_defs.generateUI()
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("lapi_lazuli"))
-            :addNoMovementWhenDragged(true)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP)
             :addInitFunc(function(registry, entity)
                 -- something init-related here
@@ -705,8 +704,6 @@ function ui_defs.generateUI()
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("lapi_lazuli"))
-            :addMinHeight(400)
-            :addMinWidth(300)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
                 -- something init-related here

@@ -13,6 +13,7 @@
 #include "util/common_headers.hpp"
 #include "core/globals.hpp"
 
+#include "systems/scripting/binding_recorder.hpp"
 
 namespace collision {
     
@@ -27,7 +28,7 @@ namespace collision {
     enum class ColliderType { AABB, Circle /*, Capsule, Polygon…*/ };
 
     struct ColliderComponent {
-        ColliderType type;
+        ColliderType type; // right now this is unused
     };
 
     
@@ -38,7 +39,7 @@ namespace collision {
     //   - emplaces a ColliderComponent with default data
     //
     
-    inline entt::entity create_collider_for_entity(entt::entity master, ColliderType type, sol::table t) {
+    inline entt::entity create_collider_for_entity(entt::entity master, sol::table t) {
         
         // unpack the offsets:
         float ox = t.get_or("offsetX", 0.f);
@@ -82,7 +83,7 @@ namespace collision {
 
         // D) add a default ColliderComponent:
         auto  &c = globals::registry.emplace<ColliderComponent>(e);
-        c.type = type;
+        c.type = ColliderType::AABB; // unused, we use transforms for collision
         
         auto &transform = globals::registry.get<transform::Transform>(e);
         // E) set the transform properties:
@@ -218,4 +219,51 @@ namespace collision {
         return obbIntersect(obbA, obbB);
     }
 
+    inline void exposeToLua(sol::state &lua) {
+        auto& rec = BindingRecorder::instance();
+        const std::vector<std::string> path = {"collision"};
+    
+        // 0) Namespace
+        rec.add_type("collision").doc =
+            "Namespace for creating colliders and performing collision‐tests.";
+    
+        // 1) ColliderType enum
+        // 1) ColliderType as a constant table
+        lua["ColliderType"] = lua.create_table_with(
+            "AABB",   static_cast<int>(collision::ColliderType::AABB),
+            "Circle", static_cast<int>(collision::ColliderType::Circle)
+        );
+        auto& ct = rec.add_type("ColliderType");
+        ct.doc = "Enum of supported collider shapes.";
+        rec.record_property("ColliderType", {"AABB",   std::to_string(static_cast<int>(collision::ColliderType::AABB)),   "Axis-aligned bounding box."});
+        rec.record_property("ColliderType", {"Circle", std::to_string(static_cast<int>(collision::ColliderType::Circle)), "Circle collider."});
+
+    
+        // 2) create_collider_for_entity
+        rec.bind_function(lua, path, "create_collider_for_entity",
+            &collision::create_collider_for_entity,
+            "---@param master entt.entity               # Parent entity to attach collider to\n"
+            "---@param type collision.ColliderType       # Shape of the new collider\n"
+            "---@param t table                           # Config table:\n"
+            "                                          #   offsetX?, offsetY?, width?, height?, rotation?, scale?\n"
+            "                                          #   alignment? (bitmask), alignOffset { x?, y? }\n"
+            "---@return entt.entity                      # Newly created collider entity",
+            "Creates a child entity under `master` with a Transform, GameObject (collision enabled),\n"
+            "and a ColliderComponent of the given `type`, applying all provided offsets, sizes, rotation,\n"
+            "scale and alignment flags."
+        );
+    
+        // 3) CheckCollisionBetweenTransforms
+        rec.bind_function(lua, path, "CheckCollisionBetweenTransforms",
+            &collision::CheckCollisionBetweenTransforms,
+            "---@param registry entt.registry*           # Pointer to your entity registry\n"
+            "---@param a entt.entity                      # First entity to test\n"
+            "---@param b entt.entity                      # Second entity to test\n"
+            "---@return boolean                           # True if their collider OBBs/AABBs overlap",
+            "Runs a Separating Axis Theorem (SAT) test—or AABB test if both are unrotated—\n"
+            "on entities `a` and `b`, returning whether they intersect based on their ColliderComponents\n"
+            "and Transforms."
+        );
+    }
+    
 }

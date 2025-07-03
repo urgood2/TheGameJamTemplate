@@ -1,7 +1,9 @@
 #pragma once
 
+#include "forward.hpp"
 #include "raylib.h"
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <map>
 #include <functional>
@@ -130,6 +132,7 @@ namespace TextSystem
             bool      triggered     = false;
         };
         std::vector<WaitPoint> waitPoints;
+        std::unordered_map<std::string, sol::thread> luaWaitThreads; // Lua threads for wait points, keyed by the id of the wait point
         std::unordered_map<std::string, sol::coroutine> luaWaiters;
 
     };

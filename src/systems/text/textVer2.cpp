@@ -549,6 +549,7 @@ namespace TextSystem
         
                     // store it under its alias
                     txtComp.luaWaiters[alias] = std::move(co);
+                    txtComp.luaWaitThreads[alias] = std::move(thr);
                 }
             } else {
                 // no table provided, search in the lua state

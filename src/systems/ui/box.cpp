@@ -6,6 +6,25 @@
 #include "components/graphics.hpp"
 #include "inventory_ui.hpp"
 #include "core/globals.hpp"
+namespace std {
+template<>
+struct hash<ui::UIElementTemplateNode> {
+    size_t operator()(ui::UIElementTemplateNode const &node) const noexcept {
+    // e.g. combine the address & some stable value,
+    // but simplest is to hash the pointer to it:
+    return reinterpret_cast<size_t>(&node);
+    }
+};
+template<>
+struct equal_to<ui::UIElementTemplateNode> {
+    bool operator()(ui::UIElementTemplateNode const &a,
+                    ui::UIElementTemplateNode const &b) const noexcept {
+    return &a == &b;
+    }
+};
+}
+
+
 namespace ui
 {
     // TODO: update function registry for methods that replace transform-provided methods
@@ -27,7 +46,7 @@ namespace ui
     {
         struct StackEntry
         {
-            UIElementTemplateNode *def;
+            UIElementTemplateNode def;
             entt::entity parent;
         }; 
 
@@ -35,9 +54,9 @@ namespace ui
         registry.emplace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
 
         std::stack<StackEntry> stack;
-        std::unordered_map<UIElementTemplateNode *, entt::entity> nodeToEntity;
+        std::unordered_map<UIElementTemplateNode, entt::entity> nodeToEntity;
 
-        stack.push({&rootDef, uiElementParent});
+        stack.push({rootDef, uiElementParent});
 
         while (!stack.empty())
         {
@@ -45,7 +64,7 @@ namespace ui
             stack.pop();
 
             // Create new UI element
-            entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def->type, def->config);
+            entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def.type, def.config);
             // make screen space  no matter what
             registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
             nodeToEntity[def] = entity;
@@ -55,11 +74,12 @@ namespace ui
             //     SPDLOG_DEBUG("Debugging UI element with entity ID 840");
             // }
             
-            if (magic_enum::enum_name<UITypeEnum>(def->type) == "") {
-                SPDLOG_ERROR("UITypeEnum is not set for entity {}, parent {}, type {}", static_cast<int>(entity), static_cast<int>(parent), magic_enum::enum_name<UITypeEnum>(def->type));
+            if (magic_enum::enum_name<UITypeEnum>(def.type) == "") {
+                SPDLOG_ERROR("UITypeEnum is not set for entity {}, parent {}, type {}", static_cast<int>(entity), static_cast<int>(parent), magic_enum::enum_name<UITypeEnum>(def.type));
+                throw std::runtime_error("UITypeEnum is not set for entity " + std::to_string(static_cast<int>(entity)) + ", parent " + std::to_string(static_cast<int>(parent)) + ", value is: " + std::to_string((int)def.type));
             }
 
-            SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def->type), static_cast<int>(entity), static_cast<int>(parent));
+            SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def.type), static_cast<int>(entity), static_cast<int>(parent));
 
             auto *parentConfig = registry.try_get<UIConfig>(parent);
 
@@ -95,7 +115,7 @@ namespace ui
             }
 
             // If object + button
-            if (def->type == UITypeEnum::OBJECT && config && config->buttonCallback)
+            if (def.type == UITypeEnum::OBJECT && config && config->buttonCallback)
             {
                 auto &node = registry.get<transform::GameObject>(config->object.value());
                 node.state.clickEnabled = false;
@@ -105,7 +125,7 @@ namespace ui
             }
 
             // If text, pre-calculate text bounds
-            if (def->type == UITypeEnum::TEXT && config && config->text)
+            if (def.type == UITypeEnum::TEXT && config && config->text)
             {
                 float scale = config->scale.value_or(1.0f);
                 float fontSize = localization::getFontData().fontLoadedSize * scale * localization::getFontData().fontScale;
@@ -149,24 +169,24 @@ namespace ui
                 SPDLOG_DEBUG("Inserted child into parent {}: ID = {}, Entity = {}", static_cast<int>(parent), thisConfig.id.value(), static_cast<int>(entity));
             }
 
-            if (def->config.mid)
+            if (def.config.mid)
             {
                 auto &boxTransform = registry.get<transform::Transform>(uiBoxEntity);
                 boxTransform.middleEntityForAlignment = entity;
             }
 
             // Push children in reverse order so the first child is processed first
-            if (def->type == UITypeEnum::VERTICAL_CONTAINER || def->type == UITypeEnum::HORIZONTAL_CONTAINER || def->type == UITypeEnum::ROOT)
+            if (def.type == UITypeEnum::VERTICAL_CONTAINER || def.type == UITypeEnum::HORIZONTAL_CONTAINER || def.type == UITypeEnum::ROOT)
             {
-                SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def->type));
-                for (int i = static_cast<int>(def->children.size()) - 1; i >= 0; --i)
+                SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def.type));
+                for (int i = static_cast<int>(def.children.size()) - 1; i >= 0; --i)
                 {
                     // Only assign an ID if one hasn't already been set
-                    if (!def->children[i].config.id.has_value())
+                    if (!def.children[i].config.id.has_value())
                     {
-                        def->children[i].config.id = std::to_string(i); // or use indexToAlphaID(i)
+                        def.children[i].config.id = std::to_string(i); // or use indexToAlphaID(i)
                     }
-                    stack.push({&def->children[i], entity});
+                    stack.push({def.children[i], entity});
                 }
             }
         }

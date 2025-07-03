@@ -19,7 +19,7 @@
 
 ## Kinda high priority
 - [ ] textured particles - need to get working
-- [ ] make collider aware of ui elements and optionally ignore, also choose between ui space and world space
+- [ ] make collider aware of ui elements and optionally ignore, also choose between ui space and world space? Maybe an efficient collision tag system for transform entities -> https://chatgpt.com/share/686691c9-7fd0-800a-b450-91854c78cb1b
 - [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
 - [ ] update the gamejam 50 branch with the new branch, then test
 - [ ] test all of the above to make sure it's working

@@ -50,6 +50,14 @@ namespace ui
             registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
             nodeToEntity[def] = entity;
             auto *config = registry.try_get<UIConfig>(entity);
+            
+            // if ((int)entity == 840) {
+            //     SPDLOG_DEBUG("Debugging UI element with entity ID 840");
+            // }
+            
+            if (magic_enum::enum_name<UITypeEnum>(def->type) == "") {
+                SPDLOG_ERROR("UITypeEnum is not set for entity {}, parent {}, type {}", static_cast<int>(entity), static_cast<int>(parent), magic_enum::enum_name<UITypeEnum>(def->type));
+            }
 
             SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def->type), static_cast<int>(entity), static_cast<int>(parent));
 

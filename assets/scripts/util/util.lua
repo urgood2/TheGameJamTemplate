@@ -101,6 +101,11 @@ function showTooltip(titleText, bodyText)
 end
 
 function showNewAchievementPopup(achievementID)
+  if not globals.ui.newAchievementUIBox then
+    debug("showNewAchievementPopup: newAchievementUIBox is not set up, skipping")
+    return
+  end
+  
   -- get the achievement definition
   local achievementDef = findInTable(globals.achievements, "id", achievementID)
   

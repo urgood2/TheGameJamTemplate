@@ -20,7 +20,6 @@
 ## Kinda high priority
 - [ ] make collider aware of ui elements and optionally ignore
 - [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
-- [ ] update master branch with timer changes & tooltip hover change
 - [ ] why does ui "unwrap" itself sometimes?? Happens with all ui, it seems, unclear why (gravitational wave bar, achievements window)
 - [ ] update the gamejam 50 branch with the new branch, then test
 - [ ] test all of the above to make sure it's working

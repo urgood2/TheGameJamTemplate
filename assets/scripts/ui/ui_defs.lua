@@ -624,6 +624,8 @@ function ui_defs.generateUI()
         nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
+    
+    debug("Creating close button template...")
     -- make a new close button template
     local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)

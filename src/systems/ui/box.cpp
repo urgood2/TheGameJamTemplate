@@ -251,7 +251,7 @@ namespace ui
         transform.setActualRotation(transformData.r);
 
         // Store UIBox definition, which contains schematic
-        registry.emplace<UIElementTemplateNode>(self, definition);
+        auto &templateDefToUse = registry.emplace<UIElementTemplateNode>(self, definition);
         if (config)
             registry.emplace<UIConfig>(self, config.value());
         registry.emplace<UIState>(self);
@@ -308,7 +308,7 @@ namespace ui
         // Parent-child relationship setup (construct UI tree)
 
         // First, set parent-child relationships to create the tree structure
-        BuildUIElementTree(registry, self, definition, entt::null);
+        BuildUIElementTree(registry, self, templateDefToUse, entt::null);
         auto *uiBox = registry.try_get<UIBoxComponent>(self);
         auto *uiBoxRole = registry.try_get<transform::InheritedProperties>(self);
         auto uiRoot = uiBox->uiRoot.value();

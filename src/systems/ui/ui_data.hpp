@@ -27,19 +27,19 @@ namespace ui
     
     enum class UITypeEnum
     {           
-        NONE,   // no type, for error checking
+        NONE = 0,   // no type, for error checking
 
         // containers. (root is treated as a column if it has children)
-        ROOT,   // container, base ui element which serves as head of hierarchy.
-        VERTICAL_CONTAINER, // container, a columnar ui element
-        HORIZONTAL_CONTAINER,    // container, a row ui element
+        ROOT = 1,   // container, base ui element which serves as head of hierarchy.
+        VERTICAL_CONTAINER = 2, // container, a columnar ui element
+        HORIZONTAL_CONTAINER = 3,    // container, a row ui element
 
         // ui elements.
-        SLIDER_UI, // element, a slider bar ui element
-        INPUT_TEXT, // element, a text input ui element
-        RECT_SHAPE,   // element, box shape
-        TEXT,  // element, Simple text (not dynamic or animated)
-        OBJECT // element, game object (like animated text, sprite, etc.)
+        SLIDER_UI = 4, // element, a slider bar ui element
+        INPUT_TEXT = 5, // element, a text input ui element
+        RECT_SHAPE = 6,   // element, box shape
+        TEXT = 7,  // element, Simple text (not dynamic or animated)
+        OBJECT = 8 // element, game object (like animated text, sprite, etc.)
     };
 
     /**
@@ -784,19 +784,28 @@ namespace ui
     // used for generating ui definitions
     struct UIElementTemplateNode
     {
-        UITypeEnum type;                             // Type of UI Element (e.g., ROOT, TEXT, COLUMN)
+        UITypeEnum type{UITypeEnum::NONE};                             // Type of UI Element (e.g., ROOT, TEXT, COLUMN)
         UIConfig config;                             // Config settings (align, padding, color, etc.)
         std::vector<UIElementTemplateNode> children; // Child UI elements
-
+        
+        
         struct Builder {
             std::shared_ptr<UIElementTemplateNode> uiElement = std::make_shared<UIElementTemplateNode>();
+            bool addTypeCalled = false; // Flag to check if addType was called
 
             static Builder create() {
                 return Builder();
             }
 
             Builder& addType(const UITypeEnum& type) {
+                if (!magic_enum::enum_contains<UITypeEnum>(type)) {
+                    throw std::invalid_argument(
+                      std::string("addType(): invalid UITypeEnum value = ")
+                      + std::to_string(static_cast<int>(type))
+                    );
+                }
                 uiElement->type = type;
+                addTypeCalled = true; // Set the flag to true when addType is called
                 return *this;
             }
 
@@ -811,6 +820,10 @@ namespace ui
             }
 
             UIElementTemplateNode build() {
+                // assert that addType was called for this builder.
+                if (!addTypeCalled) {
+                    throw std::runtime_error("UIElementTemplateNode must have a type set before building.");
+                }
                 return *uiElement;
             }
         };

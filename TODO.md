@@ -18,6 +18,7 @@
 - [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/68624700-963c-800a-b35e-53d2c4699da2 -> additional quadtree. needs to be implemented. 
 
 ## Kinda high priority
+- [ ] BREAKING BUG: in BuildUIElementTree, def->type sometimes has garbage values
 - [ ] make collider aware of ui elements and optionally ignore
 - [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
 - [ ] why does ui "unwrap" itself sometimes?? Happens with all ui, it seems, unclear why (gravitational wave bar, achievements window)

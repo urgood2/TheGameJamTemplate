@@ -582,6 +582,7 @@ namespace TextSystem
                     
                     // store it under its alias
                     txtComp.luaWaiters[alias] = std::move(co);
+                    txtComp.luaWaitThreads[alias] = std::move(thr);
                 }
             }
             
@@ -1736,10 +1737,17 @@ namespace TextSystem
                                 case Text::WaitPoint::Lua:
                                 {
                                     auto alias = wp.id;
+                                    
                                     auto &co = text.luaWaiters.at(alias);
-                                    sol::protected_function_result result = co();        // resume it
-                                    if (!result.valid()) { /* handle error */ 
-                                        SPDLOG_ERROR("Lua coroutine error: {}", result.get<std::string>());
+                                    if (!co.valid() ||
+                                        co.status() != sol::call_status::yielded) {
+                                    // either never created, or already completed — bail out
+                                    return;
+                                    }
+                                    sol::protected_function_result result = co();
+                                    if (!result.valid()) {
+                                        sol::error err = result;
+                                        spdlog::error("Coroutine error: {}", err.what());
                                         std::abort();
                                     }
                                     else if (co.status() == sol::call_status::yielded) {

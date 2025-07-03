@@ -460,6 +460,30 @@ function spawnNewWhale()
     ) 
     
     local collider = collision.create_collider_for_entity(bowser, {width = 50, height = 50, alignment = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM})
+    
+    -- give it a ScriptComponent with an onCollision method
+    local ColliderLogic = {
+        -- Custom data carried by this table
+        speed        = 150, -- pixels / second
+        hp           = 10,
+
+        -- Called once, right after the component is attached.
+        init         = function(self)
+        end,
+
+        -- Called every frame by script_system_update()
+        update       = function(self, dt)
+        end,
+
+        on_collision = function(self, other)
+            -- debug("whale collided with", other)
+        end,
+
+        -- Called just before the entity is destroyed
+        destroy      = function(self)
+        end
+    }
+    registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 
     transformComp = registry:get(bowser, Transform)
     nodeComp = registry:get(bowser, GameObject)

@@ -12,10 +12,39 @@
 - [ ]  Easy way to access text & elements on already created ui? -> I already have getUIEbyID, document it, also get a way to ensure I'm interacting with the text/animation object itself, rather than the object uielement that wraps it -> https://chatgpt.com/share/6860e021-29d4-800a-9b4e-aaa7bc0ed4ae
 
 
+
+
+- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3 -> document the use of the tag "elementID" with getTextFromString. For updating such multi-line tagged static ui, 1) just delete everything (including animations /etc ) and inject again with new definition when something changes.; 2) alternatively inject short text and attach a getter to it (static ui can also have getters, see: textGetter) 3) fetch the segment in question after it becomes a uielement through the id assigned via the raw text ("elementID") -> eg. [Warning!](background=yellow;elementID=warning_box) 
+- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/68624700-963c-800a-b35e-53d2c4699da2 -> additional quadtree. needs to be implemented. 
+
+## Kinda high priority
+- [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
+- [ ] update master branch with timer changes & tooltip hover change
+- [ ] why does ui "unwrap" itself sometimes??
+- [ ] update the gamejam 50 branch with the new branch, then test
+- [ ] test all of the above to make sure it's working
+- [ ] have all shadows for sprites, text, etc. in the same layer, below the sprites, text, etc.
+
+- [ ] Dont update text and ui that is out of bounds 
+
+- [ ] way to keep track of y-values for successive test mesages so they don't overlap
+- [ ] Try debug achievements window sometimes leaving out an achievement
+
+
+# Documentation
+- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
+- [ ] 
+NOTE that current text implementation is brittle and requires the arguments to be specifically in the number in the docs, and in the specified order
+```
+<typing,speed=0.05>
+Hello, brave hero! <wait=key,id=KEY_ENTER>
+Hello, brave hero! <wait=mouse,id=MOUSE_BUTTON_LEFT>
+Press ENTER to continue…<wait=lua,id=myCustomCallback>
+And now the rest…
+```
+
 - [ ] ability ti add arbitrary colliders and link them to an event (on collision) need to ignore transform components which aren't collision enabled in an efficient manner -> https://chatgpt.com/share/6860eae3-67a8-800a-b105-849b6c82de32 -> done, expose to lua, document, and test
 
-bug: collider rotates too much around the object when the object itself rotates?
-- make colliders not do the tilting thing when they move
 ```lua
 
 -- create custom collider entity which is always, underneath, a transform. But it should have custom types like (circle) which will decide how the collision system resolves the collision
@@ -47,39 +76,6 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 -- now it will be checked in collision.
 
 ```
-
-
-- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3 -> document the use of the tag "elementID" with getTextFromString. For updating such multi-line tagged static ui, 1) just delete everything (including animations /etc ) and inject again with new definition when something changes.; 2) alternatively inject short text and attach a getter to it (static ui can also have getters, see: textGetter) 3) fetch the segment in question after it becomes a uielement through the id assigned via the raw text ("elementID") -> eg. [Warning!](background=yellow;elementID=warning_box) 
-- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/68624700-963c-800a-b35e-53d2c4699da2 -> additional quadtree. needs to be implemented. 
-
-## Kinda high priority
-- [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
-- [ ] update master branch with timer changes & tooltip hover change
-- [ ] why does ui "unwrap" itself sometimes??
-- [ ] update the gamejam 50 branch with the new branch, then test
-- [ ] test all of the above to make sure it's working
-- [ ] have all shadows for sprites, text, etc. in the same layer, below the sprites, text, etc.
-
-- [ ] Dont update text and ui that is out of bounds 
-
-- [ ] way to keep track of y-values for successive test mesages so they don't overlap
-- [ ] Add lua gc (from entt meets sol2)
-- [ ] Try debug achievements window sometimes leaving out an achievement
-- [  ] text coroutine bug: https://chatgpt.com/share/6865cce9-c938-800a-b9bc-7ec21e774ed1
-
-
-# Documentation
-- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
-- [ ] 
-NOTE that current text implementation is brittle and requires the arguments to be specifically in the number in the docs, and in the specified order
-```
-<typing,speed=0.05>
-Hello, brave hero! <wait=key,id=KEY_ENTER>
-Hello, brave hero! <wait=mouse,id=MOUSE_BUTTON_LEFT>
-Press ENTER to continue…<wait=lua,id=myCustomCallback>
-And now the rest…
-```
-
 
 
 ## Game todos (Jame Gam 50)

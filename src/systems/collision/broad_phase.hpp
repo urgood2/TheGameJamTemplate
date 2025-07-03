@@ -79,7 +79,7 @@ namespace collision {
         role.flags->extraAlignmentFinetuningOffset = Vector2{alignOffX, alignOffY};
         
         // link your hierarchy using assignRole (or InheritedProperties):
-        transform::AssignRole(&globals::registry, e, transform::InheritedProperties::Type::RoleInheritor, master, std::nullopt, std::nullopt, std::nullopt, std::nullopt, Vector2{ox, oy});
+        transform::AssignRole(&globals::registry, e, transform::InheritedProperties::Type::PermanentAttachment, master, std::nullopt, std::nullopt, std::nullopt, std::nullopt, Vector2{ox, oy});
 
         // D) add a default ColliderComponent:
         auto  &c = globals::registry.emplace<ColliderComponent>(e);

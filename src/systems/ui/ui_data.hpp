@@ -787,46 +787,49 @@ namespace ui
         UITypeEnum type{UITypeEnum::NONE};                             // Type of UI Element (e.g., ROOT, TEXT, COLUMN)
         UIConfig config;                             // Config settings (align, padding, color, etc.)
         std::vector<UIElementTemplateNode> children; // Child UI elements
+        struct Builder;   // <-- just announce it exists
+
         
+    };
+    
+    
+    struct UIElementTemplateNode::Builder {
+        UIElementTemplateNode uiElement{};
+        bool addTypeCalled = false; // Flag to check if addType was called
+
+        static Builder create() {
+            return Builder();
+        }
+
+        Builder& addType(const UITypeEnum& type) {
+            if (!magic_enum::enum_contains<UITypeEnum>(type)) {
+                throw std::invalid_argument(
+                  std::string("addType(): invalid UITypeEnum value = ")
+                  + std::to_string(static_cast<int>(type))
+                );
+            }
+            uiElement.type = type;
+            addTypeCalled = true; // Set the flag to true when addType is called
+            return *this;
+        }
+
+        Builder& addConfig(const UIConfig& config) {
+            uiElement.config = config;
+            return *this;
+        }
         
-        struct Builder {
-            std::shared_ptr<UIElementTemplateNode> uiElement = std::make_shared<UIElementTemplateNode>();
-            bool addTypeCalled = false; // Flag to check if addType was called
+        Builder& addChild(const UIElementTemplateNode& child) {
+            uiElement.children.push_back(child);
+            return *this;
+        }
 
-            static Builder create() {
-                return Builder();
+        UIElementTemplateNode build() {
+            // assert that addType was called for this builder.
+            if (!addTypeCalled) {
+                throw std::runtime_error("UIElementTemplateNode must have a type set before building.");
             }
-
-            Builder& addType(const UITypeEnum& type) {
-                if (!magic_enum::enum_contains<UITypeEnum>(type)) {
-                    throw std::invalid_argument(
-                      std::string("addType(): invalid UITypeEnum value = ")
-                      + std::to_string(static_cast<int>(type))
-                    );
-                }
-                uiElement->type = type;
-                addTypeCalled = true; // Set the flag to true when addType is called
-                return *this;
-            }
-
-            Builder& addConfig(const UIConfig& config) {
-                uiElement->config = config;
-                return *this;
-            }
-            
-            Builder& addChild(const UIElementTemplateNode& child) {
-                uiElement->children.push_back(child);
-                return *this;
-            }
-
-            UIElementTemplateNode build() {
-                // assert that addType was called for this builder.
-                if (!addTypeCalled) {
-                    throw std::runtime_error("UIElementTemplateNode must have a type set before building.");
-                }
-                return *uiElement;
-            }
-        };
+            return uiElement;
+        }
     };
 
     // Data structure for drawing a pixellated rectangle with rough edges

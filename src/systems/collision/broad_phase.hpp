@@ -91,6 +91,8 @@ namespace collision {
         transform.setActualH(h);
         transform.setActualRotation(rotation);
         transform.setActualScale(scale);
+        transform.ignoreDynamicMotion = true; // ignore dynamic motion, we only use this for static collision checks
+        transform.ignoreXLeaning = true; // ignore x leaning, we only use this for static collision checks
         
         return e;
     }

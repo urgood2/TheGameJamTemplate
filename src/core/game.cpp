@@ -543,6 +543,9 @@ namespace game
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
         
+        // lua garbage collection
+        ai_system::masterStateLua.step_gc(4); 
+        
         // update lua main script
         sol::protected_function_result result = luaMainUpdateFunc(delta);
         if (!result.valid()) {

@@ -65,7 +65,7 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
 - [ ] Add lua gc (from entt meets sol2)
 - [ ] Try debug achievements window sometimes leaving out an achievement
-
+- [  ] text coroutine bug: https://chatgpt.com/share/6865cce9-c938-800a-b9bc-7ec21e774ed1
 
 
 # Documentation

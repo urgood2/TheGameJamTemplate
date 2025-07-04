@@ -757,6 +757,11 @@ function main.update(dt)
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
     globals.timeUntilNextGravityWave = globals.timeUntilNextGravityWave - dt
+    
+    
+    
+    
+    
     -- entity iteration example
     -- local view = registry:runtime_view(Transform)
     -- assert(view:size_hint() > 0)

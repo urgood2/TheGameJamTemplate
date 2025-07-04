@@ -897,6 +897,7 @@ namespace particle
                 a.loop          = (*animOpts).get_or("loop",          a.loop);
                 a.animationName = (*animOpts).get_or("animationName", a.animationName);
                 cfg = a;
+                p.renderType = particle::ParticleRenderType::TEXTURE; // force TEXTURE for animation
             }
             // call your function
             auto e =  CreateParticle(globals::registry, location, size, p, cfg, tag.value_or(""));

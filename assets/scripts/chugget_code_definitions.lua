@@ -5879,8 +5879,9 @@ function timer.update(...) end
 --- Creates a timer that runs an action once immediately.
 ---
 ---@param action fun()
----@param tag? string
 ---@param after? fun()
+---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.run(...) end
 
@@ -5890,6 +5891,7 @@ function timer.run(...) end
 ---@param delay number|{number, number} # A fixed delay or a {min, max} range in seconds.
 ---@param action fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.after(...) end
 
@@ -5902,6 +5904,7 @@ function timer.after(...) end
 ---@param times? integer # Number of times to run. 0 for infinite.
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.cooldown(...) end
 
@@ -5914,6 +5917,7 @@ function timer.cooldown(...) end
 ---@param immediate? boolean # If true, the action runs immediately on creation.
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.every(...) end
 
@@ -5928,6 +5932,7 @@ function timer.every(...) end
 ---@param step_method? fun(t:number):number # Easing function for delay interpolation.
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.every_step(...) end
 
@@ -5938,6 +5943,7 @@ function timer.every_step(...) end
 ---@param action fun(dt:number)
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.for_time(...) end
 
@@ -5951,8 +5957,44 @@ function timer.for_time(...) end
 ---@param easing_method? fun(t:number):number # Optional easing function (0.0-1.0).
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.tween(...) end
+
+---
+--- Pauses the timer with the given tag.
+---
+---@param tag string # The tag/handle of the timer to pause.
+---@return nil
+function timer.pause(...) end
+
+---
+--- Resumes a previously paused timer.
+---
+---@param tag string # The tag/handle of the timer to resume.
+---@return nil
+function timer.resume(...) end
+
+---
+--- Cancels (removes) all timers in the specified group.
+---
+---@param group string # The name of the timer group to cancel.
+---@return nil
+function timer.kill_group(...) end
+
+---
+--- Pauses all timers in the specified group.
+---
+---@param group string # The name of the timer group to pause.
+---@return nil
+function timer.pause_group(...) end
+
+---
+--- Resumes all timers in the specified group.
+---
+---@param group string # The name of the timer group to resume.
+---@return nil
+function timer.resume_group(...) end
 
 ---
 --- Cancels and destroys an active timer.

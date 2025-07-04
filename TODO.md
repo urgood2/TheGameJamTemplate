@@ -14,6 +14,36 @@
 - [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/68624700-963c-800a-b35e-53d2c4699da2 -> additional quadtree. needs to be implemented. 
 
 ## Kinda high priority
+- [ ] need to incorporate "group" into all lua bindings for timer system
+- [ ]need lua bindings for
+```cpp
+inline void pause_timer(const std::string& tag)   { timers.at(tag).paused = true; }
+inline void resume_timer(const std::string& tag)  { timers.at(tag).paused = false; }
+void kill_group(const std::string& group) {
+  auto it = groups.find(group);
+  if (it == groups.end()) return;
+  for (auto& tag : it->second) {
+    timers.erase(tag);
+  }
+  groups.erase(it);
+}
+
+void pause_group(const std::string& group) {
+  auto it = groups.find(group);
+  if (it == groups.end()) return;
+  for (auto& tag : it->second) {
+    timers[tag].paused = true;
+  }
+}
+
+void resume_group(const std::string& group) {
+  auto it = groups.find(group);
+  if (it == groups.end()) return;
+  for (auto& tag : it->second) {
+    timers[tag].paused = false;
+  }
+}
+```
 - [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
 - [ ] update the gamejam 50 branch with the new branch, then test
 - [ ] test all of the above to make sure it's working
@@ -75,6 +105,26 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 
 -- now it will be checked in collision.
 
+```
+- [ ] using textuerd particles:
+
+```lua
+particle.CreateParticle(
+    Vec2(x, y),                 -- start at the center
+    Vec2(initialSize, initialSize),
+    {
+        renderType     = particle.ParticleRenderType.RECTANGLE_FILLED,
+        velocity       = Vec2(vx, vy),
+        acceleration   = 0,      -- no gravity
+        lifespan       = seconds,
+        startColor     = util.getColor("WHITE"),
+        endColor       = util.getColor("WHITE"),
+        rotationSpeed  = rotationSpeed,
+        onUpdateCallback = function(comp, dt)
+        end,
+    },
+    { loop = true, animationName = "idle_animation"} -- animation config
+)
 ```
 
 

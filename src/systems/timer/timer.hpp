@@ -70,6 +70,8 @@ namespace timer
         std::function<void()> after = []() {};            // Function to call after cancellation
         std::function<bool()> condition;
         std::vector<float> delays;
+        
+        bool paused = false; // Whether the timer is paused
 
         // Tween-specific fields
         std::function<float()> getter;             // Getter function for the value to be tweened
@@ -85,6 +87,11 @@ namespace timer
     namespace TimerSystem
     {
         extern std::unordered_map<std::string, Timer> timers; // Timer Storage
+        
+        // new: store groups of timers by tag, does not interfere with the main timers map
+        extern std::unordered_map<std::string, std::vector<std::string>> groups;
+        
+        const std::string default_group_tag = "default"; // Default group for timers. All timers without a group will be added to this group.
 
         const int base_uid = 0;
         extern int uuid_counter;
@@ -106,10 +113,15 @@ namespace timer
         }
 
         // Core timer management functions
-        inline void add_timer(const std::string &tag, const Timer &timer)
+        inline void add_timer(const std::string &tag, const Timer &timer, const std::string& group=default_group_tag)
         { // add a new timer to the system
             timers[tag] = std::move(timer);
+            if (!group.empty())
+                groups[group].push_back(tag);
         }
+        
+        inline void pause_timer(const std::string& tag)   { timers.at(tag).paused = true; }
+        inline void resume_timer(const std::string& tag)  { timers.at(tag).paused = false; }
 
         inline void cancel_timer(const std::string &tag)
         {
@@ -305,6 +317,31 @@ namespace timer
                 return Random::get<float>(min_delay, max_delay - std::numeric_limits<float>::epsilon());
             }
         }
+        
+        inline void kill_group(const std::string& group) {
+            auto it = groups.find(group);
+            if (it == groups.end()) return;
+            for (auto& tag : it->second) {
+              timers.erase(tag);
+            }
+            groups.erase(it);
+          }
+          
+        inline void pause_group(const std::string& group) {
+            auto it = groups.find(group);
+            if (it == groups.end()) return;
+            for (auto& tag : it->second) {
+                timers[tag].paused = true;
+            }
+        }
+        
+        inline void resume_group(const std::string& group) {
+            auto it = groups.find(group);
+            if (it == groups.end()) return;
+            for (auto& tag : it->second) {
+                timers[tag].paused = false;
+            }
+        }
 
         inline void update_timers(float dt)
         {
@@ -312,6 +349,13 @@ namespace timer
             for (auto it = timers.begin(); it != timers.end();)
             {
                 Timer &timer = it->second;
+                
+                if (timer.paused)
+                {
+                    // If the timer is paused, skip to the next timer
+                    ++it;
+                    continue;
+                }
 
                 // update timer
                 timer.timer += dt;
@@ -443,13 +487,13 @@ namespace timer
         // Timer creation functions
         // ------------------------------------------------
 
-        extern void timer_run(const std::function<void(std::optional<float>)> &action, const std::function<void()> &after = []() {}, const std::string &tag = "");
-        extern void timer_after(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, const std::string &tag = "");
-        extern void timer_cooldown(std::variant<float, std::pair<float, float>> delay, const std::function<bool()> &condition, const std::function<void(std::optional<float>)> &action, int times = 0, const std::function<void()> &after = []() {}, const std::string &tag = "");
-        extern void timer_every(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, int times = 0, bool immediate = false, const std::function<void()> &after = []() {}, const std::string &tag = "");
-        extern void timer_every_step(float start_delay, float end_delay, int times, const std::function<void(std::optional<float>)> &action, bool immediate = false, const std::function<float(float)> &step_method = nullptr, const std::function<void()> &after = []() {}, const std::string &tag = "");
-        extern void timer_for(std::variant<float, std::pair<float, float>> duration, const std::function<void(std::optional<float>)> &action, const std::function<void()> &after = []() {}, const std::string &tag = "");
-        extern void timer_tween(std::variant<float, std::pair<float, float>> duration, const std::function<float()> &getter, const std::function<void(float)> &setter, float target_value, const std::string &tag = "", const std::function<float(float)> &easing_method = [](float t)
+        extern void timer_run(const std::function<void(std::optional<float>)> &action, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);
+        extern void timer_after(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, const std::string &tag = "", const std::string& group=default_group_tag);
+        extern void timer_cooldown(std::variant<float, std::pair<float, float>> delay, const std::function<bool()> &condition, const std::function<void(std::optional<float>)> &action, int times = 0, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);
+        extern void timer_every(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, int times = 0, bool immediate = false, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);
+        extern void timer_every_step(float start_delay, float end_delay, int times, const std::function<void(std::optional<float>)> &action, bool immediate = false, const std::function<float(float)> &step_method = nullptr, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);
+        extern void timer_for(std::variant<float, std::pair<float, float>> duration, const std::function<void(std::optional<float>)> &action, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);
+        extern void timer_tween(std::variant<float, std::pair<float, float>> duration, const std::function<float()> &getter, const std::function<void(float)> &setter, float target_value, const std::string &tag = "", const std::string& group=default_group_tag, const std::function<float(float)> &easing_method = [](float t)
                                                                                                                                                                                            { return t < 0.5 ? 2 * t * t : t * (4 - 2 * t) - 1; }, // Default easing method (ease-in-out quad)
                                 const std::function<void()> &after = []() {});
 

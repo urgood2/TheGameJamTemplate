@@ -263,22 +263,25 @@ wrap_timer_action(sol::function action) {
         t.set_function("run",
             [](sol::function action,
             sol::function after,
-            sol::optional<std::string> maybeTag)
+            sol::optional<std::string> maybeTag,
+            sol::optional<std::string> maybeGroup)
             {
                 auto actionWrapper = wrap_timer_action(std::move(action));
                 auto afterWrapper  = wrap_noarg_callback(std::move(after));
                 std::string tag = maybeTag.value_or("");
-                timer::TimerSystem::timer_run(actionWrapper, afterWrapper, tag);
+                std::string group = maybeGroup.value_or("");
+                timer::TimerSystem::timer_run(actionWrapper, afterWrapper, tag, group);
             });
         // timer_after(delay, action, tag)
         t.set_function("after",
             [](std::variant<float,std::pair<float,float>> delay,
             sol::function action,
-            sol::optional<std::string> maybeTag)
+            sol::optional<std::string> maybeTag,
+            sol::optional<std::string> maybeGroup)
             {
                 auto actionWrapper = wrap_timer_action(std::move(action));
                 std::string tag = maybeTag.value_or("");
-                timer::TimerSystem::timer_after(delay, actionWrapper, tag);
+                timer::TimerSystem::timer_after(delay, actionWrapper, tag, maybeGroup.value_or(""));
             });
         // timer_cooldown(delay, condition, action, times, after, tag)
         t.set_function("cooldown",
@@ -287,7 +290,8 @@ wrap_timer_action(sol::function action) {
             sol::function action,
             sol::optional<int> maybeTimes,
             sol::function after,
-            sol::optional<std::string> maybeTag)
+            sol::optional<std::string> maybeTag,
+            sol::optional<std::string> maybeGroup)
             {
                 int times = maybeTimes.value_or(0);
                 auto condWrapper   = wrap_condition(std::move(condition));
@@ -295,7 +299,7 @@ wrap_timer_action(sol::function action) {
                 auto afterWrapper  = wrap_noarg_callback(std::move(after));
                 std::string tag = maybeTag.value_or("");
                 timer::TimerSystem::timer_cooldown(
-                    delay, condWrapper, actionWrapper, times, afterWrapper, tag);
+                    delay, condWrapper, actionWrapper, times, afterWrapper, tag, maybeGroup.value_or(""));
             });
         // t.set_function("every",      &timer::TimerSystem::timer_every);
         t.set_function("every",
@@ -304,7 +308,8 @@ wrap_timer_action(sol::function action) {
            sol::optional<int> maybeTimes,
            sol::optional<bool> maybeImmediate,
            sol::function maybeAfter,
-           sol::optional<std::string> maybeTag) 
+           sol::optional<std::string> maybeTag,
+           sol::optional<std::string> maybeGroup) 
         {
             std::function<void(std::optional<float>)> actionWrapper = wrap_timer_action(action);
             // if the user passed nil (i.e. no 3rd arg), maybeTimes will be empty
@@ -313,7 +318,7 @@ wrap_timer_action(sol::function action) {
             // std::function<void()> after = maybeAfter.value_or(sol::function{});
             auto maybeAfterWrapper = wrap_noarg_callback(maybeAfter);
             std::string tag = maybeTag.value_or("");
-            timer::TimerSystem::timer_every(interval, actionWrapper, times, immediate, maybeAfterWrapper, tag);
+            timer::TimerSystem::timer_every(interval, actionWrapper, times, immediate, maybeAfterWrapper, tag, maybeGroup.value_or(""));
         });
         // timer_every_step(start, end, times, action, immediate, step, after, tag)
         t.set_function("every_step",
@@ -324,7 +329,8 @@ wrap_timer_action(sol::function action) {
             sol::optional<bool> maybeImmediate,
             sol::function step_method,
             sol::function after,
-            sol::optional<std::string> maybeTag)
+            sol::optional<std::string> maybeTag,
+            sol::optional<std::string> maybeGroup)
             {
                 bool immediate = maybeImmediate.value_or(false);
                 auto actionWrapper = wrap_timer_action(std::move(action));
@@ -335,18 +341,20 @@ wrap_timer_action(sol::function action) {
                     start_delay, end_delay, times,
                     actionWrapper, immediate,
                     stepWrapper, afterWrapper,
-                    tag);
+                    tag, maybeGroup.value_or("")
+                );
             });
         t.set_function("for",
             [](std::variant<float,std::pair<float,float>> duration,
                 sol::function action,
                 sol::function after,
-                sol::optional<std::string> maybeTag)
+                sol::optional<std::string> maybeTag,
+                sol::optional<std::string> maybeGroup)
             {
                 auto actionWrapper = wrap_timer_action(std::move(action));
                 auto afterWrapper  = wrap_noarg_callback(std::move(after));
                 std::string tag = maybeTag.value_or("");
-                timer::TimerSystem::timer_for(duration, actionWrapper, afterWrapper, tag);
+                timer::TimerSystem::timer_for(duration, actionWrapper, afterWrapper, tag, maybeGroup.value_or(""));
             });
         
         
@@ -359,6 +367,7 @@ wrap_timer_action(sol::function action) {
             sol::function setter,
             float target_value,
             sol::optional<std::string> maybeTag,
+            sol::optional<std::string> maybeGroup,
             sol::function easing_method,
             sol::function after)
             {
@@ -396,33 +405,35 @@ wrap_timer_action(sol::function action) {
                     setWrapper,
                     target_value,
                     tag,
+                    maybeGroup.value_or(""),
                     easeWrapper,
                     afterWrapper
                 );
             });
         
 
-        // Recorder: creation functions
         rec.record_free_function({"timer"}, {
             "run",
             "---@param action fun()\n"
-            "---@param tag? string\n"
             "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a timer that runs an action once immediately.",
             true, false
         });
-
+        
         rec.record_free_function({"timer"}, {
             "after",
             "---@param delay number|{number, number} # A fixed delay or a {min, max} range in seconds.\n"
             "---@param action fun()\n"
             "---@param tag? string\n"
+            "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a timer that runs an action once after a delay.",
             true, false
         });
-
+        
         rec.record_free_function({"timer"}, {
             "cooldown",
             "---@param delay number|{number, number} # Cooldown duration in seconds or a {min, max} range.\n"
@@ -431,11 +442,12 @@ wrap_timer_action(sol::function action) {
             "---@param times? integer # Number of times to run. 0 for infinite.\n"
             "---@param after? fun()\n"
             "---@param tag? string\n"
+            "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a resettable timer that fires an action when a condition is met after a cooldown.",
             true, false
         });
-
+        
         rec.record_free_function({"timer"}, {
             "every",
             "---@param interval number|{number, number} # Interval in seconds or a {min, max} range.\n"
@@ -444,11 +456,12 @@ wrap_timer_action(sol::function action) {
             "---@param immediate? boolean # If true, the action runs immediately on creation.\n"
             "---@param after? fun()\n"
             "---@param tag? string\n"
+            "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a timer that runs an action repeatedly at a given interval.",
             true, false
         });
-
+        
         rec.record_free_function({"timer"}, {
             "every_step",
             "---@param start_delay number\n"
@@ -459,22 +472,24 @@ wrap_timer_action(sol::function action) {
             "---@param step_method? fun(t:number):number # Easing function for delay interpolation.\n"
             "---@param after? fun()\n"
             "---@param tag? string\n"
+            "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a timer that runs for a set number of steps, interpolating the delay between a start and end value.",
             true, false
         });
-
+        
         rec.record_free_function({"timer"}, {
             "for_time",
             "---@param duration number|{number, number} # Total duration in seconds or a {min, max} range.\n"
             "---@param action fun(dt:number)\n"
             "---@param after? fun()\n"
             "---@param tag? string\n"
+            "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a timer that runs an action every frame for a set duration, passing delta time to the action.",
             true, false
         });
-
+        
         rec.record_free_function({"timer"}, {
             "tween",
             "---@param duration number|{number, number} # Duration of the tween in seconds or a {min, max} range.\n"
@@ -484,13 +499,95 @@ wrap_timer_action(sol::function action) {
             "---@param easing_method? fun(t:number):number # Optional easing function (0.0-1.0).\n"
             "---@param after? fun()\n"
             "---@param tag? string\n"
+            "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a timer that interpolates a value towards a target over a duration.",
+            true, false
+        });
+        
+        
+        // timer.pause(tag)
+        t.set_function("pause",
+            [](const std::string& tag) {
+                timer::TimerSystem::pause_timer(tag);
+            }
+        );
+
+        // timer.resume(tag)
+        t.set_function("resume",
+            [](const std::string& tag) {
+                timer::TimerSystem::resume_timer(tag);
+            }
+        );
+
+        // timer.kill_group(group)
+        t.set_function("kill_group",
+            [](const std::string& group) {
+                timer::TimerSystem::kill_group(group);
+            }
+        );
+
+        // timer.pause_group(group)
+        t.set_function("pause_group",
+            [](const std::string& group) {
+                timer::TimerSystem::pause_group(group);
+            }
+        );
+
+        // timer.resume_group(group)
+        t.set_function("resume_group",
+            [](const std::string& group) {
+                timer::TimerSystem::resume_group(group);
+            }
+        );
+
+
+
+        // --- Lua Documentation via recorder ---
+
+        rec.record_free_function({"timer"}, {
+            "pause",
+            "---@param tag string # The tag/handle of the timer to pause.\n"
+            "---@return nil",
+            "Pauses the timer with the given tag.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "resume",
+            "---@param tag string # The tag/handle of the timer to resume.\n"
+            "---@return nil",
+            "Resumes a previously paused timer.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "kill_group",
+            "---@param group string # The name of the timer group to cancel.\n"
+            "---@return nil",
+            "Cancels (removes) all timers in the specified group.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "pause_group",
+            "---@param group string # The name of the timer group to pause.\n"
+            "---@return nil",
+            "Pauses all timers in the specified group.",
+            true, false
+        });
+
+        rec.record_free_function({"timer"}, {
+            "resume_group",
+            "---@param group string # The name of the timer group to resume.\n"
+            "---@return nil",
+            "Resumes all timers in the specified group.",
             true, false
         });
 
 
         // Recorder: control/query functions
+        
         rec.record_free_function({"timer"}, {
             "cancel",
             "---@param timerHandle integer # The handle of the timer to cancel.\n"
@@ -779,6 +876,7 @@ wrap_timer_action(sol::function action) {
     namespace TimerSystem
     {
         std::unordered_map<std::string, Timer> timers{}; // Timer Storage
+        std::unordered_map<std::string, std::vector<std::string>> groups{}; // Groups of timers w/ tags
         int uuid_counter = base_uid;                     // Counter for generating unique IDs
 
         // ------------------------------------------------
@@ -786,7 +884,7 @@ wrap_timer_action(sol::function action) {
         // ------------------------------------------------
 
         // Timer Run: Calls an action every frame until canceled, then potentially calls an after action
-        void timer_run(const std::function<void(std::optional<float>)> &action, const std::function<void()> &after, const std::string &tag)
+        void timer_run(const std::function<void(std::optional<float>)> &action, const std::function<void()> &after, const std::string &tag, const std::string& group)
         {
             // Generate a random tag if none is provided
             std::string final_tag = tag.empty() ? random_uid() : tag;
@@ -797,14 +895,14 @@ wrap_timer_action(sol::function action) {
             timer.action = action;
             timer.after = after;
 
-            add_timer(final_tag, std::move(timer));
+            add_timer(final_tag, std::move(timer), group);
 
             // Debug: Notify the timer was added
             // SPDLOG_DEBUG("Added 'run' timer with tag: {}", final_tag);
         }
 
         // Timer After: Calls an action after a delay
-        void timer_after(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, const std::string &tag)
+        void timer_after(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, const std::string &tag, const std::string& group)
         {
             // Generate a random tag if none is provided
             std::string final_tag = tag.empty() ? random_uid() : tag;
@@ -821,7 +919,7 @@ wrap_timer_action(sol::function action) {
             timer.delay = timer_resolve_delay(delay);
 
             // Add the timer to the system
-            add_timer(final_tag, std::move(timer));
+            add_timer(final_tag, std::move(timer), group);
 
             // Debug: Notify the timer was added
             // SPDLOG_DEBUG("Added 'after' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
@@ -835,7 +933,7 @@ wrap_timer_action(sol::function action) {
         }
 
         // Timer Cooldown: Calls an action every delay seconds until a condition is met
-        void timer_cooldown(std::variant<float, std::pair<float, float>> delay, const std::function<bool()> &condition, const std::function<void(std::optional<float>)> &action, int times, const std::function<void()> &after, const std::string &tag)
+        void timer_cooldown(std::variant<float, std::pair<float, float>> delay, const std::function<bool()> &condition, const std::function<void(std::optional<float>)> &action, int times, const std::function<void()> &after, const std::string &tag, const std::string& group)
         {
             // Generate a random tag if none is provided
             std::string final_tag = tag.empty() ? random_uid() : tag;
@@ -853,7 +951,7 @@ wrap_timer_action(sol::function action) {
             timer.after = after;
 
             // Add the timer to the system
-            add_timer(final_tag, std::move(timer));
+            add_timer(final_tag, std::move(timer), group);
 
             // Debug: Notify the timer was added
             // SPDLOG_DEBUG("Added 'cooldown' timer with tag: {} and delay: {}", final_tag, std::visit([](auto &&arg) -> std::string
@@ -867,7 +965,7 @@ wrap_timer_action(sol::function action) {
         }
 
         // Timer Every: Calls an action every delay seconds, potentially a limited number of times
-        void timer_every(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, int times, bool immediate, const std::function<void()> &after, const std::string &tag)
+        void timer_every(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, int times, bool immediate, const std::function<void()> &after, const std::string &tag, const std::string& group)
         {
             // Generate a random tag if none is provided
             std::string final_tag = tag.empty() ? random_uid() : tag;
@@ -884,7 +982,7 @@ wrap_timer_action(sol::function action) {
             timer.after = after;
 
             // Add the timer to the system
-            add_timer(final_tag, std::move(timer));
+            add_timer(final_tag, std::move(timer), group);
 
             // Execute the action immediately if required
             if (immediate)
@@ -904,7 +1002,7 @@ wrap_timer_action(sol::function action) {
         }
 
         // Timer Every Step: Calls an action at regular intervals, potentially a limited number of times
-        void timer_every_step(float start_delay, float end_delay, int times, const std::function<void(std::optional<float>)> &action, bool immediate, const std::function<float(float)> &step_method, const std::function<void()> &after, const std::string &tag)
+        void timer_every_step(float start_delay, float end_delay, int times, const std::function<void(std::optional<float>)> &action, bool immediate, const std::function<float(float)> &step_method, const std::function<void()> &after, const std::string &tag, const std::string& group)
         {
             if (times < 2)
             {
@@ -944,7 +1042,7 @@ wrap_timer_action(sol::function action) {
             timer.after = after;
 
             // Add the timer to the system
-            add_timer(final_tag, std::move(timer));
+            add_timer(final_tag, std::move(timer), group);
 
             // Execute the action immediately if required
             if (immediate)
@@ -957,7 +1055,7 @@ wrap_timer_action(sol::function action) {
         }
 
         // Timer For: Calls an action every frame for a duration
-        void timer_for(std::variant<float, std::pair<float, float>> duration, const std::function<void(std::optional<float>)> &action, const std::function<void()> &after, const std::string &tag)
+        void timer_for(std::variant<float, std::pair<float, float>> duration, const std::function<void(std::optional<float>)> &action, const std::function<void()> &after, const std::string &tag, const std::string& group)
         {
             // Generate a random tag if none is provided
             std::string final_tag = tag.empty() ? random_uid() : tag;
@@ -973,7 +1071,7 @@ wrap_timer_action(sol::function action) {
             timer.after = after;
 
             // Add the timer to the system
-            add_timer(final_tag, std::move(timer));
+            add_timer(final_tag, std::move(timer), group);
 
             // Debug: Notify the timer was added
             // SPDLOG_DEBUG("Added 'for' timer with tag: {} and duration: {}", final_tag, std::visit([](auto &&arg) -> std::string
@@ -1014,6 +1112,7 @@ wrap_timer_action(sol::function action) {
                          const std::function<void(float)> &setter,
                          float target_value,
                          const std::string &tag,
+                         const std::string& group,
                          const std::function<float(float)> &easing_method,
                          const std::function<void()> &after
                          )
@@ -1050,7 +1149,7 @@ wrap_timer_action(sol::function action) {
             };
 
             // Add the timer to the system
-            add_timer(final_tag, std::move(timer));
+            add_timer(final_tag, std::move(timer), group);
 
             // Debug: Notify the timer was added
             // SPDLOG_DEBUG("Added 'tween' timer with tag: {} to tween from {} to {} over {} seconds", final_tag, start_value, target_value,

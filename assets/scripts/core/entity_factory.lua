@@ -25,7 +25,7 @@ function spawnCircularBurstParticles(x, y, count, seconds)
                 onUpdateCallback = function(comp, dt)
                 end,
             },
-            { loop = true, animationName = "idle_animation"} -- animation config
+            nil -- animation config
         )
     end
 end

@@ -126,6 +126,9 @@ namespace transform
         setJiggleOnHover(registry, e, 0.1f);
 
         UpdateParallaxCalculations(registry, e);
+        
+        // emplace a collision filter component by default
+        auto &collisionFilter = registry->emplace<collision::CollisionFilter>(e);
 
        // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag
  

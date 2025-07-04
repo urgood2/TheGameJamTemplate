@@ -32,6 +32,12 @@
 
 
 # Documentation
+- [ ] Collision mask usage in lua
+```lua
+-- make this entity “player” and only collide with “enemy” or “powerup”
+setCollisionCategory(me, "player")
+setCollisionMask(me, "enemy", "powerup")
+```
 - [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
 - [ ] 
 NOTE that current text implementation is brittle and requires the arguments to be specifically in the number in the docs, and in the specified order

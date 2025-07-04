@@ -461,11 +461,15 @@ function spawnNewWhale()
     
     local collider = collision.create_collider_for_entity(bowser, {width = 50, height = 50, alignment = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM})
     
+    collision.resetCollisionCategory(collider, "playerColliderTest")
+    collision.setCollisionMask(collider, "enemy") -- there is no enemy
+    
     -- give it a ScriptComponent with an onCollision method
     local ColliderLogic = {
         -- Custom data carried by this table
         speed        = 150, -- pixels / second
         hp           = 10,
+        selfEntityHandle = bowser, -- reference to the  entity
 
         -- Called once, right after the component is attached.
         init         = function(self)
@@ -476,7 +480,7 @@ function spawnNewWhale()
         end,
 
         on_collision = function(self, other)
-            -- debug("whale collided with", other)
+            debug("whale", bowser, "collided with", other)
         end,
 
         -- Called just before the entity is destroyed

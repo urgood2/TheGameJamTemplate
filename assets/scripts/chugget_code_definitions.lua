@@ -1361,6 +1361,19 @@ ColliderType = {
 
 
 ---
+--- Component holding two 32-bit bitmasks:
+- category = which tag-bits this collider *is*
+- mask     = which category-bits this collider *collides with*
+Default ctor sets both to 0xFFFFFFFF (collide with everything).
+---
+---@class CollisionFilter
+CollisionFilter = {
+    category = uint32,  -- Bitmask: what this entity *is* (e.g. Player, Enemy, Projectile).
+    mask = uint32  -- Bitmask: which categories this entity *collides* with.
+}
+
+
+---
 --- 
 ---
 ---@class particle
@@ -4539,6 +4552,30 @@ and Transforms.
 ---@param b entt.entity                      # Second entity to test
 ---@return boolean                           # True if their collider OBBs/AABBs overlap
 function collision.CheckCollisionBetweenTransforms(...) end
+
+---
+--- 
+---
+---@param e entt.entity               # Entity whose filter to modify
+---@param tag string                   # Name of the tag to add
+---| Adds the given tag bit to this entity’s filter.category, so it *is* also that tag.
+function collision.setCollisionCategory(...) end
+
+---
+--- 
+---
+---@param e entt.entity               # Entity whose filter to modify
+---@param ... string                   # One or more tag names
+---| Replaces the entity’s filter.mask with the OR of all specified tags.
+function collision.setCollisionMask(...) end
+
+---
+--- 
+---
+---@param e entt.entity               # Entity whose filter to reset
+---@param tag string                   # The sole tag name
+---| Clears all category bits, then sets only this one.
+function collision.resetCollisionCategory(...) end
 
 ---
 --- Sorts all layers by their Z-index.

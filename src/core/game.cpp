@@ -240,7 +240,21 @@ namespace game
         for (auto [a,b] : pairs) {
             if (!globals::registry.valid(a) || !globals::registry.valid(b))
                 continue;
-                
+            
+            auto &fA = globals::registry.get<collision::CollisionFilter>(a);
+            auto &fB = globals::registry.get<collision::CollisionFilter>(b);
+            // bitwise filter:
+            // if (fA.mask != 1 || fB.mask != 1) {
+            //     SPDLOG_DEBUG("Collision filter mismatch: A mask {} category {}, B mask {} category {}", 
+            //         fA.mask, fA.category, fB.mask, fB.category);
+            // }
+            if ((fA.mask & fB.category) == 0 || (fB.mask & fA.category) == 0)
+                continue; // skip entirely
+            
+            // SPDLOG_DEBUG("Collision passed for filters: A mask {} category {}, B mask {} category {}", 
+            //     fA.mask, fA.category, fB.mask, fB.category);
+
+
             if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
                 continue;
 
@@ -293,6 +307,21 @@ namespace game
         for (auto [a,b] : pairsUI) {
             if (!globals::registry.valid(a) || !globals::registry.valid(b))
                 continue;
+            
+            auto &fA = globals::registry.get<collision::CollisionFilter>(a);
+            auto &fB = globals::registry.get<collision::CollisionFilter>(b);
+            // bitwise filter:
+            // if (fA.mask != 1 || fB.mask != 1) {
+            //     SPDLOG_DEBUG("Collision filter mismatch: A mask {} category {}, B mask {} category {}", 
+            //         fA.mask, fA.category, fB.mask, fB.category);
+            // }
+            if ((fA.mask & fB.category) == 0 || (fB.mask & fA.category) == 0)
+                continue; // skip entirely
+            
+            // SPDLOG_DEBUG("Collision passed for filters: A mask {} category {}, B mask {} category {}", 
+                // fA.mask, fA.category, fB.mask, fB.category);
+
+
                 
             if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
                 continue;

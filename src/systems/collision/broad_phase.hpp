@@ -24,11 +24,50 @@ namespace collision {
     struct ScreenSpaceCollisionMarker {}; // for the ui quadtree. anything thatd doesn't have this is preusmed world space. REmove it from ui if the ui should share collision checking with the world space quadtree.
 
     
-    // shape tags:
+    // FIXME: shape tags: currently not in use.
     enum class ColliderType { AABB, Circle /*, Capsule, Polygon…*/ };
 
     struct ColliderComponent {
         ColliderType type; // right now this is unused
+    };
+    
+    
+    
+    
+    inline std::unordered_map<std::string, uint32_t> tagBits;
+
+    // Allocate and return a unique bit for each tag name.
+    // Internally keeps its own nextBit and tagBits map.
+    inline uint32_t getTagBit(const std::string &tag) {
+        static std::unordered_map<std::string,uint32_t> tagBits;
+        static uint32_t nextBit = 1u;
+        auto it = tagBits.find(tag);
+        if (it != tagBits.end()) {
+            return it->second;
+        }
+        // assign & bump
+        uint32_t bit = nextBit;
+        tagBits[tag] = bit;
+        nextBit <<= 1;
+        return bit;
+    }
+
+    // Lazily fetch the “default” tag bit (only once, on first call).
+    inline uint32_t defaultTag() {
+        static uint32_t dt = getTagBit("default");
+        return dt;
+    }
+    /*
+    – category is a bitfield saying which tag(s) this entity is (e.g. Player=0x1, Enemy=0x2, Projectile=0x4…).
+    – mask is a bitfield saying which categories it’s interested in colliding with (it only collides where (categoryB & maskA) != 0 && (categoryA & maskB) != 0).
+    */
+    struct CollisionFilter {
+        CollisionFilter()
+        : category{defaultTag()}
+        , mask{defaultTag()}
+        {}
+        uint32_t category{};   // “what I am”
+        uint32_t mask{}; // “what I collide with”
     };
 
     
@@ -265,6 +304,66 @@ namespace collision {
             "Runs a Separating Axis Theorem (SAT) test—or AABB test if both are unrotated—\n"
             "on entities `a` and `b`, returning whether they intersect based on their ColliderComponents\n"
             "and Transforms."
+        );
+        
+        // 1) Expose the CollisionFilter struct
+        lua.new_usertype<collision::CollisionFilter>(
+            /* name in Lua: */        "CollisionFilter",
+            /* no Lua constructor: */ sol::no_constructor,
+            /* fields: */
+            "category", &collision::CollisionFilter::category,
+            "mask",     &collision::CollisionFilter::mask
+        );
+        auto& cf = rec.add_type("CollisionFilter");
+        cf.doc = 
+            "Component holding two 32-bit bitmasks:\n"
+            "- category = which tag-bits this collider *is*\n"
+            "- mask     = which category-bits this collider *collides with*\n"
+            "Default ctor sets both to 0xFFFFFFFF (collide with everything).";
+        rec.record_property("CollisionFilter",
+            { "category", "uint32", "Bitmask: what this entity *is* (e.g. Player, Enemy, Projectile)." }
+        );
+        rec.record_property("CollisionFilter",
+            { "mask",     "uint32", "Bitmask: which categories this entity *collides* with." }
+        );
+
+        // 2) Helper: setCollisionCategory(entt.entity, string tag)
+        //    → ORs the category bit in; leaves existing bits intact
+        rec.bind_function(lua, path, "setCollisionCategory",
+            [&](entt::entity e, const std::string &tag){
+                auto &f = globals::registry.get<collision::CollisionFilter>(e);
+                f.category |= collision::getTagBit(tag);
+            },
+            "---@param e entt.entity               # Entity whose filter to modify\n"
+            "---@param tag string                   # Name of the tag to add\n"
+            "---| Adds the given tag bit to this entity’s filter.category, so it *is* also that tag."
+        );
+
+        // 3) Helper: setCollisionMask(entt.entity, ...)
+        //    → replaces the mask entirely with the OR of all provided tags
+        rec.bind_function(lua, path, "setCollisionMask",
+            [&](entt::entity e, sol::variadic_args args){
+                auto &f = globals::registry.get<collision::CollisionFilter>(e);
+                f.mask = 0u;
+                for (auto v : args) {
+                    std::string tag = v;
+                    f.mask |= collision::getTagBit(tag);
+                }
+            },
+            "---@param e entt.entity               # Entity whose filter to modify\n"
+            "---@param ... string                   # One or more tag names\n"
+            "---| Replaces the entity’s filter.mask with the OR of all specified tags."
+        );
+
+        // 4) Optional: helper to *replace* category bits (clear then OR) if you want exclusivity
+        rec.bind_function(lua, path, "resetCollisionCategory",
+            [&](entt::entity e, const std::string &tag){
+                auto &f = globals::registry.get<collision::CollisionFilter>(e);
+                f.category  = collision::getTagBit(tag);
+            },
+            "---@param e entt.entity               # Entity whose filter to reset\n"
+            "---@param tag string                   # The sole tag name\n"
+            "---| Clears all category bits, then sets only this one."
         );
     }
     

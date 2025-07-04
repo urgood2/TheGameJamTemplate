@@ -1,3 +1,7 @@
+
+
+- [ ] This shader https://www.reddit.com/r/shaders/s/IQTno1kCk9 + jitter shader might be good
+- [ ] Mask textures for varied holo effects https://youtu.be/p-ifYSABUgg?si=WEwik6k14Ew4Sc5y
 - automate web shader loading somehow?
 - Material (for 3 rarities?) - https://chatgpt.com/share/68521752-7898-800a-8d76-d30affc26ca0 try this
 - Outline https://godotshaders.com/shader/efficient-2d-pixel-outlines/

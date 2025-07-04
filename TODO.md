@@ -1,7 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## Kinda high priority
-- [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect
+- [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect -> shader code is in UIEffect.cginc, also scrape textures too
 
 - [ ] ui instances needing localization -> maybe just add argument to getNewDynamicTextEntry? Also figure out other ways text is created in the game and do something similar with those.
 ```lua

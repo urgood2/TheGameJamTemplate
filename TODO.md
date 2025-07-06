@@ -2,6 +2,16 @@
 
 ## Kinda high priority
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
+- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
+- [ ] Applying shaders to ui in a modular fashion
+    - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 
+    - element: drawSelf() overhaul using shader pass component: https://chatgpt.com/share/686a8a8e-2fc8-800a-b21d-3539224e69f9
+    - three considerations: 
+        - on ninepatch images
+        - how to do tweening, etc. for individual shdaers in individual elements?
+        - on rounded rects 
+        - what to do about content within? How to specify that shader be applied over what is inside, or not?
+        
 - [ ] test edge_effect shader
 
     - uniforms:

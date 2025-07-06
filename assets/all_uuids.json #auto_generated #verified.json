@@ -17672,6 +17672,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect_very_small.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/rounded_rect_very_small.aseprite"
     ],
+    "graphic_shader_texture": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/shader_textures"
+    ],
     "graphic_sprite": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/sprites.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\sprites.json",

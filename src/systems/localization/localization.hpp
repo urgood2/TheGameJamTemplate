@@ -148,5 +148,10 @@ namespace localization
     }
     return true;
   }
+  
+  inline const std::string& getCurrentLanguage()
+  {
+    return currentLang;
+  }
 
 }

@@ -1,5 +1,8 @@
 
 ## Game todos (Jame Gam 50)
+- [ ] Additional localization: 
+ - [ ] requirements
+ - [ ] XX whale dust, and so on
 - [ ] Upgrades only accessible after one "black hole day" passes. This will be the resting point.
 - [ ] progression way too slow. Tweak things
 - [ ] Gravity wave mechanic needs some fleshing out. 

@@ -5270,6 +5270,13 @@ function localization.loadLanguage(...) end
 function localization.setFallbackLanguage(...) end
 
 ---
+--- Returns the currently active language code.
+---
+---@return string # The currently active language code.
+Gets the currently active language code. This is useful for checking which language is currently set.
+function localization.getCurrentLanguage(...) end
+
+---
 --- Retrieves a localized string by key, formatting it with an optional Lua table of named parameters.
 ---
 ---@param key string                 # Localization key

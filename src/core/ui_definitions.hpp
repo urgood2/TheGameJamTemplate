@@ -1385,10 +1385,14 @@ namespace ui_defs
                     // Register a callback to update the text when the language changes
                     entity.config.initFunc = [localizedStringGetter](entt::registry* registry, entt::entity e) {
                         localization::onLanguageChanged([localizedStringGetter, e](const std::string& newLang) {
+                            // get the object inside the config component
+                            auto &config = globals::registry.get<ui::UIConfig>(e);
+                            auto textEntity = config.object.value();
+                            
                             // Call the Lua function to get the localized text
                             auto localizedText = localizedStringGetter.call<std::string>(newLang);
                             // Set the text in the TextSystem
-                            TextSystem::Functions::setText(e, localizedText);
+                            TextSystem::Functions::setText(textEntity, localizedText);
                         });
                     };
                 }

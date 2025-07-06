@@ -234,6 +234,58 @@ function initMainMenu()
     mainMenuTransform.actualX = globals.screenWidth() / 2 - mainMenuTransform.actualW / 2
     mainMenuTransform.actualY = globals.screenHeight() / 2 
     
+    -- button text
+    local languageText = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.switch_language") end,  -- initial text
+        15.0,                                 -- font size
+        "pulse=0.9,1.1"                       -- animation spec
+    )
+    local languageButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("green_persian"))
+                :addEmboss(2.0)
+                :addShadow(true)
+                :addHover(true) -- needed for button effect
+                :addButtonCallback(function ()
+                    playSoundEffect("effects", "button-click") -- play button click sound
+                    -- Switch the language
+                    if (localization.getCurrentLanguage() == "en_us") then
+                        localization.setCurrentLanguage("ko_kr")
+                    else
+                        localization.setCurrentLanguage("en_us")
+                    end
+                end)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :build()
+        )
+        :addChild(languageText)
+        :build()
+        
+    -- new root
+    local languageButtonRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("lapi_lazuli"))
+                :addShadow(true)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(languageButtonTemplate)
+        :build()
+    -- new uibox for the language button
+    mainMenuEntities.language_button_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, languageButtonRoot)
+    
+    -- put in the bottom right corner
+    local languageButtonTransform = registry:get(mainMenuEntities.language_button_uibox, Transform)
+    languageButtonTransform.actualX = globals.screenWidth() - languageButtonTransform.actualW - 20
+    languageButtonTransform.actualY = globals.screenHeight() - languageButtonTransform.actualH - 20
+    
 end
 
 function startGameButtonCallback()

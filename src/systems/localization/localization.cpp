@@ -192,6 +192,18 @@ namespace localization
             "---@return nil",
             "Sets a fallback language if a key isn't found in the current one."
         );
+        
+        // getCurrentLanguage
+        rec.bind_function(lua, path, "getCurrentLanguage",
+            // Lua signature: getCurrentLanguage() -> string
+            []() -> std::string {
+                return localization::getCurrentLanguage();
+            },
+            // Lua-facing documentation
+            "---@return string # The currently active language code.\n"
+            "Gets the currently active language code. This is useful for checking which language is currently set.",
+            "Returns the currently active language code."
+        );
 
         // get
         rec.bind_function(lua, path, "get",

@@ -13,6 +13,7 @@
 #include "rlgl.h"
 
 #include "systems/ai/ai_system.hpp"
+#include "systems/localization/localization.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "text_effects.hpp"
 
@@ -1620,6 +1621,8 @@ namespace TextSystem
             auto &textComponent = globals::registry.get<Text>(textEntity);
             textComponent.rawText = text;
             textComponent.renderScale = 1.0f;
+            
+            textComponent.fontData = localization::getFontData();
             
             clearAllEffects(textEntity);
             deleteCharacters(textEntity);

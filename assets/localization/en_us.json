@@ -1,5 +1,6 @@
 {
 	"ui": {
+		"switch_language": "Switch Language",
 		"achievements_button": "Achievements",
 		"alert_button_text": "Alert on top right corner",
 		"building_locked_body": "You need to unlock this building first",

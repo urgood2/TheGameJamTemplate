@@ -3,6 +3,9 @@
 #include <tuple>
 
 #include "core/globals.hpp"
+#include "forward.hpp"
+#include "systems/localization/localization.hpp"
+#include "types.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 #include "systems/text/textVer2.hpp"
@@ -1348,15 +1351,25 @@ namespace ui_defs
         // 2) getNewDynamicTextEntry(text, fontSize[, wrapWidth[, textEffect[, refEntity[, refComponent[, refValue]]]]])
         elem.set_function("getNewDynamicTextEntry", 
             // use a single lambda with sol::optional to let Lua omit any trailing args
-            [](const std::string& text,
+            [](sol::function localizedStringGetter,
             float fontSize,
-            sol::optional<float>      wrapWidth,
             sol::optional<std::string> textEffect,
+            sol::optional<bool> updateOnLanguageChange,
+            sol::optional<float>      wrapWidth,
             sol::optional<entt::entity> refEntity,
             sol::optional<std::string>  refComponent,
-            sol::optional<std::string>  refValue)
+            sol::optional<std::string>  refValue
+        )
             {
-                return getNewDynamicTextEntry(
+                // assert localizedStringGetter.valid()
+                if (!localizedStringGetter.valid()) {
+                    SPDLOG_ERROR("getNewDynamicTextEntry called without a valid localizedStringGetter function");
+                    throw std::runtime_error("getNewDynamicTextEntry requires a valid localizedStringGetter function");
+                }
+                
+                auto text = localizedStringGetter.call<std::string>("ERROR: default"); // default text if no localized string is provided
+                
+                auto entity = getNewDynamicTextEntry(
                     text,
                     fontSize,
                     wrapWidth ? std::make_optional(*wrapWidth) : std::nullopt,
@@ -1365,15 +1378,32 @@ namespace ui_defs
                     refComponent ? std::make_optional(*refComponent) : std::nullopt,
                     refValue ? std::make_optional(*refValue) : std::nullopt
                 );
+                
+                // set it as the init function so that automatically updates the text when the language changes
+                // default to true for updateOnLanguageChange if not provided
+                if ((!updateOnLanguageChange) || (updateOnLanguageChange && *updateOnLanguageChange)) {
+                    // Register a callback to update the text when the language changes
+                    entity.config.initFunc = [localizedStringGetter](entt::registry* registry, entt::entity e) {
+                        localization::onLanguageChanged([localizedStringGetter, e](const std::string& newLang) {
+                            // Call the Lua function to get the localized text
+                            auto localizedText = localizedStringGetter.call<std::string>(newLang);
+                            // Set the text in the TextSystem
+                            TextSystem::Functions::setText(e, localizedText);
+                        });
+                    };
+                }
+                
+                return entity;
             }
         );
         rec.record_free_function(
             {"ui","definitions"},
             {"getNewDynamicTextEntry", R"(
-        ---@param text string
+        ---@param localizedStringGetter fun(langCode:string):string
         ---@param fontSize number
-        ---@param wrapWidth? number
         ---@param textEffect? string
+        ---@param updateOnLanguageChange? boolean, defaults to true
+        ---@param wrapWidth? number
         ---@param refEntity? Entity
         ---@param refComponent? string
         ---@param refValue? string

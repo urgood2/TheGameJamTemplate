@@ -6534,10 +6534,11 @@ function ui.definitions.getNewTextEntry(...) end
 --- Create a text‐entry node with dynamic effects (wrapping, pulse, etc.) and optional refs.
 ---
 
-        ---@param text string
+        ---@param localizedStringGetter fun(langCode:string):string
         ---@param fontSize number
-        ---@param wrapWidth? number
         ---@param textEffect? string
+        ---@param updateOnLanguageChange? boolean, defaults to true
+        ---@param wrapWidth? number
         ---@param refEntity? Entity
         ---@param refComponent? string
         ---@param refValue? string

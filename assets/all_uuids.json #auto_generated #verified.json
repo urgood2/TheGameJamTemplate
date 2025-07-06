@@ -16688,6 +16688,18 @@
     "eat": [
         "eat.lua"
     ],
+    "edge_effect_fragment": [
+        "edge_effect_fragment.fs"
+    ],
+    "edge_effect_fragment_shader": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_fragment.fs"
+    ],
+    "edge_effect_shader_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_vertex.vs"
+    ],
+    "edge_effect_vertex": [
+        "edge_effect_vertex.vs"
+    ],
     "en_font": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en",

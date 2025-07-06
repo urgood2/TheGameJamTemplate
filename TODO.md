@@ -1,19 +1,12 @@
 # ✅ TODOs: Organized by Category
 
 ## Kinda high priority
-- [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect -> shader code is in UIEffect.cginc, also scrape textures too
-
-- [ ] ui instances needing localization -> maybe just add argument to getNewDynamicTextEntry? Also figure out other ways text is created in the game and do something similar with those.
-```lua
-local buildingText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.building_text"),  -- initial text
-        20.0,                                 -- font size
-        nil,                                  -- no style override
-        "float"                       -- animation spec
-    )
-
-
-```
+- [ ] test edge_effect shader
+- [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect -> shader code is in UIEffect.cginc, also scrape textures too /  want: pattern background overlay, edge shiny, transition (dissolve), 
+    - [ ] Sampling Filter 
+    - [ ] Transition filter
+    - [ ] Shadow Mode
+    - [ ] Edge mode
 
 - [ ] localization ui text updates should use:
 ```lua

@@ -182,9 +182,8 @@ end
 function newTextPopup(text, x, y, duration)
   -- create a new text popup entity
   local text = ui.definitions.getNewDynamicTextEntry(
-    text,  -- initial text
+    function() return text end,  -- initial text
     30.0,  -- font size
-    nil,   -- no style override
     "rainbow" -- animation spec
   ).config.object
 
@@ -404,9 +403,8 @@ function buyConverterButtonCallback()
 
   -- create a new text entity
   local infoText = ui.definitions.getNewDynamicTextEntry(
-    localization.get("ui.drag_me"),   -- initial text
+    function() return localization.get("ui.drag_me") end,   -- initial text
     15.0,                             -- font size
-    nil,                              -- no style override
     "bump"                            -- animation spec
   ).config.object
 
@@ -621,9 +619,8 @@ function buyBuildingButtonCallback()
 
   -- create a new text entity
   local infoText = ui.definitions.getNewDynamicTextEntry(
-    localization.get("ui.drag_me"),   -- initial text
+    function() return localization.get("ui.drag_me") end,   -- initial text
     15.0,                             -- font size
-    nil,                              -- no style override
     "bump"                            -- animation spec
   ).config.object
 

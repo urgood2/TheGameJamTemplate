@@ -53,9 +53,8 @@ function initMainMenu()
     
     -- create start game button
     mainMenuEntities.logoText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_logo"),  -- initial text
+        function() return localization.get("ui.start_game_logo") end,  -- initial text
         40.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     ).config.object
     
@@ -99,9 +98,8 @@ function initMainMenu()
     
     
     local startButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_button"),  -- initial text
+        function() return localization.get("ui.start_game_button") end,  -- initial text
         30.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     local startButtonTemplate = UIElementTemplateNodeBuilder.create()
@@ -127,9 +125,8 @@ function initMainMenu()
         
     --
     local feedbackText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_feedback"),  -- initial text
+        function() return localization.get("ui.start_game_feedback") end,  -- initial text
         15,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     
@@ -177,9 +174,8 @@ function initMainMenu()
     )
     
     local blueskyText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_follow"),  -- initial text
+        function() return localization.get("ui.start_game_follow") end,  -- initial text
         15,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     

@@ -32,9 +32,8 @@ function ui_defs.generateUI()
         globals.currencies["whale_dust"].ui_icon_entity)
     
     local sliderTextMoving = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text"),  -- initial text
+        function() return localization.get("ui.currency_text") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     
@@ -125,9 +124,8 @@ function ui_defs.generateUI()
     
     -- now make the text entries for the other currencies
     local textSongEssence = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_song_essence"),  -- initial text
+        function() return localization.get("ui.currency_text_song_essence") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     textSongEssence.config.initFunc = function(registry, entity)
@@ -153,9 +151,8 @@ function ui_defs.generateUI()
     end
     
     local textWafers = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_wafers"),  -- initial text
+        function() return localization.get("ui.currency_text_wafers") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     
@@ -182,9 +179,8 @@ function ui_defs.generateUI()
     end
     
     local textCrystals = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_crystals"),  -- initial text
+        function() return localization.get("ui.currency_text_crystals") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     textCrystals.config.initFunc = function(registry, entity)
@@ -209,9 +205,8 @@ function ui_defs.generateUI()
     end
     
     local textChips = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_chips"),  -- initial text
+        function() return localization.get("ui.currency_text_chips") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     textChips.config.initFunc = function(registry, entity)
@@ -388,9 +383,8 @@ function ui_defs.generateUI()
     
     -- prestige button
     local prestigeButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.achievements_button"),  -- initial text
+        function() return localization.get("ui.achievements_button") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "bump"                       -- animation spec
     )
     
@@ -452,9 +446,8 @@ function ui_defs.generateUI()
     
     -- help button
     local helpButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_title"),  -- initial text
+        function() return localization.get("ui.tip_title") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "bump"                       -- animation spec
     )
     
@@ -617,9 +610,8 @@ function ui_defs.generateUI()
     
     -- make a red X button 
     local closeButtonText = ui.definitions.getNewDynamicTextEntry(
-        "Close",  -- initial text
+        function() return "Close" end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make a new close button template
@@ -666,9 +658,8 @@ function ui_defs.generateUI()
     
     -- achievements text for the top of the window
     local achievementsText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.achievements_button"),  -- initial text
+        function() return localization.get("ui.achievements_button") end,  -- initial text
         30.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     
@@ -725,9 +716,8 @@ function ui_defs.generateUI()
     
     -- ui for the buildings
     local buildingText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.building_text"),  -- initial text
+        function() return localization.get("ui.building_text") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "float"                       -- animation spec
     )
     
@@ -982,9 +972,8 @@ function ui_defs.generateUI()
     
     -- "left" button
     local leftButtonText = ui.definitions.getNewDynamicTextEntry(
-        "<",  -- initial text
+        function() return "<" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -1030,9 +1019,8 @@ function ui_defs.generateUI()
     
     -- right button
     local rightButtonText = ui.definitions.getNewDynamicTextEntry(
-        ">",  -- initial text
+        function() return ">" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -1060,9 +1048,8 @@ function ui_defs.generateUI()
     
     -- buy button
     local buyButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.buy_button"),  -- initial text
+        function() return localization.get("ui.buy_button") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     -- make new button template
@@ -1096,9 +1083,8 @@ function ui_defs.generateUI()
     
     -- "left" button
     local leftButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        "<",  -- initial text
+        function() return "<" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -1144,9 +1130,8 @@ function ui_defs.generateUI()
     
     -- right button
     local rightButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        ">",  -- initial text
+        function() return ">" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -1176,9 +1161,8 @@ function ui_defs.generateUI()
     
     -- buy button
     local buyButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.buy_button"),  -- initial text
+        function() return localization.get("ui.buy_button") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     -- make new button template
@@ -1255,53 +1239,45 @@ function ui_defs.generateUI()
     
     -- new help window
     local helpTextTitle = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_title"),  -- initial text
+        function() return localization.get("ui.tip_title") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     local helpTextBody1 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body"),  -- initial text
+        function() return localization.get("ui.tip_body") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody2 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_2"),  -- initial text
+        function() return localization.get("ui.tip_body_2") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody3 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_3"),  -- initial text
+        function() return localization.get("ui.tip_body_3") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody4 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_4"),  -- initial text
+        function() return localization.get("ui.tip_body_4") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody5 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_5"),  -- initial text
+        function() return localization.get("ui.tip_body_5") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody6 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_6"),  -- initial text
+        function() return localization.get("ui.tip_body_6") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "fade"                       -- animation spec
     )
     
     -- new close button
     local closeHelpButtonText = ui.definitions.getNewDynamicTextEntry(
-        "Close",  -- initial text
+        function() return "Close" end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make a new close button template
@@ -1380,9 +1356,8 @@ function ui_defs.generateUI()
     
     -- new achivement window
     local newAchievementText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.new_achievement_title"),  -- initial text
+        function() return localization.get("ui.new_achievement_title") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     
@@ -1442,16 +1417,14 @@ function ui_defs.generateUI()
     
     -- tooltip ui box that will follow the mouse cursor
     local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("sample tooltip title"),  -- initial text
+        function() return localization.get("sample tooltip title") end,  -- initial text
         18.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     globals.ui.tooltipTitleText = tooltipTitleText.config.object
     local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("Sample tooltip body text"),  -- initial text
+        function() return localization.get("Sample tooltip body text") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "fade"                       -- animation spec
     )
     globals.ui.tooltipBodyText = tooltipBodyText.config.object

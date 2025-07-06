@@ -250,5 +250,14 @@
             "vertex": "web/custom_polychrome_vertex.vs",
             "fragment": "web/custom_polychrome_fragment.fs"
         }
+    },
+    "edge_effect": {
+        "vertex": "edge_effect_vertex.vs",
+        "fragment": "edge_effect_fragment.fs",
+
+        "web": {
+            "vertex": "web/edge_effect_vertex.vs",
+            "fragment": "web/edge_effect_fragment.fs"
+        }
     }
 }

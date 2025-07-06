@@ -8,25 +8,13 @@
     - [ ] Shadow Mode
     - [ ] Edge mode
 
-- [ ] localization ui text updates should use:
-```lua
-:addInitFunc(function(registry, entity)
-            -- something init-related here
-            localization.onLanguageChanged(function()
-                TextSystem.Functions.setText(entity, localization.get("ui.building_text"))
-            end)
-        end)
-```
-
 - [ ] Unexplored areas: chipmunk2d in a game (how to mesh with my transforms?
 - [ ] unexplored option: 1 bit or simple shapes + global shadow shader like with SNKRX
 - [ ] unexplored option: static sprites with jitter + noise as in shader_todos.md for visual uniformity & style
 
 - [ ] lua libraries to use later for my game dev
     - https://github.com/love2d-community/awesome-love2d?tab=readme-ov-file
-    - https://github.com/airstruck/knife/blob/master/readme/chain.md this seems good for nested timers
     - behavior tree & state machine libs for love might be interesting to explore @ later point if necessary
-    - small general utils useful in lua https://github.com/rxi/lume/ 
 
 - [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
 - [ ] update the gamejam 50 branch with the new branch, then test

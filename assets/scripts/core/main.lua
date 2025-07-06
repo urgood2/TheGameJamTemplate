@@ -6,6 +6,8 @@ require("util.util")
 require("ui.ui_defs")
 local shader_prepass = require("shaders.prepass_example")
 require("core.entity_factory")
+local Chain = require("external.knife.chain")
+local lume = require("external.lume")
 -- Represents game loop main module
 main = {}
 

@@ -65,12 +65,14 @@ namespace scripting {
         std::string base2 = util::getRawAssetPathNoUUID("scripts/core");
         std::string base3 = util::getRawAssetPathNoUUID("scripts/init");
         std::string base4 = util::getRawAssetPathNoUUID("scripts/monobehavior");
+        std::string base5 = util::getRawAssetPathNoUUID("scripts/external");
         
         std::string lua_path_cmd =
             "package.path = '"
             + base1 + "?.lua;" + base1 + "?/?.lua;" + base1 + "?/?/?.lua;"
             + base2 + "?.lua;"
             + base3 + "?.lua;"
+            + base5 + "?.lua;"
             + base4 + "?.lua;scripts/?/?.lua"
             + "' .. package.path"; // <- correctly attached
             

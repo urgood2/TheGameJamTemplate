@@ -14085,6 +14085,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\Double\\Transparent center"
     ],
+    "chain": [
+        "chain.lua"
+    ],
+    "chain_knife": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife/chain.lua"
+    ],
     "char_example": [
         "example_char"
     ],
@@ -16855,6 +16861,15 @@
     "exclamation_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation.svg"
     ],
+    "external_knife": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife"
+    ],
+    "external_lume": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/lume.lua"
+    ],
+    "external_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external"
+    ],
     "f10_keyboard": [
         "keyboard_f10.png"
     ],
@@ -18540,6 +18555,9 @@
     ],
     "lt_xbox": [
         "xbox_lt.png"
+    ],
+    "lume": [
+        "lume.lua"
     ],
     "magic_mono_sound_spawn_spell": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MAGIC_SPELL_Spawn_mono.wav",

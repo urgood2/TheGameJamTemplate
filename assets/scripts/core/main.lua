@@ -233,6 +233,7 @@ function initMainMenu()
     local mainMenuTransform = registry:get(mainMenuEntities.main_menu_uibox, Transform)
     mainMenuTransform.actualX = globals.screenWidth() / 2 - mainMenuTransform.actualW / 2
     mainMenuTransform.actualY = globals.screenHeight() / 2 
+    
 end
 
 function startGameButtonCallback()

@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## Kinda high priority
+- [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 - [ ] test edge_effect shader
 - [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect -> shader code is in UIEffect.cginc, also scrape textures too /  want: pattern background overlay, edge shiny, transition (dissolve), 
     - [ ] Sampling Filter 

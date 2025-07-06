@@ -3,6 +3,28 @@
 ## Kinda high priority
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 - [ ] test edge_effect shader
+
+    - uniforms:
+```cpp
+// update every frame:
+shaders::registerUniformUpdate("edge_shader", [](Shader &sh) {
+    globalShaderUniforms.set("edge_shader", "iTime", static_cast<float>(GetTime()));
+});
+
+// one-time setup of all the other edge params:
+globalShaderUniforms.set("edge_shader", "edgeMode",                1);        // 0:none,1:plain,2:shiny
+globalShaderUniforms.set("edge_shader", "edgeWidth",               1.0f);
+globalShaderUniforms.set("edge_shader", "edgeColorFilter",         1);        // e.g. 1=Multiply
+globalShaderUniforms.set("edge_shader", "edgeColor",               Vector4{1,1,1,1});
+globalShaderUniforms.set("edge_shader", "edgeColorGlow",           0.0f);
+globalShaderUniforms.set("edge_shader", "edgeShinyWidth",          0.2f);
+globalShaderUniforms.set("edge_shader", "edgeShinyAutoPlaySpeed",  1.0f);
+
+// if you need resolution/unscaled time, register those too:
+globalShaderUniforms.set("edge_shader", "iResolution", 
+    Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+
+```
 - [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect -> shader code is in UIEffect.cginc, also scrape textures too /  want: pattern background overlay, edge shiny, transition (dissolve), 
     - [ ] Sampling Filter 
     - [ ] Transition filter

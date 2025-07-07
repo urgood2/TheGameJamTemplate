@@ -12,6 +12,7 @@
 
 #include "core/globals.hpp"
 
+#include "systems/layer/layer_optimized.hpp"
 #include "systems/ui/ui_data.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
 
@@ -1689,14 +1690,28 @@ namespace layer
 
         ClearBackground(layer->backgroundColor);
 
-        if (!layer->fixed && camera)
-        {
-            BeginMode2D(*camera);
-        }
+        // if (!layer->fixed && camera)
+        // {
+        //     BeginMode2D(*camera);
+        // }
+        
+        bool cameraActive = false;
 
         // Dispatch all draw commands from the arena-based command buffer
         for (const auto& command : layer_command_buffer::GetCommandsSorted(layer))
         {
+            // 2) Decide if this one wants the camera
+            bool wantsCamera = (!layer->fixed && camera);
+            
+            if (wantsCamera && command.space == layer::DrawCommandSpace::World && !cameraActive) {
+                BeginMode2D(*camera);
+                cameraActive = true;
+            }
+            else if (!wantsCamera && cameraActive) {
+                EndMode2D();
+                cameraActive = false;
+            }
+            
             auto it = dispatcher.find(command.type);
             if (it != dispatcher.end()) {
                 it->second(layer, command.data);
@@ -1705,10 +1720,10 @@ namespace layer
             }
         }
 
-        if (!layer->fixed && camera)
-        {
-            EndMode2D();
-        }
+        // if (!layer->fixed && camera)
+        // {
+        //     EndMode2D();
+        // }
 
         render_stack_switch_internal::Pop();
     }

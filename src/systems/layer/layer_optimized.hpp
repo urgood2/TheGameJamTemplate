@@ -364,11 +364,16 @@ namespace layer
     // Draw Command Buffer
     // ===========================
     
+    enum class DrawCommandSpace {
+        World,
+        Screen
+    };
 
     struct DrawCommandV2 {
         DrawCommandType type;
         void* data;
         int z;
+        DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
     };
 
 

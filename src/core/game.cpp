@@ -646,30 +646,28 @@ namespace game
             }
     
 
-        //TODO: need to test this
         {
             // ZoneScopedN("AnimatedSprite Draw");
             auto spriteView = globals::registry.view<AnimationQueueComponent>();
             for (auto e : spriteView)
             {
-                //TODO: maybe optimize later
-                //TODO: what about treeorder? 
                 auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
                 auto zIndex = layerOrder ? layerOrder->zIndex : 0;
+                bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
                 
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
-                    }, zIndex);
+                    }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                 }
                 else
                 {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
-                    }, zIndex);
+                    }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                 }            
             }
         }

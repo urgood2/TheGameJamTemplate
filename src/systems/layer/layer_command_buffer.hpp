@@ -148,7 +148,7 @@ namespace layer
 
 
         template<typename T>
-        T* AddExplicit(std::shared_ptr<Layer>& layer, DrawCommandType type, int z = 0) {
+        T* AddExplicit(std::shared_ptr<Layer>& layer, DrawCommandType type, int z = 0, DrawCommandSpace space = DrawCommandSpace::Screen) {
             // 1) Pool lookup in O(1)
             T* cmd = GetDrawCommandPool<T>(*layer).new_object();
             assert(cmd && "Draw command allocation failed");
@@ -162,8 +162,8 @@ namespace layer
         }
 
         template<typename T>
-        inline T* Add(std::shared_ptr<Layer>& layer, int z = 0) {
-            return AddExplicit<T>(layer, GetDrawCommandType<T>(), z);
+        inline T* Add(std::shared_ptr<Layer>& layer, int z = 0, DrawCommandSpace space = DrawCommandSpace::Screen) {
+            return AddExplicit<T>(layer, GetDrawCommandType<T>(), z, space);
         }
 
 
@@ -207,8 +207,8 @@ namespace layer
     
     // Inline, header‐only. Takes any callable (lambda, function, struct) that can be invoked as init(cmd).
     template<typename T, typename Initializer>
-    inline T* QueueCommand(std::shared_ptr<Layer> layer, Initializer&& init, int z = 0) {
-        T* cmd = layer_command_buffer::Add<T>(layer, z);
+    inline T* QueueCommand(std::shared_ptr<Layer> layer, Initializer&& init, int z = 0, DrawCommandSpace space = DrawCommandSpace::Screen) {
+        T* cmd = layer_command_buffer::Add<T>(layer, z, space);
         // inlined call, no std::function
         init(cmd);
         return cmd;

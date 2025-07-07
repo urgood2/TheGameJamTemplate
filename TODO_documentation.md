@@ -1,4 +1,10 @@
 # Documentation
+- [ ] camera documentation
+
+```lua
+local testCamera = camera.new(0, 0, 1, 0, camera.smooth.damped(0.1)) -- Create a new camera instance with damping
+testCamera:move(400,400)
+```
 - [ ] Collision mask usage in lua
 ```lua
 -- make this entity “player” and only collide with “enemy” or “powerup”

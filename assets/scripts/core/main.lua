@@ -820,8 +820,9 @@ function main.update(dt)
     globals.timeUntilNextGravityWave = globals.timeUntilNextGravityWave - dt
     
     
-    testCamera:move(1,1)
     
+    -- move camera randomly
+    testCamera:move(random_utils.random_int(-10, 10), random_utils.random_int(-10, 10))
     
     -- entity iteration example
     -- local view = registry:runtime_view(Transform)

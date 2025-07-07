@@ -123,6 +123,13 @@ namespace ui
                 // make the object also screen space
                 registry.emplace<collision::ScreenSpaceCollisionMarker>(config->object.value());
             }
+            
+            // if object, make sure the object is screen space, and so is the OBJECT container
+            if (config->object && registry.valid(config->object.value()))
+            {
+                registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(config->object.value());
+                
+            }
 
             // If text, pre-calculate text bounds
             if (def.type == UITypeEnum::TEXT && config && config->text)

@@ -12,9 +12,11 @@
 
 #include "core/globals.hpp"
 
+#include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/ui/ui_data.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
+#include "systems/camera/camera_manager.hpp"
 
 #include "systems/transform/transform_functions.hpp"
 
@@ -1710,12 +1712,12 @@ namespace layer
             // }
             
             if (wantsCamera && command.space == layer::DrawCommandSpace::World && !cameraActive) {
-                BeginMode2D(*camera);
+                camera_manager::Begin(*camera); // use camera manager to handle camera state so that draw command methods can know whether camera is active
                 cameraActive = true;
                 // SPDLOG_DEBUG("Command {} activating camera in world space", magic_enum::enum_name(command.type));
             }
             else if (command.space == layer::DrawCommandSpace::Screen && cameraActive) {
-                EndMode2D();
+                camera_manager::End(); // use camera manager to handle camera state so that draw command methods can know whether camera is active
                 cameraActive = false;
                 // SPDLOG_DEBUG("Command {} deactivating camera in world space", magic_enum::enum_name(command.type));
             }
@@ -2437,6 +2439,13 @@ namespace layer
     
     auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void {
         
+        // disable the camera if it exists
+        Camera2D* camera = nullptr;
+        if (camera_manager::IsActive()) {
+            camera = camera_manager::Current();
+            camera_manager::End();
+        }
+        
         // 1. Fetch animation frame and sprite
         Rectangle* animationFrame = nullptr;
         SpriteComponentASCII* currentSprite = nullptr;
@@ -2732,7 +2741,11 @@ namespace layer
             toRender = shader_pipeline::GetBaseRenderTextureCache();
         }
 
-        
+        // turn the camera back on if it was active (since we're rendering to the screen now, and to restore camera state in the command buffer)
+        if (camera) {
+            camera_manager::Begin(*camera);
+        }
+                  
         // 5. Final draw with transform
         
         Vector2 drawPos = { transform.getVisualX() - pad, transform.getVisualY() - pad }; // why subtract pad here?
@@ -2741,6 +2754,8 @@ namespace layer
         Rectangle sourceRect = { 0, 0, renderWidth, -renderHeight }; // why is origin here?
         Vector2 origin = { renderWidth * 0.5f, renderHeight * 0.5f };
         Vector2 position = { drawPos.x + origin.x, drawPos.y + origin.y };
+        
+        
     
         PushMatrix();
         Translate(position.x, position.y);

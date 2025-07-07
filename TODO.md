@@ -1,14 +1,10 @@
 # ✅ TODOs: Organized by Category
 
-## Kinda high priority
-- [ ] performance bottleneck somewhere, need to find it.
+## New features
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
-- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
-- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
-- use hump.gamestate. How to hook with raylib?
+- [ ] true ui / sprite separation while keeping draw order - how to do this? 
 - turn hump.camera to raylib https://chatgpt.com/share/686b5528-ced8-800a-b6fc-bf4854a62cac
     - how to bind raylib camera in a way that can be used from c ++? Maybe just hang on to a single camera? what are the uses of having multiple?
-- [ ] Set up custom debugging for lua https://marketplace.visualstudio.com/items?itemName=tomblind.local-lua-debugger-vscode
 - [ ] Applying shaders to ui in a modular fashion
     - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 
     - element: drawSelf() overhaul using shader pass component: https://chatgpt.com/share/686a8a8e-2fc8-800a-b21d-3539224e69f9
@@ -17,7 +13,13 @@
         - how to do tweening, etc. for individual shdaers in individual elements?
         - on rounded rects 
         - what to do about content within? How to specify that shader be applied over what is inside, or not?
-        
+- [ ] take some shaders (esp. pixelate) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate
+
+
+## Bug fixes
+
+- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
+- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
 - [ ] test edge_effect shader
 
     - uniforms:
@@ -102,7 +104,7 @@ globalShaderUniforms.set("edge_shader", "iResolution",
 ---
 
 ## Immediate laters
-
+- use hump.gamestate. How to hook with raylib?
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
 - [ ] how to request a new GOAP plan and run it from lua?
 - [ ] Utilize controller focus interactivity focus funneling in the above ui

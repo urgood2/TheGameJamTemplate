@@ -616,7 +616,7 @@ namespace game
             // {
             //     ui::box::Draw(ui_layer, globals::registry, e);
             // }
-            ui::box::drawAllBoxes(globals::registry, sprites);
+            ui::box::drawAllBoxes(globals::registry, ui_layer);
 
             // for each ui box, print debug info
             
@@ -631,7 +631,7 @@ namespace game
             auto textView = globals::registry.view<TextSystem::Text>();
             for (auto e : textView)
             {
-                TextSystem::Functions::renderText(e, sprites, true);
+                TextSystem::Functions::renderText(e, ui_layer, true);
             }
         }
         
@@ -686,14 +686,14 @@ namespace game
             // ZoneScopedN("LayerCommandsToCanvas Draw");
             {
                 // ZoneScopedN("background layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", nullptr);  // render the background layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &globals::camera);  // render the background layer commands to its main canvas
             }
             
             
             
             {
                 // ZoneScopedN("sprites layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &globals::camera);     // render the sprite layer commands to its main canvas
             }
             
             {

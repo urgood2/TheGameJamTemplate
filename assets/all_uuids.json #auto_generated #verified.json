@@ -14631,6 +14631,12 @@
     "dark_violet": [
         "DARK VIOLET"
     ],
+    "debugging_lua": [
+        "DEBUGGING_LUA.md"
+    ],
+    "debugging_lua_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/DEBUGGING_LUA.md"
+    ],
     "deep_palette_resurrect_twilight": [
         "RESURRECT_PALETTE_DEEP_TWILIGHT"
     ],

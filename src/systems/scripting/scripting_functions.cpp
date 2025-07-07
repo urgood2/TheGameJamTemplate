@@ -35,6 +35,7 @@
 #include "script_process.hpp"
 
 #include "../../core/game.hpp"
+#include <functional>
 
 
 
@@ -481,6 +482,50 @@ namespace scripting {
         lua["globals"]["currentGameState"] = &globals::currentGameState;
         
         lua["globals"]["inputState"] = &(globals::inputState);
+        
+        /*
+                Camera2D, defines position/orientation in 2d space
+        typedef struct Camera2D {
+            Vector2 offset;         // Camera offset (displacement from target)
+            Vector2 target;         // Camera target (rotation and zoom origin)
+            float rotation;         // Camera rotation in degrees
+            float zoom;             // Camera zoom (scaling), should be 1.0f by default
+        } Camera2D;
+        */
+        
+        // lua usertype binding for Camera2D
+        // lua.new_usertype<Vector2>(
+        //     "Vector2",
+        //     "x", &Vector2::x,
+        //     "y", &Vector2::y
+        // );
+        lua.new_usertype<Camera2D>("Camera2D",
+            "offset", &Camera2D::offset,
+            "target", &Camera2D::target,
+            "rotation", &Camera2D::rotation,
+            "zoom", &Camera2D::zoom
+        );
+        
+        lua["globals"]["camera"] = []() -> Camera2D& {
+            return std::ref(globals::camera);
+        };
+        
+        lua["GetScreenWidth"] = []() -> int {
+            return GetScreenWidth();
+        };
+        lua["GetScreenHeight"] = []() -> int {
+            return GetScreenHeight();
+        };
+        lua["GetWorldToScreen2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+            // Convert the position from world coordinates to screen coordinates
+            return GetWorldToScreen2D(position, camera);
+        };
+        lua["GetScreenToWorld2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+            // Convert the position from screen coordinates to world coordinates
+            return GetScreenToWorld2D(position, camera);
+        };
+        
+        rec.record_property("globals", {"camera", "nil", "Camera2D object used for rendering the game world."});
 
         // 3) entt::entity
         lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {

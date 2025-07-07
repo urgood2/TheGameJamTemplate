@@ -1,3 +1,6 @@
+-- Modified by Chugget
+-- Additional docs: https://hump.readthedocs.io/en/latest/camera.html
+
 --[[
 Copyright (c) 2010-2015 Matthias Richter
 
@@ -24,193 +27,211 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]--
 
-local _PATH = (...):match('^(.*[%./])[^%.%/]+$') or ''
 local cos, sin = math.cos, math.sin
 
-local camera = {}
-camera.__index = camera
-
--- Movement interpolators (for camera locking/windowing)
-camera.smooth = {}
-
-function camera.smooth.none()
-	return function(dx,dy) return dx,dy end
+-- Fetch the raw Sol2-bound Camera2D userdata from C++
+local function get_raw_camera()
+  if not globals.camera then
+    error("Camera2D binding missing: call globals.camera = <your Camera2D> in C++ before using")
+  end
+  local cam = globals.camera()
+  if not cam then
+    error("globals.camera() returned nil; ensure Camera2D is initialized in C++ before using Lua camera module")
+  end
+  return cam
 end
 
-function camera.smooth.linear(speed)
-	assert(type(speed) == "number", "Invalid parameter: speed = "..tostring(speed))
-	return function(dx,dy, s)
-		-- normalize direction
-		local d = math.sqrt(dx*dx+dy*dy)
-		local dts = math.min((s or speed) * love.timer.getDelta(), d) -- prevent overshooting the goal
-		if d > 0 then
-			dx,dy = dx/d, dy/d
-		end
+-- Movement interpolators for smooth transitions
+local smooth = {}
 
-		return dx*dts, dy*dts
-	end
+function smooth.none()
+  return function(dx, dy) return dx, dy end
 end
 
-function camera.smooth.damped(stiffness)
-	assert(type(stiffness) == "number", "Invalid parameter: stiffness = "..tostring(stiffness))
-	return function(dx,dy, s)
-		local dts = love.timer.getDelta() * (s or stiffness)
-		return dx*dts, dy*dts
-	end
+function smooth.linear(speed)
+  assert(type(speed) == "number", "Invalid parameter: speed = "..tostring(speed))
+  return function(dx, dy, s)
+    local dist = math.sqrt(dx*dx + dy*dy)
+    local delta = math.min((s or speed) * GetFrameTime(), dist)
+    if dist > 0 then dx, dy = dx/dist, dy/dist end
+    return dx * delta, dy * delta
+  end
 end
 
-
-local function new(x,y, zoom, rot, smoother)
-	x,y  = x or love.graphics.getWidth()/2, y or love.graphics.getHeight()/2
-	zoom = zoom or 1
-	rot  = rot or 0
-	smoother = smoother or camera.smooth.none() -- for locking, see below
-	return setmetatable({x = x, y = y, scale = zoom, rot = rot, smoother = smoother}, camera)
+function smooth.damped(stiffness)
+  assert(type(stiffness) == "number", "Invalid parameter: stiffness = "..tostring(stiffness))
+  return function(dx, dy, s)
+    local dt = GetFrameTime() * (s or stiffness)
+    return dx * dt, dy * dt
+  end
 end
 
-function camera:lookAt(x,y)
-	self.x, self.y = x, y
-	return self
+-- Table of instance methods; will be set as proxy metatable
+local methods = {}
+
+-- Begin scissor and camera transform
+function methods:attach(x, y, w, h, noclip)
+  local cam2d = self.raw
+  x, y = x or 0, y or 0
+  w, h = w or GetScreenWidth(), h or GetScreenHeight()
+  if not noclip then BeginScissorMode(x, y, w, h) end
+  cam2d.offset.x = w/2 + x
+  cam2d.offset.y = h/2 + y
+  BeginMode2D(cam2d)
 end
 
-function camera:move(dx,dy)
-	self.x, self.y = self.x + dx, self.y + dy
-	return self
+-- End camera transform and optional scissor cleanup
+function methods:detach(noclip)
+  EndMode2D()
+  if not noclip then EndScissorMode() end
 end
 
-function camera:position()
-	return self.x, self.y
+-- Convenience draw wrapper: cam:draw(func) or cam:draw(x,y,w,h,func) or cam:draw(x,y,w,h,noclip,func)
+function methods:draw(...)
+  local nargs = select('#', ...)
+  local func, x, y, w, h, noclip
+  if nargs == 1 then
+    func = ...
+  elseif nargs == 5 then
+    x,y,w,h,func = ...
+  elseif nargs == 6 then
+    x,y,w,h,noclip,func = ...
+  else
+    error("Invalid args to camera:draw()")
+  end
+  methods.attach(self, x, y, w, h, noclip)
+  func()
+  methods.detach(self, noclip)
 end
 
-function camera:rotate(phi)
-	self.rot = self.rot + phi
-	return self
+-- Transform world coords to screen coords
+function methods:cameraCoords(x, y, ox, oy, w, h)
+  local cam2d = self.raw
+  ox, oy = ox or 0, oy or 0
+  w, h   = w or GetScreenWidth(), h or GetScreenHeight()
+  local scr = GetWorldToScreen2D({ x=x, y=y }, cam2d)
+  return scr.x + ox, scr.y + oy
 end
 
-function camera:rotateTo(phi)
-	self.rot = phi
-	return self
+-- Transform screen coords to world coords
+function methods:worldCoords(x, y, ox, oy)
+  local cam2d = self.raw
+  ox, oy = ox or 0, oy or 0
+  local wo = GetScreenToWorld2D({ x=x, y=y }, cam2d)
+  return wo.x - ox, wo.y - oy
 end
 
-function camera:zoom(mul)
-	self.scale = self.scale * mul
-	return self
+-- Get mouse position in world-space
+function methods:mousePosition(ox, oy)
+  local cam2d = self.raw
+  ox, oy = ox or 0, oy or 0
+  local mp = GetMousePosition()
+  local wo = GetScreenToWorld2D(mp, cam2d)
+  return wo.x - ox, wo.y - oy
 end
 
-function camera:zoomTo(zoom)
-	self.scale = zoom
-	return self
+-- Center camera on world point
+function methods:lookAt(x, y)
+  local cam2d = self.raw
+  cam2d.target.x, cam2d.target.y = x, y
+  return self
 end
 
-function camera:attach(x,y,w,h, noclip)
-	x,y = x or 0, y or 0
-	w,h = w or love.graphics.getWidth(), h or love.graphics.getHeight()
-
-	self._sx,self._sy,self._sw,self._sh = love.graphics.getScissor()
-	if not noclip then
-		love.graphics.setScissor(x,y,w,h)
-	end
-
-	local cx,cy = x+w/2, y+h/2
-	love.graphics.push()
-	love.graphics.translate(cx, cy)
-	love.graphics.scale(self.scale)
-	love.graphics.rotate(self.rot)
-	love.graphics.translate(-self.x, -self.y)
+-- Pan camera by dx, dy
+function methods:move(dx, dy)
+  local cam2d = self.raw
+  cam2d.target.x = cam2d.target.x + dx
+  cam2d.target.y = cam2d.target.y + dy
+  return self
 end
 
-function camera:detach()
-	love.graphics.pop()
-	love.graphics.setScissor(self._sx,self._sy,self._sw,self._sh)
+-- Retrieve camera target position
+function methods:position()
+  local cam2d = self.raw
+  return cam2d.target.x, cam2d.target.y
 end
 
-function camera:draw(...)
-	local x,y,w,h,noclip,func
-	local nargs = select("#", ...)
-	if nargs == 1 then
-		func = ...
-	elseif nargs == 5 then
-		x,y,w,h,func = ...
-	elseif nargs == 6 then
-		x,y,w,h,noclip,func = ...
-	else
-		error("Invalid arguments to camera:draw()")
-	end
-
-	self:attach(x,y,w,h,noclip)
-	func()
-	self:detach()
+-- Rotate camera by phi radians
+function methods:rotate(phi)
+  local cam2d = self.raw
+  cam2d.rotation = cam2d.rotation + (phi * 180/math.pi)
+  return self
 end
 
--- world coordinates to camera coordinates
-function camera:cameraCoords(x,y, ox,oy,w,h)
-	ox, oy = ox or 0, oy or 0
-	w,h = w or love.graphics.getWidth(), h or love.graphics.getHeight()
-
-	-- x,y = ((x,y) - (self.x, self.y)):rotated(self.rot) * self.scale + center
-	local c,s = cos(self.rot), sin(self.rot)
-	x,y = x - self.x, y - self.y
-	x,y = c*x - s*y, s*x + c*y
-	return x*self.scale + w/2 + ox, y*self.scale + h/2 + oy
+-- Set absolute rotation in radians
+function methods:rotateTo(phi)
+  local cam2d = self.raw
+  cam2d.rotation = phi * (180/math.pi)
+  return self
 end
 
--- camera coordinates to world coordinates
-function camera:worldCoords(x,y, ox,oy,w,h)
-	ox, oy = ox or 0, oy or 0
-	w,h = w or love.graphics.getWidth(), h or love.graphics.getHeight()
-
-	-- x,y = (((x,y) - center) / self.scale):rotated(-self.rot) + (self.x,self.y)
-	local c,s = cos(-self.rot), sin(-self.rot)
-	x,y = (x - w/2 - ox) / self.scale, (y - h/2 - oy) / self.scale
-	x,y = c*x - s*y, s*x + c*y
-	return x+self.x, y+self.y
+-- Zoom multiply by factor
+function methods:zoom(f)
+  local cam2d = self.raw
+  cam2d.zoom = cam2d.zoom * f
+  return self
 end
 
-function camera:mousePosition(ox,oy,w,h)
-	local mx,my = love.mouse.getPosition()
-	return self:worldCoords(mx,my, ox,oy,w,h)
+-- Set absolute zoom
+function methods:zoomTo(z)
+  local cam2d = self.raw
+  cam2d.zoom = z
+  return self
 end
 
--- camera scrolling utilities
-function camera:lockX(x, smoother, ...)
-	local dx, dy = (smoother or self.smoother)(x - self.x, self.y, ...)
-	self.x = self.x + dx
-	return self
+-- Smoothly lock X coordinate
+function methods:lockX(x, smoother, ...)
+  local dx, _ = (smoother or self.smoother)(x - self.raw.target.x, 0, ...)
+  self.raw.target.x = self.raw.target.x + dx
+  return self
 end
 
-function camera:lockY(y, smoother, ...)
-	local dx, dy = (smoother or self.smoother)(self.x, y - self.y, ...)
-	self.y = self.y + dy
-	return self
+-- Smoothly lock Y coordinate
+function methods:lockY(y, smoother, ...)
+  local _, dy = (smoother or self.smoother)(0, y - self.raw.target.y, ...)
+  self.raw.target.y = self.raw.target.y + dy
+  return self
 end
 
-function camera:lockPosition(x,y, smoother, ...)
-	return self:move((smoother or self.smoother)(x - self.x, y - self.y, ...))
+-- Smoothly lock both X and Y
+function methods:lockPosition(x, y, smoother, ...)
+  local dx, dy = (smoother or self.smoother)(x - self.raw.target.x, y - self.raw.target.y, ...)
+  return methods.move(self, dx, dy)
 end
 
-function camera:lockWindow(x, y, x_min, x_max, y_min, y_max, smoother, ...)
-	-- figure out displacement in camera coordinates
-	x,y = self:cameraCoords(x,y)
-	local dx, dy = 0,0
-	if x < x_min then
-		dx = x - x_min
-	elseif x > x_max then
-		dx = x - x_max
-	end
-	if y < y_min then
-		dy = y - y_min
-	elseif y > y_max then
-		dy = y - y_max
-	end
-
-	-- transform displacement to movement in world coordinates
-	local c,s = cos(-self.rot), sin(-self.rot)
-	dx,dy = (c*dx - s*dy) / self.scale, (s*dx + c*dy) / self.scale
-
-	-- move
-	self:move((smoother or self.smoother)(dx,dy,...))
+-- Ensure a world point stays within a screen window
+function methods:lockWindow(x, y, x_min, x_max, y_min, y_max, smoother, ...)
+  local cam2d = self.raw
+  local scr = GetWorldToScreen2D({ x=x, y=y }, cam2d)
+  local dx, dy = 0, 0
+  if scr.x < x_min then dx = scr.x - x_min
+  elseif scr.x > x_max then dx = scr.x - x_max end
+  if scr.y < y_min then dy = scr.y - y_min
+  elseif scr.y > y_max then dy = scr.y - y_max end
+  local rad = -cam2d.rotation * (math.pi/180)
+  local c, s = cos(rad), sin(rad)
+  dx, dy = (c*dx - s*dy)/cam2d.zoom, (s*dx + c*dy)/cam2d.zoom
+  local mx, my = (smoother or self.smoother)(dx, dy, ...)
+  return methods.move(self, mx, my)
 end
 
--- the module
-return setmetatable({new = new, smooth = camera.smooth},
-	{__call = function(_, ...) return new(...) end})
+-- Constructor: wrap the raw Camera2D in a proxy with only smoother in proxy
+local function new(x, y, zoom, rot, smoother)
+  local cam2d = get_raw_camera()
+  -- initialize raw camera fields directly
+  cam2d.target = cam2d.target or { x = 0, y = 0 }
+  cam2d.offset = cam2d.offset or { x = 0, y = 0 }
+  cam2d.target.x = x or GetScreenWidth()/2
+  cam2d.target.y = y or GetScreenHeight()/2
+  cam2d.offset.x = GetScreenWidth()/2
+  cam2d.offset.y = GetScreenHeight()/2
+  cam2d.rotation = (rot or 0) * (180/math.pi)
+  cam2d.zoom     = zoom or 1
+  -- build proxy that holds only 'smoother' alongside raw
+  local proxy = { raw = cam2d, smoother = smoother or smooth.none() }
+  return setmetatable(proxy, { __index = methods })
+end
+
+-- Module exports: constructor and smoothing utilities
+return setmetatable({ new = new, smooth = smooth },
+  { __call = function(_, ...) return new(...) end })

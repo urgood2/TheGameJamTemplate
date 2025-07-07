@@ -8,6 +8,7 @@ local shader_prepass = require("shaders.prepass_example")
 require("core.entity_factory")
 local Chain = require("external.knife.chain")
 local lume = require("external.lume")
+local camera, methods = require("external.hump.camera")
 -- Represents game loop main module
 main = {}
 
@@ -15,6 +16,9 @@ GAMESTATE = {
     MAIN_MENU = 0,
     IN_GAME = 1
 }
+
+local testCamera = camera.new(0, 0, 1, 0, camera.smooth.damped(0.1)) -- Create a new camera instance with damping
+testCamera:move(400,400)
 
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
 
@@ -729,6 +733,7 @@ function initMainGame()
 
     scheduler:attach(p1, p2)
 
+    
 
     -- assert(registry:has(bowser, Transform))
 
@@ -815,7 +820,7 @@ function main.update(dt)
     globals.timeUntilNextGravityWave = globals.timeUntilNextGravityWave - dt
     
     
-    
+    testCamera:move(1,1)
     
     
     -- entity iteration example

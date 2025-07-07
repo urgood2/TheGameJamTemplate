@@ -166,11 +166,11 @@ namespace random_utils {
         rec.add_type("random_utils").doc = "Random number generation utilities and helper functions";
 
         // 2) Vector2
-        ru.new_usertype<Vector2>("Vector2",
-            sol::constructors<Vector2(), Vector2(float, float)>(),
-            "x", &Vector2::x,
-            "y", &Vector2::y
-        );
+        // ru.new_usertype<Vector2>("Vector2",
+        //     sol::constructors<Vector2(), Vector2(float, float)>(),
+        //     "x", &Vector2::x,
+        //     "y", &Vector2::y
+        // );
         rec.record_property("random_utils.Vector2", { "x", "0", "X coordinate" });
         rec.record_property("random_utils.Vector2", { "y", "0", "Y coordinate" });
 

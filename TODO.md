@@ -1,9 +1,10 @@
 # ✅ TODOs: Organized by Category
 
 ## Kinda high priority
+- [ ] performance bottleneck somewhere, need to find it.
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 - [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
-- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?)
+- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
 - use hump.gamestate. How to hook with raylib?
 - turn hump.camera to raylib https://chatgpt.com/share/686b5528-ced8-800a-b6fc-bf4854a62cac
     - how to bind raylib camera in a way that can be used from c ++? Maybe just hang on to a single camera? what are the uses of having multiple?

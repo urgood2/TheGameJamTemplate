@@ -236,13 +236,15 @@ namespace game
         // Deduplicate & normalize the pairs
         auto pairs = dedupePairs(raw);
 
+        auto collisionFilterView = globals::registry.view<collision::CollisionFilter>();
+
         // Single pass: notify each entity exactly once per partner
         for (auto [a,b] : pairs) {
             if (!globals::registry.valid(a) || !globals::registry.valid(b))
                 continue;
             
-            auto &fA = globals::registry.get<collision::CollisionFilter>(a);
-            auto &fB = globals::registry.get<collision::CollisionFilter>(b);
+            auto &fA = collisionFilterView.get<collision::CollisionFilter>(a);
+            auto &fB = collisionFilterView.get<collision::CollisionFilter>(b);
             // bitwise filter:
             // if (fA.mask != 1 || fB.mask != 1) {
             //     SPDLOG_DEBUG("Collision filter mismatch: A mask {} category {}, B mask {} category {}", 
@@ -308,8 +310,8 @@ namespace game
             if (!globals::registry.valid(a) || !globals::registry.valid(b))
                 continue;
             
-            auto &fA = globals::registry.get<collision::CollisionFilter>(a);
-            auto &fB = globals::registry.get<collision::CollisionFilter>(b);
+            auto &fA = collisionFilterView.get<collision::CollisionFilter>(a);
+            auto &fB = collisionFilterView.get<collision::CollisionFilter>(b);
             // bitwise filter:
             // if (fA.mask != 1 || fB.mask != 1) {
             //     SPDLOG_DEBUG("Collision filter mismatch: A mask {} category {}, B mask {} category {}", 

@@ -4,7 +4,7 @@
 - [ ] performance bottleneck somewhere, need to find it.
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 - [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
-- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?)
+- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
 - [ ] add signals to lua code so I can use them later
 - [ ] Applying shaders to ui in a modular fashion
     - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 

@@ -14089,7 +14089,8 @@
         "chain.lua"
     ],
     "chain_knife": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife/chain.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife/chain.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\knife\\chain.lua"
     ],
     "char_example": [
         "example_char"
@@ -16698,10 +16699,12 @@
         "edge_effect_fragment.fs"
     ],
     "edge_effect_fragment_shader": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_fragment.fs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\edge_effect_fragment.fs"
     ],
     "edge_effect_shader_vertex": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_vertex.vs"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\edge_effect_vertex.vs"
     ],
     "edge_effect_vertex": [
         "edge_effect_vertex.vs"
@@ -16862,13 +16865,16 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation.svg"
     ],
     "external_knife": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\knife"
     ],
     "external_lume": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/lume.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/lume.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\lume.lua"
     ],
     "external_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external"
     ],
     "f10_keyboard": [
         "keyboard_f10.png"

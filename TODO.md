@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## Kinda high priority
+- [ ] performance bottleneck somewhere, need to find it.
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 - [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
 - [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?)

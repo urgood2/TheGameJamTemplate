@@ -907,6 +907,8 @@ namespace particle
                 // disable shadow displacement, thereby removing shadow
                 gameObject.shadowDisplacement.reset();
             }
+
+            return e;
         };
 
         // 4) Bind it

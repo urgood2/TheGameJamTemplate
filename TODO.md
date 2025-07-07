@@ -2,17 +2,12 @@
 
 ## New features
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
-- document that lua camera new doesn't actually create anew one, it binds to global::camera
+
+- way to make sure certain texts & images should be worldspace, or not
+- [ ] add l2dk support. How does it work? check api, etc. and how to integrate with raylib & lua
 - particle z values how?
     - need way to specify particle screen/world space & particle z values
-- [ ] true ui / sprite separation while keeping draw order - how to do this? https://chatgpt.com/share/686b7011-4f28-800a-8ff2-069b3bbb00d7
-    - how to specify which sprites (ui sprites) are meant to be screen space, not world space? Everything else is world space -> on ui init, any objects should be marked with ScreenSpaceCollisionMarker
-    - ExecuteDrawTransformEntityAnimationPipeline / DrawTransformEntityWithAnimation 
-    - ScreenSpaceCollisionMarker
-    - apply to debug rendering as well so we can see some separation there
     
-- turn hump.camera to raylib https://chatgpt.com/share/686b5528-ced8-800a-b6fc-bf4854a62cac
-    - how to bind raylib camera in a way that can be used from c ++? Maybe just hang on to a single camera? what are the uses of having multiple?
 - [ ] Applying shaders to ui in a modular fashion
     - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 
     - element: drawSelf() overhaul using shader pass component: https://chatgpt.com/share/686a8a8e-2fc8-800a-b21d-3539224e69f9

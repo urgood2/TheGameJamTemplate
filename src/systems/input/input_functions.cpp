@@ -4,6 +4,7 @@
 
 #include "entt/entt.hpp"
 
+#include "systems/collision/broad_phase.hpp"
 #include "util/common_headers.hpp"
 
 #include "core/globals.hpp"
@@ -737,6 +738,8 @@ namespace input
 
         // create cursor
         globals::cursor = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 10, 10);
+        // screen space
+        globals::registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(globals::cursor);
         auto &cursorNode = globals::registry.get<transform::GameObject>(globals::cursor);
         cursorNode.debug.debugText = "Cursor";
     }
@@ -2292,7 +2295,7 @@ namespace input
         }; // flag to help clear non-colliding entities
 
         // Use quadtree broad-phase + precise collision check
-        auto entitiesAtCursor = transform::FindAllEntitiesAtPoint(cursor_trans);
+        auto entitiesAtCursor = transform::FindAllEntitiesAtPoint(cursor_trans, &globals::camera);
 
         // Clear previous collision state
         state.nodes_at_cursor.clear();

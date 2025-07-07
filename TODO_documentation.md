@@ -1,5 +1,6 @@
 # Documentation
 - [ ] camera documentation
+    - also document that lua camera new doesn't actually create anew one, it binds to global::camera
 
 ```lua
 local testCamera = camera.new(0, 0, 1, 0, camera.smooth.damped(0.1)) -- Create a new camera instance with damping

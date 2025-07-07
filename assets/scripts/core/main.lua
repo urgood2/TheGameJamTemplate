@@ -18,7 +18,7 @@ GAMESTATE = {
 }
 
 local testCamera = camera.new(0, 0, 1, 0, camera.smooth.damped(0.1)) -- Create a new camera instance with damping
-testCamera:move(400,400)
+-- testCamera:move(400,400)
 
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
 
@@ -377,7 +377,16 @@ function initMainGame()
     playMusic("whale-song", true) -- Play the whale song music, but mute it
     setTrackVolume("whale-song", 0.0) -- Mute the whale song music
     
-    
+    timer.after(
+        1.0, -- delay in seconds
+        function()
+            -- testCamera:move(50,300) 
+            local t = registry:get(globals.entities.whales[1], Transform)
+            
+            testCamera:lockPosition(t.visualX, t.visualY) -- Lock the camera to the first whale's position
+        end,
+        "move_camera_text" -- unique tag for this timer
+    )
     
     -- Set the background shader to the main game background
     
@@ -820,9 +829,7 @@ function main.update(dt)
     globals.timeUntilNextGravityWave = globals.timeUntilNextGravityWave - dt
     
     
-    
-    -- move camera randomly
-    testCamera:move(random_utils.random_int(-10, 10), random_utils.random_int(-10, 10))
+
     
     -- entity iteration example
     -- local view = registry:runtime_view(Transform)

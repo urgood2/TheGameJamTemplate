@@ -58,8 +58,7 @@ namespace scripting {
         auto& rec = BindingRecorder::instance();
         
         // basic lua state initialization
-        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, 
-                                   sol::lib::math);
+        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, sol::lib::math, sol::lib::debug, sol::lib::io);
         
         std::string base1 = util::getRawAssetPathNoUUID("scripts/");
         std::string base2 = util::getRawAssetPathNoUUID("scripts/core");
@@ -237,7 +236,7 @@ namespace scripting {
         // ));
 
         // In your Sol2 init (after registering luaDebugLogWrapper*):
-        stateToInit.set_function("debug",
+        stateToInit.set_function("log_debug",
         [](sol::this_state ts, sol::variadic_args va) {
             sol::state_view L{ts};
             std::ostringstream oss;
@@ -276,29 +275,29 @@ namespace scripting {
         );
 
         // Main signature
-        rec.record_free_function({}, {"debug",
+        rec.record_free_function({}, {"log_debug",
             "---@param entity Entity # The entity to associate the log with.\n"
             "---@param message string # The message to log. Can be variadic arguments.\n"
             "---@return nil",
             "Logs a debug message associated with an entity.", true, false});
         // Overload for no entity
-        rec.record_free_function({}, {"debug",
+        rec.record_free_function({}, {"log_debug",
             "---@overload fun(message: string):nil", // Correct overload syntax
             "Logs a general debug message.", true, true});
 
 
-        stateToInit.set_function("error", sol::overload(
+        stateToInit.set_function("log_error", sol::overload(
             static_cast<void(*)(entt::entity, std::string)>(&luaErrorLogWrapper),
             static_cast<void(*)(std::string)>(&luaErrorLogWrapperNoEntity)
         ));
         // Main signature
-        rec.record_free_function({}, {"error",
+        rec.record_free_function({}, {"log_error",
             "---@param entity Entity # The entity to associate the error with.\n"
             "---@param message string # The error message.\n"
             "---@return nil",
             "Logs an error message associated with an entity.", true, false});
         // Overload for no entity
-        rec.record_free_function({}, {"error",
+        rec.record_free_function({}, {"log_error",
             "---@overload fun(message: string):nil", // Correct overload syntax
             "Logs a general error message.", true, true});
 

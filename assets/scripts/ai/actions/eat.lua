@@ -10,17 +10,17 @@ return {
     post = { hungry = false },
 
     start = function(e)
-        debug("Entity", e, "is eating.")
+        log_debug("Entity", e, "is eating.")
     end,
 
     update = function(e, dt) -- update can be coroutine
-        debug("Entity", e, "eat update.")
+        log_debug("Entity", e, "eat update.")
         wait(1.0)
         return ActionResult.SUCCESS
     end,
 
     finish = function(e)
-        debug("Done eating.")
+        log_debug("Done eating.")
     end
 }
 
@@ -31,7 +31,7 @@ return {
 -- wander = {}
 
 -- function wander.start(entity)
---     debug(entity, "Wander action started");
+--     log_debug(entity, "Wander action started");
 --     setBlackboardFloat(entity, "time_spent_wandering", 0.0);  -- Store a custom variable
 -- end
 
@@ -42,10 +42,10 @@ return {
 --     setBlackboardFloat(entity, "time_spent_wandering", timeSpent);
     
 --     if timeSpent >= 10.0 then
---         debug(entity, "Wander action completed");
+--         log_debug(entity, "Wander action completed");
 --         return ActionResult.SUCCESS;  -- Return true to indicate the action has completed
 --     else 
---         debug(entity, "Wandering... " .. timeSpent .. " seconds passed.");
+--         log_debug(entity, "Wandering... " .. timeSpent .. " seconds passed.");
 --         return ActionResult.RUNNING;  -- Return false to indicate the action is still running
 --     end
     
@@ -63,5 +63,5 @@ return {
 
 -- -- postconditions are updated automatically, no need to define them here
 -- function wander.finish(entity)
---     debug(entity, "Wander action ended");
+--     log_debug(entity, "Wander action ended");
 -- end

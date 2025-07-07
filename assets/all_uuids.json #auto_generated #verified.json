@@ -13978,6 +13978,12 @@
     "c_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_c.svg"
     ],
+    "camera": [
+        "camera.lua"
+    ],
+    "camera_hump": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/camera.lua"
+    ],
     "capslock_default_icon_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_capslock_icon.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_capslock_icon.png"
@@ -16861,6 +16867,9 @@
     "exclamation_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation.svg"
     ],
+    "external_hump": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump"
+    ],
     "external_knife": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife"
     ],
@@ -17554,6 +17563,12 @@
     "gamejam_vertex": [
         "gamejam_vertex.vs"
     ],
+    "gamestate": [
+        "gamestate.lua"
+    ],
+    "gamestate_hump": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/gamestate.lua"
+    ],
     "gear": [
         "gear.png"
     ],
@@ -17856,6 +17871,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\Hover.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Hover.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\Hover.wav"
+    ],
+    "hump_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/README.md"
+    ],
+    "hump_signal": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/signal.lua"
     ],
     "i_keyboard": [
         "keyboard_i.png"
@@ -19200,6 +19221,9 @@
     ],
     "sienna": [
         "SIENNA"
+    ],
+    "signal": [
+        "signal.lua"
     ],
     "slkscr": [
         "slkscr.ttf"

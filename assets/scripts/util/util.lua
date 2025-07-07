@@ -102,7 +102,7 @@ end
 
 function showNewAchievementPopup(achievementID)
   if not globals.ui.newAchievementUIBox then
-    debug("showNewAchievementPopup: newAchievementUIBox is not set up, skipping")
+    log_debug("showNewAchievementPopup: newAchievementUIBox is not set up, skipping")
     return
   end
   
@@ -159,7 +159,7 @@ function showNewAchievementPopup(achievementID)
   timer.after(
     5.0,           -- delay in seconds
     function()
-      debug("Dismissing achievement popup: ", achievementID)
+      log_debug("Dismissing achievement popup: ", achievementID)
       -- move the box out of the screen
       local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
       transformComp.actualY = globals.screenHeight() + 500
@@ -215,7 +215,7 @@ end
 
 function hideTooltip()
   if (globals.ui.tooltipUIBox == nil) then
-    debug("hideTooltip: tooltipUIBox is not set up, skipping")
+    log_debug("hideTooltip: tooltipUIBox is not set up, skipping")
     return
   end
   local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
@@ -231,7 +231,7 @@ function cycleConverter(inc)
   elseif globals.selectedConverterIndex < 1 then
     globals.selectedConverterIndex = #globals.converter_defs
   end
-  debug("Selected converter index: ", globals.selectedConverterIndex)
+  log_debug("Selected converter index: ", globals.selectedConverterIndex)
 
   -- 2) figure out locked state & tooltip text
   local locked = not globals.converter_defs[globals.selectedConverterIndex].unlocked
@@ -247,23 +247,23 @@ function cycleConverter(inc)
     body  = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body) .. costString .. requirementString
   end
 
-  debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
+  log_debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
   -- 3) hook up hover callbacks
   local converterEntity                   = globals.converter_ui_animation_entity
   local converterGameObject               = registry:get(converterEntity, GameObject)
   converterGameObject.methods.onHover     = function()
-    debug("Converter entity hovered!")
+    log_debug("Converter entity hovered!")
     showTooltip(title, body)
   end
   converterGameObject.methods.onStopHover = function()
-    debug("Converter entity stopped hovering!")
+    log_debug("Converter entity stopped hovering!")
     -- hideTooltip()
   end
 
   -- 4) immediately show it once
   -- showTooltip(title, body)
 
-  debug("swap the animation for converter entity: ", globals.converter_ui_animation_entity)
+  log_debug("swap the animation for converter entity: ", globals.converter_ui_animation_entity)
   -- 5) swap the animation
   local animToShow = globals.converter_defs[globals.selectedConverterIndex].unlocked
       and globals.converter_defs[globals.selectedConverterIndex].anim
@@ -288,7 +288,7 @@ function cycleBuilding(inc)
   elseif globals.selectedBuildingIndex < 1 then
     globals.selectedBuildingIndex = #globals.building_upgrade_defs
   end
-  debug("Selected converter index: ", globals.selectedBuildingIndex)
+  log_debug("Selected converter index: ", globals.selectedBuildingIndex)
 
   -- 2) figure out locked state & tooltip text
   local locked = not globals.building_upgrade_defs[globals.selectedBuildingIndex].unlocked
@@ -300,7 +300,7 @@ function cycleBuilding(inc)
   else
     local costString = getCostStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
     local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
-    debug("Cost string for building: ", costString)
+    log_debug("Cost string for building: ", costString)
     title = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_title)
     body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body) .. costString .. requirementString
   end
@@ -339,7 +339,7 @@ function buyConverterButtonCallback()
   local uiTransformComp = registry:get(globals.converter_ui_animation_entity, Transform)
 
   if not selectedConverter.unlocked then
-    debug("Converter is not unlocked yet!")
+    log_debug("Converter is not unlocked yet!")
     newTextPopup(
       localization.get("ui.not_unlocked_msg"),
       uiTransformComp.actualX + uiTransformComp.actualW / 2,
@@ -354,7 +354,7 @@ function buyConverterButtonCallback()
   local cost = selectedConverter.cost
   for currency, amount in pairs(cost) do
     if globals.currencies[currency].target < amount then
-      debug("Not enough", currency, "to buy converter", selectedConverter.id)
+      log_debug("Not enough", currency, "to buy converter", selectedConverter.id)
       newTextPopup(
         localization.get("ui.not_enough_currency"),
         uiTransformComp.actualX + uiTransformComp.actualW / 2,
@@ -369,7 +369,7 @@ function buyConverterButtonCallback()
   -- deduct the cost from the player's resources
   for currency, amount in pairs(cost) do
     globals.currencies[currency].target = globals.currencies[currency].target - amount
-    debug("Deducted", amount, currency, "from player's resources")
+    log_debug("Deducted", amount, currency, "from player's resources")
   end
       
 
@@ -378,7 +378,7 @@ function buyConverterButtonCallback()
 
   -- add the converter to the end of the table in the converters table with the id of the converter
   table.insert(globals.converters[selectedConverter.id], exampleConverter)
-  debug("Added converter entity to globals.converters: ", exampleConverter, " for id: ", selectedConverter.id)
+  log_debug("Added converter entity to globals.converters: ", exampleConverter, " for id: ", selectedConverter.id)
 
   animation_system.setupAnimatedObjectOnEntity(
     exampleConverter,
@@ -432,17 +432,17 @@ function buyConverterButtonCallback()
   -- add onstopdrag method to the converter entity
   local gameObjectComp = registry:get(exampleConverter, GameObject)
   gameObjectComp.methods.onHover = function()
-    debug("Converter entity hovered! WHy not drag?")
+    log_debug("Converter entity hovered! WHy not drag?")
   end
   gameObjectComp.methods.onStopDrag = function()
-    debug("Converter entity stopped dragging!")
+    log_debug("Converter entity stopped dragging!")
     local gameObjectComp = registry:get(exampleConverter, GameObject)
     local transformComp = registry:get(exampleConverter, Transform)
     local gameObjectState = gameObjectComp.state
     -- get the grid that it's in, grid is 64 pixels wide
     local gridX = math.floor(transformComp.actualX / 64)
     local gridY = math.floor(transformComp.actualY / 64)
-    debug("Converter entity is in grid: ", gridX, gridY)
+    log_debug("Converter entity is in grid: ", gridX, gridY)
     -- snap the entity to the grid, but center it in the grid cell
     local magic_padding = 2
     transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding   -- center it in the grid cell
@@ -466,7 +466,7 @@ function buyConverterButtonCallback()
       0.5     -- particle size
     )
     transform.InjectDynamicMotion(exampleConverter, 1.0, 1)
-    debug("add on hover/stop hover methods to the converter entity")
+    log_debug("add on hover/stop hover methods to the converter entity")
     -- add on hover/stop hover methods to the building entity
     gameObjectComp.methods.onHover = function()
       showTooltip(
@@ -476,7 +476,7 @@ function buyConverterButtonCallback()
       )
     end
     gameObjectComp.methods.onStopHover = function()
-      debug("Converter entity stopped hovering!")
+      log_debug("Converter entity stopped hovering!")
       -- hideTooltip()
     end
   end
@@ -488,7 +488,7 @@ function getRequirementStringForBuildingOrConverter(def)
   -- 1) currency requirements
   if def.required_currencies then
     for currencyKey, amount in pairs(def.required_currencies) do
-      debug("Requirement currency:", currencyKey, "amount:", amount)
+      log_debug("Requirement currency:", currencyKey, "amount:", amount)
       local currencyName = globals.currencies[currencyKey].human_readable_name
       reqString = reqString
         .. localization.get(
@@ -501,7 +501,7 @@ function getRequirementStringForBuildingOrConverter(def)
   -- 2) building or converter requirements
   if def.required_building_or_converter then
     for reqId, amount in pairs(def.required_building_or_converter) do
-      debug("Requirement building/converter:", reqId, "amount:", amount)
+      log_debug("Requirement building/converter:", reqId, "amount:", amount)
       -- look up the human‐readable name
       local reqDef = findInTable(globals.building_upgrade_defs, "id", reqId)
                   or findInTable(globals.converter_defs,        "id", reqId)
@@ -522,7 +522,7 @@ function getCostStringForBuildingOrConverter(buildingOrConverterDef)
   local costString = "\nCost:\n"
   local cost = buildingOrConverterDef.cost
   for currency, amount in pairs(cost) do
-    debug("Cost for currency: ", currency, " amount: ", amount)
+    log_debug("Cost for currency: ", currency, " amount: ", amount)
     costString = costString .. localization.get("ui.cost_tooltip_postfix", {cost = amount, currencyName = globals.currencies[currency].human_readable_name}) .. " "
   end
   return costString
@@ -537,7 +537,7 @@ function getCostStringForMaterial(converterDef)
   
   local costString = "\nCost:\n"
   local cost = converterDef.required_currencies
-  debug("debug printing cost string for material: ", converterDef.id)
+  log_debug("debug printing cost string for material: ", converterDef.id)
   print_table(cost)
   for currency, amount in pairs(cost) do
     costString = costString .. localization.get("ui.material_requirement_tooltip_postfix", {cost = amount, currencyName = globals.currencies[currency].human_readable_name}) .. " "
@@ -552,7 +552,7 @@ function buyBuildingButtonCallback()
   local uiTransformComp = registry:get(globals.building_ui_animation_entity, Transform)
 
   if not selectedBuilding.unlocked then
-    debug("Building is not unlocked yet!")
+    log_debug("Building is not unlocked yet!")
     newTextPopup(
       localization.get("ui.not_unlocked_msg"),
       uiTransformComp.actualX + uiTransformComp.actualW / 2,
@@ -567,7 +567,7 @@ function buyBuildingButtonCallback()
   local cost = selectedBuilding.cost
   for currency, amount in pairs(cost) do
     if globals.currencies[currency].target < amount then
-      debug("Not enough", currency, "to buy building", selectedBuilding.id)
+      log_debug("Not enough", currency, "to buy building", selectedBuilding.id)
       newTextPopup(
         localization.get("ui.not_enough_currency"),
         uiTransformComp.actualX + uiTransformComp.actualW / 2,
@@ -582,7 +582,7 @@ function buyBuildingButtonCallback()
   -- deduct the cost from the player's resources
   for currency, amount in pairs(cost) do
     globals.currencies[currency].target = globals.currencies[currency].target - amount
-    debug("Deducted", amount, currency, "from player's resources")
+    log_debug("Deducted", amount, currency, "from player's resources")
   end
 
 
@@ -591,7 +591,7 @@ function buyBuildingButtonCallback()
 
   -- add to the table in the buildings table with the id of the building
   table.insert(globals.buildings[selectedBuilding.id], exampleBuilding)
-  debug("Added building entity to globals.buildings: ", exampleBuilding, " for id: ", selectedBuilding.id)
+  log_debug("Added building entity to globals.buildings: ", exampleBuilding, " for id: ", selectedBuilding.id)
   
   playSoundEffect("effects", "buy-building")
 
@@ -647,17 +647,17 @@ function buyBuildingButtonCallback()
   -- add onstopdrag method to the converter entity
   local gameObjectComp = registry:get(exampleBuilding, GameObject)
   gameObjectComp.methods.onHover = function()
-    debug("Converter entity hovered! WHy not drag?")
+    log_debug("Converter entity hovered! WHy not drag?")
   end
   gameObjectComp.methods.onStopDrag = function()
-    debug("Converter entity stopped dragging!")
+    log_debug("Converter entity stopped dragging!")
     local gameObjectComp = registry:get(exampleBuilding, GameObject)
     local transformComp = registry:get(exampleBuilding, Transform)
     local gameObjectState = gameObjectComp.state
     -- get the grid that it's in, grid is 64 pixels wide
     local gridX = math.floor(transformComp.actualX / 64)
     local gridY = math.floor(transformComp.actualY / 64)
-    debug("Converter entity is in grid: ", gridX, gridY)
+    log_debug("Converter entity is in grid: ", gridX, gridY)
     -- snap the entity to the grid, but center it in the grid cell
     local magic_padding = 2
     transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding   -- center it in the grid cell
@@ -680,20 +680,20 @@ function buyBuildingButtonCallback()
     
     playSoundEffect("effects", "place-building")
 
-    debug("add on hover/stop hover methods to the building entity")
+    log_debug("add on hover/stop hover methods to the building entity")
     -- add on hover/stop hover methods to the building entity
     
     -- localization.get("ui.currency_text", {currency = math.floor(globals.currencies.whale_dust.amount)})
     
     gameObjectComp.methods.onHover = function()
-      debug("Building entity hovered!")
+      log_debug("Building entity hovered!")
       showTooltip(
         localization.get(selectedBuilding.ui_text_title),
         localization.get(selectedBuilding.ui_text_body)
       )
     end
     gameObjectComp.methods.onStopHover = function()
-      debug("Building entity stopped hovering!")
+      log_debug("Building entity stopped hovering!")
       -- hideTooltip()
     end
     
@@ -717,7 +717,7 @@ function buyBuildingButtonCallback()
             0.5     -- seconds
           )
           
-          debug("Spawned a krill entity at the building's position")
+          log_debug("Spawned a krill entity at the building's position")
         end
       )
     elseif selectedBuilding.id == "krill_farm" then
@@ -739,7 +739,7 @@ function buyBuildingButtonCallback()
               50,     -- number of particles
               0.5     -- seconds
             )
-            debug("Spawned a krill entity at the building's position")
+            log_debug("Spawned a krill entity at the building's position")
           end
         )
       end
@@ -772,7 +772,7 @@ function updateBuildings()
       -- ensure building has been placed
       local gameObject = registry:get(buildingEntity, GameObject)
       if gameObject.state.dragEnabled then
-        debug("Building", buildingID, "is not placed yet, skipping")
+        log_debug("Building", buildingID, "is not placed yet, skipping")
         goto continue
       end
       
@@ -783,7 +783,7 @@ function updateBuildings()
       -- check the resource collection rate
       local resourceCollectionRate = buildingDefTable.resource_collection_rate
       if not resourceCollectionRate then
-        debug("Building", buildingID, "has no resource collection rate defined, skipping")
+        log_debug("Building", buildingID, "has no resource collection rate defined, skipping")
         goto continue
       end
       for resource, amount in pairs(resourceCollectionRate) do
@@ -795,14 +795,14 @@ function updateBuildings()
             if #currencyEntitiesNotPickedUp > 0 then
               local currencyEntity = table.remove(currencyEntitiesNotPickedUp, 1)
               
-              debug("Building", buildingID, "gathered", resource, "from entity", currencyEntity)
+              log_debug("Building", buildingID, "gathered", resource, "from entity", currencyEntity)
               
               --TODO: move the currency entity to the building's position
               local currencyTransform = registry:get(currencyEntity, Transform)
               currencyTransform.actualX = buildingTransform.actualX + buildingTransform.actualW / 2
               currencyTransform.actualY = buildingTransform.actualY + buildingTransform.actualH / 2
               
-              debug("playing sound effect with ID", buildingID)
+              log_debug("playing sound effect with ID", buildingID)
               playSoundEffect("effects", buildingID)
               
               timer.after(
@@ -825,7 +825,7 @@ function updateBuildings()
               )
               
             else
-              debug("No more", resource, "entities to gather from")
+              log_debug("No more", resource, "entities to gather from")
               break
             end
           end
@@ -847,7 +847,7 @@ function updateConverters()
       -- ensure converter has been placed
       local gameObject = registry:get(converterEntity, GameObject)
       if gameObject.state.dragEnabled then
-        debug("Converter", converterID, "is not placed yet, skipping")
+        log_debug("Converter", converterID, "is not placed yet, skipping")
         goto continue
       end
       
@@ -859,7 +859,7 @@ function updateConverters()
       local requirement_met = true   -- assume requirement is met
       for currency, amount in pairs(converterDefTable.required_currencies) do
         if globals.currencies[currency].target < amount then
-          debug("Converter", converterID, "requires", amount, currency, "but only has",
+          log_debug("Converter", converterID, "requires", amount, currency, "but only has",
             globals.currencies[currency].target)
           requirement_met = false       -- requirement not met
           break
@@ -869,11 +869,11 @@ function updateConverters()
         -- detract from target currency
         for currency, amount in pairs(converterDefTable.required_currencies) do
           globals.currencies[currency].target = globals.currencies[currency].target - amount
-          debug("Converter", converterID, "detracted", amount, currency, "from target")
+          log_debug("Converter", converterID, "detracted", amount, currency, "from target")
         end
         -- spawn the new currency at the converter's position, in converter table's output field
         for currency, amount in pairs(converterDefTable.output) do
-          debug("Converter", converterID, "added", amount, currency, "to target")
+          log_debug("Converter", converterID, "added", amount, currency, "to target")
           
           playSoundEffect("effects", converterID)
 

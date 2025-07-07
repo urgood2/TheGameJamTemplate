@@ -329,13 +329,13 @@ function setEntityAlias(...) end
 ---@param entity Entity # The entity to associate the log with.
 ---@param message string # The message to log. Can be variadic arguments.
 ---@return nil
-function debug(...) end
+function log_debug(...) end
 
 ---
 --- Logs a general debug message.
 ---
 ---@overload fun(message: string):nil
-function debug(...) end
+function log_debug(...) end
 
 ---
 --- Logs an error message associated with an entity.
@@ -343,13 +343,13 @@ function debug(...) end
 ---@param entity Entity # The entity to associate the error with.
 ---@param message string # The error message.
 ---@return nil
-function error(...) end
+function log_error(...) end
 
 ---
 --- Logs a general error message.
 ---
 ---@overload fun(message: string):nil
-function error(...) end
+function log_error(...) end
 
 ---
 --- Sets a value in the entity's current world state.

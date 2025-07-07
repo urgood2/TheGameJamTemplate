@@ -51,7 +51,7 @@ function spawnCurrencyAutoCollect(x, y, currencyName)
     -- jigglle on spawn
     transform.InjectDynamicMotionDefault(e)
     
-    debug("currency", currencyName, "clicked")
+    log_debug("currency", currencyName, "clicked")
     -- Get the Transform component you use to track visual X/Y and size:
     local tc = registry:get(e, Transform)  -- or whatever its name is
 
@@ -77,7 +77,7 @@ function spawnCurrencyAutoCollect(x, y, currencyName)
         
     end)
     
-    debug("currency", currencyName, "remove timer added")
+    log_debug("currency", currencyName, "remove timer added")
     -- remove some time later
     timer.after(0.8, function()
         local transformComp = registry:get(e, Transform)
@@ -141,10 +141,10 @@ function spawnCurrency(x, y, currencyName)
     playSoundEffect("effects", "item-drop") -- play the currency spawn sound effect
     
     table.insert(globals.currencies_not_picked_up[currencyName], e) -- add to the list of entities for this currency
-    debug("currency", currencyName, "spawned at", x, y)
+    log_debug("currency", currencyName, "spawned at", x, y)
     gameObjectMethods.onClick = function(registry, e)
         
-        debug("currency", currencyName, "clicked")
+        log_debug("currency", currencyName, "clicked")
         -- Get the Transform component you use to track visual X/Y and size:
         local tc = registry:get(e, Transform)  -- or whatever its name is
 
@@ -161,7 +161,7 @@ function spawnCurrency(x, y, currencyName)
         
         spawnGrowingCircleParticle(centerX, centerY, 100, 100, 0.2)
         
-        debug("currency", currencyName, "motion injected")
+        log_debug("currency", currencyName, "motion injected")
         -- jiggle
         transform.InjectDynamicMotion(e, 1, 50)
         
@@ -184,14 +184,14 @@ function spawnCurrency(x, y, currencyName)
             
         end)
         
-        debug("currency", currencyName, "remove timer added")
+        log_debug("currency", currencyName, "remove timer added")
         -- remove some time later
         timer.after(0.8, function()
             if (registry:valid(e) == true) then
                 registry:destroy(e)
             end
             removeValueFromTable(globals.currencies_not_picked_up[currencyName], e) -- remove from the list of entities for this currency
-            debug("currency", currencyName, "removed from not picked up list")
+            log_debug("currency", currencyName, "removed from not picked up list")
             
             globals.currencies[currencyName].target = globals.currencies[currencyName].target + 1 -- increment the target amount
             
@@ -290,14 +290,14 @@ function spawnNewKrill()
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
     nodeComp.methods.onHover = function()
-        -- debug("krill hovered!")
+        -- log_debug("krill hovered!")
         showTooltip(
             localization.get("ui.space_krill_title"), 
             localization.get("ui.space_krill_body")
         )
     end
     -- nodeComp.methods.onStopHover = function()
-    --     -- debug("krill stopped hovering!")
+    --     -- log_debug("krill stopped hovering!")
     --     -- reset the tooltip text
     --     hideTooltip()
     -- end
@@ -480,7 +480,7 @@ function spawnNewWhale()
         end,
 
         on_collision = function(self, other)
-            debug("whale", bowser, "collided with", other)
+            log_debug("whale", bowser, "collided with", other)
         end,
 
         -- Called just before the entity is destroyed
@@ -500,10 +500,10 @@ function spawnNewWhale()
     
     local methods = nodeComp.methods
     
-    debug (methods)
+    -- log_debug(methods)
     
     methods.onHover = function()
-        -- debug("whale hovered!")
+        -- log_debug("whale hovered!")
         showTooltip(
             localization.get("ui.whale_title"), 
             localization.get("ui.whale_body")
@@ -511,7 +511,7 @@ function spawnNewWhale()
         
     end
     -- methods.onStopHover = function()
-    --     -- debug("whale stopped hovering!")
+    --     -- log_debug("whale stopped hovering!")
     --     -- reset the tooltip text
         
     --     -- hide the tooltip UI box
@@ -519,7 +519,7 @@ function spawnNewWhale()
     --     hideTooltip()
     -- end
     methods.onClick = function(registry, e) 
-        debug("whale clicked!")
+        log_debug("whale clicked!")
         
         transform.InjectDynamicMotion(e, 0.4, 15) -- add dynamic motion to the whale
         

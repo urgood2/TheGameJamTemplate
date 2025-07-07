@@ -348,16 +348,16 @@ function ui_defs.generateUI()
     
     
     -- dump(ui.box)
-    debug(ui)
-    debug(ui.element)
+    log_debug(ui)
+    log_debug(ui.element)
     -- dump(newRoot)
     
     local newUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 10}, newRoot)
     
     local newUIBoxTransform = registry:get(newUIBox, Transform)
     local uiBoxComp = registry:get(newUIBox, UIBoxComponent)
-    debug(newUIBox)
-    debug(uiBoxComp)
+    log_debug(newUIBox)
+    log_debug(uiBoxComp)
     -- anchor to the top right corner of the screen
     newUIBoxTransform.actualX = globals.screenWidth() - newUIBoxTransform.actualW -- 10 pixels from the right edge
     newUIBoxTransform.actualY = 10 -- 10 pixels from the top edge
@@ -366,7 +366,7 @@ function ui_defs.generateUI()
     timer.after(
         1.0, -- delay in seconds
         function()
-            -- debug("Aligning newUIBox to the game world container")
+            -- log_debug("Aligning newUIBox to the game world container")
             -- align the new UI box to the game world container
             --TODO: debug this, we need to get it working
             -- local uiBoxRole = registry:get(newUIBox, InheritedProperties)
@@ -374,8 +374,8 @@ function ui_defs.generateUI()
             -- transform.AssignRole(registry, newUIBox, InheritedPropertiesType.RoleInheritor, globals.gameWorldContainerEntity());
 
             -- local gameWorldContainerTransform = registry:get(globals.gameWorldContainerEntity(), Transform)
-            -- debug("uiBox width = ", uiBoxTransform.actualW, "uiBox height = ", uiBoxTransform.actualH)
-            -- debug("gameWorldContainer width = ", gameWorldContainerTransform.actualW, "gameWorldContainer height = ", gameWorldContainerTransform.actualH)
+            -- log_debug("uiBox width = ", uiBoxTransform.actualW, "uiBox height = ", uiBoxTransform.actualH)
+            -- log_debug("gameWorldContainer width = ", gameWorldContainerTransform.actualW, "gameWorldContainer height = ", gameWorldContainerTransform.actualH)
             -- uiBoxRole.flags = AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.ALIGN_TO_INNER_EDGES | AlignmentFlag.VERTICAL_TOP
         end
     )
@@ -399,7 +399,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- button click callback
-                debug("Prestige button clicked!")
+                log_debug("Prestige button clicked!")
                 local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
                 playSoundEffect("effects", "button-click") -- play button click sound
                 -- uibox_transform.actualY = uibox_transform.actualY + 300
@@ -461,7 +461,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- button click callback
-                debug("Help button clicked!")
+                log_debug("Help button clicked!")
                 playSoundEffect("effects", "button-click") -- play button click sound
                 globals.ui.help_window_open = not globals.ui.help_window_open
                 helpuiboxTransform = registry:get(globals.ui.helpTextUIBox, Transform)
@@ -512,7 +512,7 @@ function ui_defs.generateUI()
     
     -- there will be six ui elements in each row, and as many rows as needed to fit all the upgrades
     
-    debug("building achievements window...")
+    log_debug("building achievements window...")
     
     local achievementRows = {}
     local currentRow = UIElementTemplateNodeBuilder.create()
@@ -530,7 +530,7 @@ function ui_defs.generateUI()
     :build()
     
     for i, achivementDef in ipairs(globals.achievements) do
-        debug("Adding achievement: ", achivementDef.id, " with animation: ", achivementDef.anim)
+        log_debug("Adding achievement: ", achivementDef.id, " with animation: ", achivementDef.anim)
         -- make a new achievement animation entity
         achivementDef.anim_entity = animation_system.createAnimatedObjectWithTransform(
             achivementDef.unlocked and  achivementDef.anim or "locked_anim", -- animation ID
@@ -550,11 +550,11 @@ function ui_defs.generateUI()
         -- make it hoverable
         local achievementGameObject = registry:get(achivementDef.anim_entity, GameObject)
         achievementGameObject.methods.onHover = function()
-            debug("Achievement entity hovered!")
+            log_debug("Achievement entity hovered!")
             achivementDef.tooltipFunc()
         end
         achievementGameObject.methods.onStopHover = function()
-            debug("Achievement entity stopped hovering!")
+            log_debug("Achievement entity stopped hovering!")
             -- hideTooltip()
         end
         achievementGameObject.state.hoverEnabled = true
@@ -584,7 +584,7 @@ function ui_defs.generateUI()
         
         -- if we passed the sixth achievement, we need to start a new row
         if i % 6 == 0 and i > 1 then
-            debug("Reached sixth achievement with index: ", i, ", starting a new row.")
+            log_debug("Reached sixth achievement with index: ", i, ", starting a new row.")
             -- save the current row to the achievement rows
             table.insert(achievementRows, currentRow)
             -- start a new row
@@ -617,7 +617,7 @@ function ui_defs.generateUI()
         "pulse=0.9,1.1"                       -- animation spec
     )
     
-    debug("Creating close button template...")
+    log_debug("Creating close button template...")
     -- make a new close button template
     local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
     :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -629,7 +629,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- close the prestige window
-                debug("Prestige window close button clicked!")
+                log_debug("Prestige window close button clicked!")
                 globals.ui.prestige_window_open = false
                 local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
                 uibox_transform.actualY = globals.screenHeight()  -- move it out of the screen
@@ -723,11 +723,11 @@ function ui_defs.generateUI()
     local buildingTextGameObject = registry:get(buildingText.config.object, GameObject)
     -- set onhover & stop hover callbacks to show tooltip
     buildingTextGameObject.methods.onHover = function()
-        debug("Building text entity hovered!")
+        log_debug("Building text entity hovered!")
         showTooltip(localization.get("ui.grav_wave_title"), localization.get("ui.grav_wave_desc"))
     end
     buildingTextGameObject.methods.onStopHover = function()
-        debug("Building text entity stopped hovering!")
+        log_debug("Building text entity stopped hovering!")
         -- hideTooltip()
     end
     -- make hoverable
@@ -746,7 +746,7 @@ function ui_defs.generateUI()
         :addProgressBarEmptyColor(util.getColor("WHITE"))
         :addProgressBarFetchValueLamnda(function(entity)
             -- return the timer value for the gravity wave thing
-            -- debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
+            -- log_debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
             return (globals.gravityWaveSeconds - globals.timeUntilNextGravityWave) / (timer.get_delay("shockwave_uniform_tween") or globals.gravityWaveSeconds)
         end)
 
@@ -848,7 +848,7 @@ function ui_defs.generateUI()
             
                     -- 3) if status flipped, show popup
                     if wasUnlocked ~= allRequiredUnlocked then
-                        debug("Building ", building.id,
+                        log_debug("Building ", building.id,
                               " unlocked status changed to: ", allRequiredUnlocked)
                         if allRequiredUnlocked then
                             newTextPopup(
@@ -932,7 +932,7 @@ function ui_defs.generateUI()
 
                     -- 4) flip-detect and popup
                     if wasUnlocked ~= allReqsOK then
-                        debug("Converter ", conv.id,
+                        log_debug("Converter ", conv.id,
                             " unlocked status changed to: ", allReqsOK)
                         if allReqsOK then
                             newTextPopup(
@@ -987,7 +987,7 @@ function ui_defs.generateUI()
             :addButtonCallback(function()
                 playSoundEffect("effects", "button-click") -- play button click sound
                 cycleBuilding(-1) -- decrement the selected building index
-                -- debug("Left button clicked! Current building index: ", globals.selectedBuildingIndex)
+                -- log_debug("Left button clicked! Current building index: ", globals.selectedBuildingIndex)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -1145,7 +1145,7 @@ function ui_defs.generateUI()
             :addButtonCallback(function()
                 -- button click callback
                 playSoundEffect("effects", "button-click") -- play button click sound
-                debug("Right button clicked!")
+                log_debug("Right button clicked!")
                 cycleConverter(1)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
@@ -1176,7 +1176,7 @@ function ui_defs.generateUI()
             :addButtonCallback(function()
                 -- button click callback
                 playSoundEffect("effects", "button-click") -- play button click sound
-                debug("Buy button clicked!")
+                log_debug("Buy button clicked!")
                 
                 buyConverterButtonCallback()
                 
@@ -1290,7 +1290,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- close the help window    
-                debug("Help window close button clicked!")
+                log_debug("Help window close button clicked!")
                 playSoundEffect("effects", "button-click") -- play button click sound
                 globals.ui.help_window_open = false
                 local uibox_transform = registry:get(globals.ui.helpTextUIBox, Transform)

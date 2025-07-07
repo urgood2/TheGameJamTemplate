@@ -1701,15 +1701,23 @@ namespace layer
         for (const auto& command : layer_command_buffer::GetCommandsSorted(layer))
         {
             // 2) Decide if this one wants the camera
-            bool wantsCamera = (!layer->fixed && camera);
+            bool wantsCamera = (camera);
+            
+            // if (command.space == layer::DrawCommandSpace::World) {
+            //     SPDLOG_DEBUG("Command {} wants camera in world space", magic_enum::enum_name(command.type));
+            // } else {
+            //     SPDLOG_DEBUG("Command {} does not want camera in screen space", magic_enum::enum_name(command.type));
+            // }
             
             if (wantsCamera && command.space == layer::DrawCommandSpace::World && !cameraActive) {
                 BeginMode2D(*camera);
                 cameraActive = true;
+                // SPDLOG_DEBUG("Command {} activating camera in world space", magic_enum::enum_name(command.type));
             }
-            else if (!wantsCamera && cameraActive) {
+            else if (command.space == layer::DrawCommandSpace::Screen && cameraActive) {
                 EndMode2D();
                 cameraActive = false;
+                // SPDLOG_DEBUG("Command {} deactivating camera in world space", magic_enum::enum_name(command.type));
             }
             
             auto it = dispatcher.find(command.type);
@@ -2774,10 +2782,8 @@ namespace layer
         
         // debug rect
         if (globals::drawDebugInfo) {
-            shader_pipeline::width;
-            shader_pipeline::height;
-            DrawRectangleLines(-pad, -pad, (int)shader_pipeline::width, (int)shader_pipeline::height, RED);
-            DrawText(fmt::format("SHADER PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 15, RED);
+            // DrawRectangleLines(-pad, -pad, (int)shader_pipeline::width, (int)shader_pipeline::height, RED);
+            // DrawText(fmt::format("SHADER PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 15, WHITE);
 
         }
         

@@ -616,7 +616,7 @@ namespace game
             // {
             //     ui::box::Draw(ui_layer, globals::registry, e);
             // }
-            ui::box::drawAllBoxes(globals::registry, ui_layer);
+            ui::box::drawAllBoxes(globals::registry, sprites);
 
             // for each ui box, print debug info
             
@@ -631,7 +631,7 @@ namespace game
             auto textView = globals::registry.view<TextSystem::Text>();
             for (auto e : textView)
             {
-                TextSystem::Functions::renderText(e, ui_layer, true);
+                TextSystem::Functions::renderText(e, sprites, true);
             }
         }
         
@@ -642,7 +642,7 @@ namespace game
             for (auto e : view)
             {
                 
-                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, sprites);
             }
     
 
@@ -654,6 +654,11 @@ namespace game
                 auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
                 auto zIndex = layerOrder ? layerOrder->zIndex : 0;
                 bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+                
+                if (!isScreenSpace)
+                {
+                    SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
+                }
                 
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {

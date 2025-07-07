@@ -154,7 +154,7 @@ namespace layer
             assert(cmd && "Draw command allocation failed");
 
             // 2) Append to vector
-            layer->commands.push_back({ type, cmd, z });
+            layer->commands.push_back({ type, cmd, z, space });
             if (z != 0) {
                 layer->isSorted = false;
             }

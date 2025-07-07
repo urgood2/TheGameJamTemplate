@@ -51,7 +51,7 @@ namespace ui
         }; 
 
         // make ui box screen space as well
-        registry.emplace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
+        registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
 
         std::stack<StackEntry> stack;
         std::unordered_map<UIElementTemplateNode, entt::entity> nodeToEntity;
@@ -66,7 +66,7 @@ namespace ui
             // Create new UI element
             entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def.type, def.config);
             // make screen space  no matter what
-            registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
+            registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(entity);
             nodeToEntity[def] = entity;
             auto *config = registry.try_get<UIConfig>(entity);
             
@@ -265,6 +265,9 @@ namespace ui
                                  UIElementTemplateNode definition, std::optional<UIConfig> config)
     {
         auto self = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, transformData.x, transformData.y, transformData.w, transformData.h);
+        
+        // ui box should be screen space by default
+        registry.emplace<collision::ScreenSpaceCollisionMarker>(self);
 
         // Initialize transform component
         auto &transform = registry.get<transform::Transform>(self);

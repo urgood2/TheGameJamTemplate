@@ -2,6 +2,7 @@
 
 ## New features
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
+- document that lua camera new doesn't actually create anew one, it binds to global::camera
 - [ ] true ui / sprite separation while keeping draw order - how to do this? https://chatgpt.com/share/686b7011-4f28-800a-8ff2-069b3bbb00d7
     - how to specify which sprites (ui sprites) are meant to be screen space, not world space? Everything else is world space -> on ui init, any objects should be marked with ScreenSpaceCollisionMarker
     - ExecuteDrawTransformEntityAnimationPipeline / DrawTransformEntityWithAnimation 

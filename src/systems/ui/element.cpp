@@ -23,6 +23,9 @@ namespace ui
     {
         entt::entity entity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, 0, 0); // values are set up in set_values
         
+        // ui element should be screen space by default
+        registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
+        
         // don't let ui X-lean
         auto &transform = registry.get<transform::Transform>(entity);
         transform.ignoreXLeaning = true; // don't let UI elements x-lean, they should always be aligned to the parent

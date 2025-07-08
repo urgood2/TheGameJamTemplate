@@ -1,5 +1,7 @@
 
 ## IMPLMENTED, needs testing.
+- [ ] ldtk implementation needs testing
+
 - [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter? -> https://chatgpt.com/share/685d3104-e724-800a-90d8-08ac15bd9bdc 
 
 - [ ] need functionality to completely reset game state right from the game, via a debug menu, and reload script

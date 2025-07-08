@@ -195,6 +195,11 @@ public:
    {
       return m_layers.size();
    }
+   
+   const layers_t &getLayers() const
+   {
+      return m_layers;
+   }
 
    const Layer &getLayerByIdx(int layerIdx) const
    {

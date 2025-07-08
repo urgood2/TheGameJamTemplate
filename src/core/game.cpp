@@ -33,6 +33,8 @@
 #include "../systems/scripting/scripting_functions.hpp"
 #include "../systems/scripting/scripting_system.hpp"
 #include "../systems/ai/ai_system.hpp"
+#include "systems/ldtk_loader/ldtk_loader.hpp"
+#include "systems/ldtk_loader/ldtk_import.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "rlgl.h"
 

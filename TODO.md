@@ -6,9 +6,8 @@
 
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 
-- way to make sure certain texts & images should be worldspace, or not
-- [ ] add l2dk support. How does it work? check api, etc. and how to integrate with raylib & lua
-- particle z values how?
+- [] way to make sure certain texts & images should be worldspace, or not
+- [] particle z values how?
     - need way to specify particle screen/world space & particle z values
     
 - [ ] Applying shaders to ui in a modular fashion
@@ -19,6 +18,7 @@
         - how to do tweening, etc. for individual shdaers in individual elements?
         - on rounded rects 
         - what to do about content within? How to specify that shader be applied over what is inside, or not?
+        
 - [ ] take some shaders (esp. pixelate) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate
 
 

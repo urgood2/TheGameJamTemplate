@@ -11,6 +11,7 @@
     - need way to specify particle screen/world space & particle z values
     
 - [ ] Applying shaders to ui in a modular fashion
+    - most up to date format: https://chatgpt.com/share/686cc9e4-7a20-800a-be00-40e2c04a1ba7
     - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 
     - element: drawSelf() overhaul using shader pass component: https://chatgpt.com/share/686a8a8e-2fc8-800a-b21d-3539224e69f9
     - three considerations: 

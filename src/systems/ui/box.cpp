@@ -4,6 +4,7 @@
 #include "systems/text/textVer2.hpp"
 #include "systems/layer/layer_order_system.hpp"
 #include "systems/collision/broad_phase.hpp"
+#include "systems/shaders//shader_pipeline.hpp"
 #include "components/graphics.hpp"
 #include "inventory_ui.hpp"
 #include "core/globals.hpp"
@@ -1877,12 +1878,201 @@ namespace ui
             globals::REFRESH_FRAME_MASTER_CACHE.reset();
         }
     }
+    
+    
+    /**
+     * @brief Finds the end index of a subtree in a draw order list.
+     *
+     * This function determines the range of items in the `drawOrder` vector
+     * that belong to the subtree starting at the specified `startIndex`.
+     * The subtree is defined as all consecutive items with a depth greater
+     * than the depth of the item at `startIndex`.
+     *
+     * @param drawOrder A vector of `UIDrawListItem` objects representing the draw order.
+     * @param startIndex The index of the item where the subtree starts.
+     * @return The index one past the last descendant of the subtree.
+     */
+    static size_t findSubtreeEnd(const std::vector<UIDrawListItem>& drawOrder,
+        size_t                        startIndex)
+    {
+        int myDepth = drawOrder[startIndex].depth;
+        size_t i = startIndex + 1;
+        // all items with depth > myDepth belong to my subtree
+        while (i < drawOrder.size() && drawOrder[i].depth > myDepth) {
+            ++i;
+        }
+        return i;  // one past the last descendant
+    }
+    
+    void DrawSelfImmediate(entt::registry &registry, entt::entity e, std::shared_ptr<layer::Layer> layerPtr) {
+        
+    }
+    
+    //-----------------------------------------------------------------------------------
+    // renderSliceOffscreen
+    //   Renders a single UI entity (and optionally its subtree) through your
+    //   shader_pipeline system—passes, overlays—and then draws it back to the screen.
+    //-----------------------------------------------------------------------------------
+    //FIXME: doesn't use queue, immediate commands. maybe change?
+    void renderSliceOffscreen(
+        entt::registry&                registry,
+        entt::entity                   e,
+        std::shared_ptr<layer::Layer>  layerPtr,          // if you want to composite into a layer
+        float                          pad = 0.0f         // optional padding around element
+    ) {
+        // 1) Gather transform + pipeline info
+        auto& xf         = registry.get<transform::Transform>(e);
+        auto  x          = xf.getVisualX();
+        auto  y          = xf.getVisualY();
+        auto  w          = xf.getVisualW();
+        auto  h          = xf.getVisualH();
+        float renderW    = w + pad*2.0f;
+        float renderH    = h + pad*2.0f;
+
+        auto& pipeline   = registry.get<shader_pipeline::ShaderPipelineComponent>(e);
+
+        // 2) Ensure our shared ping-pong textures are big enough
+        if (!shader_pipeline::IsInitialized() ||
+            shader_pipeline::width  < (int)renderW ||
+            shader_pipeline::height < (int)renderH)
+        {
+            shader_pipeline::ShaderPipelineUnload();
+            shader_pipeline::ShaderPipelineInit(renderW, renderH);
+        }
+        shader_pipeline::ResetDebugRects();
+
+        // 3) Draw element → front() (id 6)
+        layer::render_stack_switch_internal::Push(shader_pipeline::front());
+        ClearBackground({0,0,0,0});
+        // shift origin so (0,0) in RT corresponds to (pad,pad)
+        rlPushMatrix();
+            rlTranslatef(pad, pad, 0);
+            // DrawSelfImmediate should do *all* the rounded-rect, nine-patch,
+            // text, children, etc. directly into the RT.
+            DrawSelfImmediate(registry, e, layerPtr);
+        rlPopMatrix();
+        layer::render_stack_switch_internal::Pop();
+
+        // 4) Copy front() → Base cache
+        RenderTexture2D baseRT = shader_pipeline::GetBaseRenderTextureCache();
+        layer::render_stack_switch_internal::Push(baseRT);
+        ClearBackground({0,0,0,0});
+        DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+        layer::render_stack_switch_internal::Pop();
+
+        // 5) Run all shader *passes*
+        for (auto & pass : pipeline.passes) {
+        if (!pass.enabled) continue;
+
+        Shader sh = shaders::getShader(pass.shaderName);
+        if (!sh.id) continue;
+
+        layer::render_stack_switch_internal::Push(shader_pipeline::back());
+            ClearBackground({0,0,0,0});
+            BeginShaderMode(sh);
+            if (pass.injectAtlasUniforms)
+                injectAtlasUniforms(globals::globalShaderUniforms,
+                                    pass.shaderName,
+                                    {0, 0, renderW, renderH},
+                                    {renderW, renderH});
+            if (pass.customPrePassFunction)
+                pass.customPrePassFunction();
+            TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
+
+            // draw entire front() RT through the shader
+            DrawTextureRec(
+                shader_pipeline::front().texture,
+                { 0, 0, renderW, -renderH },
+                { 0, 0 },
+                WHITE
+            );
+            EndShaderMode();
+            layer::render_stack_switch_internal::Pop();
+
+        // swap so back() → front()
+        shader_pipeline::Swap();
+        shader_pipeline::SetLastRenderTarget(shader_pipeline::front());
+        }
+
+        // 6) Collect post-pass result
+        RenderTexture2D postPassRT;
+        if (auto * last = shader_pipeline::GetLastRenderTarget()) {
+        postPassRT = *last;
+        } else {
+        postPassRT = shader_pipeline::front();
+        }
+
+        // 7) Apply all shader *overlays*
+        for (auto & ov : pipeline.overlayDraws) {
+        if (!ov.enabled) continue;
+
+        Shader sh = shaders::getShader(ov.shaderName);
+        if (!sh.id) continue;
+
+        layer::render_stack_switch_internal::Push(shader_pipeline::front());
+            BeginShaderMode(sh);
+            if (ov.injectAtlasUniforms)
+                injectAtlasUniforms(globals::globalShaderUniforms,
+                                    ov.shaderName,
+                                    {0, 0, renderW, renderH},
+                                    {renderW, renderH});
+            if (ov.customPrePassFunction)
+                ov.customPrePassFunction();
+            TryApplyUniforms(sh, globals::globalShaderUniforms, ov.shaderName);
+
+            // pick base or post-pass as input
+            auto & src = (ov.inputSource == shader_pipeline::OverlayInputSource::BaseSprite
+                            ? baseRT
+                            : postPassRT);
+
+            DrawTextureRec(
+                src.texture,
+                { 0, 0, renderW, -renderH },
+                { 0, 0 },
+                WHITE
+            );
+            EndShaderMode();
+            layer::render_stack_switch_internal::Pop();
+
+        // back() now holds the overlayed result
+        shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
+        }
+
+        // 8) Decide final RT to draw to screen
+        RenderTexture2D finalRT;
+        if (!pipeline.overlayDraws.empty()) {
+        finalRT = shader_pipeline::front();
+        }
+        else if (!pipeline.passes.empty()) {
+        finalRT = postPassRT;
+        }
+        else {
+        finalRT = baseRT;
+        }
+
+        // 9) Composite finalRT back to the screen (or UI layer)
+        //    applying the element’s transform
+        layer::PushMatrix();
+        layer::Translate(x - pad, y - pad);
+        layer::Scale(xf.getVisualScaleWithHoverAndDynamicMotionReflected(),
+                xf.getVisualScaleWithHoverAndDynamicMotionReflected());
+                layer::Rotate(xf.getVisualRWithDynamicMotionAndXLeaning());
+                layer::Translate(pad, pad);
+
+        DrawTextureRec(
+            finalRT.texture,
+            { 0, 0, renderW, -renderH },
+            { 0, 0 },
+            WHITE
+        );
+        layer::PopMatrix();
+    }
 
     void box::drawAllBoxes(entt::registry &registry,
                            std::shared_ptr<layer::Layer> layerPtr)
     {
         // 1) Build a flat list in the exact order your old box::Draw would have used.
-        std::vector<entt::entity> drawOrder;
+        std::vector<UIDrawListItem> drawOrder;
         drawOrder.reserve(200); // or an estimate of your total UI element count
 
         // TODO call for all ui boxes
@@ -1915,8 +2105,9 @@ namespace ui
         int drawOrderZIndex = 0;
 
         // 3) Loop in our flattened order:
-        for (auto ent : drawOrder)
+        for (auto &drawListItem : drawOrder)
         {
+            auto ent = drawListItem.e;
 
             if (!registry.valid(ent))
                 continue;
@@ -1953,7 +2144,8 @@ namespace ui
     void box::buildUIBoxDrawList(
         entt::registry &registry,
         entt::entity boxEntity,
-        std::vector<entt::entity> &out)
+        std::vector<UIDrawListItem> &out,
+        int depth )
     {
         // Fetch the UIBox and its GameObject. If either is missing, bail.
         auto *uiBox = registry.try_get<UIBoxComponent>(boxEntity);
@@ -1981,12 +2173,15 @@ namespace ui
             if (childUIElement && entryName != "h_popup" && entryName != "alert")
             {
                 // DrawSelf + DrawChildren are replaced by a flattening of the element subtree:
-                element::buildUIDrawList(registry, child, out);
+                
+                // pre‐draw of child + subtree, record at this depth
+                element::buildUIDrawList(registry, child, out, depth);
             }
             // If it’s another UIBox, recurse fully into that box:
             else if (childUIBox)
             {
-                buildUIBoxDrawList(registry, child, out);
+                // recurse boxes at same depth
+                buildUIBoxDrawList(registry, child, out, depth);
             }
             // else: skip everything else
         }
@@ -1997,9 +2192,9 @@ namespace ui
 
             entt::entity rootElem = uiBox->uiRoot.value();
             // 1) draw the root itself (same as element::DrawSelf(root))
-            out.push_back(rootElem);
+            out.push_back({rootElem, depth});
             // rootElem might itself have children; flatten them as well
-            element::buildUIDrawList(registry, rootElem, out);
+            element::buildUIDrawList(registry, rootElem, out, depth + 1);
         }
 
         // 3) Iterate drawLayers in insertion order:
@@ -2021,11 +2216,11 @@ namespace ui
 
             if (layerElemEl)
             {
-                element::buildUIDrawList(registry, layerEnt, out);
+                element::buildUIDrawList(registry, layerEnt, out, depth);
             }
             else if (layerElemBox)
             {
-                buildUIBoxDrawList(registry, layerEnt, out);
+                buildUIBoxDrawList(registry, layerEnt, out, depth);
             }
         }
 
@@ -2039,7 +2234,7 @@ namespace ui
 
             if (registry.valid(alertEnt) && alertNode && alertNode->state.visible && alertConfig)
             {
-                element::buildUIDrawList(registry, alertEnt, out);
+                element::buildUIDrawList(registry, alertEnt, out, depth);
             }
         }
     }

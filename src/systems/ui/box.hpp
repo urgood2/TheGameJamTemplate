@@ -65,7 +65,8 @@ namespace ui {
         void buildUIBoxDrawList(
                 entt::registry &registry,
                 entt::entity        boxEntity,
-                std::vector<entt::entity> &out);
+                std::vector<UIDrawListItem> &out,
+                int depth = 0);
                 
         
 

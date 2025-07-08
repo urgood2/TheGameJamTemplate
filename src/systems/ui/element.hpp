@@ -52,7 +52,8 @@ namespace ui {
         auto StopHover(entt::registry &registry, entt::entity entity) -> void;
         void buildUIDrawList(entt::registry &registry,
             entt::entity root,
-            std::vector<entt::entity> &out);
+            std::vector<UIDrawListItem> &out, 
+            int depth = 0);
 
     }
 }

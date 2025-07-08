@@ -627,7 +627,8 @@ namespace ui
 
     void element::buildUIDrawList(entt::registry &registry,
                          entt::entity root,
-                         std::vector<entt::entity> &out)
+                         std::vector<UIDrawListItem> &out,
+                         int depth)
     {
         // Pull exactly the same pointers you had in DrawChildren:
         auto *node = registry.try_get<transform::GameObject>(root);
@@ -655,16 +656,16 @@ namespace ui
             // “Pre‐draw” if draw_after == false
             if (!childConfig->draw_after)
             {
-                out.push_back(child);
+                out.push_back({.e = child, .depth = depth});
             }
 
             // Recurse into grandchildren
-            buildUIDrawList(registry, child, out);
+            buildUIDrawList(registry, child, out, depth + 1);
 
             // “Post‐draw” if draw_after == true
             if (childConfig->draw_after)
             {
-                out.push_back(child);
+                out.push_back({.e = child, .depth = depth});
             }
         }
     }

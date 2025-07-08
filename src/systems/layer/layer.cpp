@@ -1558,64 +1558,7 @@ namespace layer
         EndTextureMode();
     }
     
-    // only use for (DrawLayerCommandsToSpecificCanvas)
-    namespace render_stack_switch_internal
-    {
-        static std::stack<RenderTexture2D> renderStack{};
-
-        // Push a new render target, auto-ending the previous one if needed
-        inline void Push(RenderTexture2D target)
-        {
-            if (!renderStack.empty())
-            {
-                // End the currently active texture mode
-                EndTextureMode();
-            }
-            // SPDLOG_DEBUG("Ending previous render target {} and pushing new target {}", renderStack.empty() ? "none" : std::to_string(renderStack.top().id), target.id);
-            renderStack.push(target);
-            BeginTextureMode(target);
-        }
-
-        // Pop the top render target and resume the previous one
-        inline void Pop()
-        {
-            assert(!renderStack.empty() && "Render stack underflow: Pop called without a matching Push!");
-
-            // End current texture mode
-            EndTextureMode();
-            renderStack.pop();
-
-            // Resume the previous target
-            if (!renderStack.empty())
-            {
-                BeginTextureMode(renderStack.top());
-            }
-        }
-
-        // Peek current render target (optional utility)
-        inline RenderTexture2D* Current()
-        {
-            if (renderStack.empty()) return nullptr;
-            return &renderStack.top();
-        }
-
-        // Check if we’re inside any render target
-        inline bool IsActive()
-        {
-            return !renderStack.empty();
-        }
-
-        // Clear the entire stack and end current mode — use with caution
-        inline void ForceClear()
-        {
-            if (!renderStack.empty())
-            {
-                EndTextureMode();
-            }
-
-            while (!renderStack.empty()) renderStack.pop();
-        }
-    }
+    
 
     
     /**

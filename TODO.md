@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## New features
+- [ ] windows with tech trees & scenes that do collisions based on scene https://chatgpt.com/share/686c60ee-f5ac-800a-ae03-ded1700c936b -> also, integrate hump gamestate?
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 
 - way to make sure certain texts & images should be worldspace, or not

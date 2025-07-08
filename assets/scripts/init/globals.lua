@@ -984,10 +984,10 @@ globals.building_upgrade_defs = {
     id = "basic_dust_collector", -- the id of the building
     required = {},
     cost = {
-      whale_dust = 50 -- cost in whale dust
+      whale_dust = 20 -- cost in whale dust
     },
     required_currencies = {
-      whale_dust = 30 -- must hold this much whale dust to unlock
+      whale_dust = 20 -- must hold this much whale dust to unlock
     },
     resource_collection_rate = {
       whale_dust = 1 -- amount of whale dust collected per tick
@@ -1003,10 +1003,10 @@ globals.building_upgrade_defs = {
     id = "MK2_dust_collector", -- the id of the building
     required = { "basic_dust_collector" },
     required_currencies = {
-      whale_dust = 100 -- must hold this much whale dust to unlock
+      whale_dust = 40 -- must hold this much whale dust to unlock
     },
     cost = {
-      whale_dust = 100 -- cost in whale dust
+      whale_dust = 30 -- cost in whale dust
     },
     resource_collection_rate = {
       whale_dust = 2 -- amount of whale dust collected per tick
@@ -1022,11 +1022,11 @@ globals.building_upgrade_defs = {
     id = "krill_home", -- the id of the building
     required = {},
     cost = {
-      whale_dust = 50 -- cost in whale dust
+      whale_dust = 10 -- cost in whale dust
     },
     required_building_or_converter = {
       MK2_dust_collector = 1,
-      basic_dust_collector = 5
+      basic_dust_collector = 1
     },
     unlocked = true,
     anim = "krillHomeSmallAnim",          -- the animation for the building
@@ -1038,15 +1038,15 @@ globals.building_upgrade_defs = {
     id = "krill_farm", -- the id of the building
     required = { "krill_home" },
     cost = {
-      whale_dust = 150 -- cost in whale dust
+      whale_dust = 50 -- cost in whale dust
     },
     required_currencies = {
       whale_dust = 10 -- must hold this much whale dust to unlock
     },
     required_building_or_converter = {
       MK2_dust_collector = 1,
-      basic_dust_collector = 5,
-      krill_home = 5
+      basic_dust_collector = 1,
+      krill_home = 1
     },
     unlocked = false,
     anim = "krillHomeLargeAnim",          -- the animation for the building
@@ -1058,16 +1058,16 @@ globals.building_upgrade_defs = {
     id = "whale_song_gatherer", -- the id of the building
     required = { "krill_farm", "basic_dust_collector", "MK2_dust_collector" },
     cost = {
-      whale_dust = 1000 -- cost in whale dust
+      whale_dust = 150 -- cost in whale dust
     },
     required_currencies = {
       whale_dust = 10 -- must hold this much whale dust to unlock
     },
     required_building_or_converter = {
       MK2_dust_collector = 1,
-      basic_dust_collector = 5,
-      krill_home = 5,
-      krill_farm = 5
+      basic_dust_collector = 1,
+      krill_home = 1,
+      krill_farm = 1
     },
     unlocked = false,
     anim = "dream_weaver_antenna_anim",             -- the animation for the building,
@@ -1083,11 +1083,11 @@ globals.converter_defs        = {
     required_building = { "whale_song_gatherer" },
     required_converter = {},
     required_currencies = {
-      whale_dust = 100 -- input required to convert
+      whale_dust = 50 -- input required to convert
     },
     required_building_or_converter = {
-      krill_home = 5,
-      krill_farm = 5
+      krill_home = 1,
+      krill_farm = 1
     },
     output = {
       crystal = 1 -- amount of crystal produced by the conversion
@@ -1105,17 +1105,17 @@ globals.converter_defs        = {
     required_building = { "whale_song_gatherer" },
     required_converter = { "dust_to_crystal" },
     required_currencies = {
-      whale_dust = 50, -- input required to convert
-      crystal = 50     -- input required to convert
+      whale_dust = 30, -- input required to convert
+      crystal = 30     -- input required to convert
     },
     required_building_or_converter = {
-      krill_home = 5,
-      krill_farm = 5,
+      krill_home = 1,
+      krill_farm = 1,
       dust_to_crystal = 1
     },
     cost = {
-      song_essence = 100,
-      crystal = 100 -- the stuff gathered by dust_to_crystal converter
+      song_essence = 50,
+      crystal = 50 -- the stuff gathered by dust_to_crystal converter
     },
     output = {
       wafer = 1 -- amount of wafer produced by the conversion
@@ -1130,20 +1130,20 @@ globals.converter_defs        = {
     required_building = { "whale_song_gatherer" },
     required_converter = { "crystal_to_wafer" },
     required_currencies = {
-      crystal = 100,
+      crystal = 50,
       wafer = 10,        -- input required to converting
-      whale_dust = 1000, -- input required to convert
-      song_essence = 100 -- input required to convert
+      whale_dust = 100, -- input required to convert
+      song_essence = 10 -- input required to convert
     },
     required_building_or_converter = {
-      krill_home = 5,
-      krill_farm = 5,
+      krill_home = 1,
+      krill_farm = 1,
       crystal_to_wafer = 1
     },
     cost = {
-      song_essence = 100,
-      crystal = 100, -- the stuff gathered by dust_to_crystal converter
-      wafer = 100    -- the stuff gathered by  crystal_to_wafer converter
+      song_essence = 10,
+      crystal = 10, -- the stuff gathered by dust_to_crystal converter
+      wafer = 10    -- the stuff gathered by  crystal_to_wafer converter
     },
     output = {
       chip = 1 -- amount of chips produced by the conversion

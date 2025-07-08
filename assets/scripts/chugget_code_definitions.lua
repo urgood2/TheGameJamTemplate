@@ -486,6 +486,28 @@ function pauseGame(...) end
 ---@return nil
 function unpauseGame(...) end
 
+---
+--- Adds or replaces a StateTag component on the specified entity.
+---
+---@param entity Entity             # The entity to tag
+---@param name string               # The name of the state tag
+---@return nil
+function add_state_tag(...) end
+
+---
+--- Removes the StateTag component from the specified entity.
+---
+---@param entity Entity             # The entity from which to remove its state tag
+---@return nil
+function remove_state_tag(...) end
+
+---
+--- Clears any and all StateTag components from the specified entity.
+---
+---@param entity Entity             # The entity whose state tags you want to clear
+---@return nil
+function clear_state_tags(...) end
+
 
 ---
 --- 

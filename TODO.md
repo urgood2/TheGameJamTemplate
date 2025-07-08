@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## New features
+- [ ] prob add docs for entity_gamestate_management
 - [ ] document exposeGlobalsToLua with lua doc bindings
 
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua

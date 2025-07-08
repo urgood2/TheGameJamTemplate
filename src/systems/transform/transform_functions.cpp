@@ -13,6 +13,7 @@
 #include "systems/text/textVer2.hpp"
 #include "systems/ui/box.hpp"
 #include "systems/ui/inventory_ui.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -130,8 +131,11 @@ namespace transform
         
         // emplace a collision filter component by default
         auto &collisionFilter = registry->emplace<collision::CollisionFilter>(e);
+        
+        // default gamestate tag
+        entity_gamestate_management::assignDefaultStateTag(e);
 
-       // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag
+        // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag
  
         return e;
     }

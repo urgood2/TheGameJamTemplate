@@ -1,4 +1,5 @@
 # Documentation
+- [ ] document using state tags to exclude transforms from render or collision & updates
 - [ ] camera documentation
     - also document that lua camera new doesn't actually create anew one, it binds to global::camera
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entt/entity/fwd.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 
@@ -9,6 +10,7 @@
 #include "systems/factory/factory.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/collision/broad_phase.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -252,9 +254,12 @@ namespace particle
 
     inline void UpdateParticles(entt::registry &registry, float deltaTime)
     {
-        auto view = registry.view<Particle>();
+        auto view = registry.view<Particle, entity_gamestate_management::StateTag>();
         for (auto entity : view)
         {
+            auto &stateTag = view.get<entity_gamestate_management::StateTag>(entity);
+            if (!entity_gamestate_management::isActiveState(stateTag)) continue; // skip inactive particles
+            
             auto &particle = view.get<Particle>(entity);
             auto &transform = registry.get<transform::Transform>(entity);
             particle.age = particle.age.value() + deltaTime;

@@ -1,5 +1,6 @@
 #include "box.hpp"
 
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/text/textVer2.hpp"
 #include "systems/layer/layer_order_system.hpp"
 #include "systems/collision/broad_phase.hpp"
@@ -1885,9 +1886,12 @@ namespace ui
         drawOrder.reserve(200); // or an estimate of your total UI element count
 
         // TODO call for all ui boxes
-        auto view = registry.view<UIBoxComponent>();
+        auto view = registry.view<UIBoxComponent, entity_gamestate_management::StateTag>();
         for (auto ent : view)
         {
+            // check if the entity is active
+            if (!entity_gamestate_management::active_states_instance().is_active(view.get<entity_gamestate_management::StateTag>(ent)))
+                continue; // skip inactive entities
             // TODO: probably sort these with layer order
             buildUIBoxDrawList(registry, ent, drawOrder);
         }

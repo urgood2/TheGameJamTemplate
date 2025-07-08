@@ -27,6 +27,8 @@
 
 #include "systems/anim_system.hpp"
 
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 #include "util/utilities.hpp"
 
 #include "meta_helper.hpp"
@@ -412,6 +414,11 @@ namespace scripting {
         // layer order functions
         // --------------------------------------------------------
         layer::layer_order_system::exposeToLua(stateToInit);
+        
+        // ------------------------------------------------------
+        // game state management functions (for entity gamestate management)
+        // ------------------------------------------------------
+        entity_gamestate_management::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
         // Expose global variables to Lua
@@ -508,6 +515,11 @@ namespace scripting {
         
         lua["globals"]["camera"] = []() -> Camera2D& {
             return std::ref(globals::camera);
+        };
+        
+        lua["GetFrameTime"] = []() -> float {
+            // Get the time elapsed since the last frame
+            return main_loop::mainLoop.smoothedDeltaTime;
         };
         
         lua["GetScreenWidth"] = []() -> int {

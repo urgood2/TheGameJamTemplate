@@ -10,7 +10,6 @@
 
 #include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
-#include "systems/layer/layer.hpp"
 #include "systems/reflection/reflection.hpp"
 
 

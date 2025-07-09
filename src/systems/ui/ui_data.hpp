@@ -18,11 +18,6 @@
 // Each ui element can have a parent (root ui element or some other element below that)
 namespace ui
 {
-    // used for ordering ui elements in the draw list
-    struct UIDrawListItem {
-        entt::entity e{ entt::null}; // the entity to draw
-        int depth{ 0 }; // the depth of the entity in the hierarchy, used for ordering
-    };
     
     // this marks objects like text, animations, etc. which are attached to a UI element. For optimization purposes.
     struct ObjectAttachedToUITag {

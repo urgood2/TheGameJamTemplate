@@ -4,6 +4,9 @@
 #include "core/globals.hpp"
 #include "systems/ui/element.hpp"
 
+#include "systems/ui/ui_data.hpp"
+#include "systems/layer/layer_command_buffer_data.hpp"
+
 namespace layer
 {
     std::unordered_map<DrawCommandType, RenderFunc> dispatcher{};

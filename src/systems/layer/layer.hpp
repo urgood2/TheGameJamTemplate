@@ -23,10 +23,6 @@
 #include "third_party/objectpool-master/src/object_pool.hpp"
 // TODO: make internal functions not accessible?
 
-namespace ui {
-    struct UIDrawListItem;
-}
-
 namespace layer
 {
     

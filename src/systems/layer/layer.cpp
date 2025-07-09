@@ -21,6 +21,7 @@
 #include "systems/camera/camera_manager.hpp"
 
 #include "systems/transform/transform_functions.hpp"
+#include "systems/layer/layer_command_buffer_data.hpp"
 
 #include "entt/entt.hpp"
 

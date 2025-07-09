@@ -5,6 +5,7 @@
 
 #include "util/common_headers.hpp"
 #include "layer_optimized.hpp"
+#include "systems/layer/layer_command_buffer_data.hpp"
 
 namespace layer::layer_command_buffer {
     template <typename T>

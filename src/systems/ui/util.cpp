@@ -232,6 +232,57 @@ namespace ui
         return {c.r, c.g, c.b, alpha};
     }
 
+    void util::ApplyTransformMatrixImmediate(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation, const int& zIndex)
+    {
+
+        if (applyOnlyTranslation)
+        {
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [visualX, visualY](layer::CmdTranslate *cmd) {
+            //     cmd->x = visualX;
+            //     cmd->y = visualY;
+            // }, zIndex);
+            layer::Translate(visualX, visualY);
+            if (addedOffset)
+            {
+                // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = addedOffset->x, y = addedOffset->y](layer::CmdTranslate *cmd) {
+                //     cmd->x = x;
+                //     cmd->y = y;
+                // }, zIndex);
+                layer::Translate(addedOffset->x, addedOffset->y);
+            }
+            return;
+        }
+
+        // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = visualX + visualW * 0.5, y = visualY + visualH * 0.5](layer::CmdTranslate *cmd) {
+        //     cmd->x = x;
+        //     cmd->y = y;
+        // }, zIndex);
+        layer::Translate(visualX + visualW * 0.5, visualY + visualH * 0.5);
+        
+        if (addedOffset)
+        {
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = addedOffset->x, y = addedOffset->y](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // }, zIndex);
+            layer::Translate(addedOffset->x, addedOffset->y);
+        }
+
+        // layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = visualScaleWithHoverAndDynamicMotionReflected](layer::CmdScale *cmd) {
+        //     cmd->scaleX = scale;
+        //     cmd->scaleY = scale;
+        // }, zIndex);
+        layer::Scale(visualScaleWithHoverAndDynamicMotionReflected, visualScaleWithHoverAndDynamicMotionReflected);
+
+        // layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = visualR + rotationOffset](layer::CmdRotate *cmd) {
+        //     cmd->angle = rotation;
+        // }, zIndex);
+        layer::Rotate(visualR + rotationOffset);
+
+        // }, zIndex);
+        layer::Translate(-visualW * 0.5, -visualH * 0.5);
+    }
+
     // be sure to call PushMatrix before calling this function
     // if applyOnlyTranslation is true, only translation will be applied, not rotation or scale
     void util::ApplyTransformMatrix(const float& visualX,  const float& visualY,  const float& visualW,  const float& visualH,  const float& visualScaleWithHoverAndDynamicMotionReflected,  const float& visualR, const float& rotationOffset, std::shared_ptr<layer::Layer> layerPtr, std::optional<Vector2> addedOffset, bool applyOnlyTranslation, const int& zIndex)
@@ -640,6 +691,153 @@ namespace ui
             }, zIndex);
             
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+        }
+    }
+
+    void util::DrawNPatchUIElementImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress, const int &zIndex)
+    {
+        // ZoneScopedN("ui::util::DrawNPatchUIElement");
+        ::util::Profiler profiler("DrawNPatchUIElement");
+        auto &transform = registry.get<transform::Transform>(entity);
+        auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
+        auto &node = registry.get<transform::GameObject>(entity);
+        
+        //TODO: ignore or apply emboss?        
+        std::optional<float> &emboss = uiConfig->emboss;
+        
+        
+        const auto actualX = transform.getActualX() + node.layerDisplacement->x;
+        const auto actualY = transform.getActualY() + node.layerDisplacement->y;
+        const auto actualW = transform.getActualW();
+        const auto actualH = transform.getActualH();
+        const auto visualW = transform.getVisualW();
+        const auto visualH = transform.getVisualH();
+        const auto visualX = transform.getVisualX() + node.layerDisplacement->x;
+        const auto visualY = transform.getVisualY() + node.layerDisplacement->y;
+        const auto visualScaleWithHoverAndMotion = transform.getVisualScaleWithHoverAndDynamicMotionReflected();
+        const auto visualR = transform.getVisualRWithDynamicMotionAndXLeaning();
+        const auto rotationOffset = transform.rotationOffset;
+        // shadow
+        float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
+        float heightFactor = 1.0f + node.shadowHeight.value_or(0.f); // Increase effect based on height
+
+        // Adjust displacement using shadow height
+        float shadowOffsetX = node.shadowDisplacement->x * baseExaggeration * heightFactor;
+        float shadowOffsetY = node.shadowDisplacement->y * baseExaggeration * heightFactor;
+        
+        // if this is not 1, then we display progress-bar type tinting
+        auto progressVal = progress.value_or(1.0f);
+        
+        auto nPatchInfo = uiConfig->nPatchInfo.value_or(NPatchInfo{});
+        auto nPatchAtlas =  uiConfig->nPatchSourceTexture.value();
+        
+        // draw shadow first
+        if (uiConfig->shadow)
+        {
+            // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            layer::PushMatrix();
+            
+            //TODO: zindex not applied
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
+
+            Color colorToUse{};
+
+            // if a shadow override exists, use it
+            colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
+
+            // filled shadow
+            // layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, visualW, visualH, progressVal, colorToUse](layer::CmdRenderNPatchRect *cmd) {
+            //     cmd->info = nPatchInfo;
+            //     cmd->sourceTexture = nPatchAtlas;
+            //     cmd->dest = Rectangle{0, 0, visualW * progressVal, visualH};
+            //     cmd->origin = {0, 0};
+            //     cmd->rotation = 0.f;
+            //     cmd->tint = colorToUse;
+            // }, zIndex);
+            layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, Vector2{0, 0}, 0.f, colorToUse);
+            
+            //TODO: resize the shadow to match the progress value?
+            //TODO: how to do rotation later?
+
+            // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            layer::PopMatrix();
+        }
+        
+        // then draw the npatch element itself
+        // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+        layer::PushMatrix();
+        
+        util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false, zIndex);
+
+        // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
+        //     cmd->x = x;
+        //     cmd->y = y;
+        // });
+
+        Color colorToUse{};
+
+        // if an fill override exists, use it
+        colorToUse = colorOverride;
+
+        // filled
+        // layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, visualW, visualH, colorToUse](layer::CmdRenderNPatchRect *cmd) {
+        //     cmd->info = nPatchInfo;
+        //     cmd->sourceTexture = nPatchAtlas;
+        //     cmd->dest = Rectangle{0, 0, visualW, visualH};
+        //     cmd->origin = {0, 0};
+        //     cmd->rotation = 0.f;
+        //     cmd->tint = colorToUse;
+        // }, zIndex);
+        layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW, visualH}, Vector2{0, 0}, 0.f, colorToUse);
+        // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+        layer::PopMatrix();
+
+        // fill progress, if there is any
+        if (progress.has_value())
+        {
+            // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            layer::PushMatrix();
+
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false, zIndex);
+
+            Color colorToUse{};
+
+            colorToUse = (uiConfig->progressBarFullColor.value_or(RED));
+
+            // not shadow, ensure color is not translucent
+            
+            //TODO: i probably just want an overlay tinting of some sort over the rect, not actually ninepatch.
+
+            // filled progress
+            float shrink = globals::UI_PROGRESS_BAR_INSET_PIXELS;
+            float newW = visualW * progressVal - 2 * shrink;
+            float newH = visualH - 2 * shrink;
+
+            newW = std::max(0.0f, newW);
+            newH = std::max(0.0f, newH);
+
+            // Center offset: translate before drawing
+            float translateX = (visualW * progressVal - newW) / 2.0f;
+            float translateY = (visualH - newH) / 2.0f;
+
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = translateX, y = translateY](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // }, zIndex);
+            layer::Translate(translateX, translateY);
+
+            // layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, newW, newH, colorToUse](layer::CmdRenderNPatchRect *cmd) {
+            //     cmd->info = nPatchInfo;
+            //     cmd->sourceTexture = nPatchAtlas;
+            //     cmd->dest = Rectangle{0, 0, newW, newH};
+            //     cmd->origin = {0, 0};
+            //     cmd->rotation = 0.f;
+            //     cmd->tint = colorToUse;
+            // }, zIndex);
+            layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, newW, newH}, Vector2{0, 0}, 0.f, colorToUse);
+            
+            // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            layer::PopMatrix();
         }
     }
 
@@ -1173,7 +1371,7 @@ namespace ui
             layer::PushMatrix();
             
             //FIXME: needs immediate mode
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
             Color colorToUse{};
 
             // if a shadow override exists, use it
@@ -1202,11 +1400,11 @@ namespace ui
         else if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE && uiConfig->outlineShadow)
         {
             // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow outline");
-            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
             
             //FIXME: needs static version
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{-shadowOffsetX * parallaxModifier, -shadowOffsetY * parallaxModifier}, false, zIndex);
 
             Color colorToUse{};
 
@@ -1235,7 +1433,7 @@ namespace ui
             if (!uiConfig->emboss)
                 SPDLOG_DEBUG("Emboss value not provided for emboss fill rectangle render flag");
                 
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
 
             Color colorToUse{};
 
@@ -1279,7 +1477,7 @@ namespace ui
             //     cmd->y = y;
             // }); // shift y down for emboss effect
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, uiConfig->emboss.value_or(5.f) * parallaxModifier * uiConfig->scale.value_or(1.0f)}, false, zIndex);
 
 
             Color colorToUse{};
@@ -1311,7 +1509,7 @@ namespace ui
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false, zIndex);
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset,  layerPtr, Vector2{0, 0}, false, zIndex);
 
 
             Color colorToUse{};
@@ -1345,14 +1543,15 @@ namespace ui
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && rectCache->innerVerticesProgressReflected.size() > 0 && rectCache->outerVerticesProgressReflected.size() > 0 && progress.has_value())
         {
             // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
-            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            layer::PushMatrix();
 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false, zIndex);
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false, zIndex);
             
             // shrink the inner vertices so they look outlined
             {
@@ -1373,18 +1572,21 @@ namespace ui
                 float anchorX = inset;
                 float anchorY = fullH / 2.0f;
 
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = anchorX, y = anchorY](layer::CmdTranslate *cmd) {
-                    cmd->x = x;
-                    cmd->y = y;
-                }, zIndex);
-                layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX, scaleY](layer::CmdScale *cmd) {
-                    cmd->scaleX = scaleX;
-                    cmd->scaleY = scaleY;
-                }, zIndex);
-                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = -anchorY](layer::CmdTranslate *cmd) {
-                    cmd->x = x;
-                    cmd->y = y;
-                }, zIndex);
+                // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = anchorX, y = anchorY](layer::CmdTranslate *cmd) {
+                //     cmd->x = x;
+                //     cmd->y = y;
+                // }, zIndex);
+                layer::Translate(anchorX, anchorY);
+                // layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX, scaleY](layer::CmdScale *cmd) {
+                //     cmd->scaleX = scaleX;
+                //     cmd->scaleY = scaleY;
+                // }, zIndex);
+                layer::Scale(scaleX, scaleY);
+                // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = -anchorY](layer::CmdTranslate *cmd) {
+                //     cmd->x = x;
+                //     cmd->y = y;
+                // }, zIndex);
+                layer::Translate(0, -anchorY);
 
 
             }
@@ -1406,26 +1608,31 @@ namespace ui
 
             // filled progress
             // RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVertices, colorToUse);
-            layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
-                cmd->cache = entity;
-                cmd->outerRec = {0, 0, progress, height};
-                cmd->color = colorToUse;
-                cmd->progressOrFullBackground = true;
-            }, zIndex);
-            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            // layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(layerPtr, [entity, colorToUse, progress = rectCache->w * progressVal, height = rectCache->h](layer::CmdRenderRectVerticesFilledLayer *cmd) {
+            //     cmd->cache = entity;
+            //     cmd->outerRec = {0, 0, progress, height};
+            //     cmd->color = colorToUse;
+            //     cmd->progressOrFullBackground = true;
+            // }, zIndex);
+            layer::RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, true, entity, colorToUse);
+                
+                
+            // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            layer::PopMatrix();
         }
         // and ... or outline
         if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE)
         {
             // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle outline");
-            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            layer::PushMatrix();
 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
             //     cmd->x = x;
             //     cmd->y = y;
             // });
             
-            util::ApplyTransformMatrix(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false, zIndex);
+            util::ApplyTransformMatrixImmediate(visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, layerPtr, Vector2{0, 0}, false, zIndex);
 
             Color colorToUse{};
 
@@ -1444,13 +1651,14 @@ namespace ui
 
             // outline
             // RenderRectVerticlesOutlineLayer(layerPtr, rectCache->outerVerticesFullRect, colorToUse, rectCache->innerVerticesFullRect);
-            layer::QueueCommand<layer::CmdRenderRectVerticesOutlineLayer>(layerPtr, [entity, colorToUse](layer::CmdRenderRectVerticesOutlineLayer *cmd) {
-                cmd->cache = entity;
-                cmd->color = colorToUse;
-                cmd->useFullVertices = true;
-            }, zIndex);
-
-            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            // layer::QueueCommand<layer::CmdRenderRectVerticesOutlineLayer>(layerPtr, [entity, colorToUse](layer::CmdRenderRectVerticesOutlineLayer *cmd) {
+            //     cmd->cache = entity;
+            //     cmd->color = colorToUse;
+            //     cmd->useFullVertices = true;
+            // }, zIndex);
+            layer::RenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, true);
+            // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            layer::PopMatrix();
         }
 
     }

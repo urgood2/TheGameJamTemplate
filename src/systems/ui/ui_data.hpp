@@ -188,6 +188,7 @@ namespace ui
         std::optional<float> padding;                                                   // UI element padding
 
         // Visibility and Styling
+        bool includeChildrenInShaderPass = true; // Default to true for backward compatibility, this determines whether children of this UI element should be included in the shader pass, if there is one for a ui element.
         std::optional<Color> color, outlineColor; // UI element colors
         std::optional<float> outlineThickness;               // Outline width (if any)
         bool makeMovementDynamic = false;                    // Makes the UI element's movement dynamic (reflects rotation, scale from transform)
@@ -311,6 +312,11 @@ namespace ui
 
         Builder& addGroup(const std::string& group) {
             uiConfig.group = group;
+            return *this;
+        }
+
+        Builder& addIncludeChildrenInShaderPass(const bool& includeChildrenInShaderPass) {
+            uiConfig.includeChildrenInShaderPass = includeChildrenInShaderPass;
             return *this;
         }
 

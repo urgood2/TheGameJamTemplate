@@ -23,6 +23,8 @@ namespace layer
         inline void Clear(std::shared_ptr<Layer>& layer) {
             for (auto& cmd : layer->commands) {
                 switch (cmd.type) {
+                    DELETE_COMMAND(layer, RenderUISelfImmediate, CmdRenderUISelfImmediate)
+                    DELETE_COMMAND(layer, RenderUISliceFromDrawList, CmdRenderUISliceFromDrawList)
                     DELETE_COMMAND(layer, BeginDrawing, CmdBeginDrawing)
                     DELETE_COMMAND(layer, EndDrawing, CmdEndDrawing)
                     DELETE_COMMAND(layer, ClearBackground, CmdClearBackground)
@@ -90,6 +92,8 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdBeginDrawing>() { return DrawCommandType::BeginDrawing; }
         template<> inline DrawCommandType GetDrawCommandType<CmdEndDrawing>() { return DrawCommandType::EndDrawing; }
         template<> inline DrawCommandType GetDrawCommandType<CmdClearBackground>() { return DrawCommandType::ClearBackground; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdRenderUISelfImmediate>() { return DrawCommandType::RenderUISelfImmediate; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdRenderUISliceFromDrawList>() { return DrawCommandType::RenderUISliceFromDrawList; }
         template<> inline DrawCommandType GetDrawCommandType<CmdTranslate>() { return DrawCommandType::Translate; }
         template<> inline DrawCommandType GetDrawCommandType<CmdScale>() { return DrawCommandType::Scale; }
         template<> inline DrawCommandType GetDrawCommandType<CmdRotate>() { return DrawCommandType::Rotate; }
@@ -234,6 +238,8 @@ namespace layer
     inline void LogAllPoolStats(const std::shared_ptr<Layer>& layer) {
         // Define the list of all command types here
         using AllCmds = std::tuple<
+            CmdRenderUISelfImmediate,
+            CmdRenderUISliceFromDrawList,
             CmdBeginDrawing,
             CmdEndDrawing,
             CmdClearBackground,

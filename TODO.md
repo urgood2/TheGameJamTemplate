@@ -11,10 +11,30 @@
     - need way to specify particle screen/world space & particle z values
     
 - [ ] Applying shaders to ui in a modular fashion
+
+```cpp
+struct CmdRenderUISliceFromDrawList {
+    std::vector<entt::entity> drawList;
+    size_t startIndex;
+    size_t endIndex;
+    std::shared_ptr<layer::Layer> layerPtr;
+    float pad = 0.0f; // Padding around the slice
+};
+
+struct CmdRenderUISelfImmediate {
+    entt::entity entity;
+    entt::registry* registry;
+    // Components needed for rendering
+    // These should be fetched from the registry in the render function
+    // UIElementComponent, UIConfig, UIState, GameObject, Transform
+};
+```
     - need to make some new commmand types, outlined here, https://chatgpt.com/share/686d12b6-ac6c-800a-831c-48459c4ed072
-    - need immeidate DrawSteppedRoundedRectangle() and DrawNPatchUIElement()and ApplyTransformMatrix
-    - DrawSelfImmediate() ready
-    - need to make immediate version of drawSelf()
+    - hook up : https://chatgpt.com/share/686e63b6-5870-800a-881a-cd372476dbdd
+    - use renderSliceOffscreenFromDrawList
+        [x] need immeidate DrawSteppedRoundedRectangle() and DrawNPatchUIElement()and ApplyTransformMatrix() -> ready
+        [x] DrawSelfImmediate() ready
+    [x] need to make immediate version of drawSelf() -> ready
     - apply findSubtreeEnd and current depth-annotated draw list, fix renderSliceOffscreen to render final result with queue command?
     - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 
     - element: drawSelf() overhaul using shader pass component: https://chatgpt.com/share/686a8a8e-2fc8-800a-b21d-3539224e69f9

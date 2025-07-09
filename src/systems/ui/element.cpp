@@ -5,6 +5,7 @@
 #include "systems/reflection/reflection.hpp"
 #include "systems/text/textVer2.hpp"
 #include "core/globals.hpp"
+#include "systems/ui/ui_data.hpp"
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
 #include "systems/collision/broad_phase.hpp"
@@ -1256,8 +1257,9 @@ namespace ui
         }
     }
     
-    void element::DrawSelfImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex)
+    void element::DrawSelfImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
     {
+        
         // ZoneScopedN("UI Element: DrawSelf");
         auto *uiElement = &uiElementComp;
         auto *config = &configComp;

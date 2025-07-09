@@ -13982,7 +13982,8 @@
         "camera.lua"
     ],
     "camera_hump": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/camera.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/camera.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\camera.lua"
     ],
     "capslock_default_icon_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_capslock_icon.png",
@@ -14635,7 +14636,8 @@
         "DEBUGGING_LUA.md"
     ],
     "debugging_lua_script": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/DEBUGGING_LUA.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/DEBUGGING_LUA.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\DEBUGGING_LUA.md"
     ],
     "deep_palette_resurrect_twilight": [
         "RESURRECT_PALETTE_DEEP_TWILIGHT"
@@ -16877,7 +16879,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation.svg"
     ],
     "external_hump": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump"
     ],
     "external_knife": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife",
@@ -17579,7 +17582,8 @@
         "gamestate.lua"
     ],
     "gamestate_hump": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/gamestate.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/gamestate.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\gamestate.lua"
     ],
     "gear": [
         "gear.png"
@@ -17885,10 +17889,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\Hover.wav"
     ],
     "hump_readme": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/README.md"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/README.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\README.md"
     ],
     "hump_signal": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/signal.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/signal.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\signal.lua"
     ],
     "i_keyboard": [
         "keyboard_i.png"
@@ -19033,7 +19039,8 @@
         "xbox_rb.png"
     ],
     "readme": [
-        "readme.txt"
+        "readme.txt",
+        "README.md"
     ],
     "rect_rounded": [
         "rounded_rect.png"

@@ -1835,6 +1835,7 @@ namespace ui
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)
     {
+        using namespace snowhouse;
         bool doNotUse = true;
         AssertThat(doNotUse, Is().EqualTo(false)); // TODO: this method should be deleted
 
@@ -1903,170 +1904,105 @@ namespace ui
         }
         return i;  // one past the last descendant
     }
-    
-    void DrawSelfImmediate(entt::registry &registry, entt::entity e, std::shared_ptr<layer::Layer> layerPtr) {
-        
-    }
-    
-    //-----------------------------------------------------------------------------------
-    // renderSliceOffscreen
-    //   Renders a single UI entity (and optionally its subtree) through your
-    //   shader_pipeline system—passes, overlays—and then draws it back to the screen.
-    //-----------------------------------------------------------------------------------
-    //FIXME: doesn't use queue, immediate commands. maybe change?
-    void renderSliceOffscreen(
-        entt::registry&                registry,
-        entt::entity                   e,
-        std::shared_ptr<layer::Layer>  layerPtr,          // if you want to composite into a layer
-        float                          pad = 0.0f         // optional padding around element
-    ) {
-        // 1) Gather transform + pipeline info
-        auto& xf         = registry.get<transform::Transform>(e);
-        auto  x          = xf.getVisualX();
-        auto  y          = xf.getVisualY();
-        auto  w          = xf.getVisualW();
-        auto  h          = xf.getVisualH();
-        float renderW    = w + pad*2.0f;
-        float renderH    = h + pad*2.0f;
 
-        auto& pipeline   = registry.get<shader_pipeline::ShaderPipelineComponent>(e);
+    void box::drawAllBoxesShaderEnabled(entt::registry &registry,
+                           std::shared_ptr<layer::Layer> layerPtr)
+    {
+        // 1) Build a flat list in the exact order your old box::Draw would have used.
+        std::vector<UIDrawListItem> drawOrder;
+        drawOrder.reserve(200); // or an estimate of your total UI element count
 
-        // 2) Ensure our shared ping-pong textures are big enough
-        if (!shader_pipeline::IsInitialized() ||
-            shader_pipeline::width  < (int)renderW ||
-            shader_pipeline::height < (int)renderH)
+        // TODO call for all ui boxes
+        auto view = registry.view<UIBoxComponent, entity_gamestate_management::StateTag>();
+        for (auto ent : view)
         {
-            shader_pipeline::ShaderPipelineUnload();
-            shader_pipeline::ShaderPipelineInit(renderW, renderH);
-        }
-        shader_pipeline::ResetDebugRects();
-
-        // 3) Draw element → front() (id 6)
-        layer::render_stack_switch_internal::Push(shader_pipeline::front());
-        ClearBackground({0,0,0,0});
-        // shift origin so (0,0) in RT corresponds to (pad,pad)
-        rlPushMatrix();
-            rlTranslatef(pad, pad, 0);
-            // DrawSelfImmediate should do *all* the rounded-rect, nine-patch,
-            // text, children, etc. directly into the RT.
-            DrawSelfImmediate(registry, e, layerPtr);
-        rlPopMatrix();
-        layer::render_stack_switch_internal::Pop();
-
-        // 4) Copy front() → Base cache
-        RenderTexture2D baseRT = shader_pipeline::GetBaseRenderTextureCache();
-        layer::render_stack_switch_internal::Push(baseRT);
-        ClearBackground({0,0,0,0});
-        DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
-        layer::render_stack_switch_internal::Pop();
-
-        // 5) Run all shader *passes*
-        for (auto & pass : pipeline.passes) {
-        if (!pass.enabled) continue;
-
-        Shader sh = shaders::getShader(pass.shaderName);
-        if (!sh.id) continue;
-
-        layer::render_stack_switch_internal::Push(shader_pipeline::back());
-            ClearBackground({0,0,0,0});
-            BeginShaderMode(sh);
-            if (pass.injectAtlasUniforms)
-                injectAtlasUniforms(globals::globalShaderUniforms,
-                                    pass.shaderName,
-                                    {0, 0, renderW, renderH},
-                                    {renderW, renderH});
-            if (pass.customPrePassFunction)
-                pass.customPrePassFunction();
-            TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
-
-            // draw entire front() RT through the shader
-            DrawTextureRec(
-                shader_pipeline::front().texture,
-                { 0, 0, renderW, -renderH },
-                { 0, 0 },
-                WHITE
-            );
-            EndShaderMode();
-            layer::render_stack_switch_internal::Pop();
-
-        // swap so back() → front()
-        shader_pipeline::Swap();
-        shader_pipeline::SetLastRenderTarget(shader_pipeline::front());
+            // check if the entity is active
+            if (!entity_gamestate_management::active_states_instance().is_active(view.get<entity_gamestate_management::StateTag>(ent)))
+                continue; // skip inactive entities
+            // TODO: probably sort these with layer order
+            buildUIBoxDrawList(registry, ent, drawOrder);
         }
 
-        // 6) Collect post-pass result
-        RenderTexture2D postPassRT;
-        if (auto * last = shader_pipeline::GetLastRenderTarget()) {
-        postPassRT = *last;
-        } else {
-        postPassRT = shader_pipeline::front();
+        // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
+        //    of the “always‐present” components every drawable element needs:
+        if (uiGroupInitialized == false)
+        {
+            // This is a static group that will be reused for all draws.
+            // It contains the five components we need to draw any UI element.
+            uiGroupInitialized = true;
+
+            globalUIGroup = registry.group<UIElementComponent,
+                                           UIConfig,
+                                           UIState,
+                                           transform::GameObject,
+                                           transform::Transform>();
         }
 
-        // 7) Apply all shader *overlays*
-        for (auto & ov : pipeline.overlayDraws) {
-        if (!ov.enabled) continue;
+        entt::entity uiBoxEntity{entt::null};
+        int drawOrderZIndex = 0;
 
-        Shader sh = shaders::getShader(ov.shaderName);
-        if (!sh.id) continue;
+        // 3) Loop in our flattened order:
+        for (size_t i = 0; i < drawOrder.size(); ++i) {
+            auto &drawListItem = drawOrder[i];
+            auto ent = drawListItem.e;
 
-        layer::render_stack_switch_internal::Push(shader_pipeline::front());
-            BeginShaderMode(sh);
-            if (ov.injectAtlasUniforms)
-                injectAtlasUniforms(globals::globalShaderUniforms,
-                                    ov.shaderName,
-                                    {0, 0, renderW, renderH},
-                                    {renderW, renderH});
-            if (ov.customPrePassFunction)
-                ov.customPrePassFunction();
-            TryApplyUniforms(sh, globals::globalShaderUniforms, ov.shaderName);
+            if (!registry.valid(ent))
+                continue;
 
-            // pick base or post-pass as input
-            auto & src = (ov.inputSource == shader_pipeline::OverlayInputSource::BaseSprite
-                            ? baseRT
-                            : postPassRT);
+            auto &cfg = globalUIGroup.get<UIConfig>(ent);
 
-            DrawTextureRec(
-                src.texture,
-                { 0, 0, renderW, -renderH },
-                { 0, 0 },
-                WHITE
-            );
-            EndShaderMode();
-            layer::render_stack_switch_internal::Pop();
+            // Check pipeline
+            auto* pipeline = registry.try_get<shader_pipeline::ShaderPipelineComponent>(ent);
+            if (pipeline && (pipeline->hasPassesOrOverlays())) {
+                //FIXME: only include children if config says so.
+                // Determine range: element + all children with greater depth
+                size_t start = i;
+                int parentDepth = drawOrder[i].depth;
+                size_t end = i + 1;
+                bool includeChildren = cfg.includeChildrenInShaderPass;
 
-        // back() now holds the overlayed result
-        shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
+                if (includeChildren) {
+                    while (end < drawOrder.size() && drawOrder[end].depth > parentDepth) {
+                        ++end;
+                    }
+                }
+
+                // Offscreen render pass
+                //TODO: make this a command that can be queued. Also, how to pass draw order list in an efficient way?
+                renderSliceOffscreenFromDrawList(registry, drawOrder, start, end, layerPtr);
+                i = end - 1; // Skip children
+                continue;
+            }
+
+            // Pull the five group‐components by reference (O(1)):
+            auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
+            auto &st = globalUIGroup.get<UIState>(ent);
+            auto &node = globalUIGroup.get<transform::GameObject>(ent);
+            auto &xf = globalUIGroup.get<transform::Transform>(ent);
+
+            if (elemComp.uiBox != uiBoxEntity)
+            {
+                // If this is a new UIBox, set the current box entity.
+                uiBoxEntity = elemComp.uiBox;
+                drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+            }
+
+            // Finally call your lean DrawSelf that only does `try_get`
+            // for optional pieces (RoundedRectangleVerticesCache, etc.).
+            //FIXME: this should be a command that can be queued.
+            element::DrawSelfImmediate(layerPtr, ent, elemComp, cfg, st, node, xf, drawOrderZIndex);
         }
 
-        // 8) Decide final RT to draw to screen
-        RenderTexture2D finalRT;
-        if (!pipeline.overlayDraws.empty()) {
-        finalRT = shader_pipeline::front();
+        // 4) If you still want to draw bounding boxes for each UIBox itself:
+        if (globals::drawDebugInfo)
+        {
+            for (auto box : view)
+            {
+                transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
+            }
         }
-        else if (!pipeline.passes.empty()) {
-        finalRT = postPassRT;
-        }
-        else {
-        finalRT = baseRT;
-        }
-
-        // 9) Composite finalRT back to the screen (or UI layer)
-        //    applying the element’s transform
-        layer::PushMatrix();
-        layer::Translate(x - pad, y - pad);
-        layer::Scale(xf.getVisualScaleWithHoverAndDynamicMotionReflected(),
-                xf.getVisualScaleWithHoverAndDynamicMotionReflected());
-                layer::Rotate(xf.getVisualRWithDynamicMotionAndXLeaning());
-                layer::Translate(pad, pad);
-
-        DrawTextureRec(
-            finalRT.texture,
-            { 0, 0, renderW, -renderH },
-            { 0, 0 },
-            WHITE
-        );
-        layer::PopMatrix();
     }
+
 
     void box::drawAllBoxes(entt::registry &registry,
                            std::shared_ptr<layer::Layer> layerPtr)

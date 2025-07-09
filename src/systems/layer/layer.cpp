@@ -15,6 +15,8 @@
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/ui/ui_data.hpp"
+#include "systems/ui/element.hpp"
+#include "systems/ui/box.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
 #include "systems/camera/camera_manager.hpp"
 
@@ -31,6 +33,15 @@
 #include "layer_command_buffer.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
+
+namespace layer
+{
+    // only use for (DrawLayerCommandsToSpecificCanvas)
+    namespace render_stack_switch_internal
+    {
+        std::stack<RenderTexture2D> renderStack{};
+    }
+}
 
 // Graphics namespace for rendering functions
 namespace layer
@@ -2752,6 +2763,131 @@ namespace layer
 
         
         
+    }
+
+    //-----------------------------------------------------------------------------------
+    // renderSliceOffscreen
+    //   Renders a single UI entity (and optionally its subtree) through your
+    //   shader_pipeline system—passes, overlays—and then draws it back to the screen.
+    //-----------------------------------------------------------------------------------
+    //FIXME: doesn't use queue, immediate commands. maybe change?
+    void renderSliceOffscreenFromDrawList(
+    entt::registry& registry,
+    const std::vector<ui::UIDrawListItem>& drawList,
+    size_t startIndex,
+    size_t endIndex,
+    std::shared_ptr<layer::Layer> layerPtr,
+    float pad)
+    {
+        using namespace shader_pipeline;
+
+        // 1. Compute the bounding box of the entities in the range
+        float xMin = FLT_MAX, yMin = FLT_MAX;
+        float xMax = -FLT_MAX, yMax = -FLT_MAX;
+
+        for (size_t i = startIndex; i < endIndex; ++i) {
+            entt::entity e = drawList[i].e;
+            auto& xf = registry.get<transform::Transform>(e);
+            float x = xf.getVisualX();
+            float y = xf.getVisualY();
+            float w = xf.getVisualW();
+            float h = xf.getVisualH();
+
+            xMin = std::min(xMin, x);
+            yMin = std::min(yMin, y);
+            xMax = std::max(xMax, x + w);
+            yMax = std::max(yMax, y + h);
+        }
+
+        float renderW = (xMax - xMin) + pad * 2.0f;
+        float renderH = (yMax - yMin) + pad * 2.0f;
+
+        // Ensure pipeline texture size
+        if (!IsInitialized() || width < (int)renderW || height < (int)renderH) {
+            ShaderPipelineUnload();
+            ShaderPipelineInit(renderW, renderH);
+        }
+        ResetDebugRects();
+
+        // Get pipeline from first entity
+        auto& pipeline = registry.get<ShaderPipelineComponent>(drawList[startIndex].e);
+
+        // 2. Draw to front()
+        layer::render_stack_switch_internal::Push(front());
+        ClearBackground({0, 0, 0, 0});
+
+        rlPushMatrix();
+        rlTranslatef(-xMin + pad, -yMin + pad, 0);
+        for (size_t i = startIndex; i < endIndex; ++i) {
+            entt::entity e = drawList[i].e;
+            ui::element::DrawSelfImmediate(registry, e, layerPtr);
+        }
+        rlPopMatrix();
+        layer::render_stack_switch_internal::Pop();
+
+        // 3. Copy front() to base cache
+        RenderTexture2D baseRT = GetBaseRenderTextureCache();
+        layer::render_stack_switch_internal::Push(baseRT);
+        ClearBackground({0, 0, 0, 0});
+        DrawTexture(front().texture, 0, 0, WHITE);
+        layer::render_stack_switch_internal::Pop();
+
+        // 4. Shader passes
+        for (auto& pass : pipeline.passes) {
+            if (!pass.enabled) continue;
+            Shader sh = shaders::getShader(pass.shaderName);
+            if (!sh.id) continue;
+
+            layer::render_stack_switch_internal::Push(back());
+            ClearBackground({0, 0, 0, 0});
+            BeginShaderMode(sh);
+            if (pass.injectAtlasUniforms)
+                injectAtlasUniforms(globals::globalShaderUniforms, pass.shaderName,
+                                    {0, 0, renderW, renderH}, {renderW, renderH});
+            if (pass.customPrePassFunction)
+                pass.customPrePassFunction();
+            TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
+            DrawTextureRec(front().texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
+            EndShaderMode();
+            layer::render_stack_switch_internal::Pop();
+            Swap();
+            SetLastRenderTarget(front());
+        }
+
+        // 5. Collect post-pass
+        RenderTexture2D postPassRT = GetLastRenderTarget() ? *GetLastRenderTarget() : front();
+
+        // 6. Overlays
+        for (auto& ov : pipeline.overlayDraws) {
+            if (!ov.enabled) continue;
+            Shader sh = shaders::getShader(ov.shaderName);
+            if (!sh.id) continue;
+
+            layer::render_stack_switch_internal::Push(front());
+            BeginShaderMode(sh);
+            if (ov.injectAtlasUniforms)
+                injectAtlasUniforms(globals::globalShaderUniforms, ov.shaderName,
+                                    {0, 0, renderW, renderH}, {renderW, renderH});
+            if (ov.customPrePassFunction)
+                ov.customPrePassFunction();
+            TryApplyUniforms(sh, globals::globalShaderUniforms, ov.shaderName);
+            RenderTexture2D& src = (ov.inputSource == OverlayInputSource::BaseSprite) ? baseRT : postPassRT;
+            DrawTextureRec(src.texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
+            EndShaderMode();
+            layer::render_stack_switch_internal::Pop();
+            SetLastRenderTarget(back());
+        }
+
+        // 7. Choose final RT
+        RenderTexture2D finalRT = !pipeline.overlayDraws.empty() ? front() :
+                                !pipeline.passes.empty()       ? postPassRT :
+                                                                baseRT;
+
+        // 8. Composite to screen/layer
+        layer::PushMatrix();
+        layer::Translate(xMin - pad, yMin - pad);
+        DrawTextureRec(finalRT.texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
+        layer::PopMatrix();
     }
     
     auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer, entt::registry* registry, entt::entity e, int z) -> void

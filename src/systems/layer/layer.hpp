@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <typeindex>
+#include <stack>
 
 #include "layer_optimized.hpp"
 #include "sol/sol.hpp"
@@ -22,13 +23,17 @@
 #include "third_party/objectpool-master/src/object_pool.hpp"
 // TODO: make internal functions not accessible?
 
+namespace ui {
+    struct UIDrawListItem;
+}
+
 namespace layer
 {
     
     // only use for (DrawLayerCommandsToSpecificCanvas)
     namespace render_stack_switch_internal
     {
-        static std::stack<RenderTexture2D> renderStack{};
+        extern std::stack<RenderTexture2D> renderStack;
 
         // Push a new render target, auto-ending the previous one if needed
         inline void Push(RenderTexture2D target)
@@ -338,6 +343,13 @@ namespace layer
     void SetRLTexture(Texture2D texture);
     void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color);
     void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, entt::entity cacheEntity, const Color color, bool useFull);
+    void renderSliceOffscreenFromDrawList(
+        entt::registry& registry,
+        const std::vector<ui::UIDrawListItem>& drawList,
+        size_t startIndex,
+        size_t endIndex,
+        std::shared_ptr<layer::Layer> layerPtr,
+        float pad = 0.0f);
 
     // NOTE that you should set shader uniforms directly when rendering at the layer level-- that is, rendering entire layers.
     void AddUniformFloat(std::shared_ptr<Layer> layer, Shader shader, const std::string &uniform, float value);

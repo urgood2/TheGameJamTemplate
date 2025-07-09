@@ -10,6 +10,7 @@
 #include <string>
 #include <functional> 
 
+#include "systems/ui/ui_data.hpp"
 #include "third_party/objectpool-master/src/object_pool.hpp"
 
 
@@ -94,14 +95,32 @@ namespace layer
         Polygon, 
         RenderNPatchRect, 
         Triangle,
-        
+        RenderUISliceFromDrawList, // for ui
+        RenderUISelfImmediate, // for ui
         
         Count // <--- always last
     };
 
+
     // ===========================
     // Draw Command Structs
     // ===========================
+    struct CmdRenderUISliceFromDrawList {
+        std::vector<ui::UIDrawListItem> drawList;
+        size_t startIndex;
+        size_t endIndex;
+        std::shared_ptr<layer::Layer> layerPtr;
+        float pad = 0.0f; // Padding around the slice
+    };
+
+    struct CmdRenderUISelfImmediate {
+        entt::entity entity;
+        entt::registry* registry;
+        // Components needed for rendering
+        // These should be fetched from the registry in the render function
+        // UIElementComponent, UIConfig, UIState, GameObject, Transform
+    };
+
     struct CmdBeginDrawing {
         bool dummy = false; // Placeholder
     };

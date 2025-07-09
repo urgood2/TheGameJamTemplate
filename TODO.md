@@ -12,6 +12,8 @@
     
 - [ ] Applying shaders to ui in a modular fashion
     - need to make some new commmand types, outlined here, https://chatgpt.com/share/686d12b6-ac6c-800a-831c-48459c4ed072
+    - need immeidate DrawSteppedRoundedRectangle() and DrawNPatchUIElement()and ApplyTransformMatrix
+    - DrawSelfImmediate() ready
     - need to make immediate version of drawSelf()
     - apply findSubtreeEnd and current depth-annotated draw list, fix renderSliceOffscreen to render final result with queue command?
     - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 

@@ -215,7 +215,7 @@ namespace layer
             auto &stateComp = ui::globalUIGroup.get<ui::UIState>(c->entity);
             auto &nodeComp = ui::globalUIGroup.get<transform::GameObject>(c->entity);
             auto &transformComp = ui::globalUIGroup.get<transform::Transform>(c->entity);
-            ui::element::DrawSelfImmediate(layer, uiElementComp, configComp, stateComp, nodeComp, transformComp);
+            ui::element::DrawSelfImmediate(layer, c->entity, uiElementComp, configComp, stateComp, nodeComp, transformComp);
         });
         RegisterRenderer<CmdTranslate>(DrawCommandType::Translate, ExecuteTranslate);
         RegisterRenderer<CmdScale>(DrawCommandType::Scale, ExecuteScale);

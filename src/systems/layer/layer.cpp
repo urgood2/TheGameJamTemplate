@@ -2820,7 +2820,12 @@ namespace layer
         rlTranslatef(-xMin + pad, -yMin + pad, 0);
         for (size_t i = startIndex; i < endIndex; ++i) {
             entt::entity e = drawList[i].e;
-            ui::element::DrawSelfImmediate(registry, e, layerPtr);
+            auto &uiElementComp = ui::globalUIGroup.get<ui::UIElementComponent>(e);
+            auto &configComp = ui::globalUIGroup.get<ui::UIConfig>(e);
+            auto &stateComp = ui::globalUIGroup.get<ui::UIState>(e);
+            auto &nodeComp = ui::globalUIGroup.get<transform::GameObject>(e);
+            auto &transformComp = ui::globalUIGroup.get<transform::Transform>(e);
+            ui::element::DrawSelfImmediate(layerPtr, e, uiElementComp, configComp, stateComp, nodeComp, transformComp);
         }
         rlPopMatrix();
         layer::render_stack_switch_internal::Pop();

@@ -1990,7 +1990,7 @@ namespace ui
             // Finally call your lean DrawSelf that only does `try_get`
             // for optional pieces (RoundedRectangleVerticesCache, etc.).
             //FIXME: this should be a command that can be queued.
-            element::DrawSelfImmediate(layerPtr, ent, elemComp, cfg, st, node, xf, drawOrderZIndex);
+            element::DrawSelfImmediate(layerPtr, ent, elemComp, cfg, st, node, xf);
         }
 
         // 4) If you still want to draw bounding boxes for each UIBox itself:

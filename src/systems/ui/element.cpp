@@ -1484,9 +1484,9 @@ namespace ui
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                 //FIXME: needs immediate draw version
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist, {}, std::nullopt, std::nullopt, zIndex);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist, {}, std::nullopt, std::nullopt);
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                    util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, shadowColor, parallaxDist, std::nullopt, zIndex);
+                    util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, shadowColor, parallaxDist, std::nullopt);
                     
             }
             
@@ -1497,11 +1497,11 @@ namespace ui
                 
 
                 if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt, zIndex);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt);
                     
                 else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                 //TODO: ninepatch doens't support layer order yet
-                    util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, c, parallaxDist, std::nullopt, zIndex);
+                    util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, c, parallaxDist, std::nullopt);
             }
         
             
@@ -1536,15 +1536,15 @@ namespace ui
                 {
                     // gray background
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, std::nullopt, zIndex);
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, std::nullopt);
 
                     // progress bar                        
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, config->buttonDelayProgress, zIndex);
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, config->buttonDelayProgress);
 
                 }
                 else if (config->progressBar)
@@ -1572,9 +1572,9 @@ namespace ui
                     }
                     
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, progress, zIndex);
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, progress);
                     
                 }
                 else
@@ -1582,9 +1582,9 @@ namespace ui
                     
                     // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
-                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt, zIndex);
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, std::nullopt, zIndex);
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, std::nullopt);
                 }
             }
             else
@@ -1617,9 +1617,9 @@ namespace ui
                 float lw = 50.0f * std::pow(std::max(0.0f, (state->object_focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
                 // util::PrepDraw(layerPtr, registry, entity, 1.0f);
                 Color c = util::AdjustAlpha(WHITE, 0.2f * lw);
-                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, std::nullopt, zIndex);
+                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, std::nullopt);
                 c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
-                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, std::nullopt, zIndex);
+                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, std::nullopt);
                 // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
                 layer::PopMatrix();
             }
@@ -1640,11 +1640,11 @@ namespace ui
                 if (config->line_emboss)
                 {
                     Color c = ColorBrightness(config->outlineColor.value(), node->state.isBeingHovered ? 0.5f : 0.3f);
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth, zIndex);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth);
                 }
                 if (transform->getVisualW() > 0.01)
                 {
-                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth, zIndex);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth);
                 }
             }
         }
@@ -1657,12 +1657,12 @@ namespace ui
             // util::PrepDraw(layerPtr, registry, entity, 1.0f);
             Color c = Fade(WHITE, 0.2f * lw);
 
-            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f, zIndex);
+            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f);
             //TODO: refactor this whole method later
 
             c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
 
-            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f, zIndex);
+            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f);
             
         }
         else
@@ -1720,7 +1720,7 @@ namespace ui
         // call the object's own lambda draw function, if it has one
         if (node->drawFunction) {
             //TODO: this probably won't work in immediate mode
-            node->drawFunction(layerPtr, globals::registry, entity, zIndex);
+            node->drawFunction(layerPtr, globals::registry, entity, -1);
         }
     }
 

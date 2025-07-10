@@ -27,7 +27,6 @@
 #include "../components/graphics.hpp"
 
 #include "../systems/anim_system.hpp"
-#include "../systems/layer/layer.hpp"
 #include "../systems/collision/Quadtree.h"
 #include "../systems/localization/localization.hpp"
 
@@ -87,6 +86,11 @@ namespace transform
 namespace shaders
 {
     struct ShaderUniformComponent;
+}
+
+namespace layer 
+{
+    struct Layer;
 }
 
 namespace globals

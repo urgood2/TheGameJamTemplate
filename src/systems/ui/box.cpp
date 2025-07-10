@@ -1,6 +1,8 @@
 #include "box.hpp"
 
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
+#include "systems/layer/layer_optimized.hpp"
 #include "systems/text/textVer2.hpp"
 #include "systems/layer/layer_order_system.hpp"
 #include "systems/collision/broad_phase.hpp"
@@ -1945,6 +1947,8 @@ namespace ui
         for (size_t i = 0; i < drawOrder.size(); ++i) {
             auto &drawListItem = drawOrder[i];
             auto ent = drawListItem.e;
+            
+            //TODO: update with:drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex; if the uibox has changed.
 
             if (!registry.valid(ent))
                 continue;
@@ -1969,7 +1973,15 @@ namespace ui
 
                 // Offscreen render pass
                 //TODO: make this a command that can be queued. Also, how to pass draw order list in an efficient way?
-                renderSliceOffscreenFromDrawList(registry, drawOrder, start, end, layerPtr);
+                //TODO: how to do z index here? layer & tree order?
+                layer::QueueCommand<layer::CmdRenderUISliceFromDrawList>(
+                    layerPtr, [drawOrder, start, end](layer::CmdRenderUISliceFromDrawList *cmd) {
+                        //TODO: copy only part of the draw order list, and efficiently?
+                        cmd->drawList =drawOrder;
+                        cmd->startIndex = start;
+                        cmd->endIndex = end;
+                    }, drawOrderZIndex);
+                // renderSliceOffscreenFromDrawList(registry, drawOrder, start, end, layerPtr);
                 i = end - 1; // Skip children
                 continue;
             }
@@ -1990,7 +2002,13 @@ namespace ui
             // Finally call your lean DrawSelf that only does `try_get`
             // for optional pieces (RoundedRectangleVerticesCache, etc.).
             //FIXME: this should be a command that can be queued.
-            element::DrawSelfImmediate(layerPtr, ent, elemComp, cfg, st, node, xf);
+            // element::DrawSelfImmediate(layerPtr, ent, elemComp, cfg, st, node, xf);
+            
+            layer::QueueCommand<layer::CmdRenderUISelfImmediate>(
+                layerPtr, [ent](layer::CmdRenderUISelfImmediate *cmd) {
+                    //TODO: fill here
+                    cmd->entity = ent;
+                }, drawOrderZIndex);
         }
 
         // 4) If you still want to draw bounding boxes for each UIBox itself:

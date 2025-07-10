@@ -29,6 +29,7 @@ struct CmdRenderUISelfImmediate {
     // UIElementComponent, UIConfig, UIState, GameObject, Transform
 };
 ```
+    - apply final fixes here: https://chatgpt.com/share/686f9865-3790-800a-9fbc-09aaa695d91d
     - need to make some new commmand types, outlined here, https://chatgpt.com/share/686d12b6-ac6c-800a-831c-48459c4ed072
     - hook up : https://chatgpt.com/share/686e63b6-5870-800a-881a-cd372476dbdd
     - use renderSliceOffscreenFromDrawList

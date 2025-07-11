@@ -1230,6 +1230,15 @@ function ui_defs.generateUI()
     -- create a new UI box for the upgrade UI
     globals.ui.upgradeUIBox = ui.box.Initialize({x = 0, y = globals.screenHeight() - 50}, upgradeUIRoot)
     
+    -- get the root entity of the upgrade UI box
+    local rootEntity = registry:get(globals.ui.upgradeUIBox, UIBoxComponent)
+    
+    -- -- emplace the shader pipeline component for the upgrade UI box root
+    -- local shaderPipelineComp = registry:emplace(rootEntity.uiRoot, shader_pipeline.ShaderPipelineComponent)
+
+    -- shaderPipelineComp:addPass("random_displacement_anim")
+    
+    
     -- align the upgrade UI box to the bottom of the screen
     local upgradeUIBoxTransform = registry:get(globals.ui.upgradeUIBox, Transform)
     upgradeUIBoxTransform.actualX = globals.screenWidth() / 2 - upgradeUIBoxTransform.actualW / 2 -- center it horizontally

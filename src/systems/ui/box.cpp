@@ -1948,6 +1948,13 @@ namespace ui
             auto &drawListItem = drawOrder[i];
             auto ent = drawListItem.e;
             
+            // 1) update box Z every iteration
+            auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
+            if (elemComp.uiBox != uiBoxEntity) {
+                uiBoxEntity     = elemComp.uiBox;
+                drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+            }
+            
             //TODO: update with:drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex; if the uibox has changed.
 
             if (!registry.valid(ent))
@@ -1966,28 +1973,35 @@ namespace ui
                 bool includeChildren = cfg.includeChildrenInShaderPass;
 
                 if (includeChildren) {
-                    while (end < drawOrder.size() && drawOrder[end].depth > parentDepth) {
-                        ++end;
-                    }
+                    while (end < drawOrder.size() && drawOrder[end].depth > parentDepth)
+                      ++end;
                 }
 
                 // Offscreen render pass
                 //TODO: make this a command that can be queued. Also, how to pass draw order list in an efficient way?
                 //TODO: how to do z index here? layer & tree order?
                 layer::QueueCommand<layer::CmdRenderUISliceFromDrawList>(
-                    layerPtr, [drawOrder, start, end](layer::CmdRenderUISliceFromDrawList *cmd) {
-                        //TODO: copy only part of the draw order list, and efficiently?
-                        cmd->drawList =drawOrder;
-                        cmd->startIndex = start;
-                        cmd->endIndex = end;
-                    }, drawOrderZIndex);
+                    layerPtr,
+                    [&, start, end](layer::CmdRenderUISliceFromDrawList *cmd) {
+                      // build only the subrange you need
+                      cmd->drawList.assign(
+                        drawOrder.begin() + start,
+                        drawOrder.begin() + end
+                      );
+                      cmd->startIndex = 0;      // after assign, indices are [0..end-start)
+                      cmd->endIndex   = end - start;
+                    },
+                    drawOrderZIndex
+                  );
                 // renderSliceOffscreenFromDrawList(registry, drawOrder, start, end, layerPtr);
-                i = end - 1; // Skip children
+                if (includeChildren) {
+                    i = end - 1;
+                }
                 continue;
             }
 
             // Pull the five group‐components by reference (O(1)):
-            auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
+            // auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
             auto &st = globalUIGroup.get<UIState>(ent);
             auto &node = globalUIGroup.get<transform::GameObject>(ent);
             auto &xf = globalUIGroup.get<transform::Transform>(ent);

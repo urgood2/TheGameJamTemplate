@@ -1,5 +1,6 @@
 #include "util.hpp"
 
+#include "raylib.h"
 #include "raymath.h"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -1391,7 +1392,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->progressOrFullBackground = false;
             // }, zIndex);
-            RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
+            RenderRectVerticesFilledLayerImmediate(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
 
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
@@ -1416,7 +1417,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->useFullVertices = true;
             // }, zIndex);
-            layer::RenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, true);
+            layer::RenderRectVerticlesOutlineLayerImmediate(layerPtr, entity, colorToUse, true);
 
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
@@ -1459,7 +1460,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->progressOrFullBackground = false;
             // }, zIndex);
-            RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
+            RenderRectVerticesFilledLayerImmediate(layerPtr, Rectangle{0, 0, rectCache->w, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
@@ -1495,7 +1496,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->useFullVertices = false;
             // }, zIndex);
-            layer::RenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, false);
+            layer::RenderRectVerticlesOutlineLayerImmediate(layerPtr, entity, colorToUse, false);
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
@@ -1534,7 +1535,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->progressOrFullBackground = false;
             // }, zIndex);
-            RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
+            RenderRectVerticesFilledLayerImmediate(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, rectCache->outerVerticesFullRect, colorToUse);
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
@@ -1614,7 +1615,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->progressOrFullBackground = true;
             // }, zIndex);
-            layer::RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, true, entity, colorToUse);
+            layer::RenderRectVerticesFilledLayerImmediate(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, true, entity, colorToUse);
                 
                 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
@@ -1656,11 +1657,71 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->useFullVertices = true;
             // }, zIndex);
-            layer::RenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, true);
+            layer::RenderRectVerticlesOutlineLayerImmediate(layerPtr, entity, colorToUse, true);
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
 
+    }
+    
+    void util::RenderRectVerticlesOutlineLayerImmediate(std::shared_ptr<layer::Layer> layerPtr, const std::vector<Vector2> &outerVertices, const Color color, const std::vector<Vector2> &innerVertices)
+    {
+        // Draw the outlines
+        // Draw the filled outline
+        // layer::QueueCommand<layer::CmdSetTexture>(layerPtr, [](layer::CmdSetTexture *cmd) {
+        //     cmd->texture.id = 0;
+        // }, 0);
+        layer::SetRLTexture(0);
+        // layer::QueueCommand<layer::CmdBeginOpenGLMode>(layerPtr, [](layer::CmdBeginOpenGLMode *cmd) {
+        //     cmd->mode = RL_TRIANGLES;
+        // }, 0);
+        layer::BeginRLMode(RL_TRIANGLES);
+        // Draw quads between outer and inner outlines using two triangles each
+        for (size_t i = 0; i < outerVertices.size(); i += 2)
+        {
+
+            // First triangle: Outer1 → Inner1 → Inner2
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{outerVertices[i].x, outerVertices[i].y}, color);
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i].x, y = innerVertices[i].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{innerVertices[i + 1].x, innerVertices[i + 1].y}, color);
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i + 1].x, y = innerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{innerVertices[i].x, innerVertices[i].y}, color);
+
+            // Second triangle: Outer1 → Inner2 → Outer2
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{outerVertices[i + 1].x, outerVertices[i + 1].y}, color);
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = innerVertices[i + 1].x, y = innerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{outerVertices[i].x, outerVertices[i].y}, color);
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i + 1].x, y = outerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{outerVertices[i + 1].x, outerVertices[i + 1].y}, color);
+        }
+
+        layer::EndRLMode();
     }
 
     void util::RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, const std::vector<Vector2> &outerVertices, const Color color, const std::vector<Vector2> &innerVertices)
@@ -1714,6 +1775,53 @@ namespace ui
         }
 
         layer::EndRLMode();
+    }
+    
+    void util::RenderRectVerticesFilledLayerImmediate(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, const std::vector<Vector2> &outerVertices, const Color color)
+    {
+
+        // ::util::Profiler profiler("RenderRectVerticesFilledLayer");
+
+        // layer::QueueCommand<layer::CmdSetTexture>(layerPtr, [](layer::CmdSetTexture *cmd) {
+        //     cmd->texture.id = 0;
+        // }, 0);
+        layer::SetRLTexture(0);
+        // layer::QueueCommand<layer::CmdBeginOpenGLMode>(layerPtr, [](layer::CmdBeginOpenGLMode *cmd) {
+        //     cmd->mode = RL_TRIANGLES;
+        // }, 0);
+        layer::BeginRLMode(RL_TRIANGLES);
+
+        // Center of the entire rectangle (for filling)
+        Vector2 center = {outerRec.x + outerRec.width / 2.0f, outerRec.y + outerRec.height / 2.0f};
+        // SPDLOG_DEBUG("RenderRectVerticesFilledLayer > Center: x: {}, y: {}", center.x, center.y);
+
+        // Fill using the **outer vertices** and the **center**
+        for (size_t i = 0; i < outerVertices.size(); i += 2)
+        {
+            // Triangle: Center → Outer1 → Outer2
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = center.x, y = center.y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{center.x, center.y}, color);
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i + 1].x, y = outerVertices[i + 1].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{outerVertices[i + 1].x, outerVertices[i + 1].y}, color);
+            // layer::QueueCommand<layer::CmdVertex>(layerPtr, [x = outerVertices[i].x, y = outerVertices[i].y, color](layer::CmdVertex *cmd) {
+            //     cmd->v.x = x;
+            //     cmd->v.y = y;
+            //     cmd->color = color;
+            // });
+            layer::Vertex(Vector2{outerVertices[i].x, outerVertices[i].y}, color);
+        }
+
+        // layer::QueueCommand<layer::CmdEndOpenGLMode>(layerPtr, [](layer::CmdEndOpenGLMode *cmd) {}, 0);
+        layer::EndRLMode();
+
     }
 
     void util::RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, const std::vector<Vector2> &outerVertices, const Color color)

@@ -68,8 +68,10 @@ namespace ui {
         auto DrawNPatchUIElement(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress = std::nullopt, const int& zIndex = 0) -> void;
         
         auto RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, const std::vector<Vector2> &outerVertices, const Color color, const  std::vector<Vector2> &innerVertices) -> void;
+        void RenderRectVerticlesOutlineLayerImmediate(std::shared_ptr<layer::Layer> layerPtr, const std::vector<Vector2> &outerVertices, const Color color, const std::vector<Vector2> &innerVertices);
 
         auto RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, const std::vector<Vector2> &outerVertices, const Color color) -> void;
+        void RenderRectVerticesFilledLayerImmediate(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, const std::vector<Vector2> &outerVertices, const Color color);
         
         auto ClipRoundedRectVertices(std::vector<Vector2>& vertices, float clipX) -> void;
         

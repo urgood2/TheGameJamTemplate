@@ -626,7 +626,8 @@ namespace game
             // {
             //     ui::box::Draw(ui_layer, globals::registry, e);
             // }
-            ui::box::drawAllBoxes(globals::registry, sprites);
+            // ui::box::drawAllBoxes(globals::registry, sprites);
+            ui::box::drawAllBoxesShaderEnabled(globals::registry, sprites);
 
             // for each ui box, print debug info
             

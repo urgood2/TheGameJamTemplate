@@ -1417,7 +1417,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->useFullVertices = true;
             // }, zIndex);
-            layer::RenderRectVerticlesOutlineLayerImmediate(layerPtr, entity, colorToUse, true);
+            layer::RenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, true);
 
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
@@ -1496,7 +1496,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->useFullVertices = false;
             // }, zIndex);
-            layer::RenderRectVerticlesOutlineLayerImmediate(layerPtr, entity, colorToUse, false);
+            layer::RenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, false);
 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
@@ -1615,7 +1615,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->progressOrFullBackground = true;
             // }, zIndex);
-            layer::RenderRectVerticesFilledLayerImmediate(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, true, entity, colorToUse);
+            layer::RenderRectVerticesFilledLayer(layerPtr, Rectangle{0, 0, rectCache->w * progressVal, rectCache->h}, true, entity, colorToUse);
                 
                 
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
@@ -1657,7 +1657,7 @@ namespace ui
             //     cmd->color = colorToUse;
             //     cmd->useFullVertices = true;
             // }, zIndex);
-            layer::RenderRectVerticlesOutlineLayerImmediate(layerPtr, entity, colorToUse, true);
+            layer::RenderRectVerticlesOutlineLayer(layerPtr, entity, colorToUse, true);
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
@@ -1671,7 +1671,7 @@ namespace ui
         // layer::QueueCommand<layer::CmdSetTexture>(layerPtr, [](layer::CmdSetTexture *cmd) {
         //     cmd->texture.id = 0;
         // }, 0);
-        layer::SetRLTexture(0);
+        layer::SetRLTexture(Texture2D{});
         // layer::QueueCommand<layer::CmdBeginOpenGLMode>(layerPtr, [](layer::CmdBeginOpenGLMode *cmd) {
         //     cmd->mode = RL_TRIANGLES;
         // }, 0);
@@ -1785,7 +1785,7 @@ namespace ui
         // layer::QueueCommand<layer::CmdSetTexture>(layerPtr, [](layer::CmdSetTexture *cmd) {
         //     cmd->texture.id = 0;
         // }, 0);
-        layer::SetRLTexture(0);
+        layer::SetRLTexture(Texture2D{});
         // layer::QueueCommand<layer::CmdBeginOpenGLMode>(layerPtr, [](layer::CmdBeginOpenGLMode *cmd) {
         //     cmd->mode = RL_TRIANGLES;
         // }, 0);

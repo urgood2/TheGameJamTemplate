@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## New features
+- [ ] y-flipping bug fixed. Apply this to the drawEntityPipeline method as well.
 - [ ] sometimes I get a bug at this line (called a number): 
 ```lua
 local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)

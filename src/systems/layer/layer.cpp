@@ -3190,9 +3190,9 @@ void renderSliceOffscreenFromDrawList(
   
   Rectangle sourceRect = {
       0.0f,                              // x
-      (float)shader_pipeline::front().texture.height,     // y = start at top of the texture
+      (float)shader_pipeline::front().texture.height - renderH,     // y = start at top of the texture
       renderW,                           // width
-    -renderH                           // negative height to flip back
+    renderH                           // negative height to flip back
   };
   DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE); 
   layer::render_stack_switch_internal::Pop();
@@ -3223,9 +3223,9 @@ void renderSliceOffscreenFromDrawList(
     TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
     Rectangle sourceRect = {
         0.0f,                              // x
-        (float)shader_pipeline::front().texture.height,     // y = start at top of the texture
+        (float)shader_pipeline::front().texture.height - renderH,     // y = start at top of the texture
         renderW,                           // width
-      -renderH                           // negative height to flip back
+      renderH                           // negative height to flip back
     };
     DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE); 
     // DrawTextureRec(shader_pipeline::front().texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);  // y-flipped, maintained

@@ -3108,7 +3108,6 @@ void renderSliceOffscreenFromDrawList(
   // 1. Compute the bounding box of the entities in the range
   float xMin = FLT_MAX, yMin = FLT_MAX;
   float xMax = -FLT_MAX, yMax = -FLT_MAX;
-  float visualX = 0.0f, visualY = 0.0f;
   float visualScaleWithHover = 1.0f, visualRotationWithDynamicMotion = 0.0f;
 
   for (size_t i = startIndex; i < endIndex; ++i) {
@@ -3219,7 +3218,7 @@ void renderSliceOffscreenFromDrawList(
     else
       DrawTextureRec(postCache.texture, {0, 0, renderW, -renderH}, {0, 0},
                      WHITE);
-    Pop();
+    render_stack_switch_internal::Pop();
   }
 
   // 6. Overlays

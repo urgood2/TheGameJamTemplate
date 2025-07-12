@@ -1915,11 +1915,11 @@ namespace ui
         drawOrder.reserve(200); // or an estimate of your total UI element count
 
         // TODO call for all ui boxes
-        auto view = registry.view<UIBoxComponent, entity_gamestate_management::StateTag>();
+        auto view = registry.view<UIBoxComponent>();
         for (auto ent : view)
         {
             // check if the entity is active
-            if (!entity_gamestate_management::active_states_instance().is_active(view.get<entity_gamestate_management::StateTag>(ent)))
+            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
                 continue; // skip inactive entities
             // TODO: probably sort these with layer order
             buildUIBoxDrawList(registry, ent, drawOrder);
@@ -1965,6 +1965,7 @@ namespace ui
             // Check pipeline
             auto* pipeline = registry.try_get<shader_pipeline::ShaderPipelineComponent>(ent);
             if (pipeline && (pipeline->hasPassesOrOverlays())) {
+                SPDLOG_DEBUG("Drawing UI element {} with shader pipeline", (int)    ent);
                 //FIXME: only include children if config says so.
                 // Determine range: element + all children with greater depth
                 size_t start = i;
@@ -1974,7 +1975,15 @@ namespace ui
 
                 if (includeChildren) {
                     while (end < drawOrder.size() && drawOrder[end].depth > parentDepth)
-                      ++end;
+                    {
+                        auto &nextElemComp = globalUIGroup.get<UIElementComponent>(drawOrder[end].e);
+                        if (nextElemComp.uiBox != uiBoxEntity) {
+                            break; // stop if we reach a different UIBox
+                        }
+                        
+                        // increment end index otherwise, we are in the same UIBox
+                        ++end;
+                    }
                 }
 
                 // Offscreen render pass
@@ -1995,16 +2004,16 @@ namespace ui
                   );
                 // renderSliceOffscreenFromDrawList(registry, drawOrder, start, end, layerPtr);
                 if (includeChildren) {
-                    i = end - 1;
+                    i = end - 2;
                 }
                 continue;
             }
 
             // Pull the five group‐components by reference (O(1)):
             // auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
-            auto &st = globalUIGroup.get<UIState>(ent);
-            auto &node = globalUIGroup.get<transform::GameObject>(ent);
-            auto &xf = globalUIGroup.get<transform::Transform>(ent);
+            // auto &st = globalUIGroup.get<UIState>(ent);
+            // auto &node = globalUIGroup.get<transform::GameObject>(ent);
+            // auto &xf = globalUIGroup.get<transform::Transform>(ent);
 
             if (elemComp.uiBox != uiBoxEntity)
             {
@@ -2044,11 +2053,11 @@ namespace ui
         drawOrder.reserve(200); // or an estimate of your total UI element count
 
         // TODO call for all ui boxes
-        auto view = registry.view<UIBoxComponent, entity_gamestate_management::StateTag>();
+        auto view = registry.view<UIBoxComponent>();
         for (auto ent : view)
         {
             // check if the entity is active
-            if (!entity_gamestate_management::active_states_instance().is_active(view.get<entity_gamestate_management::StateTag>(ent)))
+            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
                 continue; // skip inactive entities
             // TODO: probably sort these with layer order
             buildUIBoxDrawList(registry, ent, drawOrder);

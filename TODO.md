@@ -36,7 +36,7 @@ struct CmdRenderUISelfImmediate {
         [x] need immeidate DrawSteppedRoundedRectangle() and DrawNPatchUIElement()and ApplyTransformMatrix() -> ready
         [x] DrawSelfImmediate() ready
     [x] need to make immediate version of drawSelf() -> ready
-    - [ ] ensure include children behaving as planned
+    - [ ] CmdRenderUISliceFromDrawList causes rendering of subsequent ui boxes to bug out (disappear)
     - [ ] localize rendering of ui animations & text to the ui draw tree itself
     - apply findSubtreeEnd and current depth-annotated draw list, fix renderSliceOffscreen to render final result with queue command?
     - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 

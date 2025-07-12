@@ -3188,6 +3188,13 @@ void renderSliceOffscreenFromDrawList(
   ClearBackground({0, 0, 0, 0});
   DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
   layer::render_stack_switch_internal::Pop();
+  
+  // FIXME: draw the baseRT to the screen here, so we can see what we're
+  // rendering offscreen.
+  auto tex = layer::render_stack_switch_internal::Current();
+  layer::render_stack_switch_internal::Pop();
+  DrawTexture(baseRT.texture, 0, 0, WHITE); // Debug dra
+  layer::render_stack_switch_internal::Push(*tex);
 
   // 4. Shader passes
   for (auto &pass : pipeline.passes) {
@@ -3279,13 +3286,13 @@ void renderSliceOffscreenFromDrawList(
   Vector2 drawPos = {xMin - pad, yMin - pad};
   shader_pipeline::SetLastRenderRect({drawPos.x, drawPos.y, renderW, renderH});
 
-  // Rectangle sourceRect = {0, 0, renderW, -renderH};
-  Rectangle sourceRect = {
-    /* x */               0,
-    renderH - (float)finalRT.texture.height,               // start at top
-    /* w */ renderW,
-    /* h */      -renderH            // flip vertically
-  };
+  Rectangle sourceRect = {0, 0, renderW, -renderH};
+  // Rectangle sourceRect = {
+  //   /* x */               0,
+  //   (float)finalRT.texture.height,               // start at top
+  //   /* w */ renderW,
+  //   /* h */      renderH            // flip vertically
+  // };
   
   Vector2 origin = {renderW * 0.5f, renderH * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};

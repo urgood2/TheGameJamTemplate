@@ -2791,8 +2791,16 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   if (!shader_pipeline::IsInitialized() ||
       shader_pipeline::width < (int)renderWidth ||
       shader_pipeline::height < (int)renderHeight) {
+    
+    // shader_pipeline::ShaderPipelineInit(renderWidth, renderHeight);
+    
+    auto newW = std::max(shader_pipeline::width, (int)renderWidth);
+    auto newH = std::max(shader_pipeline::height, (int)renderHeight);
     shader_pipeline::ShaderPipelineUnload();
-    shader_pipeline::ShaderPipelineInit(renderWidth, renderHeight);
+    shader_pipeline::ShaderPipelineInit(newW, newH);
+    SPDLOG_DEBUG(
+        "ShaderPipelineInit called with new size: {}x{}",
+        shader_pipeline::width, shader_pipeline::height);
   }
 
   // 2. Draw base sprite to front() (no transforms) = id 6
@@ -3097,7 +3105,6 @@ void renderSliceOffscreenFromDrawList(
     entt::registry &registry, const std::vector<ui::UIDrawListItem> &drawList,
     size_t startIndex, size_t endIndex, std::shared_ptr<layer::Layer> layerPtr,
     float pad) {
-  using namespace shader_pipeline;
 
   Camera2D *camera = nullptr;
   if (camera_manager::IsActive()) {
@@ -3133,18 +3140,30 @@ void renderSliceOffscreenFromDrawList(
   float renderH = (yMax - yMin) + pad * 2.0f;
 
   // Ensure pipeline texture size
-  if (!IsInitialized() || width < (int)renderW || height < (int)renderH) {
-    ShaderPipelineUnload();
-    ShaderPipelineInit(renderW, renderH);
+  
+  // if (!shader_pipeline::IsInitialized() ||
+  //     shader_pipeline::width < (int)renderWidth ||
+  //     shader_pipeline::height < (int)renderHeight) {
+  //   shader_pipeline::ShaderPipelineUnload();
+  //   shader_pipeline::ShaderPipelineInit(renderWidth, renderHeight);
+  // }
+  if (!shader_pipeline::IsInitialized() || shader_pipeline::width < (int)renderW || shader_pipeline::height < (int)renderH) {
+    
+    auto newW = std::max(shader_pipeline::width, (int)renderW);
+    auto newH = std::max(shader_pipeline::height, (int)renderH);shader_pipeline::ShaderPipelineUnload();
+    shader_pipeline::ShaderPipelineInit(newW, newH);
+    SPDLOG_DEBUG(
+        "ShaderPipelineInit called with new size: {}x{}",
+        shader_pipeline::width, shader_pipeline::height);
   }
-  ResetDebugRects();
+  shader_pipeline::ResetDebugRects();
 
   // Get pipeline from first entity
   auto &pipeline =
-      registry.get<ShaderPipelineComponent>(drawList[startIndex].e);
+      registry.get<shader_pipeline::ShaderPipelineComponent>(drawList[startIndex].e);
 
   // 2. Draw to front()
-  layer::render_stack_switch_internal::Push(front());
+  layer::render_stack_switch_internal::Push(shader_pipeline::front());
   ClearBackground({0, 0, 0, 0});
 
   rlPushMatrix();
@@ -3164,10 +3183,10 @@ void renderSliceOffscreenFromDrawList(
                                               // in front()?
 
   // 3. Copy front() to base cache
-  RenderTexture2D baseRT = GetBaseRenderTextureCache();
+  RenderTexture2D baseRT = shader_pipeline::GetBaseRenderTextureCache();
   layer::render_stack_switch_internal::Push(baseRT);
   ClearBackground({0, 0, 0, 0});
-  DrawTexture(front().texture, 0, 0, WHITE);
+  DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
   layer::render_stack_switch_internal::Pop();
 
   // 4. Shader passes
@@ -3178,7 +3197,7 @@ void renderSliceOffscreenFromDrawList(
     if (!sh.id)
       continue;
 
-    layer::render_stack_switch_internal::Push(back());
+    layer::render_stack_switch_internal::Push(shader_pipeline::back());
     ClearBackground({0, 0, 0, 0});
     BeginShaderMode(sh);
     if (pass.injectAtlasUniforms)
@@ -3187,11 +3206,11 @@ void renderSliceOffscreenFromDrawList(
     if (pass.customPrePassFunction)
       pass.customPrePassFunction();
     TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
-    DrawTextureRec(front().texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
+    DrawTextureRec(shader_pipeline::front().texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
     EndShaderMode();
     layer::render_stack_switch_internal::Pop();
-    Swap();
-    SetLastRenderTarget(front()); // TODO: is this logic right?
+    shader_pipeline::Swap();
+    shader_pipeline::SetLastRenderTarget(shader_pipeline::front()); // TODO: is this logic right?
   }
 
   // 5. Collect post-pass
@@ -3200,7 +3219,7 @@ void renderSliceOffscreenFromDrawList(
   // need to save it before that?
 
   RenderTexture2D postPassRT =
-      GetLastRenderTarget() ? *GetLastRenderTarget() : front();
+  shader_pipeline::GetLastRenderTarget() ? *shader_pipeline::GetLastRenderTarget() : shader_pipeline::front();
 
   auto postCache = shader_pipeline::GetPostShaderPassRenderTextureCache();
   layer::render_stack_switch_internal::Push(postCache);
@@ -3211,9 +3230,9 @@ void renderSliceOffscreenFromDrawList(
   // prime for overlays, if any
   if (!pipeline.overlayDraws.empty()) {
     auto &first = pipeline.overlayDraws.front();
-    render_stack_switch_internal::Push(front());
+    render_stack_switch_internal::Push(shader_pipeline::front());
     ClearBackground({0, 0, 0, 0});
-    if (first.inputSource == OverlayInputSource::BaseSprite)
+    if (first.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
       DrawTextureRec(baseRT.texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
     else
       DrawTextureRec(postCache.texture, {0, 0, renderW, -renderH}, {0, 0},
@@ -3229,7 +3248,7 @@ void renderSliceOffscreenFromDrawList(
     if (!sh.id)
       continue;
 
-    layer::render_stack_switch_internal::Push(front());
+    layer::render_stack_switch_internal::Push(shader_pipeline::front());
     BeginShaderMode(sh);
     if (ov.injectAtlasUniforms)
       injectAtlasUniforms(globals::globalShaderUniforms, ov.shaderName,
@@ -3237,17 +3256,17 @@ void renderSliceOffscreenFromDrawList(
     if (ov.customPrePassFunction)
       ov.customPrePassFunction();
     TryApplyUniforms(sh, globals::globalShaderUniforms, ov.shaderName);
-    RenderTexture2D &src = (ov.inputSource == OverlayInputSource::BaseSprite)
+    RenderTexture2D &src = (ov.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
                                ? baseRT
                                : postPassRT;
     DrawTextureRec(src.texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
     EndShaderMode();
     layer::render_stack_switch_internal::Pop();
-    SetLastRenderTarget(back());
+    shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
   }
 
   // 7. Choose final RT
-  RenderTexture2D finalRT = !pipeline.overlayDraws.empty() ? front()
+  RenderTexture2D finalRT = !pipeline.overlayDraws.empty() ? shader_pipeline::front()
                             : !pipeline.passes.empty()     ? postPassRT
                                                            : baseRT;
   // restore camera if it was active
@@ -3271,16 +3290,11 @@ void renderSliceOffscreenFromDrawList(
         visualScaleWithHover);
   Rotate(visualRotationWithDynamicMotion);
   Translate(-origin.x, -origin.y);
+  
 
   // final blit
   DrawTextureRec(finalRT.texture, sourceRect, {0, 0}, WHITE);
 
-  if (globals::drawDebugInfo) {
-    // debug around your slice
-    DrawRectangleLines(static_cast<int>(-origin.x), static_cast<int>(-origin.y),
-                       static_cast<int>(renderW), static_cast<int>(renderH),
-                       RED);
-  }
   PopMatrix();
 }
 

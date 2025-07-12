@@ -3191,10 +3191,10 @@ void renderSliceOffscreenFromDrawList(
   
   // FIXME: draw the baseRT to the screen here, so we can see what we're
   // rendering offscreen.
-  auto tex = layer::render_stack_switch_internal::Current();
-  layer::render_stack_switch_internal::Pop();
-  DrawTexture(baseRT.texture, 0, 0, WHITE); // Debug dra
-  layer::render_stack_switch_internal::Push(*tex);
+  // auto tex = layer::render_stack_switch_internal::Current();
+  // layer::render_stack_switch_internal::Pop();
+  // DrawTexture(baseRT.texture, 0, 0, WHITE); // Debug dra
+  // layer::render_stack_switch_internal::Push(*tex);
 
   // 4. Shader passes
   for (auto &pass : pipeline.passes) {
@@ -3213,7 +3213,7 @@ void renderSliceOffscreenFromDrawList(
     if (pass.customPrePassFunction)
       pass.customPrePassFunction();
     TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
-    DrawTextureRec(shader_pipeline::front().texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
+    DrawTextureRec(shader_pipeline::front().texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);
     EndShaderMode();
     layer::render_stack_switch_internal::Pop();
     shader_pipeline::Swap();
@@ -3233,6 +3233,22 @@ void renderSliceOffscreenFromDrawList(
   ClearBackground({0, 0, 0, 0});
   DrawTexture(postPassRT.texture, 0, 0, WHITE);
   layer::render_stack_switch_internal::Pop();
+  
+  if (globals::drawDebugInfo) {
+    DrawTexture(postPassRT.texture, 0, 0, WHITE);
+    
+    DrawRectangle(0, 0, postPassRT.texture.width,
+                      postPassRT.texture.height, {0, 255, 0, 100});
+    DrawRectangle(0, 0, renderW, renderH, {255, 0, 0, 150});
+    DrawText(fmt::format("PostPassRT (green): {}x{}",
+                      postPassRT.texture.width, postPassRT.texture.height)
+                      .c_str(),
+              10, 10, 20, WHITE);
+    DrawText(fmt::format("RenderSize (red): {}x{}",
+      renderW, renderH)
+                      .c_str(),
+              10, 30, 20, WHITE);
+  }
 
   // prime for overlays, if any
   if (!pipeline.overlayDraws.empty()) {

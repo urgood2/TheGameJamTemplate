@@ -109,7 +109,7 @@ namespace layer
         size_t startIndex;
         size_t endIndex;
         std::shared_ptr<layer::Layer> layerPtr;
-        float pad = 0.0f; // Padding around the slice
+        float pad = 10.f; // Padding around the slice
     };
 
     struct CmdRenderUISelfImmediate {

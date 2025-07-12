@@ -494,6 +494,7 @@ function ui_defs.generateUI()
     :addChild(helpButtonDef)
     :build()
     -- create a new UI box for the help button
+    log_debug("ui.box.Initialize is:", ui.box.Initialize, "  type:", type(ui.box.Initialize))
     local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)
     -- align the help button UI box to the right edge of the screen
     local helpButtonTransform = registry:get(helpButtonUIBox, Transform)

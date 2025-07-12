@@ -1,6 +1,11 @@
 # ✅ TODOs: Organized by Category
 
 ## New features
+- [ ] sometimes I get a bug at this line (called a number): 
+```lua
+local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)
+```
+
 - [ ] prob add docs for entity_gamestate_management
 - [ ] document exposeGlobalsToLua with lua doc bindings
 

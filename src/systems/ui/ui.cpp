@@ -691,7 +691,7 @@ namespace ui {
         rec.add_type("ui.element").doc = "Functions for creating and managing UI elements.";
 
         // 2) Bind every free-function from ui::element into that table
-        element.set_function("Initialize",                   &ui::element::Initialize);
+        // element.set_function("Initialize",                   &ui::element::Initialize);
         
         element.set_function("ApplyScalingToSubtree",        &ui::element::ApplyScalingFactorToSizesInSubtree);
         element.set_function("UpdateUIObjectScalingAndRecenter",&ui::element::UpdateUIObjectScalingAndRecnter);

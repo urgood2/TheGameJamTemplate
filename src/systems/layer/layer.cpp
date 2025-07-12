@@ -3299,16 +3299,16 @@ void renderSliceOffscreenFromDrawList(
 
   // now place the slice at the bounding‐box origin (xMin,yMin), not the last
   // entity
-  Vector2 drawPos = {xMin - pad, yMin - pad};
+  Vector2 drawPos = {xMin - pad, yMin };
   shader_pipeline::SetLastRenderRect({drawPos.x, drawPos.y, renderW, renderH});
 
-  Rectangle sourceRect = {0, 0, renderW, -renderH};
-  // Rectangle sourceRect = {
-  //   /* x */               0,
-  //   (float)finalRT.texture.height,               // start at top
-  //   /* w */ renderW,
-  //   /* h */      renderH            // flip vertically
-  // };
+  // Rectangle sourceRect = {0, 0, renderW, -renderH};
+  Rectangle sourceRect = {
+    0.0f,
+    (float)finalRT.texture.height,  // start at the bottom of the texture
+    renderW,
+    -renderH                         // flip vertically
+  };
   
   Vector2 origin = {renderW * 0.5f, renderH * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};

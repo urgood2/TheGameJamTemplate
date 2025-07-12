@@ -2807,6 +2807,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   render_stack_switch_internal::Push(shader_pipeline::front());
   ClearBackground({0, 0, 0, 0});
   Vector2 drawOffset = {pad, pad};
+  
 
   if (drawBackground) {
     layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight},
@@ -2843,12 +2844,27 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   render_stack_switch_internal::Pop(); // turn off id 6
 
   // 🟡 Save base sprite result
-  RenderTexture2D baseSpriteRender =
-      shader_pipeline::GetBaseRenderTextureCache();
-  render_stack_switch_internal::Push(baseSpriteRender);
-  ClearBackground({0, 0, 0, 0});
-  DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
-  render_stack_switch_internal::Pop();
+  // RenderTexture2D baseSpriteRender =
+  //     shader_pipeline::GetBaseRenderTextureCache();
+  // render_stack_switch_internal::Push(baseSpriteRender);
+  // ClearBackground({0, 0, 0, 0});
+  // DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+  // render_stack_switch_internal::Pop();
+  
+  RenderTexture2D baseSpriteRender = shader_pipeline::GetBaseRenderTextureCache();
+  layer::render_stack_switch_internal::Push(baseSpriteRender);
+  ClearBackground({0,0,0,0});
+  Rectangle sourceRect = {
+      0.0f,
+      (float)shader_pipeline::front().texture.height - renderHeight,
+      renderWidth,
+      renderHeight
+  };
+  DrawTextureRec(shader_pipeline::front().texture,
+                sourceRect,
+                {0,0},
+                WHITE);
+  layer::render_stack_switch_internal::Pop();
 
   // 3. Apply shader passes
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
@@ -2885,10 +2901,20 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     //  srcRec, Vector2{(float)spriteAtlas->width, (float)spriteAtlas->height});
 
     TryApplyUniforms(shader, globals::globalShaderUniforms, pass.shaderName);
+    // DrawTextureRec(shader_pipeline::front().texture,
+    //                {0, 0, (float)renderWidth * xFlipModifier,
+    //                 (float)-renderHeight * yFlipModifier},
+    //                {0, 0}, WHITE); // invert Y
+    Rectangle sourceRect = {
+        0.0f,
+        (float)shader_pipeline::front().texture.height - renderHeight,
+        renderWidth,
+        renderHeight
+    };
     DrawTextureRec(shader_pipeline::front().texture,
-                   {0, 0, (float)renderWidth * xFlipModifier,
-                    (float)-renderHeight * yFlipModifier},
-                   {0, 0}, WHITE); // invert Y
+                    sourceRect,
+                    {0,0},
+                    WHITE);
 
     shader_pipeline::SetLastRenderRect(
         {0, 0, renderWidth * xFlipModifier, renderHeight * yFlipModifier});
@@ -2936,10 +2962,20 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       render_stack_switch_internal::Push(shader_pipeline::front());
       ClearBackground({0, 0, 0, 0});
       // no shader
+      // DrawTextureRec(baseSpriteRender.texture,
+      //                {0, 0, renderWidth * xFlipModifier,
+      //                 -(float)renderHeight * yFlipModifier},
+      //                {0, 0}, WHITE);
+      Rectangle sourceRect = {
+          0.0f,
+          (float)baseSpriteRender.texture.height - renderHeight,
+          renderWidth,
+          renderHeight
+      };
       DrawTextureRec(baseSpriteRender.texture,
-                     {0, 0, renderWidth * xFlipModifier,
-                      -(float)renderHeight * yFlipModifier},
-                     {0, 0}, WHITE);
+                      sourceRect,
+                      {0,0},
+                      WHITE);
       render_stack_switch_internal::Pop();
     } else {
       // if the first overlay is not a base sprite, we need to draw the post
@@ -2947,10 +2983,20 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       render_stack_switch_internal::Push(shader_pipeline::front());
       ClearBackground({0, 0, 0, 0});
       // no shader
+      // DrawTextureRec(postProcessRender.texture,
+      //                {0, 0, renderWidth * xFlipModifier,
+      //                 -(float)renderHeight * yFlipModifier},
+      //                {0, 0}, WHITE);
+      Rectangle sourceRect = {
+          0.0f,
+          (float)postProcessRender.texture.height - renderHeight,
+          renderWidth,
+          renderHeight
+      };
       DrawTextureRec(postProcessRender.texture,
-                     {0, 0, renderWidth * xFlipModifier,
-                      -(float)renderHeight * yFlipModifier},
-                     {0, 0}, WHITE);
+                      sourceRect,
+                      {0,0},
+                      WHITE);
       render_stack_switch_internal::Pop();
     }
   }
@@ -2986,10 +3032,20 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
         (overlay.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
             ? baseSpriteRender
             : postPassRender;
+    // DrawTextureRec(source.texture,
+    //                {0, 0, renderWidth * xFlipModifier,
+    //                 -(float)renderHeight * yFlipModifier},
+    //                {0, 0}, WHITE);
+    Rectangle sourceRect = {
+        0.0f,
+        (float)source.texture.height - renderHeight,
+        renderWidth,
+        renderHeight
+    };
     DrawTextureRec(source.texture,
-                   {0, 0, renderWidth * xFlipModifier,
-                    -(float)renderHeight * yFlipModifier},
-                   {0, 0}, WHITE);
+                    sourceRect,
+                    {0,0},
+                    WHITE);
 
     EndShaderMode();
     render_stack_switch_internal::Pop();
@@ -3038,8 +3094,13 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
        renderHeight}); // shouldn't this store the last dest rect that was drawn
                        // on the last texture?
 
-  Rectangle sourceRect = {0, 0, renderWidth,
-                          -renderHeight}; // why is origin here?
+  sourceRect = {
+      0.0f,
+      (float)toRender.texture.height,  // start at top
+      renderWidth,
+      -renderHeight                     // flip back
+  };
+                    
   Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};
 

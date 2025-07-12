@@ -3267,7 +3267,7 @@ void renderSliceOffscreenFromDrawList(
 
   // 7. Choose final RT
   RenderTexture2D finalRT = !pipeline.overlayDraws.empty() ? shader_pipeline::front()
-                            : !pipeline.passes.empty()     ? postPassRT
+                            : !pipeline.passes.empty()     ? postCache
                                                            : baseRT;
   // restore camera if it was active
   if (camera) {
@@ -3279,7 +3279,14 @@ void renderSliceOffscreenFromDrawList(
   Vector2 drawPos = {xMin - pad, yMin - pad};
   shader_pipeline::SetLastRenderRect({drawPos.x, drawPos.y, renderW, renderH});
 
-  Rectangle sourceRect = {0, 0, renderW, -renderH};
+  // Rectangle sourceRect = {0, 0, renderW, -renderH};
+  Rectangle sourceRect = {
+    /* x */               0,
+    renderH - (float)finalRT.texture.height,               // start at top
+    /* w */ renderW,
+    /* h */      -renderH            // flip vertically
+  };
+  
   Vector2 origin = {renderW * 0.5f, renderH * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};
 

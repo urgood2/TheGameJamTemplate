@@ -1236,7 +1236,8 @@ function ui_defs.generateUI()
     -- emplace the shader pipeline component for the upgrade UI box root
     local shaderPipelineComp = registry:emplace(rootEntity.uiRoot, shader_pipeline.ShaderPipelineComponent)
 
-    shaderPipelineComp:addPass("random_displacement_anim")
+    -- shaderPipelineComp:addPass("random_displacement_anim")
+    shaderPipelineComp:addPass("flash")
     
     
     -- align the upgrade UI box to the bottom of the screen

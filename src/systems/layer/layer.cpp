@@ -3184,9 +3184,17 @@ void renderSliceOffscreenFromDrawList(
 
   // 3. Copy front() to base cache
   RenderTexture2D baseRT = shader_pipeline::GetBaseRenderTextureCache();
-  layer::render_stack_switch_internal::Push(baseRT);
+  layer::render_stack_switch_internal::Push(baseRT);//FIXME: flip every time.
   ClearBackground({0, 0, 0, 0});
-  DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE);
+  // DrawTexture(shader_pipeline::front().texture, 0, 0, WHITE); 
+  
+  Rectangle sourceRect = {
+      0.0f,                              // x
+      (float)shader_pipeline::front().texture.height,     // y = start at top of the texture
+      renderW,                           // width
+    -renderH                           // negative height to flip back
+  };
+  DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE); 
   layer::render_stack_switch_internal::Pop();
   
   // FIXME: draw the baseRT to the screen here, so we can see what we're
@@ -3213,7 +3221,14 @@ void renderSliceOffscreenFromDrawList(
     if (pass.customPrePassFunction)
       pass.customPrePassFunction();
     TryApplyUniforms(sh, globals::globalShaderUniforms, pass.shaderName);
-    DrawTextureRec(shader_pipeline::front().texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);
+    Rectangle sourceRect = {
+        0.0f,                              // x
+        (float)shader_pipeline::front().texture.height,     // y = start at top of the texture
+        renderW,                           // width
+      -renderH                           // negative height to flip back
+    };
+    DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE); 
+    // DrawTextureRec(shader_pipeline::front().texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);  // y-flipped, maintained
     EndShaderMode();
     layer::render_stack_switch_internal::Pop();
     shader_pipeline::Swap();
@@ -3228,11 +3243,11 @@ void renderSliceOffscreenFromDrawList(
   RenderTexture2D postPassRT =
   shader_pipeline::GetLastRenderTarget() ? *shader_pipeline::GetLastRenderTarget() : shader_pipeline::front();
 
-  auto postCache = shader_pipeline::GetPostShaderPassRenderTextureCache();
+  auto postCache = shader_pipeline::GetPostShaderPassRenderTextureCache(); //TODO: resize to renderW, renderH
   layer::render_stack_switch_internal::Push(postCache);
   ClearBackground({0, 0, 0, 0});
   DrawTexture(postPassRT.texture, 0, 0, WHITE);
-  layer::render_stack_switch_internal::Pop();
+  layer::render_stack_switch_internal::Pop(); // also y-flipped
   
   if (globals::drawDebugInfo) {
     DrawTexture(postPassRT.texture, 0, 0, WHITE);
@@ -3256,10 +3271,10 @@ void renderSliceOffscreenFromDrawList(
     render_stack_switch_internal::Push(shader_pipeline::front());
     ClearBackground({0, 0, 0, 0});
     if (first.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
-      DrawTextureRec(baseRT.texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
+      DrawTextureRec(baseRT.texture, {0, 0, renderW, renderH}, {0, 0}, WHITE);
     else
-      DrawTextureRec(postCache.texture, {0, 0, renderW, -renderH}, {0, 0},
-                     WHITE);
+      DrawTextureRec(postCache.texture, {0, 0, renderW, renderH}, {0, 0},
+                     WHITE); // everything stays y-flipped
     render_stack_switch_internal::Pop();
   }
 
@@ -3282,7 +3297,7 @@ void renderSliceOffscreenFromDrawList(
     RenderTexture2D &src = (ov.inputSource == shader_pipeline::OverlayInputSource::BaseSprite)
                                ? baseRT
                                : postPassRT;
-    DrawTextureRec(src.texture, {0, 0, renderW, -renderH}, {0, 0}, WHITE);
+    DrawTextureRec(src.texture, {0, 0, renderW, renderH}, {0, 0}, WHITE); // y-flipped, maintained
     EndShaderMode();
     layer::render_stack_switch_internal::Pop();
     shader_pipeline::SetLastRenderTarget(shader_pipeline::back());
@@ -3299,16 +3314,17 @@ void renderSliceOffscreenFromDrawList(
 
   // now place the slice at the bounding‐box origin (xMin,yMin), not the last
   // entity
-  Vector2 drawPos = {xMin - pad, yMin };
+  Vector2 drawPos = {xMin - pad, yMin - pad};
   shader_pipeline::SetLastRenderRect({drawPos.x, drawPos.y, renderW, renderH});
 
   // Rectangle sourceRect = {0, 0, renderW, -renderH};
-  Rectangle sourceRect = {
-    0.0f,
-    (float)finalRT.texture.height,  // start at the bottom of the texture
-    renderW,
-    -renderH                         // flip vertically
+  sourceRect = {
+      0.0f,                              // x
+      (float)finalRT.texture.height,     // y = start at top of the texture
+      renderW,                           // width
+    -renderH                           // negative height to flip back
   };
+
   
   Vector2 origin = {renderW * 0.5f, renderH * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};

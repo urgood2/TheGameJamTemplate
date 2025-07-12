@@ -14,7 +14,7 @@ local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 
 - [] way to make sure certain texts & images should be worldspace, or not
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
-    
+- [ ] possibly an alignment bug with the entity pipeline render method?
 - [ ] Applying shaders to ui in a modular fashion
 
 ```cpp

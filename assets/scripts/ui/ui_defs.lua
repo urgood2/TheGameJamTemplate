@@ -1238,6 +1238,7 @@ function ui_defs.generateUI()
     local shaderPipelineComp = registry:emplace(rootEntity.uiRoot, shader_pipeline.ShaderPipelineComponent)
 
     shaderPipelineComp:addPass("random_displacement_anim")
+    shaderPipelineComp:addPass("flash")
     -- shaderPipelineComp:addPass("flash")
     
     

@@ -1,13 +1,14 @@
 # ✅ TODOs: Organized by Category
 
-## New features
-- [ ] y-flipping bug fixed. Apply this to the drawEntityPipeline method as well? try: https://chatgpt.com/share/68725d4c-bb08-800a-bfb0-868861f21405
-- [ ] sometimes I get a bug at this line (called a number): 
+## Bugs to kill
+- [ ] sometimes I get a bug at this line (called a number..?): 
 ```lua
 local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)
 ```
 
+## New features
 - [ ] prob add docs for entity_gamestate_management
+- [ ] document using shaders with ui elements (just use pipeline comp)
 - [ ] document exposeGlobalsToLua with lua doc bindings
 
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
@@ -15,43 +16,9 @@ local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 
 - [] way to make sure certain texts & images should be worldspace, or not
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
-- [ ] possibly an alignment bug with the entity pipeline render method?
-- [ ] Applying shaders to ui in a modular fashion
 
-```cpp
-struct CmdRenderUISliceFromDrawList {
-    std::vector<entt::entity> drawList;
-    size_t startIndex;
-    size_t endIndex;
-    std::shared_ptr<layer::Layer> layerPtr;
-    float pad = 0.0f; // Padding around the slice
-};
-
-struct CmdRenderUISelfImmediate {
-    entt::entity entity;
-    entt::registry* registry;
-    // Components needed for rendering
-    // These should be fetched from the registry in the render function
-    // UIElementComponent, UIConfig, UIState, GameObject, Transform
-};
-```
-    - apply final fixes here: https://chatgpt.com/share/686f9865-3790-800a-9fbc-09aaa695d91d
-    - need to make some new commmand types, outlined here, https://chatgpt.com/share/686d12b6-ac6c-800a-831c-48459c4ed072
-    - hook up : https://chatgpt.com/share/686e63b6-5870-800a-881a-cd372476dbdd
-    - use renderSliceOffscreenFromDrawList
-        [x] need immeidate DrawSteppedRoundedRectangle() and DrawNPatchUIElement()and ApplyTransformMatrix() -> ready
-        [x] DrawSelfImmediate() ready
-    [x] need to make immediate version of drawSelf() -> ready
-    - [ ] CmdRenderUISliceFromDrawList causes rendering of subsequent ui boxes to bug out (disappear)
-    - [ ] localize rendering of ui animations & text to the ui draw tree itself
-    - apply findSubtreeEnd and current depth-annotated draw list, fix renderSliceOffscreen to render final result with queue command?
-    - ui element/ including children or not in shader: https://chatgpt.com/share/686a88fe-7d58-800a-b0c7-45d18b93a390 
-    - element: drawSelf() overhaul using shader pass component: https://chatgpt.com/share/686a8a8e-2fc8-800a-b21d-3539224e69f9
-    - three considerations: 
-        - on ninepatch images
-        - how to do tweening, etc. for individual shdaers in individual elements?
-        - on rounded rects 
-        - what to do about content within? How to specify that shader be applied over what is inside, or not?
+- [ ] localize rendering of ui animations & text to the ui draw tree itself
+    - [ ] ninepatch not tested
         
 - [ ] take some shaders (esp. pixelate) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate
 
@@ -97,9 +64,7 @@ globalShaderUniforms.set("edge_shader", "iResolution",
     - https://github.com/love2d-community/awesome-love2d?tab=readme-ov-file
     - behavior tree & state machine libs for love might be interesting to explore @ later point if necessary
 
-- [ ] bug with jitter shader where it's not rendering in the right spot again. Maybe check with master branch to see if krill render like this? And black hole
 - [ ] update the gamejam 50 branch with the new branch, then test
-- [ ] test all of the above to make sure it's working
 - [ ] have all shadows for sprites, text, etc. in the same layer, below the sprites, text, etc.
 
 - [ ] Dont update text and ui that is out of bounds 

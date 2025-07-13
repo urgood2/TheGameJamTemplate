@@ -2942,7 +2942,15 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   render_stack_switch_internal::Push(postProcessRender);
   ClearBackground({0, 0, 0, 0});
   
-  DrawTexture(postPassRender.texture, 0, 0, WHITE);
+  if (pipelineComp.passes.size() % 2 == 0)
+    DrawTexture(postPassRender.texture, 0, 0, WHITE);
+  else {
+    Rectangle sourceRect = {
+        0.0f, (float)postPassRender.texture.height - renderHeight,
+        renderWidth, renderHeight};
+    DrawTextureRec(postPassRender.texture, sourceRect, {0, 0}, WHITE);
+  }
+  
 	// DrawTextureRec(postPassRender.texture,
 	// 			{ 0.0f,
 	// 				(float)postPassRender.texture.height,

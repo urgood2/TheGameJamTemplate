@@ -2910,7 +2910,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     //                {0, 0}, WHITE); // invert Y
     Rectangle sourceRect = {
         0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
-        renderWidth, lastPass ? -renderHeight : renderHeight};
+        renderWidth, renderHeight};
     DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
 
     shader_pipeline::SetLastRenderRect(
@@ -3095,12 +3095,24 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
        renderHeight}); // shouldn't this store the last dest rect that was drawn
                        // on the last texture?
 
+  // default (no flip)
   sourceRect = {
-      0.0f,
-      (float)toRender.texture.height, // start at top
-      (float)toRender.texture.width,
-      (float)toRender.texture.height // flip back
+    0.0f,
+    (float)toRender.texture.height - renderHeight,
+    renderWidth,
+    renderHeight
   };
+
+  // if we’ve done an odd number of flips, correct it exactly once:
+  if (pipelineComp.passes.size() % 2 == 0) {
+    sourceRect.y      = (float)toRender.texture.height;
+    sourceRect.height = -(float)renderHeight;
+  }
+  else {
+    // if we have an odd number of flips, we need to flip the Y coordinate
+    // sourceRect.y      = (float)renderHeight;
+    // sourceRect.height = (float)-renderHeight;
+  }
 
   Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};

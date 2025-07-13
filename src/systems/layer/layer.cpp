@@ -2865,9 +2865,14 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   }
 
   // 3. Apply shader passes
+  int total = pipelineComp.passes.size();
+  int i = 0;
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
+    bool lastPass = (++i == total);
+
     if (!pass.enabled)
       continue;
+    
 
     Shader shader = shaders::getShader(pass.shaderName);
     if (!shader.id) {
@@ -2905,7 +2910,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     //                {0, 0}, WHITE); // invert Y
     Rectangle sourceRect = {
         0.0f, (float)shader_pipeline::front().texture.height - renderHeight,
-        renderWidth, renderHeight};
+        renderWidth, lastPass ? -renderHeight : renderHeight};
     DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
 
     shader_pipeline::SetLastRenderRect(
@@ -2946,6 +2951,11 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 	// 			{0,0},
 	// 			WHITE);
   render_stack_switch_internal::Pop();
+  
+  if (globals::drawDebugInfo) {
+    // Draw 
+    DrawTexture(postPassRender.texture, 0, 150, WHITE);
+  }
 
   // DrawTexture(postPassRender.texture, 90, 30, WHITE);
 
@@ -3059,6 +3069,16 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     // nothing?
     toRender = shader_pipeline::GetBaseRenderTextureCache();
   }
+  
+  if (globals::drawDebugInfo) {
+    // Draw the final texture to the screen for debugging
+    DrawTexture(toRender.texture, 0, 300, WHITE);
+    DrawText(
+        fmt::format("Final Render Texture: {}x{}",
+                    toRender.texture.width, toRender.texture.height)
+            .c_str(),
+        10, 300, 20, WHITE);
+  }
 
   // turn the camera back on if it was active (since we're rendering to the
   // screen now, and to restore camera state in the command buffer)
@@ -3078,8 +3098,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   sourceRect = {
       0.0f,
       (float)toRender.texture.height, // start at top
-      renderWidth,
-      -renderHeight // flip back
+      (float)toRender.texture.width,
+      (float)toRender.texture.height // flip back
   };
 
   Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};

@@ -2858,11 +2858,21 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       renderWidth, renderHeight};
   DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
   layer::render_stack_switch_internal::Pop();
+  
+  if (globals::drawDebugInfo) {
+    // Draw 
+    DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
+  }
 
   // 3. Apply shader passes
+  int total = pipelineComp.passes.size();
+  int i = 0;
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
+    bool lastPass = (++i == total);
+
     if (!pass.enabled)
       continue;
+    
 
     Shader shader = shaders::getShader(pass.shaderName);
     if (!shader.id) {
@@ -2931,7 +2941,16 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       shader_pipeline::GetPostShaderPassRenderTextureCache();
   render_stack_switch_internal::Push(postProcessRender);
   ClearBackground({0, 0, 0, 0});
-  DrawTexture(postPassRender.texture, 0, 0, WHITE);
+  
+  if (pipelineComp.passes.size() % 2 == 0)
+    DrawTexture(postPassRender.texture, 0, 0, WHITE);
+  else {
+    Rectangle sourceRect = {
+        0.0f, (float)postPassRender.texture.height - renderHeight,
+        renderWidth, renderHeight};
+    DrawTextureRec(postPassRender.texture, sourceRect, {0, 0}, WHITE);
+  }
+  
 	// DrawTextureRec(postPassRender.texture,
 	// 			{ 0.0f,
 	// 				(float)postPassRender.texture.height,
@@ -2940,6 +2959,11 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 	// 			{0,0},
 	// 			WHITE);
   render_stack_switch_internal::Pop();
+  
+  if (globals::drawDebugInfo) {
+    // Draw 
+    DrawTexture(postPassRender.texture, 0, 150, WHITE);
+  }
 
   // DrawTexture(postPassRender.texture, 90, 30, WHITE);
 
@@ -3056,6 +3080,16 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     // nothing?
     toRender = shader_pipeline::GetBaseRenderTextureCache();
   }
+  
+  if (globals::drawDebugInfo) {
+    // Draw the final texture to the screen for debugging
+    DrawTexture(toRender.texture, 0, 300, WHITE);
+    DrawText(
+        fmt::format("Final Render Texture: {}x{}",
+                    toRender.texture.width, toRender.texture.height)
+            .c_str(),
+        10, 300, 20, WHITE);
+  }
 
   // turn the camera back on if it was active (since we're rendering to the
   // screen now, and to restore camera state in the command buffer)
@@ -3072,21 +3106,24 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
        renderHeight}); // shouldn't this store the last dest rect that was drawn
                        // on the last texture?
 
-	if (internalFlipFlagForShaderPipeline) {
-		sourceRect = {
-			0.0f,
-			(float)toRender.texture.height, // start at top
-			renderWidth,
-			-renderHeight // flip back
-		};
-	} else {
-		sourceRect = {
-			0.0f,
-			(float)toRender.texture.height - renderHeight,
-			renderWidth,
-			renderHeight
-		};
-	}
+  // default (no flip)
+  sourceRect = {
+    0.0f,
+    (float)toRender.texture.height - renderHeight,
+    renderWidth,
+    renderHeight
+  };
+
+  // if we’ve done an odd number of flips, correct it exactly once:
+  if (pipelineComp.passes.size() % 2 == 0) {
+    sourceRect.y      = (float)toRender.texture.height;
+    sourceRect.height = -(float)renderHeight;
+  }
+  else {
+    // if we have an odd number of flips, we need to flip the Y coordinate
+    // sourceRect.y      = (float)renderHeight;
+    // sourceRect.height = (float)-renderHeight;
+  }
 
   Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};
@@ -3306,17 +3343,17 @@ void renderSliceOffscreenFromDrawList(
   layer::render_stack_switch_internal::Pop(); // also y-flipped
 
   if (globals::drawDebugInfo) {
-    DrawTexture(postPassRT.texture, 0, 0, WHITE);
+    // DrawTexture(postPassRT.texture, 0, 0, WHITE);
 
-    DrawRectangle(0, 0, postPassRT.texture.width, postPassRT.texture.height,
-                  {0, 255, 0, 100});
-    DrawRectangle(0, 0, renderW, renderH, {255, 0, 0, 150});
-    DrawText(fmt::format("PostPassRT (green): {}x{}", postPassRT.texture.width,
-                         postPassRT.texture.height)
-                 .c_str(),
-             10, 10, 20, WHITE);
-    DrawText(fmt::format("RenderSize (red): {}x{}", renderW, renderH).c_str(),
-             10, 30, 20, WHITE);
+    // DrawRectangle(0, 0, postPassRT.texture.width, postPassRT.texture.height,
+    //               {0, 255, 0, 100});
+    // DrawRectangle(0, 0, renderW, renderH, {255, 0, 0, 150});
+    // DrawText(fmt::format("PostPassRT (green): {}x{}", postPassRT.texture.width,
+    //                      postPassRT.texture.height)
+    //              .c_str(),
+    //          10, 10, 20, WHITE);
+    // DrawText(fmt::format("RenderSize (red): {}x{}", renderW, renderH).c_str(),
+    //          10, 30, 20, WHITE);
   }
 
   // prime for overlays, if any

@@ -350,6 +350,8 @@ function ui_defs.generateUI()
     -- dump(ui.box)
     log_debug(ui)
     log_debug(ui.element)
+    log_debug(ui.box)
+    log_debug(ui.box.Initialize)
     -- dump(newRoot)
     
     local newUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 10}, newRoot)

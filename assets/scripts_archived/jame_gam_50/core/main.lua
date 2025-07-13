@@ -47,9 +47,8 @@ function initMainMenu()
     
     -- create start game button
     mainMenuEntities.logoText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_logo"),  -- initial text
+        function() return localization.get("ui.start_game_logo") end,  -- initial text
         40.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     ).config.object
     
@@ -93,9 +92,8 @@ function initMainMenu()
     
     
     local startButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_button"),  -- initial text
+        function() return localization.get("ui.start_game_button") end,  -- initial text
         30.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     local startButtonTemplate = UIElementTemplateNodeBuilder.create()
@@ -121,9 +119,8 @@ function initMainMenu()
         
     --
     local feedbackText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_feedback"),  -- initial text
+        function() return localization.get("ui.start_game_feedback") end,  -- initial text
         15,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     
@@ -171,9 +168,8 @@ function initMainMenu()
     )
     
     local blueskyText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.start_game_follow"),  -- initial text
+        function() return localization.get("ui.start_game_follow") end,  -- initial text
         15,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     
@@ -271,7 +267,7 @@ function startGameButtonCallback()
     timer.after(
         2.0, -- delay in seconds
         function()
-            debug("Changing game state to IN_GAME") -- Debug message to indicate the game state change
+            log_debug("Changing game state to IN_GAME") -- Debug message to indicate the game state change
             timer.tween(
                 1.0, -- duration in seconds
                 function() return globalShaderUniforms:get("screen_tone_transition", "position") end, -- getter
@@ -309,7 +305,7 @@ function clearMainMenu()
 end
 
 function initMainGame()
-    debug("Initializing main game...") -- Debug message to indicate the game is starting
+    log_debug("Initializing main game...") -- Debug message to indicate the game is starting
     currentGameState = GAMESTATE.IN_GAME -- Set the game state to IN_GAME
     
     playMusic("main-game", true) -- Play the main game music
@@ -389,13 +385,13 @@ function initMainGame()
 
     -- add shader to specific layer
 
-    debug(layers)
-    debug(layers.sprites)
+    log_debug(layers)
+    log_debug(layers.sprites)
     
     -- layers.sprites:addPostProcessShader("flash")
 
     -- shader uniform manipulation example
-    debug(globals.gravityWaveSeconds)
+    log_debug(globals.gravityWaveSeconds)
     timer.every(globals.gravityWaveSeconds, function()
         globals.gravity_wave_count = globals.gravity_wave_count + 1 -- increment the gravity wave count
         globals.timeUntilNextGravityWave = globals.gravityWaveSeconds -- reset the timer for the next gravity wave
@@ -648,7 +644,7 @@ function initMainGame()
     -- add a task to the scheduler that will fade out the screen for 5 seconds
     local p1 = {
         update = function(self, dt)
-            -- debug("Fade out screen")
+            -- log_debug("Fade out screen")
             -- -- fadeOutScreen(0.1)
             -- add_fullscreen_shader("screen_tone_transition") -- Add the fade out shader
             -- globalShaderUniforms:set("screen_tone_transition", "position", 0) -- Set initial value to 1.0 (dark)
@@ -694,25 +690,25 @@ function initMainGame()
 
     local p1 = {
         update = function(self, dt)
-            debug("Task 1 Start")
+            log_debug("Task 1 Start")
             task.wait(5.0)
-            debug("Task 1 End after 5s")
+            log_debug("Task 1 End after 5s")
         end
     }
 
     local p2 = {
         update = function(self, dt)
-            debug("Task 2 Start")
+            log_debug("Task 2 Start")
             task.wait(5.0)
-            debug("Task 2 End after 5s")
+            log_debug("Task 2 End after 5s")
         end
     }
 
     local p3 = {
         update = function(self, dt)
-            debug("Task 3 Start")
+            log_debug("Task 3 Start")
             task.wait(10.0)
-            debug("Task 3 End after 10s")
+            log_debug("Task 3 End after 10s")
         end
     }
     scheduler:attach(p1, p2, p3)

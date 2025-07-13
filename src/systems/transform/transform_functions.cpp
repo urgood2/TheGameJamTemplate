@@ -4,6 +4,7 @@
 #include "raymath.h"
 #include <cmath>
 #include "systems/collision/broad_phase.hpp"
+#include "systems/layer/layer_optimized.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
@@ -12,6 +13,7 @@
 #include "systems/text/textVer2.hpp"
 #include "systems/ui/box.hpp"
 #include "systems/ui/inventory_ui.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -126,8 +128,14 @@ namespace transform
         setJiggleOnHover(registry, e, 0.1f);
 
         UpdateParallaxCalculations(registry, e);
+        
+        // emplace a collision filter component by default
+        auto &collisionFilter = registry->emplace<collision::CollisionFilter>(e);
+        
+        // default gamestate tag
+        entity_gamestate_management::assignDefaultStateTag(e);
 
-       // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag
+        // default handlers for release, click, update, animate, hover, stop_hover, drag, stop_drag, can_drag
  
         return e;
     }
@@ -474,7 +482,7 @@ namespace transform
             if (parentVisualR < 0.0001f && parentVisualR > -0.0001f)
             {
                 tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; //TODO: selfRole.offset not initialized
-                tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y;
+                tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y;
             }
             else
             {
@@ -1321,6 +1329,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto DrawBoundingBoxAndDebugInfo(entt::registry *registry, entt::entity e, std::shared_ptr<layer::Layer> layer) -> void
     {
+        // respect screen/world space
+        bool isScreenSpace = registry->any_of<collision::ScreenSpaceCollisionMarker>(e);
+        
+        layer::DrawCommandSpace drawSpace = isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
+        
         // ZoneScopedN("DrawBoundingBoxAndDebugInfo");
         // if (debugMode == false)
         //     return;
@@ -1359,27 +1372,27 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         layer::QueueCommand<layer::CmdPushMatrix>(layer, [](layer::CmdPushMatrix *cmd) {
             // Push the current matrix onto the stack
-        }, 100); // always on top of the stack
+        }, 100, drawSpace); // always on top of the stack
 
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
-        }, 100);
+        }, 100, drawSpace);
 
         layer::QueueCommand<layer::CmdScale>(layer, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
             cmd->scaleX = scaleX;
             cmd->scaleY = scaleY;
-        }, 100);
+        }, 100, drawSpace);
 
         layer::QueueCommand<layer::CmdRotate>(layer, [rotation = transform.getVisualR() + transform.rotationOffset](layer::CmdRotate *cmd) {
             cmd->angle = rotation;
-        }, 100);
+        }, 100, drawSpace);
 
         layer::QueueCommand<layer::CmdTranslate>(layer, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
             cmd->x = x;
             cmd->y = y;
-        }, 100);
+        }, 100, drawSpace);
 
         auto scale = 1.0f;
         if (registry->any_of<ui::UIConfig>(e))
@@ -1397,8 +1410,17 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 // if so, bump text up
                 bumpTextUp = true;
             }
-            float textWidth = MeasureText(node.debug.debugText.value().c_str(), 15 * scale);
-            layer::QueueCommand<layer::CmdTextPro>(layer, [text = node.debug.debugText.value(), font = GetFontDefault(), textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH(), bumpTextUp](layer::CmdTextPro *cmd) {
+            auto textToUse = node.debug.debugText.value();
+            if (registry->any_of<collision::ScreenSpaceCollisionMarker>(e))
+            {
+                textToUse += fmt::format(" (Screen)");
+            }
+            else 
+            {
+                textToUse += fmt::format(" (World)");
+            }
+            float textWidth = MeasureText(textToUse.c_str(), 15 * scale);
+            layer::QueueCommand<layer::CmdTextPro>(layer, [text = textToUse, font = GetFontDefault(), textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH(), bumpTextUp](layer::CmdTextPro *cmd) {
                 cmd->text = text.c_str();
                 cmd->font = font;
                 cmd->x = visualW / 2 - textWidth / 2;
@@ -1408,7 +1430,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->fontSize = 15 * scale;
                 cmd->spacing = 1.0f;
                 cmd->color = WHITE;
-            }, 100);
+            }, 100, drawSpace);
         }
         else {
             // If ui, get ui type + entity number
@@ -1418,6 +1440,14 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             {
                 auto &uiConfig = registry->get<ui::UIConfig>(e);
                 debugText = fmt::format("{} {}", magic_enum::enum_name<ui::UITypeEnum>(uiConfig.uiType.value_or(ui::UITypeEnum::NONE)), debugText);
+            }
+            if (registry->any_of<collision::ScreenSpaceCollisionMarker>(e))
+            {
+                debugText += fmt::format(" (Screen)");
+            }
+            else 
+            {
+                debugText += fmt::format(" (World)");
             }
             float textWidth = MeasureText(debugText.c_str(), 15 * scale);
             layer::QueueCommand<layer::CmdTextPro>(layer, [debugText, textWidth, scale, visualW = transform.getVisualW(), visualH = transform.getVisualH()](layer::CmdTextPro *cmd) {
@@ -1430,7 +1460,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->fontSize = 15 * scale;
                 cmd->spacing = 1.0f;
                 cmd->color = WHITE;
-            }, 100);
+            }, 100, drawSpace);
         }
 
         float lineWidth = 1;
@@ -1466,7 +1496,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->size = Vector2{width, height};
             cmd->lineThickness = lineThickness;
             cmd->color = color;
-        }, 100);
+        }, 100, drawSpace);
         
         
         // draw emboss effect rect
@@ -1479,10 +1509,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 cmd->offsetY = y;
                 cmd->size = Vector2{width, height};
                 cmd->color = Fade(BLACK, 0.3f);
-            }, 100);
+            }, 100, drawSpace);
         }
 
-        layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {}, 100);
+        layer::QueueCommand<layer::CmdPopMatrix>(layer, [](layer::CmdPopMatrix *cmd) {}, 100, drawSpace);
     }
 
     auto CalculateCursorPositionWithinFocus(entt::registry *registry, entt::entity e) -> Vector2

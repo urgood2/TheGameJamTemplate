@@ -1,6 +1,7 @@
 # Static UI Text Tags Guide
 
 This document describes the specific tags and options supported by your **Static UI Text System**, reflecting exactly the segments handled in your `getTextFromString` implementation and the `parseText` logic.
+__Since everything is broken up into sub-elements, the entire window should be re-constructed on a language change.__
 
 Tested example:
 ```

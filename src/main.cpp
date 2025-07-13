@@ -19,6 +19,8 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h" // or any library that uses Windows.h
 
+#include "util/common_headers.hpp" // common headers like json, spdlog, etc.
+
 #if defined(_WIN32) // raylib uses these names as function parameters
 #undef near
 #undef far
@@ -33,7 +35,6 @@
 #endif
 
 #include "effolkronium/random.hpp"   // https://github.com/effolkronium/random
-#include "magic_enum/magic_enum.hpp" // https://github.com/Neargye/magic_enum
 
 #include "core/init.hpp"
 #include "core/graphics.hpp"

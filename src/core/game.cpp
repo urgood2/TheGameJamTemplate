@@ -12,7 +12,7 @@
 #include "../components/graphics.hpp"
 
 #include "game.hpp" // game.hpp must be included after components.hpp
-#include "magic_enum/magic_enum.hpp"
+
 #include "gui.hpp"
 #include "raymath.h"
 
@@ -33,6 +33,8 @@
 #include "../systems/scripting/scripting_functions.hpp"
 #include "../systems/scripting/scripting_system.hpp"
 #include "../systems/ai/ai_system.hpp"
+#include "systems/ldtk_loader/ldtk_combined.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "rlgl.h"
 
 using std::pair;
@@ -220,8 +222,9 @@ namespace game
         );
 
         // Populate the Quadtree Per Frame
-        globals::registry.view<transform::Transform, transform::GameObject>(entt::exclude<collision::ScreenSpaceCollisionMarker>)
-            .each([&](entt::entity e, auto &transform, auto &go){
+        globals::registry.view<transform::Transform, transform::GameObject, entity_gamestate_management::StateTag>(entt::exclude<collision::ScreenSpaceCollisionMarker>)
+            .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag) {
+                if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
                 auto box = globals::getBoxWorld(e);
                 if (expandedBounds.contains(box)) {
@@ -236,11 +239,27 @@ namespace game
         // Deduplicate & normalize the pairs
         auto pairs = dedupePairs(raw);
 
+        auto collisionFilterView = globals::registry.view<collision::CollisionFilter>();
+
         // Single pass: notify each entity exactly once per partner
         for (auto [a,b] : pairs) {
             if (!globals::registry.valid(a) || !globals::registry.valid(b))
                 continue;
-                
+            
+            auto &fA = collisionFilterView.get<collision::CollisionFilter>(a);
+            auto &fB = collisionFilterView.get<collision::CollisionFilter>(b);
+            // bitwise filter:
+            // if (fA.mask != 1 || fB.mask != 1) {
+            //     SPDLOG_DEBUG("Collision filter mismatch: A mask {} category {}, B mask {} category {}", 
+            //         fA.mask, fA.category, fB.mask, fB.category);
+            // }
+            if ((fA.mask & fB.category) == 0 || (fB.mask & fA.category) == 0)
+                continue; // skip entirely
+            
+            // SPDLOG_DEBUG("Collision passed for filters: A mask {} category {}, B mask {} category {}", 
+            //     fA.mask, fA.category, fB.mask, fB.category);
+
+
             if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
                 continue;
 
@@ -273,8 +292,9 @@ namespace game
             globals::getBoxWorld
         );
                 
-        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker>()
-            .each([&](entt::entity e, auto &transform, auto &go){
+        globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag>()
+            .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag){
+                if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
                 auto box = globals::getBoxWorld(e);
                 if (expandedBounds.contains(box)) {
@@ -293,6 +313,21 @@ namespace game
         for (auto [a,b] : pairsUI) {
             if (!globals::registry.valid(a) || !globals::registry.valid(b))
                 continue;
+            
+            auto &fA = collisionFilterView.get<collision::CollisionFilter>(a);
+            auto &fB = collisionFilterView.get<collision::CollisionFilter>(b);
+            // bitwise filter:
+            // if (fA.mask != 1 || fB.mask != 1) {
+            //     SPDLOG_DEBUG("Collision filter mismatch: A mask {} category {}, B mask {} category {}", 
+            //         fA.mask, fA.category, fB.mask, fB.category);
+            // }
+            if ((fA.mask & fB.category) == 0 || (fB.mask & fA.category) == 0)
+                continue; // skip entirely
+            
+            // SPDLOG_DEBUG("Collision passed for filters: A mask {} category {}, B mask {} category {}", 
+                // fA.mask, fA.category, fB.mask, fB.category);
+
+
                 
             if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
                 continue;
@@ -497,9 +532,12 @@ namespace game
         
         {
             // ZoneScopedN("TextSystem::Update");
-            auto textView = globals::registry.view<TextSystem::Text>();
+            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
             for (auto e : textView)
             {
+                // check if the entity is active
+                if (!entity_gamestate_management::active_states_instance().is_active(globals::registry.get<entity_gamestate_management::StateTag>(e)))
+                    continue; // skip inactive entities
                 TextSystem::Functions::updateText(e, delta);
             }
         }
@@ -531,6 +569,9 @@ namespace game
             // static auto uiElementGroup = globals::registry.group
 
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
+                // check if the entity is active
+                if (!entity_gamestate_management::active_states_instance().is_active(globals::registry.get<entity_gamestate_management::StateTag>(e)))
+                    return ;; // skip inactive entities
                 // update the UI element
                 ui::element::Update(globals::registry, e, delta, &uiConfig, &transform, &uiElement, &node);
             });
@@ -542,6 +583,9 @@ namespace game
         }
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+        
+        // lua garbage collection
+        ai_system::masterStateLua.step_gc(4); 
         
         // update lua main script
         sol::protected_function_result result = luaMainUpdateFunc(delta);
@@ -582,7 +626,8 @@ namespace game
             // {
             //     ui::box::Draw(ui_layer, globals::registry, e);
             // }
-            ui::box::drawAllBoxes(globals::registry, sprites);
+            // ui::box::drawAllBoxes(globals::registry, sprites);
+            ui::box::drawAllBoxesShaderEnabled(globals::registry, sprites);
 
             // for each ui box, print debug info
             
@@ -594,48 +639,59 @@ namespace game
         // dynamic text
         {
             // ZoneScopedN("Dynamic Text Draw");
-            auto textView = globals::registry.view<TextSystem::Text>();
+            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
             for (auto e : textView)
             {
+                // check if the entity is active
+                if (!entity_gamestate_management::active_states_instance().is_active(textView.get<entity_gamestate_management::StateTag>(e)))
+                    continue; // skip inactive entities
                 TextSystem::Functions::renderText(e, sprites, true);
             }
         }
         
         // do transform debug drawing
         
-        auto view = globals::registry.view<transform::Transform>();
+        auto view = globals::registry.view<transform::Transform, entity_gamestate_management::StateTag>();
         if (globals::drawDebugInfo)
             for (auto e : view)
             {
-                
-                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, ui_layer);
+                // check if the entity is active
+                if (!entity_gamestate_management::active_states_instance().is_active(view.get<entity_gamestate_management::StateTag>(e)))
+                    continue; // skip inactive entities
+                transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, sprites);
             }
     
 
-        //TODO: need to test this
         {
             // ZoneScopedN("AnimatedSprite Draw");
-            auto spriteView = globals::registry.view<AnimationQueueComponent>();
+            auto spriteView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>();
             for (auto e : spriteView)
             {
-                //TODO: maybe optimize later
-                //TODO: what about treeorder? 
+                // check if the entity is active
+                if (!entity_gamestate_management::active_states_instance().is_active(spriteView.get<entity_gamestate_management::StateTag>(e)))
+                    continue; // skip inactive entities
                 auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
                 auto zIndex = layerOrder ? layerOrder->zIndex : 0;
+                bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+                
+                if (!isScreenSpace)
+                {
+                    SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
+                }
                 
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
-                    }, zIndex);
+                    }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                 }
                 else
                 {
                     layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
-                    }, zIndex);
+                    }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
                 }            
             }
         }
@@ -652,14 +708,14 @@ namespace game
             // ZoneScopedN("LayerCommandsToCanvas Draw");
             {
                 // ZoneScopedN("background layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", nullptr);  // render the background layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &globals::camera);  // render the background layer commands to its main canvas
             }
             
             
             
             {
                 // ZoneScopedN("sprites layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", nullptr);     // render the sprite layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &globals::camera);     // render the sprite layer commands to its main canvas
             }
             
             {

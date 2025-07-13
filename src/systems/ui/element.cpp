@@ -1,8 +1,11 @@
 #include "element.hpp"
 
+#include "systems/layer/layer.hpp"
+#include "systems/layer/layer_optimized.hpp"
 #include "systems/reflection/reflection.hpp"
 #include "systems/text/textVer2.hpp"
 #include "core/globals.hpp"
+#include "systems/ui/ui_data.hpp"
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
 #include "systems/collision/broad_phase.hpp"
@@ -22,6 +25,9 @@ namespace ui
         std::optional<UIConfig> config)
     {
         entt::entity entity = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, 0, 0, 0, 0); // values are set up in set_values
+        
+        // ui element should be screen space by default
+        registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
         
         // don't let ui X-lean
         auto &transform = registry.get<transform::Transform>(entity);
@@ -624,7 +630,8 @@ namespace ui
 
     void element::buildUIDrawList(entt::registry &registry,
                          entt::entity root,
-                         std::vector<entt::entity> &out)
+                         std::vector<UIDrawListItem> &out,
+                         int depth)
     {
         // Pull exactly the same pointers you had in DrawChildren:
         auto *node = registry.try_get<transform::GameObject>(root);
@@ -652,16 +659,16 @@ namespace ui
             // “Pre‐draw” if draw_after == false
             if (!childConfig->draw_after)
             {
-                out.push_back(child);
+                out.push_back({.e = child, .depth = depth});
             }
 
             // Recurse into grandchildren
-            buildUIDrawList(registry, child, out);
+            buildUIDrawList(registry, child, out, depth + 1);
 
             // “Post‐draw” if draw_after == true
             if (childConfig->draw_after)
             {
-                out.push_back(child);
+                out.push_back({.e = child, .depth = depth});
             }
         }
     }
@@ -1247,6 +1254,473 @@ namespace ui
 
                 ui::box::RenewAlignment(registry, uiElement->uiBox);
             }
+        }
+    }
+    
+    void element::DrawSelfImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp)
+    {
+        
+        // ZoneScopedN("UI Element: DrawSelf");
+        auto *uiElement = &uiElementComp;
+        auto *config = &configComp;
+        auto *state = &stateComp;
+        auto *node =  &nodeComp;
+        auto *transform =  &transformComp;
+        auto *rectCache = globals::registry.try_get<RoundedRectangleVerticesCache>(entity);
+
+        AssertThat(uiElement, Is().Not().EqualTo(nullptr));
+        AssertThat(config, Is().Not().EqualTo(nullptr));
+        AssertThat(state, Is().Not().EqualTo(nullptr));
+        AssertThat(node, Is().Not().EqualTo(nullptr));
+        AssertThat(transform, Is().Not().EqualTo(nullptr));
+        
+        auto actualX = transform->getActualX();
+        auto actualY = transform->getActualY();
+        auto actualW = transform->getActualW();
+        auto actualH = transform->getActualH();
+        auto visualW = transform->getVisualW();
+        auto visualH = transform->getVisualH();
+        auto visualX = transform->getVisualX();
+        auto visualY = transform->getVisualY();
+        auto visualScaleWithHoverAndMotion = transform->getVisualScaleWithHoverAndDynamicMotionReflected();
+        auto visualR = transform->getVisualRWithDynamicMotionAndXLeaning();
+        auto rotationOffset = transform->rotationOffset;
+
+        // Check if element should be drawn
+        if (!node->state.visible)
+        {
+            if (config->force_focus)
+            {
+                // LATER: what would be an equivalent for a draw hash in entt? perhaps not necessary?
+                //  addToDrawHash(entity);
+            }
+            return;
+        }
+
+        if (config->force_focus || config->forceCollision || config->button_UIE || config->buttonCallback || node->state.collisionEnabled)
+        {
+            // TODO: what does addToDrawHash do?
+            // LATER: what would be an equivalent for a draw hash in entt? perhaps not necessary?
+            //  addToDrawHash(entity);
+        }
+
+        bool buttonActive = true;
+        float parallaxDist = 1.2f; // parallax empahsis
+        bool buttonBeingPressed = false;
+
+        // Is it a button?
+        if (config->buttonCallback || config->button_UIE)
+        {
+            // ZoneScopedN("UI Element: Button Logic");
+            auto parentEntity = node->parent.value();
+            Vector2 parentParallax = {0, 0};
+
+            auto *parentElement = globals::registry.try_get<UIElementComponent>(parentEntity);
+            auto *parentNode = globals::registry.try_get<transform::GameObject>(parentEntity);
+
+            float parentLayerX = (globals::registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->x : 0;
+            float parentLayerY = (globals::registry.valid(parentEntity) && parentEntity != uiElement->uiBox) ? parentNode->layerDisplacement->y : 0;
+
+            float shadowOffsetX = (config->shadow ? 0.4f * node->shadowDisplacement->x : 0) ;
+            float shadowOffsetY = (config->shadow ? 0.4f * node->shadowDisplacement->y : 0) ;
+
+            // node->layerDisplacement->x = parentLayerX + shadowOffsetX;
+            // node->layerDisplacement->y = parentLayerY + shadowOffsetY;
+            
+            node->layerDisplacement->x = parentLayerX;
+            node->layerDisplacement->y = parentLayerY;
+
+            // This code applies a parallax effect to the button when it is clicked, hovered, or dragged while the cursor is down. The button moves slightly in the direction of its shadow displacement, giving a depth effect, and it resets parallaxDist to avoid continuous movement.
+            if (config->buttonCallback && ((state->last_clicked && state->last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f) || ((config->buttonCallback && (node->state.isBeingHovered || node->state.isBeingDragged)))) && globals::inputState.is_cursor_down)
+            {
+
+                node->layerDisplacement->x -= parallaxDist * node->shadowDisplacement->x;
+                node->layerDisplacement->y -= parallaxDist * 1.8f * node->shadowDisplacement->y;
+                parallaxDist = 0;
+                buttonBeingPressed = true;
+                
+                // SPDLOG_DEBUG("Button being pressed: {}, setting layer displacement to x: {}, y: {}", buttonBeingPressed, node->layerDisplacement->x, node->layerDisplacement->y);
+            }
+        }
+        // is it text?
+        if (config->uiType == UITypeEnum::TEXT && config->scale)
+        {
+            // ZoneScopedN("UI Element: Text Logic");
+            float rawScale = config->scale.value() * localization::getFontData().fontScale;
+            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f); // tunable clamp
+            float textParallaxSX = node->shadowDisplacement->x * localization::getFontData().fontLoadedSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * localization::getFontData().fontLoadedSize * -0.03f * scaleFactor;
+            
+            //TODO: if scale is smaller, make the shadow height smaller too
+
+            bool drawShadow = (config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::settings.shadowsOn);
+
+            if (drawShadow)
+            {
+                layer::PushMatrix();
+                
+                Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
+                layer::Translate(actualX + textParallaxSX + layerDisplacement.x, actualY + textParallaxSY + layerDisplacement.y);
+                
+                if (config->verticalText)
+                {
+                    // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = actualH](layer::CmdTranslate *cmd) {
+                    //     cmd->x = x;
+                    //     cmd->y = y;
+                    // }, zIndex);
+                    layer::Translate(0, actualH);
+                    // layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = -PI / 2](layer::CmdRotate *cmd) {
+                    //     cmd->angle = rotation;
+                    // }, zIndex);
+                    layer::Rotate(-PI / 2);
+                }
+                if ((config->shadow || (config->button_UIE && buttonActive)) && globals::settings.shadowsOn)
+                {
+                    Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+
+                    float textX = localization::getFontData().fontRenderOffset.x + (config->verticalText ? textParallaxSY : textParallaxSX) * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
+                    float textY = localization::getFontData().fontRenderOffset.y + (config->verticalText ? textParallaxSX : textParallaxSY) * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
+                    float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
+                    float spacing = config->textSpacing.value_or(localization::getFontData().spacing);   
+
+                    float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::globalUIScaleFactor;
+                    // layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
+                    //     cmd->scaleX = scale;
+                    //     cmd->scaleY = scale;
+                    // }, zIndex);
+                    layer::Scale(scale, scale);
+                    
+                    // layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, shadowColor](layer::CmdTextPro *cmd) {
+                    //     cmd->text = text.c_str();
+                    //     cmd->font = font;
+                    //     cmd->x = textX;
+                    //     cmd->y = textY;
+                    //     cmd->origin = {0, 0};
+                    //     cmd->rotation = 0;
+                    //     cmd->fontSize = localization::getFontData().fontLoadedSize;
+                    //     cmd->spacing = spacing;
+                    //     cmd->color = shadowColor;
+                    // }, zIndex);
+                    layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, localization::getFontData().fontLoadedSize, spacing, shadowColor);
+                    
+                    // text offset and spacing and fontscale are configurable values that are added to font rendering (scale changes font scaling), squish also does this (ussually 1), and offset is different for different font types. render_scale is the size at which the font is initially loaded.
+                }
+
+                // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+                layer::PopMatrix();
+            }
+
+            // util::PrepDraw(layerPtr, registry, entity, 1.0f);
+            // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            layer::PushMatrix();
+            Vector2 layerDisplacement = {node->layerDisplacement->x, node->layerDisplacement->y};
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + layerDisplacement.x, y = actualY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+            //     cmd->x = x;
+            //     cmd->y = y;
+            // }, zIndex);
+            layer::Translate(actualX + layerDisplacement.x, actualY + layerDisplacement.y);
+            if (config->verticalText)
+            {
+                // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = 0, y = actualH](layer::CmdTranslate *cmd) {
+                //     cmd->x = x;
+                //     cmd->y = y;
+                // }, zIndex);
+                layer::Translate(0, actualH);
+                // layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = -PI / 2](layer::CmdRotate *cmd) {
+                //     cmd->angle = rotation;
+                // }, zIndex);
+                layer::Rotate(-PI / 2);
+            }
+            Color renderColor = config->color.value();
+            if (buttonActive == false)
+            {
+                renderColor = globals::uiTextInactive;
+            }
+            
+            //REVIEW: bugfixing, commenting out
+            // float textX = localization::getFontData().fontRenderOffset.x * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
+            // float textY = localization::getFontData().fontRenderOffset.y * config->scale.value_or(1.0f) * localization::getFontData().fontScale;
+            // float fontScale = config->scale.value_or(1.0f) * localization::getFontData().fontScale;
+            float textX = localization::getFontData().fontRenderOffset.x;
+            float textY = localization::getFontData().fontRenderOffset.y;
+            float scale = config->scale.value_or(1.0f) * localization::getFontData().fontScale * globals::globalUIScaleFactor;
+            // layer::QueueCommand<layer::CmdScale>(layerPtr, [scale = scale](layer::CmdScale *cmd) {
+            //     cmd->scaleX = scale;
+            //     cmd->scaleY = scale;
+            // }, zIndex);
+            layer::Scale(scale, scale);
+
+            float spacing = config->textSpacing.value_or(localization::getFontData().spacing);
+            
+            // layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text = config->text.value(), font = localization::getFontData().font, textX, textY, spacing, renderColor](layer::CmdTextPro *cmd) {
+            //     cmd->text = text.c_str();
+            //     cmd->font = font;
+            //     cmd->x = textX;
+            //     cmd->y = textY;
+            //     cmd->origin = {0, 0};
+            //     cmd->rotation = 0;
+            //     cmd->fontSize = localization::getFontData().fontLoadedSize;
+            //     cmd->spacing = spacing;
+            //     cmd->color = renderColor;
+            // }, zIndex);
+            layer::TextPro(config->text.value().c_str(), localization::getFontData().font, textX, textY, {0, 0}, 0, localization::getFontData().fontLoadedSize, spacing, renderColor);
+
+            // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            layer::PopMatrix();
+        }
+        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT)
+        {
+            // ZoneScopedN("UI Element: Rectangle/Container Logic");
+            //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
+            // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
+            layer::PushMatrix();
+            if (config->shadow && globals::settings.shadowsOn)
+            {
+                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+                if (config->shadowColor)
+                {
+                    shadowColor = config->shadowColor.value();
+                }
+
+                if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                //FIXME: needs immediate draw version
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_SHADOW, parallaxDist, {}, std::nullopt, std::nullopt);
+                else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                    util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, shadowColor, parallaxDist, std::nullopt);
+                    
+            }
+            
+            // draw embossed rectangle
+            if (config->emboss)
+            {
+                Color c = ColorBrightness(config->color.value(), node->state.isBeingHovered ? -0.8f : -0.5f);
+                
+
+                if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_EMBOSS, parallaxDist, {{"emboss", c}}, std::nullopt, std::nullopt);
+                    
+                else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                //TODO: ninepatch doens't support layer order yet
+                    util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, c, parallaxDist, std::nullopt);
+            }
+        
+            
+            // darken if button is on cooldown
+            Color buttonColor = config->buttonDelay ? util::MixColours(config->color.value(), BLACK, 0.5f) : config->color.value();
+            bool collidedButtonHovered = config->hover && node->state.isBeingHovered; 
+
+            if (node->state.isBeingHovered && (entity == (entt::entity)85)) {
+                // SPDLOG_DEBUG("DrawSelf(): Button is being hovered: {}", collidedButtonNode.state.isBeingHovered);
+            }
+
+            //DONE: hover over container applies hover to all child entities. Why? THe hover state itself doesn't propagate to children. ANSWER: button UIE enabled for parents who are buttons.
+
+            bool clickedRecently = state->last_clicked && state->last_clicked.value() > main_loop::mainLoop.realtimeTimer - 0.1f;
+            
+
+            std::optional<Color> specialColor;
+            if (collidedButtonHovered || clickedRecently || config->disable_button)
+            {
+                specialColor = ColorBrightness(buttonColor, -0.5f);
+            }
+            else if (buttonBeingPressed)
+            {
+                specialColor = ColorBrightness(buttonColor, -0.5f);
+            }
+
+            Color color = specialColor ? specialColor.value() : buttonColor;
+
+            if (/*config->pixelatedRectangle && */visualW > 0.01)
+            {
+                if (config->buttonDelay)
+                {
+                    // gray background
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, std::nullopt);
+
+                    // progress bar                        
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt);
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, config->buttonDelayProgress);
+
+                }
+                else if (config->progressBar)
+                {
+                    auto colorToUse = config->progressBarEmptyColor.value_or(GRAY);
+                    
+                    colorToUse = config->progressBarFullColor.value_or(GREEN);
+                    
+                    // retrieve the current progress bar value using reflection
+                    
+                    float progress = 1.0f;
+                    
+                    if (config->progressBarFetchValueLambda) {
+                        progress = config->progressBarFetchValueLambda(entity);
+                        
+                        if (entity == (entt::entity)238) {
+                            SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
+                        }
+                    }
+                    else if (config->progressBarValueComponentName){
+                        auto component = reflection::retrieveComponent(&globals::registry, entity, config->progressBarValueComponentName.value());
+                        auto value = reflection::retrieveFieldByString(component, config->progressBarValueComponentName.value(), config->progressBarValueFieldName.value());
+                        float progress = value.cast<float>() / config->progressBarMaxValue.value_or(1.0f);
+                        SPDLOG_DEBUG("Drawself(): Progress bar progress: {}", progress);
+                    }
+                    
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt);
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, progress);
+                    
+                }
+                else
+                {
+                    
+                    // SPDLOG_DEBUG("DrawSelf(): Drawing stepped rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
+                    if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
+                        util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, std::nullopt, std::nullopt);
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, std::nullopt);
+                }
+            }
+            else
+            {
+                // layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [w = actualW, h = actualH, color](layer::CmdDrawRectangle *cmd) {
+                //     cmd->x = 0;
+                //     cmd->y = 0;
+                //     cmd->width = w;
+                //     cmd->height = h;
+                //     cmd->color = color;
+                // }, zIndex);
+                layer::RectangleDraw(0, 0, actualW, actualH, color);
+                
+                
+                SPDLOG_DEBUG("DrawSelf(): Drawing rectangle with width: {}, height: {}", transform->getActualW(), transform->getActualH());
+            }
+        
+
+            // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+            layer::PopMatrix();
+        }
+        else if (config->uiType == UITypeEnum::OBJECT && config->object)
+        {
+            //TODO: this part needs fixing
+            // hightlighted object outline
+            auto &objectNode = globals::registry.get<transform::GameObject>(config->object.value());
+            if (config->focusWithObject && objectNode.state.isBeingFocused)
+            {
+                state->object_focus_timer = state->object_focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
+                float lw = 50.0f * std::pow(std::max(0.0f, (state->object_focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
+                // util::PrepDraw(layerPtr, registry, entity, 1.0f);
+                Color c = util::AdjustAlpha(WHITE, 0.2f * lw);
+                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, std::nullopt);
+                c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
+                util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, std::nullopt);
+                // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
+                layer::PopMatrix();
+            }
+            else
+            {
+                state->object_focus_timer.reset();
+            }
+        }
+
+        // outline
+        if (config->outlineColor && config->outlineColor->a > 0.01f)
+        {
+            // ZoneScopedN("UI Element: Outline Logic");
+            if (config->outlineThickness)
+            {
+                // util::PrepDraw(layerPtr, registry, entity, 1.0f);
+                float lineWidth = config->outlineThickness.value();
+                if (config->line_emboss)
+                {
+                    Color c = ColorBrightness(config->outlineColor.value(), node->state.isBeingHovered ? 0.5f : 0.3f);
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS, parallaxDist, {{"outline_emboss", c}}, std::nullopt, lineWidth);
+                }
+                if (transform->getVisualW() > 0.01)
+                {
+                    util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", config->outlineColor.value()}}, std::nullopt, lineWidth);
+                }
+            }
+        }
+
+        // highlighted button outline (only when mouse not active)
+        if (node->state.isBeingFocused && globals::inputState.hid.mouse_enabled == false && IsCursorHidden() == true)
+        {
+            state->focus_timer = state->focus_timer.value_or(main_loop::mainLoop.realtimeTimer);
+            float lw = 50.0f * std::pow(std::max(0.0f, (state->focus_timer.value() - main_loop::mainLoop.realtimeTimer + 0.3f)), 2);
+            // util::PrepDraw(layerPtr, registry, entity, 1.0f);
+            Color c = Fade(WHITE, 0.2f * lw);
+
+            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", c}}, std::nullopt, lw + 4.0f);
+            //TODO: refactor this whole method later
+
+            c = config->color->a > 0.01f ? util::MixColours(WHITE, config->color.value(), 0.8f) : WHITE;
+
+            util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_OUTLINE, parallaxDist, {{"outline", c}}, std::nullopt, lw + 4.f);
+            
+        }
+        else
+        {
+            state->focus_timer.reset();
+        }
+
+        // draw "selection" triangle (arrow pointing to selected object)
+        if (config->chosen.value_or(false))
+        {
+            // triangle floats above the object, slightly bobbing with sine
+            float TRIANGLE_DISTANCE = 10.f * globals::globalUIScaleFactor;
+            float TRIANGLE_HEIGHT = 25.f * globals::globalUIScaleFactor;
+            float TRIANGLE_WIDTH = 25.f * globals::globalUIScaleFactor;
+            auto sineOffset = std::sin(main_loop::mainLoop.realtimeTimer * 2.0f) * 2.f;
+
+            auto centerX = actualX + actualW * 0.5f;
+            auto triangleY = actualY - TRIANGLE_DISTANCE + sineOffset;
+
+            // triangle points downward, so tip is at triangleY, base is above it
+            Vector2 p1 = {centerX, triangleY};                                // tip (bottom)
+            Vector2 p2 = {centerX - TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-left
+            Vector2 p3 = {centerX + TRIANGLE_WIDTH * 0.5f, triangleY - TRIANGLE_HEIGHT}; // top-right
+
+            if (config->shadow && globals::settings.shadowsOn)
+            {
+                constexpr auto FLAT_SHADOW_AMOUNT = 3.f;
+                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+
+                auto shadowOffsetX = node->shadowDisplacement->x * FLAT_SHADOW_AMOUNT;
+                auto shadowOffsetY = - node->shadowDisplacement->y * FLAT_SHADOW_AMOUNT;
+
+                Vector2 s1 = {p1.x + shadowOffsetX, p1.y + shadowOffsetY};
+                Vector2 s2 = {p2.x + shadowOffsetX, p2.y + shadowOffsetY};
+                Vector2 s3 = {p3.x + shadowOffsetX, p3.y + shadowOffsetY};
+
+                // layer::QueueCommand<layer::CmdDrawTriangle>(layerPtr, [s1, s2, s3, shadowColor](layer::CmdDrawTriangle *cmd) {
+                //     cmd->p1 = s1;
+                //     cmd->p2 = s2;
+                //     cmd->p3 = s3;
+                //     cmd->color = shadowColor;
+                // }, zIndex);
+                layer::Triangle(s1, s2, s3, shadowColor);
+            }
+
+            // layer::QueueCommand<layer::CmdDrawTriangle>(layerPtr, [p1, p2, p3](layer::CmdDrawTriangle *cmd) {
+            //     cmd->p1 = p1;
+            //     cmd->p2 = p2;
+            //     cmd->p3 = p3;
+            //     cmd->color = RED;
+            // }, zIndex);
+            layer::Triangle(p1, p2, p3, RED);
+        }
+
+        // call the object's own lambda draw function, if it has one
+        if (node->drawFunction) {
+            //TODO: this probably won't work in immediate mode
+            node->drawFunction(layerPtr, globals::registry, entity, -1);
         }
     }
 

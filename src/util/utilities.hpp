@@ -34,7 +34,6 @@ using json = nlohmann::json;
 #endif
 
 #include "effolkronium/random.hpp" // https://github.com/effolkronium/random
-#include "magic_enum/magic_enum.hpp" // https://github.com/Neargye/magic_enum
 // #include "behaviortree_cpp_v3/bt_factory.h" // https://github.com/BehaviorTree/BehaviorTree.CPP/tree/v3.8/
 
 

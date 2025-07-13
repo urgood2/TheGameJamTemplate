@@ -12,7 +12,7 @@ function tutorials.sample(deltaTime)
     
     addGameAnnouncement("Now press the [color:KONSOLE_BREEZE_WARM_BROWN_ORANGE]'A'[/color] key.")
     waitForKeyPress("KEY_A") -- Wait for the 'A' key press
-    debug("'A' key pressed!")
+    log_debug("'A' key pressed!")
 
     
     -- show a color coded message in a window and wait for a tutorial window closed event

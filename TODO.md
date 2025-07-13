@@ -1,61 +1,70 @@
-
-
-
 # ✅ TODOs: Organized by Category
 
-## 🧠 General Design / Architecture
-
-## to test:
-- [ ] How to instantiate some ui in place in an existing ui window? How to inject/ alter? -> https://chatgpt.com/share/685d3104-e724-800a-90d8-08ac15bd9bdc 
-
-- [ ] need functionality to completely reset game state right from the game, via a debug menu, and reload script
-- [ ]  Easy way to access text & elements on already created ui? -> I already have getUIEbyID, document it, also get a way to ensure I'm interacting with the text/animation object itself, rather than the object uielement that wraps it -> https://chatgpt.com/share/6860e021-29d4-800a-9b4e-aaa7bc0ed4ae
-
-
-- [ ] ability ti add arbitrary colliders and link them to an event (on collision) need to ignore transform components which aren't collision enabled in an efficient manner -> https://chatgpt.com/share/6860eae3-67a8-800a-b105-849b6c82de32 -> done, expose to lua, document, and test
-
+## Bugs to kill
+- [ ] sometimes I get a bug at this line (called a number..?): 
 ```lua
-
--- create custom collider entity which is always, underneath, a transform. But it should have custom types like (circle) which will decide how the collision system resolves the collision
-local collider = create_collider_for_entity(e, Colliders.TRANSFORM, {offsetX = 0, offsetY = 50, width = 50, height = 50})
-
--- give it a ScriptComponent with an onCollision method
-local ColliderLogic = {
-    -- Custom data carried by this table
-    speed        = 150, -- pixels / second
-    hp           = 10,
-
-    -- Called once, right after the component is attached.
-    init         = function(self)
-    end,
-
-    -- Called every frame by script_system_update()
-    update       = function(self, dt)
-    end,
-
-    on_collision = function(self, other)
-    end,
-
-    -- Called just before the entity is destroyed
-    destroy      = function(self)
-    end
-}
-registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
-
--- now it will be checked in collision.
-
+local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)
 ```
 
-- [ ] way to specify text timings (link them?) from code? How to make them appear sequentially? -> maybe just use lua + coroutines -> try https://chatgpt.com/share/6860daff-9b78-800a-ae2f-6131aa0c8344 / new bindings must be exposed for createTextEntity, need new documentation for typing effect. typing waitpoints & lua injection must also be tested.
+## New features
+- [ ] prob add docs for entity_gamestate_management
+- [ ] document using shaders with ui elements (just use pipeline comp)
+- [ ] document exposeGlobalsToLua with lua doc bindings
 
-- how to update static ui text? (currently uses textGetter, just like dynamic text) -> but gotta store the raw text before processing. how to update it if tags were used with it? -> THis is the way: https://chatgpt.com/share/6860e5bf-fe44-800a-b927-e40546592bb3 -> document the use of the tag "elementID" with getTextFromString. For updating such multi-line tagged static ui, 1) just delete everything (including animations /etc ) and inject again with new definition when something changes.; 2) alternatively inject short text and attach a getter to it (static ui can also have getters, see: textGetter) 3) fetch the segment in question after it becomes a uielement through the id assigned via the raw text ("elementID") -> eg. [Warning!](background=yellow;elementID=warning_box) 
-- [ ] How to do camera with layers? How to haveui both in the world space and screen space and handle proper collision order for both? -> https://chatgpt.com/share/68624700-963c-800a-b35e-53d2c4699da2 -> additional quadtree. needs to be implemented. 
+- [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 
-## Kinda high priority
-- [ ] jitter shader bugged in jame gam 50, but it works fine in the master branch
-- [ ] why does ui "unwrap" itself sometimes??
+- [] way to make sure certain texts & images should be worldspace, or not
+- [] particle z values how?
+    - need way to specify particle screen/world space & particle z values
+
+- [ ] localize rendering of ui animations & text to the ui draw tree itself
+    - [ ] ninepatch not tested
+        
+- [ ] take some shaders (esp. pixelate) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate
+
+
+## Bug fixes
+
+- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
+- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
+- [ ] test edge_effect shader
+
+    - uniforms:
+```cpp
+// update every frame:
+shaders::registerUniformUpdate("edge_shader", [](Shader &sh) {
+    globalShaderUniforms.set("edge_shader", "iTime", static_cast<float>(GetTime()));
+});
+
+// one-time setup of all the other edge params:
+globalShaderUniforms.set("edge_shader", "edgeMode",                1);        // 0:none,1:plain,2:shiny
+globalShaderUniforms.set("edge_shader", "edgeWidth",               1.0f);
+globalShaderUniforms.set("edge_shader", "edgeColorFilter",         1);        // e.g. 1=Multiply
+globalShaderUniforms.set("edge_shader", "edgeColor",               Vector4{1,1,1,1});
+globalShaderUniforms.set("edge_shader", "edgeColorGlow",           0.0f);
+globalShaderUniforms.set("edge_shader", "edgeShinyWidth",          0.2f);
+globalShaderUniforms.set("edge_shader", "edgeShinyAutoPlaySpeed",  1.0f);
+
+// if you need resolution/unscaled time, register those too:
+globalShaderUniforms.set("edge_shader", "iResolution", 
+    Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
+
+```
+- [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect -> shader code is in UIEffect.cginc, also scrape textures too /  want: pattern background overlay, edge shiny, transition (dissolve), 
+    - [ ] Sampling Filter 
+    - [ ] Transition filter
+    - [ ] Shadow Mode
+    - [ ] Edge mode
+
+- [ ] Unexplored areas: chipmunk2d in a game (how to mesh with my transforms?
+- [ ] unexplored option: 1 bit or simple shapes + global shadow shader like with SNKRX
+- [ ] unexplored option: static sprites with jitter + noise as in shader_todos.md for visual uniformity & style
+
+- [ ] lua libraries to use later for my game dev
+    - https://github.com/love2d-community/awesome-love2d?tab=readme-ov-file
+    - behavior tree & state machine libs for love might be interesting to explore @ later point if necessary
+
 - [ ] update the gamejam 50 branch with the new branch, then test
-- [ ] test all of the above to make sure it's working
 - [ ] have all shadows for sprites, text, etc. in the same layer, below the sprites, text, etc.
 
 - [ ] Dont update text and ui that is out of bounds 
@@ -63,23 +72,6 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
 
 
-
-
-# Documentation
-- [ ] document that background and finaloutput layers dont' work with layer post processing since they are overwritten. use fullscreen shaders instead.
-
-
-
-
-## Game todos (Jame Gam 50)
-- [ ] progression way too slow.
-- [ ]  1. First part(Long idea) (Second part easy fix) Just an idea, could go any way though: Well, we have done speech bubble tutorials for are game jams, but it doesnt really work that well nor is it very engaging if not done right, you have to find a way to integrate it. I would say maybe a cool way to do so would be to start the game off without the whale, and then have an astronought guy in a mask(so you dont gotta draw a face) in very short but effective diaglog prompts informs the player that they have been tracking down a "Species name here" space whale as it produces a rare resource that makes hyper space possible for spaceships. Somehting along those lines(could be very different, but just as a jist) then the space whale appears through a rift or smthg and the guy tells the player they must use some sort of tool(replace cursor with that tool) to harvest the resources. and then must collect the resource. Then after you collect like X amount of resources the space whale dissapears into another rift(that it creates) then the guy says resource can also be used to create other space technologies some very useful in collection, he then says place a collection thing after you do so, then he says ok seems like you got the hang of things and then leaves. (Since the theme seems to be more symbyotic, you would maybe want to explain that in the tutorial, and have the tutor person be some alien species or smthg. (edited)
-    THen after a bit the gravitational wave spawns in and the guy repears and explains it a bit and disappears. That is just a rough idea of what i think could fit. I do think you should add some sort of whale teleportation since that is one of the things space whales are known for, and it could help provide lore for some of the upgrades and purpose of the collection. (you could tell the character they are in the 4th dimension that is where space folds over on itself granting faster than light travel and it is the fabric the space whales use to travel. which would explain colorful bg, and then you could add multiple whales (some rarer, like they have stripes or spots idk, and then a log book that shows species discovered as well as a satisfying rarirty border like legendary.mythicals common, rare, etc it also has some cool lore facts about each species,) different whales could drop different amounts of the resources, and you could then also add upgrades for having the player more likely to find rarer whales which would increase production. Stuff like that. I just dumped a ton, if you just want to get it a a bit mor intuitive i would say:
-- [ ] 1. Add a magnifiying glass tool that can select and then clicks stuff like the whale or grav wave thingy and it will give a descriotion of what it does and how to use it. (edited)
-    The first idea would be a lot to add. So i would say the magnifying glass would work well if you just want to get it working.
-    SOme fixes/improvments: -make grid appear only when placing. -notify user when a building is unlocked, otherwise they have no idea
-- [ ] relocate tooltips for krill & whale
-- [ ] pause functionality
 
 
 ## Shaders
@@ -117,7 +109,7 @@ registry:add_script(collider, ColliderLogic) -- Attach the script to the entity
 ---
 
 ## Immediate laters
-
+- use hump.gamestate. How to hook with raylib?
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
 - [ ] how to request a new GOAP plan and run it from lua?
 - [ ] Utilize controller focus interactivity focus funneling in the above ui

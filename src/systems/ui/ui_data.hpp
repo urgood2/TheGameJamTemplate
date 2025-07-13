@@ -10,7 +10,6 @@
 
 #include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
-#include "systems/layer/layer.hpp"
 #include "systems/reflection/reflection.hpp"
 
 
@@ -27,19 +26,19 @@ namespace ui
     
     enum class UITypeEnum
     {           
-        NONE,   // no type, for error checking
+        NONE = 0,   // no type, for error checking
 
         // containers. (root is treated as a column if it has children)
-        ROOT,   // container, base ui element which serves as head of hierarchy.
-        VERTICAL_CONTAINER, // container, a columnar ui element
-        HORIZONTAL_CONTAINER,    // container, a row ui element
+        ROOT = 1,   // container, base ui element which serves as head of hierarchy.
+        VERTICAL_CONTAINER = 2, // container, a columnar ui element
+        HORIZONTAL_CONTAINER = 3,    // container, a row ui element
 
         // ui elements.
-        SLIDER_UI, // element, a slider bar ui element
-        INPUT_TEXT, // element, a text input ui element
-        RECT_SHAPE,   // element, box shape
-        TEXT,  // element, Simple text (not dynamic or animated)
-        OBJECT // element, game object (like animated text, sprite, etc.)
+        SLIDER_UI = 4, // element, a slider bar ui element
+        INPUT_TEXT = 5, // element, a text input ui element
+        RECT_SHAPE = 6,   // element, box shape
+        TEXT = 7,  // element, Simple text (not dynamic or animated)
+        OBJECT = 8 // element, game object (like animated text, sprite, etc.)
     };
 
     /**
@@ -183,6 +182,7 @@ namespace ui
         std::optional<float> padding;                                                   // UI element padding
 
         // Visibility and Styling
+        bool includeChildrenInShaderPass = true; // Default to true for backward compatibility, this determines whether children of this UI element should be included in the shader pass, if there is one for a ui element.
         std::optional<Color> color, outlineColor; // UI element colors
         std::optional<float> outlineThickness;               // Outline width (if any)
         bool makeMovementDynamic = false;                    // Makes the UI element's movement dynamic (reflects rotation, scale from transform)
@@ -269,500 +269,507 @@ namespace ui
         std::optional<bool> noRole;          // Prevents the element from being assigned a role in the layout.
         std::optional<transform::InheritedProperties> role; // Role component for UI
 
-        struct Builder {
-            std::shared_ptr<UIConfig> uiConfig = std::make_shared<UIConfig>();
-
-            static Builder create() {
-                return Builder();
-            }
-
-            Builder& addId(const std::string& id) {
-                uiConfig->id = id;
-                return *this;
-            }
-            
-            Builder& addTextGetter(const std::function<std::string()>& textGetter) {
-                uiConfig->textGetter = textGetter;
-                return *this;
-            }
-
-            Builder& addInstanceType(const std::string& instanceType) {
-                uiConfig->instanceType = instanceType;
-                return *this;
-            }
-
-            Builder& addUiType(const UITypeEnum& uiType) {
-                uiConfig->uiType = uiType;
-                return *this;
-            }
-
-            Builder& addDrawLayer(const int& drawLayer) {
-                uiConfig->drawLayer = drawLayer;
-                return *this;
-            }
-
-            Builder& addGroup(const std::string& group) {
-                uiConfig->group = group;
-                return *this;
-            }
-
-            Builder& addLocationBond(const transform::InheritedProperties::Sync& locationBond) {
-                uiConfig->location_bond = locationBond;
-                return *this;
-            }
-
-            Builder& addRotationBond(const transform::InheritedProperties::Sync& rotationBond) {
-                uiConfig->rotation_bond = rotationBond;
-                return *this;
-            }
-
-            Builder& addSizeBond(const transform::InheritedProperties::Sync& sizeBond) {
-                uiConfig->size_bond = sizeBond;
-                return *this;
-            }
-
-            Builder& addScaleBond(const transform::InheritedProperties::Sync& scaleBond) {
-                uiConfig->scale_bond = scaleBond;
-                return *this;
-            }
-
-            Builder& addOffset(const Vector2& offset) {
-                uiConfig->offset = offset;
-                return *this;
-            }
-
-            Builder& addScale(const float& scale) {
-                uiConfig->scale = scale;
-                return *this;
-            }
-
-            Builder& addTextSpacing(const float& textSpacing) {
-                uiConfig->textSpacing = textSpacing;
-                return *this;
-            }
-
-            Builder& addFocusWithObject(const bool& focusWithObject) {
-                uiConfig->focusWithObject = focusWithObject;
-                return *this;
-            }
-
-            Builder& addRefreshMovement(const bool& refreshMovement) {
-                uiConfig->refreshMovement = refreshMovement;
-                return *this;
-            }
-            
-            Builder& addNoMovementWhenDragged(const bool& noMovementWhenDragged) {
-                uiConfig->noMovementWhenDragged = noMovementWhenDragged;
-                return *this;
-            }
-
-            Builder& addNoRecalc(const bool& noRecalc) {
-                uiConfig->no_recalc = noRecalc;
-                return *this;
-            }
-
-            Builder& addNonRecalc(const bool& nonRecalc) {
-                uiConfig->non_recalc = nonRecalc;
-                return *this;
-            }
-            
-            Builder& addMakeMovementDynamic(const bool& makeMovementDynamic) {
-                uiConfig->makeMovementDynamic = makeMovementDynamic;
-                return *this;
-            }
-
-            Builder& addMaster(const entt::entity& master) {
-                uiConfig->master = master;
-                return *this;
-            }
-
-            Builder& addParent(const entt::entity& parent) {
-                uiConfig->parent = parent;
-                return *this;
-            }
-
-            Builder& addObject(const entt::entity& object) {
-                uiConfig->object = object;
-                return *this;
-            }
+        struct Builder;
+    };
     
-    
+    struct UIConfig::Builder {
+        UIConfig uiConfig{};
+
+        static Builder create() {
+            return Builder();
+        }
+
+        Builder& addId(const std::string& id) {
+            uiConfig.id = id;
+            return *this;
+        }
         
-            // align only applies to containers, not to ui elements
-            Builder& addAlign(const int& align) {
-                uiConfig->alignmentFlags = align;
-                return *this;
-            }
-
-            Builder& addWidth(const int& width) {
-                uiConfig->width = width;
-                return *this;
-            }
-
-            Builder& addHeight(const int& height) {
-                uiConfig->height = height;
-                return *this;
-            }
-
-            Builder& addMaxWidth(const int& maxWidth) {
-                uiConfig->maxWidth = maxWidth;
-                return *this;
-            }
-
-            Builder& addMaxHeight(const int& maxHeight) {
-                uiConfig->maxHeight = maxHeight;
-                return *this;
-            }
-
-            Builder& addMinWidth(const int& minWidth) {
-                uiConfig->minWidth = minWidth;
-                return *this;
-            }
-
-            Builder& addMinHeight(const int& minHeight) {
-                uiConfig->minHeight = minHeight;
-                return *this;
-            }
-
-            Builder& addPadding(const float& padding) {
-                uiConfig->padding = padding;
-                return *this;
-            }
-
-            Builder& addColor(const Color& colour) {
-                uiConfig->color = colour;
-                return *this;
-            }
-
-            Builder& addOutlineColor(const Color& outlineColour) {
-                uiConfig->outlineColor = outlineColour;
-                return *this;
-            }
-
-            Builder& addOutlineThickness(const float& outlineThickness) {
-                uiConfig->outlineThickness = outlineThickness;
-                return *this;
-            }
-
-            Builder& addShadow(const bool& shadow) {
-                uiConfig->shadow = shadow;
-                return *this;
-            }
-
-            Builder& addShadowColor(const Color& shadowColour) {
-                uiConfig->shadowColor = shadowColour;
-                return *this;
-            }
-
-            Builder& addNoFill(const bool& noFill) {
-                uiConfig->noFill = noFill;
-                return *this;
-            }
-
-            Builder& addPixelatedRectangle(const bool& pixelatedRectangle) {
-                uiConfig->pixelatedRectangle = pixelatedRectangle;
-                return *this;
-            }
-
-            Builder& addCanCollide(const bool& canCollide) {
-                uiConfig->canCollide = canCollide;
-                return *this;
-            }
-
-            Builder& addCollideable(const bool& collideable) {
-                uiConfig->collideable = collideable;
-                return *this;
-            }
-
-            Builder& addForceCollision(const bool& forceCollision) {
-                uiConfig->forceCollision = forceCollision;
-                return *this;
-            }
-
-            Builder& addButtonUIE(const entt::entity& buttonUIE) {
-                uiConfig->button_UIE = buttonUIE;
-                return *this;
-            }
-
-            Builder& addDisableButton(const bool& disableButton) {
-                uiConfig->disable_button = disableButton;
-                return *this;
-            }
-            
-            Builder& addProgressBarFetchValueLamnda(const std::function<float(entt::entity)>& progressBarFetchValueLambda) {
-                uiConfig->progressBarFetchValueLambda = progressBarFetchValueLambda;
-                return *this;
-            }
-
-            Builder& addProgressBar(const bool& progressBar) {
-                uiConfig->progressBar = progressBar;
-                return *this;
-            }
-
-            Builder& addProgressBarEmptyColor(const Color& progressBarEmptyColor) {
-                uiConfig->progressBarEmptyColor = progressBarEmptyColor;
-                return *this;
-            }
-
-            Builder& addProgressBarFullColor(const Color& progressBarFullColor) {
-                uiConfig->progressBarFullColor = progressBarFullColor;
-                return *this;
-            }
-
-            Builder& addProgressBarMaxValue(const float& progressBarMaxValue) {
-                uiConfig->progressBarMaxValue = progressBarMaxValue;
-                return *this;
-            }
-
-            Builder& addProgressBarValueComponentName(const std::string& progressBarValueComponentName) {
-                uiConfig->progressBarValueComponentName = progressBarValueComponentName;
-                return *this;
-            }
-
-            Builder& addProgressBarValueFieldName(const std::string& progressBarValueFieldName) {
-                uiConfig->progressBarValueFieldName = progressBarValueFieldName;
-                return *this;
-            }
-
-            Builder& addUIObjectUpdated(const bool& uiObjectUpdated) {
-                uiConfig->ui_object_updated = uiObjectUpdated;
-                return *this;
-            }
-
-            Builder& addButtonDelayStart(const float& buttonDelayStart) {
-                uiConfig->buttonDelayStart = buttonDelayStart;
-                return *this;
-            }
-
-            Builder& addButtonDelay(const float& buttonDelay) {
-                uiConfig->buttonDelay = buttonDelay;
-                return *this;
-            }
-
-            Builder& addButtonDelayProgress(const float& buttonDelayProgress) {
-                uiConfig->buttonDelayProgress = buttonDelayProgress;
-                return *this;
-            }
-
-            Builder& addButtonDelayEnd(const float& buttonDelayEnd) {
-                uiConfig->buttonDelayEnd = buttonDelayEnd;
-                return *this;
-            }
-
-            Builder& addButtonClicked(const bool& buttonClicked) {
-                uiConfig->buttonClicked = buttonClicked;
-                return *this;
-            }
-
-            Builder& addButtonDistance(const float& buttonDistance) {
-                uiConfig->buttonDistance = buttonDistance;
-                return *this;
-            }
-
-            Builder& addTooltip(const Tooltip& tooltip) {
-                uiConfig->tooltip = tooltip;
-                return *this;
-            }
-
-            Builder& addDetailedTooltip(const Tooltip& detailedTooltip) {
-                uiConfig->detailedTooltip = detailedTooltip;
-                return *this;
-            }
-
-            Builder& addOnDemandTooltip(const Tooltip& onDemandTooltip) {
-                uiConfig->onDemandTooltip = onDemandTooltip;
-                return *this;
-            }
-
-            Builder& addHover(const bool& hover) {
-                uiConfig->hover = hover;
-                return *this;
-            }
-
-            Builder& addForceFocus(const bool& forceFocus) {
-                uiConfig->force_focus = forceFocus;
-                return *this;
-            }
-
-            Builder& addDynamicMotion(const bool& dynamicMotion) {
-                uiConfig->dynamicMotion = dynamicMotion;
-                return *this;
-            }
-
-            Builder& addChoice(const bool& choice) {
-                uiConfig->choice = choice;
-                return *this;
-            }
-
-            Builder& addChosen(const bool& chosen) {
-                uiConfig->chosen = chosen;
-                return *this;
-            }
-
-            Builder& addOnePress(const bool& onePress) {
-                uiConfig->one_press = onePress;
-                return *this;
-            }
-
-            Builder& addChosenVert(const std::string& chosenVert) {
-                uiConfig->chosen_vert = chosenVert;
-                return *this;
-            }
-
-            Builder& addDrawAfter(const bool& drawAfter) {
-                uiConfig->draw_after = drawAfter;
-                return *this;
-            }
-
-            Builder& addFocusArgs(const FocusArgs& focusArgs) {
-                uiConfig->focusArgs = focusArgs;
-                return *this;
-            }
-
-            Builder& addUpdateFunc(const std::function<void(entt::registry*, entt::entity, float)> &func) {
-                uiConfig->updateFunc = func;
-                return *this;
-            }
-            
-            Builder& addInitFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
-                uiConfig->initFunc = func;
-                return *this;
-            }
-            
-            Builder& addOnUIResizeFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
-                uiConfig->onUIResizeFunc = func;
-                return *this;
-            }
-            
-            Builder& addOnUIScalingResetToOne(const std::function<void(entt::registry*, entt::entity)> &func) {
-                uiConfig->onUIScalingResetToOne = func;
-                return *this;
-            }
-
-            Builder& addInstaFunc(const bool& instaFunc) {
-                uiConfig->instaFunc = instaFunc;
-                return *this;
-            }
-
-            Builder& addButtonCallback(const std::function<void()> buttonCallback) {
-                uiConfig->buttonCallback = buttonCallback;
-                return *this;
-            }
-
-            Builder& addButtonTemp(const std::function<void()> buttonTemp) {
-                uiConfig->buttonTemp = buttonTemp;
-                return *this;
-            }
-
-            Builder& addRefEntity(const entt::entity& refEntity) {
-                uiConfig->ref_entity = refEntity;
-                return *this;
-            }
-
-            Builder& addRefComponent(const std::string& refComponent) {
-                uiConfig->ref_component = refComponent;
-                return *this;
-            }
-
-            Builder& addRefValue(const std::string& refValue) {
-                uiConfig->ref_value = refValue;
-                return *this;
-            }
-
-            Builder& addPrevRefValue(const entt::meta_any& prevRefValue) {
-                uiConfig->prev_ref_value = prevRefValue;
-                return *this;
-            }
-
-            Builder& addText(const std::string& text) {
-                uiConfig->text = text;
-                return *this;
-            }
-
-            Builder& addLanguage(const std::string& language) {
-                uiConfig->language = language;
-                return *this;
-            }
-
-            Builder& addVerticalText(const bool& verticalText) {
-                uiConfig->verticalText = verticalText;
-                return *this;
-            }
-
-            Builder& addHPopup(const entt::entity& hPopup) {
-                uiConfig->hPopup = hPopup;
-                return *this;
-            }
-
-            Builder& addHPopupConfig(const std::shared_ptr<UIConfig>& hPopupConfig) {
-                uiConfig->hPopupConfig = hPopupConfig;
-                return *this;
-            }
-
-            Builder& addDPopup(const entt::entity& dPopup) {
-                uiConfig->dPopup = dPopup;
-                return *this;
-            }
-
-            Builder& addDPopupConfig(const std::shared_ptr<UIConfig>& dPopupConfig) {
-                uiConfig->dPopupConfig = dPopupConfig;
-                return *this;
-            }
-
-            Builder& addExtendUp(const float& extendUp) {
-                uiConfig->extend_up = extendUp;
-                return *this;
-            }
-
-            Builder& addResolution(const float& resolution) {
-                uiConfig->resolution = resolution;
-                return *this;
-            }
-
-            Builder& addEmboss(const float& emboss) {
-                uiConfig->emboss = emboss;
-                return *this;
-            }
-
-            Builder& addLineEmboss(const bool& lineEmboss) {
-                uiConfig->line_emboss = lineEmboss;
-                return *this;
-            }
-
-            Builder& addMid(const bool& mid) {
-                uiConfig->mid = mid;
-                return *this;
-            }
-
-            Builder& addNoRole(const bool& noRole) {
-                uiConfig->noRole = noRole;
-                return *this;
-            }
-
-            Builder& addRole(const transform::InheritedProperties& role) {
-                uiConfig->role = role;
-                return *this;
-            }
-            
-            Builder& addStylingType(const UIStylingType& stylingType) {
-                uiConfig->stylingType = stylingType;
-                return *this;
-            }
-
-            Builder& addNPatchInfo(const std::optional<NPatchInfo>& nPatchInfo) {
-                uiConfig->nPatchInfo = nPatchInfo;
-                return *this;
-            }
-
-            Builder& addNPatchSourceTexture(const std::optional<Texture2D>& nPatchSourceTexture) {
-                uiConfig->nPatchSourceTexture = nPatchSourceTexture;
-                return *this;
-            }
-
-            UIConfig build() {
-                return *uiConfig;
-            }
-        };
+        Builder& addTextGetter(const std::function<std::string()>& textGetter) {
+            uiConfig.textGetter = textGetter;
+            return *this;
+        }
+
+        Builder& addInstanceType(const std::string& instanceType) {
+            uiConfig.instanceType = instanceType;
+            return *this;
+        }
+
+        Builder& addUiType(const UITypeEnum& uiType) {
+            uiConfig.uiType = uiType;
+            return *this;
+        }
+
+        Builder& addDrawLayer(const int& drawLayer) {
+            uiConfig.drawLayer = drawLayer;
+            return *this;
+        }
+
+        Builder& addGroup(const std::string& group) {
+            uiConfig.group = group;
+            return *this;
+        }
+
+        Builder& addIncludeChildrenInShaderPass(const bool& includeChildrenInShaderPass) {
+            uiConfig.includeChildrenInShaderPass = includeChildrenInShaderPass;
+            return *this;
+        }
+
+        Builder& addLocationBond(const transform::InheritedProperties::Sync& locationBond) {
+            uiConfig.location_bond = locationBond;
+            return *this;
+        }
+
+        Builder& addRotationBond(const transform::InheritedProperties::Sync& rotationBond) {
+            uiConfig.rotation_bond = rotationBond;
+            return *this;
+        }
+
+        Builder& addSizeBond(const transform::InheritedProperties::Sync& sizeBond) {
+            uiConfig.size_bond = sizeBond;
+            return *this;
+        }
+
+        Builder& addScaleBond(const transform::InheritedProperties::Sync& scaleBond) {
+            uiConfig.scale_bond = scaleBond;
+            return *this;
+        }
+
+        Builder& addOffset(const Vector2& offset) {
+            uiConfig.offset = offset;
+            return *this;
+        }
+
+        Builder& addScale(const float& scale) {
+            uiConfig.scale = scale;
+            return *this;
+        }
+
+        Builder& addTextSpacing(const float& textSpacing) {
+            uiConfig.textSpacing = textSpacing;
+            return *this;
+        }
+
+        Builder& addFocusWithObject(const bool& focusWithObject) {
+            uiConfig.focusWithObject = focusWithObject;
+            return *this;
+        }
+
+        Builder& addRefreshMovement(const bool& refreshMovement) {
+            uiConfig.refreshMovement = refreshMovement;
+            return *this;
+        }
+        
+        Builder& addNoMovementWhenDragged(const bool& noMovementWhenDragged) {
+            uiConfig.noMovementWhenDragged = noMovementWhenDragged;
+            return *this;
+        }
+
+        Builder& addNoRecalc(const bool& noRecalc) {
+            uiConfig.no_recalc = noRecalc;
+            return *this;
+        }
+
+        Builder& addNonRecalc(const bool& nonRecalc) {
+            uiConfig.non_recalc = nonRecalc;
+            return *this;
+        }
+        
+        Builder& addMakeMovementDynamic(const bool& makeMovementDynamic) {
+            uiConfig.makeMovementDynamic = makeMovementDynamic;
+            return *this;
+        }
+
+        Builder& addMaster(const entt::entity& master) {
+            uiConfig.master = master;
+            return *this;
+        }
+
+        Builder& addParent(const entt::entity& parent) {
+            uiConfig.parent = parent;
+            return *this;
+        }
+
+        Builder& addObject(const entt::entity& object) {
+            uiConfig.object = object;
+            return *this;
+        }
+
+
+    
+        // align only applies to containers, not to ui elements
+        Builder& addAlign(const int& align) {
+            uiConfig.alignmentFlags = align;
+            return *this;
+        }
+
+        Builder& addWidth(const int& width) {
+            uiConfig.width = width;
+            return *this;
+        }
+
+        Builder& addHeight(const int& height) {
+            uiConfig.height = height;
+            return *this;
+        }
+
+        Builder& addMaxWidth(const int& maxWidth) {
+            uiConfig.maxWidth = maxWidth;
+            return *this;
+        }
+
+        Builder& addMaxHeight(const int& maxHeight) {
+            uiConfig.maxHeight = maxHeight;
+            return *this;
+        }
+
+        Builder& addMinWidth(const int& minWidth) {
+            uiConfig.minWidth = minWidth;
+            return *this;
+        }
+
+        Builder& addMinHeight(const int& minHeight) {
+            uiConfig.minHeight = minHeight;
+            return *this;
+        }
+
+        Builder& addPadding(const float& padding) {
+            uiConfig.padding = padding;
+            return *this;
+        }
+
+        Builder& addColor(const Color& colour) {
+            uiConfig.color = colour;
+            return *this;
+        }
+
+        Builder& addOutlineColor(const Color& outlineColour) {
+            uiConfig.outlineColor = outlineColour;
+            return *this;
+        }
+
+        Builder& addOutlineThickness(const float& outlineThickness) {
+            uiConfig.outlineThickness = outlineThickness;
+            return *this;
+        }
+
+        Builder& addShadow(const bool& shadow) {
+            uiConfig.shadow = shadow;
+            return *this;
+        }
+
+        Builder& addShadowColor(const Color& shadowColour) {
+            uiConfig.shadowColor = shadowColour;
+            return *this;
+        }
+
+        Builder& addNoFill(const bool& noFill) {
+            uiConfig.noFill = noFill;
+            return *this;
+        }
+
+        Builder& addPixelatedRectangle(const bool& pixelatedRectangle) {
+            uiConfig.pixelatedRectangle = pixelatedRectangle;
+            return *this;
+        }
+
+        Builder& addCanCollide(const bool& canCollide) {
+            uiConfig.canCollide = canCollide;
+            return *this;
+        }
+
+        Builder& addCollideable(const bool& collideable) {
+            uiConfig.collideable = collideable;
+            return *this;
+        }
+
+        Builder& addForceCollision(const bool& forceCollision) {
+            uiConfig.forceCollision = forceCollision;
+            return *this;
+        }
+
+        Builder& addButtonUIE(const entt::entity& buttonUIE) {
+            uiConfig.button_UIE = buttonUIE;
+            return *this;
+        }
+
+        Builder& addDisableButton(const bool& disableButton) {
+            uiConfig.disable_button = disableButton;
+            return *this;
+        }
+        
+        Builder& addProgressBarFetchValueLamnda(const std::function<float(entt::entity)>& progressBarFetchValueLambda) {
+            uiConfig.progressBarFetchValueLambda = progressBarFetchValueLambda;
+            return *this;
+        }
+
+        Builder& addProgressBar(const bool& progressBar) {
+            uiConfig.progressBar = progressBar;
+            return *this;
+        }
+
+        Builder& addProgressBarEmptyColor(const Color& progressBarEmptyColor) {
+            uiConfig.progressBarEmptyColor = progressBarEmptyColor;
+            return *this;
+        }
+
+        Builder& addProgressBarFullColor(const Color& progressBarFullColor) {
+            uiConfig.progressBarFullColor = progressBarFullColor;
+            return *this;
+        }
+
+        Builder& addProgressBarMaxValue(const float& progressBarMaxValue) {
+            uiConfig.progressBarMaxValue = progressBarMaxValue;
+            return *this;
+        }
+
+        Builder& addProgressBarValueComponentName(const std::string& progressBarValueComponentName) {
+            uiConfig.progressBarValueComponentName = progressBarValueComponentName;
+            return *this;
+        }
+
+        Builder& addProgressBarValueFieldName(const std::string& progressBarValueFieldName) {
+            uiConfig.progressBarValueFieldName = progressBarValueFieldName;
+            return *this;
+        }
+
+        Builder& addUIObjectUpdated(const bool& uiObjectUpdated) {
+            uiConfig.ui_object_updated = uiObjectUpdated;
+            return *this;
+        }
+
+        Builder& addButtonDelayStart(const float& buttonDelayStart) {
+            uiConfig.buttonDelayStart = buttonDelayStart;
+            return *this;
+        }
+
+        Builder& addButtonDelay(const float& buttonDelay) {
+            uiConfig.buttonDelay = buttonDelay;
+            return *this;
+        }
+
+        Builder& addButtonDelayProgress(const float& buttonDelayProgress) {
+            uiConfig.buttonDelayProgress = buttonDelayProgress;
+            return *this;
+        }
+
+        Builder& addButtonDelayEnd(const float& buttonDelayEnd) {
+            uiConfig.buttonDelayEnd = buttonDelayEnd;
+            return *this;
+        }
+
+        Builder& addButtonClicked(const bool& buttonClicked) {
+            uiConfig.buttonClicked = buttonClicked;
+            return *this;
+        }
+
+        Builder& addButtonDistance(const float& buttonDistance) {
+            uiConfig.buttonDistance = buttonDistance;
+            return *this;
+        }
+
+        Builder& addTooltip(const Tooltip& tooltip) {
+            uiConfig.tooltip = tooltip;
+            return *this;
+        }
+
+        Builder& addDetailedTooltip(const Tooltip& detailedTooltip) {
+            uiConfig.detailedTooltip = detailedTooltip;
+            return *this;
+        }
+
+        Builder& addOnDemandTooltip(const Tooltip& onDemandTooltip) {
+            uiConfig.onDemandTooltip = onDemandTooltip;
+            return *this;
+        }
+
+        Builder& addHover(const bool& hover) {
+            uiConfig.hover = hover;
+            return *this;
+        }
+
+        Builder& addForceFocus(const bool& forceFocus) {
+            uiConfig.force_focus = forceFocus;
+            return *this;
+        }
+
+        Builder& addDynamicMotion(const bool& dynamicMotion) {
+            uiConfig.dynamicMotion = dynamicMotion;
+            return *this;
+        }
+
+        Builder& addChoice(const bool& choice) {
+            uiConfig.choice = choice;
+            return *this;
+        }
+
+        Builder& addChosen(const bool& chosen) {
+            uiConfig.chosen = chosen;
+            return *this;
+        }
+
+        Builder& addOnePress(const bool& onePress) {
+            uiConfig.one_press = onePress;
+            return *this;
+        }
+
+        Builder& addChosenVert(const std::string& chosenVert) {
+            uiConfig.chosen_vert = chosenVert;
+            return *this;
+        }
+
+        Builder& addDrawAfter(const bool& drawAfter) {
+            uiConfig.draw_after = drawAfter;
+            return *this;
+        }
+
+        Builder& addFocusArgs(const FocusArgs& focusArgs) {
+            uiConfig.focusArgs = focusArgs;
+            return *this;
+        }
+
+        Builder& addUpdateFunc(const std::function<void(entt::registry*, entt::entity, float)> &func) {
+            uiConfig.updateFunc = func;
+            return *this;
+        }
+        
+        Builder& addInitFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
+            uiConfig.initFunc = func;
+            return *this;
+        }
+        
+        Builder& addOnUIResizeFunc(const std::function<void(entt::registry*, entt::entity)> &func) {
+            uiConfig.onUIResizeFunc = func;
+            return *this;
+        }
+        
+        Builder& addOnUIScalingResetToOne(const std::function<void(entt::registry*, entt::entity)> &func) {
+            uiConfig.onUIScalingResetToOne = func;
+            return *this;
+        }
+
+        Builder& addInstaFunc(const bool& instaFunc) {
+            uiConfig.instaFunc = instaFunc;
+            return *this;
+        }
+
+        Builder& addButtonCallback(const std::function<void()> buttonCallback) {
+            uiConfig.buttonCallback = buttonCallback;
+            return *this;
+        }
+
+        Builder& addButtonTemp(const std::function<void()> buttonTemp) {
+            uiConfig.buttonTemp = buttonTemp;
+            return *this;
+        }
+
+        Builder& addRefEntity(const entt::entity& refEntity) {
+            uiConfig.ref_entity = refEntity;
+            return *this;
+        }
+
+        Builder& addRefComponent(const std::string& refComponent) {
+            uiConfig.ref_component = refComponent;
+            return *this;
+        }
+
+        Builder& addRefValue(const std::string& refValue) {
+            uiConfig.ref_value = refValue;
+            return *this;
+        }
+
+        Builder& addPrevRefValue(const entt::meta_any& prevRefValue) {
+            uiConfig.prev_ref_value = prevRefValue;
+            return *this;
+        }
+
+        Builder& addText(const std::string& text) {
+            uiConfig.text = text;
+            return *this;
+        }
+
+        Builder& addLanguage(const std::string& language) {
+            uiConfig.language = language;
+            return *this;
+        }
+
+        Builder& addVerticalText(const bool& verticalText) {
+            uiConfig.verticalText = verticalText;
+            return *this;
+        }
+
+        Builder& addHPopup(const entt::entity& hPopup) {
+            uiConfig.hPopup = hPopup;
+            return *this;
+        }
+
+        Builder& addHPopupConfig(const std::shared_ptr<UIConfig>& hPopupConfig) {
+            uiConfig.hPopupConfig = hPopupConfig;
+            return *this;
+        }
+
+        Builder& addDPopup(const entt::entity& dPopup) {
+            uiConfig.dPopup = dPopup;
+            return *this;
+        }
+
+        Builder& addDPopupConfig(const std::shared_ptr<UIConfig>& dPopupConfig) {
+            uiConfig.dPopupConfig = dPopupConfig;
+            return *this;
+        }
+
+        Builder& addExtendUp(const float& extendUp) {
+            uiConfig.extend_up = extendUp;
+            return *this;
+        }
+
+        Builder& addResolution(const float& resolution) {
+            uiConfig.resolution = resolution;
+            return *this;
+        }
+
+        Builder& addEmboss(const float& emboss) {
+            uiConfig.emboss = emboss;
+            return *this;
+        }
+
+        Builder& addLineEmboss(const bool& lineEmboss) {
+            uiConfig.line_emboss = lineEmboss;
+            return *this;
+        }
+
+        Builder& addMid(const bool& mid) {
+            uiConfig.mid = mid;
+            return *this;
+        }
+
+        Builder& addNoRole(const bool& noRole) {
+            uiConfig.noRole = noRole;
+            return *this;
+        }
+
+        Builder& addRole(const transform::InheritedProperties& role) {
+            uiConfig.role = role;
+            return *this;
+        }
+        
+        Builder& addStylingType(const UIStylingType& stylingType) {
+            uiConfig.stylingType = stylingType;
+            return *this;
+        }
+
+        Builder& addNPatchInfo(const std::optional<NPatchInfo>& nPatchInfo) {
+            uiConfig.nPatchInfo = nPatchInfo;
+            return *this;
+        }
+
+        Builder& addNPatchSourceTexture(const std::optional<Texture2D>& nPatchSourceTexture) {
+            uiConfig.nPatchSourceTexture = nPatchSourceTexture;
+            return *this;
+        }
+
+        UIConfig build() {
+            return uiConfig;
+        }
     };
 
     // TODO: probably get rid of intermediate types like this?
@@ -784,36 +791,52 @@ namespace ui
     // used for generating ui definitions
     struct UIElementTemplateNode
     {
-        UITypeEnum type;                             // Type of UI Element (e.g., ROOT, TEXT, COLUMN)
+        UITypeEnum type{UITypeEnum::NONE};                             // Type of UI Element (e.g., ROOT, TEXT, COLUMN)
         UIConfig config;                             // Config settings (align, padding, color, etc.)
         std::vector<UIElementTemplateNode> children; // Child UI elements
+        struct Builder;   // <-- just announce it exists
 
-        struct Builder {
-            std::shared_ptr<UIElementTemplateNode> uiElement = std::make_shared<UIElementTemplateNode>();
+        
+    };
+    
+    
+    struct UIElementTemplateNode::Builder {
+        UIElementTemplateNode uiElement{};
+        bool addTypeCalled = false; // Flag to check if addType was called
 
-            static Builder create() {
-                return Builder();
-            }
+        static Builder create() {
+            return Builder();
+        }
 
-            Builder& addType(const UITypeEnum& type) {
-                uiElement->type = type;
-                return *this;
+        Builder& addType(const UITypeEnum& type) {
+            if (!magic_enum::enum_contains<UITypeEnum>(type)) {
+                throw std::invalid_argument(
+                  std::string("addType(): invalid UITypeEnum value = ")
+                  + std::to_string(static_cast<int>(type))
+                );
             }
+            uiElement.type = type;
+            addTypeCalled = true; // Set the flag to true when addType is called
+            return *this;
+        }
 
-            Builder& addConfig(const UIConfig& config) {
-                uiElement->config = config;
-                return *this;
-            }
-            
-            Builder& addChild(const UIElementTemplateNode& child) {
-                uiElement->children.push_back(child);
-                return *this;
-            }
+        Builder& addConfig(const UIConfig& config) {
+            uiElement.config = config;
+            return *this;
+        }
+        
+        Builder& addChild(const UIElementTemplateNode& child) {
+            uiElement.children.push_back(child);
+            return *this;
+        }
 
-            UIElementTemplateNode build() {
-                return *uiElement;
+        UIElementTemplateNode build() {
+            // assert that addType was called for this builder.
+            if (!addTypeCalled) {
+                throw std::runtime_error("UIElementTemplateNode must have a type set before building.");
             }
-        };
+            return uiElement;
+        }
     };
 
     // Data structure for drawing a pixellated rectangle with rough edges

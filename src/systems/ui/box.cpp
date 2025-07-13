@@ -1,11 +1,34 @@
 #include "box.hpp"
 
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
+#include "systems/layer/layer_command_buffer.hpp"
+#include "systems/layer/layer_optimized.hpp"
 #include "systems/text/textVer2.hpp"
 #include "systems/layer/layer_order_system.hpp"
 #include "systems/collision/broad_phase.hpp"
+#include "systems/shaders//shader_pipeline.hpp"
 #include "components/graphics.hpp"
 #include "inventory_ui.hpp"
 #include "core/globals.hpp"
+namespace std {
+template<>
+struct hash<ui::UIElementTemplateNode> {
+    size_t operator()(ui::UIElementTemplateNode const &node) const noexcept {
+    // e.g. combine the address & some stable value,
+    // but simplest is to hash the pointer to it:
+    return reinterpret_cast<size_t>(&node);
+    }
+};
+template<>
+struct equal_to<ui::UIElementTemplateNode> {
+    bool operator()(ui::UIElementTemplateNode const &a,
+                    ui::UIElementTemplateNode const &b) const noexcept {
+    return &a == &b;
+    }
+};
+}
+
+
 namespace ui
 {
     // TODO: update function registry for methods that replace transform-provided methods
@@ -27,17 +50,17 @@ namespace ui
     {
         struct StackEntry
         {
-            UIElementTemplateNode *def;
+            UIElementTemplateNode def;
             entt::entity parent;
         }; 
 
         // make ui box screen space as well
-        registry.emplace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
+        registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(uiBoxEntity);
 
         std::stack<StackEntry> stack;
-        std::unordered_map<UIElementTemplateNode *, entt::entity> nodeToEntity;
+        std::unordered_map<UIElementTemplateNode, entt::entity> nodeToEntity;
 
-        stack.push({&rootDef, uiElementParent});
+        stack.push({rootDef, uiElementParent});
 
         while (!stack.empty())
         {
@@ -45,13 +68,22 @@ namespace ui
             stack.pop();
 
             // Create new UI element
-            entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def->type, def->config);
+            entt::entity entity = element::Initialize(registry, parent, uiBoxEntity, def.type, def.config);
             // make screen space  no matter what
-            registry.emplace<collision::ScreenSpaceCollisionMarker>(entity);
+            registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(entity);
             nodeToEntity[def] = entity;
             auto *config = registry.try_get<UIConfig>(entity);
+            
+            // if ((int)entity == 840) {
+            //     SPDLOG_DEBUG("Debugging UI element with entity ID 840");
+            // }
+            
+            if (magic_enum::enum_name<UITypeEnum>(def.type) == "") {
+                SPDLOG_ERROR("UITypeEnum is not set for entity {}, parent {}, type {}", static_cast<int>(entity), static_cast<int>(parent), magic_enum::enum_name<UITypeEnum>(def.type));
+                throw std::runtime_error("UITypeEnum is not set for entity " + std::to_string(static_cast<int>(entity)) + ", parent " + std::to_string(static_cast<int>(parent)) + ", value is: " + std::to_string((int)def.type));
+            }
 
-            SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def->type), static_cast<int>(entity), static_cast<int>(parent));
+            SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def.type), static_cast<int>(entity), static_cast<int>(parent));
 
             auto *parentConfig = registry.try_get<UIConfig>(parent);
 
@@ -87,7 +119,7 @@ namespace ui
             }
 
             // If object + button
-            if (def->type == UITypeEnum::OBJECT && config && config->buttonCallback)
+            if (def.type == UITypeEnum::OBJECT && config && config->buttonCallback)
             {
                 auto &node = registry.get<transform::GameObject>(config->object.value());
                 node.state.clickEnabled = false;
@@ -95,9 +127,16 @@ namespace ui
                 // make the object also screen space
                 registry.emplace<collision::ScreenSpaceCollisionMarker>(config->object.value());
             }
+            
+            // if object, make sure the object is screen space, and so is the OBJECT container
+            if (config->object && registry.valid(config->object.value()))
+            {
+                registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(config->object.value());
+                
+            }
 
             // If text, pre-calculate text bounds
-            if (def->type == UITypeEnum::TEXT && config && config->text)
+            if (def.type == UITypeEnum::TEXT && config && config->text)
             {
                 float scale = config->scale.value_or(1.0f);
                 float fontSize = localization::getFontData().fontLoadedSize * scale * localization::getFontData().fontScale;
@@ -141,24 +180,24 @@ namespace ui
                 SPDLOG_DEBUG("Inserted child into parent {}: ID = {}, Entity = {}", static_cast<int>(parent), thisConfig.id.value(), static_cast<int>(entity));
             }
 
-            if (def->config.mid)
+            if (def.config.mid)
             {
                 auto &boxTransform = registry.get<transform::Transform>(uiBoxEntity);
                 boxTransform.middleEntityForAlignment = entity;
             }
 
             // Push children in reverse order so the first child is processed first
-            if (def->type == UITypeEnum::VERTICAL_CONTAINER || def->type == UITypeEnum::HORIZONTAL_CONTAINER || def->type == UITypeEnum::ROOT)
+            if (def.type == UITypeEnum::VERTICAL_CONTAINER || def.type == UITypeEnum::HORIZONTAL_CONTAINER || def.type == UITypeEnum::ROOT)
             {
-                SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def->type));
-                for (int i = static_cast<int>(def->children.size()) - 1; i >= 0; --i)
+                SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def.type));
+                for (int i = static_cast<int>(def.children.size()) - 1; i >= 0; --i)
                 {
                     // Only assign an ID if one hasn't already been set
-                    if (!def->children[i].config.id.has_value())
+                    if (!def.children[i].config.id.has_value())
                     {
-                        def->children[i].config.id = std::to_string(i); // or use indexToAlphaID(i)
+                        def.children[i].config.id = std::to_string(i); // or use indexToAlphaID(i)
                     }
-                    stack.push({&def->children[i], entity});
+                    stack.push({def.children[i], entity});
                 }
             }
         }
@@ -237,13 +276,16 @@ namespace ui
                                  UIElementTemplateNode definition, std::optional<UIConfig> config)
     {
         auto self = transform::CreateOrEmplace(&registry, globals::gameWorldContainerEntity, transformData.x, transformData.y, transformData.w, transformData.h);
+        
+        // ui box should be screen space by default
+        registry.emplace<collision::ScreenSpaceCollisionMarker>(self);
 
         // Initialize transform component
         auto &transform = registry.get<transform::Transform>(self);
         transform.setActualRotation(transformData.r);
 
         // Store UIBox definition, which contains schematic
-        registry.emplace<UIElementTemplateNode>(self, definition);
+        auto &templateDefToUse = registry.emplace<UIElementTemplateNode>(self, definition);
         if (config)
             registry.emplace<UIConfig>(self, config.value());
         registry.emplace<UIState>(self);
@@ -300,7 +342,7 @@ namespace ui
         // Parent-child relationship setup (construct UI tree)
 
         // First, set parent-child relationships to create the tree structure
-        BuildUIElementTree(registry, self, definition, entt::null);
+        BuildUIElementTree(registry, self, templateDefToUse, entt::null);
         auto *uiBox = registry.try_get<UIBoxComponent>(self);
         auto *uiBoxRole = registry.try_get<transform::InheritedProperties>(self);
         auto uiRoot = uiBox->uiRoot.value();
@@ -1795,6 +1837,7 @@ namespace ui
 
     void box::Recalculate(entt::registry &registry, entt::entity entity)
     {
+        using namespace snowhouse;
         bool doNotUse = true;
         AssertThat(doNotUse, Is().EqualTo(false)); // TODO: this method should be deleted
 
@@ -1838,18 +1881,46 @@ namespace ui
             globals::REFRESH_FRAME_MASTER_CACHE.reset();
         }
     }
+    
+    
+    /**
+     * @brief Finds the end index of a subtree in a draw order list.
+     *
+     * This function determines the range of items in the `drawOrder` vector
+     * that belong to the subtree starting at the specified `startIndex`.
+     * The subtree is defined as all consecutive items with a depth greater
+     * than the depth of the item at `startIndex`.
+     *
+     * @param drawOrder A vector of `UIDrawListItem` objects representing the draw order.
+     * @param startIndex The index of the item where the subtree starts.
+     * @return The index one past the last descendant of the subtree.
+     */
+    static size_t findSubtreeEnd(const std::vector<UIDrawListItem>& drawOrder,
+        size_t                        startIndex)
+    {
+        int myDepth = drawOrder[startIndex].depth;
+        size_t i = startIndex + 1;
+        // all items with depth > myDepth belong to my subtree
+        while (i < drawOrder.size() && drawOrder[i].depth > myDepth) {
+            ++i;
+        }
+        return i;  // one past the last descendant
+    }
 
-    void box::drawAllBoxes(entt::registry &registry,
+    void box::drawAllBoxesShaderEnabled(entt::registry &registry,
                            std::shared_ptr<layer::Layer> layerPtr)
     {
         // 1) Build a flat list in the exact order your old box::Draw would have used.
-        std::vector<entt::entity> drawOrder;
+        std::vector<UIDrawListItem> drawOrder;
         drawOrder.reserve(200); // or an estimate of your total UI element count
 
         // TODO call for all ui boxes
         auto view = registry.view<UIBoxComponent>();
         for (auto ent : view)
         {
+            // check if the entity is active
+            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
+                continue; // skip inactive entities
             // TODO: probably sort these with layer order
             buildUIBoxDrawList(registry, ent, drawOrder);
         }
@@ -1873,8 +1944,147 @@ namespace ui
         int drawOrderZIndex = 0;
 
         // 3) Loop in our flattened order:
-        for (auto ent : drawOrder)
+        for (size_t i = 0; i < drawOrder.size(); ++i) {
+            auto &drawListItem = drawOrder[i];
+            auto ent = drawListItem.e;
+            
+            // 1) update box Z every iteration
+            auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
+            if (elemComp.uiBox != uiBoxEntity) {
+                uiBoxEntity     = elemComp.uiBox;
+                drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+            }
+            
+            //TODO: update with:drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex; if the uibox has changed.
+
+            if (!registry.valid(ent))
+                continue;
+
+            auto &cfg = globalUIGroup.get<UIConfig>(ent);
+
+            // Check pipeline
+            auto* pipeline = registry.try_get<shader_pipeline::ShaderPipelineComponent>(ent);
+            if (pipeline && (pipeline->hasPassesOrOverlays())) {
+                SPDLOG_DEBUG("Drawing UI element {} with shader pipeline", (int)    ent);
+                //FIXME: only include children if config says so.
+                // Determine range: element + all children with greater depth
+                size_t start = i;
+                int parentDepth = drawOrder[i].depth;
+                size_t end = i + 1;
+                bool includeChildren = cfg.includeChildrenInShaderPass;
+
+                if (includeChildren) {
+                    while (end < drawOrder.size() && drawOrder[end].depth > parentDepth)
+                    {
+                        auto &nextElemComp = globalUIGroup.get<UIElementComponent>(drawOrder[end].e);
+                        if (nextElemComp.uiBox != uiBoxEntity) {
+                            break; // stop if we reach a different UIBox
+                        }
+                        
+                        // increment end index otherwise, we are in the same UIBox
+                        ++end;
+                    }
+                }
+
+                // Offscreen render pass
+                //TODO: make this a command that can be queued. Also, how to pass draw order list in an efficient way?
+                //TODO: how to do z index here? layer & tree order?
+                layer::QueueCommand<layer::CmdRenderUISliceFromDrawList>(
+                    layerPtr,
+                    [&, start, end](layer::CmdRenderUISliceFromDrawList *cmd) {
+                      // build only the subrange you need
+                      cmd->drawList.assign(
+                        drawOrder.begin() + start,
+                        drawOrder.begin() + end
+                      );
+                      cmd->startIndex = 0;      // after assign, indices are [0..end-start)
+                      cmd->endIndex   = end - start;
+                    },
+                    drawOrderZIndex
+                  );
+                // renderSliceOffscreenFromDrawList(registry, drawOrder, start, end, layerPtr);
+                if (includeChildren) {
+                    i = end - 2;
+                }
+                continue;
+            }
+
+            // Pull the five group‐components by reference (O(1)):
+            // auto &elemComp = globalUIGroup.get<UIElementComponent>(ent);
+            // auto &st = globalUIGroup.get<UIState>(ent);
+            // auto &node = globalUIGroup.get<transform::GameObject>(ent);
+            // auto &xf = globalUIGroup.get<transform::Transform>(ent);
+
+            if (elemComp.uiBox != uiBoxEntity)
+            {
+                // If this is a new UIBox, set the current box entity.
+                uiBoxEntity = elemComp.uiBox;
+                drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+            }
+
+            // Finally call your lean DrawSelf that only does `try_get`
+            // for optional pieces (RoundedRectangleVerticesCache, etc.).
+            //FIXME: this should be a command that can be queued.
+            // element::DrawSelfImmediate(layerPtr, ent, elemComp, cfg, st, node, xf);
+            
+            layer::QueueCommand<layer::CmdRenderUISelfImmediate>(
+                layerPtr, [ent](layer::CmdRenderUISelfImmediate *cmd) {
+                    //TODO: fill here
+                    cmd->entity = ent;
+                }, drawOrderZIndex);
+        }
+
+        // 4) If you still want to draw bounding boxes for each UIBox itself:
+        if (globals::drawDebugInfo)
         {
+            for (auto box : view)
+            {
+                transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
+            }
+        }
+    }
+
+
+    void box::drawAllBoxes(entt::registry &registry,
+                           std::shared_ptr<layer::Layer> layerPtr)
+    {
+        // 1) Build a flat list in the exact order your old box::Draw would have used.
+        std::vector<UIDrawListItem> drawOrder;
+        drawOrder.reserve(200); // or an estimate of your total UI element count
+
+        // TODO call for all ui boxes
+        auto view = registry.view<UIBoxComponent>();
+        for (auto ent : view)
+        {
+            // check if the entity is active
+            if (!entity_gamestate_management::active_states_instance().is_active(registry.get<entity_gamestate_management::StateTag>(ent)))
+                continue; // skip inactive entities
+            // TODO: probably sort these with layer order
+            buildUIBoxDrawList(registry, ent, drawOrder);
+        }
+
+        // 2) Now draw them all with one tight fully owning group loop.  First, set up a group
+        //    of the “always‐present” components every drawable element needs:
+        if (uiGroupInitialized == false)
+        {
+            // This is a static group that will be reused for all draws.
+            // It contains the five components we need to draw any UI element.
+            uiGroupInitialized = true;
+
+            globalUIGroup = registry.group<UIElementComponent,
+                                           UIConfig,
+                                           UIState,
+                                           transform::GameObject,
+                                           transform::Transform>();
+        }
+
+        entt::entity uiBoxEntity{entt::null};
+        int drawOrderZIndex = 0;
+
+        // 3) Loop in our flattened order:
+        for (auto &drawListItem : drawOrder)
+        {
+            auto ent = drawListItem.e;
 
             if (!registry.valid(ent))
                 continue;
@@ -1911,7 +2121,8 @@ namespace ui
     void box::buildUIBoxDrawList(
         entt::registry &registry,
         entt::entity boxEntity,
-        std::vector<entt::entity> &out)
+        std::vector<UIDrawListItem> &out,
+        int depth )
     {
         // Fetch the UIBox and its GameObject. If either is missing, bail.
         auto *uiBox = registry.try_get<UIBoxComponent>(boxEntity);
@@ -1939,12 +2150,15 @@ namespace ui
             if (childUIElement && entryName != "h_popup" && entryName != "alert")
             {
                 // DrawSelf + DrawChildren are replaced by a flattening of the element subtree:
-                element::buildUIDrawList(registry, child, out);
+                
+                // pre‐draw of child + subtree, record at this depth
+                element::buildUIDrawList(registry, child, out, depth);
             }
             // If it’s another UIBox, recurse fully into that box:
             else if (childUIBox)
             {
-                buildUIBoxDrawList(registry, child, out);
+                // recurse boxes at same depth
+                buildUIBoxDrawList(registry, child, out, depth);
             }
             // else: skip everything else
         }
@@ -1955,9 +2169,9 @@ namespace ui
 
             entt::entity rootElem = uiBox->uiRoot.value();
             // 1) draw the root itself (same as element::DrawSelf(root))
-            out.push_back(rootElem);
+            out.push_back({rootElem, depth});
             // rootElem might itself have children; flatten them as well
-            element::buildUIDrawList(registry, rootElem, out);
+            element::buildUIDrawList(registry, rootElem, out, depth + 1);
         }
 
         // 3) Iterate drawLayers in insertion order:
@@ -1979,11 +2193,11 @@ namespace ui
 
             if (layerElemEl)
             {
-                element::buildUIDrawList(registry, layerEnt, out);
+                element::buildUIDrawList(registry, layerEnt, out, depth);
             }
             else if (layerElemBox)
             {
-                buildUIBoxDrawList(registry, layerEnt, out);
+                buildUIBoxDrawList(registry, layerEnt, out, depth);
             }
         }
 
@@ -1997,7 +2211,7 @@ namespace ui
 
             if (registry.valid(alertEnt) && alertNode && alertNode->state.visible && alertConfig)
             {
-                element::buildUIDrawList(registry, alertEnt, out);
+                element::buildUIDrawList(registry, alertEnt, out, depth);
             }
         }
     }

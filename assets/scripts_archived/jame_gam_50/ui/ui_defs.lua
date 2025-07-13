@@ -32,9 +32,8 @@ function ui_defs.generateUI()
         globals.currencies["whale_dust"].ui_icon_entity)
     
     local sliderTextMoving = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text"),  -- initial text
+        function() return localization.get("ui.currency_text") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     
@@ -125,9 +124,8 @@ function ui_defs.generateUI()
     
     -- now make the text entries for the other currencies
     local textSongEssence = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_song_essence"),  -- initial text
+        function() return localization.get("ui.currency_text_song_essence") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     textSongEssence.config.initFunc = function(registry, entity)
@@ -153,9 +151,8 @@ function ui_defs.generateUI()
     end
     
     local textWafers = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_wafers"),  -- initial text
+        function() return localization.get("ui.currency_text_wafers") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     
@@ -182,9 +179,8 @@ function ui_defs.generateUI()
     end
     
     local textCrystals = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_crystals"),  -- initial text
+        function() return localization.get("ui.currency_text_crystals") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     textCrystals.config.initFunc = function(registry, entity)
@@ -209,9 +205,8 @@ function ui_defs.generateUI()
     end
     
     local textChips = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.currency_text_chips"),  -- initial text
+        function() return localization.get("ui.currency_text_chips") end,  -- initial text
         16.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     textChips.config.initFunc = function(registry, entity)
@@ -353,16 +348,16 @@ function ui_defs.generateUI()
     
     
     -- dump(ui.box)
-    debug(ui)
-    debug(ui.element)
+    log_debug(ui)
+    log_debug(ui.element)
     -- dump(newRoot)
     
     local newUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 10}, newRoot)
     
     local newUIBoxTransform = registry:get(newUIBox, Transform)
     local uiBoxComp = registry:get(newUIBox, UIBoxComponent)
-    debug(newUIBox)
-    debug(uiBoxComp)
+    log_debug(newUIBox)
+    log_debug(uiBoxComp)
     -- anchor to the top right corner of the screen
     newUIBoxTransform.actualX = globals.screenWidth() - newUIBoxTransform.actualW -- 10 pixels from the right edge
     newUIBoxTransform.actualY = 10 -- 10 pixels from the top edge
@@ -371,7 +366,7 @@ function ui_defs.generateUI()
     timer.after(
         1.0, -- delay in seconds
         function()
-            -- debug("Aligning newUIBox to the game world container")
+            -- log_debug("Aligning newUIBox to the game world container")
             -- align the new UI box to the game world container
             --TODO: debug this, we need to get it working
             -- local uiBoxRole = registry:get(newUIBox, InheritedProperties)
@@ -379,8 +374,8 @@ function ui_defs.generateUI()
             -- transform.AssignRole(registry, newUIBox, InheritedPropertiesType.RoleInheritor, globals.gameWorldContainerEntity());
 
             -- local gameWorldContainerTransform = registry:get(globals.gameWorldContainerEntity(), Transform)
-            -- debug("uiBox width = ", uiBoxTransform.actualW, "uiBox height = ", uiBoxTransform.actualH)
-            -- debug("gameWorldContainer width = ", gameWorldContainerTransform.actualW, "gameWorldContainer height = ", gameWorldContainerTransform.actualH)
+            -- log_debug("uiBox width = ", uiBoxTransform.actualW, "uiBox height = ", uiBoxTransform.actualH)
+            -- log_debug("gameWorldContainer width = ", gameWorldContainerTransform.actualW, "gameWorldContainer height = ", gameWorldContainerTransform.actualH)
             -- uiBoxRole.flags = AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.ALIGN_TO_INNER_EDGES | AlignmentFlag.VERTICAL_TOP
         end
     )
@@ -388,9 +383,8 @@ function ui_defs.generateUI()
     
     -- prestige button
     local prestigeButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.achievements_button"),  -- initial text
+        function() return localization.get("ui.achievements_button") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "bump"                       -- animation spec
     )
     
@@ -405,7 +399,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- button click callback
-                debug("Prestige button clicked!")
+                log_debug("Prestige button clicked!")
                 local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
                 playSoundEffect("effects", "button-click") -- play button click sound
                 -- uibox_transform.actualY = uibox_transform.actualY + 300
@@ -452,9 +446,8 @@ function ui_defs.generateUI()
     
     -- help button
     local helpButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_title"),  -- initial text
+        function() return localization.get("ui.tip_title") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "bump"                       -- animation spec
     )
     
@@ -468,7 +461,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- button click callback
-                debug("Help button clicked!")
+                log_debug("Help button clicked!")
                 playSoundEffect("effects", "button-click") -- play button click sound
                 globals.ui.help_window_open = not globals.ui.help_window_open
                 helpuiboxTransform = registry:get(globals.ui.helpTextUIBox, Transform)
@@ -535,7 +528,7 @@ function ui_defs.generateUI()
     :build()
     
     for i, achivementDef in ipairs(globals.achievements) do
-        debug("Adding achievement: ", achivementDef.id, " with animation: ", achivementDef.anim)
+        log_debug("Adding achievement: ", achivementDef.id, " with animation: ", achivementDef.anim)
         -- make a new achievement animation entity
         achivementDef.anim_entity = animation_system.createAnimatedObjectWithTransform(
             achivementDef.unlocked and  achivementDef.anim or "locked_anim", -- animation ID
@@ -555,11 +548,11 @@ function ui_defs.generateUI()
         -- make it hoverable
         local achievementGameObject = registry:get(achivementDef.anim_entity, GameObject)
         achievementGameObject.methods.onHover = function()
-            debug("Achievement entity hovered!")
+            log_debug("Achievement entity hovered!")
             achivementDef.tooltipFunc()
         end
         achievementGameObject.methods.onStopHover = function()
-            debug("Achievement entity stopped hovering!")
+            log_debug("Achievement entity stopped hovering!")
             -- hideTooltip()
         end
         achievementGameObject.state.hoverEnabled = true
@@ -589,7 +582,7 @@ function ui_defs.generateUI()
         
         -- if we passed the sixth achievement, we need to start a new row
         if i % 6 == 0 and i > 1 then
-            debug("Reached sixth achievement with index: ", i, ", starting a new row.")
+            log_debug("Reached sixth achievement with index: ", i, ", starting a new row.")
             -- save the current row to the achievement rows
             table.insert(achievementRows, currentRow)
             -- start a new row
@@ -617,9 +610,8 @@ function ui_defs.generateUI()
     
     -- make a red X button 
     local closeButtonText = ui.definitions.getNewDynamicTextEntry(
-        "Close",  -- initial text
+        function() return "Close" end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make a new close button template
@@ -633,7 +625,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- close the prestige window
-                debug("Prestige window close button clicked!")
+                log_debug("Prestige window close button clicked!")
                 globals.ui.prestige_window_open = false
                 local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
                 uibox_transform.actualY = globals.screenHeight()  -- move it out of the screen
@@ -666,9 +658,8 @@ function ui_defs.generateUI()
     
     -- achievements text for the top of the window
     local achievementsText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.achievements_button"),  -- initial text
+        function() return localization.get("ui.achievements_button") end,  -- initial text
         30.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     
@@ -725,20 +716,19 @@ function ui_defs.generateUI()
     
     -- ui for the buildings
     local buildingText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.building_text"),  -- initial text
+        function() return localization.get("ui.building_text") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "float"                       -- animation spec
     )
     
     local buildingTextGameObject = registry:get(buildingText.config.object, GameObject)
     -- set onhover & stop hover callbacks to show tooltip
     buildingTextGameObject.methods.onHover = function()
-        debug("Building text entity hovered!")
+        log_debug("Building text entity hovered!")
         showTooltip(localization.get("ui.grav_wave_title"), localization.get("ui.grav_wave_desc"))
     end
     buildingTextGameObject.methods.onStopHover = function()
-        debug("Building text entity stopped hovering!")
+        log_debug("Building text entity stopped hovering!")
         -- hideTooltip()
     end
     -- make hoverable
@@ -757,7 +747,7 @@ function ui_defs.generateUI()
         :addProgressBarEmptyColor(util.getColor("WHITE"))
         :addProgressBarFetchValueLamnda(function(entity)
             -- return the timer value for the gravity wave thing
-            -- debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
+            -- log_debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
             return (globals.gravityWaveSeconds - globals.timeUntilNextGravityWave) / (timer.get_delay("shockwave_uniform_tween") or globals.gravityWaveSeconds)
         end)
 
@@ -859,7 +849,7 @@ function ui_defs.generateUI()
             
                     -- 3) if status flipped, show popup
                     if wasUnlocked ~= allRequiredUnlocked then
-                        debug("Building ", building.id,
+                        log_debug("Building ", building.id,
                               " unlocked status changed to: ", allRequiredUnlocked)
                         if allRequiredUnlocked then
                             newTextPopup(
@@ -943,7 +933,7 @@ function ui_defs.generateUI()
 
                     -- 4) flip-detect and popup
                     if wasUnlocked ~= allReqsOK then
-                        debug("Converter ", conv.id,
+                        log_debug("Converter ", conv.id,
                             " unlocked status changed to: ", allReqsOK)
                         if allReqsOK then
                             newTextPopup(
@@ -982,9 +972,8 @@ function ui_defs.generateUI()
     
     -- "left" button
     local leftButtonText = ui.definitions.getNewDynamicTextEntry(
-        "<",  -- initial text
+        function() return "<" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -999,7 +988,7 @@ function ui_defs.generateUI()
             :addButtonCallback(function()
                 playSoundEffect("effects", "button-click") -- play button click sound
                 cycleBuilding(-1) -- decrement the selected building index
-                -- debug("Left button clicked! Current building index: ", globals.selectedBuildingIndex)
+                -- log_debug("Left button clicked! Current building index: ", globals.selectedBuildingIndex)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -1030,9 +1019,8 @@ function ui_defs.generateUI()
     
     -- right button
     local rightButtonText = ui.definitions.getNewDynamicTextEntry(
-        ">",  -- initial text
+        function() return ">" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -1060,9 +1048,8 @@ function ui_defs.generateUI()
     
     -- buy button
     local buyButtonText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.buy_button"),  -- initial text
+        function() return localization.get("ui.buy_button") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     -- make new button template
@@ -1096,9 +1083,8 @@ function ui_defs.generateUI()
     
     -- "left" button
     local leftButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        "<",  -- initial text
+        function() return "<" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -1144,9 +1130,8 @@ function ui_defs.generateUI()
     
     -- right button
     local rightButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        ">",  -- initial text
+        function() return ">" end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make new button template
@@ -1161,7 +1146,7 @@ function ui_defs.generateUI()
             :addButtonCallback(function()
                 -- button click callback
                 playSoundEffect("effects", "button-click") -- play button click sound
-                debug("Right button clicked!")
+                log_debug("Right button clicked!")
                 cycleConverter(1)
             end)
             :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
@@ -1176,9 +1161,8 @@ function ui_defs.generateUI()
     
     -- buy button
     local buyButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.buy_button"),  -- initial text
+        function() return localization.get("ui.buy_button") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     -- make new button template
@@ -1193,7 +1177,7 @@ function ui_defs.generateUI()
             :addButtonCallback(function()
                 -- button click callback
                 playSoundEffect("effects", "button-click") -- play button click sound
-                debug("Buy button clicked!")
+                log_debug("Buy button clicked!")
                 
                 buyConverterButtonCallback()
                 
@@ -1255,53 +1239,45 @@ function ui_defs.generateUI()
     
     -- new help window
     local helpTextTitle = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_title"),  -- initial text
+        function() return localization.get("ui.tip_title") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     local helpTextBody1 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body"),  -- initial text
+        function() return localization.get("ui.tip_body") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody2 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_2"),  -- initial text
+        function() return localization.get("ui.tip_body_2") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody3 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_3"),  -- initial text
+        function() return localization.get("ui.tip_body_3") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody4 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_4"),  -- initial text
+        function() return localization.get("ui.tip_body_4") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody5 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_5"),  -- initial text
+        function() return localization.get("ui.tip_body_5") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         ""                       -- animation spec
     )
     local helpTextBody6 = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.tip_body_6"),  -- initial text
+        function() return localization.get("ui.tip_body_6") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "fade"                       -- animation spec
     )
     
     -- new close button
     local closeHelpButtonText = ui.definitions.getNewDynamicTextEntry(
-        "Close",  -- initial text
+        function() return "Close" end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "pulse=0.9,1.1"                       -- animation spec
     )
     -- make a new close button template
@@ -1315,7 +1291,7 @@ function ui_defs.generateUI()
             :addHover(true) -- needed for button effect
             :addButtonCallback(function()
                 -- close the help window    
-                debug("Help window close button clicked!")
+                log_debug("Help window close button clicked!")
                 playSoundEffect("effects", "button-click") -- play button click sound
                 globals.ui.help_window_open = false
                 local uibox_transform = registry:get(globals.ui.helpTextUIBox, Transform)
@@ -1380,9 +1356,8 @@ function ui_defs.generateUI()
     
     -- new achivement window
     local newAchievementText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("ui.new_achievement_title"),  -- initial text
+        function() return localization.get("ui.new_achievement_title") end,  -- initial text
         20.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     
@@ -1442,16 +1417,14 @@ function ui_defs.generateUI()
     
     -- tooltip ui box that will follow the mouse cursor
     local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("sample tooltip title"),  -- initial text
+        function() return localization.get("sample tooltip title") end,  -- initial text
         18.0,                                 -- font size
-        nil,                                  -- no style override
         "rainbow"                       -- animation spec
     )
     globals.ui.tooltipTitleText = tooltipTitleText.config.object
     local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
-        localization.get("Sample tooltip body text"),  -- initial text
+        function() return localization.get("Sample tooltip body text") end,  -- initial text
         15.0,                                 -- font size
-        nil,                                  -- no style override
         "fade"                       -- animation spec
     )
     globals.ui.tooltipBodyText = tooltipBodyText.config.object

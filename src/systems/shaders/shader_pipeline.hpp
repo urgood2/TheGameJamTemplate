@@ -90,6 +90,10 @@ namespace shader_pipeline {
             return true;
         }
 
+        bool hasPassesOrOverlays() const {
+            return !passes.empty() || !overlayDraws.empty();
+        }
+
         // Clear both passes and overlays
         void clearAll() {
             passes.clear();

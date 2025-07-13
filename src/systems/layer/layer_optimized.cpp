@@ -1,6 +1,11 @@
 #include "layer_optimized.hpp"
 
 #include "layer.hpp"
+#include "core/globals.hpp"
+#include "systems/ui/element.hpp"
+
+#include "systems/ui/ui_data.hpp"
+#include "systems/layer/layer_command_buffer_data.hpp"
 
 namespace layer
 {
@@ -203,6 +208,17 @@ namespace layer
         RegisterRenderer<CmdEndDrawing>(DrawCommandType::EndDrawing, [](std::shared_ptr<layer::Layer> layer, CmdEndDrawing*) { EndDrawingAction(); });
         RegisterRenderer<CmdClearBackground>(DrawCommandType::ClearBackground, [](std::shared_ptr<layer::Layer> layer, CmdClearBackground* c) { 
             ClearBackgroundAction(c->color); 
+        });
+        RegisterRenderer<CmdRenderUISliceFromDrawList>(DrawCommandType::RenderUISliceFromDrawList, [](std::shared_ptr<layer::Layer> layer, CmdRenderUISliceFromDrawList* c) { 
+            renderSliceOffscreenFromDrawList(globals::registry, c->drawList, c->startIndex, c->endIndex, layer, c->pad); 
+        });
+        RegisterRenderer<CmdRenderUISelfImmediate>(DrawCommandType::RenderUISelfImmediate, [](std::shared_ptr<layer::Layer> layer, CmdRenderUISelfImmediate* c) { 
+            auto &uiElementComp = ui::globalUIGroup.get<ui::UIElementComponent>(c->entity);
+            auto &configComp = ui::globalUIGroup.get<ui::UIConfig>(c->entity);
+            auto &stateComp = ui::globalUIGroup.get<ui::UIState>(c->entity);
+            auto &nodeComp = ui::globalUIGroup.get<transform::GameObject>(c->entity);
+            auto &transformComp = ui::globalUIGroup.get<transform::Transform>(c->entity);
+            ui::element::DrawSelfImmediate(layer, c->entity, uiElementComp, configComp, stateComp, nodeComp, transformComp);
         });
         RegisterRenderer<CmdTranslate>(DrawCommandType::Translate, ExecuteTranslate);
         RegisterRenderer<CmdScale>(DrawCommandType::Scale, ExecuteScale);

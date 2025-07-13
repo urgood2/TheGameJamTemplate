@@ -11,14 +11,14 @@ local globals = require("init.globals")   -- core game constants & registry hand
 require("registry")                       -- registers `registry` global for ECS ops
 local task    = require("task.task")      -- coroutine helpers: wait, run_named_task
 require("ai.init")                       -- loads/initializes global `ai` definitions from scripts
-require("util.util")                     -- utility functions: debug(), fadeOutScreen(), etc.
+require("util.util")                     -- utility functions: log_debug(), fadeOutScreen(), etc.
 ```
 
 * **globals**: holds shared singletons (registry, inputState, etc.)
 * **registry**: your EnTT-backed world interface (`create`, `emplace`, `get`, `add_script`, `runtime_view`, etc.)
 * **task.task**: Lua module providing `task.wait`, `task.run_named_task`, and named coroutine management
 * **ai.init**: populates a global `ai` table with `entity_types`, `actions`, `worldstate_updaters`, `goal_selectors`, `blackboard_init`
-* **util.util**: common functions (e.g. `debug(...)`, `fadeOutScreen(duration)`)
+* **util.util**: common functions (e.g. `log_debug(...)`, `fadeOutScreen(duration)`)
 
 ---
 
@@ -226,13 +226,13 @@ Schedule `fn()` every `interval` seconds.
 
 ```lua
 timer.every(1.0, function()
-  debug("Tick @" .. tostring(os.clock()))
+  log_debug("Tick @" .. tostring(os.clock()))
 end, 0, true, nil, "tick_timer")
 ```
 
 ### Debug Helpers
 
-* `debug(...)` — your C++‑bound logger
+* `log_debug(...)` — your C++‑bound logger
 * `dump(table)` — pretty-print any Lua table
 * `os.clock()` — CPU time, useful for profiling tasks
 

@@ -1,6 +1,7 @@
 #include "textVer2.hpp"
 
 #include "raylib.h"
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <map>
@@ -11,6 +12,9 @@
 
 #include "rlgl.h"
 
+#include "systems/ai/ai_system.hpp"
+#include "systems/localization/localization.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 #include "text_effects.hpp"
 
 #include "util/common_headers.hpp"
@@ -522,6 +526,7 @@ namespace TextSystem
                 }
             }
             
+            
             // 2) stash any lua callbacks into your Text component
             auto &txtComp = globals::registry.get<Text>(entity);
             if (waitersOpt) {
@@ -545,8 +550,44 @@ namespace TextSystem
         
                     // store it under its alias
                     txtComp.luaWaiters[alias] = std::move(co);
+                    txtComp.luaWaitThreads[alias] = std::move(thr);
+                }
+            } else {
+                // no table provided, search in the lua state
+                
+                // iterate through text.waitpoints and get the ones which are lua callbacks as a list
+                std::vector<std::string> luaWaiters;
+                for (const auto &wp : textComp.waitPoints) {
+                    if (wp.type == Text::WaitPoint::Type::Lua) {
+                        luaWaiters.push_back(wp.id);
+                    }
+                }
+                
+                for (const auto &alias : luaWaiters) {
+                    sol::function raw_fn  = ai_system::masterStateLua[alias];
+                    if (!raw_fn.valid()) {
+                        spdlog::warn("TextSystem::createTextEntity: Lua callback '{}' not found in the global state, skipping.", alias);
+                        continue;
+                    }
+                    // --- COROUTINE BOILERPLATE ---
+                    // create a new thread (so each waiter has its own stack)
+                    sol::thread thr = sol::thread::create(raw_fn.lua_state());
+                    sol::state_view thread_view{ thr.state() };
+                    // bind the raw function into that thread
+                    thread_view["__waiter_fn"] = raw_fn;
+                    // grab it back as a thread-local function
+                    sol::function thread_fn  = thread_view["__waiter_fn"];
+                    // finally wrap it in a coroutine
+                    sol::coroutine co{ thread_fn };
+                    // -------------------------------  
+                    
+                    // store it under its alias
+                    txtComp.luaWaiters[alias] = std::move(co);
+                    txtComp.luaWaitThreads[alias] = std::move(thr);
                 }
             }
+            
+            textComp.createdTime = main_loop::mainLoop.realtimeTimer;
         
 
             //TODO: testing
@@ -1020,7 +1061,7 @@ namespace TextSystem
                         }
                         // don’t produce a visible Character for the sentinel:
                         currentPos += codepointSize; // Advance pointer
-                        codepointIndex++;
+                        // codepointIndex++;
                         continue;
                     }
                     
@@ -1210,7 +1251,7 @@ namespace TextSystem
                     }
                     // advance past sentinel
                     currentPos += codepointSize;
-                    codepointIndex++;
+                    // codepointIndex++;
                     continue;
                 }
                 
@@ -1395,7 +1436,7 @@ namespace TextSystem
                     }
                     // don’t produce a visible Character for the sentinel:
                     effectPos += codepointSize;
-                    codepointIndex++;
+                    // codepointIndex++;
                     continue;
                 }
 
@@ -1524,6 +1565,13 @@ namespace TextSystem
         }
     
         void preprocessTypingInlineTags(Text &txt) {
+            // canonicalize <typing,speed=...> → <typing=speed=...>
+            auto interim = txt.rawText;
+            interim = std::regex_replace(interim,
+                std::regex(R"(<typing,speed=)"),
+                "<typing=speed=");
+            txt.rawText = interim;
+            
             std::regex tagRe(R"(<(\w+)(?:=([^,>]+)(?:,([^>]+))?)?>)");
             std::smatch m;
             std::string s = txt.rawText;
@@ -1539,19 +1587,30 @@ namespace TextSystem
                     txt.typingSpeed = std::stof(arg1.substr(6));
                     else if (arg2.rfind("speed=",0) == 0)
                     txt.typingSpeed = std::stof(arg2.substr(6));
+                    
+                    // Replace the entire tag with nothing
+                    s.replace(m.position(0), m.length(0), "");
                 }
                 else if (name == "wait") {
                     Text::WaitPoint wp;
                     wp.type      = (arg1 == "key"   ? Text::WaitPoint::Key
                                     : arg1 == "mouse" ? Text::WaitPoint::Mouse
                                                     : Text::WaitPoint::Lua);
-                    wp.id        = arg2;          // e.g. "KEY_RIGHT" or "myLuaCallback"
+                                                    
+                    // strip leading "id=" if present
+                    std::string idPart = arg2;  
+                    if (idPart.rfind("id=", 0) == 0) {
+                        idPart.erase(0, 3);
+                    }
+                    wp.id = idPart;                // now just "KEY_ENTER" or your callback ID
                     wp.charIndex = SIZE_MAX;      // mark “not known yet”
                     txt.waitPoints.push_back(wp);
+                    
+                    
+                    // Replace the entire tag with exactly 1 sentinel character:
+                    s.replace(m.position(0), m.length(0), "\x01");
                 }
         
-                // Replace the entire tag with exactly 1 sentinel character:
-                s.replace(m.position(0), m.length(0), "\x01");
             }
             txt.rawText = std::move(s);
         }
@@ -1562,6 +1621,8 @@ namespace TextSystem
             auto &textComponent = globals::registry.get<Text>(textEntity);
             textComponent.rawText = text;
             textComponent.renderScale = 1.0f;
+            
+            textComponent.fontData = localization::getFontData();
             
             clearAllEffects(textEntity);
             deleteCharacters(textEntity);
@@ -1624,6 +1685,101 @@ namespace TextSystem
                 // update shadow
                 character.shadowDisplacement.x = ((textTransform.getActualX() + textTransform.getActualW() / 2) - (gameWorldTransform.getActualX() + gameWorldTransform.getActualW() / 2)) / (gameWorldTransform.getActualW() / 2) * 1.5f;
 
+                
+                
+                // 1) see if any pending wait should fire
+                for (auto &wp : text.waitPoints) {
+                    if (!wp.triggered && wp.charIndex < text.characters.size() && character.index == wp.charIndex) {
+                        auto &ch = text.characters[ wp.charIndex ];
+                        // only start waiting once that char is fully popped in
+                        // if (ch.pop_in >= 1.0f) {
+                            bool fired = false;
+                            switch (wp.type) {
+                                case Text::WaitPoint::Key:
+                                {
+                                
+                                    // strip any stray whitespace
+                                    auto id = wp.id;
+                                    id .erase(0, id.find_first_not_of(" \t\n\r"));
+                                    id .erase(id.find_last_not_of(" \t\n\r") + 1);
+
+                                    // try the cast
+                                    auto maybeKey = magic_enum::enum_cast<KeyboardKey>(id, magic_enum::case_insensitive);
+
+                                    if (!maybeKey) {
+                                        spdlog::error("enum_cast failed for '{}', defaulting to KEY_NULL", id);
+                                        // wp.key = KEY_NULL;
+                                    } else {
+                                        // wp.key = *maybeKey;
+                                    }
+
+                                    fired = IsKeyPressed(
+                                        magic_enum::enum_cast<KeyboardKey>(wp.id, magic_enum::case_insensitive).value_or(KeyboardKey::KEY_NULL)
+                                        );
+                                    if (fired) {
+                                        // update text created time to ensure pop-in animation is not blocked
+                                        text.createdTime = GetTime();
+                                    }
+                                    break;
+                                }
+                                case Text::WaitPoint::Mouse:
+                                {
+                                    fired = IsMouseButtonPressed(
+                                    magic_enum::enum_cast<MouseButton>(wp.id).value_or(MouseButton::MOUSE_BUTTON_SIDE)
+                                    );
+                                    if (fired) {
+                                        // update text created time to ensure pop-in animation is not blocked
+                                        text.createdTime = GetTime();
+                                    }
+                                    else {
+                                        // if not fired, block everything until they press
+                                        spdlog::debug("Mouse button '{}' not pressed, blocking text rendering", wp.id);
+                                    }
+                                    break;
+                                }
+                                case Text::WaitPoint::Lua:
+                                {
+                                    auto alias = wp.id;
+                                    
+                                    auto &co = text.luaWaiters.at(alias);
+                                    if (!co.valid() ||
+                                        co.status() != sol::call_status::yielded) {
+                                    // either never created, or already completed — bail out
+                                    return;
+                                    }
+                                    sol::protected_function_result result = co();
+                                    if (!result.valid()) {
+                                        sol::error err = result;
+                                        spdlog::error("Coroutine error: {}", err.what());
+                                        std::abort();
+                                    }
+                                    else if (co.status() == sol::call_status::yielded) {
+                                        // still yielding (e.g. user did `wait(5)` internally)
+                                        fired = false; // do not set wp.triggered to true
+                                    }
+                                    else {
+                                        // coroutine finished; get its return value
+                                        bool done = result.get<bool>();
+                                        fired = true;
+                                        
+                                        // update text created time to ensure pop-in animation is not blocked
+                                        text.createdTime = GetTime();
+                                    }
+                                    break;
+                                }
+                                default: 
+                                {
+                                    
+                                }
+                            }
+                            if (fired) wp.triggered = true;
+                            else        {
+                                
+                                return;   // block *everything* until they press
+                            }
+                        // }
+                    }
+                }
                 // Apply Pop-in Animation
                 if (character.pop_in && character.pop_in < 1.0f)
                 {
@@ -1632,49 +1788,6 @@ namespace TextSystem
                     {
                         character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration
                         character.pop_in = character.pop_in.value() * character.pop_in.value(); // Ease-in effect
-                    }
-                }
-                
-                // 1) see if any pending wait should fire
-                for (auto &wp : text.waitPoints) {
-                    if (!wp.triggered && wp.charIndex < text.characters.size() && character.index == wp.charIndex) {
-                    auto &ch = text.characters[ wp.charIndex ];
-                    // only start waiting once that char is fully popped in
-                    if (ch.pop_in >= 1.0f) {
-                        bool fired = false;
-                        switch (wp.type) {
-                            case Text::WaitPoint::Key:
-                                fired = IsKeyPressed(
-                                magic_enum::enum_cast<KeyboardKey>(wp.id).value()
-                                );
-                                break;
-                            case Text::WaitPoint::Mouse:
-                                fired = IsMouseButtonPressed(
-                                magic_enum::enum_cast<MouseButton>(wp.id).value()
-                                );
-                                break;
-                            case Text::WaitPoint::Lua:
-                                
-                                auto alias = wp.id;
-                                auto &co = text.luaWaiters.at(alias);
-                                sol::protected_function_result result = co();        // resume it
-                                if (!result.valid()) { /* handle error */ 
-                                    SPDLOG_ERROR("Lua coroutine error: {}", result.get<std::string>());
-                                }
-                                else if (co.status() == sol::call_status::yielded) {
-                                    // still yielding (e.g. user did `wait(5)` internally)
-                                    fired = false; // do not set wp.triggered to true
-                                }
-                                else {
-                                    // coroutine finished; get its return value
-                                    bool done = result.get<bool>();
-                                    fired = true;
-                                }
-                                break;
-                            }
-                            if (fired) wp.triggered = true;
-                            else        return;   // block *everything* until they press
-                        }
                     }
                 }
 

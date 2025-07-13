@@ -11,7 +11,7 @@
 #include <functional> 
 
 #include "third_party/objectpool-master/src/object_pool.hpp"
-
+#include "systems/layer/layer_command_buffer_data.hpp"
 
 namespace layer
 {
@@ -94,14 +94,32 @@ namespace layer
         Polygon, 
         RenderNPatchRect, 
         Triangle,
-        
+        RenderUISliceFromDrawList, // for ui
+        RenderUISelfImmediate, // for ui
         
         Count // <--- always last
     };
 
+
     // ===========================
     // Draw Command Structs
     // ===========================
+    struct CmdRenderUISliceFromDrawList {
+        std::vector<ui::UIDrawListItem> drawList;
+        size_t startIndex;
+        size_t endIndex;
+        std::shared_ptr<layer::Layer> layerPtr;
+        float pad = 10.f; // Padding around the slice
+    };
+
+    struct CmdRenderUISelfImmediate {
+        entt::entity entity;
+        entt::registry* registry;
+        // Components needed for rendering
+        // These should be fetched from the registry in the render function
+        // UIElementComponent, UIConfig, UIState, GameObject, Transform
+    };
+
     struct CmdBeginDrawing {
         bool dummy = false; // Placeholder
     };
@@ -364,11 +382,16 @@ namespace layer
     // Draw Command Buffer
     // ===========================
     
+    enum class DrawCommandSpace {
+        World,
+        Screen
+    };
 
     struct DrawCommandV2 {
         DrawCommandType type;
         void* data;
         int z;
+        DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
     };
 
 

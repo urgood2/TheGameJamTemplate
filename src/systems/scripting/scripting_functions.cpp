@@ -19,6 +19,7 @@
 #include "../random/random.hpp"
 #include "../timer/timer.hpp"
 #include "../layer/layer_order_system.hpp"
+#include "../collision/broad_phase.hpp"
 
 #include "binding_recorder.hpp"
 
@@ -26,6 +27,8 @@
 
 #include "systems/anim_system.hpp"
 
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 #include "util/utilities.hpp"
 
 #include "meta_helper.hpp"
@@ -34,6 +37,7 @@
 #include "script_process.hpp"
 
 #include "../../core/game.hpp"
+#include <functional>
 
 
 
@@ -57,19 +61,20 @@ namespace scripting {
         auto& rec = BindingRecorder::instance();
         
         // basic lua state initialization
-        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, 
-                                   sol::lib::math);
+        stateToInit.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::coroutine, sol::lib::os, sol::lib::string, sol::lib::math, sol::lib::debug, sol::lib::io);
         
         std::string base1 = util::getRawAssetPathNoUUID("scripts/");
         std::string base2 = util::getRawAssetPathNoUUID("scripts/core");
         std::string base3 = util::getRawAssetPathNoUUID("scripts/init");
         std::string base4 = util::getRawAssetPathNoUUID("scripts/monobehavior");
+        std::string base5 = util::getRawAssetPathNoUUID("scripts/external");
         
         std::string lua_path_cmd =
             "package.path = '"
             + base1 + "?.lua;" + base1 + "?/?.lua;" + base1 + "?/?/?.lua;"
             + base2 + "?.lua;"
             + base3 + "?.lua;"
+            + base5 + "?.lua;"
             + base4 + "?.lua;scripts/?/?.lua"
             + "' .. package.path"; // <- correctly attached
             
@@ -143,6 +148,11 @@ namespace scripting {
         // methods from anim_system.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         animation_system::exposeToLua(stateToInit);
+        
+        //------------------------------------------------------
+        // methods from broad_phase.hpp. These can be called from lua ✅
+        //------------------------------------------------------
+        collision::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
         // methods from tutorial_system_v2.cpp. These can be called from lua ✅
@@ -229,7 +239,7 @@ namespace scripting {
         // ));
 
         // In your Sol2 init (after registering luaDebugLogWrapper*):
-        stateToInit.set_function("debug",
+        stateToInit.set_function("log_debug",
         [](sol::this_state ts, sol::variadic_args va) {
             sol::state_view L{ts};
             std::ostringstream oss;
@@ -268,29 +278,29 @@ namespace scripting {
         );
 
         // Main signature
-        rec.record_free_function({}, {"debug",
+        rec.record_free_function({}, {"log_debug",
             "---@param entity Entity # The entity to associate the log with.\n"
             "---@param message string # The message to log. Can be variadic arguments.\n"
             "---@return nil",
             "Logs a debug message associated with an entity.", true, false});
         // Overload for no entity
-        rec.record_free_function({}, {"debug",
+        rec.record_free_function({}, {"log_debug",
             "---@overload fun(message: string):nil", // Correct overload syntax
             "Logs a general debug message.", true, true});
 
 
-        stateToInit.set_function("error", sol::overload(
+        stateToInit.set_function("log_error", sol::overload(
             static_cast<void(*)(entt::entity, std::string)>(&luaErrorLogWrapper),
             static_cast<void(*)(std::string)>(&luaErrorLogWrapperNoEntity)
         ));
         // Main signature
-        rec.record_free_function({}, {"error",
+        rec.record_free_function({}, {"log_error",
             "---@param entity Entity # The entity to associate the error with.\n"
             "---@param message string # The error message.\n"
             "---@return nil",
             "Logs an error message associated with an entity.", true, false});
         // Overload for no entity
-        rec.record_free_function({}, {"error",
+        rec.record_free_function({}, {"log_error",
             "---@overload fun(message: string):nil", // Correct overload syntax
             "Logs a general error message.", true, true});
 
@@ -404,6 +414,11 @@ namespace scripting {
         // layer order functions
         // --------------------------------------------------------
         layer::layer_order_system::exposeToLua(stateToInit);
+        
+        // ------------------------------------------------------
+        // game state management functions (for entity gamestate management)
+        // ------------------------------------------------------
+        entity_gamestate_management::exposeToLua(stateToInit);
 
         // ------------------------------------------------------
         // Expose global variables to Lua
@@ -474,6 +489,55 @@ namespace scripting {
         lua["globals"]["currentGameState"] = &globals::currentGameState;
         
         lua["globals"]["inputState"] = &(globals::inputState);
+        
+        /*
+                Camera2D, defines position/orientation in 2d space
+        typedef struct Camera2D {
+            Vector2 offset;         // Camera offset (displacement from target)
+            Vector2 target;         // Camera target (rotation and zoom origin)
+            float rotation;         // Camera rotation in degrees
+            float zoom;             // Camera zoom (scaling), should be 1.0f by default
+        } Camera2D;
+        */
+        
+        // lua usertype binding for Camera2D
+        // lua.new_usertype<Vector2>(
+        //     "Vector2",
+        //     "x", &Vector2::x,
+        //     "y", &Vector2::y
+        // );
+        lua.new_usertype<Camera2D>("Camera2D",
+            "offset", &Camera2D::offset,
+            "target", &Camera2D::target,
+            "rotation", &Camera2D::rotation,
+            "zoom", &Camera2D::zoom
+        );
+        
+        lua["globals"]["camera"] = []() -> Camera2D& {
+            return std::ref(globals::camera);
+        };
+        
+        lua["GetFrameTime"] = []() -> float {
+            // Get the time elapsed since the last frame
+            return main_loop::mainLoop.smoothedDeltaTime;
+        };
+        
+        lua["GetScreenWidth"] = []() -> int {
+            return GetScreenWidth();
+        };
+        lua["GetScreenHeight"] = []() -> int {
+            return GetScreenHeight();
+        };
+        lua["GetWorldToScreen2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+            // Convert the position from world coordinates to screen coordinates
+            return GetWorldToScreen2D(position, camera);
+        };
+        lua["GetScreenToWorld2D"] = [](Vector2 position, Camera2D camera) -> Vector2 {
+            // Convert the position from screen coordinates to world coordinates
+            return GetScreenToWorld2D(position, camera);
+        };
+        
+        rec.record_property("globals", {"camera", "nil", "Camera2D object used for rendering the game world."});
 
         // 3) entt::entity
         lua["globals"]["gameWorldContainerEntity"] = []() -> entt::entity {

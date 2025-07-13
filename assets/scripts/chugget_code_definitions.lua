@@ -329,13 +329,13 @@ function setEntityAlias(...) end
 ---@param entity Entity # The entity to associate the log with.
 ---@param message string # The message to log. Can be variadic arguments.
 ---@return nil
-function debug(...) end
+function log_debug(...) end
 
 ---
 --- Logs a general debug message.
 ---
 ---@overload fun(message: string):nil
-function debug(...) end
+function log_debug(...) end
 
 ---
 --- Logs an error message associated with an entity.
@@ -343,13 +343,13 @@ function debug(...) end
 ---@param entity Entity # The entity to associate the error with.
 ---@param message string # The error message.
 ---@return nil
-function error(...) end
+function log_error(...) end
 
 ---
 --- Logs a general error message.
 ---
 ---@overload fun(message: string):nil
-function error(...) end
+function log_error(...) end
 
 ---
 --- Sets a value in the entity's current world state.
@@ -485,6 +485,28 @@ function pauseGame(...) end
 ---
 ---@return nil
 function unpauseGame(...) end
+
+---
+--- Adds or replaces a StateTag component on the specified entity.
+---
+---@param entity Entity             # The entity to tag
+---@param name string               # The name of the state tag
+---@return nil
+function add_state_tag(...) end
+
+---
+--- Removes the StateTag component from the specified entity.
+---
+---@param entity Entity             # The entity from which to remove its state tag
+---@return nil
+function remove_state_tag(...) end
+
+---
+--- Clears any and all StateTag components from the specified entity.
+---
+---@param entity Entity             # The entity whose state tags you want to clear
+---@return nil
+function clear_state_tags(...) end
 
 
 ---
@@ -1339,6 +1361,37 @@ TextSystem.Functions = {
 ---
 ---@class animation_system
 animation_system = {
+}
+
+
+---
+--- Namespace for creating colliders and performing collision‐tests.
+---
+---@class collision
+collision = {
+}
+
+
+---
+--- Enum of supported collider shapes.
+---
+---@class ColliderType
+ColliderType = {
+    AABB = 0,  -- Axis-aligned bounding box.
+    Circle = 1  -- Circle collider.
+}
+
+
+---
+--- Component holding two 32-bit bitmasks:
+- category = which tag-bits this collider *is*
+- mask     = which category-bits this collider *collides with*
+Default ctor sets both to 0xFFFFFFFF (collide with everything).
+---
+---@class CollisionFilter
+CollisionFilter = {
+    category = uint32,  -- Bitmask: what this entity *is* (e.g. Player, Enemy, Projectile).
+    mask = uint32  -- Bitmask: which categories this entity *collides* with.
 }
 
 
@@ -4499,6 +4552,54 @@ function animation_system.resetAnimationUIRenderScale(...) end
 function animation_system.resizeAnimationObjectToFit(...) end
 
 ---
+--- Creates a child entity under `master` with a Transform, GameObject (collision enabled),
+and a ColliderComponent of the given `type`, applying all provided offsets, sizes, rotation,
+scale and alignment flags.
+---
+---@param master entt.entity               # Parent entity to attach collider to
+---@param type collision.ColliderType       # Shape of the new collider
+---@param t table                           # Config table:
+                                          #   offsetX?, offsetY?, width?, height?, rotation?, scale?
+                                          #   alignment? (bitmask), alignOffset { x?, y? }
+---@return entt.entity                      # Newly created collider entity
+function collision.create_collider_for_entity(...) end
+
+---
+--- Runs a Separating Axis Theorem (SAT) test—or AABB test if both are unrotated—
+on entities `a` and `b`, returning whether they intersect based on their ColliderComponents
+and Transforms.
+---
+---@param registry entt.registry*           # Pointer to your entity registry
+---@param a entt.entity                      # First entity to test
+---@param b entt.entity                      # Second entity to test
+---@return boolean                           # True if their collider OBBs/AABBs overlap
+function collision.CheckCollisionBetweenTransforms(...) end
+
+---
+--- 
+---
+---@param e entt.entity               # Entity whose filter to modify
+---@param tag string                   # Name of the tag to add
+---| Adds the given tag bit to this entity’s filter.category, so it *is* also that tag.
+function collision.setCollisionCategory(...) end
+
+---
+--- 
+---
+---@param e entt.entity               # Entity whose filter to modify
+---@param ... string                   # One or more tag names
+---| Replaces the entity’s filter.mask with the OR of all specified tags.
+function collision.setCollisionMask(...) end
+
+---
+--- 
+---
+---@param e entt.entity               # Entity whose filter to reset
+---@param tag string                   # The sole tag name
+---| Clears all category bits, then sets only this one.
+function collision.resetCollisionCategory(...) end
+
+---
 --- Sorts all layers by their Z-index.
 ---
 ---@return nil
@@ -5191,6 +5292,13 @@ function localization.loadLanguage(...) end
 function localization.setFallbackLanguage(...) end
 
 ---
+--- Returns the currently active language code.
+---
+---@return string # The currently active language code.
+Gets the currently active language code. This is useful for checking which language is currently set.
+function localization.getCurrentLanguage(...) end
+
+---
 --- Retrieves a localized string by key, formatting it with an optional Lua table of named parameters.
 ---
 ---@param key string                 # Localization key
@@ -5800,8 +5908,9 @@ function timer.update(...) end
 --- Creates a timer that runs an action once immediately.
 ---
 ---@param action fun()
----@param tag? string
 ---@param after? fun()
+---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.run(...) end
 
@@ -5811,6 +5920,7 @@ function timer.run(...) end
 ---@param delay number|{number, number} # A fixed delay or a {min, max} range in seconds.
 ---@param action fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.after(...) end
 
@@ -5823,6 +5933,7 @@ function timer.after(...) end
 ---@param times? integer # Number of times to run. 0 for infinite.
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.cooldown(...) end
 
@@ -5835,6 +5946,7 @@ function timer.cooldown(...) end
 ---@param immediate? boolean # If true, the action runs immediately on creation.
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.every(...) end
 
@@ -5849,6 +5961,7 @@ function timer.every(...) end
 ---@param step_method? fun(t:number):number # Easing function for delay interpolation.
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.every_step(...) end
 
@@ -5859,6 +5972,7 @@ function timer.every_step(...) end
 ---@param action fun(dt:number)
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.for_time(...) end
 
@@ -5872,8 +5986,44 @@ function timer.for_time(...) end
 ---@param easing_method? fun(t:number):number # Optional easing function (0.0-1.0).
 ---@param after? fun()
 ---@param tag? string
+---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
 function timer.tween(...) end
+
+---
+--- Pauses the timer with the given tag.
+---
+---@param tag string # The tag/handle of the timer to pause.
+---@return nil
+function timer.pause(...) end
+
+---
+--- Resumes a previously paused timer.
+---
+---@param tag string # The tag/handle of the timer to resume.
+---@return nil
+function timer.resume(...) end
+
+---
+--- Cancels (removes) all timers in the specified group.
+---
+---@param group string # The name of the timer group to cancel.
+---@return nil
+function timer.kill_group(...) end
+
+---
+--- Pauses all timers in the specified group.
+---
+---@param group string # The name of the timer group to pause.
+---@return nil
+function timer.pause_group(...) end
+
+---
+--- Resumes all timers in the specified group.
+---
+---@param group string # The name of the timer group to resume.
+---@return nil
+function timer.resume_group(...) end
 
 ---
 --- Cancels and destroys an active timer.
@@ -6413,10 +6563,11 @@ function ui.definitions.getNewTextEntry(...) end
 --- Create a text‐entry node with dynamic effects (wrapping, pulse, etc.) and optional refs.
 ---
 
-        ---@param text string
+        ---@param localizedStringGetter fun(langCode:string):string
         ---@param fontSize number
-        ---@param wrapWidth? number
         ---@param textEffect? string
+        ---@param updateOnLanguageChange? boolean, defaults to true
+        ---@param wrapWidth? number
         ---@param refEntity? Entity
         ---@param refComponent? string
         ---@param refValue? string

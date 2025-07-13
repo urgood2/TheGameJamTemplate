@@ -4,6 +4,7 @@
 
 #include <string>
 #include <unordered_map>
+#include "sol/sol.hpp"
 
 /**
 
@@ -147,6 +148,11 @@ namespace localization
       cb(currentLang);
     }
     return true;
+  }
+  
+  inline const std::string& getCurrentLanguage()
+  {
+    return currentLang;
   }
 
 }

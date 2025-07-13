@@ -30,6 +30,8 @@ using json = nlohmann::json;
 
 #include "snowhouse/snowhouse.h" // Snowhouse assertion lib
 
+#define MAGIC_ENUM_RANGE_MIN -126
+#define MAGIC_ENUM_RANGE_MAX 400
 #include "magic_enum/magic_enum.hpp" // magic_enum lib
 #include "../core/globals.hpp"
 

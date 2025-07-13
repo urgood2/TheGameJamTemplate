@@ -62,10 +62,13 @@ namespace ui {
         void TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor);
         void drawAllBoxes(entt::registry &registry,
             std::shared_ptr<layer::Layer> layerPtr);
+        void drawAllBoxesShaderEnabled(entt::registry &registry,
+                std::shared_ptr<layer::Layer> layerPtr);
         void buildUIBoxDrawList(
                 entt::registry &registry,
                 entt::entity        boxEntity,
-                std::vector<entt::entity> &out);
+                std::vector<UIDrawListItem> &out,
+                int depth = 0);
                 
         
 

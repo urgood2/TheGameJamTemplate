@@ -13978,6 +13978,13 @@
     "c_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_c.svg"
     ],
+    "camera": [
+        "camera.lua"
+    ],
+    "camera_hump": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/camera.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\camera.lua"
+    ],
     "capslock_default_icon_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_capslock_icon.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_capslock_icon.png"
@@ -14084,6 +14091,13 @@
     "center_double_transparent": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\Double\\Transparent center"
+    ],
+    "chain": [
+        "chain.lua"
+    ],
+    "chain_knife": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife/chain.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\knife\\chain.lua"
     ],
     "char_example": [
         "example_char"
@@ -14617,6 +14631,13 @@
     ],
     "dark_violet": [
         "DARK VIOLET"
+    ],
+    "debugging_lua": [
+        "DEBUGGING_LUA.md"
+    ],
+    "debugging_lua_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/DEBUGGING_LUA.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\DEBUGGING_LUA.md"
     ],
     "deep_palette_resurrect_twilight": [
         "RESURRECT_PALETTE_DEEP_TWILIGHT"
@@ -16688,6 +16709,20 @@
     "eat": [
         "eat.lua"
     ],
+    "edge_effect_fragment": [
+        "edge_effect_fragment.fs"
+    ],
+    "edge_effect_fragment_shader": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_fragment.fs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\edge_effect_fragment.fs"
+    ],
+    "edge_effect_shader_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/edge_effect_vertex.vs",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\edge_effect_vertex.vs"
+    ],
+    "edge_effect_vertex": [
+        "edge_effect_vertex.vs"
+    ],
     "en_font": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en",
@@ -16842,6 +16877,22 @@
     ],
     "exclamation_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation.svg"
+    ],
+    "external_hump": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump"
+    ],
+    "external_knife": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\knife"
+    ],
+    "external_lume": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/lume.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\lume.lua"
+    ],
+    "external_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external"
     ],
     "f10_keyboard": [
         "keyboard_f10.png"
@@ -17527,6 +17578,13 @@
     "gamejam_vertex": [
         "gamejam_vertex.vs"
     ],
+    "gamestate": [
+        "gamestate.lua"
+    ],
+    "gamestate_hump": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/gamestate.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\gamestate.lua"
+    ],
     "gear": [
         "gear.png"
     ],
@@ -17644,6 +17702,9 @@
     "graphic_rect_rounded_small_very": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\rounded_rect_very_small.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/rounded_rect_very_small.aseprite"
+    ],
+    "graphic_shader_texture": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/shader_textures"
     ],
     "graphic_sprite": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/sprites.json",
@@ -17826,6 +17887,14 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\Hover.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Hover.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\Hover.wav"
+    ],
+    "hump_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/README.md",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\README.md"
+    ],
+    "hump_signal": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump/signal.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump\\signal.lua"
     ],
     "i_keyboard": [
         "keyboard_i.png"
@@ -18529,6 +18598,9 @@
     "lt_xbox": [
         "xbox_lt.png"
     ],
+    "lume": [
+        "lume.lua"
+    ],
     "magic_mono_sound_spawn_spell": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MAGIC_SPELL_Spawn_mono.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MAGIC_SPELL_Spawn_mono.wav"
@@ -18967,7 +19039,8 @@
         "xbox_rb.png"
     ],
     "readme": [
-        "readme.txt"
+        "readme.txt",
+        "README.md"
     ],
     "rect_rounded": [
         "rounded_rect.png"
@@ -19167,6 +19240,9 @@
     ],
     "sienna": [
         "SIENNA"
+    ],
+    "signal": [
+        "signal.lua"
     ],
     "slkscr": [
         "slkscr.ttf"

@@ -13,8 +13,11 @@
 #include <functional>
 #include <memory>
 #include <typeindex>
+#include <stack>
 
 #include "layer_optimized.hpp"
+#include "layer_dynamic_pool_wrapper.hpp"
+#include "systems/layer/layer_command_buffer_data.hpp"
 #include "sol/sol.hpp"
 
 #include "entt/fwd.hpp"
@@ -24,6 +27,65 @@
 
 namespace layer
 {
+    
+    // only use for (DrawLayerCommandsToSpecificCanvas)
+    namespace render_stack_switch_internal
+    {
+        extern std::stack<RenderTexture2D> renderStack;
+
+        // Push a new render target, auto-ending the previous one if needed
+        inline void Push(RenderTexture2D target)
+        {
+            if (!renderStack.empty())
+            {
+                // End the currently active texture mode
+                EndTextureMode();
+            }
+            // SPDLOG_DEBUG("Ending previous render target {} and pushing new target {}", renderStack.empty() ? "none" : std::to_string(renderStack.top().id), target.id);
+            renderStack.push(target);
+            BeginTextureMode(target);
+        }
+
+        // Pop the top render target and resume the previous one
+        inline void Pop()
+        {
+            assert(!renderStack.empty() && "Render stack underflow: Pop called without a matching Push!");
+
+            // End current texture mode
+            EndTextureMode();
+            renderStack.pop();
+
+            // Resume the previous target
+            if (!renderStack.empty())
+            {
+                BeginTextureMode(renderStack.top());
+            }
+        }
+
+        // Peek current render target (optional utility)
+        inline RenderTexture2D* Current()
+        {
+            if (renderStack.empty()) return nullptr;
+            return &renderStack.top();
+        }
+
+        // Check if we’re inside any render target
+        inline bool IsActive()
+        {
+            return !renderStack.empty();
+        }
+
+        // Clear the entire stack and end current mode — use with caution
+        inline void ForceClear()
+        {
+            if (!renderStack.empty())
+            {
+                EndTextureMode();
+            }
+
+            while (!renderStack.empty()) renderStack.pop();
+        }
+    }
     //------------------------------------------------------------------------------------
     // lua exposure
     //------------------------------------------------------------------------------------
@@ -50,40 +112,7 @@ namespace layer
         int z = 0;                         // Optional Z-ordering
     };
 
-    struct IDynamicPool {
-        virtual ~IDynamicPool() = default;
-        virtual void delete_all() = 0;
-        virtual ObjectPoolStats calc_stats() const = 0;
-    };
-
-    template<typename T>
-    struct DynamicObjectPoolWrapper : IDynamicPool {
-        DynamicObjectPool<T> pool;
-
-        DynamicObjectPoolWrapper(detail::index_t entries_per_block)
-            : pool(entries_per_block) {}
-
-        template<typename... Args>
-        T* create(Args&&... args) {
-            return pool.new_object(std::forward<Args>(args)...);
-        }
-
-        T* new_object() {
-            return pool.new_object();  // or whatever your underlying pool uses
-        }
-
-        void delete_object(const T* ptr) {
-            pool.delete_object(ptr);
-        }
-
-        void delete_all() override {
-            pool.delete_all();
-        }
-
-        ObjectPoolStats calc_stats() const override {
-            return pool.calc_stats();
-        }
-    };
+    
 
     // Represents a drawing layer
     struct Layer
@@ -279,6 +308,13 @@ namespace layer
     void SetRLTexture(Texture2D texture);
     void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr, const Rectangle outerRec, bool progressOrFullBackground, entt::entity cacheEntity, const Color color);
     void RenderRectVerticlesOutlineLayer(std::shared_ptr<layer::Layer> layerPtr, entt::entity cacheEntity, const Color color, bool useFull);
+    void renderSliceOffscreenFromDrawList(
+        entt::registry& registry,
+        const std::vector<ui::UIDrawListItem>& drawList,
+        size_t startIndex,
+        size_t endIndex,
+        std::shared_ptr<layer::Layer> layerPtr,
+        float pad = 0.0f);
 
     // NOTE that you should set shader uniforms directly when rendering at the layer level-- that is, rendering entire layers.
     void AddUniformFloat(std::shared_ptr<Layer> layer, Shader shader, const std::string &uniform, float value);

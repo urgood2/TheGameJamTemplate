@@ -157,6 +157,13 @@ add_git_dependency(
     v3.6.0
 )
 
+#add ldtk loader
+add_git_dependency(
+    LDtkLoader
+    https://github.com/Madour/LDtkLoader.git
+    1.5.3.1
+)
+
 # Add {magic_enum} library
 set(MAGIC_ENUM_OPT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(MAGIC_ENUM_OPT_BUILD_TESTS  OFF CACHE BOOL "" FORCE)
@@ -293,6 +300,7 @@ target_include_directories(CommonSettings INTERFACE
     "${stduuid_SOURCE_DIR}/include"
     "${snowhouse_SOURCE_DIR}/include"
     "third_party/objectpool-master/src"
+    "${LDtkLoader_SOURCE_DIR}/include"
 )
 
 target_link_libraries(CommonSettings INTERFACE
@@ -309,6 +317,7 @@ target_link_libraries(CommonSettings INTERFACE
     chipmunk_static
     stduuid
     snowhouse
+    LDtkLoader::LDtkLoader
 )
 
 if(NOT EMSCRIPTEN)

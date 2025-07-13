@@ -42,6 +42,7 @@ namespace ui {
         void UpdateText(entt::registry &registry, entt::entity entity, UIConfig *config, UIState *state);
         void UpdateObject(entt::registry &registry, entt::entity entity, UIConfig *elementConfig, transform::GameObject *elementNode, UIConfig *objectConfig, transform::Transform *objTransform, transform::InheritedProperties *objectRole, transform::GameObject *objectNode);
         void DrawSelf(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp, const int &zIndex = 0);
+        void DrawSelfImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::entity entity, UIElementComponent &uiElementComp, UIConfig &configComp, UIState &stateComp, transform::GameObject &nodeComp, transform::Transform &transformComp);
         void Update(entt::registry &registry, entt::entity entity, float dt,  UIConfig *uiConfig, transform::Transform *transform, UIElementComponent *uiElement, transform::GameObject *node);
         auto CollidesWithPoint(entt::registry &registry, entt::entity entity, const Vector2 &cursorPosition) -> bool;
         auto PutFocusedCursor(entt::registry &registry, entt::entity entity) -> Vector2;
@@ -52,7 +53,8 @@ namespace ui {
         auto StopHover(entt::registry &registry, entt::entity entity) -> void;
         void buildUIDrawList(entt::registry &registry,
             entt::entity root,
-            std::vector<entt::entity> &out);
+            std::vector<UIDrawListItem> &out, 
+            int depth = 0);
 
     }
 }

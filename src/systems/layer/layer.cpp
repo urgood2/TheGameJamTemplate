@@ -2858,6 +2858,11 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       renderWidth, renderHeight};
   DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
   layer::render_stack_switch_internal::Pop();
+  
+  if (globals::drawDebugInfo) {
+    // Draw 
+    DrawTextureRec(shader_pipeline::front().texture, sourceRect, {0, 0}, WHITE);
+  }
 
   // 3. Apply shader passes
   for (shader_pipeline::ShaderPass &pass : pipelineComp.passes) {
@@ -2931,6 +2936,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       shader_pipeline::GetPostShaderPassRenderTextureCache();
   render_stack_switch_internal::Push(postProcessRender);
   ClearBackground({0, 0, 0, 0});
+  
   DrawTexture(postPassRender.texture, 0, 0, WHITE);
 	// DrawTextureRec(postPassRender.texture,
 	// 			{ 0.0f,
@@ -3294,17 +3300,17 @@ void renderSliceOffscreenFromDrawList(
   layer::render_stack_switch_internal::Pop(); // also y-flipped
 
   if (globals::drawDebugInfo) {
-    DrawTexture(postPassRT.texture, 0, 0, WHITE);
+    // DrawTexture(postPassRT.texture, 0, 0, WHITE);
 
-    DrawRectangle(0, 0, postPassRT.texture.width, postPassRT.texture.height,
-                  {0, 255, 0, 100});
-    DrawRectangle(0, 0, renderW, renderH, {255, 0, 0, 150});
-    DrawText(fmt::format("PostPassRT (green): {}x{}", postPassRT.texture.width,
-                         postPassRT.texture.height)
-                 .c_str(),
-             10, 10, 20, WHITE);
-    DrawText(fmt::format("RenderSize (red): {}x{}", renderW, renderH).c_str(),
-             10, 30, 20, WHITE);
+    // DrawRectangle(0, 0, postPassRT.texture.width, postPassRT.texture.height,
+    //               {0, 255, 0, 100});
+    // DrawRectangle(0, 0, renderW, renderH, {255, 0, 0, 150});
+    // DrawText(fmt::format("PostPassRT (green): {}x{}", postPassRT.texture.width,
+    //                      postPassRT.texture.height)
+    //              .c_str(),
+    //          10, 10, 20, WHITE);
+    // DrawText(fmt::format("RenderSize (red): {}x{}", renderW, renderH).c_str(),
+    //          10, 30, 20, WHITE);
   }
 
   // prime for overlays, if any

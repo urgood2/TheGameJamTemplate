@@ -306,6 +306,7 @@ function spawnNewKrill()
     shaderPipelineComp = registry:emplace(kr, shader_pipeline.ShaderPipelineComponent)
 
     shaderPipelineComp:addPass("random_displacement_anim")
+    shaderPipelineComp:addPass("random_displacement_anim")
     -- shaderPipelineComp:addPass("random_displacement_anim")
 
     -- 3) Randomize its start position

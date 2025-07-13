@@ -2943,6 +2943,9 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
 
   // DrawTexture(postPassRender.texture, 90, 30, WHITE);
 
+  bool internalFlipFlagForShaderPipeline = true; //FIXME: testing
+	//   pipelineComp.overlayDraws.size() % 2 != 0; // if odd, we flip the Y
+
   // if there is an overlay draw at all, we need to draw the base sprite to the
   // front texture first.
   if (!pipelineComp.overlayDraws.empty()) {
@@ -3069,12 +3072,21 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
        renderHeight}); // shouldn't this store the last dest rect that was drawn
                        // on the last texture?
 
-  sourceRect = {
-      0.0f,
-      (float)toRender.texture.height, // start at top
-      renderWidth,
-      -renderHeight // flip back
-  };
+	if (internalFlipFlagForShaderPipeline) {
+		sourceRect = {
+			0.0f,
+			(float)toRender.texture.height, // start at top
+			renderWidth,
+			-renderHeight // flip back
+		};
+	} else {
+		sourceRect = {
+			0.0f,
+			(float)toRender.texture.height - renderHeight,
+			renderWidth,
+			renderHeight
+		};
+	}
 
   Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
   Vector2 position = {drawPos.x + origin.x, drawPos.y + origin.y};

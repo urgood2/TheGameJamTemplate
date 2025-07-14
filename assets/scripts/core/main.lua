@@ -342,6 +342,60 @@ function initMainGame()
     -- add_fullscreen_shader("shockwave")
     -- add_fullscreen_shader("tile_grid_overlay") -- to show tile griddonuts background
     
+    ui_defs.generateTooltipUI()
+    
+    -- generate ai entities which will move around the map
+    for i = 1, 3 do
+        -- 1) Spawn a new kobold AI entity
+        local colonist = create_ai_entity("kobold")
+        
+        globals.colonists[#globals.colonists+1] = colonist -- add to the global krill list
+
+        local sprite = random_utils.random_element_string({
+            "3916-TheRoguelike_1_10_alpha_709.png",
+            "3915-TheRoguelike_1_10_alpha_708.png",
+            "3914-TheRoguelike_1_10_alpha_707.png",
+            "3913-TheRoguelike_1_10_alpha_706.png"
+        })
+
+        -- 2) Set up its animation & sizing
+        animation_system.setupAnimatedObjectOnEntity(
+            colonist,
+            sprite,
+            true,
+            nil,
+            true
+        )
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            colonist,
+            64,
+            64
+        )
+        
+        local nodeComp = registry:get(colonist, GameObject)
+        local gameObjectState = nodeComp.state
+        gameObjectState.hoverEnabled = true
+        gameObjectState.collisionEnabled = true
+        nodeComp.methods.onHover = function()
+            -- log_debug("krill hovered!")
+            showTooltip(
+                localization.get("ui.colonist_tooltip_title"), 
+                localization.get("ui.colonist_tooltip_body")
+            )
+        end
+        
+        local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
+
+        shaderPipelineComp:addPass("random_displacement_anim")
+        
+        -- 3) Randomize its start position
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
+        tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+    end
+    
+    
+    
 
     -- scheduler example
 

@@ -1428,6 +1428,15 @@ function ui_defs.generateUI()
     
     
     
+    
+    
+    
+    
+end
+
+
+function ui_defs.generateTooltipUI()
+
     -- tooltip ui box that will follow the mouse cursor
     local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("sample tooltip title") end,  -- initial text
@@ -1491,9 +1500,5 @@ function ui_defs.generateUI()
     local uiBoxComp = registry:get(globals.ui.tooltipUIBox, UIBoxComponent)
     local uiTooltipRootTransform = registry:get(uiBoxComp.uiRoot, Transform)
     uiTooltipRootTransform.ignoreXLeaning = true -- ignore X leaning so it doesn't tilt
-    
-    
-    
-    
-    
+     
 end

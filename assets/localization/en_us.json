@@ -1,5 +1,10 @@
 {
 	"ui": {
+		
+		"colonist_tooltip_title": "Colonist",
+		"colonist_tooltip_body": "Keep them alive!",
+		
+		
 		"switch_language": "Switch Language",
 		"achievements_button": "Achievements",
 		"alert_button_text": "Alert on top right corner",

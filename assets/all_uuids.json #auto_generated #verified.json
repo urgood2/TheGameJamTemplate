@@ -16751,6 +16751,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/localization/en_us.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\en_us.json"
     ],
+    "en_nineteen_ninety_six": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Nineteen Ninety Six.otf"
+    ],
     "en_readme": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/readme.txt",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en\\readme.txt",
@@ -18802,6 +18805,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\NewAutoclicker5.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NewAutoclicker5.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\NewAutoclicker5.wav"
+    ],
+    "nineteen_ninety_six": [
+        "Nineteen Ninety Six.otf"
     ],
     "none": [
         "NONE"

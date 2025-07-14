@@ -98,6 +98,7 @@ function showTooltip(titleText, bodyText)
   boxT.actualX           = clamp(x, 0, screenW - w)
   boxT.visualX           = boxT.actualX
   boxT.actualY           = clamp(y, 0, screenH - h)
+  boxT.visualY           = boxT.actualY
 end
 
 function showNewAchievementPopup(achievementID)
@@ -220,6 +221,7 @@ function hideTooltip()
   end
   local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
   tooltipTransform.actualY = globals.screenHeight() -- move it out of the screen
+  tooltipTransform.visualY = tooltipTransform.actualY -- snap Y
 end
 
 -- increment converter ui index and set up ui. use 0 to just set up the ui without changing the index

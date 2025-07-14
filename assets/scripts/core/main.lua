@@ -393,9 +393,62 @@ function initMainGame()
         local tr = registry:get(colonist, Transform)
         tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
         tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+        
+        -- 4) timer for random movement within the screen bounds
+        timer.every(
+            1.0, -- every 1 second
+            function()
+                -- move the colonist by random amounts
+                local tr = registry:get(colonist, Transform)
+                local moveX = random_utils.random_int(-50, 50) -- move by a
+                local moveY = random_utils.random_int(-50, 50) -- move by a random amount
+                tr.actualX = lume.clamp(tr.actualX + moveX, 0, globals.screenWidth() - tr.actualW)
+                tr.actualY = lume.clamp(tr.actualY + moveY, 0, globals.screenHeight() - tr.actualH)
+      
+                -- log_debug("Colonist moved to: ", tr.actualX, tr.actualY)
+            end,
+            0, -- infinite repetitions
+            true, -- start immediately
+            nil, -- no "after" callback
+            "colonist_random_movement_" .. i -- unique tag for this timer
+        )
     end
     
+    function destroyRainAndSpawnNew()
+        -- destroy the rain entity
+        if globals.rainEntity and registry:valid(globals.rainEntity) then
+            registry:destroy(globals.rainEntity)
+        end
+
+        local delay = random_utils.random_int(5, 15) -- delay in seconds
+        -- start another timer with 10-30 delay
+        timer.after(
+            delay, -- delay in seconds
+            function()
+                spawnRainEntity() -- spawn a new rain entity
+            end
+        )
+        timer.after(
+            delay + 4, -- delete after three seconds
+            function()
+                destroyRainAndSpawnNew() -- recursively call this function to spawn a new rain entity
+            end
+        )
+    end
     
+    -- add a timer that activates in 10 seconds to spawn a rain transform entity
+    timer.after(
+        10.0, -- delay in seconds
+        function()
+            spawnRainEntity() 
+        end
+    )
+    timer.after(
+        13, -- delete after three seconds
+        function()
+            destroyRainAndSpawnNew()
+        end
+    )
     
 
     -- scheduler example
@@ -426,6 +479,40 @@ function initMainGame()
     -- scheduler:attach(p1, p2, p3)
 end
 
+-- overwrites the global rain entity, always delete the previous one
+function spawnRainEntity() 
+    -- create a rain transform entity
+    globals.rainEntity = create_ai_entity("kobold")
+            
+    local transformComp = registry:get(globals.rainEntity, Transform)
+    
+    -- give animation
+    animation_system.setupAnimatedObjectOnEntity(
+        globals.rainEntity,
+        "3408-TheRoguelike_1_10_alpha_201.png", -- animation ID
+        true,        
+        nil,         -- no animation speed
+        true         -- loop the animation
+    )
+    
+    -- size
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        globals.rainEntity,
+        random_utils.random_int(300, math.floor(globals.screenWidth() / 2)),   -- width
+        random_utils.random_int(300, math.floor(globals.screenHeight() / 2))    -- height
+    )
+    
+    -- center of the map, random size up to half the screen height
+    
+    transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
+    transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
+    
+    -- game object component
+    local gameObjectComp = registry:get(globals.rainEntity, GameObject)
+    -- gameObjectComp.state.hoverEnabled = true
+    gameObjectComp.state.collisionEnabled = true
+    
+end
 function changeGameState(newState)
     -- Check if the new state is different from the current state
     if newState == GAMESTATE.MAIN_MENU then

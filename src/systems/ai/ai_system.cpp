@@ -172,27 +172,33 @@ namespace ai_system
      * This function resets the action planner's atoms, actions, and world states,
      * and frees any dynamically allocated memory. Must be called before exiting the program.
      */
-    void goap_actionplanner_clear_memory(actionplanner_t *ap)
-    {
-        // Free atom names
-        for (int i = 0; i < ap->numatoms; ++i)
-        {
-            free(&(ap->atm_names[i])); // Free the memory allocated for each atom name
-            ap->atm_names[i] = NULL;   // Reset pointer to null after freeing
-        }
-        ap->numatoms = 0; // Reset the number of atoms
-
-        // Free action names
-        for (int i = 0; i < ap->numactions; ++i)
-        {
-            free(&(ap->act_names[i]));              // Free the memory allocated for each action name
-            ap->act_names[i] = NULL;                // Reset pointer to null after freeing
-            ap->act_costs[i] = 0;                   // Reset all action costs
-            goap_worldstate_clear(ap->act_pre + i); // Clear preconditions for the action
-            goap_worldstate_clear(ap->act_pst + i); // Clear postconditions for the action
-        }
-        ap->numactions = 0; // Reset the number of actions
-    }
+     void goap_actionplanner_clear_memory(actionplanner_t *ap)
+     {
+         // 1) Free all atom‐name strings
+         for (int i = 0; i < ap->numatoms; ++i)
+         {
+             if (ap->atm_names[i] != nullptr)
+             {
+                 free(ap->atm_names[i]);          // ✅ free the allocated char*
+                 ap->atm_names[i] = nullptr;
+             }
+         }
+         ap->numatoms = 0;
+     
+         // 2) Free all action‐name strings and clear their world‐states
+         for (int i = 0; i < ap->numactions; ++i)
+         {
+             if (ap->act_names[i] != nullptr)
+             {
+                 free(ap->act_names[i]);          // ✅ free the allocated char*
+                 ap->act_names[i] = nullptr;
+             }
+             ap->act_costs[i] = 0;
+             goap_worldstate_clear(&ap->act_pre[i]);
+             goap_worldstate_clear(&ap->act_pst[i]);
+         }
+         ap->numactions = 0;
+     }
 
     /**
      * Retrieves the value of a specific atom from the given world state.

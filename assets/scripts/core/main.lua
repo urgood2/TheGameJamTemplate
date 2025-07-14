@@ -423,6 +423,17 @@ function initMainGame()
         local delay = random_utils.random_int(5, 15) -- delay in seconds
         -- start another timer with 10-30 delay
         timer.after(
+            delay - 5, -- delay in seconds
+            function()
+                newTextPopup(
+                    "Rain is coming!", -- text to display
+                    0, -- bottom left
+                    globals.screenHeight() - 100, -- position at the bottom left,
+                    5
+                )
+            end
+        )
+        timer.after(
             delay, -- delay in seconds
             function()
                 spawnRainEntity() -- spawn a new rain entity
@@ -502,10 +513,11 @@ function spawnRainEntity()
         random_utils.random_int(300, math.floor(globals.screenHeight() / 2))    -- height
     )
     
-    -- center of the map, random size up to half the screen height
-    
-    transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
-    transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
+    -- random location within the screen bounds
+    transformComp.actualX = random_utils.random_int(0, math.floor(globals.screenWidth() - transformComp.actualW))
+    transformComp.actualY = random_utils.random_int(0, math.floor(globals.screenHeight() - transformComp.actualH))
+    transformComp.visualW = transformComp.actualW
+    transformComp.visualH = transformComp.actualH
     
     -- game object component
     local gameObjectComp = registry:get(globals.rainEntity, GameObject)

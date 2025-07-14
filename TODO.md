@@ -7,6 +7,9 @@ local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 
 ```
 
 ## New features
+- [ ] try here to reduce wasm file size? https://www.reddit.com/r/godot/comments/8b67lb/guide_how_to_compress_wasmpck_file_to_make_html5/
+
+
 - [ ] prob add docs for entity_gamestate_management
 - [ ] document using shaders with ui elements (just use pipeline comp)
 - [ ] document exposeGlobalsToLua with lua doc bindings

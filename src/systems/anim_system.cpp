@@ -532,6 +532,9 @@ namespace animation_system {
                 continue;
             }
             else if (ac.animationQueue.empty()) {
+                if (ac.defaultAnimation.animationList.empty()) {
+                    continue; // nothing to update
+                }
                 ac.defaultAnimation.currentElapsedTime += delta;
     
                 if (ac.defaultAnimation.currentElapsedTime > ac.defaultAnimation.animationList.at(ac.defaultAnimation.currentAnimIndex).second) {

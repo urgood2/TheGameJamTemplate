@@ -48,7 +48,7 @@ namespace game
         
         // palette shader
         
-        palette_quantizer::setPaletteTexture("palette_quantize", util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png"));
+        palette_quantizer::setPaletteTexture("palette_quantize", util::getRawAssetPathNoUUID("graphics/palettes/resurrect-64-1x.png"));
         // static auto paletteTex = LoadTexture(util::getRawAssetPathNoUUID("graphics/palettes/duel-1x.png").c_str());
         // SetTextureFilter(paletteTex, TEXTURE_FILTER_POINT);
         // globalShaderUniforms.set("palette_quantize", "palette", paletteTex);

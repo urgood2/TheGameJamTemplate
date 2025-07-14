@@ -3,6 +3,11 @@
 		
 		"colonist_tooltip_title": "Colonist",
 		"colonist_tooltip_body": "Keep them alive!",
+		"time_ui_format": "{hour}:{minute} {am_pm}",
+		"day_ui_format": "Day: {day}",
+		"storm_on_way_weather": "[Storm on the way](background=blue)",
+		"unknown_weather": "[Unknown](background=red)",
+		"drizzle_weather": "[Drizzle](background=blue)",
 		
 		
 		"switch_language": "Switch Language",

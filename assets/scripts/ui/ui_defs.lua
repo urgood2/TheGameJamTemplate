@@ -10,7 +10,31 @@ function ui_defs.placeBuilding(buildingName)
     
 end
 
-function ui_defs.generateUI() 
+function ui_defs.generateUI()
+    -- show time in XX:XX AM/PM format, create text entity
+    local timeText = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.time_ui_format", {hour = globals.game_time.hours, minute = globals.game_time.minutes, am_pm = globals.game_time.hours < 12 and "AM" or "PM"}) end,  -- initial text
+        16.0,                                 -- font size
+        "pulse=0.9,1.0"                       -- animation spec
+    )
+    
+    -- new root
+    local timeTextRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("keppel"))
+                :addNoMovementWhenDragged(true)
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+    
+end
+
+function ui_defs.generateUIArchived() 
     -- ui
     
     globals.currencies["whale_dust"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(

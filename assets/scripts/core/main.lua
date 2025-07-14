@@ -380,7 +380,7 @@ function initMainGame()
             -- log_debug("krill hovered!")
             showTooltip(
                 localization.get("ui.colonist_tooltip_title"), 
-                localization.get("ui.colonist_tooltip_body")
+            localization.get("ui.colonist_tooltip_body")
             )
         end
         

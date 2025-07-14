@@ -4,6 +4,12 @@ globals = globals or {}
 
 globals.main_menu_elapsed_time = 0 -- time spent in the main menu
 
+globals.game_time = {
+  minutes = 0, -- minutes since the game started
+  hours = 0,   -- hours since the game started
+  days = 0    -- days since the game started
+}
+
 globals.colonists = globals.colonists or {} -- list of colonists in the game
 
 -- your defaults in one place

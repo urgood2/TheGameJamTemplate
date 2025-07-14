@@ -14335,6 +14335,12 @@
     "copper_glow_palette_resurrect": [
         "RESURRECT_PALETTE_COPPER_GLOW"
     ],
+    "copy_core_main": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/core/main copy.lua"
+    ],
+    "copy_main": [
+        "main copy.lua"
+    ],
     "coral": [
         "CORAL"
     ],

@@ -11,6 +11,7 @@
 #include "systems/collision/broad_phase.hpp"
 
 #include "systems/layer/layer_command_buffer.hpp"
+#include <cstddef>
 
 namespace ui
 {
@@ -51,6 +52,7 @@ namespace ui
         auto &uiState = registry.emplace<UIState>(entity);
         uiState.contentDimensions = {0, 0};
         auto &node = registry.get<transform::GameObject>(entity);
+        node.methods.onHover = nullptr; // disable ui jiggle by default
         node.parent = parent;
         // node.debug.debugText = fmt::format("UIElement {}", static_cast<int>(entity));
 

@@ -11,6 +11,13 @@ function ui_defs.placeBuilding(buildingName)
 end
 
 function ui_defs.generateUI()
+    -- show day 
+    globals.ui.dayTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.day_ui_format", {day = globals.game_time.days or 1}) end,  -- initial text
+        60.0,                                 -- font size
+        "color=blackberry"                       -- animation spec
+    )
+    
     -- show time in XX:XX AM/PM format, create text entity
     globals.ui.timeTextEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.time_ui_format", {hour = globals.game_time.hours, minute = globals.game_time.minutes, am_pm = globals.game_time.hours < 12 and "AM" or "PM"}) end,  -- initial text
@@ -34,6 +41,24 @@ function ui_defs.generateUI()
         uiBoxTransform.actualX = globals.screenWidth() - uiBoxTransform.actualW - 10 -- 10 pixels from the right edge
         uiBoxTransform.visualX = uiBoxTransform.actualX -- update visual position as well
         uiBoxTransform.visualW = uiBoxTransform.actualW -- update visual width as well
+        
+        
+    end)
+    
+    timer.every(1, function()
+        -- update the day text every second
+        local text = localization.get("ui.day_ui_format", {day = globals.game_time.days})
+        TextSystem.Functions.setText(globals.ui.dayTextEntity.config.object, text)
+        
+        -- update the ui box size
+        ui.box.RenewAlignment(registry, globals.ui.dayTextUIBox)
+        
+        -- get ui box transform, align to the right side of the screen
+        local uiBoxTransform = registry:get(globals.ui.dayTextUIBox, Transform)
+        uiBoxTransform.actualX = globals.screenWidth() - uiBoxTransform.actualW - 10 -- 10 pixels from the right edge
+        uiBoxTransform.visualX = uiBoxTransform.actualX -- update visual position as well
+        uiBoxTransform.visualW = uiBoxTransform.actualW -- update visual width as well
+        
     end)
     
     -- new root
@@ -53,12 +78,40 @@ function ui_defs.generateUI()
         :addChild(globals.ui.timeTextEntity)
         :build()
         
+    
+    
+    -- new day root
+    local dayTextRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                :addNoMovementWhenDragged(true)
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        
+        :addChild(globals.ui.dayTextEntity)
+        :build()
+    -- create a new UI box for the day text
+    globals.ui.dayTextUIBox = ui.box.Initialize({x = 10, y = 60}, dayTextRoot)
+    -- align the day text UI box to the right side of the screen
+    local dayTextTransform = registry:get(globals.ui.dayTextUIBox, Transform)
+    dayTextTransform.actualX = globals.screenWidth() - dayTextTransform.actualW - 10 -- 10 pixels from the right edge
+    dayTextTransform.visualX = dayTextTransform.actualX -- update visual position as well
+    
     -- create a new UI box for the time text
     globals.ui.timeTextUIBox = ui.box.Initialize({x = 10, y = 10}, timeTextRoot)
     
-    -- right side of the screen
-    globals.ui.timeTextUIBoxTransform = registry:get(globals.ui.timeTextUIBox, Transform)
-    globals.ui.timeTextUIBoxTransform.actualX = globals.screenWidth() - globals.ui.timeTextUIBoxTransform.actualW - 10 -- 10 pixels from the right edge
+    -- right side of the screen, below the day text
+    local timeTextTransform = registry:get(globals.ui.timeTextUIBox, Transform)
+    timeTextTransform.actualX = globals.screenWidth() - timeTextTransform.actualW - 10 -- 10 pixels from the right edge
+    timeTextTransform.visualX = timeTextTransform.actualX -- update visual position as well
+    timeTextTransform.actualY = dayTextTransform.actualY + dayTextTransform.actualH + 10 -- 10 pixels below the day texture
+    timeTextTransform.visualY = timeTextTransform.actualY -- update visual position as well
     
 end
 
@@ -1508,7 +1561,7 @@ function ui_defs.generateTooltipUI()
     :addType(UITypeEnum.VERTICAL_CONTAINER)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
+            :addColor(util.getColor("taupe_warm"))
             :addMinHeight(50)
             :addMinWidth(200)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -1525,7 +1578,7 @@ function ui_defs.generateTooltipUI()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
+            :addColor(util.getColor("dusty_rose"))
             :addMinHeight(50)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)

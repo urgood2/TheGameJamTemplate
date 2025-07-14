@@ -8,7 +8,7 @@ globals.game_time = {
   seconds = 0, -- seconds since the game started
   minutes = 0, -- minutes since the game started
   hours = 0,   -- hours since the game started
-  days = 0    -- days since the game started
+  days = 1    -- days since the game started
 }
 
 globals.colonists = globals.colonists or {} -- list of colonists in the game
@@ -16,7 +16,9 @@ globals.colonists = globals.colonists or {} -- list of colonists in the game
 globals.ui = {
   timeTextUIBox = nil, -- the UI box that contains the time text
   timeTextEntity = nil, -- the text entity that displays the time
-  timeTextEntityUnwrapped = nil -- the text entity that displays the time, unwrapped (raw dynamic text)
+  
+  dayTextEntity = nil, -- the text entity that displays the day
+  dayTextUIBox = nil -- the UI box that contains the day text
 }
 
 -- your defaults in one place

@@ -91,7 +91,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("green_persian"))
+                :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -130,7 +130,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("green_persian"))
+                :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
@@ -168,7 +168,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("green_persian"))
+                :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
@@ -195,7 +195,7 @@ function initMainMenu()
     :addType(UITypeEnum.ROOT)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
+            :addColor(util.getColor("mauve_shadow"))
             :addShadow(true)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
@@ -467,7 +467,7 @@ function main.update(dt)
     
     -- Update the game time
     -- how many game‐seconds should pass per real second
-    local gameTimeSpeedUpFactor = 50
+    local gameTimeSpeedUpFactor = 200
 
     -- convert dt (real seconds) into game seconds
     local gameSeconds = dt * gameTimeSpeedUpFactor

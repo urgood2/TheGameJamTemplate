@@ -47,22 +47,6 @@ function initMainMenu()
     logoTextTransform.actualX = globals.screenWidth() / 2 - logoTextTransform.actualW / 2
     logoTextTransform.actualY = globals.screenHeight() / 2 - logoTextTransform.actualH / 2 - 200
     
-    local tiltDirection = 1 -- 1 for right, -1 for left
-    timer.every(
-        3.0, -- every 0.5 seconds
-        function()
-             -- set rotation to 30 degrees to the right or left
-            local rotation = tiltDirection * 2
-            local transformComp = registry:get(mainMenuEntities.logoText, Transform)
-            transformComp.actualR = rotation
-            -- toggle the direction
-            tiltDirection = -tiltDirection
-        end,
-        0, -- infinite repetitions
-        true, -- start immediately
-        nil, -- no "after" callback
-        "logo_text_update"
-    )
     
     timer.every(
         0.1, -- every 0.5 seconds
@@ -227,7 +211,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("green_persian"))
+                :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -251,7 +235,7 @@ function initMainMenu()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("lapi_lazuli"))
+                :addColor(util.getColor("dusty_rose"))
                 :addShadow(true)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
@@ -292,7 +276,7 @@ function startGameButtonCallback()
     
     --TODO: change to main game state
     timer.after(
-        2.0, -- delay in seconds
+        1.0, -- delay in seconds
         function()
             log_debug("Changing game state to IN_GAME") -- Debug message to indicate the game state change
             timer.tween(
@@ -302,14 +286,15 @@ function startGameButtonCallback()
                 1 -- target value
                 
             )
+            changeGameState(GAMESTATE.IN_GAME) -- Change the game state to IN_GAME
             
         end
     )
     timer.after(
-        3.2, -- delay in seconds
+        2.2, -- delay in seconds
         function()
             remove_fullscreen_shader("screen_tone_transition") -- Remove the fade out shader
-            changeGameState(GAMESTATE.IN_GAME) -- Change the game state to IN_GAME
+            
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer
     )
@@ -437,6 +422,32 @@ function initMainGame()
             delay, -- delay in seconds
             function()
                 spawnRainEntity() -- spawn a new rain entity
+            end
+        )
+        timer.after(
+            delay + 3.5, -- delay in seconds
+            function()
+                -- make the rain entity blink
+                -- animation_system.setFGColorForAllAnimationObjects(
+                --     globals.rainEntity,
+                --     util.getColor("white") -- set the foreground color to white
+                -- )
+                timer.every(
+                    0.1, -- every 0.5 seconds
+                    function()
+                        -- toggle the visibility of the rain entity
+                        local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+                        rainComp.noDraw = not rainComp.noDraw
+                    end,
+                    5, -- 5 repetitions
+                    true, -- start immediately
+                    function()
+                        -- after 5 repetitions, stop the blinking
+                        local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+                        rainComp.noDraw = false
+                    end,
+                    "rain_entity_blinking" -- unique tag for this timer
+                )
             end
         )
         timer.after(

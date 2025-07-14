@@ -4471,6 +4471,14 @@ function animation_system.update(...) end
 function animation_system.getNinepatchUIBorderInfo(...) end
 
 ---
+--- Sets the foreground color for all animation objects in an entity
+---
+---@param e entt.entity # Target entity
+---@param fgColor Color # Foreground color to set
+Sets the foreground color for all animation objects in an entity
+function animation_system.setFGColorForAllAnimationObjects(...) end
+
+---
 --- Creates an animated object with a transform
 ---
 ---@param defaultAnimationIDOrSpriteUUID string # Animation ID or sprite UUID

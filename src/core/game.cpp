@@ -493,16 +493,19 @@ namespace game
         globals::registry.view<TextSystem::Text>()
             .each([](entt::entity e, TextSystem::Text &text) {
                 // attach tag
+                if (globals::registry.valid(e) == false) return; // skip invalid entities
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });
         globals::registry.view<AnimationQueueComponent>()
             .each([](entt::entity e, AnimationQueueComponent &anim) {
+                if (globals::registry.valid(e) == false) return; // skip invalid entities
                 // attach tag
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });
         globals::registry.view<ui::InventoryGrid>()
             .each([](entt::entity e, ui::InventoryGrid &inv) {
                 // attach tag
+                if (globals::registry.valid(e) == false) return; // skip invalid entities
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });
         

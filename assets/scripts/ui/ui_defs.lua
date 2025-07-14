@@ -12,18 +12,36 @@ end
 
 function ui_defs.generateUI()
     -- show time in XX:XX AM/PM format, create text entity
-    local timeText = ui.definitions.getNewDynamicTextEntry(
+    globals.ui.timeTextEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.time_ui_format", {hour = globals.game_time.hours, minute = globals.game_time.minutes, am_pm = globals.game_time.hours < 12 and "AM" or "PM"}) end,  -- initial text
-        16.0,                                 -- font size
+        40.0,                                 -- font size
         "pulse=0.9,1.0"                       -- animation spec
     )
+    
+    log_debug(globals.ui.timeTextEntity.config.object)
+    
+    
+    timer.every(0.5, function()
+        -- update the time text every second
+        local text = localization.get("ui.time_ui_format", {hour = globals.game_time.hours, minute = math.floor(globals.game_time.minutes), am_pm = globals.game_time.hours < 12 and "AM" or "PM"})
+        TextSystem.Functions.setText(globals.ui.timeTextEntity.config.object, text)
+        
+        -- update the ui box size
+        ui.box.RenewAlignment(registry, globals.ui.timeTextUIBox)
+        
+        -- get ui box transform, align to the right side of the screen
+        local uiBoxTransform = registry:get(globals.ui.timeTextUIBox, Transform)
+        uiBoxTransform.actualX = globals.screenWidth() - uiBoxTransform.actualW - 10 -- 10 pixels from the right edge
+        uiBoxTransform.visualX = uiBoxTransform.actualX -- update visual position as well
+        uiBoxTransform.visualW = uiBoxTransform.actualW -- update visual width as well
+    end)
     
     -- new root
     local timeTextRoot = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("keppel"))
+                :addColor(util.getColor("dusty_rose"))
                 :addNoMovementWhenDragged(true)
                 :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
                 :addInitFunc(function(registry, entity)
@@ -31,6 +49,16 @@ function ui_defs.generateUI()
                 end)
                 :build()
         )
+        
+        :addChild(globals.ui.timeTextEntity)
+        :build()
+        
+    -- create a new UI box for the time text
+    globals.ui.timeTextUIBox = ui.box.Initialize({x = 10, y = 10}, timeTextRoot)
+    
+    -- right side of the screen
+    globals.ui.timeTextUIBoxTransform = registry:get(globals.ui.timeTextUIBox, Transform)
+    globals.ui.timeTextUIBoxTransform.actualX = globals.screenWidth() - globals.ui.timeTextUIBoxTransform.actualW - 10 -- 10 pixels from the right edge
     
 end
 

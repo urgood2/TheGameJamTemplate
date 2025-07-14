@@ -12159,6 +12159,9 @@
     "alt_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_alt.svg"
     ],
+    "amber": [
+        "Amber"
+    ],
     "amber_burnished_palette_resurrect": [
         "RESURRECT_PALETTE_BURNISHED_AMBER"
     ],
@@ -12313,6 +12316,18 @@
     ],
     "apostrophe_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_apostrophe.svg"
+    ],
+    "apricot": [
+        "Apricot"
+    ],
+    "apricot_cream": [
+        "Apricot Cream"
+    ],
+    "aqua": [
+        "Aqua"
+    ],
+    "aqua_pale": [
+        "Pale Aqua"
     ],
     "aquamarine": [
         "AQUAMARINE"
@@ -12974,6 +12989,9 @@
     "babel_edit_warning": [
         "BABEL_EDIT_WARNING.md"
     ],
+    "baby_blue": [
+        "Baby Blue"
+    ],
     "back_default_keyboard_outline_slash": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_slash_back_outline.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_slash_back_outline.png"
@@ -13219,6 +13237,9 @@
     "black": [
         "BLACK"
     ],
+    "blackberry": [
+        "Blackberry"
+    ],
     "blackboard_init_kobold": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/kobold.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\blackboard_init\\kobold.lua"
@@ -13375,7 +13396,8 @@
         "MEDIUM SLATE BLUE"
     ],
     "blue_midnight": [
-        "MIDNIGHT BLUE"
+        "MIDNIGHT BLUE",
+        "Midnight Blue"
     ],
     "blue_nc": [
         "Blue (NCS)"
@@ -13384,10 +13406,12 @@
         "POWDER BLUE"
     ],
     "blue_royal": [
-        "ROYAL BLUE"
+        "ROYAL BLUE",
+        "Royal Blue"
     ],
     "blue_sky": [
-        "SKY BLUE"
+        "SKY BLUE",
+        "Sky Blue"
     ],
     "blue_slate": [
         "SLATE BLUE"
@@ -13440,6 +13464,9 @@
     "blue_steel": [
         "STEEL BLUE"
     ],
+    "blue_teal": [
+        "Teal Blue"
+    ],
     "blue_tiffany": [
         "Tiffany Blue"
     ],
@@ -13481,6 +13508,9 @@
     ],
     "blush_lavender": [
         "LAVENDER BLUSH"
+    ],
+    "blush_pink": [
+        "Blush Pink"
     ],
     "bmjua_ko_otf": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/ko/BMJUA_otf.otf",
@@ -13695,6 +13725,9 @@
     ],
     "bubbling_deep_magic_spell_stereo_subtle_tone_zap": [
         "MAGIC_SPELL_Deep_Tone_Bubbling_Zaps_Subtle_stereo.wav"
+    ],
+    "burgundy": [
+        "Burgundy"
     ],
     "burlywood": [
         "BURLYWOOD"
@@ -14109,8 +14142,12 @@
     "char_test_woman": [
         "test_char_woman.png"
     ],
+    "charcoal": [
+        "Charcoal"
+    ],
     "chartreuse": [
-        "CHARTREUSE"
+        "CHARTREUSE",
+        "Chartreuse"
     ],
     "cheatsheet": [
         "cheatsheet.md"
@@ -14162,8 +14199,12 @@
     "cherry_palette_resurrect_vivid": [
         "RESURRECT_PALETTE_VIVID_CHERRY"
     ],
+    "chestnut": [
+        "Chestnut"
+    ],
     "chiffon_lemon": [
-        "LEMON CHIFFON"
+        "LEMON CHIFFON",
+        "Lemon Chiffon"
     ],
     "chocolate": [
         "CHOCOLATE"
@@ -14347,6 +14388,12 @@
     "coral_light": [
         "LIGHT CORAL"
     ],
+    "coral_pink": [
+        "Coral Pink"
+    ],
+    "coral_red": [
+        "Coral Red"
+    ],
     "core_entity_factory": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/entity_factory.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\core\\entity_factory.lua",
@@ -14400,6 +14447,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\creatures.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/creatures.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\creatures.json"
+    ],
+    "crimson_dark": [
+        "Dark Crimson"
     ],
     "crimson_deep_palette_resurrect": [
         "RESURRECT_PALETTE_DEEP_CRIMSON"
@@ -14559,6 +14609,9 @@
     "cyan": [
         "CYAN"
     ],
+    "cyan_green": [
+        "Cyan Green"
+    ],
     "cyan_light": [
         "LIGHT CYAN"
     ],
@@ -14617,6 +14670,9 @@
     "dark_khaki": [
         "DARK KHAKI"
     ],
+    "dark_lavender": [
+        "Dark Lavender"
+    ],
     "dark_olive_palette_resurrect": [
         "RESURRECT_PALETTE_DARK_OLIVE"
     ],
@@ -14645,11 +14701,17 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/DEBUGGING_LUA.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\DEBUGGING_LUA.md"
     ],
+    "deep_magenta": [
+        "Deep Magenta"
+    ],
     "deep_palette_resurrect_twilight": [
         "RESURRECT_PALETTE_DEEP_TWILIGHT"
     ],
     "deep_pink": [
         "DEEP PINK"
+    ],
+    "deep_teal": [
+        "Deep Teal"
     ],
     "def_ui": [
         "ui_defs.lua"
@@ -16665,7 +16727,8 @@
         "xbox_dpad.png"
     ],
     "drab_olive": [
-        "OLIVE DRAB"
+        "OLIVE DRAB",
+        "Olive Drab"
     ],
     "drop_final_fragment_shader_shadow": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/drop_shadow_final_fragment.fs",
@@ -16699,6 +16762,9 @@
     ],
     "dusky_mauve_palette_resurrect": [
         "RESURRECT_PALETTE_DUSKY_MAUVE"
+    ],
+    "dusty_rose": [
+        "Dusty Rose"
     ],
     "e_keyboard": [
         "keyboard_e.png"
@@ -16857,6 +16923,9 @@
     ],
     "escape_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_escape.svg"
+    ],
+    "espresso": [
+        "Espresso"
     ],
     "every_tick_update": [
         "update_every_tick.lua"
@@ -17112,6 +17181,9 @@
     "fiery_orange_palette_resurrect": [
         "RESURRECT_PALETTE_FIERY_ORANGE"
     ],
+    "fiery_red": [
+        "Fiery Red"
+    ],
     "file_file_globbed_globbed_packing_packing_pre_pre": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/pre-packing-files_globbed/pre-packing-files_globbed.zip",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\pre-packing-files_globbed\\pre-packing-files_globbed.zip",
@@ -17326,6 +17398,9 @@
     "forest_jade_palette_resurrect": [
         "RESURRECT_PALETTE_FOREST_JADE"
     ],
+    "forest_slate": [
+        "Forest Slate"
+    ],
     "formatting_string": [
         "string_formatting.md"
     ],
@@ -17523,6 +17598,9 @@
     "frosted_jade_palette_resurrect": [
         "RESURRECT_PALETTE_FROSTED_JADE"
     ],
+    "fuchsia": [
+        "Fuchsia"
+    ],
     "function_keyboard": [
         "keyboard_function.png"
     ],
@@ -17670,7 +17748,8 @@
         "RESURRECT_PALETTE_GOLDEN_SUNSET"
     ],
     "goldenrod": [
-        "GOLDENROD"
+        "GOLDENROD",
+        "Goldenrod"
     ],
     "goldenrod_light": [
         "LIGHT GOLDENROD"
@@ -17751,6 +17830,9 @@
     "green": [
         "GREEN"
     ],
+    "green_jade": [
+        "Jade Green"
+    ],
     "green_lawn": [
         "LAWN GREEN"
     ],
@@ -17772,6 +17854,12 @@
     "green_medium_spring": [
         "MEDIUM SPRING GREEN"
     ],
+    "green_mint": [
+        "Mint Green"
+    ],
+    "green_mos": [
+        "Moss Green"
+    ],
     "green_mossy_palette_resurrect": [
         "RESURRECT_PALETTE_MOSSY_GREEN"
     ],
@@ -17789,6 +17877,9 @@
     ],
     "green_sea": [
         "SEA GREEN"
+    ],
+    "green_seafoam": [
+        "Seafoam Green"
     ],
     "green_spring": [
         "SPRING GREEN"
@@ -17964,6 +18055,9 @@
     ],
     "indian_red": [
         "INDIAN RED"
+    ],
+    "indigo": [
+        "Indigo"
     ],
     "init": [
         "init.lua"
@@ -18506,7 +18600,8 @@
         "Lapis Lazuli"
     ],
     "lavender": [
-        "LAVENDER"
+        "LAVENDER",
+        "Lavender"
     ],
     "lavender_palette_resurrect_shadowed": [
         "RESURRECT_PALETTE_SHADOWED_LAVENDER"
@@ -18555,6 +18650,9 @@
     ],
     "light_yellow": [
         "LIGHT YELLOW"
+    ],
+    "lime": [
+        "Lime"
     ],
     "lime_palette_resurrect_sprite": [
         "RESURRECT_PALETTE_LIME_SPRITE"
@@ -18629,8 +18727,14 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_menu.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\start_main_menu.lua"
     ],
+    "marigold": [
+        "Marigold"
+    ],
     "maroon": [
         "MAROON"
+    ],
+    "mauve_shadow": [
+        "Shadow Mauve"
     ],
     "medium_orchid": [
         "MEDIUM ORCHID"
@@ -18659,6 +18763,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/spine\\miner.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/miner.png",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\miner.png"
+    ],
+    "mint_pale": [
+        "Pale Mint"
+    ],
+    "mist_olive": [
+        "Olive Mist"
     ],
     "misty_rose": [
         "MISTY ROSE"
@@ -18754,6 +18864,9 @@
     "mouse_vertical": [
         "mouse_vertical.png"
     ],
+    "mulberry": [
+        "Mulberry"
+    ],
     "musicnote1": [
         "musicnote1.png"
     ],
@@ -18771,6 +18884,9 @@
     ],
     "muted_palette_resurrect_rosewood": [
         "RESURRECT_PALETTE_MUTED_ROSEWOOD"
+    ],
+    "muted_plum": [
+        "Muted Plum"
     ],
     "navajo_white": [
         "NAVAJO WHITE"
@@ -18830,6 +18946,9 @@
     ],
     "orchid": [
         "ORCHID"
+    ],
+    "orchid_purple": [
+        "Purple Orchid"
     ],
     "outline_pixelperfect": [
         "pixelperfect_outline.fs",
@@ -18917,6 +19036,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\parallax_shadow.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/parallax_shadow.vs"
     ],
+    "pastel_pink": [
+        "Pastel Pink"
+    ],
+    "peach": [
+        "Peach"
+    ],
     "peach_puff": [
         "PEACH PUFF"
     ],
@@ -18933,7 +19058,8 @@
         "PINK"
     ],
     "plum": [
-        "PLUM"
+        "PLUM",
+        "Plum"
     ],
     "polychrome_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\polychrome_vertex.vs",
@@ -18988,6 +19114,9 @@
     "purple": [
         "PURPLE"
     ],
+    "purple_slate": [
+        "Slate Purple"
+    ],
     "r_right_stick_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_stick_r_right.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Vector\\xbox_stick_r_right.svg"
@@ -19037,6 +19166,9 @@
     "r_xbox": [
         "xbox_rs.png"
     ],
+    "raspberry": [
+        "Raspberry"
+    ],
     "raw": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/raws/.DS_Store",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\.DS_Store",
@@ -19070,6 +19202,9 @@
     "red": [
         "RED"
     ],
+    "red_tomato": [
+        "Tomato Red"
+    ],
     "red_violet": [
         "VIOLET RED"
     ],
@@ -19098,12 +19233,21 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\ripple.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/ripple.vs"
     ],
+    "rosewood": [
+        "Rosewood"
+    ],
     "rt_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rt.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Vector\\xbox_rt.svg"
     ],
     "rt_xbox": [
         "xbox_rt.png"
+    ],
+    "rust": [
+        "Rust"
+    ],
+    "sage": [
+        "Sage"
     ],
     "salmon": [
         "SALMON"
@@ -19274,6 +19418,9 @@
     "snow": [
         "SNOW"
     ],
+    "soft_steel": [
+        "Soft Steel"
+    ],
     "sol_with_working": [
         "working_with_sol.md"
     ],
@@ -19314,8 +19461,14 @@
     "suggestion_tileset_use": [
         "tileset use suggestions.md"
     ],
+    "sunflower": [
+        "Sunflower"
+    ],
     "tan": [
         "TAN"
+    ],
+    "tangerine": [
+        "Tangerine"
     ],
     "task": [
         "task.lua"
@@ -19323,6 +19476,9 @@
     "task_task": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/task/task.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\task\\task.lua"
+    ],
+    "taupe_warm": [
+        "Warm Taupe"
     ],
     "test": [
         "test.png"
@@ -19356,6 +19512,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\util\\util.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/util/util.lua"
     ],
+    "verdigri": [
+        "Verdigris"
+    ],
     "vertex_web_wind": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\wind_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/wind_vertex.vs"
@@ -19364,13 +19523,18 @@
         "wind_vertex.vs"
     ],
     "violet": [
-        "VIOLET"
+        "VIOLET",
+        "Violet"
     ],
     "wheat": [
         "WHEAT"
     ],
     "white": [
-        "WHITE"
+        "WHITE",
+        "White"
+    ],
+    "wine": [
+        "Wine"
     ],
     "world": [
         "world.ldtk"

@@ -676,7 +676,7 @@ namespace game
                 
                 if (!isScreenSpace)
                 {
-                    SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
+                    // SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
                 }
                 
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))

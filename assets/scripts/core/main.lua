@@ -343,6 +343,7 @@ function initMainGame()
     -- add_fullscreen_shader("tile_grid_overlay") -- to show tile griddonuts background
     
     ui_defs.generateTooltipUI()
+    ui_defs.generateUI()
     
     -- generate ai entities which will move around the map
     for i = 1, 3 do
@@ -399,30 +400,30 @@ function initMainGame()
 
     -- scheduler example
 
-    local p1 = {
-        update = function(self, dt)
-            log_debug("Task 1 Start")
-            task.wait(5.0)
-            log_debug("Task 1 End after 5s")
-        end
-    }
+    -- local p1 = {
+    --     update = function(self, dt)
+    --         log_debug("Task 1 Start")
+    --         task.wait(5.0)
+    --         log_debug("Task 1 End after 5s")
+    --     end
+    -- }
 
-    local p2 = {
-        update = function(self, dt)
-            log_debug("Task 2 Start")
-            task.wait(5.0)
-            log_debug("Task 2 End after 5s")
-        end
-    }
+    -- local p2 = {
+    --     update = function(self, dt)
+    --         log_debug("Task 2 Start")
+    --         task.wait(5.0)
+    --         log_debug("Task 2 End after 5s")
+    --     end
+    -- }
 
-    local p3 = {
-        update = function(self, dt)
-            log_debug("Task 3 Start")
-            task.wait(10.0)
-            log_debug("Task 3 End after 10s")
-        end
-    }
-    scheduler:attach(p1, p2, p3)
+    -- local p3 = {
+    --     update = function(self, dt)
+    --         log_debug("Task 3 Start")
+    --         task.wait(10.0)
+    --         log_debug("Task 3 End after 10s")
+    --     end
+    -- }
+    -- scheduler:attach(p1, p2, p3)
 end
 
 function changeGameState(newState)
@@ -464,7 +465,37 @@ function main.update(dt)
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
     
+    -- Update the game time
+    -- how many game‐seconds should pass per real second
+    local gameTimeSpeedUpFactor = 50
 
+    -- convert dt (real seconds) into game seconds
+    local gameSeconds = dt * gameTimeSpeedUpFactor
+
+    -- add to an explicit seconds counter (for precision)
+    globals.game_time.seconds = (globals.game_time.seconds or 0) + gameSeconds
+
+    -- roll up into minutes
+    if globals.game_time.seconds >= 60 then
+        local extraMin = math.floor(globals.game_time.seconds / 60)
+        globals.game_time.seconds = globals.game_time.seconds % 60
+        globals.game_time.minutes = globals.game_time.minutes + extraMin
+    end
+
+    -- roll up into hours
+    if globals.game_time.minutes >= 60 then
+        local extraHr = math.floor(globals.game_time.minutes / 60)
+        globals.game_time.minutes = globals.game_time.minutes % 60
+        globals.game_time.hours   = globals.game_time.hours + extraHr
+    end
+
+    -- roll up into days
+    if globals.game_time.hours >= 24 then
+        local extraDay = math.floor(globals.game_time.hours / 24)
+        globals.game_time.hours = globals.game_time.hours % 24
+        globals.game_time.days  = globals.game_time.days + extraDay
+    end
+    log_debug("time:", globals.game_time.hours, ":", globals.game_time.minutes, "days:", globals.game_time.days)
     
     -- entity iteration example
     -- local view = registry:runtime_view(Transform)

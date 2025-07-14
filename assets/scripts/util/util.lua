@@ -99,6 +99,10 @@ function showTooltip(titleText, bodyText)
   boxT.visualX           = boxT.actualX
   boxT.actualY           = clamp(y, 0, screenH - h)
   boxT.visualY           = boxT.actualY
+  
+  -- 6) hard set size
+  boxT.visualW = boxT.actualW
+  boxT.visualH = boxT.actualH
 end
 
 function showNewAchievementPopup(achievementID)

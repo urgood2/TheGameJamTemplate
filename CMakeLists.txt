@@ -22,10 +22,15 @@ elseif()
     set(OPENGL_VERSION "3.3") #apple uses 4.1, which is not supported 
 endif()
 
+#set gzip for window
+if (WIN32)
+    set(GZIP_EXE "E:/gzip-1.3.12-1-bin/bin/gzip.exe")  # Adjust to where gzip.exe lives
+endif()
+
 #stack size adjustment for web
 if (EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s TOTAL_STACK=128MB") # 5MB stack size
-endif()
+endif() 
 
 if (WIN32) 
     add_compile_options("-Wa,-mbig-obj")
@@ -408,8 +413,8 @@ add_custom_target(configure_web_build
     COMMAND call ${EMSDK_PATH}/emsdk_env.bat && ${EMSCRIPTEN_PATH}/emcmake.bat cmake .. 
         -DPLATFORM=Web 
         -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0"
-        -DCMAKE_EXECUTABLE_SUFFIX=\".html\"
+        -DCMAKE_EXE_LINKER_FLAGS="-sUSE_GLFW=3 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=2 -Oz -sALLOW_MEMORY_GROWTH=1 -gsource-map -sASSERTIONS=1 -sNO_DISABLE_EXCEPTION_CATCHING=0 -DNDEBUG -s WASM=1 -s SIDE_MODULE=0 -s EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 --closure 1"
+        -DCMAKE_EXECUTABLE_SUFFIX=\".html\" 
     WORKING_DIRECTORY ${BUILD_DIR}
     COMMENT "Configuring CMake with Emscripten for web build (debug enabled)"
 )
@@ -431,14 +436,39 @@ add_custom_target(rename_to_index
     COMMENT "Renaming output HTML file to index.html"
 )
 
+# Inject snippet into <head> of index.html
+set(INJECT_SNIPPET_PATH "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.html")
+set(INJECT_SCRIPT_PATH "${CMAKE_SOURCE_DIR}/cmake/inject_snippet.ps1")
+
+add_custom_target(inject_web_patch
+    DEPENDS rename_to_index
+    COMMAND ${CMAKE_COMMAND} -E echo "Injecting custom HTML snippet into <head>..."
+    COMMAND powershell -ExecutionPolicy Bypass -NoProfile -File "${INJECT_SCRIPT_PATH}" `
+        -HtmlPath "${WEB_OUT}" `
+        -SnippetPath "${INJECT_SNIPPET_PATH}"
+    COMMENT "Patch index.html with custom <script> logic"
+)
+
 set(WASM_FILE "${BUILD_DIR}/${PROJECT_NAME}.wasm")
 set(DATA_FILE "${BUILD_DIR}/${PROJECT_NAME}.data")
 set(JS_FILE "${BUILD_DIR}/${PROJECT_NAME}.js")
 
+add_custom_target(gzip_assets
+    DEPENDS inject_web_patch
+    COMMAND ${CMAKE_COMMAND} -E echo "Gzipping WASM and DATA files..."
+    COMMAND ${CMAKE_COMMAND} -E copy ${WASM_FILE} ${WASM_FILE}.orig
+    COMMAND ${CMAKE_COMMAND} -E copy ${DATA_FILE} ${DATA_FILE}.orig
+    COMMAND ${CMAKE_COMMAND} -E echo "Trying: ${GZIP_EXE} -kf ${WASM_FILE}"
+    COMMAND ${GZIP_EXE} -kf ${WASM_FILE}
+    COMMAND ${GZIP_EXE} -kf ${DATA_FILE}
+    COMMENT "Gzipping .wasm and .data files"
+) 
+
 # Set up the target to zip without the parent folder
 add_custom_target(zip_web_build
-    DEPENDS rename_to_index
-    COMMAND ${CMAKE_COMMAND} -E tar "cf" ${WEB_ZIP} --format=zip index.html ${WASM_FILE} ${DATA_FILE} ${JS_FILE} assets
+    DEPENDS gzip_assets
+    COMMAND ${CMAKE_COMMAND} -E tar "cf" ${WEB_ZIP} --format=zip index.html ${WASM_FILE}.gz ${DATA_FILE}.gz ${JS_FILE} assets
+    # COMMAND ${CMAKE_COMMAND} -E tar "cf" ${WEB_ZIP} --format=zip index.html ${WASM_FILE} ${DATA_FILE} ${JS_FILE} assets
     WORKING_DIRECTORY ${BUILD_DIR}
     COMMENT "Zipping web build for distribution"
 )

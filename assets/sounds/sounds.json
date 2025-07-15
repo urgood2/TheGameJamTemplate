@@ -11,7 +11,7 @@
     "categories": {
         "effects": {
             "sounds": {
-                "button-click": "UI_Click_Snappy_mono.wav",                
+                "button-click": "UI_Click_Snappy_mono.wav"                
             },
             "volume": 0.3
         },

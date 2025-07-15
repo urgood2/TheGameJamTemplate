@@ -14377,7 +14377,8 @@
         "RESURRECT_PALETTE_COPPER_GLOW"
     ],
     "copy_core_main": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/core/main copy.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts_archived/jame_gam_50/core/main copy.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts_archived\\jame_gam_50\\core\\main copy.lua"
     ],
     "copy_main": [
         "main copy.lua"
@@ -16818,7 +16819,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/localization\\en_us.json"
     ],
     "en_nineteen_ninety_six": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Nineteen Ninety Six.otf"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Nineteen Ninety Six.otf",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Nineteen Ninety Six.otf"
     ],
     "en_readme": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/readme.txt",

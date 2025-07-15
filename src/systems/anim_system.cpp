@@ -323,7 +323,7 @@ namespace animation_system {
         auto &transform = registry.get<transform::Transform>(e);
 
         // 1) attach animation queue
-        auto &animQueue = registry.emplace<AnimationQueueComponent>(e);
+        auto &animQueue = registry.emplace_or_replace<AnimationQueueComponent>(e);
 
         if (generateNewAnimFromSprite) {
             animQueue.defaultAnimation =

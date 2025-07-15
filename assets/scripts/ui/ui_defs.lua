@@ -113,6 +113,64 @@ function ui_defs.generateUI()
     timeTextTransform.actualY = dayTextTransform.actualY + dayTextTransform.actualH + 10 -- 10 pixels below the day texture
     timeTextTransform.visualY = timeTextTransform.actualY -- update visual position as well
     
+    -- a shop button 
+    globals.ui.shopButtonTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.shop_button") end,  -- initial text
+        20.0,                                 -- font size
+        "bump"                       -- animation spec
+    )
+    
+    local shopButtonDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addHover(true) -- needed for button effect
+                :addButtonCallback(function()
+                    -- button click callback
+                    log_debug("Shop button clicked!")
+                    playSoundEffect("effects", "button-click") -- play button click sound
+                    
+                end)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(globals.ui.shopButtonTextEntity)
+        :build()
+        
+    local shopButtonRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addMinHeight(50)
+                -- :addShadow(true)
+                -- :addMaxWidth(300)
+                :addPadding(0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(shopButtonDef)
+        :build()
+        
+    -- create a new UI box for the shop button
+    globals.ui.shopButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 10}, shopButtonRoot)
+    -- align the shop button UI box to the right side of the screen
+    local shopButtonTransform = registry:get(globals.ui.shopButtonUIBox, Transform)
+    shopButtonTransform.actualX = globals.screenWidth() - shopButtonTransform.actualW - 10 -- 10 pixels from the right edge
+    shopButtonTransform.visualX = shopButtonTransform.actualX -- update visual position as well
+    -- bottom right corner of the screen
+    shopButtonTransform.actualY = globals.screenHeight() - shopButtonTransform.actualH - 10 -- 10 pixels from the bottom edge
+    shopButtonTransform.visualY = shopButtonTransform.actualY -- update visual position as well
+    
 end
 
 function ui_defs.generateUIArchived() 

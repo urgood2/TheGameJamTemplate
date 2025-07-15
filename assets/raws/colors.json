@@ -122,6 +122,15 @@
         "r": 255
     },
     {
+        "a": 0,
+        "auto_generated_uuid": "blank",
+        "b": 0,
+        "family": "Whites/Pastels",
+        "g": 0,
+        "name": "blank",
+        "r": 0
+    },
+    {
         "auto_generated_uuid": "almond_blanched",
         "b": 205,
         "family": "Whites/Pastels",

@@ -8,7 +8,7 @@ require("core.entity_factory")
 local shader_prepass = require("shaders.prepass_example")
 require("core.entity_factory")
 local Chain = require("external.knife.chain")
-local lume = require("external.lume")
+lume = require("external.lume")
 local camera, methods = require("external.hump.camera")
 -- Represents game loop main module
 main = {}
@@ -332,71 +332,7 @@ function initMainGame()
     
     -- generate ai entities which will move around the map
     for i = 1, 1 do
-        -- 1) Spawn a new kobold AI entity
-        local colonist = create_ai_entity("kobold")
-        
-        globals.colonists[#globals.colonists+1] = colonist -- add to the global krill list
-
-        local sprite = random_utils.random_element_string({
-            "3916-TheRoguelike_1_10_alpha_709.png",
-            "3915-TheRoguelike_1_10_alpha_708.png",
-            "3914-TheRoguelike_1_10_alpha_707.png",
-            "3913-TheRoguelike_1_10_alpha_706.png"
-        })
-
-        -- 2) Set up its animation & sizing
-        animation_system.setupAnimatedObjectOnEntity(
-            colonist,
-            sprite,
-            true,
-            nil,
-            true
-        )
-        animation_system.resizeAnimationObjectsInEntityToFit(
-            colonist,
-            64,
-            64
-        )
-        
-        local nodeComp = registry:get(colonist, GameObject)
-        local gameObjectState = nodeComp.state
-        gameObjectState.hoverEnabled = true
-        gameObjectState.collisionEnabled = true
-        nodeComp.methods.onHover = function()
-            -- log_debug("krill hovered!")
-            showTooltip(
-                localization.get("ui.colonist_tooltip_title"), 
-            localization.get("ui.colonist_tooltip_body")
-            )
-        end
-        
-        local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
-
-        shaderPipelineComp:addPass("random_displacement_anim")
-        
-        -- 3) Randomize its start position
-        local tr = registry:get(colonist, Transform)
-        tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
-        tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
-        
-        -- 4) timer for random movement within the screen bounds
-        timer.every(
-            1.0, -- every 1 second
-            function()
-                -- move the colonist by random amounts
-                local tr = registry:get(colonist, Transform)
-                local moveX = random_utils.random_int(-50, 50) -- move by a
-                local moveY = random_utils.random_int(-50, 50) -- move by a random amount
-                tr.actualX = lume.clamp(tr.actualX + moveX, 0, globals.screenWidth() - tr.actualW)
-                tr.actualY = lume.clamp(tr.actualY + moveY, 0, globals.screenHeight() - tr.actualH)
-      
-                -- log_debug("Colonist moved to: ", tr.actualX, tr.actualY)
-            end,
-            0, -- infinite repetitions
-            true, -- start immediately
-            nil, -- no "after" callback
-            "colonist_random_movement_" .. i -- unique tag for this timer
-        )
+        spawnNewColonist()
     end
     
     -- function destroyRainAndSpawnNew()
@@ -586,7 +522,7 @@ function main.update(dt)
     
     -- Update the game time
     -- how many game‐seconds should pass per real second
-    local gameTimeSpeedUpFactor = 200
+    local gameTimeSpeedUpFactor = 500
 
     -- convert dt (real seconds) into game seconds
     local gameSeconds = dt * gameTimeSpeedUpFactor

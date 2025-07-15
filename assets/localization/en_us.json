@@ -1,6 +1,7 @@
 {
 	"ui": {
 		
+		"shop_button": "Shop",
 		"colonist_tooltip_title": "Colonist",
 		"colonist_tooltip_body": "Keep them alive!",
 		"time_ui_format": "{hour}:{minute} {am_pm}",

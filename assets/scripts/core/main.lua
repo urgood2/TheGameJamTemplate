@@ -422,34 +422,43 @@ function initMainGame()
             delay, -- delay in seconds
             function()
                 spawnRainEntity() -- spawn a new rain entity
-            end
-        )
-        timer.after(
-            delay + 3.5, -- delay in seconds
-            function()
-                -- make the rain entity blink
-                -- animation_system.setFGColorForAllAnimationObjects(
-                --     globals.rainEntity,
-                --     util.getColor("white") -- set the foreground color to white
-                -- )
-                timer.every(
-                    0.1, -- every 0.5 seconds
+                timer.after(
+                    3.5, -- delay in seconds
                     function()
-                        -- toggle the visibility of the rain entity
-                        local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
-                        rainComp.noDraw = not rainComp.noDraw
-                    end,
-                    5, -- 5 repetitions
-                    true, -- start immediately
-                    function()
-                        -- after 5 repetitions, stop the blinking
-                        local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
-                        rainComp.noDraw = false
-                    end,
-                    "rain_entity_blinking" -- unique tag for this timer
+                        -- make the rain entity blink
+                        -- animation_system.setFGColorForAllAnimationObjects(
+                        --     globals.rainEntity,
+                        --     util.getColor("white") -- set the foreground color to white
+                        -- )
+                        timer.every(
+                            0.1, -- every 0.5 seconds
+                            function()
+                                -- toggle the visibility of the rain entity
+                                if (registry:valid(globals.rainEntity) == false) then
+                                    log_debug("Rain entity is not valid, skipping blinking") -- Debug message
+                                    return -- if the rain entity is not valid, do nothing
+                                end
+                                local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+                                rainComp.noDraw = not rainComp.noDraw
+                            end,
+                            5, -- 5 repetitions
+                            true, -- start immediately
+                            function()
+                                if (registry:valid(globals.rainEntity) == false) then
+                                    log_debug("Rain entity is not valid, skipping blinking") -- Debug message
+                                    return -- if the rain entity is not valid, do nothing
+                                end
+                                -- after 5 repetitions, stop the blinking
+                                local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+                                rainComp.noDraw = false
+                            end,
+                            "rain_entity_blinking" -- unique tag for this timer
+                        )
+                    end
                 )
             end
         )
+        
         timer.after(
             delay + 4, -- delete after three seconds
             function()

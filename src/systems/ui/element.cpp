@@ -891,8 +891,8 @@ namespace ui
 
             if (!role || !node || !uiElement || !transform || !uiState || !uiConfig) continue;
 
-            SPDLOG_DEBUG("Applying scaling factor to entity {} with initial width: {}, height: {}, content dimensions: {}, scale: {}",
-                        static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
+            // SPDLOG_DEBUG("Applying scaling factor to entity {} with initial width: {}, height: {}, content dimensions: {}, scale: {}",
+            //             static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
 
             transform->setActualW(transform->getActualW() * scaling);
             transform->setActualH(transform->getActualH() * scaling);
@@ -906,8 +906,8 @@ namespace ui
                 UpdateUIObjectScalingAndRecnter(uiConfig, uiConfig->scale.value(), transform);
             }
 
-            SPDLOG_DEBUG("Applying scaling factor to entity {} resulted in width: {}, height: {}, content dimensions: {}, scale: {}",
-                        static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
+            // SPDLOG_DEBUG("Applying scaling factor to entity {} resulted in width: {}, height: {}, content dimensions: {}, scale: {}",
+            //             static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
         }
     }
 
@@ -973,8 +973,8 @@ namespace ui
             role->offset->x += x;
             role->offset->y += y;
 
-            SPDLOG_DEBUG("Applying alignment to entity {} with x: {}, y: {}, resulted in offset x: {}, y: {}. This entity has {} children.",
-                        static_cast<int>(entity), x, y, role->offset->x, role->offset->y, node->children.size());
+            // SPDLOG_DEBUG("Applying alignment to entity {} with x: {}, y: {}, resulted in offset x: {}, y: {}. This entity has {} children.",
+            //             static_cast<int>(entity), x, y, role->offset->x, role->offset->y, node->children.size());
         }
     }
  
@@ -2524,7 +2524,7 @@ namespace ui
         AssertThat(node, Is().Not().EqualTo(nullptr));
         AssertThat(roomTransform, Is().Not().EqualTo(nullptr));
         
-        SPDLOG_DEBUG("ApplyHover(): Applying hover for entity: {}", static_cast<int>(entity));
+        // SPDLOG_DEBUG("ApplyHover(): Applying hover for entity: {}", static_cast<int>(entity));
 
         // Step 1: Handle On-Demand Tooltip
         if (uiConfig->onDemandTooltip)

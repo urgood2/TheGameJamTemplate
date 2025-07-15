@@ -331,7 +331,7 @@ function initMainGame()
     ui_defs.generateUI()
     
     -- generate ai entities which will move around the map
-    for i = 1, 3 do
+    for i = 1, 1 do
         -- 1) Spawn a new kobold AI entity
         local colonist = create_ai_entity("kobold")
         
@@ -399,87 +399,87 @@ function initMainGame()
         )
     end
     
-    function destroyRainAndSpawnNew()
-        -- destroy the rain entity
-        if globals.rainEntity and registry:valid(globals.rainEntity) then
-            registry:destroy(globals.rainEntity)
-        end
+    -- function destroyRainAndSpawnNew()
+    --     -- destroy the rain entity
+    --     if globals.rainEntity and registry:valid(globals.rainEntity) then
+    --         registry:destroy(globals.rainEntity)
+    --     end
 
-        local delay = random_utils.random_int(5, 15) -- delay in seconds
-        -- start another timer with 10-30 delay
-        timer.after(
-            delay - 5, -- delay in seconds
-            function()
-                newTextPopup(
-                    "Rain is coming!", -- text to display
-                    0, -- bottom left
-                    globals.screenHeight() - 100, -- position at the bottom left,
-                    5
-                )
-            end
-        )
-        timer.after(
-            delay, -- delay in seconds
-            function()
-                spawnRainEntity() -- spawn a new rain entity
-                timer.after(
-                    3.5, -- delay in seconds
-                    function()
-                        -- make the rain entity blink
-                        -- animation_system.setFGColorForAllAnimationObjects(
-                        --     globals.rainEntity,
-                        --     util.getColor("white") -- set the foreground color to white
-                        -- )
-                        timer.every(
-                            0.1, -- every 0.5 seconds
-                            function()
-                                -- toggle the visibility of the rain entity
-                                if (registry:valid(globals.rainEntity) == false) then
-                                    log_debug("Rain entity is not valid, skipping blinking") -- Debug message
-                                    return -- if the rain entity is not valid, do nothing
-                                end
-                                local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
-                                rainComp.noDraw = not rainComp.noDraw
-                            end,
-                            5, -- 5 repetitions
-                            true, -- start immediately
-                            function()
-                                if (registry:valid(globals.rainEntity) == false) then
-                                    log_debug("Rain entity is not valid, skipping blinking") -- Debug message
-                                    return -- if the rain entity is not valid, do nothing
-                                end
-                                -- after 5 repetitions, stop the blinking
-                                local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
-                                rainComp.noDraw = false
-                            end,
-                            "rain_entity_blinking" -- unique tag for this timer
-                        )
-                    end
-                )
-            end
-        )
+    --     local delay = random_utils.random_int(5, 15) -- delay in seconds
+    --     -- start another timer with 10-30 delay
+    --     timer.after(
+    --         delay - 5, -- delay in seconds
+    --         function()
+    --             newTextPopup(
+    --                 "Rain is coming!", -- text to display
+    --                 0, -- bottom left
+    --                 globals.screenHeight() - 100, -- position at the bottom left,
+    --                 5
+    --             )
+    --         end
+    --     )
+    --     timer.after(
+    --         delay, -- delay in seconds
+    --         function()
+    --             spawnRainEntity() -- spawn a new rain entity
+    --             timer.after(
+    --                 3.5, -- delay in seconds
+    --                 function()
+    --                     -- make the rain entity blink
+    --                     -- animation_system.setFGColorForAllAnimationObjects(
+    --                     --     globals.rainEntity,
+    --                     --     util.getColor("white") -- set the foreground color to white
+    --                     -- )
+    --                     timer.every(
+    --                         0.1, -- every 0.5 seconds
+    --                         function()
+    --                             -- toggle the visibility of the rain entity
+    --                             if (registry:valid(globals.rainEntity) == false) then
+    --                                 log_debug("Rain entity is not valid, skipping blinking") -- Debug message
+    --                                 return -- if the rain entity is not valid, do nothing
+    --                             end
+    --                             local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+    --                             rainComp.noDraw = not rainComp.noDraw
+    --                         end,
+    --                         5, -- 5 repetitions
+    --                         true, -- start immediately
+    --                         function()
+    --                             if (registry:valid(globals.rainEntity) == false) then
+    --                                 log_debug("Rain entity is not valid, skipping blinking") -- Debug message
+    --                                 return -- if the rain entity is not valid, do nothing
+    --                             end
+    --                             -- after 5 repetitions, stop the blinking
+    --                             local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+    --                             rainComp.noDraw = false
+    --                         end,
+    --                         "rain_entity_blinking" -- unique tag for this timer
+    --                     )
+    --                 end
+    --             )
+    --         end
+    --     )
         
-        timer.after(
-            delay + 4, -- delete after three seconds
-            function()
-                destroyRainAndSpawnNew() -- recursively call this function to spawn a new rain entity
-            end
-        )
-    end
+    --     timer.after(
+    --         delay + 4, -- delete after three seconds
+    --         function()
+    --             destroyRainAndSpawnNew() -- recursively call this function to spawn a new rain entity
+    --         end
+    --     )
+    -- end
     
-    -- add a timer that activates in 10 seconds to spawn a rain transform entity
-    timer.after(
-        10.0, -- delay in seconds
-        function()
-            spawnRainEntity() 
-        end
-    )
-    timer.after(
-        13, -- delete after three seconds
-        function()
-            destroyRainAndSpawnNew()
-        end
-    )
+    -- -- add a timer that activates in 10 seconds to spawn a rain transform entity
+    -- timer.after(
+    --     10.0, -- delay in seconds
+    --     function()
+    --         spawnRainEntity() 
+    --     end
+    -- )
+    -- timer.after(
+    --     13, -- delete after three seconds
+    --     function()
+    --         destroyRainAndSpawnNew()
+    --     end
+    -- )
     
 
     -- scheduler example

@@ -16,11 +16,13 @@ return {
     update = function(e, dt) -- update can be coroutine
         log_debug("Entity", e, "eat update.")
         wait(1.0)
+        local bb = ai.get_blackboard(e)
+        bb:set_float("hunger", bb:get_float("hunger") + 0.5) -- increase hunger level
         return ActionResult.SUCCESS
     end,
 
     finish = function(e)
-        log_debug("Done eating.")
+        log_debug("Done eating: entity", e)
     end
 }
 

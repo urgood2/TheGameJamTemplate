@@ -865,7 +865,7 @@ namespace ai_system
                 const std::string post_key = postCondition.first;
                 const bool post_value = postCondition.second;
                 goap_worldstate_set(&goapComponent.ap, &goapComponent.current_state, post_key.c_str(), post_value);
-                // SPDLOG_DEBUG("Automatically setting postcondition {} to {}", post_key, post_value);
+                SPDLOG_DEBUG("Automatically setting postcondition {} to {}", post_key, post_value);
             }
 
             // Move to the next action
@@ -1166,7 +1166,7 @@ namespace ai_system
         // Check if re-planning is necessary based on action failure or mismatch with expected state / plan is empty
         if (is_goap_info_valid == false && plan_is_running_valid == false)
         { // plan might be running one action, but plan can be empty otherwise
-            // SPDLOG_DEBUG("GOAP plan is empty, re-selecting goal...");
+            SPDLOG_DEBUG("GOAP plan is empty, re-selecting goal...");
             select_goal(entity);
         }
         // if plan is running, but the world state has changed since the plan was made, then replan
@@ -1182,7 +1182,8 @@ namespace ai_system
                 // compare to next state
                 goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
                 SPDLOG_DEBUG("Cached current state: {}", desc);
-                replan(entity);
+                select_goal(entity);
+                // replan(entity);
             }
         }
         // the plan is no longer valid (running actions encountered an error)
@@ -1190,13 +1191,14 @@ namespace ai_system
         {
             // If the plan is not running, re-plan
             // SPDLOG_DEBUG("Plan is not running properly for entity {}, replanning...", static_cast<int>(entity));
-            char desc[4096];
-            goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
-            SPDLOG_DEBUG("Current world state: {}", desc);
-            // compare to next state
-            goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
-            SPDLOG_DEBUG("Cached current state: {}", desc);
-            replan(entity);
+            // char desc[4096];
+            // goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
+            // SPDLOG_DEBUG("Current world state: {}", desc);
+            // // compare to next state
+            // goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
+            // SPDLOG_DEBUG("Cached current state: {}", desc);
+            select_goal(entity);
+            // replan(entity);
         }
 
         // update cached state
@@ -1318,15 +1320,35 @@ namespace ai_system
         goapStruct.planCost = astar_plan(&goapStruct.ap, goapStruct.current_state, goapStruct.goal, goapStruct.plan, goapStruct.states, &goapStruct.planSize);
         char desc[4096];
         goap_description(&goapStruct.ap, desc, sizeof(desc));
-        SPDLOG_DEBUG("replan() called for entity {}", static_cast<int>(entity));
-        SPDLOG_INFO("Action planner description: {}", desc);
+        // SPDLOG_DEBUG("replan() called for entity {}", static_cast<int>(entity));
+        // SPDLOG_INFO("Action planner description: {}", desc);
 
-        SPDLOG_INFO("plancost = {}", goapStruct.planCost);
+        // SPDLOG_INFO("plancost = {}", goapStruct.planCost);
+        if (goapStruct.planCost == 0)
+        {
+            SPDLOG_ERROR("No plan found for entity {}. Current world state does not match goal.", static_cast<int>(entity));
+            // If no plan is found, we can try to reselect the goal or handle it
+        }
+        if (goapStruct.planCost > 0)
+        {
+            SPDLOG_INFO("PLAN FOUND: {} steps", goapStruct.planSize);
+        }
+        SPDLOG_DEBUG("Current world state:");
         goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
         SPDLOG_INFO("{:<23}{}", "", desc);
+        
+        char buf[512];
+        goap_worldstate_description(&goapStruct.ap, &goapStruct.goal, buf, sizeof(buf));
+        SPDLOG_DEBUG("Goal world state: {}", buf);
+        
+        if (goapStruct.planSize > 0)
+        {
+            SPDLOG_DEBUG("Plan steps:");
+        }
+        
         for (int i = 0; i < goapStruct.planSize && i < 16; ++i) {
             goap_worldstate_description(&goapStruct.ap, &goapStruct.states[i], desc, sizeof(desc));
-            SPDLOG_INFO("{}: {:<20}{}", i, goapStruct.plan[i], desc);
+            SPDLOG_INFO("step {}: {:<20}{}", i, goapStruct.plan[i], desc);
         }
 
         goapStruct.current_action = 0;
@@ -1334,8 +1356,8 @@ namespace ai_system
         checkAndSetGOAPDirty(goapStruct, globals::MAX_ACTIONS);
         if (goapStruct.dirty == false)
         {
-            // clear and reinit the blackboard
-            runBlackboardInitFunction(entity, goapStruct.type); // FIXME: placeholder value, these should come from the entity type (file)
+            // // clear and reinit the blackboard
+            // runBlackboardInitFunction(entity, goapStruct.type); // FIXME: placeholder value, these should come from the entity type (file)
 
             fill_action_queue_based_on_plan(entity, goapStruct.plan, goapStruct.planSize);
 

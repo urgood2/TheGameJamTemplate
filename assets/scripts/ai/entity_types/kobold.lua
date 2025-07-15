@@ -1,6 +1,6 @@
 return {
     initial = {
-        hungry = false,
+        hungry = true,
         enemyvisible = false,
         resourceAvailable = false,
         underAttack = false

@@ -8,7 +8,7 @@ return {
         end
         local hunger = bb:get_float("hunger")
         bb:set_float("hunger", hunger - dt * 0.01) -- decrement hunger over time
-        log_debug("Hunger level for entity " .. tostring(entity) .. ": " .. tostring(hunger))
+        log_debug("hunger_check: Hunger level for entity " .. tostring(entity) .. ": " .. tostring(hunger))
         
         if hunger < 0 then
             hunger = 0 -- ensure hunger does not go below 0
@@ -19,9 +19,9 @@ return {
             
             -- check if worldstate has been set correctly
             if ai.get_worldstate(entity, "hungry") then
-                log_debug("Entity " .. tostring(entity) .. " is set to hungry.")
+                log_debug("hunger_check: Entity " .. tostring(entity) .. " is set to hungry.")
             else
-                log_error("Entity " .. tostring(entity) .. " is not set to hungry.")
+                log_error("hunger_check: Entity " .. tostring(entity) .. " is not set to hungry.")
             end
             
             log_debug("Entity " .. tostring(entity) .. " is hungry.")

@@ -3,13 +3,19 @@ param (
     [string]$SnippetPath
 )
 
-$html = Get-Content -Raw $HtmlPath
+# read entire files
+$html    = Get-Content -Raw $HtmlPath
 $snippet = Get-Content -Raw $SnippetPath
 
-# Build the replacement string first
-$injected = "<head>`n$snippet"
+# the exact loader tag you want to anchor on
+$scriptTag = '<script async type="text/javascript" src="raylib-cpp-cmake-template.js"></script>'
 
-# Do the replacement
-$html = $html -replace '<head>', $injected
+# build the replacement: snippet, newline, then the script tag (and a newline after, if you like)
+$injected = "$snippet`n$scriptTag"
 
-Set-Content -Encoding UTF8 $HtmlPath $html
+# perform the replace (escape the pattern so any regex‑chars in it are literal)
+$pattern = [Regex]::Escape($scriptTag)
+$html    = $html -replace $pattern, $injected
+
+# write back out
+Set-Content -Encoding UTF8 -Path $HtmlPath -Value $html

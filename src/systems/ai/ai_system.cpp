@@ -1174,15 +1174,15 @@ namespace ai_system
         {
             if (!goap_worldstate_match(&goapStruct.ap, goapStruct.current_state, goapStruct.cached_current_state))
             {
-                // SPDLOG_DEBUG("World state has changed, re-planning required...");
+                SPDLOG_DEBUG("World state has changed, re-planning required...");
                 // print current state
                 char desc[4096];
                 goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
-                // SPDLOG_DEBUG("Current world state: {}", desc);
+                SPDLOG_DEBUG("Current world state: {}", desc);
                 // compare to next state
                 goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
-                // SPDLOG_DEBUG("Cached current state: {}", desc);
-                select_goal(entity);
+                SPDLOG_DEBUG("Cached current state: {}", desc);
+                replan(entity);
             }
         }
         // the plan is no longer valid (running actions encountered an error)
@@ -1190,6 +1190,12 @@ namespace ai_system
         {
             // If the plan is not running, re-plan
             // SPDLOG_DEBUG("Plan is not running properly for entity {}, replanning...", static_cast<int>(entity));
+            char desc[4096];
+            goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
+            SPDLOG_DEBUG("Current world state: {}", desc);
+            // compare to next state
+            goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
+            SPDLOG_DEBUG("Cached current state: {}", desc);
             replan(entity);
         }
 
@@ -1312,16 +1318,16 @@ namespace ai_system
         goapStruct.planCost = astar_plan(&goapStruct.ap, goapStruct.current_state, goapStruct.goal, goapStruct.plan, goapStruct.states, &goapStruct.planSize);
         char desc[4096];
         goap_description(&goapStruct.ap, desc, sizeof(desc));
-        // SPDLOG_DEBUG("replan() called for entity {}", static_cast<int>(entity));
-        // SPDLOG_INFO("Action planner description: {}", desc);
+        SPDLOG_DEBUG("replan() called for entity {}", static_cast<int>(entity));
+        SPDLOG_INFO("Action planner description: {}", desc);
 
-        // SPDLOG_INFO("plancost = {}", goapStruct.planCost);
-        // goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
-        // SPDLOG_INFO("{:<23}{}", "", desc);
-        // for (int i = 0; i < goapStruct.planSize && i < 16; ++i) {
-        //     goap_worldstate_description(&goapStruct.ap, &goapStruct.states[i], desc, sizeof(desc));
-        //     SPDLOG_INFO("{}: {:<20}{}", i, goapStruct.plan[i], desc);
-        // }
+        SPDLOG_INFO("plancost = {}", goapStruct.planCost);
+        goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
+        SPDLOG_INFO("{:<23}{}", "", desc);
+        for (int i = 0; i < goapStruct.planSize && i < 16; ++i) {
+            goap_worldstate_description(&goapStruct.ap, &goapStruct.states[i], desc, sizeof(desc));
+            SPDLOG_INFO("{}: {:<20}{}", i, goapStruct.plan[i], desc);
+        }
 
         goapStruct.current_action = 0;
         goapStruct.retries = 0; // Reset retries after re-planning

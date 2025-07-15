@@ -327,6 +327,44 @@ function initMainGame()
     -- add_fullscreen_shader("shockwave")
     -- add_fullscreen_shader("tile_grid_overlay") -- to show tile griddonuts background
     
+    tileSize = 64 -- Set the tile size for the game world
+    
+    -- generate some random grass and place them around the map, tiled
+    local grassSprites = {
+        "3253-TheRoguelike_1_10_alpha_46.png",
+        "3254-TheRoguelike_1_10_alpha_47.png",
+        "3255-TheRoguelike_1_10_alpha_48.png",
+        "3256-TheRoguelike_1_10_alpha_49.png",
+        "3257-TheRoguelike_1_10_alpha_50.png",
+        "3258-TheRoguelike_1_10_alpha_51.png",
+        "3259-TheRoguelike_1_10_alpha_52.png",
+        "3260-TheRoguelike_1_10_alpha_53.png",
+        "3261-TheRoguelike_1_10_alpha_54.png",
+        "3262-TheRoguelike_1_10_alpha_55.png"
+    }
+    
+    
+    for i = 1, 30 do
+        local grassEntity =  animation_system.createAnimatedObjectWithTransform(
+            random_utils.random_element_string(grassSprites), -- animation ID
+            true             -- use animation, not sprite identifier, if false
+        )
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            grassEntity,
+            tileSize,   -- width
+            tileSize    -- height
+        )
+        
+        -- place within the screen bounds, but make sure it respects tiles
+        local transformComp = registry:get(grassEntity, Transform)
+        transformComp.actualX = random_utils.random_int(0, math.floor(globals.screenWidth() / tileSize) - 1) * tileSize
+        transformComp.actualY = random_utils.random_int(0, math.floor(globals.screenHeight() / tileSize) - 1) * tileSize
+        transformComp.visualW = transformComp.actualW
+        transformComp.visualH = transformComp.actualH   
+        
+    end
+    
+    
     ui_defs.generateTooltipUI()
     ui_defs.generateUI()
     
@@ -334,6 +372,7 @@ function initMainGame()
     for i = 1, 1 do
         spawnNewColonist()
     end
+    
     
     -- function destroyRainAndSpawnNew()
     --     -- destroy the rain entity

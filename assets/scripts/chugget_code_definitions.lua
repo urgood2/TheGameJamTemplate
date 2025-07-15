@@ -3914,6 +3914,13 @@ function UIElementTemplateNodeBuilder:addConfig(...) end
 function UIElementTemplateNodeBuilder:addChild(...) end
 
 ---
+--- Adds multiple child template nodes from a Lua table.
+---
+---@param children table<integer, UIElementTemplateNode>
+---@return self
+function UIElementTemplateNodeBuilder:addChildren(...) end
+
+---
 --- Builds the final template node.
 ---
 ---@return UIElementTemplateNode

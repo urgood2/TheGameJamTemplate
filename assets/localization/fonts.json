@@ -4,7 +4,7 @@
     "loadedSize": 25.0,
     "scale":  1.0,
     "spacing": 1.2,
-    "offset": [2, 0],
+    "offset": [2, 8],
     "ranges": [
       [32, 126]           
     ],

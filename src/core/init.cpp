@@ -376,6 +376,7 @@ namespace init {
     globals::SpriteFrameData getSpriteFrame(std::string uuid_or_raw_identifier) {
         using namespace snowhouse;
         auto test = uuid::lookup(uuid_or_raw_identifier);
+        
         if (globals::spriteDrawFrames.find(uuid::lookup(uuid_or_raw_identifier)) == globals::spriteDrawFrames.end()) {
             SPDLOG_ERROR("Sprite frame with UUID or identifier '{}' not found in spriteDrawFrames", uuid_or_raw_identifier);
         }

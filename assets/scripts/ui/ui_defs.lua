@@ -133,6 +133,16 @@ function ui_defs.generateUI()
                     log_debug("Shop button clicked!")
                     playSoundEffect("effects", "button-click") -- play button click sound
                     
+                    if (globals.isShopOpen) then
+                        globals.isShopOpen = false
+                        local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+                        transform.actualY = globals.screenHeight() -- hide the shop UI box
+                    else
+                        globals.isShopOpen = true
+                        local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+                        transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2-- show the shop UI box
+                    end
+                    
                 end)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
@@ -170,6 +180,239 @@ function ui_defs.generateUI()
     -- bottom right corner of the screen
     shopButtonTransform.actualY = globals.screenHeight() - shopButtonTransform.actualH - 10 -- 10 pixels from the bottom edge
     shopButtonTransform.visualY = shopButtonTransform.actualY -- update visual position as well
+    
+    
+    -- text that says "strcture placement"
+    globals.ui.itemPlacementTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.item_placement_text") end,  -- initial text
+        30.0,                                 -- font size
+        "bump"                       -- animation spec
+    )
+    
+    -- put in its own row
+    local itemPlacementTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(globals.ui.itemPlacementTextEntity)
+        :build()
+        
+    function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey)
+        globals.ui[globalAnimationHandle] = animation_system.createAnimatedObjectWithTransform(
+            spriteID, -- animation ID
+            true             -- true if sprite id
+        )
+        
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            globals.ui[globalAnimationHandle], -- entity to resize
+            40, -- width
+            40  -- height
+        )
+        
+        local uiIconHomeDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui[globalAnimationHandle])
+            
+        -- colonist home text, for colonist home buy button
+        globals.ui[globalTextHandle] = ui.definitions.getNewDynamicTextEntry(
+            function() return localization.get(textLocalizationKey) end,  -- initial text
+            20.0,                                 -- font size
+            ""                       -- animation spec
+        )
+        
+        
+        
+        local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                    :addColor(util.getColor("taupe_warm"))
+                    -- :addShadow(true) --- IGNORE ---
+                    :addEmboss(4.0)
+                    :addHover(true) -- needed for button effect
+                    :addButtonCallback(function()
+                        -- button click callback
+                        log_debug(globalTextHandle .. " button clicked!")
+                        playSoundEffect("effects", "button-click") -- play button click sound
+                    end)
+                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                    :addInitFunc(function(registry, entity)
+                        -- something init-related here
+                    end)
+                    :build()
+            )
+            :addChild(uiIconHomeDef)
+            :addChild(globals.ui[globalTextHandle])
+            :build()
+            
+        return colonistHomeTextDef
+    end
+        
+    local home_structure_def = createStructurePlacementButton(
+        "3490-TheRoguelike_1_10_alpha_283.png", -- sprite ID for colonist home
+        "colonistHomeButtoAnimationEntity", -- global animation handle
+        "colonistHomeTextEntity", -- global text handle
+        "ui.colonist_home_text" -- localization key for text
+    )
+    
+    local duplicator_structure_def = createStructurePlacementButton(
+        "3641-TheRoguelike_1_10_alpha_434.png", -- sprite ID for duplicator
+        "duplicatorButtonAnimationEntity", -- global animation handle
+        "duplicatorTextEntity", -- global text handle
+        "ui.duplicator_text" -- localization key for text
+    )
+    
+    -- make horizontal container for other items if necessary
+    local structurePlacementRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addId("structure_placement_row")
+                :addColor(util.getColor("dusty_rose"))
+                :addShadow(true) 
+                -- :addEmboss(4.0) --- IGNORE ---
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(home_structure_def)
+        :addChild(duplicator_structure_def)
+        :build()
+        
+    -- new vertical container for title and buttons row
+    local newRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.VERTICAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(itemPlacementTextDef)
+        :addChild(structurePlacementRow)
+        :build()
+        
+    -- create a new UI box for the structure placement row
+    globals.ui.structurePlacementUIBox = ui.box.Initialize({x = 10, y = 120}, newRoot)
+    
+    -- align the structure placement UI box to the left side of the screen, and bottom
+    local structurePlacementTransform = registry:get(globals.ui.structurePlacementUIBox, Transform)
+    structurePlacementTransform.actualX = 10 -- 10 pixels from the left edge
+    structurePlacementTransform.visualX = structurePlacementTransform.actualX -- update visual position as well
+    structurePlacementTransform.actualY = globals.screenHeight() - structurePlacementTransform.actualH - 10 -- 10 pixels from the bottom edge
+    structurePlacementTransform.visualY = structurePlacementTransform.actualY -- update visual position as well
+    
+    
+    -- currency icon
+    globals.ui.currencyIconEntity = animation_system.createAnimatedObjectWithTransform(
+        "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID
+        true             -- true if sprite id
+    )
+    
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        globals.ui.currencyIconEntity, -- entity to resize
+        40, -- width
+        40  -- height
+    )
+    
+    -- wrap the currency icon in a UI element
+    local currencyIconDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui.currencyIconEntity)
+    
+    -- new number text entry for the currency amount
+    globals.ui.currencyTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.currency_text", {currency = math.floor(0)}) end,  -- initial text
+        20.0,                                 -- font size
+        ""                       -- animation spec
+    )
+    
+    -- add both to a rootUIElement
+    local currencyRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(currencyIconDef)
+        :addChild(globals.ui.currencyTextEntity)
+        :build()
+        
+    -- create a new UI box for the currency row
+    globals.ui.currencyUIBox = ui.box.Initialize({x = globals.screenWidth() - 200, y = 10}, currencyRow)
+    -- align the currency UI box to the top left
+    local currencyTransform = registry:get(globals.ui.currencyUIBox, Transform)
+    currencyTransform.actualX = 10
+    currencyTransform.visualX = currencyTransform.actualX -- update visual position as well
+    currencyTransform.actualY = 10 -- 10 pixels from the top edge
+    currencyTransform.visualY = currencyTransform.actualY -- update visual position as well
+    
+    
+    -- make three buttons for weather events
+    local weatherEvents = {
+        {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity"},
+        {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity"},
+        {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity"},
+        {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity"},
+    }
+    
+    local weatherButtonDefs = {}
+    
+    -- populate weatherButtonDefs based on weatherEvents
+    for _, event in ipairs(weatherEvents) do
+        local buttonDef = createStructurePlacementButton(
+            event.spriteID, -- sprite ID for the weather event
+            event.animHandle, -- global animation handle
+            event.textHandle, -- global text handle
+            event.text -- localization key for text
+        )
+        -- add buttonDef to weatherButtonDefs
+        table.insert(weatherButtonDefs, buttonDef)
+    end
+    
+    -- make a new row
+    local weatherRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.VERTICAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        -- add all weather button defs to the row
+        :addChildren(weatherButtonDefs)
+        :build()
+    
+    
+    -- create a new UI box for the shop
+    globals.ui.weatherShopUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 100}, weatherRow)
+    -- align the weather shop UI box to the center of the screen
+    local weatherShopTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
+    weatherShopTransform.actualX = globals.screenWidth() / 2 - weatherShopTransform.actualW / 2 -- center horizontally
+    weatherShopTransform.visualX = weatherShopTransform.actualX -- update visual position as well
+    weatherShopTransform.actualY = globals.screenHeight() -- out of view initially
     
 end
 

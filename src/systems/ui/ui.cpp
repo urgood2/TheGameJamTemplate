@@ -664,6 +664,21 @@ namespace ui {
             "addType", &UIElementTemplateNode::Builder::addType,
             "addConfig", &UIElementTemplateNode::Builder::addConfig, 
             "addChild", &UIElementTemplateNode::Builder::addChild, 
+            "addChildren", [](UIElementTemplateNode::Builder &b, sol::table children) {
+                // Convert Lua table to vector of UIElementTemplateNode
+                std::vector<UIElementTemplateNode> childNodes;
+                for (const auto& child : children) {
+                    if (child.second.is<UIElementTemplateNode>()) {
+                        childNodes.push_back(child.second.as<UIElementTemplateNode>());
+                    }
+                }
+                
+                for (const auto& child : childNodes) {
+                    b.addChild(child);
+                }
+                
+                return b;
+            },
             "build", &UIElementTemplateNode::Builder::build
         );
         auto& tNodeBuilder = rec.add_type("UIElementTemplateNodeBuilder");
@@ -672,6 +687,7 @@ namespace ui {
         rec.record_method("UIElementTemplateNodeBuilder", {"addType", "---@param type UITypeEnum\n---@return self", "Sets the node's UI type.", false, false});
         rec.record_method("UIElementTemplateNodeBuilder", {"addConfig", "---@param config UIConfig\n---@return self", "Sets the node's config.", false, false});
         rec.record_method("UIElementTemplateNodeBuilder", {"addChild", "---@param child UIElementTemplateNode\n---@return self", "Adds a child template node.", false, false});
+        rec.record_method("UIElementTemplateNodeBuilder", {"addChildren", "---@param children table<integer, UIElementTemplateNode>\n---@return self", "Adds multiple child template nodes from a Lua table.", false, false});
         rec.record_method("UIElementTemplateNodeBuilder", {"build", "---@return UIElementTemplateNode", "Builds the final template node.", false, false});
 
 

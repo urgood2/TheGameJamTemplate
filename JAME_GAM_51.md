@@ -9,3 +9,10 @@
 - [ ] Homes produce 1 colonist, 1 gold every 2 days
 - [ ] Buy weather events (thunderstrom, snowstorm, firedtorm, rain) which will impact colonists differently based on their umbrella tags, always damages them
 
+- copy station where units will go to be copied, random umbrella effects/ always reduces health
+- Currency: gold start with 5
+- Homes produce 1 colonist, 1 gold every 2 days
+- colonists can do gather jobs which also result in gold at the end of the day
+- gold can be spent on getting more colonists, duplicators, or weather events, or umbrellas (relics) in shop
+- weather events will bring on dangerous rain, etc. which damages colonists but gives some kind of reward
+- If colonists have umbrellas (which  have random properties) they will interact with the weather events in some way (got to think this out, ideas welcome)

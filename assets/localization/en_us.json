@@ -1,8 +1,16 @@
 {
 	"ui": {
 		
+		"rain_event_shop": "Buy rain event",
+		"snow_event_shop": "Buy snow event",
+		"sunny_event_shop": "Buy sunny event",
+		"death_event_shop": "Buy death event",
+		"duplicator_text": "Duplicator",
+		"currency_text": "{currency}",
 		"shop_button": "Shop",
+		"item_placement_text": "Structure Placement",
 		"colonist_tooltip_title": "Colonist",
+		"colonist_home_text": "Colonist Home",
 		"colonist_tooltip_body": "Keep them alive!",
 		"time_ui_format": "{hour}:{minute} {am_pm}",
 		"day_ui_format": "Day: {day}",
@@ -36,7 +44,6 @@
 		"crystal_to_wafer_converter_description": "Converts Crystals into Wafers at a rate of 10:1",
 		"crystal_to_wafer_converter_name": "Crystal to Wafer Converter",
 		"currency_reward_postfix": "+ {amount} {currencyName}",
-		"currency_text": "Whale Dust: {currency}",
 		"currency_text_chips": "Chips: {currency}",
 		"currency_text_crystals": "Crystals: {currency}",
 		"currency_text_song_essence": "Song Essence: {currency}",

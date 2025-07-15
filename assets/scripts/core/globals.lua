@@ -4,6 +4,8 @@ globals = globals or {}
 
 globals.main_menu_elapsed_time = 0 -- time spent in the main menu
 
+globals.isShopOpen = false -- whether the shop is currently open
+
 globals.game_time = {
   seconds = 0, -- seconds since the game started
   minutes = 0, -- minutes since the game started

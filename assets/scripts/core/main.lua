@@ -614,7 +614,7 @@ function main.update(dt)
         globals.game_time.hours = globals.game_time.hours % 24
         globals.game_time.days  = globals.game_time.days + extraDay
     end
-    log_debug("time:", globals.game_time.hours, ":", globals.game_time.minutes, "days:", globals.game_time.days)
+    -- log_debug("time:", globals.game_time.hours, ":", globals.game_time.minutes, "days:", globals.game_time.days)
     
     -- entity iteration example
     -- local view = registry:runtime_view(Transform)

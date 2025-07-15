@@ -257,8 +257,8 @@ namespace transform
         }
         // 
 
-        if (role.master == globals::gameWorldContainerEntity)
-            SPDLOG_DEBUG("Aligning to master (game world)");
+        // if (role.master == globals::gameWorldContainerEntity)
+        //     SPDLOG_DEBUG("Aligning to master (game world)");
         
 
         entt::entity midEntity = transform.middleEntityForAlignment.value();
@@ -347,15 +347,15 @@ namespace transform
         // parent is 43
         if (static_cast<int>(parent) == 36)
         {
-            SPDLOG_DEBUG("Parent is UIBOX");
-            if (parentRole.offset) SPDLOG_DEBUG("UIBOx offsets are: x: {}, y: {}", parentRole.offset->x, parentRole.offset->y);
+            // SPDLOG_DEBUG("Parent is UIBOX");
+            // if (parentRole.offset) SPDLOG_DEBUG("UIBOx offsets are: x: {}, y: {}", parentRole.offset->x, parentRole.offset->y);
         }
 
         // so this should cover cases where uibox, which is the master of a uiroot, has an actual offset. In which case, the uiroot will align its location to that offset and act as though its relative location to the master is actually 0,0 (making ui offset caculations for layout simpler)
         transform.getXSpring().targetValue = parentTransform.getXSpring().value + (parentRole.offset ? parentRole.offset->x : 0) + role.offset->x;
         transform.getYSpring().targetValue = parentTransform.getYSpring().value + (parentRole.offset ? parentRole.offset->y : 0) + role.offset->y;
         if (role.master == globals::gameWorldContainerEntity)
-            SPDLOG_DEBUG("Aligning to master (game world) at values: x: {}, y: {}", transform.getXSpring().targetValue, transform.getYSpring().targetValue);
+            // SPDLOG_DEBUG("Aligning to master (game world) at values: x: {}, y: {}", transform.getXSpring().targetValue, transform.getYSpring().targetValue);
 
         //TODO: now where are these offsets used?
 
@@ -900,7 +900,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      */
     auto InjectDynamicMotion(entt::registry *registry, entt::entity e, float amount, float rotationAmount) -> void
     {
-        SPDLOG_DEBUG("Injecting dynamic motion for entity {} with amount: {}, rotationAmount: {}", static_cast<int>(e), amount, rotationAmount);
+        // SPDLOG_DEBUG("Injecting dynamic motion for entity {} with amount: {}, rotationAmount: {}", static_cast<int>(e), amount, rotationAmount);
         AssertThat(amount >= 0 && amount <= 1, Is().EqualTo(true));
         
         float startTime = GetTime();
@@ -994,7 +994,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
         if (offset)
         {
-            SPDLOG_DEBUG("AssignRole called for entity {} with offset x: {}, y: {}", static_cast<int>(e), offset->x, offset->y);
+            // SPDLOG_DEBUG("AssignRole called for entity {} with offset x: {}, y: {}", static_cast<int>(e), offset->x, offset->y);
             role.offset = offset.value();
         }
 
@@ -1933,7 +1933,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         { // click
             node.clickOffset.x = tempOffsetPoint.x - transform.getActualX();
             node.clickOffset.y = tempOffsetPoint.y - transform.getActualY();
-            SPDLOG_DEBUG("Click offset set to: ({}, {}) for entity {}", node.clickOffset.x, node.clickOffset.y, static_cast<int>(e));
+            // SPDLOG_DEBUG("Click offset set to: ({}, {}) for entity {}", node.clickOffset.x, node.clickOffset.y, static_cast<int>(e));
         }
         else
         { // hover
@@ -2200,7 +2200,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (registry->valid(node.container) == false || node.container == e)
         {
-            SPDLOG_DEBUG("Container is invalid");
+            // SPDLOG_DEBUG("Container is invalid");
             return;
         }
 

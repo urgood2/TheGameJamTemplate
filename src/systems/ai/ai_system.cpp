@@ -517,6 +517,7 @@ namespace ai_system
                                  goap.current_state,
                                  goap.goal);
         goap.type = type;
+        runBlackboardInitFunction(entity, type); // Initialize the blackboard for this entity type
         select_goal(entity);
     }
 
@@ -951,6 +952,25 @@ namespace ai_system
                         {
             auto& goap = globals::registry.get<GOAPComponent>(e);
             goap_worldstate_set(&goap.ap, &goap.current_state, key.c_str(), value); });
+        
+        // 3. Expose a getter for a single world-state flag:
+        ai.set_function("get_worldstate",
+            // we need to capture lua state in order to return sol::nil on error
+            [&](sol::this_state L, entt::entity e, const std::string & key) -> sol::object {
+            auto &goap = globals::registry.get<GOAPComponent>(e);
+            bool value = false;
+            bool ok = goap_worldstate_get(&goap.ap,
+                                            goap.current_state,
+                                            key.c_str(),
+                                            &value);
+            if (!ok) {
+                // atom not found or "dontcare" bit set → return nil
+                return sol::make_object(L, sol::lua_nil);
+            }
+            // otherwise return the boolean
+            return sol::make_object(L, value);
+            }
+        );
 
         ai.set_function("set_goal", [](entt::entity e, sol::table goal)
                         {
@@ -984,10 +1004,11 @@ namespace ai_system
                                      "set_int", &Blackboard::set<int>,
                                      "set_double", &Blackboard::set<double>,
                                      "set_string", &Blackboard::set<std::string>,
-
+                                     "set_float", &Blackboard::set<float>,
                                      "get_bool", &Blackboard::get<bool>,
                                      "get_int", &Blackboard::get<int>,
                                      "get_double", &Blackboard::get<double>,
+                                     "get_float", &Blackboard::get<float>,
                                      "get_string", &Blackboard::get<std::string>,
 
                                      "contains", &Blackboard::contains,
@@ -1073,6 +1094,14 @@ namespace ai_system
                                  "---@param value boolean\n"
                                  "---@return nil",
                                  "Sets a single world-state flag on the entity’s current state."});
+                                 
+        rec.record_method("ai", {
+        "get_worldstate",
+        "---@param e Entity\n"
+        "---@param key string\n"
+        "---@return boolean|nil",
+        "Retrieves the value of a single world-state flag from the entity’s current state; returns nil if the flag is not set or is marked as 'don't care'."
+    });
 
         rec.record_method("ai", {"set_goal",
                                  "---@param e Entity\n"
@@ -1160,8 +1189,8 @@ namespace ai_system
         else if (plan_is_running_valid == false)
         {
             // If the plan is not running, re-plan
-            // SPDLOG_DEBUG("Plan is not running properly, re-planning...");
-            select_goal(entity);
+            // SPDLOG_DEBUG("Plan is not running properly for entity {}, replanning...", static_cast<int>(entity));
+            replan(entity);
         }
 
         // update cached state
@@ -1309,7 +1338,7 @@ namespace ai_system
         }
         else
         {
-            // SPDLOG_ERROR("Call to replan() produced no plan... There are no actions to take.");
+            SPDLOG_ERROR("Call to replan() produced no plan for entity {}.", static_cast<int>(entity));
 
             handle_no_plan(entity); // Call a function to handle this scenario
         }

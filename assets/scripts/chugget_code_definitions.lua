@@ -721,6 +721,14 @@ function ai:get_entity_ai_def(...) end
 function ai:set_worldstate(...) end
 
 ---
+--- Retrieves the value of a single world-state flag from the entity’s current state; returns nil if the flag is not set or is marked as 'don't care'.
+---
+---@param e Entity
+---@param key string
+---@return boolean|nil
+function ai:get_worldstate(...) end
+
+---
 --- Clears existing goal and assigns new goal flags for the entity.
 ---
 ---@param e Entity

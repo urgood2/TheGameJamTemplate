@@ -1,7 +1,9 @@
 return function(entity)
     -- TODO: Initialize the blackboard for a kobold entity
-    -- local bb = get_blackboard(entity)
-    -- bb.hunger = 0.5
-    -- bb.enemy_visible = false
-    -- bb.last_ate_time = 0
+    local bb = ai.get_blackboard(entity)
+    bb:set_float("hunger", 0.5)
+    bb:set_float("health", 1.0)
+    
+    log_debug("entity", entity, "hunger is", bb:get_float("hunger"))
+    log_debug("Blackboard initialized for kobold entity: " .. tostring(entity))
 end

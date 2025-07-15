@@ -38,7 +38,7 @@ namespace ui
     void LogChildrenOrder(entt::registry &registry, entt::entity parent)
     {
         auto &parentNode = registry.get<transform::GameObject>(parent);
-        SPDLOG_DEBUG("Children of entity {}:", static_cast<int>(parent));
+        // SPDLOG_DEBUG("Children of entity {}:", static_cast<int>(parent));
         for (const auto &[id, child] : parentNode.children)
         {
             SPDLOG_DEBUG("  - ID: {}, Entity: {}", id, static_cast<int>(child));
@@ -83,7 +83,7 @@ namespace ui
                 throw std::runtime_error("UITypeEnum is not set for entity " + std::to_string(static_cast<int>(entity)) + ", parent " + std::to_string(static_cast<int>(parent)) + ", value is: " + std::to_string((int)def.type));
             }
 
-            SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def.type), static_cast<int>(entity), static_cast<int>(parent));
+            // SPDLOG_DEBUG("Initialized UI element of type {}: entity = {}, parent = {}", magic_enum::enum_name<UITypeEnum>(def.type), static_cast<int>(entity), static_cast<int>(parent));
 
             auto *parentConfig = registry.try_get<UIConfig>(parent);
 
@@ -177,7 +177,7 @@ namespace ui
 
                 parentGO.children[thisConfig.id.value()] = entity;
                 parentGO.orderedChildren.push_back(entity);
-                SPDLOG_DEBUG("Inserted child into parent {}: ID = {}, Entity = {}", static_cast<int>(parent), thisConfig.id.value(), static_cast<int>(entity));
+                // SPDLOG_DEBUG("Inserted child into parent {}: ID = {}, Entity = {}", static_cast<int>(parent), thisConfig.id.value(), static_cast<int>(entity));
             }
 
             if (def.config.mid)
@@ -189,7 +189,7 @@ namespace ui
             // Push children in reverse order so the first child is processed first
             if (def.type == UITypeEnum::VERTICAL_CONTAINER || def.type == UITypeEnum::HORIZONTAL_CONTAINER || def.type == UITypeEnum::ROOT)
             {
-                SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def.type));
+                // SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def.type));
                 for (int i = static_cast<int>(def.children.size()) - 1; i >= 0; --i)
                 {
                     // Only assign an ID if one hasn't already been set
@@ -418,8 +418,8 @@ namespace ui
         std::stack<StackEntry> stack;
         stack.push({root});
 
-        SPDLOG_DEBUG("=== Begin AssignLayerOrderComponents for box {} (zIndex={}) ===",
-                     static_cast<int>(uiBox), rootLayer);
+        // SPDLOG_DEBUG("=== Begin AssignLayerOrderComponents for box {} (zIndex={}) ===",
+                    //  static_cast<int>(uiBox), rootLayer);
 
         while (!stack.empty())
         {
@@ -462,7 +462,7 @@ namespace ui
             }
         }
 
-        SPDLOG_DEBUG("=== Done AssignLayerOrderComponents for box {} ===", static_cast<int>(uiBox));
+        // SPDLOG_DEBUG("=== Done AssignLayerOrderComponents for box {} ===", static_cast<int>(uiBox));
     }
 
     auto box::handleAlignment(entt::registry &registry, entt::entity root) -> void
@@ -524,13 +524,13 @@ namespace ui
 
             if (node.children.size() == 0)
             {
-                SPDLOG_DEBUG("Skipping alignment adjustment entity {} (parent {}) - no children", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
+                // SPDLOG_DEBUG("Skipping alignment adjustment entity {} (parent {}) - no children", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
                 continue;
             }
 
             if ((!uiConfig.alignmentFlags || uiConfig.alignmentFlags.value_or(transform::InheritedProperties::Alignment::NONE) == transform::InheritedProperties::Alignment::NONE))
             {
-                SPDLOG_DEBUG("Skipping alignment adjustment entity {} (parent {}) - no alignment", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
+                // SPDLOG_DEBUG("Skipping alignment adjustment entity {} (parent {}) - no alignment", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
                 continue;
             }
 
@@ -550,7 +550,7 @@ namespace ui
                 alignmentString += "HORIZONTAL_LEFT ";
             if (alignmentFlags & transform::InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES)
                 alignmentString += "ALIGN_TO_INNER_EDGES ";
-            SPDLOG_DEBUG("Adjusting alignment for entity {} (parent {}) with alignment: {}", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)), alignmentString);
+            // SPDLOG_DEBUG("Adjusting alignment for entity {} (parent {}) with alignment: {}", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)), alignmentString);
 
             auto selfDimensions = Vector2{transform.getActualW(), transform.getActualH()};
             auto selfOffset = role.offset.value_or(Vector2{0, 0});
@@ -844,7 +844,7 @@ namespace ui
         }
 
         // print out stack
-        SPDLOG_DEBUG("Processing order: ");
+        // SPDLOG_DEBUG("Processing order: ");
         for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
         {
             auto [entity, parentUINodeRect, forceRecalculateLayout, scale] = *it;
@@ -853,7 +853,7 @@ namespace ui
             auto &nodeTransform = registry.get<transform::Transform>(entity);
             auto &node = registry.get<transform::GameObject>(entity);
             auto &role = registry.get<transform::InheritedProperties>(entity);
-            SPDLOG_DEBUG("- entity {} | UIT: {} | parentUINodeRect: ({}, {}, {}, {}) | forceRecalculateLayout: {} | scale: {}", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(uiConfig.uiType.value()), parentUINodeRect.x, parentUINodeRect.y, parentUINodeRect.w, parentUINodeRect.h, forceRecalculateLayout, scale.value_or(1.f) * globals::globalUIScaleFactor);
+            // SPDLOG_DEBUG("- entity {} | UIT: {} | parentUINodeRect: ({}, {}, {}, {}) | forceRecalculateLayout: {} | scale: {}", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(uiConfig.uiType.value()), parentUINodeRect.x, parentUINodeRect.y, parentUINodeRect.w, parentUINodeRect.h, forceRecalculateLayout, scale.value_or(1.f) * globals::globalUIScaleFactor);
         }
 
         auto &nodeTransform = registry.get<transform::Transform>(uiElement);
@@ -880,10 +880,10 @@ namespace ui
                 if (uiConfig.uiType == UITypeEnum::OBJECT)
                 {
                     // debug
-                    SPDLOG_DEBUG("Processing object entity {} (parent {})", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
+                    // SPDLOG_DEBUG("Processing object entity {} (parent {})", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
                 }
                 auto dimensions = TreeCalcSubNonContainer(registry, entity, parentUINodeRect, forceRecalculateLayout, scale, calcCurrentNodeTransform);
-                SPDLOG_DEBUG("Calculated content size for entity {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
+                // SPDLOG_DEBUG("Calculated content size for entity {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
                 // Store content size for this child
                 contentSizes[entity] = dimensions;
                 continue;
@@ -891,7 +891,7 @@ namespace ui
 
             // 2. containers - vertical, horizontal, root
             auto dimensions = TreeCalcSubContainer(registry, entity, parentUINodeRect, forceRecalculateLayout, scale, calcCurrentNodeTransform, contentSizes);
-            SPDLOG_DEBUG("Calculated content size for container {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
+            // SPDLOG_DEBUG("Calculated content size for container {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
             contentSizes[entity] = dimensions;
         }
 
@@ -1091,7 +1091,7 @@ namespace ui
         stack.push({rootUIElement});
         int currentOrder = 0;
 
-        SPDLOG_DEBUG("=== Begin AssignTreeOrderComponents ===");
+        // SPDLOG_DEBUG("=== Begin AssignTreeOrderComponents ===");
 
         // Step 1: Top-down DFS collection + assign TreeOrderComponent
         while (!stack.empty())
@@ -1116,25 +1116,26 @@ namespace ui
                 registry.emplace_or_replace<transform::TreeOrderComponent>(object, transform::TreeOrderComponent{currentOrder + 1});
             }
 
-            SPDLOG_DEBUG("Assigned TreeOrderComponent to entity {} with order {}", static_cast<int>(e), currentOrder);
+            // SPDLOG_DEBUG("Assigned TreeOrderComponent to entity {} with order {}", static_cast<int>(e), currentOrder);
             ++currentOrder;
 
             if (auto *node = registry.try_get<transform::GameObject>(e))
             {
-                SPDLOG_DEBUG("Entity {} has {} ordered children", static_cast<int>(e), node->orderedChildren.size());
+                // SPDLOG_DEBUG
+                // ("Entity {} has {} ordered children", static_cast<int>(e), node->orderedChildren.size());
 
                 for (auto it = node->orderedChildren.rbegin(); it != node->orderedChildren.rend(); ++it)
                 {
                     if (registry.valid(*it))
                     {
-                        SPDLOG_DEBUG("  Queuing child entity {} for traversal", static_cast<int>(*it));
+                        // SPDLOG_DEBUG("  Queuing child entity {} for traversal", static_cast<int>(*it));
                         stack.push({*it});
                     }
                 }
             }
         }
 
-        SPDLOG_DEBUG("=== Finished AssignTreeOrderComponents. Total entities ordered: {} ===", currentOrder);
+        // SPDLOG_DEBUG("=== Finished AssignTreeOrderComponents. Total entities ordered: {} ===", currentOrder);
     }
 
     auto isVertContainer(entt::registry &registry, entt::entity uiElement) -> bool
@@ -1168,7 +1169,7 @@ namespace ui
         // runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding);
 
         role.offset = {runningTransform.x, runningTransform.y};
-        SPDLOG_DEBUG("Placing entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
+        // SPDLOG_DEBUG("Placing entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
         // cache transform before adding children
         auto transformCache = runningTransform;
@@ -1180,7 +1181,7 @@ namespace ui
             auto child = childEntry;
             if (!registry.valid(child))
                 continue;
-            SPDLOG_DEBUG("Processing child entity {}", static_cast<int>(child));
+            // SPDLOG_DEBUG("Processing child entity {}", static_cast<int>(child));
 
             placeUIElementsRecursively(registry, child, runningTransform, uiConfig.uiType.value(), uiElement);
         }
@@ -1255,7 +1256,7 @@ namespace ui
         // runningTransform.x += uiConfig.padding.value_or(globals::settings.uiPadding);
         // runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding);
 
-        SPDLOG_DEBUG("Placing entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
+        // SPDLOG_DEBUG("Placing entity {} at ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y);
 
         // is my parent not a row?
         if (parentType != UITypeEnum::HORIZONTAL_CONTAINER)
@@ -1269,14 +1270,14 @@ namespace ui
                 runningTransform.y += uiConfig.emboss.value() * uiConfig.scale.value() * globals::globalUIScaleFactor;
             }
             runningTransform.y += uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
-            SPDLOG_DEBUG("Incrementing y by {} for entity {}", uiState.contentDimensions->y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::globalUIScaleFactor, static_cast<int>(uiElement));
+            // SPDLOG_DEBUG("Incrementing y by {} for entity {}", uiState.contentDimensions->y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor + uiConfig.emboss.value_or(0.f) * uiConfig.scale.value() * globals::globalUIScaleFactor, static_cast<int>(uiElement));
         }
         else
         {
             // increment x with padding as necessary.
             // runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding);
             runningTransform.x += uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
-            SPDLOG_DEBUG("Incrementing x by {} for entity {}", uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, static_cast<int>(uiElement));
+            // SPDLOG_DEBUG("Incrementing x by {} for entity {}", uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, static_cast<int>(uiElement));
         }
     }
 
@@ -1965,7 +1966,7 @@ namespace ui
             // Check pipeline
             auto* pipeline = registry.try_get<shader_pipeline::ShaderPipelineComponent>(ent);
             if (pipeline && (pipeline->hasPassesOrOverlays())) {
-                SPDLOG_DEBUG("Drawing UI element {} with shader pipeline", (int)    ent);
+                // SPDLOG_DEBUG("Drawing UI element {} with shader pipeline", (int)    ent);
                 //FIXME: only include children if config says so.
                 // Determine range: element + all children with greater depth
                 size_t start = i;

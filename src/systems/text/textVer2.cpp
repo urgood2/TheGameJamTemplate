@@ -1001,9 +1001,9 @@ namespace TextSystem
             Vector2 textPosition = {transform.getActualX(), transform.getActualY()};
             
             // spdlog::debug("Parsing text: {}", text.rawText);
-            spdlog::debug("[preprocess] before: `{}`", text.rawText);
+            // spdlog::debug("[preprocess] before: `{}`", text.rawText);
             preprocessTypingInlineTags(text);
-            spdlog::debug("[preprocess] after: `{}`", text.rawText);
+            // spdlog::debug("[preprocess] after: `{}`", text.rawText);
             
             for (size_t i = 0; i < text.waitPoints.size(); ++i) {
             spdlog::debug(" waitPoint[{}] → type={}, id=`{}`, charIndex={}",
@@ -1400,7 +1400,7 @@ namespace TextSystem
             transform.setActualH(height);
             
             
-            spdlog::debug("— finished parseText(), total chars = {}", codepointIndex);
+            // spdlog::debug("— finished parseText(), total chars = {}", codepointIndex);
             for (size_t w = 0; w < text.waitPoints.size(); ++w) {
                 auto &wp = text.waitPoints[w];
                 spdlog::debug(" waitPoint[{}] id=`{}` → charIndex={}",

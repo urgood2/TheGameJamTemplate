@@ -2748,6 +2748,7 @@ InheritedProperties = {
     location_bond = nil, -- InheritedPropertiesSync|nil The sync bond for location.
     size_bond = nil, -- InheritedPropertiesSync|nil The sync bond for size.
     rotation_bond = nil, -- InheritedPropertiesSync|nil The sync bond for rotation.
+    extraAlignmentFinetuningOffset = nil, -- Vector2 An additional fine-tuning offset for alignment.
     scale_bond = nil, -- InheritedPropertiesSync|nil The sync bond for scale.
     flags = nil, -- Alignment|nil Alignment flags and data.
 }

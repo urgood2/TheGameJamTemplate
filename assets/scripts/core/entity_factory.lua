@@ -47,6 +47,71 @@ function spawnNewColonist()
     tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
     tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
     
+    local hpBar = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+    :addConfig(
+    UIConfigBuilder.create()
+        :addColor(util.getColor("dusty_rose"))
+        :addMinHeight(20)
+        :addMinWidth(80)
+        :addPadding(0)
+        :addProgressBar(true) -- enable progress bar effect
+        :addProgressBarFullColor(util.getColor("mint_pale"))
+        :addProgressBarEmptyColor(util.getColor("dusty_rose"))
+        :addProgressBarFetchValueLamnda(function(entity)
+            -- return the timer value for the gravity wave thing
+            -- log_debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
+            
+            local health = getBlackboardFloat(colonist, "health") -- get the health from the blackboard
+            local maxHealth = getBlackboardFloat(colonist, "max_health") -- get the max health from the blackboard
+            
+            return health / maxHealth -- return the health percentage
+        end)
+
+        :addNoMovementWhenDragged(true)
+        :addMinWidth(50)
+        :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+        :addInitFunc(function(registry, entity)
+            -- something init-related here
+        end)
+        :build()
+    )
+    :build()
+    
+    -- new root
+    local newRoot = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.ROOT)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(util.getColor("blank"))
+            :addPadding(0)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
+            :build()
+    )
+    :addChild(hpBar) -- add the hp bar to the root
+    :build()
+    
+    -- make ui box
+    globals.ui[colonist .. "_hp_bar_box"] = ui.box.Initialize({x = 10, y = 120}, newRoot)
+    
+    -- get uibox component
+    local uiBoxComp = registry:get(globals.ui[colonist .. "_hp_bar_box"], UIBoxComponent)
+    
+    -- anchor to the top center of the colonist 
+    transform.AssignRole(registry, globals.ui[colonist .. "_hp_bar_box"], InheritedPropertiesType.RoleInheritor, colonist,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong
+    );
+    
+    
+    local uiBoxRole = registry:get(globals.ui[colonist .. "_hp_bar_box"], InheritedProperties)
+    
+    uiBoxRole.flags = AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_TOP
+    
+    -- uiBoxRole.extraAlignmentFinetuningOffset = Vec2(0, -40) -- offset it a bit upwards
+    
     -- 4) timer for random movement within the screen bounds
     timer.every(
         1.0, -- every 1 second

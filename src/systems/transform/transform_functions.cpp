@@ -2435,8 +2435,19 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 return *p.flags;
             },
             // setter: replace the entire Alignment
-            [](InheritedProperties &p, InheritedProperties::Alignment v) {
-                p.flags = v;
+            [](InheritedProperties &p, int v) {
+                p.flags->alignment = v;
+            }
+        ),
+        "extraAlignmentFinetuningOffset", sol::property(
+            // getter: default-construct if needed, then return ref
+            [](InheritedProperties &p)->Vector2& {
+                if (!p.flags) p.flags.emplace();
+                return p.flags->extraAlignmentFinetuningOffset;
+            },
+            // setter: replace the entire Vector2
+            [](InheritedProperties &p, const Vector2 &v) {
+                p.flags->extraAlignmentFinetuningOffset = v;
             }
         ),
         "type_id",         []() { return entt::type_hash<InheritedProperties>::value(); }
@@ -2450,6 +2461,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     rec.record_property("InheritedProperties", {"location_bond", "InheritedPropertiesSync|nil", "The sync bond for location."});
     rec.record_property("InheritedProperties", {"size_bond", "InheritedPropertiesSync|nil", "The sync bond for size."});
     rec.record_property("InheritedProperties", {"rotation_bond", "InheritedPropertiesSync|nil", "The sync bond for rotation."});
+    //extraAlignmentFinetuningOffset
+    rec.record_property("InheritedProperties", {"extraAlignmentFinetuningOffset", "Vector2", "An additional fine-tuning offset for alignment."});
     rec.record_property("InheritedProperties", {"scale_bond", "InheritedPropertiesSync|nil", "The sync bond for scale."});
     rec.record_property("InheritedProperties", {"flags", "Alignment|nil", "Alignment flags and data."});
 

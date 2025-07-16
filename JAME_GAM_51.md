@@ -1,3 +1,11 @@
+- end of day- bring up shop screen
+- close button for shop
+- building placement
+- trigger interaction 
+- cost overlay (maybe attachment?) to buttons
+- camera with right mouse
+
+
 - A day loop where one day ends, you go to a shop screen.
 - How would we manuever entities away from the rain?
 - There should be a mechanic that gives a reward for the risk of entering the rain. Maybe the rain/storm should be deterministic instead of random, in that case?
@@ -16,3 +24,7 @@
 - gold can be spent on getting more colonists, duplicators, or weather events, or umbrellas (relics) in shop
 - weather events will bring on dangerous rain, etc. which damages colonists but gives some kind of reward
 - If colonists have umbrellas (which  have random properties) they will interact with the weather events in some way (got to think this out, ideas welcome)
+
+
+# later todos
+- dedicated Alignment callback for windows on resize

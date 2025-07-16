@@ -1,6 +1,7 @@
 {
 	"ui": {
 		
+		"cost_text": "{cost}",
 		"shop_close" : "Close",
 		"new_day_text": "A new day has arrived!",
 		"basic_umbrella_name": "Basic Umbrella",

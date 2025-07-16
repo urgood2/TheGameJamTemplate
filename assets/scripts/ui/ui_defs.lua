@@ -206,7 +206,7 @@ function ui_defs.generateUI()
         :addChild(globals.ui.itemPlacementTextEntity)
         :build()
         
-    function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey)
+    function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey, costValue)
         globals.ui[globalAnimationHandle] = animation_system.createAnimatedObjectWithTransform(
             spriteID, -- animation ID
             true             -- true if sprite id
@@ -227,7 +227,65 @@ function ui_defs.generateUI()
             ""                       -- animation spec
         )
         
+        -- cost string
+        local costText = ui.definitions.getNewDynamicTextEntry(
+            function() return localization.get("ui.cost_text", {cost = costValue}) end,  -- initial text
+            20.0,                                 -- font size
+            ""                       -- animation spec
+        )
         
+        -- animation entity for the cost icon
+        local costIconEntity = animation_system.createAnimatedObjectWithTransform(
+            "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID for currency icon
+            true             -- true if sprite id
+        )
+        
+        -- put in a row
+        local costIconDef = ui.definitions.wrapEntityInsideObjectElement(costIconEntity)
+        
+        -- resize the cost icon to fit
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            costIconEntity, -- entity to resize
+            20, -- width
+            20  -- height
+        )
+        
+        -- make a horizontal container for the cost icon and text
+        local costRow = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                    :addColor(util.getColor("blank"))
+                    -- :addShadow(true) --- IGNORE ---
+                    -- :addEmboss(4.0)
+                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                    :addInitFunc(function(registry, entity)
+                        -- something init-related here
+                    end)
+                    :build()
+            )
+            :addChild(costIconDef)
+            :addChild(costText)
+            :build()
+        
+        -- vertical container for home text + cost 
+        local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.VERTICAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                    :addColor(util.getColor("blank"))
+                    -- :addShadow(true) --- IGNORE ---
+                    -- :addEmboss(4.0)
+                    :addPadding(0)
+                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                    :addInitFunc(function(registry, entity)
+                        -- something init-related here
+                    end)
+                    :build()
+            )
+            :addChild(globals.ui[globalTextHandle])
+            :addChild(costRow)
+            :build()
         
         local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
             :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -249,7 +307,7 @@ function ui_defs.generateUI()
                     :build()
             )
             :addChild(uiIconHomeDef)
-            :addChild(globals.ui[globalTextHandle])
+            :addChild(colonistHomeTextDef)
             :build()
             
         return colonistHomeTextDef
@@ -259,15 +317,19 @@ function ui_defs.generateUI()
         "3490-TheRoguelike_1_10_alpha_283.png", -- sprite ID for colonist home
         "colonistHomeButtoAnimationEntity", -- global animation handle
         "colonistHomeTextEntity", -- global text handle
-        "ui.colonist_home_text" -- localization key for text
+        "ui.colonist_home_text", -- localization key for text
+        findInTable(globals.structure_defs, "id", "colonist_home").cost -- cost to buy the colonist home
     )
     
     local duplicator_structure_def = createStructurePlacementButton(
         "3641-TheRoguelike_1_10_alpha_434.png", -- sprite ID for duplicator
         "duplicatorButtonAnimationEntity", -- global animation handle
         "duplicatorTextEntity", -- global text handle
-        "ui.duplicator_text" -- localization key for text
+        "ui.duplicator_text", -- localization key for text
+        findInTable(globals.structure_defs, "id", "duplicator").cost -- cost to buy the duplicator
     )
+    
+    
     
     -- make horizontal container for other items if necessary
     local structurePlacementRow = UIElementTemplateNodeBuilder.create()
@@ -375,10 +437,10 @@ function ui_defs.generateUI()
     
     -- make three buttons for weather events
     local weatherEvents = {
-        {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity"},
-        {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity"},
-        {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity"},
-        {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity"},
+        {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity", cost = 4},
+        {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity", cost = 6},
+        {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity", cost = 2},
+        {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity", cost = 8},
     }
     
     local weatherButtonDefs = {}
@@ -389,7 +451,8 @@ function ui_defs.generateUI()
             event.spriteID, -- sprite ID for the weather event
             event.animHandle, -- global animation handle
             event.textHandle, -- global text handle
-            event.text -- localization key for text
+            event.text, -- localization key for text
+            event.cost -- cost to buy the weather event
         )
         -- add buttonDef to weatherButtonDefs
         table.insert(weatherButtonDefs, buttonDef)

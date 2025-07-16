@@ -17,12 +17,32 @@ globals.ownedRelics = {
   }
 }
 
+globals.structure_defs = {
+  {
+      id = "colonist_home",
+      animation_entity = "colonistHomeButtoAnimationEntity", -- the animation entity for the colonist home
+      text_entity = "colonistHomeTextEntity", -- the text entity for the colonist home, under globals table
+      text = "ui.colonist_home_text", -- the text for the colonist home
+      cost = 5 -- the cost to buy the colonist home
+  },
+  {
+      id = "duplicator",
+      animation_entity = "duplicatorButtonAnimationEntity", -- the animation entity for the duplicator
+      text_entity = "duplicatorTextEntity", -- the text entity for the duplicator, under globals table
+      text = "ui.duplicator_text", -- the text for the duplicator
+      cost = 10 -- the cost to buy the duplicator
+  }
+  
+}
+
+
 globals.relicDefs = {
   {
     id = "basic_umbrella",
     localizationKeyName = "ui.basic_umbrella_name",
     localizationKeyDesc = "ui.basic_umbrella_desc",
-    spriteID = "4077-TheRoguelike_1_10_alpha_870.png"
+    spriteID = "4077-TheRoguelike_1_10_alpha_870.png",
+    costToBuy = 4
   }
 }
 

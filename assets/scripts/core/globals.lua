@@ -2,6 +2,8 @@
 
 globals = globals or {}
 
+globals.currency = 5 -- the current amount of currency the player has
+
 globals.gamePaused = false -- whether the game is currently paused
 
 globals.main_menu_elapsed_time = 0 -- time spent in the main menu

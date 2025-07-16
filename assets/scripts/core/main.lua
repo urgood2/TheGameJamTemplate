@@ -603,6 +603,7 @@ function main.update(dt)
                 globals.game_time.hours = 0
                 globals.game_time.minutes = 0
                 globals.gamePaused = true -- pause the game
+                timer.pause_group("colonist_movement_group") -- pause all game timers
                 -- show the new day message
                 if registry:valid(globals.ui.newDayUIBox) then
                     local transformComp = registry:get(globals.ui.newDayUIBox, Transform)

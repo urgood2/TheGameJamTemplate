@@ -227,31 +227,32 @@ function ui_defs.generateUI()
             ""                       -- animation spec
         )
         
-        -- cost string
-        local costText = ui.definitions.getNewDynamicTextEntry(
-            function() return localization.get("ui.cost_text", {cost = costValue}) end,  -- initial text
-            20.0,                                 -- font size
-            ""                       -- animation spec
-        )
         
-        -- animation entity for the cost icon
-        local costIconEntity = animation_system.createAnimatedObjectWithTransform(
-            "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID for currency icon
-            true             -- true if sprite id
-        )
+        local costRow = nil
+        if costValue then
+            -- cost string
+            local costText = ui.definitions.getNewDynamicTextEntry(
+                function() return localization.get("ui.cost_text", {cost = costValue}) end,  -- initial text
+                20.0,                                 -- font size
+                ""                       -- animation spec
+            )
+            
+            -- animation entity for the cost icon
+            local costIconEntity = animation_system.createAnimatedObjectWithTransform(
+                "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID for currency icon
+                true             -- true if sprite id
+            )
+            
+            
+            local costIconDef = ui.definitions.wrapEntityInsideObjectElement(costIconEntity)
         
-        -- put in a row
-        local costIconDef = ui.definitions.wrapEntityInsideObjectElement(costIconEntity)
-        
-        -- resize the cost icon to fit
-        animation_system.resizeAnimationObjectsInEntityToFit(
-            costIconEntity, -- entity to resize
-            20, -- width
-            20  -- height
-        )
-        
-        -- make a horizontal container for the cost icon and text
-        local costRow = UIElementTemplateNodeBuilder.create()
+            -- resize the cost icon to fit
+            animation_system.resizeAnimationObjectsInEntityToFit(
+                costIconEntity, -- entity to resize
+                20, -- width
+                20  -- height
+            )
+            costRow = UIElementTemplateNodeBuilder.create()
             :addType(UITypeEnum.HORIZONTAL_CONTAINER)
             :addConfig(
                 UIConfigBuilder.create()
@@ -267,6 +268,10 @@ function ui_defs.generateUI()
             :addChild(costIconDef)
             :addChild(costText)
             :build()
+    
+        end
+        -- make a horizontal container for the cost icon and text
+        
         
         -- vertical container for home text + cost 
         local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
@@ -284,8 +289,11 @@ function ui_defs.generateUI()
                     :build()
             )
             :addChild(globals.ui[globalTextHandle])
-            :addChild(costRow)
             :build()
+            
+        if costRow then
+            colonistHomeTextDef.children:add(costRow) -- add the cost row if it exists
+        end
         
         local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
             :addType(UITypeEnum.HORIZONTAL_CONTAINER)

@@ -1,6 +1,12 @@
 {
 	"ui": {
 		
+		"cost_text": "{cost}",
+		"shop_close" : "Close",
+		"new_day_text": "A new day has arrived!",
+		"basic_umbrella_name": "Basic Umbrella",
+		"basic_umbrella_desc": "1 damage reduction in a weather event.",
+		"buy_weather_event": "Buy Weather Event",
 		"rain_event_shop": "Buy rain event",
 		"snow_event_shop": "Buy snow event",
 		"sunny_event_shop": "Buy sunny event",

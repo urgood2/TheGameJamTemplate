@@ -1219,6 +1219,28 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</key>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
+            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
+            <key type="filename">rounded_rect_very_small.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9Paddings</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/3325-TheRoguelike_1_10_alpha_118.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -1698,26 +1720,6 @@
                 <rect>2,2,4,4</rect>
                 <key>scale9Paddings</key>
                 <rect>2,2,4,4</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
-            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
-            <key type="filename">rounded_rect_very_small.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9Paddings</key>
-                <rect>4,4,8,8</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -3690,6 +3692,8 @@
                     <filename>../../../../../Downloads/musicnote5.png</filename>
                     <filename>../../../../../Downloads/title3.png</filename>
                     <filename>../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</filename>
+                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</filename>
+                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</filename>
                 </array>
             </struct>
         </map>

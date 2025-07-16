@@ -63,7 +63,8 @@ function spawnNewColonist()
         0, -- infinite repetitions
         true, -- start immediately
         nil, -- no "after" callback
-        "colonist_random_movement_" .. colonist -- unique tag for this timer
+        "colonist_random_movement_" .. colonist, -- unique tag for this timer
+        "colonist_movement_group" -- group name for easy cancellation
     )
     
 end

@@ -555,13 +555,18 @@ function main.init()
 end
 
 function main.update(dt)
+    
+    if (globals.gamePaused) then
+        return -- If the game is paused, do not update anything
+    end
+    
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
     
     -- Update the game time
     -- how many game‐seconds should pass per real second
-    local gameTimeSpeedUpFactor = 500
+    local gameTimeSpeedUpFactor = 2000
 
     -- convert dt (real seconds) into game seconds
     local gameSeconds = dt * gameTimeSpeedUpFactor
@@ -588,6 +593,39 @@ function main.update(dt)
         local extraDay = math.floor(globals.game_time.hours / 24)
         globals.game_time.hours = globals.game_time.hours % 24
         globals.game_time.days  = globals.game_time.days + extraDay
+        
+        -- new day has dawned. pause the game and show the new day message
+        
+        timer.after(
+            1.0, -- delay in seconds
+            function()
+                -- set hours and minutes to 0
+                globals.game_time.hours = 0
+                globals.game_time.minutes = 0
+                globals.gamePaused = true -- pause the game
+                timer.pause_group("colonist_movement_group") -- pause all game timers
+                -- show the new day message
+                if registry:valid(globals.ui.newDayUIBox) then
+                    local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
+                    transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2 -- center the new day message vertically
+                end
+                
+                -- after 1 second, hide the new day message and show the shop menu
+                timer.after(
+                    3.0, -- delay in seconds
+                    function()
+                        
+                        if registry:valid(globals.ui.newDayUIBox) then
+                            local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
+                            transformComp.actualY = globals.screenHeight() 
+                        end
+                        
+                        toggleShopWindow() -- toggle the shop window
+                    end
+                )
+            end
+        )
+        
     end
     -- log_debug("time:", globals.game_time.hours, ":", globals.game_time.minutes, "days:", globals.game_time.days)
     

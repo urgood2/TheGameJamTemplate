@@ -206,7 +206,7 @@ function ui_defs.generateUI()
         :addChild(globals.ui.itemPlacementTextEntity)
         :build()
         
-    function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey)
+    function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey, costValue)
         globals.ui[globalAnimationHandle] = animation_system.createAnimatedObjectWithTransform(
             spriteID, -- animation ID
             true             -- true if sprite id
@@ -228,6 +228,72 @@ function ui_defs.generateUI()
         )
         
         
+        local costRow = nil
+        if costValue then
+            -- cost string
+            local costText = ui.definitions.getNewDynamicTextEntry(
+                function() return localization.get("ui.cost_text", {cost = costValue}) end,  -- initial text
+                20.0,                                 -- font size
+                ""                       -- animation spec
+            )
+            
+            -- animation entity for the cost icon
+            local costIconEntity = animation_system.createAnimatedObjectWithTransform(
+                "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID for currency icon
+                true             -- true if sprite id
+            )
+            
+            
+            local costIconDef = ui.definitions.wrapEntityInsideObjectElement(costIconEntity)
+        
+            -- resize the cost icon to fit
+            animation_system.resizeAnimationObjectsInEntityToFit(
+                costIconEntity, -- entity to resize
+                20, -- width
+                20  -- height
+            )
+            costRow = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                    :addColor(util.getColor("blank"))
+                    -- :addShadow(true) --- IGNORE ---
+                    -- :addEmboss(4.0)
+                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                    :addInitFunc(function(registry, entity)
+                        -- something init-related here
+                    end)
+                    :build()
+            )
+            :addChild(costIconDef)
+            :addChild(costText)
+            :build()
+    
+        end
+        -- make a horizontal container for the cost icon and text
+        
+        
+        -- vertical container for home text + cost 
+        local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
+            :addType(UITypeEnum.VERTICAL_CONTAINER)
+            :addConfig(
+                UIConfigBuilder.create()
+                    :addColor(util.getColor("blank"))
+                    -- :addShadow(true) --- IGNORE ---
+                    -- :addEmboss(4.0)
+                    :addPadding(0)
+                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                    :addInitFunc(function(registry, entity)
+                        -- something init-related here
+                    end)
+                    :build()
+            )
+            :addChild(globals.ui[globalTextHandle])
+            :build()
+            
+        if costRow then
+            colonistHomeTextDef.children:add(costRow) -- add the cost row if it exists
+        end
         
         local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
             :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -249,7 +315,7 @@ function ui_defs.generateUI()
                     :build()
             )
             :addChild(uiIconHomeDef)
-            :addChild(globals.ui[globalTextHandle])
+            :addChild(colonistHomeTextDef)
             :build()
             
         return colonistHomeTextDef
@@ -259,15 +325,19 @@ function ui_defs.generateUI()
         "3490-TheRoguelike_1_10_alpha_283.png", -- sprite ID for colonist home
         "colonistHomeButtoAnimationEntity", -- global animation handle
         "colonistHomeTextEntity", -- global text handle
-        "ui.colonist_home_text" -- localization key for text
+        "ui.colonist_home_text", -- localization key for text
+        findInTable(globals.structure_defs, "id", "colonist_home").cost -- cost to buy the colonist home
     )
     
     local duplicator_structure_def = createStructurePlacementButton(
         "3641-TheRoguelike_1_10_alpha_434.png", -- sprite ID for duplicator
         "duplicatorButtonAnimationEntity", -- global animation handle
         "duplicatorTextEntity", -- global text handle
-        "ui.duplicator_text" -- localization key for text
+        "ui.duplicator_text", -- localization key for text
+        findInTable(globals.structure_defs, "id", "duplicator").cost -- cost to buy the duplicator
     )
+    
+    
     
     -- make horizontal container for other items if necessary
     local structurePlacementRow = UIElementTemplateNodeBuilder.create()
@@ -337,6 +407,14 @@ function ui_defs.generateUI()
         ""                       -- animation spec
     )
     
+    -- new timer to update the currency text every second
+    timer.every(1, function()
+        -- update the currency text every second
+        local text = localization.get("ui.currency_text", {currency = math.floor(globals.currency)})
+        TextSystem.Functions.setText(globals.ui.currencyTextEntity.config.object, text)
+        
+    end)
+    
     -- add both to a rootUIElement
     local currencyRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -367,10 +445,10 @@ function ui_defs.generateUI()
     
     -- make three buttons for weather events
     local weatherEvents = {
-        {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity"},
-        {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity"},
-        {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity"},
-        {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity"},
+        {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity", cost = 4},
+        {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity", cost = 6},
+        {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity", cost = 2},
+        {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity", cost = 8},
     }
     
     local weatherButtonDefs = {}
@@ -381,11 +459,28 @@ function ui_defs.generateUI()
             event.spriteID, -- sprite ID for the weather event
             event.animHandle, -- global animation handle
             event.textHandle, -- global text handle
-            event.text -- localization key for text
+            event.text, -- localization key for text
+            event.cost -- cost to buy the weather event
         )
         -- add buttonDef to weatherButtonDefs
         table.insert(weatherButtonDefs, buttonDef)
     end
+    
+    -- add a close button to the weather shop
+    local closeButton = createStructurePlacementButton(
+        "4158-TheRoguelike_1_10_alpha_951.png", 
+        "shopCloseButton", -- global animation handle
+        "shopCloseText", -- global text handle
+        "ui.shop_close" -- localization key for text
+    )
+    closeButton.config.buttonCallback = function ()
+        -- close the weather shop
+        log_debug("Weather shop closed!")
+        playSoundEffect("effects", "button-click") -- play button click sound
+        toggleShopWindow() -- toggle the shop window visibility
+    end
+    -- add the close button to the weatherButtonDefs
+    table.insert(weatherButtonDefs, closeButton)
     
     -- make a new row
     local weatherRow = UIElementTemplateNodeBuilder.create()
@@ -414,1432 +509,178 @@ function ui_defs.generateUI()
     weatherShopTransform.visualX = weatherShopTransform.actualX -- update visual position as well
     weatherShopTransform.actualY = globals.screenHeight() -- out of view initially
     
-end
-
-function ui_defs.generateUIArchived() 
-    -- ui
     
-    globals.currencies["whale_dust"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
-        "whale_dust_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    -- add tooltip
-    local whaleDustGameObject = registry:get(globals.currencies["whale_dust"].ui_icon_entity, GameObject)
-    whaleDustGameObject.methods.onHover = function()
-        showTooltip(localization.get("ui.tooltip_currency_whale_dust_title"), localization.get("ui.tooltip_currency_whale_dust"))
-    end
-    whaleDustGameObject.methods.onStopHover = function()
-        -- hideTooltip()
-    end
-    whaleDustGameObject.state.hoverEnabled = true
-    whaleDustGameObject.state.collisionEnabled = true -- enable collision for the hover to work
+    -- relics menu 
+    -- for each relic in globals.ownedRelics, create a hoverable animatione entity
+    local relicsRowImages = {}
     
-    local currencyIconDef = ui.definitions.wrapEntityInsideObjectElement(
-        globals.currencies["whale_dust"].ui_icon_entity)
-    
-    local sliderTextMoving = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.currency_text") end,  -- initial text
-        16.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    
-    --TODO do this later
-    sliderTextMoving.config.initFunc = function(registry, entity)
-        localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text", {currency = math.floor(globals.currencies.whale_dust.amount)}))
-        end)
-    end
-    sliderTextMoving.config.updateFunc = function(r, entity, dt)
-        local elementUIConfig = registry:get(entity, UIConfig)
-        local objectEntity = elementUIConfig.object
-        if not registry:valid(objectEntity) then
-            return
+    for _, ownedRelic in ipairs(globals.ownedRelics) do
+        local relicID = ownedRelic.id
+        local relicDef = findInTable(globals.relicDefs, "id", relicID)
+        if relicDef then
+            -- you already have the entry, no need to look it up again
+            ownedRelic.animation_entity = animation_system.createAnimatedObjectWithTransform(
+                relicDef.spriteID,
+                true
+            )
+        
+            animation_system.resizeAnimationObjectsInEntityToFit(
+                ownedRelic.animation_entity,
+                40, 40
+            )
+        
+            local relicIconDef = ui.definitions.wrapEntityInsideObjectElement(ownedRelic.animation_entity)
+        
+            local relicGameObject = registry:get(ownedRelic.animation_entity, GameObject)
+            relicGameObject.methods.onHover = function()
+                showTooltip(
+                localization.get(relicDef.localizationKeyName),
+                localization.get(relicDef.localizationKeyDesc)
+                )
+            end
+            relicGameObject.state.hoverEnabled = true
+            relicGameObject.state.collisionEnabled = true -- enable collision for the hover to work
+      
+          table.insert(relicsRowImages, relicIconDef)
         end
-        
-        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
-        
-        
-        local text = localization.get("ui.currency_text", {currency = math.floor(globals.currencies.whale_dust.amount)})
-        
-        if (objectTextComp.rawText ~= text) then
-            TextSystem.Functions.setText(objectEntity, text)
-        end
-    end
+      end
     
-    -- create other entries for crystals, wafers, chips
-    globals.currencies["wafer"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
-        "wafer_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    -- add tooltip
-    local waferGameObject = registry:get(globals.currencies["wafer"].ui_icon_entity, GameObject)
-    local converterDef = findInTable(globals.converter_defs, "id", "crystal_to_wafer")
-    waferGameObject.methods.onHover = function()
-        showTooltip(localization.get("ui.tooltip_currency_wafers_title"), localization.get("ui.tooltip_currency_wafers") .. getCostStringForMaterial(converterDef))
-    end
-    waferGameObject.methods.onStopHover = function()
-        -- hideTooltip()
-    end
-    waferGameObject.state.hoverEnabled = true
-    waferGameObject.state.collisionEnabled = true -- enable collision for the hover to work
-    
-    globals.currencies["chip"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
-        "chip_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    local converterDef = findInTable(globals.converter_defs, "id", "wafer_to_chip")
-    local chipGameObject = registry:get(globals.currencies["chip"].ui_icon_entity, GameObject)
-    chipGameObject.methods.onHover = function()
-        showTooltip(localization.get("ui.tooltip_currency_chips_title"), localization.get("ui.tooltip_currency_chips") .. getCostStringForMaterial(converterDef))
-    end
-    chipGameObject.methods.onStopHover = function()
-        -- hideTooltip()
-    end
-    chipGameObject.state.hoverEnabled = true
-    chipGameObject.state.collisionEnabled = true -- enable collision for the hover to work
-    
-    globals.currencies["crystal"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
-        "crystal_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    local converterDef = findInTable(globals.converter_defs, "id", "dust_to_crystal")
-    local crystalGameObject = registry:get(globals.currencies["crystal"].ui_icon_entity, GameObject)
-    crystalGameObject.methods.onHover = function()
-        showTooltip(localization.get("ui.tooltip_currency_crystals_title"), localization.get("ui.tooltip_currency_crystals") .. getCostStringForMaterial(converterDef))
-    end
-    crystalGameObject.methods.onStopHover = function()
-        -- hideTooltip()
-    end
-    crystalGameObject.state.hoverEnabled = true
-    crystalGameObject.state.collisionEnabled = true -- enable collision for the hover to work
-    
-    
-    globals.currencies["song_essence"].ui_icon_entity = animation_system.createAnimatedObjectWithTransform(
-        "song_essence_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    local songEssenceGameObject = registry:get(globals.currencies["song_essence"].ui_icon_entity, GameObject)
-    songEssenceGameObject.methods.onHover = function()
-        showTooltip(localization.get("ui.tooltip_currency_song_essence_title"), localization.get("ui.tooltip_currency_song_essence"))
-    end
-    songEssenceGameObject.methods.onStopHover = function()
-        -- hideTooltip()
-    end
-    songEssenceGameObject.state.hoverEnabled = true
-    songEssenceGameObject.state.collisionEnabled = true -- enable collision for the hover to work
-    
-    -- now make the text entries for the other currencies
-    local textSongEssence = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.currency_text_song_essence") end,  -- initial text
-        16.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    textSongEssence.config.initFunc = function(registry, entity)
-        localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.currencies.song_essence.amount)}))
-        end)
-    end
-    
-    textSongEssence.config.updateFunc = function(r, entity, dt)
-        local elementUIConfig = registry:get(entity, UIConfig)
-        local objectEntity = elementUIConfig.object
-        if not registry:valid(objectEntity) then
-            return
-        end
-        
-        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
-        
-        local text = localization.get("ui.currency_text_song_essence", {currency = math.floor(globals.currencies.song_essence.amount)})
-        
-        if (objectTextComp.rawText ~= text) then
-            TextSystem.Functions.setText(objectEntity, text)
-        end
-    end
-    
-    local textWafers = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.currency_text_wafers") end,  -- initial text
-        16.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    
-    textWafers.config.initFunc = function(registry, entity)
-        localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_wafers", {currency = math.floor(globals.currencies.wafer.amount)}))
-        end)
-    end
-    
-    textWafers.config.updateFunc = function(r, entity, dt)
-        local elementUIConfig = registry:get(entity, UIConfig)
-        local objectEntity = elementUIConfig.object
-        if not registry:valid(objectEntity) then
-            return
-        end
-        
-        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
-        
-        local text = localization.get("ui.currency_text_wafers", {currency = math.floor(globals.currencies.wafer.amount)})
-        
-        if (objectTextComp.rawText ~= text) then
-            TextSystem.Functions.setText(objectEntity, text)
-        end
-    end
-    
-    local textCrystals = ui.definitions.getNewDynamicTextEntry(
-        function() return  localization.get("ui.currency_text_crystals") end,  -- initial text
-        16.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    textCrystals.config.initFunc = function(registry, entity)
-        localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_crystals", {currency = math.floor(globals.currencies.crystal.amount)}))
-        end)
-    end
-    textCrystals.config.updateFunc = function(r, entity, dt)
-        local elementUIConfig = registry:get(entity, UIConfig)
-        local objectEntity = elementUIConfig.object
-        if not registry:valid(objectEntity) then
-            return
-        end
-        
-        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
-        
-        local text = localization.get("ui.currency_text_crystals", {currency = math.floor(globals.currencies.crystal.amount)})
-        
-        if (objectTextComp.rawText ~= text) then
-            TextSystem.Functions.setText(objectEntity, text)
-        end
-    end
-    
-    local textChips = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.currency_text_chips") end,  -- initial text
-        16.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    textChips.config.initFunc = function(registry, entity)
-        localization.onLanguageChanged(function(newLang)
-            TextSystem.Functions.setText(entity, localization.get("ui.currency_text_chips", {currency = math.floor(globals.currencies.chip.amount)}))
-        end)
-    end
-    textChips.config.updateFunc = function(r, entity, dt)
-        local elementUIConfig = registry:get(entity, UIConfig)
-        local objectEntity = elementUIConfig.object
-        if not registry:valid(objectEntity) then
-            return
-        end
-        
-        local objectTextComp = registry:get(objectEntity, TextSystem.Text)
-        
-        local text = localization.get("ui.currency_text_chips", {currency = math.floor(globals.currencies.chip.amount)})
-        
-        if (objectTextComp.rawText ~= text) then
-            TextSystem.Functions.setText(objectEntity, text)
-        end
-    end
-    
-    -- now wrap each icon + text in a row
-    local currencyWhaleDustRow = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addNoMovementWhenDragged(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(currencyIconDef)
-    :addChild(sliderTextMoving)
-    :build()
-    
-    local currencyWafersRow = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addNoMovementWhenDragged(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["wafer"].ui_icon_entity))
-    :addChild(textWafers)
-    :build()
-    
-    local currencyChipsRow = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addNoMovementWhenDragged(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["chip"].ui_icon_entity))
-    :addChild(textChips)
-    
-    :build()
-    
-    local currencyCrystalsRow = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addNoMovementWhenDragged(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["crystal"].ui_icon_entity))
-    :addChild(textCrystals)
-    :build()
-    
-    local currencySongEssenceRow = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addNoMovementWhenDragged(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(ui.definitions.wrapEntityInsideObjectElement(globals.currencies["song_essence"].ui_icon_entity))
-    :addChild(textSongEssence)
-    :build()
-    
-    
-    local sliderTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.VERTICAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            
-            :addNoMovementWhenDragged(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(currencySongEssenceRow)
-    :addChild(currencyWhaleDustRow)
-    :addChild(currencyCrystalsRow)
-    :addChild(currencyWafersRow)
-    :addChild(currencyChipsRow)
-    :build()
-    
-    local newRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(sliderTemplate)
-    :build()
-    
-    
-    -- dump(ui.box)
-    log_debug(ui)
-    log_debug(ui.element)
-    log_debug(ui.box)
-    log_debug(ui.box.Initialize)
-    -- dump(newRoot)
-    
-    local newUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 10}, newRoot)
-    
-    local newUIBoxTransform = registry:get(newUIBox, Transform)
-    local uiBoxComp = registry:get(newUIBox, UIBoxComponent)
-    log_debug(newUIBox)
-    log_debug(uiBoxComp)
-    -- anchor to the top right corner of the screen
-    newUIBoxTransform.actualX = globals.screenWidth() - newUIBoxTransform.actualW -- 10 pixels from the right edge
-    newUIBoxTransform.actualY = 10 -- 10 pixels from the top edge
-    
-    -- TODO: test aligning to the inside of the game world container with a delay to let the update run
-    timer.after(
-        1.0, -- delay in seconds
-        function()
-            -- log_debug("Aligning newUIBox to the game world container")
-            -- align the new UI box to the game world container
-            --TODO: debug this, we need to get it working
-            -- local uiBoxRole = registry:get(newUIBox, InheritedProperties)
-            -- local uiBoxTransform = registry:get(newUIBox, Transform)
-            -- transform.AssignRole(registry, newUIBox, InheritedPropertiesType.RoleInheritor, globals.gameWorldContainerEntity());
-
-            -- local gameWorldContainerTransform = registry:get(globals.gameWorldContainerEntity(), Transform)
-            -- log_debug("uiBox width = ", uiBoxTransform.actualW, "uiBox height = ", uiBoxTransform.actualH)
-            -- log_debug("gameWorldContainer width = ", gameWorldContainerTransform.actualW, "gameWorldContainer height = ", gameWorldContainerTransform.actualH)
-            -- uiBoxRole.flags = AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.ALIGN_TO_INNER_EDGES | AlignmentFlag.VERTICAL_TOP
-        end
-    )
-    
-    
-    -- prestige button
-    local prestigeButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.achievements_button") end,  -- initial text
-        20.0,                                 -- font size
-        "bump"                       -- animation spec
-    )
-    
-
-    local prestigeButtonDef = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- button click callback
-                log_debug("Prestige button clicked!")
-                local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
-                playSoundEffect("effects", "button-click") -- play button click sound
-                -- uibox_transform.actualY = uibox_transform.actualY + 300
-
-                if globals.ui.prestige_window_open then
-                    -- close the prestige window
-                    globals.ui.prestige_window_open = false                    
-                    uibox_transform.actualY = globals.screenHeight()
-                else
-                    -- open the prestige window
-                    globals.ui.prestige_window_open = true
-                    uibox_transform.actualY = globals.screenHeight() / 2 - uibox_transform.actualH / 2
-
-                end
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(prestigeButtonText)
-    :build()
-
-    local prestigeButtonRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addMinHeight(50)
-            :addShadow(true)
-            :addMaxWidth(300)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(prestigeButtonDef)
-    :build()
-    -- create a new UI box for the prestige button
-    local prestigeButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 450}, prestigeButtonRoot)
-    
-    
-    -- help button
-    local helpButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_title") end,  -- initial text
-        20.0,                                 -- font size
-        "bump"                       -- animation spec
-    )
-    
-    local helpButtonDef = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- button click callback
-                log_debug("Help button clicked!")
-                playSoundEffect("effects", "button-click") -- play button click sound
-                globals.ui.help_window_open = not globals.ui.help_window_open
-                helpuiboxTransform = registry:get(globals.ui.helpTextUIBox, Transform)
-                if globals.ui.help_window_open then
-                    helpuiboxTransform.actualY = globals.screenHeight() / 2 - helpuiboxTransform.actualH / 2
-                else
-                    helpuiboxTransform.actualY = globals.screenHeight() -- move it out of the screen
-                end
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(helpButtonText)
-    :build()
-    local helpButtonRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addShadow(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(helpButtonDef)
-    :build()
-    -- create a new UI box for the help button
-    log_debug("ui.box.Initialize is:", ui.box.Initialize, "  type:", type(ui.box.Initialize))
-    local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)
-    -- align the help button UI box to the right edge of the screen
-    local helpButtonTransform = registry:get(helpButtonUIBox, Transform)
-    local prestigeButtonTransform = registry:get(prestigeButtonUIBox, Transform)
-    helpButtonTransform.actualX = globals.screenWidth() - helpButtonTransform.actualW -- 10 pixels from the right edge
-    helpButtonTransform.actualY = prestigeButtonTransform.actualY + prestigeButtonTransform.actualH + 10 -- 10 pixels below the prestige button_UIE
-    
-    
-    -- right-align the prestige button UI box
-    local prestigeButtonTransform = registry:get(prestigeButtonUIBox, Transform)
-    prestigeButtonTransform.actualX = globals.screenWidth() - prestigeButtonTransform.actualW -- 10 pixels from the right edge
-    
-
-
-    -- prestige upgrades window
-    
-    -- there will be six ui elements in each row, and as many rows as needed to fit all the upgrades
-    
-    log_debug("building achievements window...")
-    
-    local achievementRows = {}
-    local currentRow = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addNoMovementWhenDragged(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :build()
-    
-    for i, achivementDef in ipairs(globals.achievements) do
-        log_debug("Adding achievement: ", achivementDef.id, " with animation: ", achivementDef.anim)
-        -- make a new achievement animation entity
-        achivementDef.anim_entity = animation_system.createAnimatedObjectWithTransform(
-            achivementDef.unlocked and  achivementDef.anim or "locked_anim", -- animation ID
-            false             -- use animation, not sprite id
-        )
-        
-        -- resize to fit 48 x 48
-        animation_system.resizeAnimationObjectsInEntityToFit(
-            achivementDef.anim_entity,
-            48, -- Width
-            48  -- Height
-        ) 
-        
-        -- wrap 
-        local achievementAnimDef = ui.definitions.wrapEntityInsideObjectElement(achivementDef.anim_entity)
-        
-        -- make it hoverable
-        local achievementGameObject = registry:get(achivementDef.anim_entity, GameObject)
-        achievementGameObject.methods.onHover = function()
-            log_debug("Achievement entity hovered!")
-            achivementDef.tooltipFunc()
-        end
-        achievementGameObject.methods.onStopHover = function()
-            log_debug("Achievement entity stopped hovering!")
-            -- hideTooltip()
-        end
-        achievementGameObject.state.hoverEnabled = true
-        achievementGameObject.state.collisionEnabled = true -- enable collision for the hover to work
-        
-        -- make a row that will hold the achievement icon
-        local imageContainer = UIElementTemplateNodeBuilder.create()
+    -- make a new row for relics
+    local relicsRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("lapi_lazuli"))
-                :addNoMovementWhenDragged(true)
-                :addEmboss(2.0)
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
                 end)
                 :build()
         )
-        :addChild(achievementAnimDef)
+        -- add all relic button defs to the row
+        :addChildren(relicsRowImages)
         :build()
         
-        -- add the achievement icon to the current row
-        currentRow.children:add(imageContainer)
-        
-        
-        
-        -- if we passed the sixth achievement, we need to start a new row
-        if i % 6 == 0 and i > 1 then
-            log_debug("Reached sixth achievement with index: ", i, ", starting a new row.")
-            -- save the current row to the achievement rows
-            table.insert(achievementRows, currentRow)
-            -- start a new row
-            currentRow = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                    :addColor(util.getColor("keppel"))
-                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-                    :addInitFunc(function(registry, entity)
-                        -- something init-related here
-                    end)
-                    :build()
-            )
-            :build()
-        end
-    end
-    
-    -- if there are any remaining achievements in the current row, add it to the achievement rows
-    if #currentRow.children > 0 and achievementRows[#achievementRows] ~= currentRow then
-        debug ("Adding last row with achievements, index: ", #achievementRows + 1)
-        table.insert(achievementRows, currentRow)
-    end
+    -- new ui box for relics
+    globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRow)
+    -- align the relics UI box to the left side of the screen, and top
+    local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
+    relicsTransform.actualX = 100 -- 100 pixels from the left edge
+    relicsTransform.visualX = relicsTransform.actualX -- update visual position as well
+    relicsTransform.actualY = 10 -- 10 pixels from the top edge
+    relicsTransform.visualY = relicsTransform.actualY -- update visual position as well
     
     
-    -- make a red X button 
-    local closeButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return "Close" end,  -- initial text
-        15.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    
-    log_debug("Creating close button template...")
-    -- make a new close button template
-    local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("glaucou"))
-            :addEmboss(2.0)
-            :addShadow(true)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- close the prestige window
-                log_debug("Prestige window close button clicked!")
-                globals.ui.prestige_window_open = false
-                local uibox_transform = registry:get(globals.ui.prestige_uibox, Transform)
-                uibox_transform.actualY = globals.screenHeight()  -- move it out of the screen
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_TOP)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(closeButtonText)
-    :build()
-    
-    
-    -- vertical container for the prestige upgrades
-    local prestigeUpgradesContainer = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.VERTICAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :build()
-    
-    -- achievements text for the top of the window
-    local achievementsText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.achievements_button") end,  -- initial text
+    -- text that says "new day has arrived!"
+    globals.ui.newDayTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.new_day_text") end,  -- initial text
         30.0,                                 -- font size
-        "rainbow"                       -- animation spec
+        "bump"                       -- animation spec
     )
     
-    local achievementsTextTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(achievementsText)
-    :build()
-    
-    -- add title
-    prestigeUpgradesContainer.children:add(achievementsTextTemplate)
-    
-    -- add rows
-    for i, row in ipairs(achievementRows) do
-        -- add the row to the prestige upgrades container
-        prestigeUpgradesContainer.children:add(row)
-    end
-    
-    -- add the close button to the prestige upgrades container
-    prestigeUpgradesContainer.children:add(closeButtonTemplate)
-
-    -- uibox for the prestige upgrades
-    local prestigeUpgradesContainerRoot = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(prestigeUpgradesContainer)
-    :build()
-
-    -- create a new UI box for the prestige upgrades
-    globals.ui.prestige_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, prestigeUpgradesContainerRoot)
-    
-    -- center the ui box X-axi
-    local prestigeUiboxTransform = registry:get(globals.ui.prestige_uibox, Transform)
-    prestigeUiboxTransform.actualX = globals.screenWidth() / 2 - prestigeUiboxTransform.actualW / 2
-    
-    -- ui for the buildings
-    local buildingText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.building_text") end,  -- initial text
-        20.0,                                 -- font size
-        "float"                       -- animation spec
-    )
-    
-    local buildingTextGameObject = registry:get(buildingText.config.object, GameObject)
-    -- set onhover & stop hover callbacks to show tooltip
-    buildingTextGameObject.methods.onHover = function()
-        log_debug("Building text entity hovered!")
-        showTooltip(localization.get("ui.grav_wave_title"), localization.get("ui.grav_wave_desc"))
-    end
-    buildingTextGameObject.methods.onStopHover = function()
-        log_debug("Building text entity stopped hovering!")
-        -- hideTooltip()
-    end
-    -- make hoverable
-    buildingTextGameObject.state.hoverEnabled = true
-    buildingTextGameObject.state.collisionEnabled = true -- enable collision for the hover to work
-    
-    
-    local buildingTextTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-    UIConfigBuilder.create()
-        :addColor(util.getColor("lapi_lazuli"))
-        :addMinHeight(50)
-        :addProgressBar(true) -- enable progress bar effect
-        :addProgressBarFullColor(util.getColor("BLUE"))
-        :addProgressBarEmptyColor(util.getColor("WHITE"))
-        :addProgressBarFetchValueLamnda(function(entity)
-            -- return the timer value for the gravity wave thing
-            -- log_debug("Fetching gravity wave seconds for entity: ", timer.get_delay("shockwave_uniform_tween"))
-            return (globals.gravityWaveSeconds - globals.timeUntilNextGravityWave) / (timer.get_delay("shockwave_uniform_tween") or globals.gravityWaveSeconds)
-        end)
-
-        :addNoMovementWhenDragged(true)
-        :addMinWidth(500)
-        :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-        :addInitFunc(function(registry, entity)
-            -- something init-related here
-        end)
+    -- put in its own row
+    local newDayTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(globals.ui.newDayTextEntity)
         :build()
+        
+    -- new uibox
+    globals.ui.newDayUIBox = ui.box.Initialize({x = globals.screenWidth() / 2 - 150, y = globals.screenHeight() / 2 - 50}, newDayTextDef)
+    -- align the new day UI box to the center of the screen
+    local newDayTransform = registry:get(globals.ui.newDayUIBox, Transform)
+    newDayTransform.actualX = globals.screenWidth() / 2 - newDayTransform.actualW / 2 -- center horizontally
+    newDayTransform.visualX = newDayTransform.actualX -- update visual position as well
+    newDayTransform.actualY = globals.screenHeight() -- hide it initially
+    
+    
+    -- new pause/unpause button
+    -- new anim entity for pause button
+    globals.ui.pauseButtonAnimationEntity = animation_system.createAnimatedObjectWithTransform(
+        "tile_0538.png", -- animation/sprite ID
+        true             
     )
-    :addChild(buildingText)
-    :build()
-    
-    local buildingTextRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addMinHeight(50)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(buildingTextTemplate)
-    :build()
-    
-    -- create a new UI box for the gravity wave progress bar
-    local buildingTextUIBox = ui.box.Initialize({x = globals.screenWidth() - 400, y = 600}, buildingTextRoot)
-    
-    -- align top of the screen, centered
-    local buildingTextTransform = registry:get(buildingTextUIBox, Transform)
-    buildingTextTransform.actualX = globals.screenWidth() / 2 - buildingTextTransform.actualW / 2
-    buildingTextTransform.actualY = 10 -- 10 pixels from the top edge
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    -- Make a bottom UI box that will hold the purchase ui
-    
-    
-    -- first upgrade ui (buildings)
-    
-      
-    
-    
-    timer.every(
-        4, -- every 4 seconds
-        function()
-            -- check building unlock conditions
-            -- loop through the table. for each required table, check if the building with that id is unlocked. If all required buildings are unlocked, set the building to unlocked
-            local yLocationIncrement = 0 -- used to offset the y position of the text notification
-            for i, building in ipairs(globals.building_upgrade_defs) do
-                -- remember previous state so we can detect a flip
-                local wasUnlocked = building.unlocked
-            
-                -- only consider those with any requirements
-                if not building.unlocked and building.required then
-                    local allRequiredUnlocked = true
-            
-                    -- 1) dependency check
-                    for _, reqId in ipairs(building.required) do
-                        local reqB = findInTable(globals.building_upgrade_defs, "id", reqId)
-                        if not reqB or not reqB.unlocked then
-                            allRequiredUnlocked = false
-                            break
-                        end
-                    end
-            
-                    -- 2) currency check (only if deps passed)
-                    if allRequiredUnlocked and building.required_currencies then
-                        for currencyKey, reqAmount in pairs(building.required_currencies) do
-                            local have = globals.currencies[currencyKey].target or 0
-                            if have < reqAmount then
-                                allRequiredUnlocked = false
-                                break
-                            end
-                        end
-                    end
-                    
-                    -- 3) building_or_converter check
-                    if allRequiredUnlocked and building.required_building_or_converter then
-                        for reqId, reqCount in pairs(building.required_building_or_converter) do
-                            local owned = # (globals.buildings[reqId] or {})
-                            if owned < reqCount then
-                                allRequiredUnlocked = false
-                                break
-                            end
-                        end
-                    end
-
-            
-                    -- 3) if status flipped, show popup
-                    if wasUnlocked ~= allRequiredUnlocked then
-                        log_debug("Building ", building.id,
-                              " unlocked status changed to: ", allRequiredUnlocked)
-                        if allRequiredUnlocked then
-                            newTextPopup(
-                                localization.get(
-                                    "ui.new_unlock",
-                                    { unlock = localization.get(building.ui_text_title) }
-                                ),
-                                globals.screenWidth() / 2,
-                                globals.screenHeight() / 2 + yLocationIncrement,
-                                4
-                            )
-                            timer.after(
-                                0.1, 
-                                function()
-                                    local pitch = random_utils.random_float(0.8, 1.2)
-                                    playSoundEffect("effects", "new-unlock", pitch)
-                                end
-                            )
-                            yLocationIncrement = yLocationIncrement + 30 -- increment the y location for the next popup
-                            
-                            -- reset the building UI to the first building
-                            cycleBuilding(0) -- reset the building UI to the first building
-                        end
-                    end
-            
-                    -- 4) store new state
-                    building.unlocked = allRequiredUnlocked
-                end
-            end
-            
-            -- now do the same for converters
-            for i, conv in ipairs(globals.converter_defs) do
-                local wasUnlocked = conv.unlocked
-
-                -- only test those still locked and with requirements
-                if not conv.unlocked then
-                    local allReqsOK = true
-
-                    -- 1) building-dependency check
-                    for _, bId in ipairs(conv.required_building) do
-                        local b = findInTable(globals.building_upgrade_defs, "id", bId)
-                        if not b or not b.unlocked then
-                            allReqsOK = false
-                            break
-                        end
-                    end
-
-                    -- 2) converter-dependency check (only if buildings passed)
-                    if allReqsOK and conv.required_converter then
-                        for _, cId in ipairs(conv.required_converter) do
-                            local c = findInTable(globals.converter_defs, "id", cId)
-                            if not c or not c.unlocked then
-                                allReqsOK = false
-                                break
-                            end
-                        end
-                    end
-                    
-                    -- 3) building_or_converter check
-                    if allReqsOK and conv.required_building_or_converter then
-                        for reqId, reqCount in pairs(conv.required_building_or_converter) do
-                            local owned = # (globals.converters[reqId] or {})
-                            if owned < reqCount then
-                                allReqsOK = false
-                                break
-                            end
-                        end
-                    end
-
-
-                    -- 3) currency check (only if all deps passed)
-                    if allReqsOK and conv.required_currencies then
-                        for key, amount in pairs(conv.required_currencies) do
-                            local have = globals.currencies[key].target or 0
-                            if have < amount then
-                                allReqsOK = false
-                                break
-                            end
-                        end
-                    end
-
-                    -- 4) flip-detect and popup
-                    if wasUnlocked ~= allReqsOK then
-                        log_debug("Converter ", conv.id,
-                            " unlocked status changed to: ", allReqsOK)
-                        if allReqsOK then
-                            newTextPopup(
-                                localization.get(
-                                    "ui.new_unlock",
-                                    { unlock = localization.get(conv.ui_text_title) }
-                                ),
-                                globals.screenWidth() / 2,
-                                globals.screenHeight() / 2 + yLocationIncrement,
-                                4
-                            )
-                            timer.after(
-                                0.1, 
-                                function()
-                                    local pitch = random_utils.random_float(0.8, 1.2)
-                                    playSoundEffect("effects", "new-unlock", pitch)
-                                end
-                            )
-                            yLocationIncrement = yLocationIncrement + 30
-                            cycleConverter(0) -- reset the converter UI to the first converter
-                        end
-                    end
-
-                    -- 5) store new state
-                    conv.unlocked = allReqsOK
-                end
-            end
-        end,
-        0,-- repeat forever,
-        false,-- run immediately
-        nil,
-        "building_unlock_check" -- timer name
-    )
-      
-    globals.selectedBuildingIndex = 1 -- the index of the currently selected building in the upgrade list
-    
-    -- "left" button
-    local leftButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return "<" end,  -- initial text
-        20.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    -- make new button template
-    local leftButtonTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                playSoundEffect("effects", "button-click") -- play button click sound
-                cycleBuilding(-1) -- decrement the selected building index
-                -- log_debug("Left button clicked! Current building index: ", globals.selectedBuildingIndex)
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(leftButtonText)
-    :build()
-    
-    -- middle text 
-    --TODO: customize this based on update data
-    globals.building_ui_animation_entity = animation_system.createAnimatedObjectWithTransform(
-        globals.building_upgrade_defs[1].anim, -- animation ID
-        false             -- use animation, not sprite id
-    )
-    local middleTextElement = ui.definitions.wrapEntityInsideObjectElement(globals.building_ui_animation_entity) -- wrap the text in an object element
-    cycleBuilding(0) -- initialize the building UI with the first building
-    
-    -- make animatino hoverable
-    local buildingUIAnimGameObject = registry:get(globals.building_ui_animation_entity, GameObject)
-    buildingUIAnimGameObject.state.dragEnabled = false
-    buildingUIAnimGameObject.state.hoverEnabled = true
-    buildingUIAnimGameObject.state.clickEnabled = false
-    buildingUIAnimGameObject.state.collisionEnabled = true
-    
-    
-    
-    -- right button
-    local rightButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return ">" end,  -- initial text
-        20.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    -- make new button template
-    local rightButtonTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                playSoundEffect("effects", "button-click") -- play button click sound
-                cycleBuilding(1) -- increment the selected building index
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(rightButtonText)
-    :build()
-    
-    
-    -- buy button
-    local buyButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.buy_button") end,  -- initial text
-        20.0,                                 -- font size
-        "rainbow"                       -- animation spec
-    )
-    -- make new button template
-    local buyButtonTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                playSoundEffect("effects", "button-click") -- play button click sound
-                buyBuildingButtonCallback()
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(buyButtonText)
-    :build()
-    
-    
-    -- second upgrade ui (converters)
-    
-    globals.converter_ui_animation_entity = nil
-    
-    globals.selectedConverterIndex = 1 -- the index of the currently selected building in the upgrade list
-    
-    -- "left" button
-    local leftButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        function() return  "<" end,  -- initial text
-        20.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    -- make new button template
-    local leftButtonTemplateConverter = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                playSoundEffect("effects", "button-click") -- play button click sound
-                cycleConverter(-1)
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(leftButtonTextConverter)
-    :build()
-    
-    -- middle text 
-    --TODO: customize this based on update data
-    globals.converter_ui_animation_entity = animation_system.createAnimatedObjectWithTransform(
-        "locked_upgrade_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    
-    -- make globals.converter_ui_animation_entity hoverable
-    local converterGameObject = registry:get(globals.converter_ui_animation_entity, GameObject)
-    converterGameObject.state.dragEnabled = false
-    converterGameObject.state.clickEnabled = false
-    converterGameObject.state.hoverEnabled = true
-    converterGameObject.state.collisionEnabled = true
-    
-    local middleTextElementConverter = ui.definitions.wrapEntityInsideObjectElement(globals.converter_ui_animation_entity) -- wrap the text in an object element
-    
-    cycleConverter(0) -- cycle to the first converter
-    
-    
-    -- right button
-    local rightButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        function() return ">" end,  -- initial text
-        20.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    -- make new button template
-    local rightButtonTemplateConverter = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- button click callback
-                playSoundEffect("effects", "button-click") -- play button click sound
-                log_debug("Right button clicked!")
-                cycleConverter(1)
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(rightButtonTextConverter)
-    :build()
-    
-    
-    -- buy button
-    local buyButtonTextConverter = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.buy_button") end,  -- initial text
-        20.0,                                 -- font size
-        "rainbow"                       -- animation spec
-    )
-    -- make new button template
-    local buyButtonTemplateConverter = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            -- :addShadow(true)
-            :addEmboss(4.0)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- button click callback
-                playSoundEffect("effects", "button-click") -- play button click sound
-                log_debug("Buy button clicked!")
-                
-                buyConverterButtonCallback()
-                
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(buyButtonTextConverter)
-    :build()
-
-    -- make a horizontal container for all upgrade ui
-    local upgradeUIContainer = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(leftButtonTemplate)
-    :addChild(middleTextElement)
-    :addChild(rightButtonTemplate)
-    :addChild(buyButtonTemplate)
-    :addChild(leftButtonTemplateConverter)
-    :addChild(middleTextElementConverter)
-    :addChild(rightButtonTemplateConverter)
-    :addChild(buyButtonTemplateConverter)
-    :build()
-    
-    -- make a new upgrade UI root
-    local upgradeUIRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(upgradeUIContainer)
-    :build()
-    
-    -- create a new UI box for the upgrade UI
-    globals.ui.upgradeUIBox = ui.box.Initialize({x = 0, y = globals.screenHeight() - 50}, upgradeUIRoot)
-    
-    -- get the root entity of the upgrade UI box
-    local rootEntity = registry:get(globals.ui.upgradeUIBox, UIBoxComponent)
-    
-    -- emplace the shader pipeline component for the upgrade UI box root
-    local shaderPipelineComp = registry:emplace(rootEntity.uiRoot, shader_pipeline.ShaderPipelineComponent)
-
-    shaderPipelineComp:addPass("random_displacement_anim")
-    -- shaderPipelineComp:addPass("flash")
-    -- shaderPipelineComp:addPass("flash")
-    
-    
-    -- align the upgrade UI box to the bottom of the screen
-    local upgradeUIBoxTransform = registry:get(globals.ui.upgradeUIBox, Transform)
-    upgradeUIBoxTransform.actualX = globals.screenWidth() / 2 - upgradeUIBoxTransform.actualW / 2 -- center it horizontally
-    upgradeUIBoxTransform.actualY = globals.screenHeight() - upgradeUIBoxTransform.actualH -- align to the bottom of the screen
-    
-    
-    -- new help window
-    local helpTextTitle = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_title") end,  -- initial text
-        20.0,                                 -- font size
-        "rainbow"                       -- animation spec
-    )
-    local helpTextBody1 = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_body") end,  -- initial text
-        15.0,                                 -- font size
-        ""                       -- animation spec
-    )
-    local helpTextBody2 = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_body_2") end,  -- initial text
-        15.0,                                 -- font size
-        ""                       -- animation spec
-    )
-    local helpTextBody3 = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_body_3") end,  -- initial text
-        15.0,                                 -- font size
-        ""                       -- animation spec
-    )
-    local helpTextBody4 = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_body_4") end,  -- initial text
-        15.0,                                 -- font size
-        ""                       -- animation spec
-    )
-    local helpTextBody5 = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_body_5") end,  -- initial text
-        15.0,                                 -- font size
-        ""                       -- animation spec
-    )
-    local helpTextBody6 = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.tip_body_6") end,  -- initial text
-        15.0,                                 -- font size
-        "fade"                       -- animation spec
-    )
-    
-    -- new close button
-    local closeHelpButtonText = ui.definitions.getNewDynamicTextEntry(
-        function() return "Close" end,  -- initial text
-        15.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
-    )
-    -- make a new close button template
-    local closeHelpButtonTemplate = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addEmboss(2.0)
-            :addShadow(true)
-            :addHover(true) -- needed for button effect
-            :addButtonCallback(function()
-                -- close the help window    
-                log_debug("Help window close button clicked!")
-                playSoundEffect("effects", "button-click") -- play button click sound
-                globals.ui.help_window_open = false
-                local uibox_transform = registry:get(globals.ui.helpTextUIBox, Transform)
-                uibox_transform.actualY = globals.screenHeight() + 500 -- move it out offset
-            end)
-            :addAlign(AlignmentFlag.HORIZONTAL_RIGHT | AlignmentFlag.VERTICAL_TOP)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(closeHelpButtonText)
-    :build()
-    
-    -- new row for the help text
-    local helpTextRow = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.VERTICAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addMinHeight(50)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(helpTextBody1)
-    :addChild(helpTextBody2)
-    :addChild(helpTextBody3)
-    :addChild(helpTextBody4)
-    :addChild(helpTextBody5)
-    :addChild(helpTextBody6)
-    :addChild(closeHelpButtonTemplate) -- add the close button
-    :build()
-    
-    -- new help text root
-    local helpTextRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addMinHeight(50)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()
-    )
-    :addChild(helpTextTitle) -- add the title
-    :addChild(helpTextRow) -- add the help text row
-    :build()
-    
-    -- create a new UI box for the help text
-    globals.ui.helpTextUIBox = ui.box.Initialize({x = 0, y = globals.screenHeight() - 200}, helpTextRoot)
-    
-    -- align the help text UI box to the bottom of the screen
-    local helpTextUIBoxTransform = registry:get(globals.ui.helpTextUIBox, Transform)
-    helpTextUIBoxTransform.actualX = globals.screenWidth() / 2 - helpTextUIBoxTransform.actualW / 2 -- center it horizontally
-    helpTextUIBoxTransform.actualY = globals.screenHeight() + 500 -- align to the bottom of the screenWidth
-    
-    
-    -- new achivement window
-    local newAchievementText = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.new_achievement_title") end,  -- initial text
-        20.0,                                 -- font size
-        "rainbow"                       -- animation spec
-    )
-    
-    -- make new animated entity
-    globals.ui.achievementIconEntity = animation_system.createAnimatedObjectWithTransform(
-        "locked_anim", -- animation ID
-        false             -- use animation, not sprite id
-    )
-    -- resize
     animation_system.resizeAnimationObjectsInEntityToFit(
-        globals.ui.achievementIconEntity,
-        60,
-        60
+        globals.ui.pauseButtonAnimationEntity, -- entity to resize
+        40, -- width
+        40  -- height
     )
-    -- wrap the animated entity in an object element
-    local newAchievementAnimDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui.achievementIconEntity)
-    
-    -- make a new horizontal container for the new achievement text
-    local newAchievementAnimContainer = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("lapi_lazuli"))
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)        
-            :build()
-    )
-    :addChild(newAchievementAnimDef) -- add the achievement icon
-    :build()
-    
-    
-    -- make a new root for the new achievement text
-    local newAchievementTextRoot =  UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
-    :addConfig(
-        UIConfigBuilder.create()
-            :addColor(util.getColor("keppel"))
-            :addMinHeight(50)
-            :addShadow(true)
-            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-            :addInitFunc(function(registry, entity)
-                -- something init-related here
-            end)
-            :build()        
-    )
-    :addChild(newAchievementText)
-    :addChild(newAchievementAnimContainer)
-    :build()
-    
-    -- create a new UI box for the new achievement text
-    globals.ui.newAchievementUIBox = ui.box.Initialize({x = 0, y = globals.screenHeight() + 400}, newAchievementTextRoot)   
-    
-    
-    
-    
-    
-    
-    
-    
+    -- wrap the pause button in a UI element
+    local pauseButtonDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui.pauseButtonAnimationEntity)
+    -- new row 
+    local pauseButtonRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addHover(true) -- needed for button effect
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addButtonCallback(function()
+                    -- button click callback
+                    log_debug("Pause button clicked!")
+                    playSoundEffect("effects", "button-click") -- play button click sound
+                    
+                    if (globals.gamePaused) then
+                        globals.gamePaused = false
+                        log_debug("Unpausing game")
+                        timer.resume_group("colonist_movement_group") -- resume game timers
+                        animation_system.replaceAnimatedObjectOnEntity(
+                            globals.ui.pauseButtonAnimationEntity, -- entity to replace
+                            "tile_0538.png", -- change to pause icon
+                            true -- true if sprite id
+                        ) -- change to unpause icon
+                        animation_system.resizeAnimationObjectsInEntityToFit(
+                            globals.ui.pauseButtonAnimationEntity,
+                            40,   -- width
+                            40    -- height
+                        )
+                    else
+                        globals.gamePaused = true
+                        log_debug("Pausing game")
+                        timer.pause_group("colonist_movement_group") -- pause game timers
+                        animation_system.replaceAnimatedObjectOnEntity(
+                            globals.ui.pauseButtonAnimationEntity, -- entity to replace
+                            "tile_0537.png", -- change to play icon
+                            true -- true if sprite id
+                        ) -- change to pause icon
+                        animation_system.resizeAnimationObjectsInEntityToFit(
+                            globals.ui.pauseButtonAnimationEntity,
+                            40,   -- width
+                            40    -- height
+                        )
+                    end
+                    
+                end)
+                :build()
+        )
+        :addChild(pauseButtonDef)
+        :build()
+        
+    -- create a new UI box for the pause button
+    globals.ui.pauseButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 100, y = 10}, pauseButtonRow)
+    -- align the pause button UI box to the right side of the screen
+    local pauseButtonTransform = registry:get(globals.ui.pauseButtonUIBox, Transform)
+    pauseButtonTransform.actualX = globals.screenWidth() - pauseButtonTransform.actualW - 10 -- 10 pixels from the right edge
+    pauseButtonTransform.visualX = pauseButtonTransform.actualX -- update visual position as well
+    -- above the shop button
+    local shopButtonTransform = registry:get(globals.ui.shopButtonUIBox, Transform)
+    pauseButtonTransform.actualY = shopButtonTransform.actualY - pauseButtonTransform.actualH - 10 -- 10 pixels below the shop button
+    pauseButtonTransform.visualY = pauseButtonTransform.actualY -- update visual position as well
 end
-
 
 function ui_defs.generateTooltipUI()
 

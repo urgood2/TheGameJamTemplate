@@ -2,9 +2,27 @@
 
 globals = globals or {}
 
+globals.gamePaused = false -- whether the game is currently paused
+
 globals.main_menu_elapsed_time = 0 -- time spent in the main menu
 
 globals.isShopOpen = false -- whether the shop is currently open
+
+globals.ownedRelics = {
+  {
+    id = "basic_umbrella",
+    animation_entity = nil -- the animation entity for the relic
+  }
+}
+
+globals.relicDefs = {
+  {
+    id = "basic_umbrella",
+    localizationKeyName = "ui.basic_umbrella_name",
+    localizationKeyDesc = "ui.basic_umbrella_desc",
+    spriteID = "4077-TheRoguelike_1_10_alpha_870.png"
+  }
+}
 
 globals.game_time = {
   seconds = 0, -- seconds since the game started
@@ -20,7 +38,9 @@ globals.ui = {
   timeTextEntity = nil, -- the text entity that displays the time
   
   dayTextEntity = nil, -- the text entity that displays the day
-  dayTextUIBox = nil -- the UI box that contains the day text
+  dayTextUIBox = nil, -- the UI box that contains the day text
+  
+  newDayUIBox = nil -- the UI box that displays the new day message
 }
 
 -- your defaults in one place

@@ -387,6 +387,22 @@ function ui_defs.generateUI()
         table.insert(weatherButtonDefs, buttonDef)
     end
     
+    -- add a close button to the weather shop
+    local closeButton = createStructurePlacementButton(
+        "4158-TheRoguelike_1_10_alpha_951.png", 
+        "shopCloseButton", -- global animation handle
+        "shopCloseText", -- global text handle
+        "ui.shop_close" -- localization key for text
+    )
+    closeButton.config.buttonCallback = function ()
+        -- close the weather shop
+        log_debug("Weather shop closed!")
+        playSoundEffect("effects", "button-click") -- play button click sound
+        toggleShopWindow() -- toggle the shop window visibility
+    end
+    -- add the close button to the weatherButtonDefs
+    table.insert(weatherButtonDefs, closeButton)
+    
     -- make a new row
     local weatherRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.VERTICAL_CONTAINER)
@@ -414,6 +430,177 @@ function ui_defs.generateUI()
     weatherShopTransform.visualX = weatherShopTransform.actualX -- update visual position as well
     weatherShopTransform.actualY = globals.screenHeight() -- out of view initially
     
+    
+    -- relics menu 
+    -- for each relic in globals.ownedRelics, create a hoverable animatione entity
+    local relicsRowImages = {}
+    
+    for _, ownedRelic in ipairs(globals.ownedRelics) do
+        local relicID = ownedRelic.id
+        local relicDef = findInTable(globals.relicDefs, "id", relicID)
+        if relicDef then
+            -- you already have the entry, no need to look it up again
+            ownedRelic.animation_entity = animation_system.createAnimatedObjectWithTransform(
+                relicDef.spriteID,
+                true
+            )
+        
+            animation_system.resizeAnimationObjectsInEntityToFit(
+                ownedRelic.animation_entity,
+                40, 40
+            )
+        
+            local relicIconDef = ui.definitions.wrapEntityInsideObjectElement(ownedRelic.animation_entity)
+        
+            local relicGameObject = registry:get(ownedRelic.animation_entity, GameObject)
+            relicGameObject.methods.onHover = function()
+                showTooltip(
+                localization.get(relicDef.localizationKeyName),
+                localization.get(relicDef.localizationKeyDesc)
+                )
+            end
+            relicGameObject.state.hoverEnabled = true
+            relicGameObject.state.collisionEnabled = true -- enable collision for the hover to work
+      
+          table.insert(relicsRowImages, relicIconDef)
+        end
+      end
+    
+    -- make a new row for relics
+    local relicsRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        -- add all relic button defs to the row
+        :addChildren(relicsRowImages)
+        :build()
+        
+    -- new ui box for relics
+    globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRow)
+    -- align the relics UI box to the left side of the screen, and top
+    local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
+    relicsTransform.actualX = 100 -- 100 pixels from the left edge
+    relicsTransform.visualX = relicsTransform.actualX -- update visual position as well
+    relicsTransform.actualY = 10 -- 10 pixels from the top edge
+    relicsTransform.visualY = relicsTransform.actualY -- update visual position as well
+    
+    
+    -- text that says "new day has arrived!"
+    globals.ui.newDayTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.new_day_text") end,  -- initial text
+        30.0,                                 -- font size
+        "bump"                       -- animation spec
+    )
+    
+    -- put in its own row
+    local newDayTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(globals.ui.newDayTextEntity)
+        :build()
+        
+    -- new uibox
+    globals.ui.newDayUIBox = ui.box.Initialize({x = globals.screenWidth() / 2 - 150, y = globals.screenHeight() / 2 - 50}, newDayTextDef)
+    -- align the new day UI box to the center of the screen
+    local newDayTransform = registry:get(globals.ui.newDayUIBox, Transform)
+    newDayTransform.actualX = globals.screenWidth() / 2 - newDayTransform.actualW / 2 -- center horizontally
+    newDayTransform.visualX = newDayTransform.actualX -- update visual position as well
+    newDayTransform.actualY = globals.screenHeight() -- hide it initially
+    
+    
+    -- new pause/unpause button
+    -- new anim entity for pause button
+    globals.ui.pauseButtonAnimationEntity = animation_system.createAnimatedObjectWithTransform(
+        "tile_0538.png", -- animation/sprite ID
+        true             
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        globals.ui.pauseButtonAnimationEntity, -- entity to resize
+        40, -- width
+        40  -- height
+    )
+    -- wrap the pause button in a UI element
+    local pauseButtonDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui.pauseButtonAnimationEntity)
+    -- new row 
+    local pauseButtonRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addHover(true) -- needed for button effect
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addButtonCallback(function()
+                    -- button click callback
+                    log_debug("Pause button clicked!")
+                    playSoundEffect("effects", "button-click") -- play button click sound
+                    
+                    if (globals.gamePaused) then
+                        globals.gamePaused = false
+                        log_debug("Unpausing game")
+                        timer.resume_group("colonist_movement_group") -- resume game timers
+                        animation_system.replaceAnimatedObjectOnEntity(
+                            globals.ui.pauseButtonAnimationEntity, -- entity to replace
+                            "tile_0538.png", -- change to pause icon
+                            true -- true if sprite id
+                        ) -- change to unpause icon
+                        animation_system.resizeAnimationObjectsInEntityToFit(
+                            globals.ui.pauseButtonAnimationEntity,
+                            40,   -- width
+                            40    -- height
+                        )
+                    else
+                        globals.gamePaused = true
+                        log_debug("Pausing game")
+                        timer.pause_group("colonist_movement_group") -- pause game timers
+                        animation_system.replaceAnimatedObjectOnEntity(
+                            globals.ui.pauseButtonAnimationEntity, -- entity to replace
+                            "tile_0537.png", -- change to play icon
+                            true -- true if sprite id
+                        ) -- change to pause icon
+                        animation_system.resizeAnimationObjectsInEntityToFit(
+                            globals.ui.pauseButtonAnimationEntity,
+                            40,   -- width
+                            40    -- height
+                        )
+                    end
+                    
+                end)
+                :build()
+        )
+        :addChild(pauseButtonDef)
+        :build()
+        
+    -- create a new UI box for the pause button
+    globals.ui.pauseButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 100, y = 10}, pauseButtonRow)
+    -- align the pause button UI box to the right side of the screen
+    local pauseButtonTransform = registry:get(globals.ui.pauseButtonUIBox, Transform)
+    pauseButtonTransform.actualX = globals.screenWidth() - pauseButtonTransform.actualW - 10 -- 10 pixels from the right edge
+    pauseButtonTransform.visualX = pauseButtonTransform.actualX -- update visual position as well
+    -- above the shop button
+    local shopButtonTransform = registry:get(globals.ui.shopButtonUIBox, Transform)
+    pauseButtonTransform.actualY = shopButtonTransform.actualY - pauseButtonTransform.actualH - 10 -- 10 pixels below the shop button
+    pauseButtonTransform.visualY = pauseButtonTransform.actualY -- update visual position as well
 end
 
 function ui_defs.generateUIArchived() 

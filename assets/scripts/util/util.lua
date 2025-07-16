@@ -105,6 +105,18 @@ function showTooltip(titleText, bodyText)
   boxT.visualH = boxT.actualH
 end
 
+function toggleShopWindow() 
+  if (globals.isShopOpen) then
+      globals.isShopOpen = false
+      local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+      transform.actualY = globals.screenHeight() -- hide the shop UI box
+  else
+      globals.isShopOpen = true
+      local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+      transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2-- show the shop UI box
+  end
+end
+
 function showNewAchievementPopup(achievementID)
   if not globals.ui.newAchievementUIBox then
     log_debug("showNewAchievementPopup: newAchievementUIBox is not set up, skipping")

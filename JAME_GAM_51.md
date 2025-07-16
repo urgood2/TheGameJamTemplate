@@ -1,3 +1,5 @@
+- progress bar doesn't render properly when inside a uibox and given alginment - only renders at the inner top. why?
+
 - end of day- bring up shop screen
 - close button for shop
 - building placement

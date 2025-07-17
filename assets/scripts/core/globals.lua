@@ -29,12 +29,14 @@ globals.ownedRelics = {
 globals.structure_defs = {
   {
       id = "colonist_home",
+      spriteID = "3490-TheRoguelike_1_10_alpha_283.png", -- the sprite ID for the colonist home
       animation_entity = "colonistHomeButtoAnimationEntity", -- the animation entity for the colonist home
       ui_tooltip_title = "ui.colonist_home_tooltip_title", -- the title for the colonist home tooltip
       ui_tooltip_body = "ui.colonist_home_tooltip_body", -- the body
       text_entity = "colonistHomeTextEntity", -- the text entity for the colonist home, under globals table
       text = "ui.colonist_home_text", -- the text for the colonist home
-      cost = 5 -- the cost to buy the colonist home
+      cost = 5, -- the cost to buy the colonist home
+      currency_per_day = 3
   },
   {
       id = "duplicator",

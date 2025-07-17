@@ -59,6 +59,105 @@ local function clamp(val, min, max)
   return val
 end
 
+function handleNewDay()
+  timer.after(
+    1.0, -- delay in seconds
+    function()
+      -- set hours and minutes to 0
+      globals.game_time.hours = 0
+      globals.game_time.minutes = 0
+      ai.pause_ai_system()   -- pause the AI system
+      togglePausedState(true)
+      -- show the new day message
+      if registry:valid(globals.ui.newDayUIBox) then
+        local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
+        transformComp.actualY = globals.screenHeight() / 2 -
+        transformComp.actualH / 2                                                          -- center the new day message vertically
+      end
+      
+      -- for each colonist home, add a coin image to the location, tween it to the currency ui, then vanish it. Then add the currency to the player's resources
+      for _, colonistHomeEntry in ipairs(globals.structures.colonist_homes) do
+        
+        -- add a coin image to the location of the colonist home
+        local coinImage = animation_system.createAnimatedObjectWithTransform(
+          "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID
+          true             -- use animation, not sprite identifier, if false
+        )
+        animation_system.resizeAnimationObjectsInEntityToFit(
+          coinImage,
+            globals.tileSize,   -- width
+            globals.tileSize    -- height
+        )
+        
+        local transformComp = registry:get(coinImage, Transform)
+        local t = registry:get(colonistHomeEntry.entity, Transform)
+        -- align above the home
+        transformComp.actualX = t.actualX + t.actualW / 2 - transformComp.actualW / 2
+        transformComp.actualY = t.actualY - transformComp.actualH / 2 - 5
+        transformComp.visualX = transformComp.actualX -- snap X
+        transformComp.visualY = transformComp.actualY -- snap Y
+        
+        -- spawn particles at the center of the coin image
+        spawnCircularBurstParticles(
+          transformComp.actualX + transformComp.actualW / 2,
+          transformComp.actualY + transformComp.actualH / 2,
+          10, -- number of particles
+          0.3 -- particle size
+        )
+        
+        timer.after(
+          1.5,
+          function()
+            if not registry:valid(coinImage) then
+              log_debug("Coin image entity is not valid, skipping tweening")
+              return
+            end
+            
+            
+            -- tween the coin image to the currency UI box
+            local uiBoxTransform = registry:get(globals.ui.currencyUIBox, Transform)
+            local transformComp = registry:get(coinImage, Transform)
+            transformComp.actualX = uiBoxTransform.actualX + uiBoxTransform.actualW / 2 - transformComp.actualW / 2
+            transformComp.actualY = uiBoxTransform.actualY + uiBoxTransform.actualH / 2 - transformComp.actualH / 2
+            
+            
+            
+          end
+        )
+        
+        -- delete it after 0.5 seconds
+        timer.after(
+          2.2, -- delay in seconds
+          function()
+            if registry:valid(coinImage) then
+              registry:destroy(coinImage) -- remove the coin image entity
+            end
+            -- add the currency to the player's resources
+            globals.currency = globals.currency + findInTable(
+              globals.structure_defs,
+              "id",
+              "colonist_home"
+            ).currency_per_day -- add the currency per day for the colonist home
+          end
+        )
+      end
+
+      -- after 1 second, hide the new day message and show the shop menu
+      timer.after(
+        3.6,     -- delay in seconds
+        function()
+          if registry:valid(globals.ui.newDayUIBox) then
+            local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
+            transformComp.actualY = globals.screenHeight()
+          end
+
+          toggleShopWindow()       -- toggle the shop window
+        end
+      )
+    end
+  )
+end
+
 -- Conveniene function to drive your tooltip
 function showTooltip(titleText, bodyText)
   local titleEnt = globals.ui.tooltipTitleText
@@ -109,11 +208,11 @@ function toggleShopWindow()
   if (globals.isShopOpen) then
     globals.isShopOpen = false
     local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
-    transform.actualY = globals.screenHeight()   -- hide the shop UI box
+    transform.actualY = globals.screenHeight() -- hide the shop UI box
   else
     globals.isShopOpen = true
     local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
-    transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2   -- show the shop UI box
+    transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2 -- show the shop UI box
   end
 end
 
@@ -255,15 +354,15 @@ function cycleConverter(inc)
   if locked then
     title                   = localization.get("ui.converter_locked_title")
     local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs
-    [globals.selectedConverterIndex])
+      [globals.selectedConverterIndex])
     body                    = localization.get("ui.converter_locked_body") .. requirementString
   else
     local costString        = getCostStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
     local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs
-    [globals.selectedConverterIndex])
+      [globals.selectedConverterIndex])
     title                   = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_title)
     body                    = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body) ..
-    costString .. requirementString
+        costString .. requirementString
   end
 
   log_debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
@@ -315,16 +414,16 @@ function cycleBuilding(inc)
   if locked then
     title                   = localization.get("ui.building_locked_title")
     local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs
-    [globals.selectedBuildingIndex])
+      [globals.selectedBuildingIndex])
     body                    = localization.get("ui.building_locked_body") .. requirementString
   else
     local costString = getCostStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
     local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs
-    [globals.selectedBuildingIndex])
+      [globals.selectedBuildingIndex])
     log_debug("Cost string for building: ", costString)
     title = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_title)
     body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body) ..
-    costString .. requirementString
+        costString .. requirementString
   end
 
   -- 3) hook up hover callbacks
@@ -545,8 +644,8 @@ function getCostStringForBuildingOrConverter(buildingOrConverterDef)
   for currency, amount in pairs(cost) do
     log_debug("Cost for currency: ", currency, " amount: ", amount)
     costString = costString ..
-    localization.get("ui.cost_tooltip_postfix",
-      { cost = amount, currencyName = globals.currencies[currency].human_readable_name }) .. " "
+        localization.get("ui.cost_tooltip_postfix",
+          { cost = amount, currencyName = globals.currencies[currency].human_readable_name }) .. " "
   end
   return costString
 end
@@ -563,8 +662,8 @@ function getCostStringForMaterial(converterDef)
   print_table(cost)
   for currency, amount in pairs(cost) do
     costString = costString ..
-    localization.get("ui.material_requirement_tooltip_postfix",
-      { cost = amount, currencyName = globals.currencies[currency].human_readable_name }) .. " "
+        localization.get("ui.material_requirement_tooltip_postfix",
+          { cost = amount, currencyName = globals.currencies[currency].human_readable_name }) .. " "
   end
   return costString
 end
@@ -575,59 +674,178 @@ function togglePausedState(forcePause)
   -- if forcePause is boolean → use that
   local willPause
   if forcePause == nil then
-      willPause = not globals.gamePaused
+    willPause = not globals.gamePaused
   else
-      willPause = forcePause
+    willPause = forcePause
   end
 
   if willPause then
-      -- → go into paused state
-      globals.gamePaused = true
-      log_debug("Pausing game")
-      ai.pause_ai_system()
-      timer.pause_group("colonist_movement_group")
+    -- → go into paused state
+    globals.gamePaused = true
+    log_debug("Pausing game")
+    ai.pause_ai_system()
+    timer.pause_group("colonist_movement_group")
+    if globals.ui.pauseButtonAnimationEntity then
       animation_system.replaceAnimatedObjectOnEntity(
-          globals.ui.pauseButtonAnimationEntity,
-          "tile_0537.png",  -- play icon
-          true
+        globals.ui.pauseButtonAnimationEntity,
+        "tile_0537.png",     -- play icon
+        true
       )
       animation_system.resizeAnimationObjectsInEntityToFit(
-          globals.ui.pauseButtonAnimationEntity, 40, 40
+        globals.ui.pauseButtonAnimationEntity, 40, 40
       )
+    end
   else
-      -- → come out of paused state
-      globals.gamePaused = false
-      log_debug("Unpausing game")
-      ai.resume_ai_system()
-      timer.resume_group("colonist_movement_group")
+    -- → come out of paused state
+    globals.gamePaused = false
+    log_debug("Unpausing game")
+    ai.resume_ai_system()
+    timer.resume_group("colonist_movement_group")
+    if globals.ui.pauseButtonAnimationEntity then
       animation_system.replaceAnimatedObjectOnEntity(
-          globals.ui.pauseButtonAnimationEntity,
-          "tile_0538.png",  -- pause icon
-          true
+        globals.ui.pauseButtonAnimationEntity,
+        "tile_0538.png",     -- pause icon
+        true
       )
       animation_system.resizeAnimationObjectsInEntityToFit(
-          globals.ui.pauseButtonAnimationEntity, 40, 40
+        globals.ui.pauseButtonAnimationEntity, 40, 40
       )
+    end
   end
 end
 
-
 -- starts walk animation for an entity
 function startEntityWalkMotion(e)
-  timer.every(0.5, 
+  timer.every(0.5,
     function()
-        local t = registry:get(e, Transform)
-        t.actualR = 10 * math.sin(GetTime() * 4) -- Multiply GetTime() by a factor to increase oscillation speed
+      local t = registry:get(e, Transform)
+      t.actualR = 10 * math.sin(GetTime() * 4)   -- Multiply GetTime() by a factor to increase oscillation speed
     end,
-    0, 
-    true, 
-    function ()
-        local t = registry:get(e, Transform)
-        t.actualR = 0
+    0,
+    true,
+    function()
+      local t = registry:get(e, Transform)
+      t.actualR = 0
     end,
     e .. "_walk_timer" -- unique timer name for this entity
-)
+  )
+end
 
+function buyNewColonistHomeCallback() 
+  local structureDef = findInTable(globals.structure_defs, "id", "colonist_home")
+  
+  -- check if the player has enough resources to buy the colonist home
+  local cost = structureDef.cost
+  if cost > globals.currency then
+    log_debug("Not enough resources to buy colonist home")
+    newTextPopup(
+      localization.get("ui.not_enough_currency"),
+      globals.screenWidth() / 2,
+      globals.screenHeight() / 2 - 100,
+      2
+    )
+    return  
+  end
+  
+  -- deduct the cost from the player's resources
+  globals.currency = globals.currency - cost
+  log_debug("Deducted", cost, "from player's resources")
+  
+  -- create a new colonist home entity
+  local colonistHomeEntity = create_transform_entity()
+  animation_system.setupAnimatedObjectOnEntity(
+    colonistHomeEntity,
+    structureDef.spriteID, -- Default animation ID
+    true,                  -- ? generate a new still animation from sprite
+    nil,                   -- shader_prepass, -- Optional shader pass config
+    true
+  )
+  
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    colonistHomeEntity,
+    globals.tileSize, -- width
+    globals.tileSize  -- height
+  )
+  
+  -- make the object draggable
+  local gameObjectState = registry:get(colonistHomeEntity, GameObject).state
+  gameObjectState.dragEnabled = true
+  gameObjectState.clickEnabled = true
+  gameObjectState.hoverEnabled = true
+  gameObjectState.collisionEnabled = true 
+  
+  -- create a new text entity
+  local infoText = ui.definitions.getNewDynamicTextEntry(
+    function() return localization.get("ui.drag_me") end, -- initial text
+    15.0,                                                 -- font size
+    "bump"                                                -- animation spec  
+  ).config.object
+  
+  -- make the text entity follow the colonist home entity
+  transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, colonistHomeEntity,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong,   
+    InheritedPropertiesSync.Strong,
+    Vec2(0, -20) -- offset the text above the colonist home
+  );
+  
+  -- now locate the colonist home entity in the game world
+  local transformComp = registry:get(colonistHomeEntity, Transform)
+  transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
+  transformComp.actualY = globals.screenHeight() - 300  
+  
+  -- add onstopdrag method to the colonist home entity
+  local gameObjectComp = registry:get(colonistHomeEntity, GameObject)
+  gameObjectComp.methods.onStopDrag = function()
+    log_debug("Colonist home entity stopped dragging!") 
+    -- add to the table in the buildings table with the id of the building
+    table.insert(globals.structures.colonist_homes, { entity = colonistHomeEntity })
+    log_debug("Added colonist home entity to globals.structures: ", colonistHomeEntity, " for id: ", structureDef.id) 
+    local gameObjectComp = registry:get(colonistHomeEntity, GameObject)
+    local transformComp = registry:get(colonistHomeEntity, Transform)
+    local gameObjectState = gameObjectComp.state
+    -- get the grid that it's in, grid is 64 pixels wide
+    local gridX = math.floor(transformComp.actualX / 64)
+    local gridY = math.floor(transformComp.actualY / 64)
+    log_debug("Colonist home entity is in grid: ", gridX, gridY)  
+    -- snap the entity to the grid, but center it in the grid cell  
+    local magic_padding = 2
+    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding -- center it in the grid cell
+    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
+    -- make the entity no longer draggable
+    gameObjectState.dragEnabled = false
+    gameObjectState.clickEnabled = false
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true 
+    -- remove the text entity
+    registry:destroy(infoText)  
+    -- spawn particles at the colonist home's position center
+    spawnCircularBurstParticles(
+      transformComp.actualX + transformComp.actualW / 2,
+      transformComp.actualY + transformComp.actualH / 2,
+      20, -- number of particles
+      0.5 -- particle size
+    ) 
+    transform.InjectDynamicMotion(colonistHomeEntity, 1.0, 1) 
+    log_debug("add on hover/stop hover methods to the colonist home entity")
+    -- add on hover/stop hover methods to the colonist home entity
+    gameObjectComp.methods.onHover = function()
+      showTooltip(
+        localization.get(structureDef.ui_tooltip_title),
+        localization.get(structureDef.ui_tooltip_body)
+      )
+    end
+    gameObjectComp.methods.onStopHover = function()
+      log_debug("Colonist home entity stopped hovering!")
+      -- hideTooltip()
+    end
+    
+    -- spawn a new colonist at the colonist home
+    spawnNewColonist()
+    log_debug("Spawned new colonist at the colonist home")
+  end
+  
 end
 
 function buyNewDuplicatorCallback()
@@ -701,12 +919,12 @@ function buyNewDuplicatorCallback()
   local gameObjectComp = registry:get(duplicatorEntity, GameObject)
   gameObjectComp.methods.onStopDrag = function()
     log_debug("Duplicator entity stopped dragging!")
-    
-    
+
+
     -- add to the table in the buildings table with the id of the building
-    table.insert(globals.structures.duplicators, {entity = duplicatorEntity})
+    table.insert(globals.structures.duplicators, { entity = duplicatorEntity })
     log_debug("Added duplicator entity to globals.structures: ", duplicatorEntity, " for id: ", structureDef.id)
-    
+
     local gameObjectComp = registry:get(duplicatorEntity, GameObject)
     local transformComp = registry:get(duplicatorEntity, Transform)
     local gameObjectState = gameObjectComp.state

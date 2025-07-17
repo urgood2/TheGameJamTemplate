@@ -31,7 +31,7 @@ function moveEntityTowardGoalOneIncrement(e, goalLoc, dt)
     end
 end
 
-function spawnNewColonist()
+function spawnNewColonist(x, y)
     -- 1) Spawn a new kobold AI entity
     local colonist = create_ai_entity("kobold")
         
@@ -74,10 +74,16 @@ function spawnNewColonist()
 
     shaderPipelineComp:addPass("random_displacement_anim")
     
-    -- 3) Randomize its start position
-    local tr = registry:get(colonist, Transform)
-    tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
-    tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+    -- 3) Randomize its start position, unless x and y are provided
+    if (x and y) then
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = x
+        tr.actualY = y
+    else
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
+        tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+    end
     
     
     local hpText = ui.definitions.getNewDynamicTextEntry(

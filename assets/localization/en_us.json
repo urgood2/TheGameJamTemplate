@@ -1,5 +1,7 @@
 {
 	"ui": {
+		"colonist_home_tooltip_title": "Colonist Home",
+		"colonist_home_tooltip_body": "This is a colonist home.\nIt houses a single colonist.",
 		"duplicator_tooltip_title": "Duplicator",
 		"duplicator_tooltip_body": "This is a duplicator.\nIt duplicates a colonist, but at a cost!",
 		"colonistHPText": "HP: {hp}/{maxHp}",

@@ -29,6 +29,7 @@ function ui_defs.generateUI()
     
     
     timer.every(0.5, function()
+        log_debug("Updating game time...")
         -- update the time text every second
         local text = localization.get("ui.time_ui_format", {hour = globals.game_time.hours, minute = math.floor(globals.game_time.minutes), am_pm = globals.game_time.hours < 12 and "AM" or "PM"})
         TextSystem.Functions.setText(globals.ui.timeTextEntity.config.object, text)
@@ -329,6 +330,10 @@ function ui_defs.generateUI()
         findInTable(globals.structure_defs, "id", "colonist_home").cost -- cost to buy the colonist home
     )
     
+    home_structure_def.config.buttonCallback = function ()
+        buyNewColonistHomeCallback()
+    end
+    
     local duplicator_structure_def = createStructurePlacementButton(
         "3641-TheRoguelike_1_10_alpha_434.png", -- sprite ID for duplicator
         "duplicatorButtonAnimationEntity", -- global animation handle
@@ -411,6 +416,8 @@ function ui_defs.generateUI()
         ""                       -- animation spec
     )
     
+    globals.ui.currencyTextEntity.config.minWidth = 100
+    
     -- new timer to update the currency text every second
     timer.every(1, function()
         -- update the currency text every second
@@ -426,7 +433,7 @@ function ui_defs.generateUI()
             UIConfigBuilder.create()
                 :addColor(util.getColor("blank"))
                 -- :addShadow(true) --- IGNORE ---
-                :addEmboss(4.0)
+                -- :addEmboss(4.0)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -571,7 +578,9 @@ function ui_defs.generateUI()
     globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRow)
     -- align the relics UI box to the left side of the screen, and top
     local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
-    relicsTransform.actualX = 100 -- 100 pixels from the left edge
+    local currencyBoxTrnsform = registry:get(globals.ui.currencyUIBox, Transform)
+    
+    relicsTransform.actualX = currencyBoxTrnsform.actualX + currencyBoxTrnsform.actualW + 10 -- 10 pixels from the right edge of the currency box
     relicsTransform.visualX = relicsTransform.actualX -- update visual position as well
     relicsTransform.actualY = 10 -- 10 pixels from the top edge
     relicsTransform.visualY = relicsTransform.actualY -- update visual position as well

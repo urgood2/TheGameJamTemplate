@@ -596,35 +596,7 @@ function main.update(dt)
         
         -- new day has dawned. pause the game and show the new day message
         
-        timer.after(
-            1.0, -- delay in seconds
-            function()
-                -- set hours and minutes to 0
-                globals.game_time.hours = 0
-                globals.game_time.minutes = 0
-                ai.pause_ai_system() -- pause the AI system
-                togglePausedState(true)
-                -- show the new day message
-                if registry:valid(globals.ui.newDayUIBox) then
-                    local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
-                    transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2 -- center the new day message vertically
-                end
-                
-                -- after 1 second, hide the new day message and show the shop menu
-                timer.after(
-                    3.0, -- delay in seconds
-                    function()
-                        
-                        if registry:valid(globals.ui.newDayUIBox) then
-                            local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
-                            transformComp.actualY = globals.screenHeight() 
-                        end
-                        
-                        toggleShopWindow() -- toggle the shop window
-                    end
-                )
-            end
-        )
+        handleNewDay()
         
     end
     -- log_debug("time:", globals.game_time.hours, ":", globals.game_time.minutes, "days:", globals.game_time.days)

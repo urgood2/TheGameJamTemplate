@@ -42,6 +42,7 @@ return {
     
     avilable_duplicator = function(entity, dt)
         -- Check if the duplicator table is not empty, and there is one with taken flag not set
+        local duplicatorAvailable = false
         if #globals.structures.duplicators > 0 then
             for _, duplicatorEntry in ipairs(globals.structures.duplicators) do
                 if not duplicatorEntry.taken then
@@ -50,9 +51,25 @@ return {
                     log_debug("avilable_duplicator: Found an available duplicator for entity " .. tostring(entity))
                     -- save in blackboard
                     setBlackboardInt(entity, "duplicator_available", duplicatorEntry.entity)
-                    return true
+                    
+                    duplicatorAvailable = true
+                    break
                 end
             end
+        end
+        
+        if not duplicatorAvailable then
+            
+            -- if we previously found one, then don't touch world state
+            if getBlackboardInt(entity, "duplicator_available") ~= -1 then
+                log_debug("avilable_duplicator: one still available for entity ", tostring(entity))
+                return
+            end
+            -- If no duplicator is available, set the world state to false
+            ai.set_worldstate(entity, "duplicator_available", false)
+            log_debug("avilable_duplicator: No available duplicators for entity " .. tostring(entity))
+            -- save in blackboard
+            setBlackboardInt(entity, "duplicator_available", -1) -- -1 indicates no duplicator available
         end
     end
 }

@@ -74,30 +74,72 @@ wrap_noarg_callback(sol::function luaFunc) {
     };
 }
 
+void dump_lua_state(lua_State* L) {
+    // 1) Status (OK, YIELD, ERRRUN, ERRMEM, ERRERR, etc)
+    int stat = lua_status(L);
+    SPDLOG_DEBUG("Lua status: {} ({})", stat, lua_typename(L, stat));
+
+    // 2) Memory usage (in KBytes)
+    int kb = lua_gc(L, LUA_GCCOUNT, 0);
+    SPDLOG_DEBUG("Lua memory: {} KB", kb);
+
+    // 3) Stack top
+    int top = lua_gettop(L);
+    SPDLOG_DEBUG("Lua stack top = {}", top);
+
+
+    // 5) Backtrace of call frames
+    {
+      lua_Debug ar;
+      int level = 0;
+      while (lua_getstack(L, level, &ar)) {
+        lua_getinfo(L, "nSl", &ar);
+        SPDLOG_DEBUG(
+          "[frame {}] {}:{}  function = {}",
+          level,
+          ar.short_src,
+          ar.currentline,
+          (ar.name ? ar.name : "<anonymous>")
+        );
+        ++level;
+      }
+    }
+}
+
+
     // for main actions in timers
     static std::function<void(std::optional<float>)>
 wrap_timer_action(sol::function action) {
-        // move the raw Lua function into a protected wrapper
-        sol::protected_function protectedAction(std::move(action));
+    sol::protected_function protectedAction(std::move(action));
 
-        // return a std::function that checks dt and handles errors
-        return [protectedAction = std::move(protectedAction)]
-            (std::optional<float> dt) mutable
-        {
-            sol::protected_function_result result;
-            if (dt.has_value()) {
-                result = protectedAction(*dt);
-            } else {
-                result = protectedAction();  // call with no args
-            }
+    return [protectedAction = std::move(protectedAction)]
+           (std::optional<float> dt) mutable
+    {
+        // 1) Grab the raw lua_State pointer
+        lua_State* L = protectedAction.lua_state();
+        
+        dump_lua_state(L);
 
-            if (!result.valid()) {
-                sol::error err = result;
-                SPDLOG_ERROR("Timer action failed: {}", err.what());
-                std::abort();
-            }
-        };
-    }
+        sol::protected_function_result result;
+        if (dt.has_value()) {
+            SPDLOG_DEBUG("   -> calling Lua with dt");
+            result = protectedAction(*dt);
+            SPDLOG_DEBUG("   -> returned from Lua dt-call");
+        } else {
+            SPDLOG_DEBUG("   -> calling Lua with NO args");
+            result = protectedAction();
+            SPDLOG_DEBUG("   -> returned from Lua no-arg call");
+        }
+
+        if (!result.valid()) {
+            sol::error err = result;
+            SPDLOG_ERROR("Timer action failed: {}", err.what());
+            std::abort();
+        }
+
+        SPDLOG_DEBUG("<< Timer callback end");
+    };
+}
 
     
     /*

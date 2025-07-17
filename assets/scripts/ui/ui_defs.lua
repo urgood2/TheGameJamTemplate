@@ -29,7 +29,7 @@ function ui_defs.generateUI()
     -- timer to update weather 
     timer.every(1, function()
         -- update the weather text every second
-        local text = localization.get("ui.weather_ui_format", {weather = globals.currentWeather})
+        local text = localization.get("ui.weather_ui_format", {weather = globals.current_weather_event})
         TextSystem.Functions.setText(globals.ui.weatherTextEntity.config.object, text)
         
     end)

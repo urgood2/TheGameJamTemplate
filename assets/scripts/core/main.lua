@@ -566,6 +566,37 @@ function main.init()
                 nil, -- no "after" callback
                 "acid_rain_particle_spawn"
             )
+            
+            -- choose a random colonist with 50% chance
+            if random_utils.random_int(0, 1) == 0 then
+                local acid_rain_def = findInTable(
+                    globals.weather_event_defs, "id", "acid_rain"
+                )
+                
+                -- choose a random colonist
+                local colonist = globals.colonists[random_utils.random_int(1, #globals.colonists)]
+                
+                log_debug("Acid rain event: applying damage to colonist:", colonist)
+                
+                -- set the blackboard health value (reduce health by 1)
+                if colonist and registry:valid(colonist) then
+                    
+                    local damage_done = random_utils.random_int(1, acid_rain_def.base_damage) -- random damage between 1 and base damage
+                    
+                    setBlackboardFloat(colonist, "health", getBlackboardFloat(colonist, "health") - damage_done)  
+                    
+                    --TODO: damage mitigatoin through relics
+                    
+                    -- show a text popup above the colonist
+                    local colonistTransform = registry:get(colonist, Transform)
+                    newTextPopup(
+                        localization.get("ui.acid_rain_damage_text", {damage = damage_done}), -- text to display
+                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
+                        colonistTransform.actualY - 50, -- position above the colonist
+                        5 -- duration in seconds
+                    )
+                end
+            end
         end
     end,
     0, -- start immediately

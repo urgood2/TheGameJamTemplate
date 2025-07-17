@@ -107,3 +107,5 @@
 - sprite order sorting so what's behind somehting can properly go behind, etc.
 - erase blackboard value, check if value exists in blackboard
 - make get/set blackboard methods return lua nil if invalid instead of throwing error
+- cancel_self() function which will queue a cancel for the current timer after loop finishes to avoid triggering errors
+- dynamic text entity will reset its alignment and set to center on its master entity when updated via setText

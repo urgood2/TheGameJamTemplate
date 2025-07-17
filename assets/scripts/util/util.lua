@@ -293,39 +293,60 @@ function centerTransformOnScreen(entity)
   transformComp.visualY = transformComp.actualY -- snap Y
 end
 
-function newTextPopup(text, x, y, duration)
-  -- create a new text popup entity
-  local text = ui.definitions.getNewDynamicTextEntry(
-    function() return text end, -- initial text
-    30.0,                       -- font size
-    "rainbow"                   -- animation spec
-  ).config.object
+function newTextPopup(textString, x, y, duration)
+  -- 1) spawn the dynamic text entry
+  local entry = ui.definitions.getNewDynamicTextEntry(
+    function() return textString end,  -- initial text
+    30.0,                              -- font size
+    "rainbow"                          -- animation spec
+  )
+  local entity = entry.config.object
 
-  -- set position
-  local transformComp = registry:get(text, Transform)
-  transformComp.actualX = globals.screenWidth() / 2
-  transformComp.actualY = globals.screenHeight() / 2 - 100
-  transformComp.visualX = transformComp.actualX
-  transformComp.visualY = transformComp.actualY
+  -- 2) fetch its transform and its size (set by the text system)
+  local tc = registry:get(entity, Transform)
+  local w, h = tc.actualW or 0, tc.actualH or 0
 
-  -- inject dynamic motion
-  transform.InjectDynamicMotion(text, 0.7, 16)
+  -- 3) default to center-screen if no x/y passed
+  x = x or (globals.screenWidth()  / 2)
+  y = y or (globals.screenHeight() / 2) - 100
 
-  -- timer to make it disappear
+  -- 4) shift so that (x,y) is the center
+  tc.actualX = x - w * 0.5
+  tc.actualY = y - h * 0.5
+  tc.visualX = tc.actualX
+  tc.visualY = tc.actualY
+
+  -- 5) give it some jiggle/motion
+  transform.InjectDynamicMotion(entity, 0.7, 16)
+  
+  timer.for_time(
+    duration and duration - .2 or 1.8, -- duration in seconds
+    function()
+      -- move text slowly upward
+      local tc2 = registry:get(entity, Transform)
+      tc2.actualY = tc2.actualY - 30 * GetFrameTime()
+      
+      local textComp = registry:get(entity, TextSystem.Text)
+      textComp.globalAlpha = textComp.globalAlpha - 0.1 * GetFrameTime() -- fade out the text
+    end,
+    nil, -- no after function
+    "text_popup_fade_out" -- timer name
+  )
+
+  -- 6) after duration, burst and destroy
   timer.after(duration or 2.0, function()
-    local transformComp = registry:get(text, Transform)
-
+    local tc2 = registry:get(entity, Transform)
     spawnCircularBurstParticles(
-      transformComp.actualX + transformComp.actualW / 2,
-      transformComp.actualY + transformComp.actualH / 2,
-      5,
-      0.2)
-
-    if registry:valid(text) then
-      registry:destroy(text) -- remove the text entity after the duration
+      tc2.actualX + tc2.actualW * 0.5,
+      tc2.actualY + tc2.actualH * 0.5,
+      5, 0.2
+    )
+    if registry:valid(entity) then
+      registry:destroy(entity)
     end
   end)
 end
+
 
 function hideTooltip()
   if (globals.ui.tooltipUIBox == nil) then

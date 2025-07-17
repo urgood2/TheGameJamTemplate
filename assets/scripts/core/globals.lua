@@ -8,7 +8,8 @@ globals.current_weather_event = "acid_rain" -- the current weather event, if any
 
 globals.weather_event_defs = {
   {
-    id = "acid_rain"
+    id = "acid_rain",
+    base_damage = 2
   },
   {
     id = "snow"
@@ -91,6 +92,11 @@ globals.game_time = {
 globals.colonists = globals.colonists or {} -- list of colonists in the game
 
 globals.ui = {
+  
+  colonist_ui = {
+    -- array with id: entity, hp_ui_text: entity
+  },
+  
   timeTextUIBox = nil, -- the UI box that contains the time text
   timeTextEntity = nil, -- the text entity that displays the time
   

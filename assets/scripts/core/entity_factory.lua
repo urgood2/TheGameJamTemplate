@@ -85,44 +85,46 @@ function spawnNewColonist(x, y)
         tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
     end
     
+    globals.ui.colonist_ui[colonist] = {
+        id = colonist, -- the entity ID of the colonist
+        hp_ui_text = nil -- will be set later
+    }
     
-    local hpText = ui.definitions.getNewDynamicTextEntry(
+    local textDef =  ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") }) end,  -- initial text
         20.0,                                 -- font size
         ""                       -- animation spec
-    ).config.object
+    )
+    
+    globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
+    
+    -- put in a uibox
+    local uiBox = ui.box.Initialize({},textDef   )
+    
+    -- update hp text every 0.5 seconds
+    timer.every(
+        0.5, -- every 0.5 seconds
+        function()
+            if (registry:valid(colonist) == true) then
+                text = localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") })
+                
+                TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
+            end
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "colonist_hp_text_update_" .. colonist -- unique tag per colonist
+    )
     
     -- anchor to the top center of the colonist 
-    transform.AssignRole(registry, hpText, InheritedPropertiesType.PermanentAttachment, colonist,
+    transform.AssignRole(registry, uiBox, InheritedPropertiesType.PermanentAttachment, colonist,
         InheritedPropertiesSync.Strong,
         InheritedPropertiesSync.Weak,
         InheritedPropertiesSync.Weak,
         InheritedPropertiesSync.Weak,
-        Vec2(0, -20) -- offset it a bit upwards
+        Vec2(0, -50) -- offset it a bit upwards
     );
-    
-    
-    -- uiBoxRole.extraAlignmentFinetuningOffset = Vec2(0, -40) -- offset it a bit upwards
-    
-    -- 4) timer for random movement within the screen bounds
-    -- timer.every(
-    --     1.0, -- every 1 second
-    --     function()
-    --         -- move the colonist by random amounts
-    --         local tr = registry:get(colonist, Transform)
-    --         local moveX = random_utils.random_int(-50, 50) -- move by a
-    --         local moveY = random_utils.random_int(-50, 50) -- move by a random amount
-    --         tr.actualX = lume.clamp(tr.actualX + moveX, 0, globals.screenWidth() - tr.actualW)
-    --         tr.actualY = lume.clamp(tr.actualY + moveY, 0, globals.screenHeight() - tr.actualH)
-  
-    --         -- log_debug("Colonist moved to: ", tr.actualX, tr.actualY)
-    --     end,
-    --     0, -- infinite repetitions
-    --     true, -- start immediately
-    --     nil, -- no "after" callback
-    --     "colonist_random_movement_" .. colonist, -- unique tag for this timer
-    --     "colonist_movement_group" -- group name for easy cancellation
-    -- )
     
 end
 

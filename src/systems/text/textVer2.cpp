@@ -223,6 +223,7 @@ namespace TextSystem
             "createdTime",                     &TextSystem::Text::createdTime,
             "effectStartTime",                 &TextSystem::Text::effectStartTime,
             "applyTransformRotationAndScale",  &TextSystem::Text::applyTransformRotationAndScale,
+            "globalAlpha",                   &TextSystem::Text::globalAlpha,
             "type_id",                         []() { return entt::type_hash<TextSystem::Text>::value(); }
         );
         {
@@ -2051,7 +2052,7 @@ namespace TextSystem
                         auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
                         auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
                         
-                        layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect](layer::CmdTexturePro *cmd) {
+                        layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [text, atlasTexture, sourceRect, destRect](layer::CmdTexturePro *cmd) {
                             cmd->texture = atlasTexture;
                             cmd->source = sourceRect;
                             cmd->offsetX = 0;
@@ -2059,7 +2060,7 @@ namespace TextSystem
                             cmd->size = {destRect.width, destRect.height};
                             cmd->rotationCenter = {0, 0};
                             cmd->rotation = 0;
-                            cmd->color = Fade(BLACK, 0.7f);
+                            cmd->color = Fade(BLACK, text.globalAlpha * 0.7f);
                         }, layerZIndex);
                         
                     }
@@ -2067,7 +2068,7 @@ namespace TextSystem
                         // ZoneScopedN("TextSystem::renderText-render text shadow");
                         // Draw shadow 
                         
-                        layer::QueueCommand<layer::CmdTextPro>(layerPtr, [fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale](layer::CmdTextPro *cmd) {
+                        layer::QueueCommand<layer::CmdTextPro>(layerPtr, [text, fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale](layer::CmdTextPro *cmd) {
                             cmd->text = utf8String.c_str();
                             cmd->font = font;
                             cmd->x = 0;
@@ -2076,7 +2077,7 @@ namespace TextSystem
                             cmd->rotation = 0;
                             cmd->fontSize = fontSize * renderScale;
                             cmd->spacing = spacing;
-                            cmd->color = Fade(BLACK, 0.7f);
+                            cmd->color = Fade(BLACK, text.globalAlpha * 0.7f);
                         }, layerZIndex);
                     }
 
@@ -2094,7 +2095,7 @@ namespace TextSystem
                     auto sourceRect = spriteFrame.frame;
                     auto atlasTexture = globals::textureAtlasMap[spriteFrame.atlasUUID];
                     auto destRect = Rectangle{0, 0, character.size.x, character.size.y};
-                    layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect, fgTint = character.fgTint](layer::CmdTexturePro *cmd) {
+                    layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [atlasTexture, sourceRect, destRect, fgTint = Color{.r = character.fgTint.r, .g = character.fgTint.g, .b = character.fgTint.b, .a = (unsigned char)(text.globalAlpha * character.fgTint.a) }](layer::CmdTexturePro *cmd) {
                         cmd->texture = atlasTexture;
                         cmd->source = sourceRect;
                         cmd->offsetX = 0;
@@ -2107,7 +2108,7 @@ namespace TextSystem
                 }
                 else {
                     // ZoneScopedN("TextSystem::renderText-render text");
-                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale, color = character.color](layer::CmdTextPro *cmd) {
+                    layer::QueueCommand<layer::CmdTextPro>(layerPtr, [fontSize = text.fontSize, spacing = text.fontData.spacing, font = text.fontData.font, renderScale, color = Color{.r = character.color.r, .g = character.color.g, .b = character.color.b, .a = (unsigned char)(text.globalAlpha * character.color.a) }](layer::CmdTextPro *cmd) {
                         cmd->text = utf8String.c_str();
                         cmd->font = font;
                         cmd->x = 0;

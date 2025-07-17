@@ -420,7 +420,7 @@ wrap_timer_action(sol::function action) {
                     tag, maybeGroup.value_or("")
                 );
             });
-        t.set_function("for",
+        t.set_function("for_time",
             [clone_to_main](std::variant<float,std::pair<float,float>> duration,
                 sol::function action,
                 sol::function after,

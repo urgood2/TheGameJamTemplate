@@ -134,6 +134,8 @@ namespace TextSystem
         std::vector<WaitPoint> waitPoints;
         std::unordered_map<std::string, sol::thread> luaWaitThreads; // Lua threads for wait points, keyed by the id of the wait point
         std::unordered_map<std::string, sol::coroutine> luaWaiters;
+        
+        float globalAlpha = 1.0f; // global alpha for the text, applied to all characters
 
     };
 

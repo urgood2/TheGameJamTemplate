@@ -19537,6 +19537,9 @@
         "VIOLET",
         "Violet"
     ],
+    "wander": [
+        "wander.lua"
+    ],
     "wheat": [
         "WHEAT"
     ],

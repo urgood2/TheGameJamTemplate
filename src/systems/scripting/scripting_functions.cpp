@@ -358,6 +358,11 @@ namespace scripting {
         stateToInit.set_function("getBlackboardFloat", getBlackboardFloat);
         rec.record_free_function({}, {"setBlackboardFloat", "---@param entity Entity\n---@param key string\n---@param value number\n---@return nil", "Sets a float value on an entity's blackboard.", true, false});
         rec.record_free_function({}, {"getBlackboardFloat", "---@param entity Entity\n---@param key string\n---@return number", "Gets a float value from an entity's blackboard.", true, false});
+        
+        stateToInit.set_function("setBlackboardVector2", setBlackBoardVector2);
+        stateToInit.set_function("getBlackboardVector2", getBlackBoardVector2);
+        rec.record_free_function({}, {"setBlackboardVector2", "---@param entity Entity\n---@param key string\n---@param value Vector2\n---@return nil", "Sets a Vector2 value on an entity's blackboard.", true, false});
+        rec.record_free_function({}, {"getBlackboardVector2", "---@param entity Entity\n---@param key string\n---@return Vector2", "Gets a Vector2 value from an entity's blackboard.", true, false});
 
         stateToInit.set_function("setBlackboardBool", setBlackboardBool);
         stateToInit.set_function("getBlackboardBool", getBlackboardBool);
@@ -520,6 +525,11 @@ namespace scripting {
         lua["GetFrameTime"] = []() -> float {
             // Get the time elapsed since the last frame
             return main_loop::mainLoop.smoothedDeltaTime;
+        };
+        
+        lua["GetTime"] = []() -> float {
+            // Get the time elapsed since the last frame
+            return GetTime();
         };
         
         lua["GetScreenWidth"] = []() -> int {
@@ -713,56 +723,69 @@ namespace scripting {
      * Convenience functions for dealing with std::any blackboard
      * ------------------------------------------------------
      */
+     
+    auto setBlackBoardVector2(entt::entity entity, std::string key, Vector2 valueToSet) -> void {
+        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        blackboard.set(key, valueToSet);
+        // SPDLOG_DEBUG("{}: Setting blackboard vector2 \"{}\" to ({}, {})", static_cast<int>(entity), key, valueToSet.x, valueToSet.y);
+    }
+    
+    auto getBlackBoardVector2(entt::entity entity, std::string key) -> Vector2 {
+        auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+        auto value = blackboard.get<Vector2>(key);
+        // SPDLOG_DEBUG("{}: Getting blackboard vector2 \"{}\": ({}, {})", static_cast<int>(entity), key, value.x, value.y);
+        return value;
+    }
 
     auto setBlackboardFloat(entt::entity entity, std::string key, float valueToSet) -> void {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
-        SPDLOG_DEBUG("{}: Setting blackboard float \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
+        // SPDLOG_DEBUG("{}: Setting blackboard float \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardFloat(entt::entity entity, std::string key) -> float {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         auto value = blackboard.get<float>(key);
-        SPDLOG_DEBUG("{}: Getting blackboard float \"{}\": {}", static_cast<int>(entity), key, value);
+        // SPDLOG_DEBUG("{}: Getting blackboard float \"{}\": {}", static_cast<int>(entity), key, value);
         return value;
     }
 
     auto setBlackboardBool(entt::entity entity, std::string key, bool valueToSet) -> void {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
-        SPDLOG_DEBUG("{}: Setting blackboard bool \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
+        // SPDLOG_DEBUG("{}: Setting blackboard bool \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardBool(entt::entity entity, std::string key) -> bool {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         auto value = blackboard.get<bool>(key);
-        SPDLOG_DEBUG("{}: Getting blackboard bool \"{}\": {}", static_cast<int>(entity), key, value);
+        // SPDLOG_DEBUG("{}: Getting blackboard bool \"{}\": {}", static_cast<int>(entity), key, value);
         return value;
     }
 
     auto setBlackboardInt(entt::entity entity, std::string key, int valueToSet) -> void {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
-        SPDLOG_DEBUG("{}: Setting blackboard int \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
+        // SPDLOG_DEBUG("{}: Setting blackboard int \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardInt(entt::entity entity, std::string key) -> int {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         auto value = blackboard.get<int>(key);
-        SPDLOG_DEBUG("{}: Getting blackboard int \"{}\": {}", static_cast<int>(entity), key, value);
+        // SPDLOG_DEBUG("{}: Getting blackboard int \"{}\": {}", static_cast<int>(entity), key, value);
         return value;
     }
 
     auto setBlackboardString(entt::entity entity, std::string key, std::string valueToSet) -> void {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
-        SPDLOG_DEBUG("{}: Setting blackboard string \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
+        // SPDLOG_DEBUG("{}: Setting blackboard string \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 
     auto getBlackboardString(entt::entity entity, std::string key) -> std::string {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         auto value = blackboard.get<std::string>(key);
-        SPDLOG_DEBUG("{}: Getting blackboard string \"{}\": {}", static_cast<int>(entity), key, value);
+        // SPDLOG_DEBUG("{}: Getting blackboard string \"{}\": {}", static_cast<int>(entity), key, value);
         return value;
     }
 

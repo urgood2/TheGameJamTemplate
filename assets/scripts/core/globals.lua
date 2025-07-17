@@ -2,6 +2,8 @@
 
 globals = globals or {}
 
+globals.defaultColonistMoveSpeed = 10 -- speed at which colonists move, in pixels per second
+
 globals.currency = 5 -- the current amount of currency the player has
 
 globals.gamePaused = false -- whether the game is currently paused

@@ -417,6 +417,23 @@ function setBlackboardFloat(...) end
 function getBlackboardFloat(...) end
 
 ---
+--- Sets a Vector2 value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value Vector2
+---@return nil
+function setBlackboardVector2(...) end
+
+---
+--- Gets a Vector2 value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return Vector2
+function getBlackboardVector2(...) end
+
+---
 --- Sets a boolean value on an entity's blackboard.
 ---
 ---@param entity Entity

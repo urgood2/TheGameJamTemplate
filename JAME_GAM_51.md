@@ -100,3 +100,5 @@
 - add chain funcionality to timer?
 - maybe a text log of sorts, with scroll?
 - bug whre fine tuning offset not respected at render time, ui box aligns correctly, but not the root for ui box 
+- is there a way to make blackboard a lua table that can be reliably fetched from lua?
+- ui box aligned to a transform with extrafintuning goes haywire when trasnform's rotation changes

@@ -4,44 +4,44 @@
 -- The update function should return ActionResult.SUCCESS when the action is complete, ActionResult.RUNNING when the action is still running and ActionResult.FAILURE when the action has failed. It can also use functions like wait() to wait for a certain amount of time, but it must return one of the three values eventually.
 
 return {
-    name = "wander",
-    cost = 5, -- make less desirable
-    pre = { wander = false },
-    post = { wander = true },
+    name = "use_duplicator",
+    cost = 1, -- lowest cost, as it is a common action
+    pre = { duplicator_available = true },
+    post = { duplicator_available = false },
 
     start = function(e)
-        log_debug("Entity", e, "is wandering.")
+        log_debug("Entity", e, "is going to duplicator.")
     end,
 
     update = function(e, dt) -- update can be coroutine
-        log_debug("Entity", e, "wander update.")
-        wait(1.0)
+        log_debug("Entity", e, "use_duplicator update.")
         
-        --TODO: find random location on the map, activate movement towards that location, continue wandering until the entity reaches that location, turn off walk timer
+        -- get the duplicator from the blackboard
+        local duplicatorEntity = getBlackboardInt(e, "duplicator_available")
         
-        local goalLoc = Vec2(random_utils.random_float(0, globals.screenWidth()), random_utils.random_float(0, globals.screenHeight()))
+        -- set the duplicator to taken
+        local entry = findInTable(globals.structures.duplicators, "entity", duplicatorEntity)
+        entry.taken = true
+        log_debug("use_duplicator: Entity", e, "is using duplicator", duplicatorEntity)
         
-        -- save in blackboard
-    
-        -- setBlackboardVector2(e, "wander_target", goalLoc)
+        local t = registry:get(duplicatorEntity, Transform)
         
-        -- start a timer that will rotate the entity regularly to simulate walking
-        -- add a walk-timer that bounces rotation ±5° every half-second
+        local goalLoc = Vec2(t.actualX, t.actualY)
+        
         startEntityWalkMotion(e)
-        
         -- while the entity is not at the target location, continue wandering
         while true do
+            log_debug("use_duplicator: Entity", e, "moving towards duplicator at", goalLoc.x, goalLoc.y)
             if moveEntityTowardGoalOneIncrement(e, goalLoc, dt) == false then
-                log_debug("Entity", e, "has reached the wander target location.")
+                log_debug("Entity", e, "has reached the target location.")
                 break -- exit the loop when the entity reaches the target location
             end
         end
-        
         return ActionResult.SUCCESS
     end,
 
     finish = function(e)
-        log_debug("Done wandering: entity", e)
+        log_debug("Done use_duplicator: entity", e)
     end
 }
 

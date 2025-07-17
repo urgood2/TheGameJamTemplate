@@ -612,6 +612,24 @@ function togglePausedState(forcePause)
 end
 
 
+-- starts walk animation for an entity
+function startEntityWalkMotion(e)
+  timer.every(0.5, 
+    function()
+        local t = registry:get(e, Transform)
+        t.actualR = 10 * math.sin(GetTime() * 4) -- Multiply GetTime() by a factor to increase oscillation speed
+    end,
+    0, 
+    true, 
+    function ()
+        local t = registry:get(e, Transform)
+        t.actualR = 0
+    end,
+    e .. "_walk_timer" -- unique timer name for this entity
+)
+
+end
+
 function buyNewDuplicatorCallback()
   local structureDef = findInTable(globals.structure_defs, "id", "duplicator")
 
@@ -637,9 +655,6 @@ function buyNewDuplicatorCallback()
   -- create a new duplicator entity
   local duplicatorEntity = create_transform_entity()
 
-  -- add to the table in the buildings table with the id of the building
-  table.insert(globals.structures.duplicators, duplicatorEntity)
-  log_debug("Added duplicator entity to globals.structures: ", duplicatorEntity, " for id: ", structureDef.id)
 
   animation_system.setupAnimatedObjectOnEntity(
     duplicatorEntity,
@@ -686,6 +701,12 @@ function buyNewDuplicatorCallback()
   local gameObjectComp = registry:get(duplicatorEntity, GameObject)
   gameObjectComp.methods.onStopDrag = function()
     log_debug("Duplicator entity stopped dragging!")
+    
+    
+    -- add to the table in the buildings table with the id of the building
+    table.insert(globals.structures.duplicators, {entity = duplicatorEntity})
+    log_debug("Added duplicator entity to globals.structures: ", duplicatorEntity, " for id: ", structureDef.id)
+    
     local gameObjectComp = registry:get(duplicatorEntity, GameObject)
     local transformComp = registry:get(duplicatorEntity, Transform)
     local gameObjectState = gameObjectComp.state

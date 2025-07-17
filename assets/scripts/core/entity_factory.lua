@@ -1,4 +1,36 @@
 
+-- meant to be called within a coroutine.
+-- returns false if entity should stop.
+function moveEntityTowardGoalOneIncrement(e, goalLoc, dt) 
+    -- get the current position of the entity
+    local transformComp = registry:get(e, Transform)
+    local absYDiff = math.abs(transformComp.actualY - goalLoc.y)
+    local absXDiff = math.abs(transformComp.actualX - goalLoc.x)
+    -- check if the entity is close enough to the target location
+    if absYDiff < globals.defaultColonistMoveSpeed and absXDiff < globals.defaultColonistMoveSpeed then
+        log_debug("Entity", e, "has reached the wander target at", goalLoc)
+        -- stop the walk timer
+        timer.cancel(e .. "_walk_timer")
+        transformComp.actualR = 0 -- reset the rotation to 0
+        return false -- exit the loop if the entity is close enough to the target location 
+    else 
+        -- move towards the target location
+        local direction = Vec2(goalLoc.x - transformComp.actualX, goalLoc.y - transformComp.actualY)
+        -- normalize the direction vector
+        local length = math.sqrt(direction.x * direction.x + direction.y * direction.y)
+        if length > 0 then
+            direction.x = direction.x / length
+            direction.y = direction.y / length
+        end
+        -- move the entity in the direction of the target location
+        transformComp.actualX = transformComp.actualX + direction.x * globals.defaultColonistMoveSpeed * dt -- speed is 100 units per second 
+        transformComp.actualY = transformComp.actualY + direction.y * globals.defaultColonistMoveSpeed * dt
+        log_debug("Entity", e, "is walking towards", goalLoc, "at position", Vec2(transformComp.actualX, transformComp.actualY))
+        -- yield to allow other actions to run
+        coroutine.yield()
+    end
+end
+
 function spawnNewColonist()
     -- 1) Spawn a new kobold AI entity
     local colonist = create_ai_entity("kobold")

@@ -11966,6 +11966,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai_actions.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai_actions.json"
     ],
+    "action_duplicator_use": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/use_duplicator.lua"
+    ],
     "action_eat": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/eat.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions\\eat.lua"
@@ -16769,6 +16772,9 @@
     "dump_global_lua_script": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\lua_globals_dump.txt",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/lua_globals_dump.txt"
+    ],
+    "duplicator_use": [
+        "use_duplicator.lua"
     ],
     "dusky_mauve_palette_resurrect": [
         "RESURRECT_PALETTE_DUSKY_MAUVE"

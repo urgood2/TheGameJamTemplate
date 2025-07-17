@@ -38,5 +38,21 @@ return {
         -- ai.set_worldstate(entity, "enemyvisible", visible)
         -- local bb = get_blackboard(entity)
         -- bb.enemy_visible = visible
+    end,
+    
+    avilable_duplicator = function(entity, dt)
+        -- Check if the duplicator table is not empty, and there is one with taken flag not set
+        if #globals.structures.duplicators > 0 then
+            for _, duplicatorEntry in ipairs(globals.structures.duplicators) do
+                if not duplicatorEntry.taken then
+                    -- If we find a duplicator that is not taken, set the world state
+                    ai.set_worldstate(entity, "duplicator_available", true)
+                    log_debug("avilable_duplicator: Found an available duplicator for entity " .. tostring(entity))
+                    -- save in blackboard
+                    setBlackboardInt(entity, "duplicator_available", duplicatorEntry.entity)
+                    return true
+                end
+            end
+        end
     end
 }

@@ -551,6 +551,29 @@ function main.init()
     "tooltip_hide_timer" -- unique tag for this timer
     )
     
+    timer.every(1.0, function()
+        -- if a weather event is active, update the weather event
+        if (globals.current_weather_event == "acid_rain") then
+            -- TODO: spawn green particles everywhere
+        
+            timer.every(
+                0.1, -- every 0.1 seconds
+                function()
+                    spawnRainPlopAtRandomLocation()
+                end,
+                5, -- repeat 10 times
+                true, -- start immediately
+                nil, -- no "after" callback
+                "acid_rain_particle_spawn"
+            )
+        end
+    end,
+    0, -- start immediately
+    true,
+    nil, -- no "after" callback
+    "weather_event_timer" -- unique tag for this timer
+    )
+    
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 end
 

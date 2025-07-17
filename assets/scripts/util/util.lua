@@ -731,6 +731,19 @@ function startEntityWalkMotion(e)
   )
 end
 
+function spawnRainPlopAtRandomLocation()
+    local randomX = random_utils.random_int(0, globals.screenWidth() - 1)
+    local randomY = random_utils.random_int(0, globals.screenHeight() - 1)
+    spawnCircularBurstParticles(
+        randomX, -- X position
+        randomY, -- Y position
+        10, -- number of particles
+        0.5, -- lasting how long
+        util.getColor("drab_olive"), -- start color
+        util.getColor("green_mos") -- end color
+    )
+end
+
 function buyNewColonistHomeCallback() 
   local structureDef = findInTable(globals.structure_defs, "id", "colonist_home")
   

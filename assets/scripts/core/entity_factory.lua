@@ -126,7 +126,7 @@ function spawnNewColonist(x, y)
     
 end
 
-function spawnCircularBurstParticles(x, y, count, seconds)
+function spawnCircularBurstParticles(x, y, count, seconds, startColorParam, endColorParam)
     local initialSize   = 10             -- starting diameter of each circle
     local burstSpeed    = 200           -- pixels per second
     local growRate      = 20            -- how fast scale increases (same as your other function)
@@ -146,8 +146,8 @@ function spawnCircularBurstParticles(x, y, count, seconds)
                 velocity       = Vec2(vx, vy),
                 acceleration   = 0,      -- no gravity
                 lifespan       = seconds,
-                startColor     = util.getColor("WHITE"),
-                endColor       = util.getColor("WHITE"),
+                startColor     = startColorParam or util.getColor("WHITE"),
+                endColor       = endColorParam or util.getColor("WHITE"),
                 rotationSpeed  = rotationSpeed,
                 onUpdateCallback = function(comp, dt)
                 end,

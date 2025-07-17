@@ -11,6 +11,29 @@ function ui_defs.placeBuilding(buildingName)
 end
 
 function ui_defs.generateUI()
+    
+    -- show current weather
+    globals.ui.weatherTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.weather_ui_format", {weather = globals.current_weather_event}) end,  -- initial text
+        30.0,                                 -- font size
+        "pulse"                       -- animation spec
+    )
+    
+    -- place at the top center of the screen
+    local weatherTransform = registry:get(globals.ui.weatherTextEntity.config.object, Transform)
+    weatherTransform.actualX = globals.screenWidth() / 2 - weatherTransform.actualW / 2 -- center it horizontally
+    weatherTransform.visualX = weatherTransform.actualX -- update visual position as well
+    weatherTransform.actualY = 100 -- 10 pixels from the top edge
+    weatherTransform.visualY = weatherTransform.actualY -- update visual position as well
+    
+    -- timer to update weather 
+    timer.every(1, function()
+        -- update the weather text every second
+        local text = localization.get("ui.weather_ui_format", {weather = globals.currentWeather})
+        TextSystem.Functions.setText(globals.ui.weatherTextEntity.config.object, text)
+        
+    end)
+    
     -- show day 
     globals.ui.dayTextEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.day_ui_format", {day = globals.game_time.days or 1}) end,  -- initial text

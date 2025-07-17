@@ -2,6 +2,25 @@
 
 globals = globals or {}
 
+globals.weather_event_active = false -- whether a weather event is currently active
+
+globals.current_weather_event = "acid_rain" -- the current weather event, if any
+
+globals.weather_event_defs = {
+  {
+    id = "acid_rain"
+  },
+  {
+    id = "snow"
+  },
+  {
+    id = "sunny"
+  },
+  {
+    id = "death"
+  }
+}
+
 globals.structures = globals.structures or {} -- table to hold all structures in the game
 
 globals.structures.colonist_homes = globals.structures.colonist_homes or {} -- table to hold colonist home structures

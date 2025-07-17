@@ -29,6 +29,7 @@
 
 
 # ideas to implement next
+- add a basic weather event which occurs every other day (lightning storm)
 - movement based on goap rather than crude timer, also make them mine resources, and move continously rather than in jerks, add walking animation as well. also make them go and find & eat food when they are hungry
 - use a text indicator to show hunger and health
 - next up weather window which shows the events queued, and how many days off it is
@@ -104,3 +105,5 @@
 - ui box aligned to a transform with extrafintuning goes haywire when trasnform's rotation changes
 - some way to hook up lua table state, easily retriveable, through lua code, with entt entities
 - sprite order sorting so what's behind somehting can properly go behind, etc.
+- erase blackboard value, check if value exists in blackboard
+- make get/set blackboard methods return lua nil if invalid instead of throwing error

@@ -1,3 +1,5 @@
+-- These will run every frame per ai entity.
+
 return {
     hunger_check = function(entity, dt)
         -- TODO: Implement hunger check logic
@@ -51,6 +53,7 @@ return {
                     log_debug("avilable_duplicator: Found an available duplicator for entity " .. tostring(entity))
                     -- save in blackboard
                     setBlackboardInt(entity, "duplicator_available", duplicatorEntry.entity)
+                    duplicatorEntry.taken = true -- mark it as taken
                     
                     duplicatorAvailable = true
                     break
@@ -61,7 +64,8 @@ return {
         if not duplicatorAvailable then
             
             -- if we previously found one, then don't touch world state
-            if getBlackboardInt(entity, "duplicator_available") ~= -1 then
+            if blackboardContains(entity, "duplicator_available") and
+               getBlackboardInt(entity, "duplicator_available") ~= -1 then
                 log_debug("avilable_duplicator: one still available for entity ", tostring(entity))
                 return
             end

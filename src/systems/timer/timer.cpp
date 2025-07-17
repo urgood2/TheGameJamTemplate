@@ -140,13 +140,13 @@ wrap_timer_action(sol::function action) {
 
         sol::protected_function_result result;
         if (dt.has_value()) {
-            SPDLOG_DEBUG("   -> calling Lua with dt");
+            // SPDLOG_DEBUG("   -> calling Lua with dt");
             result = protectedAction(*dt);
-            SPDLOG_DEBUG("   -> returned from Lua dt-call");
+            // SPDLOG_DEBUG("   -> returned from Lua dt-call");
         } else {
-            SPDLOG_DEBUG("   -> calling Lua with NO args");
+            // SPDLOG_DEBUG("   -> calling Lua with NO args");
             result = protectedAction();
-            SPDLOG_DEBUG("   -> returned from Lua no-arg call");
+            // SPDLOG_DEBUG("   -> returned from Lua no-arg call");
         }
 
         if (!result.valid()) {
@@ -155,7 +155,7 @@ wrap_timer_action(sol::function action) {
             std::abort();
         }
 
-        SPDLOG_DEBUG("<< Timer callback end");
+        // SPDLOG_DEBUG("<< Timer callback end");
     };
 }
 

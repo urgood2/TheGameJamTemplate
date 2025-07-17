@@ -93,7 +93,7 @@ function spawnNewColonist(x, y)
     ).config.object
     
     -- anchor to the top center of the colonist 
-    transform.AssignRole(registry, hpText, InheritedPropertiesType.RoleInheritor, colonist,
+    transform.AssignRole(registry, hpText, InheritedPropertiesType.PermanentAttachment, colonist,
         InheritedPropertiesSync.Strong,
         InheritedPropertiesSync.Weak,
         InheritedPropertiesSync.Weak,

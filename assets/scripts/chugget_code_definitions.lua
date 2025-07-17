@@ -451,6 +451,14 @@ function setBlackboardBool(...) end
 function getBlackboardBool(...) end
 
 ---
+--- Checks if the blackboard contains a specific key.
+---
+---@param entity Entity
+---@param key string
+---@return boolean
+function blackboardContains(...) end
+
+---
 --- Sets an integer value on an entity's blackboard.
 ---
 ---@param entity Entity

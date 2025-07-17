@@ -36,6 +36,7 @@ return {
                 log_debug("Entity", e, "has reached the target location.")
                 break -- exit the loop when the entity reaches the target location
             end
+            setBlackboardInt(e, "duplicator_available", -1) -- reset the duplicator available in blackboard
         end
         return ActionResult.SUCCESS
     end,

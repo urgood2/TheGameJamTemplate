@@ -368,6 +368,12 @@ namespace scripting {
         stateToInit.set_function("getBlackboardBool", getBlackboardBool);
         rec.record_free_function({}, {"setBlackboardBool", "---@param entity Entity\n---@param key string\n---@param value boolean\n---@return nil", "Sets a boolean value on an entity's blackboard.", true, false});
         rec.record_free_function({}, {"getBlackboardBool", "---@param entity Entity\n---@param key string\n---@return boolean", "Gets a boolean value from an entity's blackboard.", true, false});
+        
+        stateToInit.set_function("blackboardContains", [] (entt::entity entity, const std::string& key) {
+            auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
+            return blackboard.contains(key);
+        });
+        rec.record_free_function({}, {"blackboardContains", "---@param entity Entity\n---@param key string\n---@return boolean", "Checks if the blackboard contains a specific key.", true, false});
 
         stateToInit.set_function("setBlackboardInt", setBlackboardInt);
         stateToInit.set_function("getBlackboardInt", getBlackboardInt);
@@ -740,6 +746,7 @@ namespace scripting {
     auto setBlackboardFloat(entt::entity entity, std::string key, float valueToSet) -> void {
         auto& blackboard = globals::registry.get<GOAPComponent>(entity).blackboard;
         blackboard.set(key, valueToSet);
+        
         // SPDLOG_DEBUG("{}: Setting blackboard float \"{}\" to {}", static_cast<int>(entity), key, valueToSet);
     }
 

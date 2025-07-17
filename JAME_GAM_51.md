@@ -103,3 +103,4 @@
 - is there a way to make blackboard a lua table that can be reliably fetched from lua?
 - ui box aligned to a transform with extrafintuning goes haywire when trasnform's rotation changes
 - some way to hook up lua table state, easily retriveable, through lua code, with entt entities
+- sprite order sorting so what's behind somehting can properly go behind, etc.

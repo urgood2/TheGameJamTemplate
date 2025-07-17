@@ -1,5 +1,6 @@
 {
 	"ui": {
+		"colonist_dead_text": "Colonist is dead!",
 		"acid_rain_damage_text": "Acid damage: {damage}",
 		"weather_ui_format": "Current weather: {weather}",
 		"colonist_home_tooltip_title": "Colonist Home",

@@ -1114,7 +1114,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 // recursively move on parent
                 if (parentTransform->frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame ||transform.frameCalculation.alignmentChanged == true)
                 {
-                    UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
+                    if (registry->valid(role.master))
+                    {
+                        // SPDLOG_DEBUG("Updating transform for entity {} with master {}",
+                        UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
+                    }
                 }
                 
                 
@@ -1154,44 +1158,44 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 {
                     UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
                 }
+
+                // Fully inherit parent's stationary state
+                transform.frameCalculation.stationary = parentTransform->frameCalculation.stationary;
+
+                float parentRotationAngle = parentTransform->getVisualRWithDynamicMotionAndXLeaning();
+
+                // convert to radians
+                float angle = parentRotationAngle * DEG2RAD;
+
+                // parent center
+                float parentCenterX = parentTransform->getVisualX() + parentTransform->getVisualW() * 0.5;
+                float parentCenterY = parentTransform->getVisualY() + parentTransform->getVisualH() * 0.5;
+
+                // child's offset relative to the parent's center
+                float childOffsetX = role.offset->x - parentTransform->getVisualW() * 0.5 + transform.getVisualW() * 0.5;
+                float childOffsetY = role.offset->y - parentTransform->getVisualH() * 0.5 + transform.getVisualH() * 0.5;
+
+                // apply rotation around the parent's center
+                float rotatedX = childOffsetX * cos(angle) - childOffsetY * sin(angle);
+                float rotatedY = childOffsetX * sin(angle) + childOffsetY * cos(angle);
+
+                // convert back to absolute coordinates
+                float absoluteX = parentCenterX + rotatedX;
+                float absoluteY = parentCenterY + rotatedY;
+
+                // adjust for child's size
+                absoluteX -= transform.getVisualW() * 0.5;
+                absoluteY -= transform.getVisualH() * 0.5;
+
+                // child inherits parent's rotation
+                transform.setVisualRotation(parentRotationAngle);
+                transform.setActualRotation(parentRotationAngle);
+
+                transform.setVisualX(absoluteX);
+                transform.setVisualY(absoluteY);
+                transform.setActualX(absoluteX);
+                transform.setActualY(absoluteY);
             }
-
-            // Fully inherit parent's stationary state
-            transform.frameCalculation.stationary = parentTransform->frameCalculation.stationary;
-
-            float parentRotationAngle = parentTransform->getVisualRWithDynamicMotionAndXLeaning();
-
-            // convert to radians
-            float angle = parentRotationAngle * DEG2RAD;
-
-            // parent center
-            float parentCenterX = parentTransform->getVisualX() + parentTransform->getVisualW() * 0.5;
-            float parentCenterY = parentTransform->getVisualY() + parentTransform->getVisualH() * 0.5;
-
-            // child's offset relative to the parent's center
-            float childOffsetX = role.offset->x - parentTransform->getVisualW() * 0.5 + transform.getVisualW() * 0.5;
-            float childOffsetY = role.offset->y - parentTransform->getVisualH() * 0.5 + transform.getVisualH() * 0.5;
-
-            // apply rotation around the parent's center
-            float rotatedX = childOffsetX * cos(angle) - childOffsetY * sin(angle);
-            float rotatedY = childOffsetX * sin(angle) + childOffsetY * cos(angle);
-
-            // convert back to absolute coordinates
-            float absoluteX = parentCenterX + rotatedX;
-            float absoluteY = parentCenterY + rotatedY;
-
-            // adjust for child's size
-            absoluteX -= transform.getVisualW() * 0.5;
-            absoluteY -= transform.getVisualH() * 0.5;
-
-            // child inherits parent's rotation
-            transform.setVisualRotation(parentRotationAngle);
-            transform.setActualRotation(parentRotationAngle);
-
-            transform.setVisualX(absoluteX);
-            transform.setVisualY(absoluteY);
-            transform.setActualX(absoluteX);
-            transform.setActualY(absoluteY);
         }
 
         else if (role.role_type == InheritedProperties::Type::RoleRoot)

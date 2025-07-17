@@ -605,6 +605,51 @@ function main.init()
     "weather_event_timer" -- unique tag for this timer
     )
     
+    
+    -- every 1 second, check every colonist
+    timer.every(1.0, function()
+        for _, colonist in pairs(globals.colonists) do
+            if registry:valid(colonist) then
+                -- check if the colonist is dead
+                if getBlackboardFloat(colonist, "health") <= 0 then
+                    -- show a text popup above the colonist
+                    local colonistTransform = registry:get(colonist, Transform)
+                    newTextPopup(
+                        localization.get("ui.colonist_dead_text"), -- text to display
+                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
+                        colonistTransform.actualY - 50, -- position above the colonist
+                        5 -- duration in seconds
+                    )
+                    
+                    -- show particles
+                    spawnCircularBurstParticles(
+                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
+                        colonistTransform.actualY + colonistTransform.visualH / 2, -- position at the center of the colonist
+                        50, -- count
+                        10, -- duration
+                        util.getColor("red"), -- start
+                        util.getColor("black") -- end color
+                    )
+                    
+                    -- remove the colonist from the globals.colonists table
+                    globals.colonists[colonist] = nil
+                    
+                    -- remove colonist's text ui
+                    registry:destroy(globals.ui.colonist_ui[colonist].hp_ui_text)
+                    globals.ui.colonist_ui[colonist] = nil
+                    
+                    -- destroy the colonist entity
+                    registry:destroy(colonist)
+                end
+            end
+        end
+    end,
+    1.0, -- every 1 second
+    true, -- start immediately
+    nil, -- no "after" callback
+    "colonist_health_check" -- unique tag for this timer
+    )
+    
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 end
 

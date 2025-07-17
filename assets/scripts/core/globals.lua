@@ -2,9 +2,16 @@
 
 globals = globals or {}
 
+globals.structures = globals.structures or {} -- table to hold all structures in the game
+
+globals.structures.colonist_homes = globals.structures.colonist_homes or {} -- table to hold colonist home structures
+globals.structures.duplicators = globals.structures.duplicators or {} -- table to hold
+
+globals.tileSize = 64 -- Set the tile size for the game world
+
 globals.defaultColonistMoveSpeed = 10 -- speed at which colonists move, in pixels per second
 
-globals.currency = 5 -- the current amount of currency the player has
+globals.currency = 30 -- the current amount of currency the player has to beign with, and running total
 
 globals.gamePaused = false -- whether the game is currently paused
 
@@ -23,12 +30,17 @@ globals.structure_defs = {
   {
       id = "colonist_home",
       animation_entity = "colonistHomeButtoAnimationEntity", -- the animation entity for the colonist home
+      ui_tooltip_title = "ui.colonist_home_tooltip_title", -- the title for the colonist home tooltip
+      ui_tooltip_body = "ui.colonist_home_tooltip_body", -- the body
       text_entity = "colonistHomeTextEntity", -- the text entity for the colonist home, under globals table
       text = "ui.colonist_home_text", -- the text for the colonist home
       cost = 5 -- the cost to buy the colonist home
   },
   {
       id = "duplicator",
+      spriteID = "3641-TheRoguelike_1_10_alpha_434.png", -- the sprite ID for the duplicator
+      ui_tooltip_title = "ui.duplicator_tooltip_title", -- the title for the duplicator tooltip
+      ui_tooltip_body = "ui.duplicator_tooltip_body", -- the body for
       animation_entity = "duplicatorButtonAnimationEntity", -- the animation entity for the duplicator
       text_entity = "duplicatorTextEntity", -- the text entity for the duplicator, under globals table
       text = "ui.duplicator_text", -- the text for the duplicator

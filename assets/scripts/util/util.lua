@@ -7,8 +7,8 @@ end
 
 -- Recursively prints any table (with cycle detection)
 function print_table(tbl, indent, seen)
-  indent = indent or ""   -- current indentation
-  seen   = seen or {}     -- tables we’ve already visited
+  indent = indent or "" -- current indentation
+  seen   = seen or {}   -- tables we’ve already visited
 
   if seen[tbl] then
     print(indent .. "*<recursion>–") -- cycle detected
@@ -71,9 +71,9 @@ function showTooltip(titleText, bodyText)
   end
 
   -- 1) set the texts
-  
+
   TextSystem.Functions.setText(titleEnt, titleText)
-  TextSystem.Functions.clearAllEffects(titleEnt) -- clear any previous effects
+  TextSystem.Functions.clearAllEffects(titleEnt)            -- clear any previous effects
   TextSystem.Functions.applyGlobalEffects(titleEnt, "fade") -- apply the tooltip title effects
   TextSystem.Functions.setText(bodyEnt, bodyText)
 
@@ -99,21 +99,21 @@ function showTooltip(titleText, bodyText)
   boxT.visualX           = boxT.actualX
   boxT.actualY           = clamp(y, 0, screenH - h)
   boxT.visualY           = boxT.actualY
-  
+
   -- 6) hard set size
-  boxT.visualW = boxT.actualW
-  boxT.visualH = boxT.actualH
+  boxT.visualW           = boxT.actualW
+  boxT.visualH           = boxT.actualH
 end
 
-function toggleShopWindow() 
+function toggleShopWindow()
   if (globals.isShopOpen) then
-      globals.isShopOpen = false
-      local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
-      transform.actualY = globals.screenHeight() -- hide the shop UI box
+    globals.isShopOpen = false
+    local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+    transform.actualY = globals.screenHeight()   -- hide the shop UI box
   else
-      globals.isShopOpen = true
-      local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
-      transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2-- show the shop UI box
+    globals.isShopOpen = true
+    local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+    transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2   -- show the shop UI box
   end
 end
 
@@ -122,24 +122,24 @@ function showNewAchievementPopup(achievementID)
     log_debug("showNewAchievementPopup: newAchievementUIBox is not set up, skipping")
     return
   end
-  
+
   -- get the achievement definition
   local achievementDef = findInTable(globals.achievements, "id", achievementID)
-  
+
   -- replace the animation
   animation_system.replaceAnimatedObjectOnEntity(
     globals.ui.achievementIconEntity,
-    achievementDef.anim,   -- Default animation ID
-    false,                 -- ? generate a new still animation from sprite, don't set to true, causes bug
-    nil,                   -- shader_prepass, -- Optional shader pass config function
-    true                   -- Enable shadow
+    achievementDef.anim, -- Default animation ID
+    false,               -- ? generate a new still animation from sprite, don't set to true, causes bug
+    nil,                 -- shader_prepass, -- Optional shader pass config function
+    true                 -- Enable shadow
   )
   animation_system.resizeAnimationObjectsInEntityToFit(
     globals.ui.achievementIconEntity,
-    60,   -- width
-    60    -- height
+    60, -- width
+    60  -- height
   )
-  
+
   -- set tooltip
   local gameObject = registry:get(globals.ui.achievementIconEntity, GameObject)
   gameObject.methods.onHover = function()
@@ -150,37 +150,36 @@ function showNewAchievementPopup(achievementID)
   -- end
   gameObject.state.hoverEnabled = true
   gameObject.state.collisionEnabled = true
-  
+
   -- renew the alignment of the achievement UI box
   -- ui.box.RenewAlignment(registry, globals.ui.newAchievementUIBox)
-  
+
   -- play sound
   playSoundEffect("effects", "new_achievement")
-  
+
   -- if not already at bottom of the screen, move it to the center
   local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
   transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
   transformComp.visualX = transformComp.actualX -- snap X
   transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
-  
-  
+
+
   -- spawn particles at the center of the box
   spawnCircularBurstParticles(
     transformComp.actualX + transformComp.actualW / 2,
     transformComp.actualY + transformComp.actualH / 2,
-    40,     -- number of particles
-    0.5     -- particle size
+    40, -- number of particles
+    0.5 -- particle size
   )
-  
+
   -- dismiss after 5 seconds
   timer.after(
-    5.0,           -- delay in seconds
+    5.0, -- delay in seconds
     function()
       log_debug("Dismissing achievement popup: ", achievementID)
       -- move the box out of the screen
       local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
       transformComp.actualY = globals.screenHeight() + 500
-  
     end,
     "dismiss_achievement_popup" -- timer name
   )
@@ -195,13 +194,12 @@ function centerTransformOnScreen(entity)
   transformComp.visualY = transformComp.actualY -- snap Y
 end
 
-
 function newTextPopup(text, x, y, duration)
   -- create a new text popup entity
   local text = ui.definitions.getNewDynamicTextEntry(
-    function() return text end,  -- initial text
-    30.0,  -- font size
-    "rainbow" -- animation spec
+    function() return text end, -- initial text
+    30.0,                       -- font size
+    "rainbow"                   -- animation spec
   ).config.object
 
   -- set position
@@ -236,7 +234,7 @@ function hideTooltip()
     return
   end
   local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
-  tooltipTransform.actualY = globals.screenHeight() -- move it out of the screen
+  tooltipTransform.actualY = globals.screenHeight()   -- move it out of the screen
   tooltipTransform.visualY = tooltipTransform.actualY -- snap Y
 end
 
@@ -255,14 +253,17 @@ function cycleConverter(inc)
   local locked = not globals.converter_defs[globals.selectedConverterIndex].unlocked
   local title, body
   if locked then
-    title = localization.get("ui.converter_locked_title")
-    local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
-    body  = localization.get("ui.converter_locked_body") .. requirementString
+    title                   = localization.get("ui.converter_locked_title")
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs
+    [globals.selectedConverterIndex])
+    body                    = localization.get("ui.converter_locked_body") .. requirementString
   else
-    local costString = getCostStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
-    local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
-    title = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_title) 
-    body  = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body) .. costString .. requirementString
+    local costString        = getCostStringForBuildingOrConverter(globals.converter_defs[globals.selectedConverterIndex])
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.converter_defs
+    [globals.selectedConverterIndex])
+    title                   = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_title)
+    body                    = localization.get(globals.converter_defs[globals.selectedConverterIndex].ui_text_body) ..
+    costString .. requirementString
   end
 
   log_debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
@@ -290,8 +291,8 @@ function cycleConverter(inc)
     globals.converter_ui_animation_entity,
     animToShow,
     false,
-    nil,   -- shader_prepass, -- Optional shader pass config function
-    true   -- Enable shadow
+    nil, -- shader_prepass, -- Optional shader pass config function
+    true -- Enable shadow
   )
 
   -- 6) add a jiggle
@@ -312,15 +313,18 @@ function cycleBuilding(inc)
   local locked = not globals.building_upgrade_defs[globals.selectedBuildingIndex].unlocked
   local title, body
   if locked then
-    title = localization.get("ui.building_locked_title")
-    local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
-    body  = localization.get("ui.building_locked_body") .. requirementString
+    title                   = localization.get("ui.building_locked_title")
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs
+    [globals.selectedBuildingIndex])
+    body                    = localization.get("ui.building_locked_body") .. requirementString
   else
     local costString = getCostStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
-    local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs[globals.selectedBuildingIndex])
+    local requirementString = getRequirementStringForBuildingOrConverter(globals.building_upgrade_defs
+    [globals.selectedBuildingIndex])
     log_debug("Cost string for building: ", costString)
     title = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_title)
-    body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body) .. costString .. requirementString
+    body  = localization.get(globals.building_upgrade_defs[globals.selectedBuildingIndex].ui_text_body) ..
+    costString .. requirementString
   end
 
   -- 3) hook up hover callbacks
@@ -367,7 +371,7 @@ function buyConverterButtonCallback()
     playSoundEffect("effects", "cannot-buy")
     return
   end
-  
+
   -- check if the player has enough resources to buy the converter
   local cost = selectedConverter.cost
   for currency, amount in pairs(cost) do
@@ -383,13 +387,13 @@ function buyConverterButtonCallback()
       return
     end
   end
-  
+
   -- deduct the cost from the player's resources
   for currency, amount in pairs(cost) do
     globals.currencies[currency].target = globals.currencies[currency].target - amount
     log_debug("Deducted", amount, currency, "from player's resources")
   end
-      
+
 
   -- create a new example converter entity
   local exampleConverter = create_ai_entity("kobold")
@@ -400,16 +404,16 @@ function buyConverterButtonCallback()
 
   animation_system.setupAnimatedObjectOnEntity(
     exampleConverter,
-    selectedConverter.anim,   -- Default animation ID
-    false,                    -- ? generate a new still animation from sprite, don't set to true, causes bug
-    nil,                      -- shader_prepass, -- Optional shader pass config function
-    true                      -- Enable shadow
+    selectedConverter.anim, -- Default animation ID
+    false,                  -- ? generate a new still animation from sprite, don't set to true, causes bug
+    nil,                    -- shader_prepass, -- Optional shader pass config function
+    true                    -- Enable shadow
   )
 
   animation_system.resizeAnimationObjectsInEntityToFit(
     exampleConverter,
-    60,   -- width
-    60    -- height
+    60, -- width
+    60  -- height
   )
 
   -- make the object draggable
@@ -421,9 +425,9 @@ function buyConverterButtonCallback()
 
   -- create a new text entity
   local infoText = ui.definitions.getNewDynamicTextEntry(
-    function() return localization.get("ui.drag_me") end,   -- initial text
-    15.0,                             -- font size
-    "bump"                            -- animation spec
+    function() return localization.get("ui.drag_me") end, -- initial text
+    15.0,                                                 -- font size
+    "bump"                                                -- animation spec
   ).config.object
 
   -- make the text entity follow the converter entity
@@ -463,25 +467,25 @@ function buyConverterButtonCallback()
     log_debug("Converter entity is in grid: ", gridX, gridY)
     -- snap the entity to the grid, but center it in the grid cell
     local magic_padding = 2
-    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding   -- center it in the grid cell
-    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding   -- center it in the grid cell
+    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding -- center it in the grid cell
+    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
     -- make the entity no longer draggable
     gameObjectState.dragEnabled = false
     gameObjectState.clickEnabled = false
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
-    
+
     -- play sound
     playSoundEffect("effects", "place-building")
-    
+
     -- remove the text entity
     registry:destroy(infoText)
     -- spawn particles at the converter's position center
     spawnCircularBurstParticles(
       transformComp.actualX + transformComp.actualW / 2,
       transformComp.actualY + transformComp.actualH / 2,
-      20,     -- number of particles
-      0.5     -- particle size
+      20, -- number of particles
+      0.5 -- particle size
     )
     transform.InjectDynamicMotion(exampleConverter, 1.0, 1)
     log_debug("add on hover/stop hover methods to the converter entity")
@@ -502,17 +506,17 @@ end
 
 function getRequirementStringForBuildingOrConverter(def)
   local reqString = "\nRequirements:\n"
-  
+
   -- 1) currency requirements
   if def.required_currencies then
     for currencyKey, amount in pairs(def.required_currencies) do
       log_debug("Requirement currency:", currencyKey, "amount:", amount)
       local currencyName = globals.currencies[currencyKey].human_readable_name
       reqString = reqString
-        .. localization.get(
-             "ui.requirement_unlock_postfix",
-             { number = amount, requirement = currencyName }
-           )
+          .. localization.get(
+            "ui.requirement_unlock_postfix",
+            { number = amount, requirement = currencyName }
+          )
     end
   end
 
@@ -522,45 +526,209 @@ function getRequirementStringForBuildingOrConverter(def)
       log_debug("Requirement building/converter:", reqId, "amount:", amount)
       -- look up the human‐readable name
       local reqDef = findInTable(globals.building_upgrade_defs, "id", reqId)
-                  or findInTable(globals.converter_defs,        "id", reqId)
+          or findInTable(globals.converter_defs, "id", reqId)
       local reqName = localization.get(reqDef.ui_text_title)
       reqString = reqString
-        .. localization.get(
-             "ui.requirement_unlock_postfix",
-             { number = amount, requirement = reqName }
-           )
+          .. localization.get(
+            "ui.requirement_unlock_postfix",
+            { number = amount, requirement = reqName }
+          )
     end
   end
 
   return reqString
 end
 
-
 function getCostStringForBuildingOrConverter(buildingOrConverterDef)
   local costString = "\nCost:\n"
   local cost = buildingOrConverterDef.cost
   for currency, amount in pairs(cost) do
     log_debug("Cost for currency: ", currency, " amount: ", amount)
-    costString = costString .. localization.get("ui.cost_tooltip_postfix", {cost = amount, currencyName = globals.currencies[currency].human_readable_name}) .. " "
+    costString = costString ..
+    localization.get("ui.cost_tooltip_postfix",
+      { cost = amount, currencyName = globals.currencies[currency].human_readable_name }) .. " "
   end
   return costString
 end
 
 function getUnlockStrinForBuildingOrConverter(buildingOrConverterDef)
-  
+
 end
 
 -- pass in the converter definition used to output the material
 function getCostStringForMaterial(converterDef)
-  
   local costString = "\nCost:\n"
   local cost = converterDef.required_currencies
   log_debug("debug printing cost string for material: ", converterDef.id)
   print_table(cost)
   for currency, amount in pairs(cost) do
-    costString = costString .. localization.get("ui.material_requirement_tooltip_postfix", {cost = amount, currencyName = globals.currencies[currency].human_readable_name}) .. " "
+    costString = costString ..
+    localization.get("ui.material_requirement_tooltip_postfix",
+      { cost = amount, currencyName = globals.currencies[currency].human_readable_name }) .. " "
   end
   return costString
+end
+
+function togglePausedState(forcePause)
+  -- decide whether we should be paused
+  -- if forcePause is nil → flip the current state
+  -- if forcePause is boolean → use that
+  local willPause
+  if forcePause == nil then
+      willPause = not globals.gamePaused
+  else
+      willPause = forcePause
+  end
+
+  if willPause then
+      -- → go into paused state
+      globals.gamePaused = true
+      log_debug("Pausing game")
+      ai.pause_ai_system()
+      timer.pause_group("colonist_movement_group")
+      animation_system.replaceAnimatedObjectOnEntity(
+          globals.ui.pauseButtonAnimationEntity,
+          "tile_0537.png",  -- play icon
+          true
+      )
+      animation_system.resizeAnimationObjectsInEntityToFit(
+          globals.ui.pauseButtonAnimationEntity, 40, 40
+      )
+  else
+      -- → come out of paused state
+      globals.gamePaused = false
+      log_debug("Unpausing game")
+      ai.resume_ai_system()
+      timer.resume_group("colonist_movement_group")
+      animation_system.replaceAnimatedObjectOnEntity(
+          globals.ui.pauseButtonAnimationEntity,
+          "tile_0538.png",  -- pause icon
+          true
+      )
+      animation_system.resizeAnimationObjectsInEntityToFit(
+          globals.ui.pauseButtonAnimationEntity, 40, 40
+      )
+  end
+end
+
+
+function buyNewDuplicatorCallback()
+  local structureDef = findInTable(globals.structure_defs, "id", "duplicator")
+
+  -- check if the player has enough resources to buy the duplicator
+  local cost = structureDef.cost
+  if cost > globals.currency then
+    log_debug("Not enough resources to buy duplicator")
+    newTextPopup(
+      localization.get("ui.not_enough_currency"),
+      globals.screenWidth() / 2,
+      globals.screenHeight() / 2 - 100,
+      2
+    )
+    return
+  end
+
+  -- deduct the cost from the player's resources
+  globals.currency = globals.currency - cost
+  log_debug("Deducted", cost, "from player's resources")
+
+  --TODO: store duplicator in the globals table
+
+  -- create a new duplicator entity
+  local duplicatorEntity = create_transform_entity()
+
+  -- add to the table in the buildings table with the id of the building
+  table.insert(globals.structures.duplicators, duplicatorEntity)
+  log_debug("Added duplicator entity to globals.structures: ", duplicatorEntity, " for id: ", structureDef.id)
+
+  animation_system.setupAnimatedObjectOnEntity(
+    duplicatorEntity,
+    structureDef.spriteID, -- Default animation ID
+    true,                  -- ? generate a new still animation from sprite
+    nil,                   -- shader_prepass, -- Optional shader pass config
+    true
+  )
+
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    duplicatorEntity,
+    globals.tileSize, -- width
+    globals.tileSize  -- height
+  )
+
+  -- make the object draggable
+  local gameObjectState = registry:get(duplicatorEntity, GameObject).state
+  gameObjectState.dragEnabled = true
+  gameObjectState.clickEnabled = true
+  gameObjectState.hoverEnabled = true
+  gameObjectState.collisionEnabled = true
+
+  -- create a new text entity
+  local infoText = ui.definitions.getNewDynamicTextEntry(
+    function() return localization.get("ui.drag_me") end, -- initial text
+    15.0,                                                 -- font size
+    "bump"                                                -- animation spec
+  ).config.object
+  -- make the text entity follow the duplicator entity
+  transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, duplicatorEntity,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong,
+    InheritedPropertiesSync.Strong,
+    Vec2(0, -20) -- offset the text above the duplicator
+  );
+
+  -- now locate the duplicator entity in the game world
+  local transformComp = registry:get(duplicatorEntity, Transform)
+  transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
+  transformComp.actualY = globals.screenHeight() - 300
+
+  -- add onstopdrag method to the duplicator entity
+  local gameObjectComp = registry:get(duplicatorEntity, GameObject)
+  gameObjectComp.methods.onStopDrag = function()
+    log_debug("Duplicator entity stopped dragging!")
+    local gameObjectComp = registry:get(duplicatorEntity, GameObject)
+    local transformComp = registry:get(duplicatorEntity, Transform)
+    local gameObjectState = gameObjectComp.state
+    -- get the grid that it's in, grid is 64 pixels wide
+    local gridX = math.floor(transformComp.actualX / 64)
+    local gridY = math.floor(transformComp.actualY / 64)
+    log_debug("Duplicator entity is in grid: ", gridX, gridY)
+    -- snap the entity to the grid, but center it in the grid cell
+    local magic_padding = 2
+    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding -- center it in the grid cell
+    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
+    -- make the entity no longer draggable
+    gameObjectState.dragEnabled = false
+    gameObjectState.clickEnabled = false
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true
+    -- remove the text entity
+    registry:destroy(infoText)
+
+    -- spawn particles at the duplicator's position center
+    spawnCircularBurstParticles(
+      transformComp.actualX + transformComp.actualW / 2,
+      transformComp.actualY + transformComp.actualH / 2,
+      20, -- number of particles
+      0.5 -- particle size
+    )
+
+    transform.InjectDynamicMotion(duplicatorEntity, 1.0, 1)
+
+    log_debug("add on hover/stop hover methods to the duplicator entity")
+
+    -- add on hover/stop hover methods to the duplicator entity
+    gameObjectComp.methods.onHover = function()
+      showTooltip(
+        localization.get(structureDef.ui_tooltip_title),
+        localization.get(structureDef.ui_tooltip_body)
+      )
+    end
+    gameObjectComp.methods.onStopHover = function()
+      log_debug("Duplicator entity stopped hovering!")
+      -- hideTooltip()
+    end
+  end
 end
 
 function buyBuildingButtonCallback()
@@ -580,7 +748,7 @@ function buyBuildingButtonCallback()
     playSoundEffect("effects", "cannot-buy")
     return
   end
-  
+
   -- check if the player has enough resources to buy the building
   local cost = selectedBuilding.cost
   for currency, amount in pairs(cost) do
@@ -596,7 +764,7 @@ function buyBuildingButtonCallback()
       return
     end
   end
-  
+
   -- deduct the cost from the player's resources
   for currency, amount in pairs(cost) do
     globals.currencies[currency].target = globals.currencies[currency].target - amount
@@ -610,22 +778,22 @@ function buyBuildingButtonCallback()
   -- add to the table in the buildings table with the id of the building
   table.insert(globals.buildings[selectedBuilding.id], exampleBuilding)
   log_debug("Added building entity to globals.buildings: ", exampleBuilding, " for id: ", selectedBuilding.id)
-  
+
   playSoundEffect("effects", "buy-building")
 
 
   animation_system.setupAnimatedObjectOnEntity(
     exampleBuilding,
-    selectedBuilding.anim,   -- Default animation ID
-    false,                   -- ? generate a new still animation from sprite, don't set to true, causes bug
-    nil,                     -- shader_prepass, -- Optional shader pass config function
-    true                     -- Enable shadow
+    selectedBuilding.anim, -- Default animation ID
+    false,                 -- ? generate a new still animation from sprite, don't set to true, causes bug
+    nil,                   -- shader_prepass, -- Optional shader pass config function
+    true                   -- Enable shadow
   )
 
   animation_system.resizeAnimationObjectsInEntityToFit(
     exampleBuilding,
-    60,   -- width
-    60    -- height
+    60, -- width
+    60  -- height
   )
 
   -- make the object draggable
@@ -637,9 +805,9 @@ function buyBuildingButtonCallback()
 
   -- create a new text entity
   local infoText = ui.definitions.getNewDynamicTextEntry(
-    function() return localization.get("ui.drag_me") end,   -- initial text
-    15.0,                             -- font size
-    "bump"                            -- animation spec
+    function() return localization.get("ui.drag_me") end, -- initial text
+    15.0,                                                 -- font size
+    "bump"                                                -- animation spec
   ).config.object
 
   -- make the text entity follow the converter entity
@@ -678,8 +846,8 @@ function buyBuildingButtonCallback()
     log_debug("Converter entity is in grid: ", gridX, gridY)
     -- snap the entity to the grid, but center it in the grid cell
     local magic_padding = 2
-    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding   -- center it in the grid cell
-    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding   -- center it in the grid cell
+    transformComp.actualX = gridX * 64 + 32 - transformComp.actualW / 2 + magic_padding -- center it in the grid cell
+    transformComp.actualY = gridY * 64 + 32 - transformComp.actualH / 2 + magic_padding -- center it in the grid cell
     -- make the entity no longer draggable
     gameObjectState.dragEnabled = false
     gameObjectState.clickEnabled = false
@@ -691,18 +859,18 @@ function buyBuildingButtonCallback()
     spawnCircularBurstParticles(
       transformComp.actualX + transformComp.actualW / 2,
       transformComp.actualY + transformComp.actualH / 2,
-      20,     -- number of particles
-      0.5     -- particle size
+      20, -- number of particles
+      0.5 -- particle size
     )
     transform.InjectDynamicMotion(exampleBuilding, 1.0, 1)
-    
+
     playSoundEffect("effects", "place-building")
 
     log_debug("add on hover/stop hover methods to the building entity")
     -- add on hover/stop hover methods to the building entity
-    
+
     -- localization.get("ui.currency_text", {currency = math.floor(globals.currencies.whale_dust.amount)})
-    
+
     gameObjectComp.methods.onHover = function()
       log_debug("Building entity hovered!")
       showTooltip(
@@ -714,27 +882,27 @@ function buyBuildingButtonCallback()
       log_debug("Building entity stopped hovering!")
       -- hideTooltip()
     end
-    
-    
+
+
     -- is the building a krill home or krill farm?
     if selectedBuilding.id == "krill_home" then
       -- spawn a krill entity at the building's position
       timer.after(
-        0.4,           -- delay in seconds
+        0.4, -- delay in seconds
         function()
           spawnNewKrillAtLocation(
             transformComp.actualX + transformComp.actualW / 2,
             transformComp.actualY + transformComp.actualH / 2
           )
-          
+
           -- spawn particles at the building's position center
           spawnCircularBurstParticles(
             transformComp.actualX + transformComp.actualW / 2,
             transformComp.actualY + transformComp.actualH / 2,
-            50,     -- number of particles
-            0.5     -- seconds
+            50, -- number of particles
+            0.5 -- seconds
           )
-          
+
           log_debug("Spawned a krill entity at the building's position")
         end
       )
@@ -742,7 +910,7 @@ function buyBuildingButtonCallback()
       -- spawn 3
       for j = 1, 3 do
         timer.after(
-          j * 0.2,           -- delay in seconds
+          j * 0.2, -- delay in seconds
           function()
             spawnNewKrillAtLocation(
               transformComp.actualX + transformComp.actualW / 2,
@@ -750,12 +918,12 @@ function buyBuildingButtonCallback()
             )
             -- spawn particles at the building's position center
             spawnCircularBurstParticles(
-              
-              
+
+
               transformComp.actualX + transformComp.actualW / 2,
               transformComp.actualY + transformComp.actualH / 2,
-              50,     -- number of particles
-              0.5     -- seconds
+              50, -- number of particles
+              0.5 -- seconds
             )
             log_debug("Spawned a krill entity at the building's position")
           end
@@ -780,24 +948,22 @@ function findInTable(list, field, value)
 end
 
 function updateBuildings()
-  
   for buildingID, buildingTable in pairs(globals.buildings) do
-    
     -- loop through each building type
     for i = 1, #buildingTable do
       local buildingEntity = buildingTable[i]
-      
+
       -- ensure building has been placed
       local gameObject = registry:get(buildingEntity, GameObject)
       if gameObject.state.dragEnabled then
         log_debug("Building", buildingID, "is not placed yet, skipping")
         goto continue
       end
-      
+
       local buildingTransform = registry:get(buildingEntity, Transform)
       local buildingDefTable = findInTable(globals.building_upgrade_defs, "id", buildingID)
-      
-      
+
+
       -- check the resource collection rate
       local resourceCollectionRate = buildingDefTable.resource_collection_rate
       if not resourceCollectionRate then
@@ -812,19 +978,19 @@ function updateBuildings()
           for j = 1, amount do
             if #currencyEntitiesNotPickedUp > 0 then
               local currencyEntity = table.remove(currencyEntitiesNotPickedUp, 1)
-              
+
               log_debug("Building", buildingID, "gathered", resource, "from entity", currencyEntity)
-              
+
               --TODO: move the currency entity to the building's position
               local currencyTransform = registry:get(currencyEntity, Transform)
               currencyTransform.actualX = buildingTransform.actualX + buildingTransform.actualW / 2
               currencyTransform.actualY = buildingTransform.actualY + buildingTransform.actualH / 2
-              
+
               log_debug("playing sound effect with ID", buildingID)
               playSoundEffect("effects", buildingID)
-              
+
               timer.after(
-                0.8,           -- delay in seconds
+                0.8, -- delay in seconds
                 function()
                   -- increment the global currency count
                   globals.currencies[resource].target = globals.currencies[resource].target + 1
@@ -832,16 +998,15 @@ function updateBuildings()
                   spawnCircularBurstParticles(
                     buildingTransform.actualX + buildingTransform.actualW / 2,
                     buildingTransform.actualY + buildingTransform.actualH / 2,
-                    10,     -- number of particles
-                    0.5     -- seconds
-                    )
+                    10, -- number of particles
+                    0.5 -- seconds
+                  )
                   -- remove the currency entity from the registry
                   if (registry:valid(currencyEntity) == true) then
                     registry:destroy(currencyEntity)
                   end
                 end
               )
-              
             else
               log_debug("No more", resource, "entities to gather from")
               break
@@ -849,37 +1014,36 @@ function updateBuildings()
           end
         end
       end
-      
+
       ::continue::
     end
-    
   end
-  
 end
+
 function updateConverters()
   for converterID, converterTable in pairs(globals.converters) do
     -- loop through each converter type
     for i = 1, #converterTable do
       local converterEntity = converterTable[i]
-      
+
       -- ensure converter has been placed
       local gameObject = registry:get(converterEntity, GameObject)
       if gameObject.state.dragEnabled then
         log_debug("Converter", converterID, "is not placed yet, skipping")
         goto continue
       end
-      
+
       local converterTransform = registry:get(converterEntity, Transform)
       local converterDefTable = findInTable(globals.converter_defs, "id", converterID)
-      
+
 
       -- check the global currencies table for the converter's required currency
-      local requirement_met = true   -- assume requirement is met
+      local requirement_met = true -- assume requirement is met
       for currency, amount in pairs(converterDefTable.required_currencies) do
         if globals.currencies[currency].target < amount then
           log_debug("Converter", converterID, "requires", amount, currency, "but only has",
             globals.currencies[currency].target)
-          requirement_met = false       -- requirement not met
+          requirement_met = false -- requirement not met
           break
         end
       end
@@ -892,12 +1056,12 @@ function updateConverters()
         -- spawn the new currency at the converter's position, in converter table's output field
         for currency, amount in pairs(converterDefTable.output) do
           log_debug("Converter", converterID, "added", amount, currency, "to target")
-          
+
           playSoundEffect("effects", converterID)
 
           for j = 1, amount do
             timer.after(
-              0.1,           -- delay in seconds
+              0.1, -- delay in seconds
               function()
                 spawnCurrencyAutoCollect(
                   converterTransform.actualX,
@@ -910,11 +1074,9 @@ function updateConverters()
         end
       end
       ::continue::
-
     end
   end
 end
-
 
 function removeValueFromTable(t, value)
   for i, v in ipairs(t) do

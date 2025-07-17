@@ -337,6 +337,10 @@ function ui_defs.generateUI()
         findInTable(globals.structure_defs, "id", "duplicator").cost -- cost to buy the duplicator
     )
     
+    duplicator_structure_def.config.buttonCallback = function ()
+        buyNewDuplicatorCallback()
+    end
+    
     
     
     -- make horizontal container for other items if necessary
@@ -634,35 +638,7 @@ function ui_defs.generateUI()
                     log_debug("Pause button clicked!")
                     playSoundEffect("effects", "button-click") -- play button click sound
                     
-                    if (globals.gamePaused) then
-                        globals.gamePaused = false
-                        log_debug("Unpausing game")
-                        timer.resume_group("colonist_movement_group") -- resume game timers
-                        animation_system.replaceAnimatedObjectOnEntity(
-                            globals.ui.pauseButtonAnimationEntity, -- entity to replace
-                            "tile_0538.png", -- change to pause icon
-                            true -- true if sprite id
-                        ) -- change to unpause icon
-                        animation_system.resizeAnimationObjectsInEntityToFit(
-                            globals.ui.pauseButtonAnimationEntity,
-                            40,   -- width
-                            40    -- height
-                        )
-                    else
-                        globals.gamePaused = true
-                        log_debug("Pausing game")
-                        timer.pause_group("colonist_movement_group") -- pause game timers
-                        animation_system.replaceAnimatedObjectOnEntity(
-                            globals.ui.pauseButtonAnimationEntity, -- entity to replace
-                            "tile_0537.png", -- change to play icon
-                            true -- true if sprite id
-                        ) -- change to pause icon
-                        animation_system.resizeAnimationObjectsInEntityToFit(
-                            globals.ui.pauseButtonAnimationEntity,
-                            40,   -- width
-                            40    -- height
-                        )
-                    end
+                    togglePausedState()
                     
                 end)
                 :build()

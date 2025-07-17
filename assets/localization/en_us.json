@@ -1,6 +1,7 @@
 {
 	"ui": {
-		
+		"duplicator_tooltip_title": "Duplicator",
+		"duplicator_tooltip_body": "This is a duplicator.\nIt duplicates a colonist, but at a cost!",
 		"colonistHPText": "HP: {hp}/{maxHp}",
 		"cost_text": "{cost}",
 		"shop_close" : "Close",

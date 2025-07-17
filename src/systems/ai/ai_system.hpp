@@ -16,6 +16,7 @@ using json = nlohmann::json;
 
 namespace ai_system
 {
+    extern bool ai_system_paused; // global flag to pause the AI system, from lua
     
     using fsec = std::chrono::duration<float>;
     using scheduler = entt::basic_scheduler<fsec>;

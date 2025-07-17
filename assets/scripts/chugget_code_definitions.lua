@@ -722,6 +722,18 @@ ai = {
 }
 
 ---
+--- This is useful for debugging or when you want to temporarily halt AI processing.
+---
+Pauses the AI system, preventing any updates or actions from being processed.
+function ai:pause_ai_system(...) end
+
+---
+--- This allows the AI system to continue processing updates and actions.
+---
+Resumes the AI system after it has been paused.
+function ai:resume_ai_system(...) end
+
+---
 --- Returns the mutable AI-definition table for the given entity.
 ---
 ---@param e Entity
@@ -4307,6 +4319,12 @@ HIDFlags = {
     mouse_enabled = bool,  -- Mouse navigation enabled
     axis_cursor_enabled = bool  -- Axis-as-cursor enabled
 }
+
+---
+--- Creates a new transform entity with default parameters.
+---
+---@return Entity
+function .create_transform_entity(...) end
 
 ---
 --- Adds a fullscreen shader to the game.

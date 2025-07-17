@@ -327,7 +327,7 @@ function initMainGame()
     -- add_fullscreen_shader("shockwave")
     -- add_fullscreen_shader("tile_grid_overlay") -- to show tile griddonuts background
     
-    tileSize = 64 -- Set the tile size for the game world
+    
     
     -- generate some random grass and place them around the map, tiled
     local grassSprites = {
@@ -351,14 +351,14 @@ function initMainGame()
         )
         animation_system.resizeAnimationObjectsInEntityToFit(
             grassEntity,
-            tileSize,   -- width
-            tileSize    -- height
+            globals.tileSize,   -- width
+            globals.tileSize    -- height
         )
         
         -- place within the screen bounds, but make sure it respects tiles
         local transformComp = registry:get(grassEntity, Transform)
-        transformComp.actualX = random_utils.random_int(0, math.floor(globals.screenWidth() / tileSize) - 1) * tileSize
-        transformComp.actualY = random_utils.random_int(0, math.floor(globals.screenHeight() / tileSize) - 1) * tileSize
+        transformComp.actualX = random_utils.random_int(0, math.floor(globals.screenWidth() / globals.tileSize) - 1) * globals.tileSize
+        transformComp.actualY = random_utils.random_int(0, math.floor(globals.screenHeight() / globals.tileSize) - 1) * globals.tileSize
         transformComp.visualW = transformComp.actualW
         transformComp.visualH = transformComp.actualH   
         
@@ -602,8 +602,8 @@ function main.update(dt)
                 -- set hours and minutes to 0
                 globals.game_time.hours = 0
                 globals.game_time.minutes = 0
-                globals.gamePaused = true -- pause the game
-                timer.pause_group("colonist_movement_group") -- pause all game timers
+                ai.pause_ai_system() -- pause the AI system
+                togglePausedState(true)
                 -- show the new day message
                 if registry:valid(globals.ui.newDayUIBox) then
                     local transformComp = registry:get(globals.ui.newDayUIBox, Transform)

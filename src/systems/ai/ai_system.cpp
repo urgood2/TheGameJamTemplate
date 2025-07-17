@@ -32,6 +32,8 @@
 
 namespace ai_system
 {
+    bool ai_system_paused = false; // global flag to pause the AI system, from lua
+    
     sol::state masterStateLua; // stores all scripts in one state
 
     std::map<std::string, std::map<std::string, bool>> allPostconditionsForEveryAction; // Contains all post-conditions for every action
@@ -932,6 +934,11 @@ namespace ai_system
 
     void bind_ai_utilities(sol::state &lua)
     {
+        auto &rec = BindingRecorder::instance();
+
+        // 1) InputState usertype
+        rec.add_type("ai");
+
 
         // 1) Create (or overwrite) the `ai` table:
         lua.create_named_table("ai"); // equivalent to lua["ai"] = {}
@@ -945,8 +952,30 @@ namespace ai_system
             return cmp.def;
         }
         );
-
-
+        
+        ai.set_function(
+            "pause_ai_system",
+            []() {
+                ai_system_paused = true;
+                SPDLOG_DEBUG("AI system paused.");
+            });
+            
+        rec.record_method("ai", {
+            "pause_ai_system",
+            "Pauses the AI system, preventing any updates or actions from being processed.",
+            "This is useful for debugging or when you want to temporarily halt AI processing."
+        });
+        ai.set_function(
+            "resume_ai_system",
+            []() {
+                ai_system_paused = false;
+                SPDLOG_DEBUG("AI system resumed.");
+            });
+        rec.record_method("ai", {
+            "resume_ai_system",
+            "Resumes the AI system after it has been paused.",
+            "This allows the AI system to continue processing updates and actions."
+        });
         // 2) Move each binding into ai:
         ai.set_function("set_worldstate", [](entt::entity e, std::string key, bool value)
                         {
@@ -1075,11 +1104,7 @@ namespace ai_system
                             return result; // Sol2 → Lua table
                         });
 
-        auto &rec = BindingRecorder::instance();
-
-        // 1) InputState usertype
-        rec.add_type("ai");
-
+        
         // 2) Record it in your BindingRecorder:
         rec.record_method("ai", {
         "get_entity_ai_def",
@@ -1374,6 +1399,7 @@ namespace ai_system
 
     auto updateHumanAI(float deltaTime) -> void
     {
+        if (ai_system_paused) return;
 
         // add deltaTime to aiUpdateTickTotal
         aiUpdateTickTotal += deltaTime;

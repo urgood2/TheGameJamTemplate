@@ -2646,6 +2646,13 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     transform_tbl.set_function("CreateOrEmplace", &transform::CreateOrEmplace);
     rec.record_free_function({"transform"}, {"CreateOrEmplace", "---@param registry registry\n---@param container Entity\n---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@param entityToEmplaceTo? Entity\n---@return Entity", "Creates or emplaces an entity with core components.", true, false});
     
+    lua.set_function("create_transform_entity", 
+        []() {
+            return transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0.0f, 0.0f, 1.0f, 1.0f);
+        }
+    );
+    rec.record_free_function({""}, {"create_transform_entity", "---@return Entity", "Creates a new transform entity with default parameters.", true, false});
+    
     transform_tbl.set_function("CreateGameWorldContainerEntity", &transform::CreateGameWorldContainerEntity);
     rec.record_free_function({"transform"}, {"CreateGameWorldContainerEntity", "---@param registry registry\n---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@return Entity", "Creates a root container entity for the game world.", true, false});
 

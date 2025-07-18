@@ -151,29 +151,29 @@ function spawnNewColonist(x, y)
 
     log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
     
-    timer.every(
-        0.1, -- every 0.1 seconds
-        function()
-            -- print the location of the text entity every frame
-            -- log_debug("colonist", colonist, "ui text entity:", globals.ui.colonist_ui[colonist].hp_ui_text)
-            local transform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
-            log_debug("colonist", colonist, "ui text entity", globals.ui.colonist_ui[colonist].hp_ui_text, " location:", transform.actualX, transform.actualY)
+    -- timer.every(
+    --     0.1, -- every 0.1 seconds
+    --     function()
+    --         -- print the location of the text entity every frame
+    --         -- log_debug("colonist", colonist, "ui text entity:", globals.ui.colonist_ui[colonist].hp_ui_text)
+    --         local transform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
+    --         log_debug("colonist", colonist, "ui text entity", globals.ui.colonist_ui[colonist].hp_ui_text, " location:", transform.actualX, transform.actualY)
 
-            -- print the root entity location as well
-            local rootTransform = registry:get(uiRoot, Transform)
-            log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
+    --         -- print the root entity location as well
+    --         local rootTransform = registry:get(uiRoot, Transform)
+    --         log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
 
-            -- print the uibox location
-            local uiboxTransform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
-            log_debug("colonist", colonist, "uibox entity", globals.ui.colonist_ui[colonist].hp_ui_box, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
+    --         -- print the uibox location
+    --         local uiboxTransform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
+    --         log_debug("colonist", colonist, "uibox entity", globals.ui.colonist_ui[colonist].hp_ui_box, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
 
-            log_debug(ui.box.DebugPrint(registry, globals.ui.colonist_ui[colonist].hp_ui_box, 4)) -- print the uibox debug info
-        end,
-        0, -- infinite repetitions
-        true, -- start immediately
-        nil, -- no "after" callback
-        "colonist_ui_update_" .. colonist -- unique tag per colonist
-    )
+    --         log_debug(ui.box.DebugPrint(registry, globals.ui.colonist_ui[colonist].hp_ui_box, 4)) -- print the uibox debug info
+    --     end,
+    --     0, -- infinite repetitions
+    --     true, -- start immediately
+    --     nil, -- no "after" callback
+    --     "colonist_ui_update_" .. colonist -- unique tag per colonist
+    -- )
     
 end
 

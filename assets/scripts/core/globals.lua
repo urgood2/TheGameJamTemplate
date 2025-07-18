@@ -51,6 +51,7 @@ globals.creature_defs = {
   {
     id = "healer",
     cost = 3,
+    initial_hp = 5, -- initial health points for the healer
     spriteID = "3868-TheRoguelike_1_10_alpha_661.png" -- the sprite ID for the healer
   },
   {

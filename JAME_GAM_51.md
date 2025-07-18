@@ -1,6 +1,7 @@
 # immediate todos
 - global pause funciton that pauses weather event & ai & day counter
 - make day counter not run when in main menu
+- deduct gold at end of day for healers & damage cushions, add game over state for negative currency
 
  - [ ]  Same challenges, but different strategies - 
  - [ ]  weather events of increasing damage spring (acid), summer (sunburn), rare golden season (gold falls from sky, does some damage) - pace these to happen every 2 days, each season is 3 weather events, there is only summer and winter, 

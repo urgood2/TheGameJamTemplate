@@ -191,6 +191,30 @@ function ui_defs.generateUI()
     rootGameObject.methods.onRelease = function(registry, releasedOn, released)
         log_debug("entity", released, "released on", releasedOn)
         
+        -- is it one of the colonists?
+        if lume.find(globals.colonists, released) == nil then
+            -- not one of the colonists. show text popup
+            newTextPopup(
+                localization.get("ui.drag_to_duplicate_invalid") -- text to show
+            )   
+            return
+        else
+            -- check the colonist has more than 2 hp 
+            local health = getBlackboardFloat(released, "health") or 0
+            if health < 2 then
+                -- not enough health to duplicate, show text popup
+                newTextPopup(
+                    localization.get("ui.drag_to_duplicate_invalid_health") -- text to show
+                )
+                return
+            end
+            
+            log_debug("Duplicating colonist", released, "on", releasedOn, "with health", health)
+            
+            -- half the health of the colonist
+            setBlackboardFloat(released, "health", health / 2) -- halve the health of the colonist
+        end
+        
         -- pause the game, show a window which shows a list of selections
         togglePausedState(true) -- pause the game
         
@@ -253,6 +277,26 @@ function ui_defs.generateUI()
         "ui.healer_button", -- localization key for text
         findInTable(globals.creature_defs, "id", "healer").cost -- cost to buy the colonist home
     )
+    
+    healer_button_def.config.buttonCallback = function ()
+        -- check if user has enough gold
+        if (globals.currency < findInTable(globals.creature_defs, "id", "healer").cost) then
+            newTextPopup(
+                localization.get("ui.not_enough_currency") -- text to show
+            )
+            return
+        end
+        -- deduct the cost from the currency
+        globals.currency = globals.currency - findInTable(globals.creature_defs, "id", "healer").cost
+        spawnHealer() -- spawn a healer
+        
+        -- resume the game
+        togglePausedState(false) -- unpause the game
+        
+        -- hide the creature duplicate choice UI box
+        local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        transform.actualY = globals.screenHeight() -- hide the UI box
+    end
     
     
     local damage_cushion_button_def = createStructurePlacementButton(

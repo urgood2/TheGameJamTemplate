@@ -193,10 +193,10 @@ namespace transform
     {
         if (registry->valid(e) == false) return;
         
-        auto &node = registry->get<transform::GameObject>(e);
-        if (node.methods.onRelease) {
-            node.methods.onRelease(*registry, e, entt::null);
-        }
+        // auto &node = registry->get<transform::GameObject>(e);
+        // if (node.methods.onRelease) {
+        //     node.methods.onRelease(*registry, e, entt::null);
+        // }
     }
 
     

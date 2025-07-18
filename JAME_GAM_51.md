@@ -1,5 +1,4 @@
 # immediate todos
-- structure placement & functionality
 - relic purchasing & shop randomization & functionality
 - gold digger & healer behavior
 - use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
@@ -32,7 +31,7 @@
  - [ ] Structures (expensive but permanent): mass umbrella (absolute orotection, but cootime of 5 days), gold generator (2 gold per minion, but subtracts health from 2 random minions per day), weather deflector (chance to swap an incoming weather to something else)
     -- mass protector 3703-TheRoguelike_1_10_alpha_496.png
     -- gold generator 3435-TheRoguelike_1_10_alpha_228.png
-    -- 3530-TheRoguelike_1_10_alpha_323.png
+    -- weather deflector 3530-TheRoguelike_1_10_alpha_323.png
  
  - [ ] Ending a stage without taking damage or by not losing a minion grants bonus
  - [ ] 

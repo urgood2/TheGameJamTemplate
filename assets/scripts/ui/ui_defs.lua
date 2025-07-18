@@ -634,19 +634,21 @@ function ui_defs.generateUI()
         buyNewColonistHomeCallback()
     end
     
-    local duplicator_structure_def = createStructurePlacementButton(
-        "3641-TheRoguelike_1_10_alpha_434.png", -- sprite ID for duplicator
-        "duplicatorButtonAnimationEntity", -- global animation handle
-        "duplicatorTextEntity", -- global text handle
-        "ui.duplicator_text", -- localization key for text
-        findInTable(globals.structure_defs, "id", "duplicator").cost -- cost to buy the duplicator
-    )
+    -- local duplicator_structure_def = createStructurePlacementButton(
+    --     "3641-TheRoguelike_1_10_alpha_434.png", -- sprite ID for duplicator
+    --     "duplicatorButtonAnimationEntity", -- global animation handle
+    --     "duplicatorTextEntity", -- global text handle
+    --     "ui.duplicator_text", -- localization key for text
+    --     findInTable(globals.structure_defs, "id", "duplicator").cost -- cost to buy the duplicator
+    -- )
     
-    duplicator_structure_def.config.buttonCallback = function ()
-        buyNewDuplicatorCallback()
-    end
+    -- duplicator_structure_def.config.buttonCallback = function ()
+    --     buyNewDuplicatorCallback()
+    -- end
     
-    
+
+
+
     
     -- make horizontal container for other items if necessary
     local structurePlacementRow = UIElementTemplateNodeBuilder.create()
@@ -664,7 +666,7 @@ function ui_defs.generateUI()
                 :build()
         )
         :addChild(home_structure_def)
-        :addChild(duplicator_structure_def)
+        -- :addChild(duplicator_structure_def)
         :build()
         
     -- new vertical container for title and buttons row
@@ -754,18 +756,26 @@ function ui_defs.generateUI()
     currencyTransform.visualY = currencyTransform.actualY -- update visual position as well
     
     
-    -- make three buttons for weather events
-    local weatherEvents = {
-        {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity", cost = 4},
-        {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity", cost = 6},
-        {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity", cost = 2},
-        {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity", cost = 8},
+    local relicSlots = {
+        {id = "relic1", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.relic_slot_1", animHandle = "relic1ButtonAnimationEntity", textHandle = "relic1TextEntity"},
+        {id = "relic2", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.relic_slot_2", animHandle = "relic2ButtonAnimationEntity", textHandle = "relic2TextEntity"},
+        {id = "relic3", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.relic_slot_3", animHandle = "relic3ButtonAnimationEntity", textHandle = "relic3TextEntity"},
     }
+
+    -- -- make three buttons for weather events
+    -- local weatherEvents = {
+    --     {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity", cost = 4},
+    --     {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity", cost = 6},
+    --     {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity", cost = 2},
+    --     {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity", cost = 8},
+    -- }
     
     local weatherButtonDefs = {}
     
     -- populate weatherButtonDefs based on weatherEvents
-    for _, event in ipairs(weatherEvents) do
+    for _, event in ipairs(relicSlots) do
+
+        -- TODO: so these are stored under globals.ui["relic1TextEntity"] globals.ui["relic1ButtonAnimationEntity"] and so on, we will access these later
         local buttonDef = createStructurePlacementButton(
             event.spriteID, -- sprite ID for the weather event
             event.animHandle, -- global animation handle

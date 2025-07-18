@@ -50,12 +50,15 @@ globals.creature_defs = {
     id = "gold_digger",
     cost = 6,
     gold_produced_each_dig = 1, -- amount of gold produced each time the gold digger digs
+    dig_cooldown_seconds = 10, -- cooldown time in seconds before the gold digger can dig again
     initial_hp = 2, -- initial health points for the gold digger
     spriteID = "3830-TheRoguelike_1_10_alpha_623.png", -- the sprite ID for the gold digger
   },
   {
     id = "healer",
     cost = 3,
+    heal_cooldown_seconds = 10, -- cooldown time in seconds before the healer can heal again
+    heal_amount = 3, -- amount of health restored each time the healer heals
     initial_hp = 5, -- initial health points for the healer
     spriteID = "3868-TheRoguelike_1_10_alpha_661.png" -- the sprite ID for the healer
   },

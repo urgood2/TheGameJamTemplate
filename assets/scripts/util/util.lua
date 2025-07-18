@@ -312,7 +312,7 @@ function newTextPopup(textString, x, y, duration)
   local entry = ui.definitions.getNewDynamicTextEntry(
     function() return textString end,  -- initial text
     30.0,                              -- font size
-    "rainbow"                          -- animation spec
+    ""                          -- animation spec
   )
   local entity = entry.config.object
 

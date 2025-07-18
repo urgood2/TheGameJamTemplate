@@ -11977,6 +11977,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/eat.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions\\eat.lua"
     ],
+    "action_heal_other": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/heal_other.lua"
+    ],
     "action_script": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/actions",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\actions",
@@ -13256,6 +13259,9 @@
     ],
     "blackboard_digger_gold_init": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/gold_digger.lua"
+    ],
+    "blackboard_healer_init": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/healer.lua"
     ],
     "blackboard_init_kobold": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/kobold.lua",
@@ -16938,6 +16944,9 @@
     "entity_factory": [
         "entity_factory.lua"
     ],
+    "entity_healer_type": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types/healer.lua"
+    ],
     "entity_kobold_type": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types/kobold.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\entity_types\\kobold.lua"
@@ -17765,6 +17774,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\glow.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glow.fs"
     ],
+    "goal_healer_selector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors/healer.lua"
+    ],
     "goal_kobold_selector": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors/kobold.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\goal_selectors\\kobold.lua"
@@ -17969,6 +17981,12 @@
     ],
     "harp_magic_morphing_scale_spell_stereo_subtle_synth": [
         "MAGIC_SPELL_Morphing_Synth_Harp_Scales_Subtle_stereo.wav"
+    ],
+    "heal_other": [
+        "heal_other.lua"
+    ],
+    "healer": [
+        "healer.lua"
     ],
     "holo_shader_vertex": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\holo_vertex.vs",

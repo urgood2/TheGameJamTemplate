@@ -1,6 +1,6 @@
 # immediate todos
 - relic purchasing & shop randomization & functionality
-- gold digger & healer behavior
+- healer behavior
 - use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
 - ui window reordering
 - deduct gold at end of day for healers & damage cushions, add game over state for negative currency
@@ -145,3 +145,4 @@
 - make get/set blackboard methods return lua nil if invalid instead of throwing error
 - cancel_self() function which will queue a cancel for the current timer after loop finishes to avoid triggering errors
 - dynamic text entity will reset its alignment and set to center on its master entity when updated via setText
+- performance optimizations for ai system, namely blackboard access

@@ -42,13 +42,31 @@ return {
         -- bb.enemy_visible = visible
     end,
     
+    can_heal_other = function(entity, dt)
+        -- when's the last time the healer healed?
+        if (blackboardContains(entity, "last_heal_time") == false) then
+            return
+        end
+        local heal_time = getBlackboardFloat(entity, "last_heal_time")
+        local heal_cooldown = findInTable(globals.creature_defs, "id", "healer").heal_cooldown_seconds or 10 -- default to 10 seconds if not found
+        if (GetTime() - heal_time) < heal_cooldown then
+            -- if the last heal time is less than 10 seconds ago, then we cannot heal
+            ai.set_worldstate(entity, "canhealother", false)
+            log_debug("can_heal_other: Entity " .. tostring(entity) .. " cannot heal yet.")
+        else
+            ai.set_worldstate(entity, "canhealother", true)
+            log_debug("can_heal_other: Entity " .. tostring(entity) .. " can heal now.")
+        end
+    end,
+    
     can_dig_for_gold = function(entity, dt)
         -- when's the last time the gold digger dug for gold?
         if (blackboardContains(entity, "last_dig_time") == false) then
             return
         end
         local dig_time =  getBlackboardFloat(entity, "last_dig_time")
-        if (GetTime() - dig_time) < 10 then
+        local dig_cooldown = findInTable(globals.creature_defs, "id", "gold_digger").dig_cooldown_seconds or 10 -- default to 10 seconds if not found
+        if (GetTime() - dig_time) < dig_cooldown then
             -- if the last dig time is less than 5 seconds ago, then we cannot dig for gold
             ai.set_worldstate(entity, "candigforgold", false)
             log_debug("can_dig_for_gold: Entity " .. tostring(entity) .. " cannot dig for gold yet.")

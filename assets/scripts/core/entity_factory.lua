@@ -179,7 +179,7 @@ end
 
 function spawnHealer(x, y)
     -- 1) Spawn a new kobold AI entity
-    local colonist = create_ai_entity("kobold")
+    local colonist = create_ai_entity("healer")
         
     globals.healers[#globals.healers+1] = colonist -- add to the global healer list
 

@@ -135,7 +135,7 @@ function spawnNewColonist(x, y)
     )
     
     -- anchor to the top center of the colonist 
-    transform.AssignRole(registry, uiBox, InheritedPropertiesType.PermanentAttachment, colonist,
+    transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
         InheritedPropertiesSync.Strong,
         InheritedPropertiesSync.Weak,
         InheritedPropertiesSync.Strong,

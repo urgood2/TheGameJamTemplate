@@ -1,3 +1,5 @@
+local task = require("task/task")
+
 -- Wraps v into the interval [−size, limit]
 function wrap(v, size, limit)
   if v > limit then return -size end
@@ -739,12 +741,30 @@ end
 function startEntityWalkMotion(e)
   timer.every(0.5,
     function()
+      if (not registry:valid(e)) then
+        log_debug("Entity is not valid, stopping walk motion")
+        
+        -- use schduler to remove the timer
+        local task1 = {
+              update = function(self, dt)
+                  task.wait(0.5) -- wait for 0.5 seconds
+                  log_debug("Removing walk timer for entity: ", e)
+                  timer.cancel(e .. "_walk_timer") -- cancel the timer
+              end
+          }
+        scheduler:attach(task1) -- attach the task to the scheduler
+        return
+      end
       local t = registry:get(e, Transform)
       t.actualR = 10 * math.sin(GetTime() * 4)   -- Multiply GetTime() by a factor to increase oscillation speed
     end,
     0,
     true,
     function()
+      if (not registry:valid(e)) then
+        log_debug("Entity is not valid, stopping walk motion")
+        return -- stop the timer if the entity is not valid
+      end
       local t = registry:get(e, Transform)
       t.actualR = 0
     end,

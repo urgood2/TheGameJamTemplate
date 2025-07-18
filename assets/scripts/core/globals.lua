@@ -94,7 +94,7 @@ globals.colonists = globals.colonists or {} -- list of colonists in the game
 globals.ui = {
   
   colonist_ui = {
-    -- array with id: entity, hp_ui_text: entity
+    -- array with id: entity, hp_ui_text: entity, hp_ui_box: entity
   },
   
   timeTextUIBox = nil, -- the UI box that contains the time text

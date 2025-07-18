@@ -1608,8 +1608,9 @@ namespace ui
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
-        else if (config->uiType == UITypeEnum::OBJECT && config->object)
+        else if (config->uiType == UITypeEnum::OBJECT && config->object && globals::registry.any_of<transform::GameObject>(config->object.value()))
         {
+            // ZoneScopedN("UI Element: Object Logic");
             //TODO: this part needs fixing
             // hightlighted object outline
             auto &objectNode = globals::registry.get<transform::GameObject>(config->object.value());
@@ -2314,6 +2315,13 @@ namespace ui
             if (registry.any_of<ui::UIConfig>(object) == false){
                 // no uiconfig entity. emplace one.
                 registry.emplace_or_replace<ui::UIConfig>(object);
+            }
+            
+            // skip if transform is destroyed
+            if (!registry.valid(object) || !registry.any_of<transform::Transform>(object))
+            {
+                SPDLOG_ERROR("UI Element: UpdateObject: Object entity {} does not have a Transform component or is not valid.", static_cast<int>(object));
+                return;
             }
 
             UpdateObject(registry, entity, &globalUIGroup.get<ui::UIConfig>(entity), 

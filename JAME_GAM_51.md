@@ -1,6 +1,7 @@
 # immediate todos
+- apply globals.end_of_day_gold_multiplier
+- need simple way of showing current stats, probably just use text ui element (how to update this on demand?)
 - relic purchasing & shop randomization & functionality
-- healer behavior
 - use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
 - ui window reordering
 - deduct gold at end of day for healers & damage cushions, add game over state for negative currency
@@ -10,14 +11,14 @@
  - [ ] Increasing damage, damage frequency, different damage types. Each year increases base damage done by 3. 
  - [ ] Different strategies - relics, copy minions, structures
  - [ ] Relics - rare, can only buy 1 per shop at end of day: resist damage, absorb damage, give chance based healing, 
-    -- global resist acid damage by 1/3/5
-    -- global resist cold damage by 1/3/5
-    -- grant 10%/20%/30% dodge chance during weather event
-    -- on a colonist being damaged, 50% chance to grant 2 hp to a random colonist
-    -- on dodge, grant 2 hp to a random colonist
-    -- damage taken X2, but all gold doubled at the end of the day
-    -- gold diggers dig 2/4/6 more gold each time
-    -- healers heal 2/4/6 times as much
+    - [x] global resist acid damage by 1/3/5
+    - [x] global resist cold damage by 1/3/5
+    - [x] grant 10%/20%/30% dodge chance during weather event
+    - [x] on a colonist being damaged, 50% chance to grant 2 hp to a random colonist
+    - [x] on dodge, grant 2 hp to a random colonist
+    - [x] damage taken X2, but all gold doubled at the end of the day
+    - [x] gold diggers dig 2/4/6 more gold each time
+    - [x] healers heal 2/4/6 times as much
     -- damage cushions gain 10/40/70 hp
  
  - [ ] Copy  (cheap but can die, produce at any time) - healer minion, damage cushion minion, gold digger minion
@@ -146,3 +147,4 @@
 - cancel_self() function which will queue a cancel for the current timer after loop finishes to avoid triggering errors
 - dynamic text entity will reset its alignment and set to center on its master entity when updated via setText
 - performance optimizations for ai system, namely blackboard access
+-  need streamlined way to access quadtree features, like collision checking specific areas 

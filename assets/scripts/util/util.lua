@@ -331,7 +331,7 @@ function newTextPopup(textString, x, y, duration, effectString)
   tc.visualY = tc.actualY
 
   -- 5) give it some jiggle/motion
-  transform.InjectDynamicMotion(entity, 0.7, 0)
+  -- transform.InjectDynamicMotion(entity, 0.7, 0)
   
   timer.for_time(
     duration and duration - .2 or 1.8, -- duration in seconds

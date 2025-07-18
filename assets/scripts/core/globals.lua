@@ -7,7 +7,7 @@ globals.end_of_day_gold_multiplier = 1.0 -- multiplier for gold at the end of th
 globals.weather_event_active = false -- whether a weather event is currently active
 
 globals.timeUntilNextWeatherEvent = 0 -- time until the next weather event occurs, in days
-globals.current_weather_event = "snow"-- the current weather event, if any
+globals.current_weather_event = nil -- the current weather event, if any
 globals.current_weather_event_base_damage = 1 -- the current damage from the weather event,
 
 globals.weather_event_defs = {

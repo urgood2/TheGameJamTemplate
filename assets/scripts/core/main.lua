@@ -726,7 +726,7 @@ function main.init()
                     -- show a text popup above the colonist
                     local colonistTransform = registry:get(colonist, Transform)
                     newTextPopup(
-                        localization.get("ui.acid_rain_damage_text", {damage = damage_done}), -- text to display
+                        localization.get("ui.snow_damage_text", {damage = damage_done}), -- text to display
                         colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
                         colonistTransform.actualY - 50, -- position above the colonist
                         5 -- duration in seconds

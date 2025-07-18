@@ -17,6 +17,7 @@
 		"drag_to_duplicate": "Drop to\nduplicate",
 		"colonist_dead_text": "Colonist is dead!",
 		"acid_rain_damage_text": "Acid damage: {damage}",
+		"snow_damage_text": "Fallout damage: {damage}",
 		"weather_ui_format": "Current weather: {weather}",
 		"colonist_home_tooltip_title": "Colonist Home",
 		"colonist_home_tooltip_body": "This is a colonist home.\nIt houses a single colonist.",

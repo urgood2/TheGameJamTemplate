@@ -1,11 +1,13 @@
-- progress bar doesn't render properly when inside a uibox and given alginment - only renders at the inner top. why?
 
-- end of day- bring up shop screen
-- close button for shop
-- building placement
-- trigger interaction 
-- cost overlay (maybe attachment?) to buttons
-- camera with right mouse
+ - [ ]  Same challenges, but different strategies - 
+ - [ ]  weather events of increasing damage spring (acid), summer (sunburn), rare golden season (gold falls from sky, does some damage) - pace these to happen every 2 days, each season is 3 weather events, there is only summer and winter, 
+ - [ ] Increasing damage, damage frequency, different damage types. Each year increases base damage done by 3. 
+ - [ ] Different strategies - relics, copy minions, structures
+ - [ ] Relics - rare, can only buy 1 per shop at end of day: resist damage, absorb damage, give chance based healing, 
+ - [ ] Copy  (cheap but can die, produce at any time) - healer minion, damage cushion minion, gold digger minion
+ - [ ] Structures (expensive but permanent): mass umbrella (absolute orotection, but cootime of 5 days), gold generator (2 gold per minion, but subtracts health from 2 random minions per day), weather deflector (chance to swap an incoming weather to something else)
+ - [ ] Ending a stage without taking damage or by not losing a minion grants bonus
+ - [ ] 
 
 
 - A day loop where one day ends, you go to a shop screen.
@@ -95,6 +97,13 @@
 
 
 # later todos
+ - [ ] Different font for title and body in tooltip
+ - [ ] How to make ui element float from its  the indow (like hover effect, but with y axis?)
+ - [ ] Reduce crt noise to make text more readable
+ - [ ] large bar across screen + announcement text
+ - [ ] Really need to make use of the layer order thing. To show stuff on top
+ - [ ] Customizinf transform shadows to have a bottom shadow instead
+ - [ ] Damage flash shader (customizable color)
 - dedicated Alignment callback for windows on resize
 - text updating wrong. not easy to configure updates with on update method for some reason.
 - renew alignment needs to cache so it can be called every frame

@@ -100,7 +100,7 @@ function spawnGoldDigger(x, y)
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
+                :addColor(util.getColor("blank"))
                 :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -246,7 +246,7 @@ function spawnHealer(x, y)
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
+                :addColor(util.getColor("blank"))
                 :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -291,7 +291,7 @@ function spawnHealer(x, y)
     
     -- set the alignment flag for the uibox to be centered above the colonist
     local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
-    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
 
     local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
@@ -369,7 +369,7 @@ function spawnDamageCushion(x, y)
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
+                :addColor(util.getColor("blank"))
                 :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -414,7 +414,7 @@ function spawnDamageCushion(x, y)
     
     -- set the alignment flag for the uibox to be centered above the colonist
     local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
-    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
 
     local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
@@ -489,7 +489,7 @@ function spawnNewColonist(x, y)
     
     local textDef =  ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") }) end,  -- initial text
-        20.0,                                 -- font size
+        25.0,                                 -- font size
         ""                       -- animation spec
     )
 
@@ -497,7 +497,7 @@ function spawnNewColonist(x, y)
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
+                :addColor(util.getColor("blank"))
                 :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -542,7 +542,7 @@ function spawnNewColonist(x, y)
     
     -- set the alignment flag for the uibox to be centered above the colonist
     local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
-    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
 
     local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 

@@ -1,10 +1,14 @@
 # immediate todos
+- fill up relic def ui strings, add to relic defs, hook them up in the shop (weighted chance based on cost)
 - apply globals.end_of_day_gold_multiplier
+- deduct gold at end of day for healers & damage cushions, add game over state for negative currency
+- relic digger creatures who have a chance to dig up relics
+- make hurt entities blink
 - need simple way of showing current stats, probably just use text ui element (how to update this on demand?)
 - relic purchasing & shop randomization & functionality
 - use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
 - ui window reordering
-- deduct gold at end of day for healers & damage cushions, add game over state for negative currency
+
 
  - [ ]  Same challenges, but different strategies - 
  - [ ]  weather events of increasing damage spring (acid), summer (sunburn), rare golden season (gold falls from sky, does some damage) - pace these to happen every 2 days, each season is 3 weather events, there is only summer and winter, 

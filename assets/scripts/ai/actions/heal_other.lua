@@ -88,11 +88,13 @@ return {
                 util.getColor("blue_teal")
             )
             
-            -- newTextPopup(
-            --     "+ "..healAmount,
-            --     transform.visualX + transform.visualW / 2,
-            --     transform.visualY + transform.visualH / 2   
-            -- )
+            newTextPopup(
+                "+ "..healAmount,
+                transform.visualX + transform.visualW / 2,
+                transform.visualY + transform.visualH / 2,
+                3.0, -- duration
+                "color=pastel_pink" -- effect
+            )
         else
             log_debug("No entity to heal found.")
             newTextPopup("No entity to heal!")

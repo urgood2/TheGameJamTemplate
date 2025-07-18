@@ -77,13 +77,16 @@ return {
         transformComp.visualX = transformComp.actualX -- snap X
         transformComp.visualY = transformComp.actualY -- snap Y
         
-        -- newTextPopup("+ "..findInTable(
-        --     globals.creature_defs,
-        --     "id",
-        --     "gold_digger"
-        --   ).gold_produced_each_dig,
-        --   transformComp.visualX + transformComp.visualW / 2,
-        --   transformComp.visualY + transformComp.visualH / 2)
+        newTextPopup("+ "..findInTable(
+            globals.creature_defs,
+            "id",
+            "gold_digger"
+          ).gold_produced_each_dig,
+          transformComp.visualX + transformComp.visualW / 2,
+          transformComp.visualY + transformComp.visualH / 2,
+        3,
+          "color=chiffon_lemon" -- effect
+        )
         
         timer.after(
           1.5,

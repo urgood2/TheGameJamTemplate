@@ -307,12 +307,12 @@ function centerTransformOnScreen(entity)
   transformComp.visualY = transformComp.actualY -- snap Y
 end
 
-function newTextPopup(textString, x, y, duration)
+function newTextPopup(textString, x, y, duration, effectString)
   -- 1) spawn the dynamic text entry
   local entry = ui.definitions.getNewDynamicTextEntry(
     function() return textString end,  -- initial text
     30.0,                              -- font size
-    ""                          -- animation spec
+    effectString or ""                          -- animation spec
   )
   local entity = entry.config.object
 

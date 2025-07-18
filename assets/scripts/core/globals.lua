@@ -49,6 +49,7 @@ globals.creature_defs = {
   {
     id = "gold_digger",
     cost = 6,
+    gold_produced_each_dig = 1, -- amount of gold produced each time the gold digger digs
     initial_hp = 2, -- initial health points for the gold digger
     spriteID = "3830-TheRoguelike_1_10_alpha_623.png", -- the sprite ID for the gold digger
   },

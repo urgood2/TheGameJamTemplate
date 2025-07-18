@@ -33,7 +33,7 @@ end
 
 function spawnGoldDigger(x, y)
     -- 1) Spawn a new kobold AI entity
-    local colonist = create_ai_entity("kobold")
+    local colonist = create_ai_entity("gold_digger")
         
     globals.gold_diggers[#globals.gold_diggers+1] = colonist -- add to the global gold digger list
 

@@ -11966,6 +11966,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai_actions.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai_actions.json"
     ],
+    "action_dig_for_gold": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/dig_for_gold.lua"
+    ],
     "action_duplicator_use": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/use_duplicator.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions\\use_duplicator.lua"
@@ -13250,6 +13253,9 @@
     ],
     "blackberry": [
         "Blackberry"
+    ],
+    "blackboard_digger_gold_init": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/gold_digger.lua"
     ],
     "blackboard_init_kobold": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init/kobold.lua",
@@ -15636,6 +15642,18 @@
     "demand_juice_on_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\on_demand_juice.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/on_demand_juice.fs"
+    ],
+    "dig_for_gold": [
+        "dig_for_gold.lua"
+    ],
+    "digger_entity_gold_type": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types/gold_digger.lua"
+    ],
+    "digger_goal_gold_selector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selectors/gold_digger.lua"
+    ],
+    "digger_gold": [
+        "gold_digger.lua"
     ],
     "dim_gray": [
         "DIM GRAY"

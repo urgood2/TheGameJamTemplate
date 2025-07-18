@@ -3,11 +3,13 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
+#include "spdlog/spdlog.h"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
+#include "systems/ui/ui_data.hpp"
 #include "systems/ui/util.hpp"
 #include "systems/ui/element.hpp"
 #include "systems/text/textVer2.hpp"
@@ -229,6 +231,14 @@ namespace transform
     // not exposed publicly
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
+        static auto getRotationAwareOffset = [](float ox, float oy, float angle) -> Vector2 {
+            float cosA = cos(angle);
+            float sinA = sin(angle);
+            return {
+                ox * cosA - oy * sinA,
+                ox * sinA + oy * cosA
+            };
+        };
         
         // ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
@@ -352,8 +362,15 @@ namespace transform
         }
 
         // so this should cover cases where uibox, which is the master of a uiroot, has an actual offset. In which case, the uiroot will align its location to that offset and act as though its relative location to the master is actually 0,0 (making ui offset caculations for layout simpler)
-        transform.getXSpring().targetValue = parentTransform.getXSpring().value + (parentRole.offset ? parentRole.offset->x : 0) + role.offset->x;
-        transform.getYSpring().targetValue = parentTransform.getYSpring().value + (parentRole.offset ? parentRole.offset->y : 0) + role.offset->y;
+        float rawOffsetX = role.offset->x + (parentRole.offset ? parentRole.offset->x : 0);
+        float rawOffsetY = role.offset->y + (parentRole.offset ? parentRole.offset->y : 0);
+
+        float parentAngle = parentTransform.getVisualR(); // This is your rotation source
+        Vector2 rotatedOffset = getRotationAwareOffset(rawOffsetX, rawOffsetY, parentAngle);
+
+        transform.getXSpring().targetValue = parentTransform.getVisualX() + rotatedOffset.x;
+        transform.getYSpring().targetValue = parentTransform.getVisualY() + rotatedOffset.y;
+
         if (role.master == globals::gameWorldContainerEntity)
             // SPDLOG_DEBUG("Aligning to master (game world) at values: x: {}, y: {}", transform.getXSpring().targetValue, transform.getYSpring().targetValue);
 
@@ -390,6 +407,11 @@ namespace transform
     auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> void
     {
         auto registry = &globals::registry;
+
+        if (registry->any_of<ui::UIConfig>(e) && registry->get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
+        {
+            SPDLOG_DEBUG("MoveWithMaster called for entity {} (root)", (int)e);
+        }
         
         // ZoneScopedN("MoveWithMaster");
         Vector2 tempRotatedOffset{};
@@ -413,7 +435,13 @@ namespace transform
         
         auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode, parentTransform, parentRole);
         auto parent = parentRetVal.master.value();
-
+        // getmaster for a ui root entity returns the ui box's master, which is not what we want. if this is a ui root, use the immediate master instead.
+        if (ui::globalUIGroup.contains(e) &&
+            ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
+        {
+            parent = selfRole.master; // use the immediate master instead of the master of the ui box
+        }
+        //FIXME: parent != selfRole.master after the lambda below. why?
         static auto fillParentTransformAndRole = [](entt::entity parent, Transform *&parentTransform, InheritedProperties *&parentRole)
         {
             auto &registry = globals::registry;
@@ -447,7 +475,7 @@ namespace transform
         {
             // if this is a UI element object, we need to use the immediate master
             parent = selfRole.master;
-            fillParentTransformAndRole(e, parentTransform, parentRole);
+            fillParentTransformAndRole(parent, parentTransform, parentRole);
         }
         
         UpdateDynamicMotion(e, dt, selfTransform);
@@ -472,6 +500,7 @@ namespace transform
         auto parentVisualH = parentSprings.h->value;
         auto parentVisualR = parentSprings.r->value;
 
+
         if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
             tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
@@ -491,7 +520,7 @@ namespace transform
                 tempWidth = -selfActualW / 2 + parentActualW / 2;
                 tempHeight = -selfActualH / 2 + parentActualH / 2;
                 tempIntermediateOffsets.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x - tempWidth;
-                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y - tempHeight;
+                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y - tempHeight;
                 tempRotatedOffset.x = tempIntermediateOffsets.x * tempAngleCos - tempIntermediateOffsets.y * tempAngleSin + tempWidth;
                 tempRotatedOffset.y = tempIntermediateOffsets.x * tempAngleSin + tempIntermediateOffsets.y * tempAngleCos + tempHeight;
             }
@@ -724,6 +753,11 @@ namespace transform
 
     auto GetMaster(entt::entity selfEntity, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*& parentTransformStorage, InheritedProperties*& parentRoleStorage) -> Transform::FrameCalculation::MasterCache
     {
+
+        if ((int)selfEntity == 1365)
+        {
+            SPDLOG_DEBUG("GetMaster called for entity 1365 (UIBOX)");
+        }
         // Check the global cache first
         auto it = globals::getMasterCacheEntityToParentCompMap.find(selfEntity);
         if (it != globals::getMasterCacheEntityToParentCompMap.end())

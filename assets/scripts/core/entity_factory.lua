@@ -95,11 +95,28 @@ function spawnNewColonist(x, y)
         20.0,                                 -- font size
         ""                       -- animation spec
     )
+
+    local rootDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        
+    :addChild(textDef)
+    :build()
+
+        
     
     globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
     
     -- put in a uibox
-    local uiBox = ui.box.Initialize({},textDef   )
+    local uiBox = ui.box.Initialize({}, rootDef   )
     
     -- update hp text every 0.5 seconds
     timer.every(
@@ -121,10 +138,38 @@ function spawnNewColonist(x, y)
     transform.AssignRole(registry, uiBox, InheritedPropertiesType.PermanentAttachment, colonist,
         InheritedPropertiesSync.Strong,
         InheritedPropertiesSync.Weak,
-        InheritedPropertiesSync.Weak,
-        InheritedPropertiesSync.Weak,
-        Vec2(0, -50) -- offset it a bit upwards
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak
+        -- Vec2(0, -50) -- offset it a bit upwards
     );
+
+    local uiRoot = registry:get(uiBox, UIBoxComponent).uiRoot
+
+    log_debug("uibox", uiBox, "created for colonist", colonist, "uiroot is", uiRoot)
+    
+    timer.every(
+        0.1, -- every 0.1 seconds
+        function()
+            -- print the location of the text entity every frame
+            -- log_debug("colonist", colonist, "ui text entity:", globals.ui.colonist_ui[colonist].hp_ui_text)
+            local transform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
+            log_debug("colonist", colonist, "ui text entity", globals.ui.colonist_ui[colonist].hp_ui_text, " location:", transform.actualX, transform.actualY)
+
+            -- print the root entity location as well
+            local rootTransform = registry:get(uiRoot, Transform)
+            log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
+
+            -- print the uibox location
+            local uiboxTransform = registry:get(uiBox, Transform)
+            log_debug("colonist", colonist, "uibox entity", uiBox, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
+
+            log_debug(ui.box.DebugPrint(registry, uiBox, 4)) -- print the uibox debug info
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "colonist_ui_update_" .. colonist -- unique tag per colonist
+    )
     
 end
 

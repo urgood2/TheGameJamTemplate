@@ -11967,7 +11967,8 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai_actions.json"
     ],
     "action_duplicator_use": [
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/use_duplicator.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/use_duplicator.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions\\use_duplicator.lua"
     ],
     "action_eat": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/eat.lua",
@@ -11984,7 +11985,8 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\actions\\wander.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/actions/wander.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\actions\\wander.lua",
-        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/wander.lua"
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/actions/wander.lua",
+        "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\actions\\wander.lua"
     ],
     "ai_blackboard_init": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init",

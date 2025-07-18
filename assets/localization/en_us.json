@@ -24,7 +24,7 @@
 		"duplicator_tooltip_body": "This is a duplicator.\nIt duplicates a colonist, but at a cost!",
 		"colonistHPText": "HP: {hp}/{maxHp}",
 		"cost_text": "{cost}",
-		"shop_close" : "Close",
+		"shop_close" : "Close and resume",
 		"new_day_text": "A new day has arrived!",
 		"basic_umbrella_name": "Basic Umbrella",
 		"basic_umbrella_desc": "1 damage reduction in a weather event.",

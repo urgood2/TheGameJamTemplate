@@ -590,6 +590,13 @@ function main.init()
                     
                     log_debug("Acid rain event: applying damage to damage cushion:", colonist)
                     
+                    
+                    if not registry:valid(colonist) then
+                        log_debug("Damage cushion is not valid, skipping damage application")
+                        globals.damage_cushions[index] = nil -- remove the invalid damage cushion
+                        return -- If the damage cushion is not valid, do not apply damage
+                    end
+                    
                 else 
                     -- if there are no damage cushions, then choose a random colonist
                     
@@ -610,6 +617,14 @@ function main.init()
                 -- choose a random colonist
                 
                 log_debug("Acid rain event: applying damage to colonist:", colonist)
+                
+                if not registry:valid(colonist) then
+                    log_debug("Colonist is not valid, skipping damage application")
+                    lume.remove(globals.colonists, colonist) -- remove the invalid colonist from the list
+                    lume.remove(globals.healers, colonist) -- remove the invalid colonist from the list
+                    lume.remove(globals.gold_diggers, colonist) -- remove the invalid colonist_ui
+                    return -- If the colonist is not valid, do not apply damage
+                end
                 
                 -- set the blackboard health value (reduce health by 1)
                 if colonist and registry:valid(colonist) then
@@ -665,6 +680,12 @@ function main.init()
                     
                     log_debug("snow event: applying damage to damage cushion:", colonist)
                     
+                    if not registry:valid(colonist) then
+                        log_debug("Damage cushion is not valid, skipping damage application")
+                        globals.damage_cushions[index] = nil -- remove the invalid damage cushion
+                        return -- If the damage cushion is not valid, do not apply damage
+                    end
+                    
                 else 
                     -- if there are no damage cushions, then choose a random colonist
                     
@@ -685,6 +706,13 @@ function main.init()
                 -- choose a random colonist
                 
                 log_debug("snow event: applying damage to colonist:", colonist)
+                if not registry:valid(colonist) then
+                    log_debug("Colonist is not valid, skipping damage application")
+                    lume.remove(globals.colonists, colonist) -- remove the invalid colonist from the list
+                    lume.remove(globals.healers, colonist) -- remove the invalid colonist from the list
+                    lume.remove(globals.gold_diggers, colonist) -- remove the invalid colonist_ui
+                    return -- If the colonist is not valid, do not apply damage
+                end
                 
                 -- set the blackboard health value (reduce health by 1)
                 if colonist and registry:valid(colonist) then
@@ -716,7 +744,15 @@ function main.init()
     
     -- every 1 second, check every colonist
     timer.every(1.0, function()
-        for _, colonist in pairs(globals.colonists) do
+        
+        local fullColonistList = {}
+        -- add all colonists to the fullColonistList
+        lume.extend(fullColonistList, globals.colonists)
+        lume.extend(fullColonistList, globals.healers)
+        lume.extend(fullColonistList, globals.gold_diggers)
+        lume.extend(fullColonistList, globals.damage_cushions)
+        
+        for _, colonist in pairs(fullColonistList) do
             if registry:valid(colonist) then
                 -- check if the colonist is dead
                 if getBlackboardFloat(colonist, "health") <= 0 then
@@ -739,8 +775,11 @@ function main.init()
                         util.getColor("black") -- end color
                     )
                     
-                    -- remove the colonist from the globals.colonists table
+                    -- remove the colonist from all tables
                     globals.colonists[colonist] = nil
+                    globals.healers[colonist] = nil
+                    globals.gold_diggers[colonist] = nil
+                    globals.damage_cushions[colonist] = nil
                     
                     -- remove colonist's text ui
                     ui.box.Remove(registry, globals.ui.colonist_ui[colonist].hp_ui_box)

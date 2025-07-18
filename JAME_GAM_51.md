@@ -1,4 +1,7 @@
 # immediate todos
+- structure placement & functionality
+- relic purchasing & shop randomization & functionality
+- gold digger & healer behavior
 - ui window reordering
 - global pause funciton that pauses weather event & ai & day counter
 - make day counter not run when in main menu

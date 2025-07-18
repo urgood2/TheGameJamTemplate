@@ -789,6 +789,7 @@ function ui_defs.generateUI()
         log_debug("Weather shop closed!")
         playSoundEffect("effects", "button-click") -- play button click sound
         toggleShopWindow() -- toggle the shop window visibility
+        togglePausedState(false) -- unpause the game
     end
     -- add the close button to the weatherButtonDefs
     table.insert(weatherButtonDefs, closeButton)

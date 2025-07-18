@@ -453,10 +453,10 @@ namespace transform
             {
                 auto &entry = it->second;
 
-                if (entry.parentTransform == nullptr)
+                // if (entry.parentTransform == nullptr)
                     entry.parentTransform = registry.try_get<Transform>(parent);
 
-                if (entry.parentRole == nullptr)
+                // if (entry.parentRole == nullptr)
                     entry.parentRole = registry.try_get<InheritedProperties>(parent);
 
                 parentTransform = entry.parentTransform;
@@ -472,12 +472,18 @@ namespace transform
         fillParentTransformAndRole(parent, parentTransform, parentRole);
 
         // an object that is attached to a UI element (of type OBJECT) should use the immediate master
+        bool isUIElementObjectWrapper = ui::globalUIGroup.contains(e) && ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::OBJECT;
         bool isUIElementObject = registry->any_of<ui::ObjectAttachedToUITag>(e);
-        if (isUIElementObject) 
-        {
+        if (isUIElementObject || isUIElementObjectWrapper) 
+        { 
             // if this is a UI element object, we need to use the immediate master
             parent = selfRole.master;
             fillParentTransformAndRole(parent, parentTransform, parentRole);
+        }
+        
+        if (isUIElementObjectWrapper)
+        {
+            SPDLOG_DEBUG("Moving with master for UI element object wrapper: {}", (int)e);
         }
         
         UpdateDynamicMotion(e, dt, selfTransform);
@@ -493,7 +499,7 @@ namespace transform
         auto selfVisualY = selfSprings.y->value;
         auto selfVisualW = selfSprings.w->value;
         auto selfVisualH = selfSprings.h->value;
-        
+        // FIXME: for root, ui box x, y is different. why is it pulling wrong 
         auto parentActualW = parentSprings.w->targetValue;
         auto parentActualH = parentSprings.h->targetValue;
         auto parentVisualX = parentSprings.x->value;
@@ -501,12 +507,14 @@ namespace transform
         auto parentVisualW = parentSprings.w->value;
         auto parentVisualH = parentSprings.h->value;
         auto parentVisualR = parentSprings.r->value;
-
+        
+        
+        
 
         if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
-            tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
-            tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y;
+            tempRotatedOffset.x = selfRole.offset->x + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
+            tempRotatedOffset.y = selfRole.offset->y + layeredDisplacement.y;
         }
         else
         {
@@ -528,8 +536,24 @@ namespace transform
             }
         }
         
+        // hacky fix to ensure ui roots don't revolve strangely ?
+        if (isUIElementObject || isUIElementObjectWrapper || (ui::globalUIGroup.contains(e) && ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT))
+        {
+            tempRotatedOffset.x = selfRole.offset->x + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
+            tempRotatedOffset.y = selfRole.offset->y + layeredDisplacement.y;
+            
+            
+        }
+        
+        
         selfSprings.x->targetValue = parentSprings.x->value + tempRotatedOffset.x;
         selfSprings.y->targetValue = parentSprings.y->value + tempRotatedOffset.y;
+        
+        if (selfRole.location_bond == InheritedProperties::Sync::Strong) {
+            // snap to target values immediately
+            selfSprings.x->value = selfSprings.x->targetValue;
+            selfSprings.y->value = selfSprings.y->targetValue;
+        }
         // SPDLOG_DEBUG("Moving with master set to targets: x: {}, y: {}", selfTransform.getXSpring().targetValue, selfTransform.getYSpring().targetValue);
 
         if (selfRole.location_bond == InheritedProperties::Sync::Strong)
@@ -1108,6 +1132,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     auto UpdateTransform(entt::entity e, float dt, Transform &transform, InheritedProperties &role, GameObject &node) -> void
     {
         // ZoneScopedN("UpdateTransform");
+        
+        if (globals::registry.any_of<ui::UIBoxComponent>(e))
+        {
+            SPDLOG_DEBUG("UpdateTransform called for UIBoxComponent entity {}", static_cast<int>(e));
+        }
         
         auto registry = &globals::registry;
 

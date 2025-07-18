@@ -116,7 +116,7 @@ function spawnNewColonist(x, y)
     globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
     
     -- put in a uibox
-    local uiBox = ui.box.Initialize({}, rootDef   )
+    globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
     
     -- update hp text every 0.5 seconds
     timer.every(
@@ -142,10 +142,14 @@ function spawnNewColonist(x, y)
         InheritedPropertiesSync.Weak
         -- Vec2(0, -50) -- offset it a bit upwards
     );
+    
+    -- set the alignment flag for the uibox to be centered above the colonist
+    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
 
-    local uiRoot = registry:get(uiBox, UIBoxComponent).uiRoot
+    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
 
-    log_debug("uibox", uiBox, "created for colonist", colonist, "uiroot is", uiRoot)
+    log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
     
     timer.every(
         0.1, -- every 0.1 seconds
@@ -160,10 +164,10 @@ function spawnNewColonist(x, y)
             log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
 
             -- print the uibox location
-            local uiboxTransform = registry:get(uiBox, Transform)
-            log_debug("colonist", colonist, "uibox entity", uiBox, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
+            local uiboxTransform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
+            log_debug("colonist", colonist, "uibox entity", globals.ui.colonist_ui[colonist].hp_ui_box, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
 
-            log_debug(ui.box.DebugPrint(registry, uiBox, 4)) -- print the uibox debug info
+            log_debug(ui.box.DebugPrint(registry, globals.ui.colonist_ui[colonist].hp_ui_box, 4)) -- print the uibox debug info
         end,
         0, -- infinite repetitions
         true, -- start immediately

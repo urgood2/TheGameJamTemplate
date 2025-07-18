@@ -747,7 +747,7 @@ function startEntityWalkMotion(e)
         -- use schduler to remove the timer
         local task1 = {
               update = function(self, dt)
-                  task.wait(0.5) -- wait for 0.5 seconds
+                  task.wait(0.1) -- wait for 0.5 seconds
                   log_debug("Removing walk timer for entity: ", e)
                   timer.cancel(e .. "_walk_timer") -- cancel the timer
               end

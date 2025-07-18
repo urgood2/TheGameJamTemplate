@@ -1,4 +1,15 @@
 # Documentation
+- document this:
+```lua
+layer_order_system.assignZIndexToEntity(
+        dragDropboxUIBOX, -- entity to assign z-index to
+        0 -- z-index value
+    )
+ui.box.AssignLayerOrderComponents(
+    registry, -- registry to use
+    dragDropboxUIBOX -- ui box to assign layer order components to
+)
+```
 - [ ] document using state tags to exclude transforms from render or collision & updates
 - [ ] camera documentation
     - also document that lua camera new doesn't actually create anew one, it binds to global::camera

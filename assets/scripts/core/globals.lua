@@ -44,15 +44,19 @@ globals.ownedRelics = {
 globals.creature_defs = {
   {
     id = "gold_digger",
-    cost = 6
+    cost = 6,
+    initial_hp = 2, -- initial health points for the gold digger
+    spriteID = "3830-TheRoguelike_1_10_alpha_623.png", -- the sprite ID for the gold digger
   },
   {
     id = "healer",
-    cost = 3
+    cost = 3,
+    spriteID = "3868-TheRoguelike_1_10_alpha_661.png" -- the sprite ID for the healer
   },
   {
     id = "damage_cushion",
-    cost = 2
+    cost = 2,
+    spriteID = "3846-TheRoguelike_1_10_alpha_639.png" -- the sprite ID for the damage cushion
   }
 }
 
@@ -99,6 +103,9 @@ globals.game_time = {
   days = 1    -- days since the game started
 }
 
+globals.gold_diggers = {}
+globals.healers = {} -- list of healers in the game
+globals.damage_cushions = {} -- list of damage cushions in the game
 globals.colonists = globals.colonists or {} -- list of colonists in the game
 
 globals.ui = {

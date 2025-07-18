@@ -199,6 +199,18 @@ function ui_defs.generateUI()
         creatureChoiceTransform.actualY = globals.screenHeight() / 2 - creatureChoiceTransform.actualH / 2 -- center it vertically
     end
     
+    layer_order_system.assignZIndexToEntity(
+        dragDropboxUIBOX, -- entity to assign z-index to
+        0 -- z-index value
+    )
+    ui.box.AssignLayerOrderComponents(
+        registry, -- registry to use
+        dragDropboxUIBOX -- ui box to assign layer order components to
+    )
+    -- 
+    -- AssignLayerOrderComponents to propogate to uibox
+    
+    
     -- gold digger 3830-TheRoguelike_1_10_alpha_623.png
         -- costs nothing but dies very easily
     -- healer 3868-TheRoguelike_1_10_alpha_661.png
@@ -213,6 +225,26 @@ function ui_defs.generateUI()
         "ui.gold_digger_button", -- localization key for text
         findInTable(globals.creature_defs, "id", "gold_digger").cost -- cost to buy the colonist home
     )
+    
+    gold_digger_button_def.config.buttonCallback = function ()
+        -- check if user has enough gold
+        if (globals.currency < findInTable(globals.creature_defs, "id", "gold_digger").cost) then
+            newTextPopup(
+                localization.get("ui.not_enough_currency") -- text to show
+            )
+            return
+        end
+        -- deduct the cost from the currency
+        globals.currency = globals.currency - findInTable(globals.creature_defs, "id", "gold_digger").cost
+        spawnGoldDigger() -- spawn a gold digger
+        
+        -- resume the game
+        togglePausedState(false) -- unpause the game
+        
+        -- hide the creature duplicate choice UI box
+        local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        transform.actualY = globals.screenHeight() -- hide the UI box
+    end
     
     local healer_button_def = createStructurePlacementButton(
         "3868-TheRoguelike_1_10_alpha_661.png", -- sprite ID for healer

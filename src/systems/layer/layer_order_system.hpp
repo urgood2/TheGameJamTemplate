@@ -66,11 +66,12 @@ namespace layer
             // Create or grab the table
             sol::table sys = lua["layer_order_system"].get_or(
                 sol::table(lua.lua_state(), sol::create) );
+            lua["layer_order_system"] = sys;
 
             // setToTopZIndex(entity, incrementIndexAfterwards = true)
             sys.set_function("setToTopZIndex", &SetToTopZIndex);
             rec.record_free_function(
-                /* module path */ {"layer", "layer_order_system"},
+                /* module path */ {"layer_order_system"},
                 /* name + docs */ {
                     "setToTopZIndex",
                     "---@param registry registry\n"
@@ -84,7 +85,7 @@ namespace layer
             // putAOverB(a, b)
             sys.set_function("putAOverB", &PutAOverB);
             rec.record_free_function(
-                {"layer", "layer_order_system"},
+                { "layer_order_system"},
                 {
                     "putAOverB",
                     "---@param registry registry\n"
@@ -98,7 +99,7 @@ namespace layer
             // updateLayerZIndexesAsNecessary()
             sys.set_function("updateLayerZIndexesAsNecessary", &UpdateLayerZIndexesAsNecessary);
             rec.record_free_function(
-                {"layer", "layer_order_system"},
+                {"layer_order_system"},
                 {
                     "updateLayerZIndexesAsNecessary",
                     "---@param registry registry\n"
@@ -110,7 +111,7 @@ namespace layer
             // resetRunningZIndex()
             sys.set_function("resetRunningZIndex", &ResetRunningZIndex);
             rec.record_free_function(
-                {"layer", "layer_order_system"},
+                {"layer_order_system"},
                 {
                     "resetRunningZIndex",
                     "---@return nil",
@@ -121,7 +122,7 @@ namespace layer
             // assignZIndexToEntity(entity, zIndex)
             sys.set_function("assignZIndexToEntity", &AssignZIndexToEntity);
             rec.record_free_function(
-                {"layer", "layer_order_system"},
+                {"layer_order_system"},
                 {
                     "assignZIndexToEntity",
                     "---@param registry registry\n"

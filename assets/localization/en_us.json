@@ -1,5 +1,7 @@
 {
 	"ui": {
+		"gold_digger_tooltip_title": "Gold Digger Clone",
+		"gold_digger_tooltip_body": "This is a gold digger clone.\nIt collects gold from the ground.\nIt is very fragile and ndies easily.",
 		"cancel_button": "Cancel",
 		"gold_digger_button": "Gold Digger Clone",
 		"healer_button": "Healer Clone",

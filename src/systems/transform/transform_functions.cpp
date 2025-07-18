@@ -408,10 +408,10 @@ namespace transform
     {
         auto registry = &globals::registry;
 
-        if (registry->any_of<ui::UIConfig>(e) && registry->get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
-        {
-            SPDLOG_DEBUG("MoveWithMaster called for entity {} (root)", (int)e);
-        }
+        // if (registry->any_of<ui::UIConfig>(e) && registry->get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
+        // {
+        //     SPDLOG_DEBUG("MoveWithMaster called for entity {} (root)", (int)e);
+        // }
         
         // ZoneScopedN("MoveWithMaster");
         Vector2 tempRotatedOffset{};
@@ -481,10 +481,10 @@ namespace transform
             fillParentTransformAndRole(parent, parentTransform, parentRole);
         }
         
-        if (isUIElementObjectWrapper)
-        {
-            SPDLOG_DEBUG("Moving with master for UI element object wrapper: {}", (int)e);
-        }
+        // if (isUIElementObjectWrapper)
+        // {
+        //     SPDLOG_DEBUG("Moving with master for UI element object wrapper: {}", (int)e);
+        // }
         
         UpdateDynamicMotion(e, dt, selfTransform);
         
@@ -780,10 +780,10 @@ namespace transform
     auto GetMaster(entt::entity selfEntity, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*& parentTransformStorage, InheritedProperties*& parentRoleStorage) -> Transform::FrameCalculation::MasterCache
     {
 
-        if ((int)selfEntity == 1365)
-        {
-            SPDLOG_DEBUG("GetMaster called for entity 1365 (UIBOX)");
-        }
+        // if ((int)selfEntity == 1365)
+        // {
+        //     SPDLOG_DEBUG("GetMaster called for entity 1365 (UIBOX)");
+        // }
         // Check the global cache first
         auto it = globals::getMasterCacheEntityToParentCompMap.find(selfEntity);
         if (it != globals::getMasterCacheEntityToParentCompMap.end())
@@ -1133,10 +1133,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     {
         // ZoneScopedN("UpdateTransform");
         
-        if (globals::registry.any_of<ui::UIBoxComponent>(e))
-        {
-            SPDLOG_DEBUG("UpdateTransform called for UIBoxComponent entity {}", static_cast<int>(e));
-        }
+        // if (globals::registry.any_of<ui::UIBoxComponent>(e))
+        // {
+        //     SPDLOG_DEBUG("UpdateTransform called for UIBoxComponent entity {}", static_cast<int>(e));
+        // }
         
         auto registry = &globals::registry;
 

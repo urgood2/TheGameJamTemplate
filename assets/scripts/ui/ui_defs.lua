@@ -10,7 +10,293 @@ function ui_defs.placeBuilding(buildingName)
     
 end
 
+function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey, costValue)
+    globals.ui[globalAnimationHandle] = animation_system.createAnimatedObjectWithTransform(
+        spriteID, -- animation ID
+        true             -- true if sprite id
+    )
+    
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        globals.ui[globalAnimationHandle], -- entity to resize
+        40, -- width
+        40  -- height
+    )
+    
+    local uiIconHomeDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui[globalAnimationHandle])
+        
+    -- colonist home text, for colonist home buy button
+    globals.ui[globalTextHandle] = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get(textLocalizationKey) end,  -- initial text
+        20.0,                                 -- font size
+        ""                       -- animation spec
+    )
+    
+    
+    local costRow = nil
+    if costValue then
+        -- cost string
+        local costText = ui.definitions.getNewDynamicTextEntry(
+            function() return localization.get("ui.cost_text", {cost = costValue}) end,  -- initial text
+            20.0,                                 -- font size
+            ""                       -- animation spec
+        )
+        
+        -- animation entity for the cost icon
+        local costIconEntity = animation_system.createAnimatedObjectWithTransform(
+            "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID for currency icon
+            true             -- true if sprite id
+        )
+        
+        
+        local costIconDef = ui.definitions.wrapEntityInsideObjectElement(costIconEntity)
+    
+        -- resize the cost icon to fit
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            costIconEntity, -- entity to resize
+            20, -- width
+            20  -- height
+        )
+        costRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(costIconDef)
+        :addChild(costText)
+        :build()
+
+    end
+    -- make a horizontal container for the cost icon and text
+    
+    
+    -- vertical container for home text + cost 
+    local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.VERTICAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
+                :addPadding(0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(globals.ui[globalTextHandle])
+        :build()
+        
+    if costRow then
+        colonistHomeTextDef.children:add(costRow) -- add the cost row if it exists
+    end
+    
+    local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addHover(true) -- needed for button effect
+                :addButtonCallback(function()
+                    -- button click callback
+                    log_debug(globalTextHandle .. " button clicked!")
+                    playSoundEffect("effects", "button-click") -- play button click sound
+                end)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(uiIconHomeDef)
+        :addChild(colonistHomeTextDef)
+        :build()
+        
+    return colonistHomeTextDef
+end
 function ui_defs.generateUI()
+    
+    -- make a ui rect to the side of the screen
+    local rectDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.RECT_SHAPE)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addMinWidth(200)
+                :addMinHeight(200)
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :build()
+        
+    local rectTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.TEXT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addText(localization.get("ui.drag_to_duplicate")) -- title text
+                :addColor(util.getColor("blackberry"))
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :build()
+        
+    -- ui root
+    local dragDropboxRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(rectDef)
+        :addChild(rectTextDef)
+        :build()
+        
+    -- ui box, place it at the top left corner of the screen
+    dragDropboxUIBOX = ui.box.Initialize({x = 10, y = 10}, dragDropboxRoot)
+    -- align the ui box to the top left corner of the screen
+    local uiBoxTransform = registry:get(dragDropboxUIBOX, Transform)
+    uiBoxTransform.actualX = 10 -- 10 pixels from the left edge
+    uiBoxTransform.visualX = uiBoxTransform.actualX -- update visual position as well
+    uiBoxTransform.actualY = 300 -- 10 pixels from the top edge
+    
+    -- get root, make collidable
+    local rootEntity = registry:get(dragDropboxUIBOX, UIBoxComponent).uiRoot
+    local rootGameObject = registry:get(rootEntity, GameObject)
+    rootGameObject.state.collisionEnabled = true -- make the root collidable
+    rootGameObject.state.triggerOnReleaseEnabled = true -- make the root hoverable
+    
+    rootGameObject.methods.onRelease = function(registry, releasedOn, released)
+        log_debug("entity", released, "released on", releasedOn)
+        
+        -- pause the game, show a window which shows a list of selections
+        togglePausedState(true) -- pause the game
+        
+        -- TODO: show globals.ui.creatureDuplicateChoiceUIbox
+        local creatureChoiceTransform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        creatureChoiceTransform.actualY = globals.screenHeight() / 2 - creatureChoiceTransform.actualH / 2 -- center it vertically
+    end
+    
+    -- gold digger 3830-TheRoguelike_1_10_alpha_623.png
+        -- costs nothing but dies very easily
+    -- healer 3868-TheRoguelike_1_10_alpha_661.png
+        -- costs 1 gold each turn to maintain
+    -- damage cushion 3846-TheRoguelike_1_10_alpha_639.png  
+        -- costs 2 gold each turn to maintain
+    
+    local gold_digger_button_def = createStructurePlacementButton(
+        "3830-TheRoguelike_1_10_alpha_623.png", -- sprite ID for colonist home
+        "goldDiggerAnimEntity", -- global animation handle
+        "goldDiggerTextEntity", -- global text handle
+        "ui.gold_digger_button", -- localization key for text
+        findInTable(globals.creature_defs, "id", "gold_digger").cost -- cost to buy the colonist home
+    )
+    
+    local healer_button_def = createStructurePlacementButton(
+        "3868-TheRoguelike_1_10_alpha_661.png", -- sprite ID for healer
+        "healerAnimEntity", -- global animation handle
+        "healerTextEntity", -- global text handle
+        "ui.healer_button", -- localization key for text
+        findInTable(globals.creature_defs, "id", "healer").cost -- cost to buy the colonist home
+    )
+    
+    local damage_cushion_button_def = createStructurePlacementButton(
+        "3846-TheRoguelike_1_10_alpha_639.png", -- sprite ID for damage cushion
+        "damageCushionAnimEntity", -- global animation handle
+        "damageCushionTextEntity", -- global text handle
+        "ui.damage_cushion_button", -- localization key for text
+        findInTable(globals.creature_defs, "id", "damage_cushion").cost -- cost to buy the colonist home
+    )
+    
+    -- add to row
+    local creatureRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                -- :addShadow(true) --- IGNORE ---
+                :addEmboss(4.0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(gold_digger_button_def)
+        :addChild(healer_button_def)
+        :addChild(damage_cushion_button_def)
+        :build()
+        
+    -- a text entity that says "cancel"
+    local cancelTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.TEXT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addText(localization.get("ui.cancel_button")) -- title text
+                :addColor(util.getColor("blackberry"))
+                :addShadow(true)
+                :addButtonCallback(function()
+                    -- button click callback
+                    log_debug("Cancel button clicked!")
+                    playSoundEffect("effects", "button-click") -- play button click sound
+                    
+                    -- hide the creature duplicate choice UI box
+                    local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+                    transform.actualY = globals.screenHeight() -- hide the UI box
+                    togglePausedState(false) -- unpause the game
+                end)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :build()
+    
+    -- new rootEntity
+    local duplicateChoiceRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("dusty_rose"))
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(creatureRow) -- add the drag to duplicate text entity
+        :addChild(cancelTextDef) -- add the cancel text entity
+        :build()
+    -- new uibox
+    globals.ui.creatureDuplicateChoiceUIbox = ui.box.Initialize({x = 10, y = 200}, duplicateChoiceRoot)
+    -- align the creature duplicate choice UI box to the center of the screen, out of view
+    local creatureChoiceTransform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+    creatureChoiceTransform.actualX = globals.screenWidth() / 2 - creatureChoiceTransform.actualW / 2 -- center it horizontally
+    creatureChoiceTransform.visualX = creatureChoiceTransform.actualX -- update visual position as well
+    creatureChoiceTransform.actualY = globals.screenHeight() -- out of view initially
     
     -- show current weather
     globals.ui.weatherTextEntity = ui.definitions.getNewDynamicTextEntry(
@@ -230,120 +516,7 @@ function ui_defs.generateUI()
         :addChild(globals.ui.itemPlacementTextEntity)
         :build()
         
-    function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey, costValue)
-        globals.ui[globalAnimationHandle] = animation_system.createAnimatedObjectWithTransform(
-            spriteID, -- animation ID
-            true             -- true if sprite id
-        )
-        
-        animation_system.resizeAnimationObjectsInEntityToFit(
-            globals.ui[globalAnimationHandle], -- entity to resize
-            40, -- width
-            40  -- height
-        )
-        
-        local uiIconHomeDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui[globalAnimationHandle])
-            
-        -- colonist home text, for colonist home buy button
-        globals.ui[globalTextHandle] = ui.definitions.getNewDynamicTextEntry(
-            function() return localization.get(textLocalizationKey) end,  -- initial text
-            20.0,                                 -- font size
-            ""                       -- animation spec
-        )
-        
-        
-        local costRow = nil
-        if costValue then
-            -- cost string
-            local costText = ui.definitions.getNewDynamicTextEntry(
-                function() return localization.get("ui.cost_text", {cost = costValue}) end,  -- initial text
-                20.0,                                 -- font size
-                ""                       -- animation spec
-            )
-            
-            -- animation entity for the cost icon
-            local costIconEntity = animation_system.createAnimatedObjectWithTransform(
-                "4024-TheRoguelike_1_10_alpha_817.png", -- animation ID for currency icon
-                true             -- true if sprite id
-            )
-            
-            
-            local costIconDef = ui.definitions.wrapEntityInsideObjectElement(costIconEntity)
-        
-            -- resize the cost icon to fit
-            animation_system.resizeAnimationObjectsInEntityToFit(
-                costIconEntity, -- entity to resize
-                20, -- width
-                20  -- height
-            )
-            costRow = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                    :addColor(util.getColor("blank"))
-                    -- :addShadow(true) --- IGNORE ---
-                    -- :addEmboss(4.0)
-                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-                    :addInitFunc(function(registry, entity)
-                        -- something init-related here
-                    end)
-                    :build()
-            )
-            :addChild(costIconDef)
-            :addChild(costText)
-            :build()
     
-        end
-        -- make a horizontal container for the cost icon and text
-        
-        
-        -- vertical container for home text + cost 
-        local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.VERTICAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                    :addColor(util.getColor("blank"))
-                    -- :addShadow(true) --- IGNORE ---
-                    -- :addEmboss(4.0)
-                    :addPadding(0)
-                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-                    :addInitFunc(function(registry, entity)
-                        -- something init-related here
-                    end)
-                    :build()
-            )
-            :addChild(globals.ui[globalTextHandle])
-            :build()
-            
-        if costRow then
-            colonistHomeTextDef.children:add(costRow) -- add the cost row if it exists
-        end
-        
-        local colonistHomeTextDef = UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.HORIZONTAL_CONTAINER)
-            :addConfig(
-                UIConfigBuilder.create()
-                    :addColor(util.getColor("taupe_warm"))
-                    -- :addShadow(true) --- IGNORE ---
-                    :addEmboss(4.0)
-                    :addHover(true) -- needed for button effect
-                    :addButtonCallback(function()
-                        -- button click callback
-                        log_debug(globalTextHandle .. " button clicked!")
-                        playSoundEffect("effects", "button-click") -- play button click sound
-                    end)
-                    :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-                    :addInitFunc(function(registry, entity)
-                        -- something init-related here
-                    end)
-                    :build()
-            )
-            :addChild(uiIconHomeDef)
-            :addChild(colonistHomeTextDef)
-            :build()
-            
-        return colonistHomeTextDef
-    end
         
     local home_structure_def = createStructurePlacementButton(
         "3490-TheRoguelike_1_10_alpha_283.png", -- sprite ID for colonist home

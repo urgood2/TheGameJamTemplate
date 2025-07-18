@@ -4,7 +4,7 @@ globals = globals or {}
 
 globals.weather_event_active = false -- whether a weather event is currently active
 
-globals.current_weather_event = "acid_rain" -- the current weather event, if any
+globals.current_weather_event = nil-- the current weather event, if any
 
 globals.weather_event_defs = {
   {
@@ -12,13 +12,8 @@ globals.weather_event_defs = {
     base_damage = 2
   },
   {
-    id = "snow"
-  },
-  {
-    id = "sunny"
-  },
-  {
-    id = "death"
+    id = "snow",
+    base_damage = 3
   }
 }
 
@@ -43,6 +38,21 @@ globals.ownedRelics = {
   {
     id = "basic_umbrella",
     animation_entity = nil -- the animation entity for the relic
+  }
+}
+
+globals.creature_defs = {
+  {
+    id = "gold_digger",
+    cost = 6
+  },
+  {
+    id = "healer",
+    cost = 3
+  },
+  {
+    id = "damage_cushion",
+    cost = 2
   }
 }
 

@@ -62,12 +62,17 @@ function spawnNewColonist(x, y)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     gameObjectState.collisionEnabled = true
+    gameObjectState.dragEnabled = true -- allow dragging the colonist
     nodeComp.methods.onHover = function()
         -- log_debug("krill hovered!")
         showTooltip(
             localization.get("ui.colonist_tooltip_title"), 
         localization.get("ui.colonist_tooltip_body")
         )
+    end
+    
+    nodeComp.methods.onRelease = function(registry, releasedOn, released)
+        log_debug("colonist", released, "released on", releasedOn)
     end
     
     local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)

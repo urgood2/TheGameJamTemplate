@@ -1,11 +1,35 @@
+# immediate todos
+- global pause funciton that pauses weather event & ai & day counter
+- make day counter not run when in main menu
 
  - [ ]  Same challenges, but different strategies - 
  - [ ]  weather events of increasing damage spring (acid), summer (sunburn), rare golden season (gold falls from sky, does some damage) - pace these to happen every 2 days, each season is 3 weather events, there is only summer and winter, 
  - [ ] Increasing damage, damage frequency, different damage types. Each year increases base damage done by 3. 
  - [ ] Different strategies - relics, copy minions, structures
  - [ ] Relics - rare, can only buy 1 per shop at end of day: resist damage, absorb damage, give chance based healing, 
+    -- global resist acid damage by 1/3/5
+    -- global resist cold damage by 1/3/5
+    -- grant 10%/20%/30% dodge chance during weather event
+    -- on a colonist being damaged, 50% chance to grant 2 hp to a random colonist
+    -- on dodge, grant 2 hp to a random colonist
+    -- damage taken X2, but all gold doubled at the end of the day
+    -- gold diggers dig 2/4/6 more gold each time
+    -- healers heal 2/4/6 times as much
+    -- damage cushions gain 10/40/70 hp
+ 
  - [ ] Copy  (cheap but can die, produce at any time) - healer minion, damage cushion minion, gold digger minion
+    -- gold digger 3830-TheRoguelike_1_10_alpha_623.png
+        -- costs nothing but dies very easily
+    -- healer 3868-TheRoguelike_1_10_alpha_661.png
+        -- costs 1 gold each turn to maintain
+    -- damage cushion 3846-TheRoguelike_1_10_alpha_639.png  
+        -- costs 2 gold each turn to maintain
+    
  - [ ] Structures (expensive but permanent): mass umbrella (absolute orotection, but cootime of 5 days), gold generator (2 gold per minion, but subtracts health from 2 random minions per day), weather deflector (chance to swap an incoming weather to something else)
+    -- mass protector 3703-TheRoguelike_1_10_alpha_496.png
+    -- gold generator 3435-TheRoguelike_1_10_alpha_228.png
+    -- 3530-TheRoguelike_1_10_alpha_323.png
+ 
  - [ ] Ending a stage without taking damage or by not losing a minion grants bonus
  - [ ] 
 

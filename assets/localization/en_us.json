@@ -1,5 +1,10 @@
 {
 	"ui": {
+		"cancel_button": "Cancel",
+		"gold_digger_button": "Gold Digger Clone",
+		"healer_button": "Healer Clone",
+		"damage_cushion_button": "Damage Cushion Clone",
+		"drag_to_duplicate": "Drop to\nduplicate",
 		"colonist_dead_text": "Colonist is dead!",
 		"acid_rain_damage_text": "Acid damage: {damage}",
 		"weather_ui_format": "Current weather: {weather}",

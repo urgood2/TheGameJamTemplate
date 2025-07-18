@@ -152,3 +152,4 @@
 - dynamic text entity will reset its alignment and set to center on its master entity when updated via setText
 - performance optimizations for ai system, namely blackboard access
 -  need streamlined way to access quadtree features, like collision checking specific areas 
+- how to make text popup include an image that fades with it?

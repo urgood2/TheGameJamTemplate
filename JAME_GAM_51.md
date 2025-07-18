@@ -2,9 +2,8 @@
 - structure placement & functionality
 - relic purchasing & shop randomization & functionality
 - gold digger & healer behavior
+- use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
 - ui window reordering
-- global pause funciton that pauses weather event & ai & day counter
-- make day counter not run when in main menu
 - deduct gold at end of day for healers & damage cushions, add game over state for negative currency
 
  - [ ]  Same challenges, but different strategies - 

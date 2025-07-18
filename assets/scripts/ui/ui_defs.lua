@@ -254,6 +254,7 @@ function ui_defs.generateUI()
         findInTable(globals.creature_defs, "id", "healer").cost -- cost to buy the colonist home
     )
     
+    
     local damage_cushion_button_def = createStructurePlacementButton(
         "3846-TheRoguelike_1_10_alpha_639.png", -- sprite ID for damage cushion
         "damageCushionAnimEntity", -- global animation handle
@@ -261,6 +262,26 @@ function ui_defs.generateUI()
         "ui.damage_cushion_button", -- localization key for text
         findInTable(globals.creature_defs, "id", "damage_cushion").cost -- cost to buy the colonist home
     )
+    
+    damage_cushion_button_def.config.buttonCallback = function ()
+        -- check if user has enough gold
+        if (globals.currency < findInTable(globals.creature_defs, "id", "damage_cushion").cost) then
+            newTextPopup(
+                localization.get("ui.not_enough_currency") -- text to show
+            )
+            return
+        end
+        -- deduct the cost from the currency
+        globals.currency = globals.currency - findInTable(globals.creature_defs, "id", "damage_cushion").cost
+        spawnDamageCushion() -- spawn a damage cushion
+        
+        -- resume the game
+        togglePausedState(false) -- unpause the game
+        
+        -- hide the creature duplicate choice UI box
+        local transform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
+        transform.actualY = globals.screenHeight() -- hide the UI box
+    end
     
     -- add to row
     local creatureRow = UIElementTemplateNodeBuilder.create()

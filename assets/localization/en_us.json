@@ -1,5 +1,7 @@
 {
 	"ui": {
+		"damage_cushion_tooltip_title": "Damage Cushion Clone",
+		"damage_cushion_tooltip_body": "This is a damage cushion clone.\nIt has a higher chance to be hit during weather events.\nBoasts a lot of HP.",
 		"gold_digger_tooltip_title": "Gold Digger Clone",
 		"gold_digger_tooltip_body": "This is a gold digger clone.\nIt collects gold from the ground.\nIt is very fragile and ndies easily.",
 		"cancel_button": "Cancel",

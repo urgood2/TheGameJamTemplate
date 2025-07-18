@@ -56,6 +56,7 @@ globals.creature_defs = {
   {
     id = "damage_cushion",
     cost = 2,
+    initial_hp = 20, -- initial health points for the damage cushion
     spriteID = "3846-TheRoguelike_1_10_alpha_639.png" -- the sprite ID for the damage cushion
   }
 }

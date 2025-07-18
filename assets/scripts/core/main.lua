@@ -635,8 +635,9 @@ function main.init()
                     globals.colonists[colonist] = nil
                     
                     -- remove colonist's text ui
-                    registry:destroy(globals.ui.colonist_ui[colonist].hp_ui_text)
-                    globals.ui.colonist_ui[colonist] = nil
+                    ui.box.Remove(registry, globals.ui.colonist_ui[colonist].hp_ui_box)
+                    -- registry:destroy(globals.ui.colonist_ui[colonist].hp_ui_box)
+                    -- globals.ui.colonist_ui[colonist] = nil
                     
                     -- destroy the colonist entity
                     registry:destroy(colonist)

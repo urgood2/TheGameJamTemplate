@@ -411,6 +411,8 @@ namespace transform
         Transform *parentTransform = nullptr;
         InheritedProperties *parentRole = nullptr;
         
+        
+        
         auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode, parentTransform, parentRole);
         auto parent = parentRetVal.master.value();
 
@@ -749,6 +751,7 @@ namespace transform
         Transform::FrameCalculation::MasterCache toReturn;
         toReturn.master = selfEntity;
         toReturn.offset = Vector2{0, 0};
+        
 
         if (selfRole.master == globals::gameWorldContainerEntity || selfRole.role_type == InheritedProperties::Type::RoleRoot || selfRole.master == selfEntity)
         {
@@ -772,6 +775,14 @@ namespace transform
         parentTransformStorage = globals::registry.try_get<Transform>(selfRole.master);
         parentRoleStorage = globals::registry.try_get<InheritedProperties>(selfRole.master);
         auto parentNode = globals::registry.try_get<GameObject>(selfRole.master);
+        
+        if (!parentTransformStorage || !parentRoleStorage || !parentNode)
+        {
+            // If parent is not found, return self as master
+            // SPDLOG_DEBUG("Parent not found for entity {}: using self as master", static_cast<int>(selfEntity));
+            globals::getMasterCacheEntityToParentCompMap[selfEntity] = {selfEntity, toReturn.offset.value(), nullptr, nullptr};
+            return toReturn;
+        }
 
         if (!parentTransformStorage || !parentRoleStorage)
         {

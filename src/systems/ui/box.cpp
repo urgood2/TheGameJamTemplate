@@ -1734,7 +1734,7 @@ namespace ui
         transform::RemoveEntity(&registry, entity);
 
         // Finally, destroy the entity
-        registry.destroy(entity);
+        // registry.destroy(entity);
     }
 
     // entity is a uibox.

@@ -99,7 +99,7 @@ function spawnNewColonist(x, y)
     globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
     
     -- put in a uibox
-    local uiBox = ui.box.Initialize({},textDef   )
+    globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({},textDef   )
     
     -- update hp text every 0.5 seconds
     timer.every(
@@ -118,7 +118,7 @@ function spawnNewColonist(x, y)
     )
     
     -- anchor to the top center of the colonist 
-    transform.AssignRole(registry, uiBox, InheritedPropertiesType.PermanentAttachment, colonist,
+    transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
         InheritedPropertiesSync.Strong,
         InheritedPropertiesSync.Weak,
         InheritedPropertiesSync.Weak,

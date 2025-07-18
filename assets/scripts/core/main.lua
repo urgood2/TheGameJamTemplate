@@ -567,25 +567,133 @@ function main.init()
                 "acid_rain_particle_spawn"
             )
             
+            -- only do damage if game isn't paused
+            if globals.gamePaused then
+                return -- If the game is paused, do not apply damage
+            end
+            
             -- choose a random colonist with 50% chance
             if random_utils.random_int(0, 1) == 0 then
                 local acid_rain_def = findInTable(
                     globals.weather_event_defs, "id", "acid_rain"
                 )
                 
+                local colonist = nil
+                
+                -- if there are damage cushions, then choose them as a priority
+                if globals.damage_cushions and #globals.damage_cushions > 0 then
+                    -- choose a random damage cushion
+                    local index = random_utils.random_int(1, #globals.damage_cushions)
+                    colonist = globals.damage_cushions[index]
+                    
+                    log_debug("got damage cushion at index",index)
+                    
+                    log_debug("Acid rain event: applying damage to damage cushion:", colonist)
+                    
+                else 
+                    -- if there are no damage cushions, then choose a random colonist
+                    
+                    local fullColonistList = {}
+                    -- add all colonists to the fullColonistList
+                    lume.extend(fullColonistList, globals.colonists)
+                    lume.extend(fullColonistList, globals.healers)
+                    lume.extend(fullColonistList, globals.gold_diggers)
+                    
+                    -- choose a random colonist from the fullColonistList
+                    if #fullColonistList > 0 then
+                        colonist = fullColonistList[random_utils.random_int(1, #fullColonistList)]
+                    else
+                        log_debug("No colonists available to apply acid rain damage to.")
+                        return -- If there are no colonists, do not apply damage
+                    end
+                end
                 -- choose a random colonist
-                local colonist = globals.colonists[random_utils.random_int(1, #globals.colonists)]
                 
                 log_debug("Acid rain event: applying damage to colonist:", colonist)
                 
                 -- set the blackboard health value (reduce health by 1)
                 if colonist and registry:valid(colonist) then
                     
-                    local damage_done = random_utils.random_int(1, acid_rain_def.base_damage) -- random damage between 1 and base damage
+                    local damage_done = random_utils.random_int(1, globals.current_weather_event_base_damage) -- random damage between 1 and base damage
+                    
+                    log_debug("Acid rain event: applying damage:", damage_done, "to colonist:", colonist)
                     
                     setBlackboardFloat(colonist, "health", getBlackboardFloat(colonist, "health") - damage_done)  
                     
-                    --TODO: damage mitigatoin through relics
+                    -- show a text popup above the colonist
+                    local colonistTransform = registry:get(colonist, Transform)
+                    newTextPopup(
+                        localization.get("ui.acid_rain_damage_text", {damage = damage_done}), -- text to display
+                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
+                        colonistTransform.actualY - 50, -- position above the colonist
+                        5 -- duration in seconds
+                    )
+                end
+            end
+        elseif (globals.current_weather_event == "snow") then
+            timer.every(
+                0.1, -- every 0.1 seconds
+                function()
+                    spawnSnowPlopAtRandomLocation()
+                end,
+                5, -- repeat 10 times
+                true, -- start immediately
+                nil, -- no "after" callback
+                "radio_snow_particle_spawn"
+            )
+            
+            -- only do damage if game isn't paused
+            if globals.gamePaused then
+                return -- If the game is paused, do not apply damage
+            end
+            
+            -- choose a random colonist with 100% chance
+            if true then
+                local acid_rain_def = findInTable(
+                    globals.weather_event_defs, "id", "snow"
+                )
+                
+                local colonist = nil
+                
+                -- if there are damage cushions, then choose them as a priority
+                if globals.damage_cushions and #globals.damage_cushions > 0 then
+                    -- choose a random damage cushion
+                    local index = random_utils.random_int(1, #globals.damage_cushions)
+                    colonist = globals.damage_cushions[index]
+                    
+                    log_debug("got damage cushion at index",index)
+                    
+                    log_debug("snow event: applying damage to damage cushion:", colonist)
+                    
+                else 
+                    -- if there are no damage cushions, then choose a random colonist
+                    
+                    local fullColonistList = {}
+                    -- add all colonists to the fullColonistList
+                    lume.extend(fullColonistList, globals.colonists)
+                    lume.extend(fullColonistList, globals.healers)
+                    lume.extend(fullColonistList, globals.gold_diggers)
+                    
+                    -- choose a random colonist from the fullColonistList
+                    if #fullColonistList > 0 then
+                        colonist = fullColonistList[random_utils.random_int(1, #fullColonistList)]
+                    else
+                        log_debug("No colonists available to apply snow damage to.")
+                        return -- If there are no colonists, do not apply damage
+                    end
+                end
+                -- choose a random colonist
+                
+                log_debug("snow event: applying damage to colonist:", colonist)
+                
+                -- set the blackboard health value (reduce health by 1)
+                if colonist and registry:valid(colonist) then
+                    
+                    local damage_done = random_utils.random_int(1, globals.current_weather_event_base_damage) * 0.5 -- halve the base damage
+                    
+                    log_debug("snow event: applying damage:", damage_done, "to colonist:", colonist)
+                    
+                    setBlackboardFloat(colonist, "health", getBlackboardFloat(colonist, "health") - damage_done)  
                     
                     -- show a text popup above the colonist
                     local colonistTransform = registry:get(colonist, Transform)
@@ -656,7 +764,7 @@ end
 
 function main.update(dt)
     
-    if (globals.gamePaused) then
+    if (globals.gamePaused or currentGameState == GAMESTATE.MAIN_MENU) then
         return -- If the game is paused, do not update anything
     end
     

@@ -1,4 +1,5 @@
 # immediate todos
+- ui window reordering
 - global pause funciton that pauses weather event & ai & day counter
 - make day counter not run when in main menu
 - deduct gold at end of day for healers & damage cushions, add game over state for negative currency

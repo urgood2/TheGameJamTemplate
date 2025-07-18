@@ -1,5 +1,7 @@
 {
 	"ui": {
+		"acid_rain_text": "Acid Rain!",
+		"snow_text": "Radioactive Snow!",
 		"drag_to_duplicate_invalid_health": "Colonist health too low!",
 		"drag_to_duplicate_invalid": "Duplicate only colonists!",
 		"healer_tooltip_title": "Healer Clone",
@@ -38,7 +40,7 @@
 		"colonist_tooltip_title": "Colonist",
 		"colonist_home_text": "Colonist Home",
 		"colonist_tooltip_body": "Keep them alive!",
-		"time_ui_format": "{hour}:{minute} {am_pm}",
+		"time_ui_format": "{hour} {am_pm}",
 		"day_ui_format": "Day: {day}",
 		"storm_on_way_weather": "[Storm on the way](background=blue)",
 		"unknown_weather": "[Unknown](background=red)",

@@ -62,6 +62,18 @@ local function clamp(val, min, max)
 end
 
 function handleNewDay()
+  
+  -- every 3 days, we have a weather event 
+  globals.timeUntilNextWeatherEvent = globals.timeUntilNextWeatherEvent + 1
+  if globals.timeUntilNextWeatherEvent >= 1 then
+    globals.timeUntilNextWeatherEvent = 0 -- reset the timer
+    -- trigger a weather event
+    globals.current_weather_event = globals.weather_event_defs[math.random(1, #globals.weather_event_defs)].id -- pick a random weather event
+    
+    -- increment the base damage of the weather event
+    globals.current_weather_event_base_damage = globals.current_weather_event_base_damage + 1
+  end
+  
   timer.after(
     1.0, -- delay in seconds
     function()
@@ -331,8 +343,7 @@ function newTextPopup(textString, x, y, duration)
       local textComp = registry:get(entity, TextSystem.Text)
       textComp.globalAlpha = textComp.globalAlpha - 0.1 * GetFrameTime() -- fade out the text
     end,
-    nil, -- no after function
-    "text_popup_fade_out" -- timer name
+    nil
   )
 
   -- 6) after duration, burst and destroy
@@ -783,6 +794,19 @@ function spawnRainPlopAtRandomLocation()
         util.getColor("drab_olive"), -- start color
         util.getColor("green_mos") -- end color
     )
+end
+
+function spawnSnowPlopAtRandomLocation()
+  local randomX = random_utils.random_int(0, globals.screenWidth() - 1)
+  local randomY = random_utils.random_int(0, globals.screenHeight() - 1)
+  spawnCircularBurstParticles(
+      randomX, -- X position
+      randomY, -- Y position
+      10, -- number of particles
+      0.5, -- lasting how long
+      util.getColor("pastel_pink"), -- start color
+      util.getColor("blue_sky") -- end color
+  )
 end
 
 function buyNewColonistHomeCallback() 

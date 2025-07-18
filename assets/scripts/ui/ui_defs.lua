@@ -412,7 +412,14 @@ function ui_defs.generateUI()
     -- timer to update weather 
     timer.every(1, function()
         -- update the weather text every second
-        local text = localization.get("ui.weather_ui_format", {weather = globals.current_weather_event})
+        local input = nil
+        if globals.current_weather_event == nil then
+            input = "Fair Weather"
+        else
+            input = findInTable(globals.weather_event_defs, "id", globals.current_weather_event).ui_text
+            input = localization.get(input) -- get the localized text for the weather event
+        end
+        local text = localization.get("ui.weather_ui_format", {weather = input})
         TextSystem.Functions.setText(globals.ui.weatherTextEntity.config.object, text)
         
     end)
@@ -426,7 +433,7 @@ function ui_defs.generateUI()
     
     -- show time in XX:XX AM/PM format, create text entity
     globals.ui.timeTextEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.time_ui_format", {hour = globals.game_time.hours, minute = globals.game_time.minutes, am_pm = globals.game_time.hours < 12 and "AM" or "PM"}) end,  -- initial text
+        function() return localization.get("ui.time_ui_format", {hour = globals.game_time.hours, am_pm = globals.game_time.hours < 12 and "AM" or "PM"}) end,  -- initial text
         40.0,                                 -- font size
         "pulse=0.9,1.0"                       -- animation spec
     )

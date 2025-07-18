@@ -69,6 +69,14 @@ return {
             setBlackboardFloat(toHeal, "health", math.min(hp + healAmount, maxHp)) -- heal by 1, but not above max health
             log_debug("Healed entity", toHeal, "to", getBlackboardFloat(toHeal, "health"), "/", maxHp)
             
+            -- local 
+            local selfTransform = registry:get(e, Transform)
+            newTextPopup(
+                localization.get("ui.healing"),
+                selfTransform.visualX + selfTransform.visualW / 2,
+                selfTransform.visualY + selfTransform.visualH / 2   
+            )
+            
             -- spawn a healing particle effect at the entity's position
             local transform = registry:get(toHeal, Transform)
             spawnCircularBurstParticles(
@@ -79,6 +87,12 @@ return {
                 util.getColor("cyan_green"),
                 util.getColor("blue_teal")
             )
+            
+            -- newTextPopup(
+            --     "+ "..healAmount,
+            --     transform.visualX + transform.visualW / 2,
+            --     transform.visualY + transform.visualH / 2   
+            -- )
         else
             log_debug("No entity to heal found.")
             newTextPopup("No entity to heal!")

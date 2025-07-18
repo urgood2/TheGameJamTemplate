@@ -1,5 +1,7 @@
 {
 	"ui": {
+		"healing": "Applying heal...",
+		"digging": "Digging...",
 		"acid_rain_text": "Acid Rain!",
 		"snow_text": "Radioactive Snow!",
 		"drag_to_duplicate_invalid_health": "Colonist health too low!",

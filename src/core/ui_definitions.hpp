@@ -12,6 +12,7 @@
 #include "systems/text/static_ui_text.hpp"
 #include "systems/timer/timer.hpp"
 #include "systems/scripting/binding_recorder.hpp"
+#include "systems/ai/ai_system.hpp"
 
 #include "systems/ui/ui.hpp"
 #include "core/misc_fuctions.hpp"
@@ -1347,11 +1348,28 @@ namespace ui_defs
             "Create a static text‐entry node, with optional entity/component/value refs.", 
             true, false}
         );
+        
+        // clone whatever function is passed in to the main Lua state, so we won't have issues with lua threads going out of scope (if timers are called from a coroutine)
+        auto clone_to_main = [](sol::function thread_fn) {
+            // 1) get a view of your real, main-state Lua
+            sol::state_view main_sv{ ai_system::masterStateLua };
+        
+            // 2) stash the passed-in function into a temporary global
+            main_sv.set("__timer_import", thread_fn);
+        
+            // 3) pull it back out — now it’s bound to the main-state lua_State*
+            sol::function main_fn = main_sv.get<sol::function>("__timer_import");
+        
+            // 4) clean up the temp
+            main_sv["__timer_import"] = sol::lua_nil;
+        
+            return main_fn;
+        };
 
         // 2) getNewDynamicTextEntry(text, fontSize[, wrapWidth[, textEffect[, refEntity[, refComponent[, refValue]]]]])
         elem.set_function("getNewDynamicTextEntry", 
             // use a single lambda with sol::optional to let Lua omit any trailing args
-            [](sol::function localizedStringGetter,
+            [clone_to_main](sol::function localizedStringGetter,
             float fontSize,
             sol::optional<std::string> textEffect,
             sol::optional<bool> updateOnLanguageChange,
@@ -1383,14 +1401,14 @@ namespace ui_defs
                 // default to true for updateOnLanguageChange if not provided
                 if ((!updateOnLanguageChange) || (updateOnLanguageChange && *updateOnLanguageChange)) {
                     // Register a callback to update the text when the language changes
-                    entity.config.initFunc = [localizedStringGetter](entt::registry* registry, entt::entity e) {
-                        localization::onLanguageChanged([localizedStringGetter, e](const std::string& newLang) {
+                    entity.config.initFunc = [getter = clone_to_main(localizedStringGetter)](entt::registry* registry, entt::entity e) {
+                        localization::onLanguageChanged([getter, e](const std::string& newLang) {
                             // get the object inside the config component
                             auto &config = globals::registry.get<ui::UIConfig>(e);
                             auto textEntity = config.object.value();
                             
                             // Call the Lua function to get the localized text
-                            auto localizedText = localizedStringGetter.call<std::string>(newLang);
+                            auto localizedText = getter.call<std::string>(newLang);
                             // Set the text in the TextSystem
                             TextSystem::Functions::setText(textEntity, localizedText);
                         });

@@ -43,6 +43,13 @@ return {
             end
         )
         
+        local transform = registry:get(e, Transform)
+        newTextPopup(
+            localization.get("ui.digging"),
+            transform.visualX + transform.visualW / 2,
+            transform.visualY + transform.visualH / 2   
+        )
+        
         while true do
             if (doneDiggng) then
                 break -- exit the loop if done digging

@@ -10,6 +10,7 @@
 #include "systems/factory/factory.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/collision/broad_phase.hpp"
+#include "systems/ai/ai_system.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
@@ -791,6 +792,22 @@ namespace particle
             return CreateParticleEmitter(globals::registry, location, e);
         };
         
+        // clone whatever function is passed in to the main Lua state, so we won't have issues with lua threads going out of scope (if timers are called from a coroutine)
+        auto clone_to_main = [](sol::function thread_fn) {
+            // 1) get a view of your real, main-state Lua
+            sol::state_view main_sv{ ai_system::masterStateLua };
+        
+            // 2) stash the passed-in function into a temporary global
+            main_sv.set("__timer_import", thread_fn);
+        
+            // 3) pull it back out — now it’s bound to the main-state lua_State*
+            sol::function main_fn = main_sv.get<sol::function>("__timer_import");
+        
+            // 4) clean up the temp
+            main_sv["__timer_import"] = sol::lua_nil;
+        
+            return main_fn;
+        };
         
         
         // 4) Attach-emitter helper that sets `attachedTo` + `attachOffset`:
@@ -869,7 +886,7 @@ namespace particle
                           "Creates a ParticleEmitter; pass a table to override any defaults.");
 
         // 2) Table→Particle converter (unchanged)
-        static auto tableDrivenParticleMaker = [](sol::table opts) -> particle::Particle {
+        static auto tableDrivenParticleMaker = [clone_to_main](sol::table opts) -> particle::Particle {
             particle::Particle p;
             p.renderType    = opts.get_or("renderType",    p.renderType);
             p.velocity      = opts.get_or("velocity",      p.velocity);
@@ -883,7 +900,11 @@ namespace particle
             p.acceleration  = opts.get_or("acceleration",  p.acceleration);
             p.startColor    = opts.get_or("startColor",    p.startColor);
             p.endColor      = opts.get_or("endColor",      p.endColor);
-            p.onUpdateCallback = opts.get_or("onUpdateCallback", p.onUpdateCallback);
+            sol::object obj = opts["onUpdateCallback"];
+            if (obj.valid()) {
+                // key exists and isn’t nil
+                p.onUpdateCallback = clone_to_main(obj.as<sol::function>());
+            }
             return p;
         };
 

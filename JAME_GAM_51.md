@@ -153,3 +153,4 @@
 - performance optimizations for ai system, namely blackboard access
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - how to make text popup include an image that fades with it?
+- how to do progress indicators or overlays for ui/icon?

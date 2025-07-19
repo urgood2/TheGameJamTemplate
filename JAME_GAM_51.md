@@ -1,5 +1,6 @@
 # immediate todos
 - fill up relic def ui strings, add to relic defs, hook them up in the shop (weighted chance based on cost)
+- use ui element id to modify ui element callback
 - apply globals.end_of_day_gold_multiplier
 - deduct gold at end of day for healers & damage cushions, add game over state for negative currency
 - relic digger creatures who have a chance to dig up relics

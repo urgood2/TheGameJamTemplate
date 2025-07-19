@@ -74,6 +74,16 @@ function handleNewDay()
     globals.current_weather_event_base_damage = globals.current_weather_event_base_damage + 1
   end
   
+  -- select 3 random items for the shop.
+  
+  lume.clear(globals.currentShopSlots) -- clear the current shop slots
+  
+  globals.currentShopSlots[1] = lume.randomchoice(globals.relicDefs).id
+  globals.currentShopSlots[2] = lume.randomchoice(globals.relicDefs).id
+  globals.currentShopSlots[3] = lume.randomchoice(globals.relicDefs).id
+  
+  log_debug("Current shop slots: ", lume.serialize(globals.currentShopSlots))
+  
   timer.after(
     1.0, -- delay in seconds
     function()

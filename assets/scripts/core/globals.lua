@@ -10,6 +10,12 @@ globals.timeUntilNextWeatherEvent = 0 -- time until the next weather event occur
 globals.current_weather_event = nil -- the current weather event, if any
 globals.current_weather_event_base_damage = 1 -- the current damage from the weather event,
 
+globals.currentShopSlots = { 
+  { id = "basic_umbrella" },
+  { id = "basic_umbrella" },
+  { id = "basic_umbrella" } -- and so on. this will be randomized each day.
+}
+
 globals.weather_event_defs = {
   {
     id = "acid_rain",

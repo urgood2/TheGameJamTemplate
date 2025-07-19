@@ -84,6 +84,34 @@ function handleNewDay()
   
   log_debug("Current shop slots: ", lume.serialize(globals.currentShopSlots))
   
+  --TODO: now populate the shop ui
+  
+  -- refer to this:
+  
+--   local relicSlots = {
+--     {id = "relic1", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.relic_slot_1", animHandle = "relic1ButtonAnimationEntity", textHandle = "relic1TextEntity"},
+--     {id = "relic2", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.relic_slot_2", animHandle = "relic2ButtonAnimationEntity", textHandle = "relic2TextEntity"},
+--     {id = "relic3", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.relic_slot_3", animHandle = "relic3ButtonAnimationEntity", textHandle = "relic3TextEntity"},
+-- }
+
+-- local weatherButtonDefs = {}
+
+-- -- populate weatherButtonDefs based on weatherEvents
+-- for _, event in ipairs(relicSlots) do
+
+--     -- TODO: so these are stored under globals.ui["relic1TextEntity"] globals.ui["relic1ButtonAnimationEntity"] and so on, we will access these later
+--     local buttonDef = createStructurePlacementButton(
+--         event.spriteID, -- sprite ID for the weather event
+--         event.animHandle, -- global animation handle
+--         event.textHandle, -- global text handle
+--         event.text, -- localization key for text
+--         event.cost -- cost to buy the weather event
+--     )
+--     -- add buttonDef to weatherButtonDefs
+--     table.insert(weatherButtonDefs, buttonDef)
+-- end
+  
+  
   timer.after(
     1.0, -- delay in seconds
     function()

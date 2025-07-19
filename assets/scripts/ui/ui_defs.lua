@@ -762,14 +762,6 @@ function ui_defs.generateUI()
         {id = "relic3", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.relic_slot_3", animHandle = "relic3ButtonAnimationEntity", textHandle = "relic3TextEntity"},
     }
 
-    -- -- make three buttons for weather events
-    -- local weatherEvents = {
-    --     {id = "rain", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.rain_event_shop", animHandle = "rainButtonAnimationEntity", textHandle = "rainTextEntity", cost = 4},
-    --     {id = "snow", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.snow_event_shop", animHandle = "snowButtonAnimationEntity", textHandle = "snowTextEntity", cost = 6},
-    --     {id = "sunny", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.sunny_event_shop", animHandle = "sunnyButtonAnimationEntity", textHandle = "sunnyTextEntity", cost = 2},
-    --     {id = "death", spriteID = "3730-TheRoguelike_1_10_alpha_523.png", text = "ui.death_event_shop", animHandle = "deathButtonAnimationEntity", textHandle = "deathTextEntity", cost = 8},
-    -- }
-    
     local weatherButtonDefs = {}
     
     -- populate weatherButtonDefs based on weatherEvents

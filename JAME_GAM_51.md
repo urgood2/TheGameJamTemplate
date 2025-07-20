@@ -3,6 +3,17 @@
 - add simple tutorial
 - add simple how-to-window
 
+- 
+```
+--FIXME: why/ does is this nil in web? ui.box
+if not ui.box then
+                        log_error("UI box system is not available, cannot remove HP UI box.")
+                        registry:destroy(ui_elem.hp_ui_box)
+                        registry:destroy(ui_elem.hp_ui_text)
+                    else
+                        ui.box.Remove(registry, ui_elem.hp_ui_box)
+                    end
+```
 - really long dynamic texts cause massive slowdowns.
 - attempt to call number value (uibox initialize method) sometimes happens, why?
 ```

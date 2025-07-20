@@ -1251,7 +1251,14 @@ function main.init()
 
                 local ui_elem = globals.ui.colonist_ui[colonist]
                 if ui_elem and ui_elem.hp_ui_box then
-                    ui.box.Remove(registry, ui_elem.hp_ui_box)
+                    --FIXME: why/ does is this nil in web?
+                    if not ui.box then
+                        log_error("UI box system is not available, cannot remove HP UI box.")
+                        registry:destroy(ui_elem.hp_ui_box)
+                        registry:destroy(ui_elem.hp_ui_text)
+                    else
+                        ui.box.Remove(registry, ui_elem.hp_ui_box)
+                    end
                 end
 
                 registry:destroy(colonist)

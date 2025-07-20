@@ -231,7 +231,7 @@ function ui_defs.generateUI()
     
     layer_order_system.assignZIndexToEntity(
         dragDropboxUIBOX, -- entity to assign z-index to
-        0 -- z-index value
+        2 -- z-index value
     )
     ui.box.AssignLayerOrderComponents(
         registry, -- registry to use
@@ -432,7 +432,7 @@ function ui_defs.generateUI()
         end
         local text = localization.get("ui.weather_ui_format", {weather = input})
         TextSystem.Functions.setText(globals.ui.weatherTextEntity.config.object, text)
-        TextSystem.Functions.applyGlobalEffects(globals.ui.weatherTextEntity.config.object, "fade") -- apply the rainbow effect to the text
+        TextSystem.Functions.applyGlobalEffects(globals.ui.weatherTextEntity.config.object, "rainbow") -- apply the rainbow effect to the text
         
     end)
     
@@ -712,8 +712,8 @@ function ui_defs.generateUI()
     colonistHomeButtonGameObject.state.hoverEnabled = true -- enable hover for the colonist
     colonistHomeButtonGameObject.state.collisionEnabled = true -- enable collision for the colonist home button
     colonistHomeButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
-        showTooltip(localization.get("ui.colonist_home_tooltip"),
-            localization.get("ui.colonist_home_tooltip_desc"))
+        showTooltip(localization.get("ui.colonist_home_tooltip_title"),
+            localization.get("ui.colonist_home_tooltip_body"))
     end
     
     -- align the structure placement UI box to the left side of the screen, and bottom

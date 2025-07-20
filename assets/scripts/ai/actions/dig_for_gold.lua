@@ -81,7 +81,7 @@ return {
             globals.creature_defs,
             "id",
             "gold_digger"
-          ).gold_produced_each_dig,
+          ).gold_produced_each_dig.."G",
           transformComp.visualX + transformComp.visualW / 2,
           transformComp.visualY + transformComp.visualH / 2,
         3,

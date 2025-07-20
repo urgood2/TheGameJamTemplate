@@ -123,7 +123,7 @@ function spawnGoldDigger(x, y)
         0.5, -- every 0.5 seconds
         function()
             if (registry:valid(colonist) == true) then
-                text = localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") })
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
                 
                 TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
             end
@@ -135,11 +135,11 @@ function spawnGoldDigger(x, y)
     )
     layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_box, 
-        3 -- make sure it is below show window
+        4 -- make sure it is below show window
     )
     layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_text, 
-        3 -- make sure it is below show window
+        4 -- make sure it is below show window
     )
     -- anchor to the top center of the colonist 
     transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
@@ -273,11 +273,11 @@ function spawnHealer(x, y)
     
     layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_box, 
-        3 -- make sure it is below show window
+        4 -- make sure it is below show window
     )
     layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_text, 
-        3 -- make sure it is below show window
+        4 -- make sure it is below show window
     )
     
     -- update hp text every 0.5 seconds
@@ -285,7 +285,7 @@ function spawnHealer(x, y)
         0.5, -- every 0.5 seconds
         function()
             if (registry:valid(colonist) == true) then
-                text = localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") })
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
                 
                 TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
             end
@@ -421,11 +421,11 @@ function spawnDamageCushion(x, y)
     
     layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_box, 
-        3 -- make sure it is below show window
+        4 -- make sure it is below show window
     )
     layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_text, 
-        3 -- make sure it is below show window
+         4 -- make sure it is below show window
     )
     
     -- anchor to the top center of the colonist 
@@ -541,12 +541,17 @@ function spawnNewColonist(x, y)
     globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
     
     layer_order_system.assignZIndexToEntity(
+        colonist, 
+        4 -- make sure it is below show window
+    )
+    
+    layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_box, 
-        3 -- make sure it is below show window
+        4 -- make sure it is below show window
     )
     layer_order_system.assignZIndexToEntity(
         globals.ui.colonist_ui[colonist].hp_ui_text, 
-        3 -- make sure it is below show window
+        4 -- make sure it is below show window
     )
     
     -- update hp text every 0.5 seconds
@@ -554,7 +559,7 @@ function spawnNewColonist(x, y)
         0.5, -- every 0.5 seconds
         function()
             if (registry:valid(colonist) == true) then
-                text = localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") })
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
                 
                 TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
             end

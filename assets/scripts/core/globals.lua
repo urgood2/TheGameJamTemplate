@@ -49,22 +49,22 @@ globals.isShopOpen = false -- whether the shop is currently open
 globals.ownedRelics = {
   {
     id = "proto_umbrella"
-  },
-  {
-    id = "ultimate_mark_of_the_cat_ninja"
-  },
-  {
-    id = "karma_umbrella"
-  },
-  {
-    id = "vampire_teeth"
-  },
-  {
-    id = "gold_lover"
-  },
-  {
-    id = "shoddy_pickaxe"
   }
+  -- {
+  --   id = "ultimate_mark_of_the_cat_ninja"
+  -- },
+  -- {
+  --   id = "karma_umbrella"
+  -- },
+  -- {
+  --   id = "vampire_teeth"
+  -- },
+  -- {
+  --   id = "gold_lover"
+  -- },
+  -- {
+  --   id = "shoddy_pickaxe"
+  -- }
 }
 
 globals.creature_defs = {

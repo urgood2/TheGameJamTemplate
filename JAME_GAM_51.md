@@ -10,6 +10,7 @@
 - get rid of cancel button on selection screen
 - tooltips on selection buttons
 
+- color coding (part) for dynamic text as well
 
 - get static text formatting in ui working
 

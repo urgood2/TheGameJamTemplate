@@ -179,7 +179,7 @@ function handleNewDay()
     globals.current_weather_event = globals.weather_event_defs[math.random(1, #globals.weather_event_defs)].id -- pick a random weather event
     
     -- increment the base damage of the weather event
-    globals.current_weather_event_base_damage = globals.current_weather_event_base_damage * 1.5
+    globals.current_weather_event_base_damage = globals.current_weather_event_base_damage * 2
   end
   
   -- select 3 random items for the shop.
@@ -522,6 +522,9 @@ function toggleShopWindow()
     globals.isShopOpen = true
     local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
     transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2 -- show the shop UI box
+    -- center x
+    transform.actualX = globals.screenWidth() / 2 - transform.actualW / 2
+    transform.visualX = transform.actualX -- snap X
   end
 end
 
@@ -998,6 +1001,11 @@ function getCostStringForMaterial(converterDef)
 end
 
 function togglePausedState(forcePause)
+  if (globals.gameOver) then
+    log_debug("Game is over, cannot toggle paused state")
+    return
+  end
+  
   -- decide whether we should be paused
   -- if forcePause is nil → flip the current state
   -- if forcePause is boolean → use that

@@ -89,7 +89,7 @@ return {
             )
             
             newTextPopup(
-                "+ "..healAmount,
+                "+ "..healAmount.." HP",
                 transform.visualX + transform.visualW / 2,
                 transform.visualY + transform.visualH / 2,
                 3.0, -- duration

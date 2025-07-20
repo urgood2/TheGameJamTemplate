@@ -1,5 +1,6 @@
 {
 	"ui": {
+		"dodgedText": "Dodge!",
 		"weather_difficulty_text": "Weather Difficulty: {difficulty}",
 		"basic_acid_umbrella_name": "Basic Acid Umbrella",
 		"basic_acid_umbrella_desc": "Provides 1 damage reduction in acid rain.",

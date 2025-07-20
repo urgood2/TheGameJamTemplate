@@ -355,6 +355,11 @@ function initMainGame()
             globals.tileSize    -- height
         )
         
+        layer_order_system.assignZIndexToEntity(
+            grassEntity,
+            0 -- assign a z-index based on the iteration
+        )
+        
         -- place within the screen bounds, but make sure it respects tiles
         local transformComp = registry:get(grassEntity, Transform)
         transformComp.actualX = random_utils.random_int(0, math.floor(globals.screenWidth() / globals.tileSize) - 1) * globals.tileSize
@@ -373,6 +378,44 @@ function initMainGame()
         spawnNewColonist()
     end
     
+    
+    timer.every(2.0 , function()
+        -- every 2 seconds, check if the game is paused
+        if globals.gamePaused then
+            return -- If the game is paused, do not update the game state
+        end
+        
+        -- if there are no colonists, game over
+        if #globals.colonists == 0 and not globals.gameOver then
+            log_debug("No colonists left, game over") -- Debug message to indicate game over
+            globals.gameOver = true -- Set the game over flag, disable resuming
+            globals.gamePaused = true -- Set the game over flag
+            
+            -- create game over text
+            local gameOverText = ui.definitions.getNewDynamicTextEntry(
+                function() return "GAME OVER" end,  -- initial text
+                50.0,                                 -- font size
+                "rainbow"                       -- animation spec
+            )
+            
+            -- get transformComp
+            local gameOverTransform = registry:get(gameOverText.config.object, Transform)
+            
+            -- center the text in the middle of the screen
+            gameOverTransform.actualX = globals.screenWidth() / 2 - gameOverTransform.actualX / 2
+            gameOverTransform.actualY = globals.screenHeight() / 2 - gameOverTransform.actualH / 2  
+            gameOverTransform.visualW = gameOverTransform.actualW
+            gameOverTransform.visualH = gameOverTransform.actualH
+            
+            -- set z order to be on top of everything
+            layer_order_system.assignZIndexToEntity(
+                gameOverText.config.object,
+                30000 -- a very high z-index to ensure it is on top of everything
+            )
+            return -- Exit the function
+        end
+        
+    end)
     
     -- function destroyRainAndSpawnNew()
     --     -- destroy the rain entity
@@ -551,6 +594,8 @@ function main.init()
     "tooltip_hide_timer" -- unique tag for this timer
     )
     
+    
+    
     timer.every(1.0, function()
         -- if a weather event is active, update the weather event
         
@@ -687,7 +732,7 @@ function main.init()
                 
                 log_debug("Acid rain event: applying damage to colonist:", colonist)
                 
-                if not registry:valid(colonist) then
+                if not registry:valid(colonist) or colonist == entt_null then
                     log_debug("Colonist is not valid, skipping damage application")
                     lume.remove(globals.colonists, colonist) -- remove the invalid colonist from the list
                     lume.remove(globals.healers, colonist) -- remove the invalid colonist from the list
@@ -702,6 +747,13 @@ function main.init()
                     for _, callback in ipairs(onDodgeCallbacks) do
                         callback(colonist)
                     end
+                    local colonistTransform = registry:get(colonist, Transform)
+                    newTextPopup(
+                        localization.get("ui.dodgedText"), -- text to display
+                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
+                        colonistTransform.actualY - 50, -- position above the colonist
+                        5 -- duration in seconds
+                    )
                     return -- If the colonist dodged, do not apply damage
                 end
                 
@@ -812,6 +864,14 @@ function main.init()
                 end
                 -- choose a random colonist
                 
+                if not registry:valid(colonist) or colonist == entt_null then
+                    log_debug("Colonist is not valid, skipping damage application")
+                    lume.remove(globals.colonists, colonist) -- remove the invalid colonist from the list
+                    lume.remove(globals.healers, colonist) -- remove the invalid colonist from the list
+                    lume.remove(globals.gold_diggers, colonist) -- remove the invalid colonist_ui
+                    return -- If the colonist is not valid, do not apply damage
+                end
+                
                 -- chance to dodge the damage
                 if random_utils.random_float(0, 1.0) < totalDodgeChance then
                     log_debug("Colonist dodged the acid rain damage")
@@ -819,6 +879,13 @@ function main.init()
                     for _, callback in ipairs(onDodgeCallbacks) do
                         callback(colonist)
                     end
+                    local colonistTransform = registry:get(colonist, Transform)
+                    newTextPopup(
+                        localization.get("ui.dodgedText"), -- text to display
+                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
+                        colonistTransform.actualY - 50, -- position above the colonist
+                        5 -- duration in seconds
+                    )
                     return -- If the colonist dodged, do not apply damage
                 end
                 

@@ -132,6 +132,11 @@ namespace scripting {
             /*version=*/"0.1",
             /*doc=*/"Wraps an EnTT entity handle for Lua scripts."
         );
+        
+        
+        // add entt::null
+        
+        stateToInit["entt_null"] = static_cast<entt::entity>(entt::null);
 
 
         //---------------------------------------------------------
@@ -374,6 +379,7 @@ namespace scripting {
             return blackboard.contains(key);
         });
         rec.record_free_function({}, {"blackboardContains", "---@param entity Entity\n---@param key string\n---@return boolean", "Checks if the blackboard contains a specific key.", true, false});
+        
 
         stateToInit.set_function("setBlackboardInt", setBlackboardInt);
         stateToInit.set_function("getBlackboardInt", getBlackboardInt);

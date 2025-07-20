@@ -1219,8 +1219,9 @@ function main.init()
     log_debug("gold_diggers", globals.gold_diggers)
     log_debug("damage_cushions", globals.damage_cushions)
     -- every 1 second, check every colonist
-    function checkColonistDeaths()
-        local colonists = lume.clone(globals.colonists or {})
+    timer.every(0.5, function()
+        local colonists = {}
+        lume.extend(colonists, globals.colonists or {})
         lume.extend(colonists, globals.healers or {})
         lume.extend(colonists, globals.gold_diggers or {})
         lume.extend(colonists, globals.damage_cushions or {})
@@ -1229,42 +1230,35 @@ function main.init()
 
         for _, colonist in pairs(colonists) do
             if registry:valid(colonist) and getBlackboardFloat(colonist, "health") <= 0 then
-                local ok, err = pcall(function()
-                    local transform = registry:get(colonist, Transform)
+                local transform = registry:get(colonist, Transform)
 
-                    newTextPopup(localization.get("ui.colonist_dead_text"),
-                                transform.actualX + transform.visualW / 2,
-                                transform.actualY - 50,
-                                5)
+                newTextPopup(localization.get("ui.colonist_dead_text"),
+                            transform.actualX + transform.visualW / 2,
+                            transform.actualY - 50,
+                            5)
 
-                    playSoundEffect("effects", "die")
-                    spawnCircularBurstParticles(
-                        transform.actualX + transform.visualW / 2,
-                        transform.actualY + transform.visualH / 2,
-                        50, 10,
-                        util.getColor("red"), util.getColor("black"))
+                playSoundEffect("effects", "die")
+                spawnCircularBurstParticles(
+                    transform.actualX + transform.visualW / 2,
+                    transform.actualY + transform.visualH / 2,
+                    50, 10,
+                    util.getColor("red"), util.getColor("black"))
 
-                    globals.colonists[colonist] = nil
-                    globals.healers[colonist] = nil
-                    globals.gold_diggers[colonist] = nil
-                    globals.damage_cushions[colonist] = nil
+                globals.colonists[colonist] = nil
+                globals.healers[colonist] = nil
+                globals.gold_diggers[colonist] = nil
+                globals.damage_cushions[colonist] = nil
 
-                    local ui = globals.ui.colonist_ui[colonist]
-                    if ui and ui.hp_ui_box then
-                        ui.box.Remove(registry, ui.hp_ui_box)
-                    end
-
-                    registry:destroy(colonist)
-                end)
-
-                if not ok then
-                    log_debug("Colonist death check failed:", err)
+                local ui_elem = globals.ui.colonist_ui[colonist]
+                if ui_elem and ui_elem.hp_ui_box then
+                    ui.box.Remove(registry, ui_elem.hp_ui_box)
                 end
-            end
-        end
-    end
 
-    timer.every(0.3, checkColonistDeaths, 0, true, nil)
+                registry:destroy(colonist)
+            end
+
+        end
+    end)
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 end

@@ -1,9 +1,9 @@
 {
 	"ui": {
-		"tutorial_duplicate": "Hey there! Let me teach you the ropes with a quick tutorial.\nDrag & drop a colonist into the window on the left side to duplicate it.\nThis will spawn clones, each with a specific function.",
-		"tutorial_game_goal": "Your goal is to survive the acid rains and radioactive snows by using the clones you create.\nYou must keep colonists alive, and keep your gold balance above 0, to keep playing.\nYou may want to build some colonist homes to help with gold production.",
-		"tutorial_advanced": "As you progress, you will be able to buy relics from the end-of-day shop.\nThey will help your colonists survive the harsh weather.\nNote that the weather will only get worse as you progress.",
-		"tutorial_end": "That's it for the tutorial!\nRefer ot the tooltips if you need more info.\nGood luck, and have fun!\nLet's see 'weather or not' you can survive!",
+		"tutorial_duplicate": "Hey there! Let me teach you the ropes with\na quick tutorial. Drag & drop a colonist\ninto the window on the left side to\nduplicate it. This will spawn clones,\neach with a specific function.",
+		"tutorial_game_goal": "Your goal is to survive the acid rains and\nradioactive snows by using the clones you\ncreate. You must keep colonists alive, and\nkeep your gold balance above 0, to keep\nplaying. You may want to build some colonist\nhomes to help with gold production.",
+		"tutorial_advanced": "As you progress, you will be able to buy\nrelics from the end-of-day shop.\nThey will help your colonists survive the\nharsh weather. Note that the weather will\nonly get worse as you progress.",
+		"tutorial_end": "That's it for the tutorial! Refer to the\ntooltips if you need more info.\nGood luck, and have fun! Let's see 'weather\nor not' you can survive!",
 		"dodgedText": "Dodge!",
 		"weather_difficulty_text": "Weather Difficulty: {difficulty}",
 		"basic_acid_umbrella_name": "Basic Acid Umbrella",

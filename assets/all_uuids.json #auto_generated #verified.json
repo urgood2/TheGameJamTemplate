@@ -18316,6 +18316,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/JAMEGAM50.md",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\JAMEGAM50.md"
     ],
+    "jamegam51_logo": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/jamegam51/logo.png"
+    ],
     "jamegam51_rainman2": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/jamegam51/Rainman2.png"
     ],
@@ -18904,6 +18907,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\logic",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/logic",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\logic"
+    ],
+    "logo": [
+        "logo.png"
     ],
     "louder_main_menu_sound_theme": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Main Menu Theme (Louder).wav"

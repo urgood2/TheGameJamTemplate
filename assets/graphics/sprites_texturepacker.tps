@@ -1970,6 +1970,21 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/jamegam51/logo.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>32,16,64,32</rect>
+                <key>scale9Paddings</key>
+                <rect>32,16,64,32</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">pre-packing-files_globbed/particles/circle_01.png</key>
             <key type="filename">pre-packing-files_globbed/particles/circle_02.png</key>
             <key type="filename">pre-packing-files_globbed/particles/circle_03.png</key>
@@ -3716,6 +3731,7 @@
                     <filename>pre-packing-files_globbed/jamegam51/Defended3.png</filename>
                     <filename>pre-packing-files_globbed/jamegam51/Defended4.png</filename>
                     <filename>pre-packing-files_globbed/jamegam51/Rainman2.png</filename>
+                    <filename>pre-packing-files_globbed/jamegam51/logo.png</filename>
                 </array>
             </struct>
         </map>

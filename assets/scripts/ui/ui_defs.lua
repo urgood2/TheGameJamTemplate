@@ -1165,6 +1165,103 @@ function ui_defs.generateUI()
     local shopButtonTransform = registry:get(globals.ui.shopButtonUIBox, Transform)
     pauseButtonTransform.actualY = shopButtonTransform.actualY - pauseButtonTransform.actualH - 10 -- 10 pixels below the shop button
     pauseButtonTransform.visualY = pauseButtonTransform.actualY -- update visual position as well
+    
+    
+    globals.tutorials = {
+        "ui.tutorial_duplicate",
+        "ui.tutorial_game_goal",
+        "ui.tutorial_advanced",
+        "ui.tutorial_end"
+    }
+    
+    globals.currentTutorialIndex = 1 -- Start with the first tutorial
+    
+    -- first, make a row with a text entity and a close button
+    -- globals.ui.tutorialText = ui.definitions.getNewDynamicTextEntry(
+    --     function() return localization.get(globals.tutorials[globals.currentTutorialIndex]) end,  -- initial text
+    --     30.0,                                 -- font size
+    --     ""                       -- animation spec
+    -- )
+    
+    -- local rectTextDef = UIElementTemplateNodeBuilder.create()
+    --     :addType(UITypeEnum.TEXT)
+    --     :addConfig(
+    --         UIConfigBuilder.create()
+    --             :addText(localization.get("ui.drag_to_duplicate")) -- title text
+    --             :addColor(util.getColor("blackberry"))
+    --             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM)
+    --             :addInitFunc(function(registry, entity)
+    --                 -- something init-related here
+    --             end)
+    --             :build()
+    --     )
+    --     :build()
+    local rowDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.TEXT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addId("tutorial_text_row")
+                :addColor(util.getColor("taupe_warm"))
+                :addText(localization.get(globals.tutorials[globals.currentTutorialIndex])) -- title text
+                :addColor(util.getColor("blackberry"))
+                -- :addEmboss(2.0)
+                -- :addMinWidth(500) -- minimum width of the button
+                -- :addShadow(true)
+                -- :addHover(true) -- needed for button effect
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :build()
+        )
+        -- :addChild(globals.ui.tutorialText)
+        :build()
+        
+    local closeButtonText = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.next_tutorial_text") end,  -- initial text
+        30.0,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
+    )
+    
+    local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(2.0)
+                :addHover(true) -- needed for button effect
+                :addMinWidth(500) -- minimum width of the button
+                :addButtonCallback(function ()
+                    nextTutorialCallback()
+                end)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :build()
+        )
+        :addChild(closeButtonText)
+        :build()
+        
+    -- new root
+    local tutorialRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("mauve_shadow"))
+                :addShadow(true)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(rowDef)
+        :addChild(closeButtonTemplate)
+        :build()
+        
+    -- new uibox for the tutorial
+    globals.ui.tutorial_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, tutorialRoot)
+    -- center the uibox
+    local tutorialTransform = registry:get(globals.ui.tutorial_uibox, Transform)
+    tutorialTransform.actualX = globals.screenWidth() / 2 - tutorialTransform.actualW / 2
+    -- snap x
+    tutorialTransform.visualX = tutorialTransform.actualX
+    tutorialTransform.actualY = globals.screenHeight() / 2 - tutorialTransform.actualH / 2
 end
 
 function ui_defs.generateTooltipUI()

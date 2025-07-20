@@ -346,14 +346,14 @@ function handleNewDay()
     local uiConfig = registry:get(uiElement3, UIConfig)
     uiConfig.disable_button = true -- disable the button
   end
+  ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox) -- re-align the shop UI box
+  
   -- update shop uiboxTransform to centered
   local shopUIBoxTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
   shopUIBoxTransform.actualX = globals.screenWidth() / 2 - shopUIBoxTransform.actualW / 2
   shopUIBoxTransform.visualX = shopUIBoxTransform.actualX -- snap X
   shopUIBoxTransform.actualY = globals.screenHeight() / 2 - shopUIBoxTransform.actualH / 2
   shopUIBoxTransform.visualY = shopUIBoxTransform.actualY -- snap Y
-  
-  ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox) -- re-align the shop UI box
   -- refer to this:
   
 --   local relicSlots = {
@@ -1132,7 +1132,7 @@ end
 function startEntityWalkMotion(e)
   timer.every(0.5,
     function()
-      if (not registry:valid(e)) then
+      if (not registry:valid(e) or e == entt_null) then
         log_debug("Entity is not valid, stopping walk motion")
         
         -- use schduler to remove the timer

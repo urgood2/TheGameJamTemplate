@@ -21,6 +21,11 @@ return {
         -- Then spawn a gold coin at the given pace, then complete the action
         timer.every(0.5, 
             function()
+              
+                if not registry:valid(e) or e == entt_null then
+                    log_debug("Entity", e, "is no longer valid, stopping dig action.")
+                    return ActionResult.FAILURE
+                end
                 -- get transform
                 local transform = registry:get(e, Transform)
                 

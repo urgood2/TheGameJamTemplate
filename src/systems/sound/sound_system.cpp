@@ -321,9 +321,9 @@ namespace sound_system {
         for (auto &me : activeMusic) {
             if (me.name == name) {
                 me.volume = v;
-                if (me.fadeState == None) {
+                // if (me.fadeState == None) {
                     SetMusicVolume(me.stream, me.volume * musicVolume * globalVolume);
-                }
+                // }
                 break;
             }
         }

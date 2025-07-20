@@ -140,8 +140,8 @@ function ui_defs.generateUI()
                 :addColor(util.getColor("taupe_warm"))
                 -- :addShadow(true) --- IGNORE ---
                 :addEmboss(4.0)
-                :addMinWidth(200)
-                :addMinHeight(200)
+                :addMinWidth(230)
+                :addMinHeight(230)
                 :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here

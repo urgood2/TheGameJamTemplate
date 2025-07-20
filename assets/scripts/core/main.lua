@@ -36,6 +36,7 @@ end
 function initMainMenu()
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     setCategoryVolume("effects", 0.2)
+    playMusic("main-menu", true) -- Play the main menu music
     -- create start game button
     mainMenuEntities.logoText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_logo") end,  -- initial text
@@ -295,6 +296,8 @@ function startGameButtonCallback()
         function()
             remove_fullscreen_shader("screen_tone_transition") -- Remove the fade out shader
             
+            add_fullscreen_shader("palette_quantize")
+            
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer
     )
@@ -317,6 +320,36 @@ function clearMainMenu()
 end
 
 function initMainGame()
+    -- pauseMusic("main-menu") -- Pause the main menu music
+    setTrackVolume("main-menu", 0.0)
+    
+    --     "snow-ambiance": "Snow Ambience.wav",
+    --     "regular-ambiance": "Regular Ambience.wav",
+    --     "rain-ambiance": "Rain Ambience.wav",
+    --     "fair_weather": "Difficulty 1 Fair Weather.wav",
+    --     "acid_rain": "Difficulty 3 Acid Rain.wav",
+    --     "radioactive_snow": "Difficulty 4 Radioactive Snow.wav"
+    
+    -- play everything, but set to 0 volume
+    playMusic("snow-ambiance", true) -- Play the snow ambiance music
+    setTrackVolume("snow-ambiance", 0.0) -- Mute the snow ambiance music
+    playMusic("regular-ambiance", true) -- Play the regular ambiance music
+    -- setTrackVolume("regular-ambiance", 0.0) -- Mute the regular ambiance music
+    playMusic("rain-ambiance", true) -- Play the rain ambiance music
+    setTrackVolume("rain-ambiance", 0.0) -- Mute the rain ambiance music
+    playMusic("fair_weather", true) -- Play the fair weather music
+    -- setTrackVolume("fair_weather", 0.0) -- Mute the fair weather music
+    playMusic("acid_rain", true) -- Play the acid rain music
+    setTrackVolume("acid_rain", 0.0) -- Mute the acid rain music
+    playMusic("radioactive_snow", true) -- Play the radioactive snow music
+    setTrackVolume("radioactive_snow", 0.0) -- Mute the radioactive snow music
+    
+    -- timer.tween(
+    --     0.5, -- duration in seconds
+    --     function() return getTrackVolume("whale-song") end, -- getter
+    --     function(v) setTrackVolume("whale-song", v) end, -- setter
+    --     1 -- target value
+    -- )
     log_debug("Initializing main game...") -- Debug message to indicate the game is starting
     currentGameState = GAMESTATE.IN_GAME -- Set the game state to IN_GAME
     
@@ -324,8 +357,7 @@ function initMainGame()
     -- playMusic("whale-song", true) -- Play the whale song music, but mute it
     -- setTrackVolume("whale-song", 0.0) -- Mute the whale song music
     
-    -- add_fullscreen_shader("shockwave")
-    -- add_fullscreen_shader("tile_grid_overlay") -- to show tile griddonuts background
+    
     
     
     
@@ -667,8 +699,72 @@ function main.init()
         log_debug("Total On Hit Callbacks:", #onHitCallbacks)
         log_debug("Total On Dodge Callbacks:", #onDodgeCallbacks)
         
-        if (globals.current_weather_event == "acid_rain") then
+        function convenientTrackFadeOut(trackName, duration)
+            -- convenience function to fade out a track
+            if getTrackVolume(trackName) > 0 then
+                timer.tween(
+                    duration, -- duration in seconds
+                    function() return getTrackVolume(trackName) end, -- getter
+                    function(v) setTrackVolume(trackName, v) end, -- setter
+                    0 -- target value
+                )
+            end
+        end
+        
+        function convenientTrackFadeIn(trackName, duration)
+            -- convenience function to fade in a track
+            timer.tween(
+                duration, -- duration in seconds
+                function() return getTrackVolume(trackName) end, -- getter
+                function(v) setTrackVolume(trackName, v) end, -- setter
+                1 -- target value
+            )
+        end
+        if (globals.current_weather_event == nil) then
+            
+            -- fair weather.
+            if globals.previous_weather_event ~= globals.current_weather_event then
+                -- if the previous weather event was not acid rain, then queue the music
+                
+                -- fade out everything, if it is not already at 0 volume
+                convenientTrackFadeOut("snow-ambiance", 0.5) -- Fade out the snow ambiance music
+                convenientTrackFadeOut("regular-ambiance", 0.5) -- Fade out the regular ambiance music
+                convenientTrackFadeOut("rain-ambiance", 0.5) -- Fade out the rain ambiance music
+                convenientTrackFadeOut("fair_weather", 0.5) --  
+                convenientTrackFadeOut("acid_rain", 0.5) -- Fade out the acid rain music
+                convenientTrackFadeOut("radioactive_snow", 0.5) -- Fade out
+                
+                -- fade in the acid rain music & ambiance
+                convenientTrackFadeIn("fair_weather", 0.5) -- Fade in the fair weather music
+                convenientTrackFadeIn("regular-ambiance", 0.5)
+                
+            end
+            
+            globals.previous_weather_event = globals.current_weather_event -- update the previous weather event
+        
+        elseif (globals.current_weather_event == "acid_rain") then
             -- TODO: spawn green particles everywhere
+            
+            if globals.previous_weather_event ~= globals.current_weather_event then
+                -- if the previous weather event was not acid rain, then queue the music
+                
+                -- fade out everything, if it is not already at 0 volume
+                convenientTrackFadeOut("snow-ambiance", 0.5) -- Fade out the snow ambiance music
+                convenientTrackFadeOut("regular-ambiance", 0.5) -- Fade out the regular ambiance music
+                convenientTrackFadeOut("rain-ambiance", 0.5) -- Fade out the rain ambiance music
+                convenientTrackFadeOut("fair_weather", 0.5) --  
+                convenientTrackFadeOut("acid_rain", 0.5) -- Fade out the acid rain music
+                convenientTrackFadeOut("radioactive_snow", 0.5) -- Fade out
+                
+                -- -- fade in the acid rain music & ambiance
+                -- convenientTrackFadeIn("acid_rain", 0.5) -- Fade in the acid rain music
+                -- convenientTrackFadeIn("rain-ambiance", 0.5) 
+                setTrackVolume("acid_rain", 0.3) -- set the acid rain music to 1.0 volume
+                setTrackVolume("rain-ambiance", 1.0) -- set the rain
+                
+            end
+            
+            globals.previous_weather_event = globals.current_weather_event -- update the previous weather event
         
             timer.every(
                 0.1, -- every 0.1 seconds
@@ -808,6 +904,27 @@ function main.init()
                 end
             end
         elseif (globals.current_weather_event == "snow") then
+            if globals.previous_weather_event ~= globals.current_weather_event then
+                -- if the previous weather event was not acid rain, then queue the music
+                
+                -- fade out everything, if it is not already at 0 volume
+                convenientTrackFadeOut("snow-ambiance", 0.5) -- Fade out the snow ambiance music
+                convenientTrackFadeOut("regular-ambiance", 0.5) -- Fade out the regular ambiance music
+                convenientTrackFadeOut("rain-ambiance", 0.5) -- Fade out the rain ambiance music
+                convenientTrackFadeOut("fair_weather", 0.5) --  
+                convenientTrackFadeOut("acid_rain", 0.5) -- Fade out the acid rain music
+                convenientTrackFadeOut("radioactive_snow", 0.5) -- Fade out
+                
+                -- fade in the acid rain music & ambiance
+                -- convenientTrackFadeIn("radioactive_snow", 0.5) -- Fade in the acid rain music
+                -- convenientTrackFadeIn("snow-ambiance", 0.5) 
+                
+                setTrackVolume("radioactive_snow", 0.3) -- set the acid rain music to 1.0 volume
+                setTrackVolume("snow-ambiance", 1.0) -- set the rain
+            end
+            
+            globals.previous_weather_event = globals.current_weather_event -- update the previous weather event
+            
             timer.every(
                 0.1, -- every 0.1 seconds
                 function()

@@ -17697,6 +17697,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/palette_quantize_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\palette_quantize_fragment.fs"
     ],
+    "fragment_palette_quantize_web": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/palette_quantize_fragment.fs"
+    ],
     "fragment_polychrome": [
         "polychrome_fragment.fs"
     ],
@@ -19230,6 +19233,9 @@
     ],
     "palette_quantize_vertex": [
         "palette_quantize_vertex.vs"
+    ],
+    "palette_quantize_vertex_web": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/palette_quantize_vertex.vs"
     ],
     "palette_raspberry_resurrect_wine": [
         "RESURRECT_PALETTE_RASPBERRY_WINE"

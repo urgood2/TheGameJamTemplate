@@ -726,7 +726,7 @@ function ui_defs.generateUI()
     -- new number text entry for the currency amount
     globals.ui.currencyTextEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.currency_text", {currency = math.floor(0)}) end,  -- initial text
-        20.0,                                 -- font size
+        30.0,                                 -- font size
         ""                       -- animation spec
     )
     
@@ -899,7 +899,7 @@ function ui_defs.generateUI()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("blank"))
+                :addColor(util.getColor("dusty_rose"))
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
                     -- something init-related here
@@ -1017,6 +1017,7 @@ function ui_defs.generateTooltipUI()
         30.0,                                 -- font size
         "fade"                       -- animation spec
     )
+    registry:get(tooltipBodyText.config.object, TextSystem.Text).shadow_enabled = false -- disable shadow for the tooltip body text
     globals.ui.tooltipBodyText = tooltipBodyText.config.object
     
     -- make vertical container for the tooltip

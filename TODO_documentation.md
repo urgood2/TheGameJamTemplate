@@ -1,4 +1,5 @@
 # Documentation
+- add children method (which takes lua table) for ui builder
 - document this:
 ```lua
 layer_order_system.assignZIndexToEntity(

@@ -111,6 +111,9 @@ function buyRelicFromSlot(slot)
       localization.get(relicDef.localizationKeyDesc)
     )
   end
+  gameObject.state.hoverEnabled = true
+  gameObject.state.collisionEnabled = true
+  
   
   -- wrap the animation entity 
   local uie = ui.definitions.wrapEntityInsideObjectElement(
@@ -133,7 +136,7 @@ function buyRelicFromSlot(slot)
                 :build()
         )
         -- add all relic button defs to the row
-        :addChildren(uie)
+        :addChild(uie)
         :build()
   
   globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
@@ -464,8 +467,9 @@ function showTooltip(titleText, bodyText)
 
   TextSystem.Functions.setText(titleEnt, titleText)
   TextSystem.Functions.clearAllEffects(titleEnt)            -- clear any previous effects
-  TextSystem.Functions.applyGlobalEffects(titleEnt, "pulse") -- apply the tooltip title effects
+  TextSystem.Functions.applyGlobalEffects(titleEnt, "pulse;color=lavender") -- apply the tooltip title effects
   TextSystem.Functions.setText(bodyEnt, bodyText)
+  TextSystem.Functions.applyGlobalEffects(bodyEnt, "color=blue_midnight") -- apply the tooltip body effects
 
   -- 2) re-calc the box layout to fit new text
   ui.box.RenewAlignment(registry, boxEnt)

@@ -11071,6 +11071,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_1_outline.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_1_outline.png"
     ],
+    "1_difficulty_fair_sound_weather": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Difficulty 1 Fair Weather.wav"
+    ],
+    "1_difficulty_fair_weather": [
+        "Difficulty 1 Fair Weather.wav"
+    ],
     "1_double_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_1.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Double/keyboard_1.png"
@@ -11281,6 +11287,12 @@
     "2_snow": [
         "SNOW 2"
     ],
+    "3_acid_difficulty_rain": [
+        "Difficulty 3 Acid Rain.wav"
+    ],
+    "3_acid_difficulty_rain_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Difficulty 3 Acid Rain.wav"
+    ],
     "3_antique_white": [
         "ANTIQUE WHITE 3"
     ],
@@ -11481,6 +11493,12 @@
     "4_default_keyboard_outline": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_4_outline.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_4_outline.png"
+    ],
+    "4_difficulty_radioactive_snow": [
+        "Difficulty 4 Radioactive Snow.wav"
+    ],
+    "4_difficulty_radioactive_snow_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Difficulty 4 Radioactive Snow.wav"
     ],
     "4_double_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Double\\keyboard_4.png",
@@ -12181,6 +12199,24 @@
     ],
     "amber_burnished_palette_resurrect": [
         "RESURRECT_PALETTE_BURNISHED_AMBER"
+    ],
+    "ambience_rain": [
+        "Rain Ambience.wav"
+    ],
+    "ambience_rain_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Rain Ambience.wav"
+    ],
+    "ambience_regular": [
+        "Regular Ambience.wav"
+    ],
+    "ambience_regular_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Regular Ambience.wav"
+    ],
+    "ambience_snow": [
+        "Snow Ambience.wav"
+    ],
+    "ambience_snow_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Snow Ambience.wav"
     ],
     "ambient_and_down_shader_smooth_up": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/shaders/smooth_up_and_down_ambient.fs",
@@ -13752,6 +13788,18 @@
     "bubbling_deep_magic_spell_stereo_subtle_tone_zap": [
         "MAGIC_SPELL_Deep_Tone_Bubbling_Zaps_Subtle_stereo.wav"
     ],
+    "building_place": [
+        "Building Place.wav"
+    ],
+    "building_place_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Building Place.wav"
+    ],
+    "building_plop": [
+        "Building Plop.wav"
+    ],
+    "building_plop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Building Plop.wav"
+    ],
     "burgundy": [
         "Burgundy"
     ],
@@ -14002,6 +14050,12 @@
     ],
     "button_xbox_y": [
         "xbox_button_y.png"
+    ],
+    "buy_shop": [
+        "Shop Buy.wav"
+    ],
+    "buy_shop_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Shop Buy.wav"
     ],
     "buyelf_sound": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/BuyElf.wav",
@@ -14676,6 +14730,12 @@
     "d_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_d.svg"
     ],
+    "damage_sound_tick": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Damage Tick.wav"
+    ],
+    "damage_tick": [
+        "Damage Tick.wav"
+    ],
     "danger_en_motorway_on_the": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/Danger on the Motorway.otf",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en\\Danger on the Motorway.otf",
@@ -14726,6 +14786,12 @@
     ],
     "dark_violet": [
         "DARK VIOLET"
+    ],
+    "day_end_of": [
+        "End of Day.wav"
+    ],
+    "day_end_of_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/End of Day.wav"
     ],
     "debugging_lua": [
         "DEBUGGING_LUA.md"
@@ -15657,6 +15723,12 @@
     ],
     "dig_for_gold": [
         "dig_for_gold.lua"
+    ],
+    "dig_sound": [
+        "Dig Sound.wav"
+    ],
+    "dig_sound_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Dig Sound.wav"
     ],
     "digger_entity_gold_type": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types/gold_digger.lua"
@@ -16801,9 +16873,21 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\drop_shadow_final_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/drop_shadow_final_vertex.vs"
     ],
+    "dropped_duplicate_into_sound_window": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Dropped into Duplicate Window.wav"
+    ],
+    "dropped_duplicate_into_window": [
+        "Dropped into Duplicate Window.wav"
+    ],
     "dump_global_lua_script": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\lua_globals_dump.txt",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/lua_globals_dump.txt"
+    ],
+    "duplicate": [
+        "Duplicate.wav"
+    ],
+    "duplicate_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Duplicate.wav"
     ],
     "duplicator_use": [
         "use_duplicator.lua"
@@ -17685,6 +17769,12 @@
     ],
     "g_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_g.svg"
+    ],
+    "gain_gold": [
+        "Gold Gain.wav"
+    ],
+    "gain_gold_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Gold Gain.wav"
     ],
     "gainsboro": [
         "GAINSBORO"
@@ -18761,6 +18851,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/logic",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\logic"
     ],
+    "louder_main_menu_sound_theme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Main Menu Theme (Louder).wav"
+    ],
+    "louder_main_menu_theme": [
+        "Main Menu Theme (Louder).wav"
+    ],
     "lt_outline_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_lt_outline.svg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Xbox Series\\Vector\\xbox_lt_outline.svg"
@@ -18788,6 +18884,9 @@
     "main": [
         "main.lua"
     ],
+    "main_menu_sound_theme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Main Menu Theme.wav"
+    ],
     "main_menu_start": [
         "start_main_menu.lua"
     ],
@@ -18796,6 +18895,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\tutorial\\start_main_menu.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/tutorial/start_main_menu.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\tutorial\\start_main_menu.lua"
+    ],
+    "main_menu_theme": [
+        "Main Menu Theme.wav"
     ],
     "marigold": [
         "Marigold"
@@ -19126,6 +19228,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\Pick1A.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Pick1A.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\Pick1A.wav"
+    ],
+    "pick_sound_up": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/Pick Up.wav"
+    ],
+    "pick_up": [
+        "Pick Up.wav"
     ],
     "pink": [
         "PINK"

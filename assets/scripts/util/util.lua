@@ -522,10 +522,11 @@ function toggleShopWindow()
     globals.isShopOpen = true
     local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
     transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2 -- show the shop UI box
-    -- center x
-    transform.actualX = globals.screenWidth() / 2 - transform.actualW / 2
-    transform.visualX = transform.actualX -- snap X
   end
+  local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+  -- center x
+  transform.actualX = globals.screenWidth() / 2 - transform.actualW / 2
+  transform.visualX = transform.actualX -- snap X
 end
 
 function showNewAchievementPopup(achievementID)

@@ -40,7 +40,7 @@ function initMainMenu()
     -- create start game button
     mainMenuEntities.logoText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_logo") end,  -- initial text
-        40.0,                                 -- font size
+        50.0,                                 -- font size
         "pulse=0.9,1.1"                       -- animation spec
     ).config.object
     
@@ -70,7 +70,7 @@ function initMainMenu()
     local startButtonText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_button") end,  -- initial text
         30.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
+        "color=fuchsia"                       -- animation spec
     )
     local startButtonTemplate = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -78,6 +78,7 @@ function initMainMenu()
             UIConfigBuilder.create()
                 :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
+                :addMinWidth(500) -- minimum width of the button
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
                 :addButtonCallback(function ()
@@ -96,8 +97,8 @@ function initMainMenu()
     --
     local feedbackText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_feedback") end,  -- initial text
-        15,                                 -- font size
-        "rainbow"                       -- animation spec
+        30,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
     )
     
     local discordIcon = animation_system.createAnimatedObjectWithTransform(
@@ -117,12 +118,14 @@ function initMainMenu()
             UIConfigBuilder.create()
                 :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
+                :addMinWidth(500) -- minimum width of the button
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Discord link
                     OpenURL("https://discord.gg/urpjVuPwjW") 
                 end)
                 :addShadow(true)
+                :addMinWidth(500) -- minimum width of the button
                 :addHover(true) -- needed for button effect
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :build()
@@ -145,8 +148,8 @@ function initMainMenu()
     
     local blueskyText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_follow") end,  -- initial text
-        15,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
+        30,                                 -- font size
+        "color=pastel_pink"                       -- animation spec
     )
     
     local blueskyRow = UIElementTemplateNodeBuilder.create()
@@ -449,6 +452,97 @@ function initMainGame()
         
     end)
     
+    
+    -- set game to paused
+    togglePausedState(true) -- Set the game to paused state
+    
+    -- now we will show a series of tutorials
+    
+    -- "tutorial_duplicate": "<typing,speed=0.8>Hey there! Let me teach you the ropes with a quick tutorial.\nDrag & drop a colonist into the window on the left side to duplicate it.\nThis will spawn clones, each with a specific function.",
+	-- 	"tutorial_game_goal": "<typing,speed=0.8>Your goal is to survive the acid rains and radioactive snows by using the clones you create.\nYou must keep colonists alive, and keep your gold balance above 0, to keep playing.\nYou may want to build some colonist homes to help with gold production.",
+	-- 	"tutorial_advanced": "<typing,speed=0.8>As you progress, you will be able to buy relics from the end-of-day shop.\nThey will help your colonists survive the harsh weather.\nNote that the weather will only get worse as you progress.",
+	-- 	"tutorial_end": "<typing,speed=0.8>That's it for the tutorial!\nRefer ot the tooltips if you need more info.\nGood luck, and have fun!\nLet's see 'weather or not' you can survive!",
+    
+    globals.tutorials = {
+        "ui.tutorial_duplicate",
+        "ui.tutorial_game_goal",
+        "ui.tutorial_advanced",
+        "ui.tutorial_end"
+    }
+    
+    globals.currentTutorialIndex = 1 -- Start with the first tutorial
+    
+    -- first, make a row with a text entity and a close button
+    globals.ui.tutorialText = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get(globals.tutorials[globals.currentTutorialIndex]) end,  -- initial text
+        30.0,                                 -- font size
+        "color=forest_slate"                       -- animation spec
+    )
+    
+    local rowDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(2.0)
+                -- :addMinWidth(500) -- minimum width of the button
+                :addShadow(true)
+                -- :addHover(true) -- needed for button effect
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :build()
+        )
+        :addChild(globals.ui.tutorialText)
+        :build()
+        
+    local closeButtonText = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.next_tutorial_text") end,  -- initial text
+        30.0,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
+    )
+    
+    local closeButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(2.0)
+                :addMinWidth(500) -- minimum width of the button
+                :addShadow(true)
+                :addHover(true) -- needed for button effect
+                :addButtonCallback(function ()
+                    nextTutorialCallback()
+                end)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :build()
+        )
+        :addChild(closeButtonText)
+        :build()
+        
+    -- new root
+    local tutorialRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("mauve_shadow"))
+                :addShadow(true)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(rowDef)
+        :addChild(closeButtonTemplate)
+        :build()
+        
+    -- new uibox for the tutorial
+    globals.ui.tutorial_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, tutorialRoot)
+    -- center the uibox
+    local tutorialTransform = registry:get(globals.ui.tutorial_uibox, Transform)
+    tutorialTransform.actualX = globals.screenWidth() / 2 - tutorialTransform.actualW / 2
+    -- snap x
+    tutorialTransform.visualX = tutorialTransform.actualX
+    tutorialTransform.actualY = globals.screenHeight() / 2 - tutorialTransform.actualH / 2
     -- function destroyRainAndSpawnNew()
     --     -- destroy the rain entity
     --     if globals.rainEntity and registry:valid(globals.rainEntity) then
@@ -558,6 +652,39 @@ function initMainGame()
     --     end
     -- }
     -- scheduler:attach(p1, p2, p3)
+end
+
+function nextTutorialCallback()
+    -- Increment the tutorial index
+    globals.currentTutorialIndex = globals.currentTutorialIndex + 1
+    
+    -- Check if there are more tutorials
+    if globals.currentTutorialIndex > #globals.tutorials then
+        -- If no more tutorials, close the tutorial UI
+        local transformComp = registry:get(globals.ui.tutorial_uibox, Transform)
+        transformComp.actualY = globals.screenHeight() + 500 -- push it down out of view
+        togglePausedState(false) -- Unpause the game
+        return
+    end
+    
+    -- Update the tutorial text with the next tutorial
+    local text =  localization.get(globals.tutorials[globals.currentTutorialIndex])
+    TextSystem.Functions.setText(
+        globals.ui.tutorialText.config.object, -- the text entity
+        text -- the new text to set
+    )
+    
+    -- renew alignment of uibox
+    ui.box.RenewAlignment(registry, globals.ui.tutorial_uibox)
+    
+    -- recenter
+    local tutorialTransform = registry:get(globals.ui.tutorial_uibox, Transform)
+    tutorialTransform.actualX = globals.screenWidth() / 2 - tutorialTransform.actualW / 2
+    tutorialTransform.actualY = globals.screenHeight() / 2 - tutorialTransform.actualH / 2
+    -- snap x
+    tutorialTransform.visualX = tutorialTransform.actualX
+    tutorialTransform.visualY = tutorialTransform.actualY
+    
 end
 
 -- overwrites the global rain entity, always delete the previous one

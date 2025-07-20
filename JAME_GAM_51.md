@@ -3,6 +3,7 @@
 - add simple tutorial
 - add simple how-to-window
 
+- typing effect <typing> is super slow on frame rate for some reason?
 - attempt to call number value (uibox initialize method) sometimes happens, why?
 ```
 [2025-07-21 00:56:56.708] [error] [timer.cpp:154] Timer action failed: attempt to call a number value

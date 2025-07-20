@@ -146,8 +146,8 @@ globals.relicDefs = {
   -- global resist acid damage by 1/3/5
   {
     id = "basic_acid_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.basic_acid_umbrella_name",
+    localizationKeyDesc = "ui.basic_acid_umbrella_desc",
     spriteID = "3482-TheRoguelike_1_10_alpha_275.png",
     costToBuy = 4,
     onBuyCallback = function()
@@ -175,8 +175,8 @@ globals.relicDefs = {
   -- global resist acid damage by 1/3/5
   {
     id = "middling_acid_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.middling_acid_umbrella_name",
+    localizationKeyDesc = "ui.middling_acid_umbrella_desc",
     spriteID = "3291-TheRoguelike_1_10_alpha_84.png",
     costToBuy = 7,
     onBuyCallback = function()
@@ -203,8 +203,8 @@ globals.relicDefs = {
   },
   {
     id = "advanced_acid_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.advanced_acid_umbrella_name",
+    localizationKeyDesc = "ui.advanced_acid_umbrella_desc",
     spriteID = "3486-TheRoguelike_1_10_alpha_279.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -232,8 +232,8 @@ globals.relicDefs = {
   -- global resist cold damage by 1/3/5
   {
     id = "basic_radioactive_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.basic_radioactive_umbrella_name",
+    localizationKeyDesc = "ui.basic_radioactive_umbrella_desc",
     spriteID = "3480-TheRoguelike_1_10_alpha_273.png",
     costToBuy = 4,
     onBuyCallback = function()
@@ -260,8 +260,8 @@ globals.relicDefs = {
   },
   {
     id = "middling_radioactive_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.middling_radioactive_umbrella_name",
+    localizationKeyDesc = "ui.middling_radioactive_umbrella_desc",
     spriteID = "3483-TheRoguelike_1_10_alpha_276.png",
     costToBuy = 7,
     onBuyCallback = function()
@@ -288,8 +288,8 @@ globals.relicDefs = {
   },
   {
     id = "advanced_radioactive_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.advanced_radioactive_umbrella_name",
+    localizationKeyDesc = "ui.advanced_radioactive_umbrella_desc",
     spriteID = "3485-TheRoguelike_1_10_alpha_278.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -316,8 +316,8 @@ globals.relicDefs = {
   },
   {
     id = "cat_whiskers",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.cat_whiskers_name",
+    localizationKeyDesc = "ui.cat_whiskers_desc",
     spriteID = "3346-TheRoguelike_1_10_alpha_139.png",
     costToBuy = 5,
     onBuyCallback = function()
@@ -344,8 +344,8 @@ globals.relicDefs = {
   },
   {
     id = "cat_ninja_paw_holders",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.cat_ninja_paw_holders_name",
+    localizationKeyDesc = "ui.cat_ninja_paw_holders_desc",
     spriteID = "3805-TheRoguelike_1_10_alpha_598.png",
     costToBuy = 8,
     onBuyCallback = function()
@@ -372,8 +372,8 @@ globals.relicDefs = {
   },
   {
     id = "ultimate_mark_of_the_cat_ninja",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.ultimate_mark_of_the_cat_ninja_name",
+    localizationKeyDesc = "ui.ultimate_mark_of_the_cat_ninja_desc",
     spriteID = "3858-TheRoguelike_1_10_alpha_651.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -400,8 +400,8 @@ globals.relicDefs = {
   },
   { -- heal by 3 on dodge
     id = "karma_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.karma_umbrella_name",
+    localizationKeyDesc = "ui.karma_umbrella_desc",
     spriteID = "3933-TheRoguelike_1_10_alpha_726.png",
     costToBuy = 8,
     onBuyCallback = function()
@@ -451,8 +451,8 @@ globals.relicDefs = {
   },
   { -- heal by 10% of damage taken with 50% chance
     id = "vampire_teeth",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.vampire_teeth_name",
+    localizationKeyDesc = "ui.vampire_teeth_desc",
     spriteID = "3777-TheRoguelike_1_10_alpha_570.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -496,8 +496,8 @@ globals.relicDefs = {
   },
   { -- heal by 10% of damage taken with 50% chance
     id = "gold_lover",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.gold_lover_name",
+    localizationKeyDesc = "ui.gold_lover_desc",
     spriteID = "4014-TheRoguelike_1_10_alpha_807.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -528,8 +528,8 @@ globals.relicDefs = {
   },
   { -- gold diggers dig more gold each time 1/2/4
     id = "shoddy_pickaxe",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.shoddy_pickaxe_name",
+    localizationKeyDesc = "ui.shoddy_pickaxe_desc",
     spriteID = "4044-TheRoguelike_1_10_alpha_837.png",
     costToBuy = 4,
     onBuyCallback = function()
@@ -560,8 +560,8 @@ globals.relicDefs = {
   },
   { -- gold diggers dig more gold each time 1/2/4
     id = "useful_pickaxe",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.useful_pickaxe_name",
+    localizationKeyDesc = "ui.useful_pickaxe_desc",
     spriteID = "3679-TheRoguelike_1_10_alpha_472.png",
     costToBuy = 8,
     onBuyCallback = function()
@@ -592,8 +592,8 @@ globals.relicDefs = {
   },
   { -- gold diggers dig more gold each time 1/2/4
     id = "golden_pickaxe",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.golden_pickaxe_name",
+    localizationKeyDesc = "ui.golden_pickaxe_desc",
     spriteID = "4076-TheRoguelike_1_10_alpha_869.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -624,8 +624,8 @@ globals.relicDefs = {
   },
   { -- healers heal more each time 3/6/9
     id = "plastic_syringe",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.plastic_syringe_name",
+    localizationKeyDesc = "ui.plastic_syringe_desc",
     spriteID = "4001-TheRoguelike_1_10_alpha_794.png",
     costToBuy = 5,
     onBuyCallback = function()
@@ -656,8 +656,8 @@ globals.relicDefs = {
   },
   { -- healers heal more each time 3/6/9
     id = "better_syringe",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.better_syringe_name",
+    localizationKeyDesc = "ui.better_syringe_desc",
     spriteID = "4006-TheRoguelike_1_10_alpha_799.png",
     costToBuy = 8,
     onBuyCallback = function()
@@ -688,8 +688,8 @@ globals.relicDefs = {
   },
   { -- healers heal more each time 3/6/9
     id = "plutonium_syringe",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.plutonium_syringe_name",
+    localizationKeyDesc = "ui.plutonium_syringe_desc",
     spriteID = "4010-TheRoguelike_1_10_alpha_803.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -720,8 +720,8 @@ globals.relicDefs = {
   },
   { -- new damage_cushions get more hp when bought 10/15/30
     id = "safety_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.safety_umbrella_name",
+    localizationKeyDesc = "ui.safety_umbrella_desc",
     spriteID = "4115-TheRoguelike_1_10_alpha_908.png",
     costToBuy = 7,
     onBuyCallback = function()
@@ -752,8 +752,8 @@ globals.relicDefs = {
   },
   { -- new damage_cushions get more hp when bought 10/15/30
     id = "steel_umbrella",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.steel_umbrella_name",
+    localizationKeyDesc = "ui.steel_umbrella_desc",
     spriteID = "4129-TheRoguelike_1_10_alpha_922.png",
     costToBuy = 10,
     onBuyCallback = function()
@@ -784,8 +784,8 @@ globals.relicDefs = {
   },
   { -- new damage_cushions get more hp when bought 10/15/30
     id = "cushionista",
-    localizationKeyName = "ui.global_acid_umbrella_name",
-    localizationKeyDesc = "ui.basic_umbrella_desc",
+    localizationKeyName = "ui.cushionista_name",
+    localizationKeyDesc = "ui.cushionista_desc",
     spriteID = "3982-TheRoguelike_1_10_alpha_775.png",
     costToBuy = 13,
     onBuyCallback = function()

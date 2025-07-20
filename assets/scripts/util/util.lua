@@ -54,11 +54,88 @@ function deep_copy(orig)
   return copy
 end
 
+
 -- utility clamp if you don't already have one
 local function clamp(val, min, max)
   if val < min then return min end
   if val > max then return max end
   return val
+end
+
+
+function buyRelicFromSlot(slot)
+  -- make sure slot doesn't exceed the number of slots
+  if slot < 1 or slot > #globals.currentShopSlots then
+    log_debug("buyRelicFromSlot: Invalid slot number: ", slot)
+    return
+  end
+  
+  -- create animation entity, add it to the top ui box
+  local currentID = globals.currentShopSlots[slot].id
+  
+  local relicDef = findInTable(globals.relicDefs, "id", currentID)
+  
+  if not relicDef then
+    log_debug("buyRelicFromSlot: No relic definition found for ID: ", currentID)
+    return
+  end
+  
+  -- check if the player has enough currency
+  if globals.currency < relicDef.costToBuy then
+    log_debug("buyRelicFromSlot: Not enough currency to buy relic: ", currentID)
+    return
+  end
+  
+  -- deduct the cost from the player's currency
+  globals.currency = globals.currency - relicDef.costToBuy
+  log_debug("buyRelicFromSlot: Bought relic: ", currentID, " for ", relicDef.costToBuy, " currency. Remaining currency: ", globals.currency)
+  
+  -- create the animation entity for the relic
+  local relicAnimationEntity = animation_system.createAnimatedObjectWithTransform(
+    relicDef.spriteID, -- sprite ID for the relic
+    true               -- use animation, not sprite identifier, if false
+  )
+  
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    relicAnimationEntity,
+    globals.tileSize, -- width
+    globals.tileSize  -- height
+  )
+  
+  -- add hover tooltip
+  local gameObject = registry:get(relicAnimationEntity, GameObject)
+  gameObject.methods.onHover = function()
+    log_debug("Relic hovered: ", relicDef.id)
+    showTooltip(
+      localization.get(relicDef.localizationKeyName),
+      localization.get(relicDef.localizationKeyDesc)
+    )
+  end
+  
+  -- wrap the animation entity 
+  local uie = ui.definitions.wrapEntityInsideObjectElement(
+    relicAnimationEntity -- entity to wrap
+  )
+  globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
+  log_debug("buyRelicFromSlot: Wrapped entity inside UI element row: ", globals.ui.relicsUIElementRow)
+  
+  --TODO: add to top bar and renew alignment
+  local uiElementComp = registry:get(globals.ui.relicsUIElementRow, UIElementComponent)
+  uiElementComp.children:add(uie) -- add the wrapped entity to the UI element row
+  
+  ui.box.RenewAlignment(registry, globals.ui.relicsUIBox) -- re-align the relics UI element row
+  
+  -- add to the ownedRelics, run the onBuyCallback
+  
+  table.insert(globals.ownedRelics, {
+    id = relicDef.id,
+    entity = uie
+  })
+  log_debug("buyRelicFromSlot: Added relic to ownedRelics: ", lume.serialize(globals.ownedRelics))
+  
+  if relicDef.onBuyCallback then
+    relicDef.onBuyCallback() -- run the onBuyCallback if it exists
+  end
 end
 
 function handleNewDay()
@@ -78,14 +155,147 @@ function handleNewDay()
   
   lume.clear(globals.currentShopSlots) -- clear the current shop slots
   
-  globals.currentShopSlots[1] = lume.randomchoice(globals.relicDefs).id
-  globals.currentShopSlots[2] = lume.randomchoice(globals.relicDefs).id
-  globals.currentShopSlots[3] = lume.randomchoice(globals.relicDefs).id
+  globals.currentShopSlots[1] = { id = lume.randomchoice(globals.relicDefs).id}
+  globals.currentShopSlots[2] = { id = lume.randomchoice(globals.relicDefs).id}
+  globals.currentShopSlots[3] = { id = lume.randomchoice(globals.relicDefs).id}
   
   log_debug("Current shop slots: ", lume.serialize(globals.currentShopSlots))
   
   --TODO: now populate the shop ui
   
+  -- relic1ButtonAnimationEntity
+  
+  local relicDef = findInTable(globals.relicDefs, "id", globals.currentShopSlots[1].id)
+  
+  animation_system.replaceAnimatedObjectOnEntity(
+    globals.ui["relic1ButtonAnimationEntity"],
+    relicDef.spriteID, -- Default animation ID
+    true,               -- ? generate a new still animation from sprite, don't set to true, causes bug
+    nil,                 -- shader_prepass, -- Optional shader pass config function
+    true                 -- Enable shadow
+  )
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    globals.ui["relic1ButtonAnimationEntity"],
+    globals.tileSize, -- width
+    globals.tileSize  -- height
+  )
+  
+  -- relic1TextEntity
+  log_debug("Setting text for relic1TextEntity to: ", localization.get(relicDef.localizationKeyName), "with key: ", relicDef.localizationKeyName)
+  TextSystem.Functions.setText(globals.ui["relic1TextEntity"], localization.get(relicDef.localizationKeyName))
+  
+  -- relic1CostTextEntity
+  local costText = "".. relicDef.costToBuy
+  TextSystem.Functions.setText(globals.ui["relic1CostTextEntity"], costText)
+  
+  -- fetch ui element
+  local uiElement1 = ui.box.GetUIEByID(registry, globals.ui.weatherShopUIBox, "relic1UIElement")
+  
+  -- add hover 
+  local gameObject1 = registry:get(uiElement1, GameObject)
+  local relicDef1 = relicDef
+  gameObject1.methods.onHover = function()
+    log_debug("Relic 1 hovered!")
+    showTooltip(
+      localization.get(relicDef1.localizationKeyName),
+      localization.get(relicDef1.localizationKeyDesc)
+    )
+  end
+  
+  -- add button callback
+  local uieUIConfig1 = registry:get(uiElement1, UIConfig)
+  uieUIConfig1.buttonCallback = function()
+    log_debug("Relic 1 button clicked!")
+    buyRelicFromSlot(1) -- buy the relic from slot 1
+  end
+  -- relic2ButtonAnimationEntity
+  relicDef = findInTable(globals.relicDefs, "id", globals.currentShopSlots[2].id)
+  animation_system.replaceAnimatedObjectOnEntity(
+    globals.ui["relic2ButtonAnimationEntity"],
+    relicDef.spriteID, -- Default animation ID
+    true,               -- ? generate a new still animation from sprite, don't set to true, causes bug
+    nil,                 -- shader_prepass, -- Optional shader pass config function
+    true                 -- Enable shadow
+  )
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    globals.ui["relic2ButtonAnimationEntity"],
+    globals.tileSize, -- width
+    globals.tileSize  -- height
+  )
+  -- relic2TextEntity
+  log_debug("Setting text for relic2TextEntity to: ", localization.get(relicDef.localizationKeyName), "with key: ", relicDef.localizationKeyName)
+  TextSystem.Functions.setText(globals.ui["relic2TextEntity"], localization.get(relicDef.localizationKeyName))
+  
+  -- relic2CostTextEntity
+  local costText = "".. relicDef.costToBuy
+  TextSystem.Functions.setText(globals.ui["relic2CostTextEntity"], costText)
+  -- fetch ui element
+  
+  local uiElement2 = ui.box.GetUIEByID(registry, globals.ui.weatherShopUIBox, "relic2UIElement")
+  -- add hover
+  local gameObject2 = registry:get(uiElement2, GameObject)
+  local relicDef2 = relicDef
+  gameObject2.methods.onHover = function()
+    log_debug("Relic 2 hovered!")
+    showTooltip(
+      localization.get(relicDef2.localizationKeyName),
+      localization.get(relicDef2.localizationKeyDesc)
+    )
+  end
+  
+  -- add button callback
+  local uieUIConfig2 = registry:get(uiElement2, UIConfig)
+  uieUIConfig2.buttonCallback = function()
+    log_debug("Relic 2 button clicked!")
+    buyRelicFromSlot(2) -- buy the relic from slot 2
+  end
+  -- relic3ButtonAnimationEntity
+  relicDef = findInTable(globals.relicDefs, "id", globals.currentShopSlots[3].id)
+  animation_system.replaceAnimatedObjectOnEntity(
+    globals.ui["relic3ButtonAnimationEntity"],
+    relicDef.spriteID, -- Default animation ID
+    true,               -- ? generate a new still animation from sprite, don't set to true, causes bug
+    nil,                 -- shader_prepass, -- Optional shader pass config function
+    true                 -- Enable shadow
+  )
+  animation_system.resizeAnimationObjectsInEntityToFit(
+    globals.ui["relic3ButtonAnimationEntity"],
+    globals.tileSize, -- width
+    globals.tileSize  -- height
+  )
+  -- relic3TextEntity
+  log_debug("Setting text for relic3TextEntity to: ", localization.get(relicDef.localizationKeyName), "with key: ", relicDef.localizationKeyName)
+  TextSystem.Functions.setText(globals.ui["relic3TextEntity"], localization.get(relicDef.localizationKeyName))
+  
+  -- relic3CostTextEntity
+  local costText = "".. relicDef.costToBuy
+  TextSystem.Functions.setText(globals.ui["relic3CostTextEntity"], costText)
+  -- fetch ui element
+  local uiElement3 = ui.box.GetUIEByID(registry, globals.ui.weatherShopUIBox, "relic3UIElement")
+  -- add hover
+  local gameObject3 = registry:get(uiElement3, GameObject)
+  local relicDef3 = relicDef
+  gameObject3.methods.onHover = function()
+    log_debug("Relic 3 hovered!")
+    showTooltip(
+      localization.get(relicDef3.localizationKeyName),
+      localization.get(relicDef3.localizationKeyDesc)
+    )
+  end
+  -- add button callback
+  local uieUIConfig3 = registry:get(uiElement3, UIConfig)
+  uieUIConfig3.buttonCallback = function()
+    log_debug("Relic 3 button clicked!")
+    buyRelicFromSlot(3) -- buy the relic from slot 3
+  end
+  -- update shop uiboxTransform to centered
+  local shopUIBoxTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
+  shopUIBoxTransform.actualX = globals.screenWidth() / 2 - shopUIBoxTransform.actualW / 2
+  shopUIBoxTransform.visualX = shopUIBoxTransform.actualX -- snap X
+  shopUIBoxTransform.actualY = globals.screenHeight() / 2 - shopUIBoxTransform.actualH / 2
+  shopUIBoxTransform.visualY = shopUIBoxTransform.actualY -- snap Y
+  
+  ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox) -- re-align the shop UI box
   -- refer to this:
   
 --   local relicSlots = {
@@ -225,7 +435,7 @@ function showTooltip(titleText, bodyText)
 
   TextSystem.Functions.setText(titleEnt, titleText)
   TextSystem.Functions.clearAllEffects(titleEnt)            -- clear any previous effects
-  TextSystem.Functions.applyGlobalEffects(titleEnt, "fade") -- apply the tooltip title effects
+  TextSystem.Functions.applyGlobalEffects(titleEnt, "pulse") -- apply the tooltip title effects
   TextSystem.Functions.setText(bodyEnt, bodyText)
 
   -- 2) re-calc the box layout to fit new text

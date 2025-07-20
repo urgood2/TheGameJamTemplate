@@ -10,7 +10,7 @@ function ui_defs.placeBuilding(buildingName)
     
 end
 
-function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey, costValue)
+function createStructurePlacementButton(spriteID, globalAnimationHandle, globalTextHandle, textLocalizationKey, costValue, globalCostTextHandle)
     globals.ui[globalAnimationHandle] = animation_system.createAnimatedObjectWithTransform(
         spriteID, -- animation ID
         true             -- true if sprite id
@@ -25,11 +25,14 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
     local uiIconHomeDef = ui.definitions.wrapEntityInsideObjectElement(globals.ui[globalAnimationHandle])
         
     -- colonist home text, for colonist home buy button
-    globals.ui[globalTextHandle] = ui.definitions.getNewDynamicTextEntry(
+    local itemTextDef = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get(textLocalizationKey) end,  -- initial text
         20.0,                                 -- font size
         ""                       -- animation spec
     )
+    
+    
+    globals.ui[globalTextHandle] = itemTextDef.config.object -- store the text entity in globals
     
     
     local costRow = nil
@@ -40,6 +43,9 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
             20.0,                                 -- font size
             ""                       -- animation spec
         )
+        if globalCostTextHandle then
+            globals.ui[globalCostTextHandle] = costText.config.object -- store the cost text entity in globals
+        end
         
         -- animation entity for the cost icon
         local costIconEntity = animation_system.createAnimatedObjectWithTransform(
@@ -92,7 +98,7 @@ function createStructurePlacementButton(spriteID, globalAnimationHandle, globalT
                 end)
                 :build()
         )
-        :addChild(globals.ui[globalTextHandle])
+        :addChild(itemTextDef)
         :build()
         
     if costRow then
@@ -399,7 +405,12 @@ function ui_defs.generateUI()
     globals.ui.weatherTextEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.weather_ui_format", {weather = globals.current_weather_event}) end,  -- initial text
         30.0,                                 -- font size
-        "pulse"                       -- animation spec
+        "rainbow"                       -- animation spec
+    )
+    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.weatherTextEntity.config.object, -- entity to assign z-index to
+        40 -- z-index value, always show in front
     )
     
     -- place at the top center of the screen
@@ -757,9 +768,9 @@ function ui_defs.generateUI()
     
     
     local relicSlots = {
-        {id = "relic1", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.relic_slot_1", animHandle = "relic1ButtonAnimationEntity", textHandle = "relic1TextEntity"},
-        {id = "relic2", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.relic_slot_2", animHandle = "relic2ButtonAnimationEntity", textHandle = "relic2TextEntity"},
-        {id = "relic3", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.relic_slot_3", animHandle = "relic3ButtonAnimationEntity", textHandle = "relic3TextEntity"},
+        {id = "relic1", spriteID = "4165-TheRoguelike_1_10_alpha_958.png", text = "ui.relic_slot_1", animHandle = "relic1ButtonAnimationEntity", textHandle = "relic1TextEntity", cost = 0, costTextHandle = "relic1CostTextEntity", uielementID = "relic1UIElement"},
+        {id = "relic2", spriteID = "4169-TheRoguelike_1_10_alpha_962.png", text = "ui.relic_slot_2", animHandle = "relic2ButtonAnimationEntity", textHandle = "relic2TextEntity", cost = 0, costTextHandle = "relic2CostTextEntity", uielementID = "relic2UIElement"},
+        {id = "relic3", spriteID = "4054-TheRoguelike_1_10_alpha_847.png", text = "ui.relic_slot_3", animHandle = "relic3ButtonAnimationEntity", textHandle = "relic3TextEntity", cost = 0, costTextHandle = "relic3CostTextEntity", uielementID = "relic3UIElement"},
     }
 
     local weatherButtonDefs = {}
@@ -773,8 +784,11 @@ function ui_defs.generateUI()
             event.animHandle, -- global animation handle
             event.textHandle, -- global text handle
             event.text, -- localization key for text
-            event.cost -- cost to buy the weather event
+            event.cost, -- cost to buy the weather event
+            event.costTextHandle -- global cost text handle
         )
+        
+        buttonDef.config.id = event.uielementID -- set the id for the buttonDef
         -- add buttonDef to weatherButtonDefs
         table.insert(weatherButtonDefs, buttonDef)
     end
@@ -864,6 +878,7 @@ function ui_defs.generateUI()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
+                :addId("relics_row")
                 :addColor(util.getColor("blank"))
                 -- :addShadow(true) --- IGNORE ---
                 -- :addEmboss(4.0)
@@ -882,6 +897,8 @@ function ui_defs.generateUI()
     -- align the relics UI box to the left side of the screen, and top
     local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
     local currencyBoxTrnsform = registry:get(globals.ui.currencyUIBox, Transform)
+    
+    globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
     
     relicsTransform.actualX = currencyBoxTrnsform.actualX + currencyBoxTrnsform.actualW + 10 -- 10 pixels from the right edge of the currency box
     relicsTransform.visualX = relicsTransform.actualX -- update visual position as well
@@ -975,13 +992,13 @@ function ui_defs.generateTooltipUI()
     -- tooltip ui box that will follow the mouse cursor
     local tooltipTitleText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("sample tooltip title") end,  -- initial text
-        18.0,                                 -- font size
+        30.0,                                 -- font size
         "rainbow"                       -- animation spec
     )
     globals.ui.tooltipTitleText = tooltipTitleText.config.object
     local tooltipBodyText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("Sample tooltip body text") end,  -- initial text
-        15.0,                                 -- font size
+        30.0,                                 -- font size
         "fade"                       -- animation spec
     )
     globals.ui.tooltipBodyText = tooltipBodyText.config.object
@@ -1028,6 +1045,11 @@ function ui_defs.generateTooltipUI()
     -- create a new UI box for the tooltip
     
     globals.ui.tooltipUIBox = ui.box.Initialize({x = 300, y = globals.screenHeight()}, tooltipRoot)
+    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.tooltipUIBox, -- entity to assign z-index to
+        1000 -- z-index value, always show in front
+    )
     
     -- get transform for the tooltip UI box
     local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)

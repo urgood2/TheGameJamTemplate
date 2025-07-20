@@ -14282,6 +14282,12 @@
     "click_mono_snappy_ui": [
         "UI_Click_Snappy_mono.wav"
     ],
+    "codehack_en_nightmare": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Nightmare Codehack.otf"
+    ],
+    "codehack_nightmare": [
+        "Nightmare Codehack.otf"
+    ],
     "colon_default_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_colon.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_colon.png"
@@ -16837,6 +16843,9 @@
     "edge_effect_vertex": [
         "edge_effect_vertex.vs"
     ],
+    "en_errand_fool'": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Fool's Errand.otf"
+    ],
     "en_font": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts\\en",
@@ -16862,6 +16871,9 @@
     "en_nineteen_ninety_six": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Nineteen Ninety Six.otf",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/fonts\\en\\Nineteen Ninety Six.otf"
+    ],
+    "en_notalot60": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/fonts/en/Notalot60.ttf"
     ],
     "en_readme": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts/en/readme.txt",
@@ -16950,6 +16962,9 @@
     "entity_kobold_type": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types/kobold.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\entity_types\\kobold.lua"
+    ],
+    "errand_fool'": [
+        "Fool's Errand.otf"
     ],
     "error_msg_shader_shader_web": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/shader_web_error_msgs.md",
@@ -18982,6 +18997,9 @@
     ],
     "none": [
         "NONE"
+    ],
+    "notalot60": [
+        "Notalot60.ttf"
     ],
     "npatch": [
         "npatch.json"

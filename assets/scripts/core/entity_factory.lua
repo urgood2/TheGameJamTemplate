@@ -515,6 +515,15 @@ function spawnNewColonist(x, y)
     -- put in a uibox
     globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
     
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        3 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+        3 -- make sure it is below show window
+    )
+    
     -- update hp text every 0.5 seconds
     timer.every(
         0.5, -- every 0.5 seconds

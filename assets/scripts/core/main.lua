@@ -743,7 +743,7 @@ function main.init()
     
     
     -- every 1 second, check every colonist
-    timer.every(1.0, function()
+    timer.every(0.3, function()
         
         local fullColonistList = {}
         -- add all colonists to the fullColonistList

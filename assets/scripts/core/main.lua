@@ -1264,7 +1264,7 @@ function main.init()
         end
     end
 
-    timer.every(0.3, checkColonistDeaths, 1.0, true, nil)
+    timer.every(0.3, checkColonistDeaths, 0, true, nil)
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 end

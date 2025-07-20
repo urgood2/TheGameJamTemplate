@@ -25,7 +25,12 @@
                 "end-of-day": "End of Day.wav",
                 "gold-gain": "Gold Gain.wav",
                 "pick-up": "Pick Up.wav",
-                "shop-buy": "Shop Buy.wav"
+                "shop-buy": "Shop Buy.wav",
+                "cannot-buy": "NOTIFICATION_Subtle_07_mono.wav",
+                "heal": "MAGIC_SPELL_Spawn_mono.wav",
+                "money-to-cash-pile": "CASH_REGISTER_Cha-ching_04_mono.wav",
+                "dodge": "FABRIC_Movement_Fast_01_mono.wav",
+                "die": "MONSTER_Breath_01_mono.wav"
             },
             "volume": 0.3
         },

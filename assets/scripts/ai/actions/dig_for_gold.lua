@@ -28,6 +28,8 @@ return {
                 local offsetX = math.sin(os.clock() * 10) * 30 -- oscillate between -30 and 30
                 transform.visualX = transform.visualX + offsetX
                 
+                playSoundEffect("effects", "dig-sound") -- play acid rain damage sound effect
+                
                 spawnCircularBurstParticles(
                     transform.visualX + transform.visualW / 2, -- center X
                     transform.visualY + transform.visualH / 2, -- center Y
@@ -69,6 +71,7 @@ return {
             globals.tileSize    -- height
         )
         
+        playSoundEffect("effects", "gold-gain") -- play coin sound effect
         local transformComp = registry:get(coinImage, Transform)
         local t = registry:get(e, Transform)
         -- align above the character
@@ -110,8 +113,9 @@ return {
         
         -- delete it after 0.5 seconds
         timer.after(
-          2.2, -- delay in seconds
+          1.9, -- delay in seconds
           function()
+            playSoundEffect("effects", "money-to-cash-pile") -- play coin sound effect
             if registry:valid(coinImage) then
               registry:destroy(coinImage) -- remove the coin image entity
             end

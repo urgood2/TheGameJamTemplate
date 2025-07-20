@@ -217,12 +217,16 @@ function ui_defs.generateUI()
             
             log_debug("Duplicating colonist", released, "on", releasedOn, "with health", health)
             
+            playSoundEffect("effects", "drop-duplicate") -- play acid rain damage sound effect
             -- half the health of the colonist
             setBlackboardFloat(released, "health", health / 2) -- halve the health of the colonist
         end
         
         -- pause the game, show a window which shows a list of selections
         togglePausedState(true) -- pause the game
+        
+        -- set global variable
+        globals.recentlyDroppedColonist = released -- set the recently dropped colonist
         
         -- TODO: show globals.ui.creatureDuplicateChoiceUIbox
         local creatureChoiceTransform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
@@ -263,11 +267,23 @@ function ui_defs.generateUI()
             newTextPopup(
                 localization.get("ui.not_enough_currency") -- text to show
             )
+            playSoundEffect("effects", "cannot-buy") -- play cannot buy sound effect
             return
         end
+        playSoundEffect("effects", "duplicate") -- play button click sound
         -- deduct the cost from the currency
         globals.currency = globals.currency - findInTable(globals.creature_defs, "id", "gold_digger").cost
         spawnGoldDigger() -- spawn a gold digger
+        
+        -- move the selected colonist, if valid, 300 pixels to the right
+        if (globals.recentlyDroppedColonist and registry:valid(globals.recentlyDroppedColonist) and globals.recentlyDroppedColonist ~= entt_null) then
+            local transform = registry:get(globals.recentlyDroppedColonist, Transform)
+            transform.actualX = transform.actualX + 300 -- move 300 pixels to the right
+            
+            
+            -- reset variable
+            globals.recentlyDroppedColonist = nil -- reset the recently dropped colonist
+        end
         
         -- resume the game
         togglePausedState(false) -- unpause the game
@@ -292,12 +308,22 @@ function ui_defs.generateUI()
             newTextPopup(
                 localization.get("ui.not_enough_currency") -- text to show
             )
+            playSoundEffect("effects", "cannot-buy") -- play cannot buy sound effect
             return
         end
+        playSoundEffect("effects", "duplicate") -- play button click sound
         -- deduct the cost from the currency
         globals.currency = globals.currency - findInTable(globals.creature_defs, "id", "healer").cost
         spawnHealer() -- spawn a healer
         
+        -- move the selected colonist, if valid, 300 pixels to the right
+        if (globals.recentlyDroppedColonist and registry:valid(globals.recentlyDroppedColonist) and globals.recentlyDroppedColonist ~= entt_null) then
+            local transform = registry:get(globals.recentlyDroppedColonist, Transform)
+            transform.actualX = transform.actualX + 300 -- move 300 pixels to the right
+            
+            -- reset variable
+            globals.recentlyDroppedColonist = nil -- reset the recently dropped colonist
+        end
         -- resume the game
         togglePausedState(false) -- unpause the game
         
@@ -317,16 +343,29 @@ function ui_defs.generateUI()
     
     damage_cushion_button_def.config.id = "damage_cushion_button" -- set the id for the button
     damage_cushion_button_def.config.buttonCallback = function ()
+        
         -- check if user has enough gold
         if (globals.currency < findInTable(globals.creature_defs, "id", "damage_cushion").cost) then
             newTextPopup(
                 localization.get("ui.not_enough_currency") -- text to show
             )
+            playSoundEffect("effects", "cannot-buy") -- play cannot buy sound effect
             return
         end
+        
+        playSoundEffect("effects", "duplicate") -- play button click sound
         -- deduct the cost from the currency
         globals.currency = globals.currency - findInTable(globals.creature_defs, "id", "damage_cushion").cost
         spawnDamageCushion() -- spawn a damage cushion
+        
+        -- move the selected colonist, if valid, 300 pixels to the right
+        if (globals.recentlyDroppedColonist and registry:valid(globals.recentlyDroppedColonist) and globals.recentlyDroppedColonist ~= entt_null) then
+            local transform = registry:get(globals.recentlyDroppedColonist, Transform)
+            transform.actualX = transform.actualX + 300 -- move 300 pixels to the right
+            
+            -- reset variable
+            globals.recentlyDroppedColonist = nil -- reset the recently dropped colonist
+        end
         
         -- resume the game
         togglePausedState(false) -- unpause the game
@@ -398,6 +437,15 @@ function ui_defs.generateUI()
         :build()
     -- new uibox
     globals.ui.creatureDuplicateChoiceUIbox = ui.box.Initialize({x = 10, y = 200}, duplicateChoiceRoot)
+    
+    layer_order_system.assignZIndexToEntity(
+        creatureDuplicateChoiceUIbox, -- entity to assign z-index to
+        5 -- z-index value
+    )
+    ui.box.AssignLayerOrderComponents( -- propogate layer order components to the uibox
+        registry, -- registry to use
+        creatureDuplicateChoiceUIbox -- ui box to assign layer order components to
+    )
     -- align the creature duplicate choice UI box to the center of the screen, out of view
     local creatureChoiceTransform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)
     creatureChoiceTransform.actualX = globals.screenWidth() / 2 - creatureChoiceTransform.actualW / 2 -- center it horizontally
@@ -693,6 +741,7 @@ function ui_defs.generateUI()
     )
     
     home_structure_def.config.buttonCallback = function ()
+        playSoundEffect("effects", "building-placed") -- play the currency spawn sound effect
         buyNewColonistHomeCallback()
     end
     

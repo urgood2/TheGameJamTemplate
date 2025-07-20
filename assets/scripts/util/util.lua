@@ -83,8 +83,19 @@ function buyRelicFromSlot(slot)
   -- check if the player has enough currency
   if globals.currency < relicDef.costToBuy then
     log_debug("buyRelicFromSlot: Not enough currency to buy relic: ", currentID)
+    
+    playSoundEffect("effects", "cannot-buy") -- play button click sound
+    newTextPopup(
+      localization.get("ui.not_enough_currency"),
+      globals.screenWidth() / 2,
+      globals.screenHeight() / 4,
+      5, -- duration in seconds
+      "color=fiery_red" -- effect string
+    )
     return
   end
+  
+  playSoundEffect("effects", "shop-buy") -- play button click sound
   
   -- deduct the cost from the player's currency
   globals.currency = globals.currency - relicDef.costToBuy
@@ -181,6 +192,8 @@ function handleNewDay()
     -- increment the base damage of the weather event
     globals.current_weather_event_base_damage = globals.current_weather_event_base_damage * 2
   end
+  
+  playSoundEffect("effects", "end-of-day") -- play button click sound
   
   -- select 3 random items for the shop.
   
@@ -436,6 +449,10 @@ function handleNewDay()
             globals.tileSize    -- height
         )
         
+        playSoundEffect("effects", "gold-gain") -- play coin sound effect
+        
+        local coinTansformComp = registry:get(coinImage, Transform)
+        
         -- text popup at the location of the colonist home
         newTextPopup(
           "+"..math.floor(findInTable(
@@ -443,10 +460,10 @@ function handleNewDay()
             "id",
             "colonist_home"
           ).currency_per_day * globals.end_of_day_gold_multiplier),
-          colonistHomeEntry.x * globals.tileSize + globals.tileSize / 2,
-          colonistHomeEntry.y * globals.tileSize + globals.tileSize / 2,
+          coinTansformComp.actualX * globals.tileSize + globals.tileSize / 2,
+          coinTansformComp.actualY * globals.tileSize + globals.tileSize / 2,
           1.0, -- duration in seconds
-          "color=marigold;slide" -- effect string
+          "color=marigold" -- effect string
         )
         
         local transformComp = registry:get(coinImage, Transform)
@@ -466,8 +483,9 @@ function handleNewDay()
         )
         
         timer.after(
-          1.5,
+          1.1,
           function()
+            playSoundEffect("effects", "money-to-cash-pile") -- play coin sound effect
             if not registry:valid(coinImage) then
               log_debug("Coin image entity is not valid, skipping tweening")
               return
@@ -1261,6 +1279,7 @@ function buyNewColonistHomeCallback()
       20, -- number of particles
       0.5 -- particle size
     ) 
+    playSoundEffect("effects", "building-plop")
     transform.InjectDynamicMotion(colonistHomeEntity, 1.0, 1) 
     log_debug("add on hover/stop hover methods to the colonist home entity")
     -- add on hover/stop hover methods to the colonist home entity

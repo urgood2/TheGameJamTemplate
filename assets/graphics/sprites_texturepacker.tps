@@ -173,6 +173,11 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">../../../../../Downloads/musicnote1.png</key>
+            <key type="filename">../../../../../Downloads/musicnote2.png</key>
+            <key type="filename">../../../../../Downloads/musicnote3.png</key>
+            <key type="filename">../../../../../Downloads/musicnote4.png</key>
+            <key type="filename">../../../../../Downloads/musicnote5.png</key>
             <key type="filename">pre-packing-files_globbed/3207-TheRoguelike_1_10_alpha_0.png</key>
             <key type="filename">pre-packing-files_globbed/3208-TheRoguelike_1_10_alpha_1.png</key>
             <key type="filename">pre-packing-files_globbed/3209-TheRoguelike_1_10_alpha_2.png</key>
@@ -1148,11 +1153,6 @@
             <key type="filename">pre-packing-files_globbed/jamegam51/Defended3.png</key>
             <key type="filename">pre-packing-files_globbed/jamegam51/Defended4.png</key>
             <key type="filename">rounded_rect_small.png</key>
-            <key type="filename">../../../../../Downloads/musicnote1.png</key>
-            <key type="filename">../../../../../Downloads/musicnote2.png</key>
-            <key type="filename">../../../../../Downloads/musicnote3.png</key>
-            <key type="filename">../../../../../Downloads/musicnote4.png</key>
-            <key type="filename">../../../../../Downloads/musicnote5.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -1164,6 +1164,83 @@
                 <rect>8,8,16,16</rect>
                 <key>scale9Paddings</key>
                 <rect>8,8,16,16</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">../../../../../Downloads/title3.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>122,68,243,135</rect>
+                <key>scale9Paddings</key>
+                <rect>122,68,243,135</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_2.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_3.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_4.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_5.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_6.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_7.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_8.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_9.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>12,16,24,32</rect>
+                <key>scale9Paddings</key>
+                <rect>12,16,24,32</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>13,13,25,25</rect>
+                <key>scale9Paddings</key>
+                <rect>13,13,25,25</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</key>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
+            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
+            <key type="filename">rounded_rect_very_small.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9Paddings</key>
+                <rect>4,4,8,8</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -1254,31 +1331,6 @@
                 <rect>10,10,20,20</rect>
                 <key>scale9Paddings</key>
                 <rect>10,10,20,20</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_2.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_3.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_4.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_5.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_6.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_7.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_8.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_9.png</key>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>12,16,24,32</rect>
-                <key>scale9Paddings</key>
-                <rect>12,16,24,32</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -1674,28 +1726,6 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
-            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
-            <key type="filename">rounded_rect_very_small.png</key>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</key>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9Paddings</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
             <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-000.png</key>
             <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-001.png</key>
             <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-002.png</key>
@@ -2062,36 +2092,6 @@
                 <rect>32,32,64,64</rect>
                 <key>scale9Paddings</key>
                 <rect>32,32,64,64</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>13,13,25,25</rect>
-                <key>scale9Paddings</key>
-                <rect>13,13,25,25</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">../../../../../Downloads/title3.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>122,68,243,135</rect>
-                <key>scale9Paddings</key>
-                <rect>122,68,243,135</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>

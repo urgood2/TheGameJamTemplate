@@ -454,11 +454,19 @@ function spawnNewColonist(x, y)
         
     globals.colonists[#globals.colonists+1] = colonist -- add to the global krill list
 
+    -- local sprite = random_utils.random_element_string({
+    --     "3916-TheRoguelike_1_10_alpha_709.png",
+    --     "3915-TheRoguelike_1_10_alpha_708.png",
+    --     "3914-TheRoguelike_1_10_alpha_707.png",
+    --     "3913-TheRoguelike_1_10_alpha_706.png"
+    -- })
+    
+    -- Rainman2.png Defended2.png Defended3.png Defended4.png
     local sprite = random_utils.random_element_string({
-        "3916-TheRoguelike_1_10_alpha_709.png",
-        "3915-TheRoguelike_1_10_alpha_708.png",
-        "3914-TheRoguelike_1_10_alpha_707.png",
-        "3913-TheRoguelike_1_10_alpha_706.png"
+        "Rainman2.png",
+        "Defended2.png",
+        "Defended3.png",
+        "Defended4.png"
     })
 
     -- 2) Set up its animation & sizing

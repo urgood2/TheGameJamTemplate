@@ -386,7 +386,7 @@ function initMainGame()
         end
         
         -- if there are no colonists, game over
-        if #globals.colonists == 0 and not globals.gameOver then
+        if (#globals.colonists == 0 and not globals.gameOver) or (globals.currency < 0) then
             log_debug("No colonists left, game over") -- Debug message to indicate game over
             globals.gameOver = true -- Set the game over flag, disable resuming
             globals.gamePaused = true -- Set the game over flag
@@ -394,7 +394,7 @@ function initMainGame()
             -- create game over text
             local gameOverText = ui.definitions.getNewDynamicTextEntry(
                 function() return "GAME OVER" end,  -- initial text
-                50.0,                                 -- font size
+                80.0,                                 -- font size
                 "rainbow"                       -- animation spec
             )
             
@@ -743,6 +743,7 @@ function main.init()
                 -- chance to dodge the damage
                 if random_utils.random_float(0, 1.0) < totalDodgeChance then
                     log_debug("Colonist dodged the acid rain damage")
+                    playSoundEffect("effects", "dodge") -- play dodge sound effect
                     -- call all onDodgeCallbacks
                     for _, callback in ipairs(onDodgeCallbacks) do
                         callback(colonist)
@@ -797,6 +798,8 @@ function main.init()
                         colonistTransform.actualY - 50, -- position above the colonist
                         5 -- duration in seconds
                     )
+                    
+                    playSoundEffect("effects", "damage-tick") -- play acid rain damage sound effect
                     
                     -- call all onHitCallbacks
                     for _, callback in ipairs(onHitCallbacks) do
@@ -875,6 +878,7 @@ function main.init()
                 -- chance to dodge the damage
                 if random_utils.random_float(0, 1.0) < totalDodgeChance then
                     log_debug("Colonist dodged the acid rain damage")
+                    playSoundEffect("effects", "dodge") -- play dodge sound effect
                     -- call all onDodgeCallbacks
                     for _, callback in ipairs(onDodgeCallbacks) do
                         callback(colonist)
@@ -939,6 +943,8 @@ function main.init()
                         5 -- duration in seconds
                     )
                     
+                    playSoundEffect("effects", "damage-tick") -- play acid rain damage sound effect
+                    
                     -- call all onHitCallbacks
                     for _, callback in ipairs(onHitCallbacks) do
                         callback(colonist, damage_done) -- pass the colonist and damage done to the callback
@@ -976,6 +982,8 @@ function main.init()
                         colonistTransform.actualY - 50, -- position above the colonist
                         5 -- duration in seconds
                     )
+                    
+                    playSoundEffect("effects", "die") -- play colonist death sound effect
                     
                     -- show particles
                     spawnCircularBurstParticles(

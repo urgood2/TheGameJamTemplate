@@ -1,8 +1,9 @@
 # immediate todos
+- add image for website
+- add simple tutorial
+- colonist die sound
 - add simple how-to-window
-- add music & sfx
-- add game over state for negative currency
-- teleport colonist to the side of the drop zone after duplicating
+- add music & ambiance
 
 - color coding (part) for dynamic text as well
 

@@ -51,6 +51,8 @@ return {
         lume.extend(allEntities, globals.damage_cushions)
         lume.extend(allEntities, globals.colonists)
         
+        playSoundEffect("effects", "heal") -- play heal sound effect
+        
         local toHeal = nil
         for _, entity in ipairs(allEntities) do
             local hp = getBlackboardFloat(entity, "health")

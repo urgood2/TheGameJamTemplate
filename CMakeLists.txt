@@ -44,7 +44,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Set project details
 set(ITCH_USER "chugget")
-set(ITCH_PAGE "weather-or-not")
+set(ITCH_PAGE "testing")
 set(PROJECT_VERSION "0.1")
 
 include(FetchContent)

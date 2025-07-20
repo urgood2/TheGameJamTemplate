@@ -1213,64 +1213,58 @@ function main.init()
     "weather_event_timer" -- unique tag for this timer
     )
     
-    
+    log_debug("Setting up colonist death check timer")
+    log_debug("colonists", globals.colonists)
+    log_debug("healers", globals.healers)
+    log_debug("gold_diggers", globals.gold_diggers)
+    log_debug("damage_cushions", globals.damage_cushions)
     -- every 1 second, check every colonist
-    timer.every(0.3, function()
-        
-        local fullColonistList = {}
-        -- add all colonists to the fullColonistList
-        lume.extend(fullColonistList, globals.colonists)
-        lume.extend(fullColonistList, globals.healers)
-        lume.extend(fullColonistList, globals.gold_diggers)
-        lume.extend(fullColonistList, globals.damage_cushions)
-        
-        for _, colonist in pairs(fullColonistList) do
-            if registry:valid(colonist) then
-                -- check if the colonist is dead
-                if getBlackboardFloat(colonist, "health") <= 0 then
-                    -- show a text popup above the colonist
-                    local colonistTransform = registry:get(colonist, Transform)
-                    newTextPopup(
-                        localization.get("ui.colonist_dead_text"), -- text to display
-                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
-                        colonistTransform.actualY - 50, -- position above the colonist
-                        5 -- duration in seconds
-                    )
-                    
-                    playSoundEffect("effects", "die") -- play colonist death sound effect
-                    
-                    -- show particles
+    function checkColonistDeaths()
+        local colonists = lume.clone(globals.colonists or {})
+        lume.extend(colonists, globals.healers or {})
+        lume.extend(colonists, globals.gold_diggers or {})
+        lume.extend(colonists, globals.damage_cushions or {})
+
+        log_debug("Checking colonists for death. Count:", #colonists)
+
+        for _, colonist in pairs(colonists) do
+            if registry:valid(colonist) and getBlackboardFloat(colonist, "health") <= 0 then
+                local ok, err = pcall(function()
+                    local transform = registry:get(colonist, Transform)
+
+                    newTextPopup(localization.get("ui.colonist_dead_text"),
+                                transform.actualX + transform.visualW / 2,
+                                transform.actualY - 50,
+                                5)
+
+                    playSoundEffect("effects", "die")
                     spawnCircularBurstParticles(
-                        colonistTransform.actualX + colonistTransform.visualW / 2, -- position at the center of the colonist
-                        colonistTransform.actualY + colonistTransform.visualH / 2, -- position at the center of the colonist
-                        50, -- count
-                        10, -- duration
-                        util.getColor("red"), -- start
-                        util.getColor("black") -- end color
-                    )
-                    
-                    -- remove the colonist from all tables
+                        transform.actualX + transform.visualW / 2,
+                        transform.actualY + transform.visualH / 2,
+                        50, 10,
+                        util.getColor("red"), util.getColor("black"))
+
                     globals.colonists[colonist] = nil
                     globals.healers[colonist] = nil
                     globals.gold_diggers[colonist] = nil
                     globals.damage_cushions[colonist] = nil
-                    
-                    -- remove colonist's text ui
-                    ui.box.Remove(registry, globals.ui.colonist_ui[colonist].hp_ui_box)
-                    -- registry:destroy(globals.ui.colonist_ui[colonist].hp_ui_box)
-                    -- globals.ui.colonist_ui[colonist] = nil
-                    
-                    -- destroy the colonist entity
+
+                    local ui = globals.ui.colonist_ui[colonist]
+                    if ui and ui.hp_ui_box then
+                        ui.box.Remove(registry, ui.hp_ui_box)
+                    end
+
                     registry:destroy(colonist)
+                end)
+
+                if not ok then
+                    log_debug("Colonist death check failed:", err)
                 end
             end
         end
-    end,
-    1.0, -- every 1 second
-    true, -- start immediately
-    nil, -- no "after" callback
-    "colonist_health_check" -- unique tag for this timer
-    )
+    end
+
+    timer.every(0.3, checkColonistDeaths, 1.0, true, nil)
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 end

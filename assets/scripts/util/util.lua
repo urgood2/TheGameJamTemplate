@@ -235,9 +235,14 @@ function handleNewDay()
   
   -- add button callback
   local uieUIConfig1 = registry:get(uiElement1, UIConfig)
+  -- enable button
+  uieUIConfig1.disable_button = false -- enable the button
   uieUIConfig1.buttonCallback = function()
     log_debug("Relic 1 button clicked!")
     buyRelicFromSlot(1) -- buy the relic from slot 1
+    -- disable the button
+    local uiConfig = registry:get(uiElement1, UIConfig)
+    uiConfig.disable_button = true -- disable the button
   end
   -- relic2ButtonAnimationEntity
   relicDef = findInTable(globals.relicDefs, "id", globals.currentShopSlots[2].id)
@@ -274,11 +279,16 @@ function handleNewDay()
     )
   end
   
+  -- enable button
   -- add button callback
   local uieUIConfig2 = registry:get(uiElement2, UIConfig)
+  uieUIConfig2.disable_button = false -- enable the button
   uieUIConfig2.buttonCallback = function()
     log_debug("Relic 2 button clicked!")
     buyRelicFromSlot(2) -- buy the relic from slot 2
+    -- disable the button
+    local uiConfig = registry:get(uiElement2, UIConfig)
+    uiConfig.disable_button = true -- disable the button
   end
   -- relic3ButtonAnimationEntity
   relicDef = findInTable(globals.relicDefs, "id", globals.currentShopSlots[3].id)
@@ -315,9 +325,13 @@ function handleNewDay()
   end
   -- add button callback
   local uieUIConfig3 = registry:get(uiElement3, UIConfig)
+  uieUIConfig3.disable_button = false -- enable the button
   uieUIConfig3.buttonCallback = function()
     log_debug("Relic 3 button clicked!")
     buyRelicFromSlot(3) -- buy the relic from slot 3
+    -- disable the button
+    local uiConfig = registry:get(uiElement3, UIConfig)
+    uiConfig.disable_button = true -- disable the button
   end
   -- update shop uiboxTransform to centered
   local shopUIBoxTransform = registry:get(globals.ui.weatherShopUIBox, Transform)

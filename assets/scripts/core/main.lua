@@ -708,7 +708,7 @@ function main.init()
                 -- set the blackboard health value (reduce health by 1)
                 if colonist and registry:valid(colonist) then
                     
-                    local damage_done = random_utils.random_int(1, globals.current_weather_event_base_damage) -- random damage between 1 and base damage
+                    local damage_done = random_utils.random_float(1, globals.current_weather_event_base_damage) -- random damage between 1 and base damage
                     
                     if (totalGlobalDamageReduction > 0) then
                         damage_done = damage_done - totalGlobalDamageReduction -- reduce damage by global damage reduction
@@ -834,7 +834,7 @@ function main.init()
                 -- set the blackboard health value (reduce health by 1)
                 if colonist and registry:valid(colonist) then
                     
-                    local damage_done = random_utils.random_int(1, globals.current_weather_event_base_damage) * 0.5 -- halve the base damage
+                    local damage_done = random_utils.random_float(1, globals.current_weather_event_base_damage) * 0.5 -- halve the base damage
                     
                     if (totalGlobalDamageReduction > 0) then
                         damage_done = damage_done - totalGlobalDamageReduction -- reduce damage by global damage reduction

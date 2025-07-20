@@ -2,9 +2,13 @@
 - add dodge and other relic effect strings to the screen when it happens
 - add simple tutorial
 - add music & sfx
+- disable shop buttons after selection
 - add tooltip to colonist home
 - apply globals.end_of_day_gold_multiplier
 - deduct gold at end of day for healers & damage cushions, add game over state for negative currency
+- teleport colonist to the side of the drop zone after duplicating
+- get rid of cancel button on selection screen
+- tooltips on selection buttons
 
 
 - get static text formatting in ui working

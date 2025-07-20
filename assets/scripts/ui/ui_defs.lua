@@ -432,7 +432,7 @@ function ui_defs.generateUI()
         end
         local text = localization.get("ui.weather_ui_format", {weather = input})
         TextSystem.Functions.setText(globals.ui.weatherTextEntity.config.object, text)
-        TextSystem.Functions.applyGlobalEffects(globals.ui.weatherTextEntity.config.object, "bump") -- apply the rainbow effect to the text
+        TextSystem.Functions.applyGlobalEffects(globals.ui.weatherTextEntity.config.object, "fade") -- apply the rainbow effect to the text
         
     end)
     
@@ -645,6 +645,8 @@ function ui_defs.generateUI()
         buyNewColonistHomeCallback()
     end
     
+    home_structure_def.config.id = "colonist_home_button" -- set the id for the button, so we can find it later
+    
     -- local duplicator_structure_def = createStructurePlacementButton(
     --     "3641-TheRoguelike_1_10_alpha_434.png", -- sprite ID for duplicator
     --     "duplicatorButtonAnimationEntity", -- global animation handle
@@ -698,6 +700,21 @@ function ui_defs.generateUI()
         
     -- create a new UI box for the structure placement row
     globals.ui.structurePlacementUIBox = ui.box.Initialize({x = 10, y = 120}, newRoot)
+    
+    -- get the uie colonist home button
+    globals.ui.colonistHomeButton = ui.box.GetUIEByID(
+        registry, -- registry to use
+        globals.ui.structurePlacementUIBox, -- ui box to search in
+        "colonist_home_button" -- id of the UI element to find
+    )
+    -- add hover
+    local colonistHomeButtonGameObject = registry:get(globals.ui.colonistHomeButton, GameObject)
+    colonistHomeButtonGameObject.state.hoverEnabled = true -- enable hover for the colonist
+    colonistHomeButtonGameObject.state.collisionEnabled = true -- enable collision for the colonist home button
+    colonistHomeButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
+        showTooltip(localization.get("ui.colonist_home_tooltip"),
+            localization.get("ui.colonist_home_tooltip_desc"))
+    end
     
     -- align the structure placement UI box to the left side of the screen, and bottom
     local structurePlacementTransform = registry:get(globals.ui.structurePlacementUIBox, Transform)
@@ -765,6 +782,46 @@ function ui_defs.generateUI()
     currencyTransform.visualX = currencyTransform.actualX -- update visual position as well
     currencyTransform.actualY = 10 -- 10 pixels from the top edge
     currencyTransform.visualY = currencyTransform.actualY -- update visual position as well
+    
+    -- make a weather dificulty text
+    globals.ui.weatherDifficultyTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.weather_difficulty_text", {difficulty = globals.current_weather_event_base_damage}) end,  -- initial text
+        30.0,                                 -- font size
+        "pulse"                       -- animation spec
+    )
+    
+    -- update it every 2 seconds
+    timer.every(2, function()
+        -- update the weather difficulty text every 2 seconds
+        local text = localization.get("ui.weather_difficulty_text", {difficulty = globals.current_weather_event_base_damage})
+        TextSystem.Functions.setText(globals.ui.weatherDifficultyTextEntity.config.object, text)    
+        TextSystem.Functions.applyGlobalEffects(globals.ui.weatherDifficultyTextEntity.config.object, "pulse") -- apply the pulse effect to the text
+    end)
+    
+    -- put in a row
+    local weatherDifficultyTextDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0) --- IGNORE ---
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(globals.ui.weatherDifficultyTextEntity)
+        :build()
+    -- create a new UI box for the weather difficulty text
+    globals.ui.weatherDifficultyUIBox = ui.box.Initialize({x = globals.screenWidth() - 200, y = 60}, weatherDifficultyTextDef)
+    -- align the weather difficulty UI box to the top right of the screen
+    local weatherDifficultyTransform = registry:get(globals.ui.weatherDifficultyUIBox, Transform)
+    weatherDifficultyTransform.actualX = globals.screenWidth() - weatherDifficultyTransform.actualW - 10 -- 10 pixels from the right edge
+    weatherDifficultyTransform.visualX = weatherDifficultyTransform.actualX -- update visual position as well
+    weatherDifficultyTransform.actualY = 10 -- 10 pixels from the top edge
+    weatherDifficultyTransform.visualY = weatherDifficultyTransform.actualY
     
     
     local relicSlots = {

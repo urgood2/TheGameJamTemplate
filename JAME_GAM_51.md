@@ -1,9 +1,7 @@
 # immediate todos
 - add image for website
 - add simple tutorial
-- colonist die sound
 - add simple how-to-window
-- add music & ambiance
 
 - attempt to call number value (uibox initialize method) sometimes happens, why?
 ```

@@ -432,6 +432,7 @@ function ui_defs.generateUI()
         end
         local text = localization.get("ui.weather_ui_format", {weather = input})
         TextSystem.Functions.setText(globals.ui.weatherTextEntity.config.object, text)
+        TextSystem.Functions.applyGlobalEffects(globals.ui.weatherTextEntity.config.object, "bump") -- apply the rainbow effect to the text
         
     end)
     
@@ -891,9 +892,24 @@ function ui_defs.generateUI()
         -- add all relic button defs to the row
         :addChildren(relicsRowImages)
         :build()
-        
+    relicsRow.config.id = "relics_row" -- set the id for the relics row   
+    
+    -- new root
+    local relicsRoot = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(relicsRow) -- add the relics row
+        :build()
     -- new ui box for relics
-    globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRow)
+    globals.ui.relicsUIBox = ui.box.Initialize({x = 10, y = globals.screenHeight() - 200}, relicsRoot)
     -- align the relics UI box to the left side of the screen, and top
     local relicsTransform = registry:get(globals.ui.relicsUIBox, Transform)
     local currencyBoxTrnsform = registry:get(globals.ui.currencyUIBox, Transform)

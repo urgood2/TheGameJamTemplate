@@ -116,12 +116,40 @@ function buyRelicFromSlot(slot)
   local uie = ui.definitions.wrapEntityInsideObjectElement(
     relicAnimationEntity -- entity to wrap
   )
+  
+  -- make new ui row
+  local uieRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                -- :addShadow(true) --- IGNORE ---
+                -- :addEmboss(4.0)
+                :addPadding(0)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        -- add all relic button defs to the row
+        :addChildren(uie)
+        :build()
+  
   globals.ui.relicsUIElementRow = ui.box.GetUIEByID(registry, globals.ui.relicsUIBox, "relics_row")
   log_debug("buyRelicFromSlot: Wrapped entity inside UI element row: ", globals.ui.relicsUIElementRow)
   
   --TODO: add to top bar and renew alignment
-  local uiElementComp = registry:get(globals.ui.relicsUIElementRow, UIElementComponent)
-  uiElementComp.children:add(uie) -- add the wrapped entity to the UI element row
+  -- local gameobjectCompTopBar = registry:get(globals.ui.relicsUIElementRow, GameObject)
+  -- gameobjectCompTopBar.orderedChildren:add(uie) -- add the wrapped entity to the top bar UI element row
+  
+  --TODO: document that AddTemplateToUIBox must take a row
+  ui.box.AddTemplateToUIBox(
+    registry,
+    globals.ui.relicsUIBox,
+    uieRow, -- def to add
+    globals.ui.relicsUIElementRow -- parent UI element row to add to
+  )
   
   ui.box.RenewAlignment(registry, globals.ui.relicsUIBox) -- re-align the relics UI element row
   
@@ -131,7 +159,7 @@ function buyRelicFromSlot(slot)
     id = relicDef.id,
     entity = uie
   })
-  log_debug("buyRelicFromSlot: Added relic to ownedRelics: ", lume.serialize(globals.ownedRelics))
+  -- log_debug("buyRelicFromSlot: Added relic to ownedRelics: ", lume.serialize(globals.ownedRelics))
   
   if relicDef.onBuyCallback then
     relicDef.onBuyCallback() -- run the onBuyCallback if it exists
@@ -332,9 +360,10 @@ function handleNewDay()
       togglePausedState(true)
       -- show the new day message
       if registry:valid(globals.ui.newDayUIBox) then
+        local shopTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
+        
         local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
-        transformComp.actualY = globals.screenHeight() / 2 -
-        transformComp.actualH / 2                                                          -- center the new day message vertically
+        transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH / 2 -- show above the shop UI box
       end
       
       -- for each colonist home, add a coin image to the location, tween it to the currency ui, then vanish it. Then add the currency to the player's resources

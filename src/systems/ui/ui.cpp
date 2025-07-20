@@ -802,6 +802,9 @@ namespace ui {
 
         box.set_function("RenewAlignment", &ui::box::RenewAlignment);
         rec.record_free_function({"ui", "box"}, {"RenewAlignment", "---@param registry registry\n---@param self Entity\n---@return nil", "Renews the alignment for an entity.", true, false});
+        
+        box.set_function("AddTemplateToUIBox", &ui::box::AddTemplateToUIBox);
+        rec.record_free_function({"ui", "box"}, {"AddTemplateToUIBox", "---@param registry registry\n---@param uiBoxEntity Entity\n---@param templateDef UIElementTemplateNode\n---@param maybeParent Entity|nil\n---@return nil", "Adds a template definition to a UI box.", true, false});
 
         box.set_function("TreeCalcSubContainer", &ui::box::TreeCalcSubContainer);
         rec.record_free_function({"ui", "box"}, {"TreeCalcSubContainer", "---@param registry registry\n---@param uiElement Entity\n---@param parentUINodeRect table\n---@param forceRecalculateLayout boolean\n---@param scale? number\n---@param calcCurrentNodeTransform table\n---@param contentSizes table\n---@return Vector2", "Calculates the size for a container sub-element.", true, false});

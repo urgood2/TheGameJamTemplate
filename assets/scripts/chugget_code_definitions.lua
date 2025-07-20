@@ -6434,6 +6434,16 @@ function ui.box.TreeCalcSubNonContainer(...) end
 function ui.box.RenewAlignment(...) end
 
 ---
+--- Adds a template definition to a UI box.
+---
+---@param registry registry
+---@param uiBoxEntity Entity
+---@param templateDef UIElementTemplateNode
+---@param maybeParent Entity|nil
+---@return nil
+function ui.box.AddTemplateToUIBox(...) end
+
+---
 --- Calculates the size for a container sub-element.
 ---
 ---@param registry registry

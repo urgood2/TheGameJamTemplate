@@ -532,6 +532,11 @@ function ui_defs.generateUI()
         local text = localization.get("ui.weather_ui_format", {weather = input})
         TextSystem.Functions.setText(globals.ui.weatherTextEntity.config.object, text)
         TextSystem.Functions.applyGlobalEffects(globals.ui.weatherTextEntity.config.object, "rainbow") -- apply the rainbow effect to the text
+
+        -- center the weather text
+        local weatherTextTransform = registry:get(globals.ui.weatherTextEntity.config.object, Transform)
+        weatherTextTransform.actualX = globals.screenWidth() / 2 - weatherTextTransform.actualW / 2 -- center it horizontally
+        weatherTextTransform.visualX = weatherTextTransform.actualX -- update visual position as well
         
     end)
     

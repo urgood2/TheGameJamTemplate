@@ -393,7 +393,7 @@ function handleNewDay()
         local shopTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
         
         local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
-        transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH  * 2 -- show above the shop UI box
+        transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH  + 10 -- show above the shop UI box
         -- cneter x
         transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
         transformComp.visualX = transformComp.actualX -- snap X

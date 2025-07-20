@@ -439,12 +439,12 @@ function ui_defs.generateUI()
     globals.ui.creatureDuplicateChoiceUIbox = ui.box.Initialize({x = 10, y = 200}, duplicateChoiceRoot)
     
     layer_order_system.assignZIndexToEntity(
-        creatureDuplicateChoiceUIbox, -- entity to assign z-index to
+        globals.ui.creatureDuplicateChoiceUIbox, -- entity to assign z-index to
         5 -- z-index value
     )
     ui.box.AssignLayerOrderComponents( -- propogate layer order components to the uibox
         registry, -- registry to use
-        creatureDuplicateChoiceUIbox -- ui box to assign layer order components to
+        globals.ui.creatureDuplicateChoiceUIbox -- ui box to assign layer order components to
     )
     -- align the creature duplicate choice UI box to the center of the screen, out of view
     local creatureChoiceTransform = registry:get(globals.ui.creatureDuplicateChoiceUIbox, Transform)

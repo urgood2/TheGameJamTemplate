@@ -187,7 +187,7 @@
 		"start_game_button": "Start Game",
 		"start_game_feedback": "Give Feedback",
 		"start_game_follow": "Follow on",
-		"start_game_logo": "<typing,speed=0.2>Unnamed Prototype:<wait=lua,id=myCustomCallback> Yep",
+		"start_game_logo": "<typing,speed=0.2>Weather or Not:<wait=lua,id=myCustomCallback> Game Jam Edition",
 		"text_input": "Enter Name:",
 		"tip_body": "Stuck? The basic mechanic is to click the whale.",
 		"tip_body_2": "You can place krill homes to automate clicking.",

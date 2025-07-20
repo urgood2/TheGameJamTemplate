@@ -5,6 +5,8 @@
 - add simple how-to-window
 - add music & ambiance
 
+- attempt to call number value (uibox initialize method) sometimes happens, why?
+
 - color coding (part) for dynamic text as well
 
 - get static text formatting in ui working

@@ -408,7 +408,7 @@ function spawnDamageCushion(x, y)
         0.5, -- every 0.5 seconds
         function()
             if (registry:valid(colonist) == true) then
-                text = localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") })
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
                 
                 TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
             end

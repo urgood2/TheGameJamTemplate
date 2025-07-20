@@ -394,6 +394,9 @@ function handleNewDay()
         
         local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
         transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH  * 2 -- show above the shop UI box
+        -- cneter x
+        transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
+        transformComp.visualX = transformComp.actualX -- snap X
       end
       
       -- for each healer & damage cushion, detract currency and show text popup
@@ -527,6 +530,9 @@ function handleNewDay()
           if registry:valid(globals.ui.newDayUIBox) then
             local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
             transformComp.actualY = globals.screenHeight()
+            -- center x
+            transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
+            transformComp.visualX = transformComp.actualX -- snap X
           end
 
           toggleShopWindow()       -- toggle the shop window

@@ -944,6 +944,12 @@
     "01_9_buff_debuff_n_p3": [
         "Buff n Debuff P3 01_9.png"
     ],
+    "01_breath_mono_monster": [
+        "MONSTER_Breath_01_mono.wav"
+    ],
+    "01_breath_mono_monster_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MONSTER_Breath_01_mono.wav"
+    ],
     "01_button_light_sound_stereo_switch": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/BUTTON_Light_Switch_01_stereo.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\BUTTON_Light_Switch_01_stereo.wav"
@@ -971,6 +977,12 @@
     ],
     "01_drop_notification_stereo_triple_ui": [
         "UI_Notification_Triple_Drops_01_stereo.wav"
+    ],
+    "01_fabric_fast_mono_movement": [
+        "FABRIC_Movement_Fast_01_mono.wav"
+    ],
+    "01_fabric_fast_mono_movement_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/FABRIC_Movement_Fast_01_mono.wav"
     ],
     "01_fire": [
         "fire_01.png"
@@ -1745,6 +1757,12 @@
     "04_button_light_stereo_switch": [
         "BUTTON_Light_Switch_04_stereo.wav"
     ],
+    "04_cash_cha_ching_mono_register": [
+        "CASH_REGISTER_Cha-ching_04_mono.wav"
+    ],
+    "04_cash_cha_ching_mono_register_sound": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/CASH_REGISTER_Cha-ching_04_mono.wav"
+    ],
     "04_circle": [
         "circle_04.png"
     ],
@@ -1995,6 +2013,12 @@
     ],
     "06_trace": [
         "trace_06.png"
+    ],
+    "07_mono_notification_sound_subtle": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NOTIFICATION_Subtle_07_mono.wav"
+    ],
+    "07_mono_notification_subtle": [
+        "NOTIFICATION_Subtle_07_mono.wav"
     ],
     "07_particle_rotated_trace": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\particles\\trace_07_rotated.png",

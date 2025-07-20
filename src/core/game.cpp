@@ -837,6 +837,7 @@ namespace game
             }
             
             {
+#ifndef __EMSCRIPTEN__
                 // ZoneScopedN("Debug UI");
                 rlImGuiBegin(); // Required: starts ImGui frame
 
@@ -844,6 +845,7 @@ namespace game
                 ShowDebugUI();
 
                 rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+#endif
             }
             
 

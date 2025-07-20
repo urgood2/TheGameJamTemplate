@@ -359,7 +359,7 @@ function ui_defs.generateUI()
             UIConfigBuilder.create()
                 :addText(localization.get("ui.cancel_button")) -- title text
                 :addColor(util.getColor("blackberry"))
-                :addShadow(true)
+                :addEmboss(4.0)
                 :addButtonCallback(function()
                     -- button click callback
                     log_debug("Cancel button clicked!")
@@ -391,7 +391,7 @@ function ui_defs.generateUI()
                 :build()
         )
         :addChild(creatureRow) -- add the drag to duplicate text entity
-        :addChild(cancelTextDef) -- add the cancel text entity
+        -- :addChild(cancelTextDef) -- add the cancel text entity
         :build()
     -- new uibox
     globals.ui.creatureDuplicateChoiceUIbox = ui.box.Initialize({x = 10, y = 200}, duplicateChoiceRoot)

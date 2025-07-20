@@ -40,7 +40,7 @@ function initMainMenu()
     -- create start game button
     mainMenuEntities.logoText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_logo") end,  -- initial text
-        40.0,                                 -- font size
+        50.0,                                 -- font size
         "pulse=0.9,1.1"                       -- animation spec
     ).config.object
     
@@ -70,7 +70,7 @@ function initMainMenu()
     local startButtonText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_button") end,  -- initial text
         30.0,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
+        "color=fuchsia"                       -- animation spec
     )
     local startButtonTemplate = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
@@ -78,6 +78,7 @@ function initMainMenu()
             UIConfigBuilder.create()
                 :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
+                :addMinWidth(500) -- minimum width of the button
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
                 :addButtonCallback(function ()
@@ -96,8 +97,8 @@ function initMainMenu()
     --
     local feedbackText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_feedback") end,  -- initial text
-        15,                                 -- font size
-        "rainbow"                       -- animation spec
+        30,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
     )
     
     local discordIcon = animation_system.createAnimatedObjectWithTransform(
@@ -117,12 +118,14 @@ function initMainMenu()
             UIConfigBuilder.create()
                 :addColor(util.getColor("taupe_warm"))
                 :addEmboss(2.0)
+                :addMinWidth(500) -- minimum width of the button
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
                     -- Open the Discord link
                     OpenURL("https://discord.gg/urpjVuPwjW") 
                 end)
                 :addShadow(true)
+                :addMinWidth(500) -- minimum width of the button
                 :addHover(true) -- needed for button effect
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :build()
@@ -145,8 +148,8 @@ function initMainMenu()
     
     local blueskyText = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.start_game_follow") end,  -- initial text
-        15,                                 -- font size
-        "pulse=0.9,1.1"                       -- animation spec
+        30,                                 -- font size
+        "color=pastel_pink"                       -- animation spec
     )
     
     local blueskyRow = UIElementTemplateNodeBuilder.create()

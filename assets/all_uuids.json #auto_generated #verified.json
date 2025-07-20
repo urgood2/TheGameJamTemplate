@@ -17971,6 +17971,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/.DS_Store",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\.DS_Store"
     ],
+    "graphic_not_or_weather": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/weather-or-not.png"
+    ],
     "graphic_npatch": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/npatch.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\npatch.json",
@@ -19150,6 +19153,9 @@
     ],
     "none": [
         "NONE"
+    ],
+    "not_or_weather": [
+        "weather-or-not.png"
     ],
     "notalot60": [
         "Notalot60.ttf"

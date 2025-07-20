@@ -516,7 +516,7 @@ function ui_defs.generateUI()
     local weatherTransform = registry:get(globals.ui.weatherTextEntity.config.object, Transform)
     weatherTransform.actualX = globals.screenWidth() / 2 - weatherTransform.actualW / 2 -- center it horizontally
     weatherTransform.visualX = weatherTransform.actualX -- update visual position as well
-    weatherTransform.actualY = 100 -- 10 pixels from the top edge
+    weatherTransform.actualY = 150 -- 10 pixels from the top edge
     weatherTransform.visualY = weatherTransform.actualY -- update visual position as well
     
     -- timer to update weather 

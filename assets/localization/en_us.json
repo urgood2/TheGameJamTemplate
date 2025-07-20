@@ -1,5 +1,9 @@
 {
 	"ui": {
+		"tutorial_duplicate": "<typing,speed=0.8>Hey there! Let me teach you the ropes with a quick tutorial.\nDrag & drop a colonist into the window on the left side to duplicate it.\nThis will spawn clones, each with a specific function.",
+		"tutorial_game_goal": "<typing,speed=0.8>Your goal is to survive the acid rains and radioactive snows by using the clones you create.\nYou must keep colonists alive, and keep your gold balance above 0, to keep playing.\nYou may want to build some colonist homes to help with gold production.",
+		"tutorial_advanced": "<typing,speed=0.8>As you progress, you will be able to buy relics from the end-of-day shop.\nThey will help your colonists survive the harsh weather.\nNote that the weather will only get worse as you progress.",
+		"tutorial_end": "<typing,speed=0.8>That's it for the tutorial!\nRefer ot the tooltips if you need more info.\nGood luck, and have fun!\nLet's see 'weather or not' you can survive!",
 		"dodgedText": "Dodge!",
 		"weather_difficulty_text": "Weather Difficulty: {difficulty}",
 		"basic_acid_umbrella_name": "Basic Acid Umbrella",
@@ -187,7 +191,7 @@
 		"start_game_button": "Start Game",
 		"start_game_feedback": "Give Feedback",
 		"start_game_follow": "Follow on",
-		"start_game_logo": "<typing,speed=0.2>Weather or Not:<wait=lua,id=myCustomCallback> Game Jam Edition",
+		"start_game_logo": "<typing,speed=0.5>Weather or Not: Game Jam Edition",
 		"text_input": "Enter Name:",
 		"tip_body": "Stuck? The basic mechanic is to click the whale.",
 		"tip_body_2": "You can place krill homes to automate clicking.",

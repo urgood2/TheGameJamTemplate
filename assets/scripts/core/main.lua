@@ -553,6 +553,75 @@ function main.init()
     
     timer.every(1.0, function()
         -- if a weather event is active, update the weather event
+        
+        -- globalDamageReductionCallback 
+        --   acidDamageReductionCallback
+        --   coldDamageReductionCallback 
+        --   dodgeChanceCallback
+        --   damageTakenMultiplierCallback 
+        
+        -- onHitCallback = function(entity, damage)
+        -- onDodgeCallback 
+        
+        -- calculcate some stats based on current owned relics
+        
+        local totalGlobalDamageReduction = 0
+        local totalAcidDamageReduction = 0
+        local totalColdDamageReduction = 0
+        local totalDodgeChance = 0
+        local totalDamageTakenMultiplier = 1.0 -- default multiplier is 1.0 (no damage taken)
+        
+        local onHitCallbacks = {}
+        local onDodgeCallbacks = {}
+        
+        for _, relic in ipairs(globals.ownedRelics) do
+            
+            
+            local id = relic.id
+            local relicDef = findInTable(globals.relicDefs, "id", id)
+            
+            
+            
+            if relicDef.globalDamageReductionCallback then
+                totalGlobalDamageReduction = totalGlobalDamageReduction + relicDef.globalDamageReductionCallback()
+            end
+            
+            if relicDef.acidDamageReductionCallback then
+                totalAcidDamageReduction = totalAcidDamageReduction + relicDef.acidDamageReductionCallback()
+            end
+            
+            if relicDef.coldDamageReductionCallback then
+                totalColdDamageReduction = totalColdDamageReduction + relicDef.coldDamageReductionCallback()
+            end
+            
+            if relicDef.dodgeChanceCallback then
+                totalDodgeChance = totalDodgeChance + relicDef.dodgeChanceCallback()
+            end
+            
+            if relicDef.damageTakenMultiplierCallback then
+                totalDamageTakenMultiplier = totalDamageTakenMultiplier * relicDef.damageTakenMultiplierCallback()
+            end
+            
+            if relicDef.onHitCallback then
+                table.insert(onHitCallbacks, relicDef.onHitCallback)
+            end
+            
+            if relicDef.onDodgeCallback then
+                table.insert(onDodgeCallbacks, relicDef.onDodgeCallback)
+            end
+        end
+        
+        
+        
+        -- debug print the stats
+        log_debug("Total Global Damage Reduction:", totalGlobalDamageReduction)
+        log_debug("Total Acid Damage Reduction:", totalAcidDamageReduction)
+        log_debug("Total Cold Damage Reduction:", totalColdDamageReduction)
+        log_debug("Total Dodge Chance:", totalDodgeChance)
+        log_debug("Total Damage Taken Multiplier:", totalDamageTakenMultiplier)
+        log_debug("Total On Hit Callbacks:", #onHitCallbacks)
+        log_debug("Total On Dodge Callbacks:", #onDodgeCallbacks)
+        
         if (globals.current_weather_event == "acid_rain") then
             -- TODO: spawn green particles everywhere
         
@@ -626,10 +695,43 @@ function main.init()
                     return -- If the colonist is not valid, do not apply damage
                 end
                 
+                -- chance to dodge the damage
+                if random_utils.random_float(0, 1.0) < totalDodgeChance then
+                    log_debug("Colonist dodged the acid rain damage")
+                    -- call all onDodgeCallbacks
+                    for _, callback in ipairs(onDodgeCallbacks) do
+                        callback(colonist)
+                    end
+                    return -- If the colonist dodged, do not apply damage
+                end
+                
                 -- set the blackboard health value (reduce health by 1)
                 if colonist and registry:valid(colonist) then
                     
                     local damage_done = random_utils.random_int(1, globals.current_weather_event_base_damage) -- random damage between 1 and base damage
+                    
+                    if (totalGlobalDamageReduction > 0) then
+                        damage_done = damage_done - totalGlobalDamageReduction -- reduce damage by global damage reduction
+                        log_debug("Acid rain event: applying global damage reduction:", totalGlobalDamageReduction, "to damage:", damage_done)
+                        -- make sure damage is not negative
+                        if damage_done < 0 then
+                            damage_done = 0 
+                        end
+                    end
+                    
+                    if (totalAcidDamageReduction > 0) then
+                        damage_done = damage_done - totalAcidDamageReduction -- reduce damage by acid damage reduction
+                        log_debug("Acid rain event: applying acid damage reduction:", totalAcidDamageReduction, "to damage:", damage_done)
+                        -- make sure damage is not negative
+                        if damage_done < 0 then
+                            damage_done = 0 
+                        end
+                    end
+                    
+                    if totalDamageTakenMultiplier ~= 1.0 then
+                        damage_done = damage_done * totalDamageTakenMultiplier -- apply damage taken multiplier
+                        log_debug("Acid rain event: applying damage taken multiplier:", totalDamageTakenMultiplier, "to damage:", damage_done)
+                    end
                     
                     log_debug("Acid rain event: applying damage:", damage_done, "to colonist:", colonist)
                     
@@ -643,6 +745,11 @@ function main.init()
                         colonistTransform.actualY - 50, -- position above the colonist
                         5 -- duration in seconds
                     )
+                    
+                    -- call all onHitCallbacks
+                    for _, callback in ipairs(onHitCallbacks) do
+                        callback(colonist, damage_done) -- pass the colonist and damage done to the callback
+                    end
                 end
             end
         elseif (globals.current_weather_event == "snow") then
@@ -705,6 +812,16 @@ function main.init()
                 end
                 -- choose a random colonist
                 
+                -- chance to dodge the damage
+                if random_utils.random_float(0, 1.0) < totalDodgeChance then
+                    log_debug("Colonist dodged the acid rain damage")
+                    -- call all onDodgeCallbacks
+                    for _, callback in ipairs(onDodgeCallbacks) do
+                        callback(colonist)
+                    end
+                    return -- If the colonist dodged, do not apply damage
+                end
+                
                 log_debug("snow event: applying damage to colonist:", colonist)
                 if not registry:valid(colonist) then
                     log_debug("Colonist is not valid, skipping damage application")
@@ -719,6 +836,29 @@ function main.init()
                     
                     local damage_done = random_utils.random_int(1, globals.current_weather_event_base_damage) * 0.5 -- halve the base damage
                     
+                    if (totalGlobalDamageReduction > 0) then
+                        damage_done = damage_done - totalGlobalDamageReduction -- reduce damage by global damage reduction
+                        log_debug("snow event: applying global damage reduction:", totalGlobalDamageReduction, "to damage:", damage_done)
+                        -- make sure damage is not negative
+                        if damage_done < 0 then
+                            damage_done = 0 
+                        end
+                    end
+                    
+                    if (totalColdDamageReduction > 0) then
+                        damage_done = damage_done - totalColdDamageReduction -- reduce damage by cold damage reduction
+                        log_debug("snow event: applying cold damage reduction:", totalColdDamageReduction, "to damage:", damage_done)
+                        -- make sure damage is not negative
+                        if damage_done < 0 then
+                            damage_done = 0 
+                        end
+                    end
+                    
+                    if totalDamageTakenMultiplier ~= 1.0 then
+                        damage_done = damage_done * totalDamageTakenMultiplier -- apply damage taken multiplier
+                        log_debug("Acid rain event: applying damage taken multiplier:", totalDamageTakenMultiplier, "to damage:", damage_done)
+                    end
+                    
                     log_debug("snow event: applying damage:", damage_done, "to colonist:", colonist)
                     
                     setBlackboardFloat(colonist, "health", getBlackboardFloat(colonist, "health") - damage_done)  
@@ -731,6 +871,11 @@ function main.init()
                         colonistTransform.actualY - 50, -- position above the colonist
                         5 -- duration in seconds
                     )
+                    
+                    -- call all onHitCallbacks
+                    for _, callback in ipairs(onHitCallbacks) do
+                        callback(colonist, damage_done) -- pass the colonist and damage done to the callback
+                    end
                 end
             end
         end
@@ -813,7 +958,7 @@ function main.update(dt)
     
     -- Update the game time
     -- how many game‐seconds should pass per real second
-    local gameTimeSpeedUpFactor = 2000
+    local gameTimeSpeedUpFactor = 2500
 
     -- convert dt (real seconds) into game seconds
     local gameSeconds = dt * gameTimeSpeedUpFactor

@@ -603,9 +603,8 @@ function ui_defs.generateUI()
     local shopButtonTransform = registry:get(globals.ui.shopButtonUIBox, Transform)
     shopButtonTransform.actualX = globals.screenWidth() - shopButtonTransform.actualW - 10 -- 10 pixels from the right edge
     shopButtonTransform.visualX = shopButtonTransform.actualX -- update visual position as well
-    -- bottom right corner of the screen
-    shopButtonTransform.actualY = globals.screenHeight() - shopButtonTransform.actualH - 10 -- 10 pixels from the bottom edge
-    shopButtonTransform.visualY = shopButtonTransform.actualY -- update visual position as well
+    -- move it out of sight
+    shopButtonTransform.actualY = globals.screenHeight()
     
     
     -- text that says "strcture placement"
@@ -811,6 +810,13 @@ function ui_defs.generateUI()
     -- add the close button to the weatherButtonDefs
     table.insert(weatherButtonDefs, closeButton)
     
+    -- add a text entity that says "Relic Shop"
+    globals.ui.weatherShopTextEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return "RELIC SHOP" end,  -- initial text
+        40.0,                                 -- font size
+        "float;color=apricot_cream"                       -- animation spec
+    )
+    
     -- make a new row
     local weatherRow = UIElementTemplateNodeBuilder.create()
         :addType(UITypeEnum.VERTICAL_CONTAINER)
@@ -826,6 +832,7 @@ function ui_defs.generateUI()
                 :build()
         )
         -- add all weather button defs to the row
+        :addChild(globals.ui.weatherShopTextEntity) -- add the weather shop text entity
         :addChildren(weatherButtonDefs)
         :build()
     

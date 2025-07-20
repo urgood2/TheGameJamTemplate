@@ -1,8 +1,16 @@
 # immediate todos
-- fill up relic def ui strings, add to relic defs, hook them up in the shop (weighted chance based on cost)
-- use ui element id to modify ui element callback
+- add dodge and other relic effect strings to the screen when it happens
+- add simple tutorial
+- add music & sfx
+- add tooltip to colonist home
 - apply globals.end_of_day_gold_multiplier
 - deduct gold at end of day for healers & damage cushions, add game over state for negative currency
+
+
+- get static text formatting in ui working
+
+- fill up relic def ui strings, add to relic defs, hook them up in the shop (weighted chance based on cost)
+- use ui element id to modify ui element callback
 - relic digger creatures who have a chance to dig up relics
 - make hurt entities blink
 - need simple way of showing current stats, probably just use text ui element (how to update this on demand?)

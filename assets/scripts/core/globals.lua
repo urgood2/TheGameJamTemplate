@@ -48,8 +48,22 @@ globals.isShopOpen = false -- whether the shop is currently open
 
 globals.ownedRelics = {
   {
-    id = "basic_umbrella",
-    animation_entity = nil -- the animation entity for the relic
+    id = "proto_umbrella"
+  },
+  {
+    id = "ultimate_mark_of_the_cat_ninja"
+  },
+  {
+    id = "karma_umbrella"
+  },
+  {
+    id = "vampire_teeth"
+  },
+  {
+    id = "gold_lover"
+  },
+  {
+    id = "shoddy_pickaxe"
   }
 }
 
@@ -521,7 +535,7 @@ globals.relicDefs = {
     onDodgeCallback = function() -- function to call when a dodge occurs
     end,
     damageTakenMultiplierCallback = function() -- function to call when the relic is active
-      return 2.0 -- no multiplier, normal damage taken
+      return 1.0 -- no multiplier, normal damage taken
     end,
     onHitCallback = function(entity, damage) -- function to call when the entity is hit
     end,

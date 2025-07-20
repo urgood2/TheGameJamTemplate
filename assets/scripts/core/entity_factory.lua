@@ -133,7 +133,14 @@ function spawnGoldDigger(x, y)
         nil, -- no "after" callback
         "colonist_hp_text_update_" .. colonist -- unique tag per colonist
     )
-    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        3 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+        3 -- make sure it is below show window
+    )
     -- anchor to the top center of the colonist 
     transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
         InheritedPropertiesSync.Strong,
@@ -263,6 +270,15 @@ function spawnHealer(x, y)
     
     -- put in a uibox
     globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
+    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        3 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+        3 -- make sure it is below show window
+    )
     
     -- update hp text every 0.5 seconds
     timer.every(
@@ -401,6 +417,15 @@ function spawnDamageCushion(x, y)
         true, -- start immediately
         nil, -- no "after" callback
         "colonist_hp_text_update_" .. colonist -- unique tag per colonist
+    )
+    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        3 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+        3 -- make sure it is below show window
     )
     
     -- anchor to the top center of the colonist 

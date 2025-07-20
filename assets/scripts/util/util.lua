@@ -96,11 +96,11 @@ function buyRelicFromSlot(slot)
     true               -- use animation, not sprite identifier, if false
   )
   
-  animation_system.resizeAnimationObjectsInEntityToFit(
-    relicAnimationEntity,
-    globals.tileSize, -- width
-    globals.tileSize  -- height
-  )
+  -- animation_system.resizeAnimationObjectsInEntityToFit(
+  --   relicAnimationEntity,
+  --   globals.tileSize, -- width
+  --   globals.tileSize  -- height
+  -- )
   
   -- add hover tooltip
   local gameObject = registry:get(relicAnimationEntity, GameObject)
@@ -179,7 +179,7 @@ function handleNewDay()
     globals.current_weather_event = globals.weather_event_defs[math.random(1, #globals.weather_event_defs)].id -- pick a random weather event
     
     -- increment the base damage of the weather event
-    globals.current_weather_event_base_damage = globals.current_weather_event_base_damage + 1
+    globals.current_weather_event_base_damage = globals.current_weather_event_base_damage * 1.5
   end
   
   -- select 3 random items for the shop.
@@ -366,7 +366,7 @@ function handleNewDay()
         local shopTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
         
         local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
-        transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH / 2 -- show above the shop UI box
+        transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH  * 2 -- show above the shop UI box
       end
       
       -- for each colonist home, add a coin image to the location, tween it to the currency ui, then vanish it. Then add the currency to the player's resources
@@ -467,7 +467,7 @@ function showTooltip(titleText, bodyText)
 
   TextSystem.Functions.setText(titleEnt, titleText)
   TextSystem.Functions.clearAllEffects(titleEnt)            -- clear any previous effects
-  TextSystem.Functions.applyGlobalEffects(titleEnt, "pulse;color=lavender") -- apply the tooltip title effects
+  TextSystem.Functions.applyGlobalEffects(titleEnt, "slide;color=plum") -- apply the tooltip title effects
   TextSystem.Functions.setText(bodyEnt, bodyText)
   TextSystem.Functions.applyGlobalEffects(bodyEnt, "color=blue_midnight") -- apply the tooltip body effects
 

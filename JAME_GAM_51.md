@@ -1,14 +1,8 @@
 # immediate todos
-- add dodge and other relic effect strings to the screen when it happens
-- add simple tutorial
+- add simple how-to-window
 - add music & sfx
-- disable shop buttons after selection
-- add tooltip to colonist home
-- apply globals.end_of_day_gold_multiplier
-- deduct gold at end of day for healers & damage cushions, add game over state for negative currency
+- add game over state for negative currency
 - teleport colonist to the side of the drop zone after duplicating
-- get rid of cancel button on selection screen
-- tooltips on selection buttons
 
 - color coding (part) for dynamic text as well
 

@@ -79,6 +79,7 @@ globals.creature_defs = {
   {
     id = "healer",
     cost = 3,
+    maintenance_cost = 3, -- cost to maintain the healer each day
     heal_cooldown_seconds = 10, -- cooldown time in seconds before the healer can heal again
     heal_amount = 3, -- amount of health restored each time the healer heals
     initial_hp = 5, -- initial health points for the healer
@@ -87,6 +88,7 @@ globals.creature_defs = {
   {
     id = "damage_cushion",
     cost = 2,
+    maintenance_cost = 4, -- cost to maintain the damage cushion each day
     initial_hp = 20, -- initial health points for the damage cushion
     spriteID = "3846-TheRoguelike_1_10_alpha_639.png" -- the sprite ID for the damage cushion
   }

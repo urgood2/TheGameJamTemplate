@@ -256,6 +256,7 @@ function ui_defs.generateUI()
         findInTable(globals.creature_defs, "id", "gold_digger").cost -- cost to buy the colonist home
     )
     
+    gold_digger_button_def.config.id = "gold_digger_button" -- set the id for the button
     gold_digger_button_def.config.buttonCallback = function ()
         -- check if user has enough gold
         if (globals.currency < findInTable(globals.creature_defs, "id", "gold_digger").cost) then
@@ -284,6 +285,7 @@ function ui_defs.generateUI()
         findInTable(globals.creature_defs, "id", "healer").cost -- cost to buy the colonist home
     )
     
+    healer_button_def.config.id = "healer_button" -- set the id for the button
     healer_button_def.config.buttonCallback = function ()
         -- check if user has enough gold
         if (globals.currency < findInTable(globals.creature_defs, "id", "healer").cost) then
@@ -313,6 +315,7 @@ function ui_defs.generateUI()
         findInTable(globals.creature_defs, "id", "damage_cushion").cost -- cost to buy the colonist home
     )
     
+    damage_cushion_button_def.config.id = "damage_cushion_button" -- set the id for the button
     damage_cushion_button_def.config.buttonCallback = function ()
         -- check if user has enough gold
         if (globals.currency < findInTable(globals.creature_defs, "id", "damage_cushion").cost) then
@@ -400,6 +403,54 @@ function ui_defs.generateUI()
     creatureChoiceTransform.actualX = globals.screenWidth() / 2 - creatureChoiceTransform.actualW / 2 -- center it horizontally
     creatureChoiceTransform.visualX = creatureChoiceTransform.actualX -- update visual position as well
     creatureChoiceTransform.actualY = globals.screenHeight() -- out of view initially
+    
+    -- get uie by id
+    globals.ui.goldDiggerButtonElement = ui.box.GetUIEByID(
+        registry,
+        "gold_digger_button" -- id of the UI element
+    )
+    globals.ui.healerButtonElement = ui.box.GetUIEByID(
+        registry,
+        "healer_button" -- id of the UI element
+    )
+    globals.ui.damageCushionButtonElement = ui.box.GetUIEByID(
+        registry,
+        "damage_cushion_button" -- id of the UI element
+    )
+    
+    -- add hover
+    local goldDiggerButtonGameObject = registry:get(globals.ui.goldDiggerButtonElement, GameObject)
+    goldDiggerButtonGameObject.state.hoverEnabled = true -- enable hover for the button
+    goldDiggerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
+    goldDiggerButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
+        -- show the tooltip 
+        showTooltip(
+            localization.get("ui.gold_digger_button"), -- entity hovered on
+            localization.get("ui.gold_digger_tooltip_body") -- tooltip body
+        )
+    end
+    local healerButtonGameObject = registry:get(globals.ui.healerButtonElement, GameObject)
+    healerButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
+    healerButtonGameObject.state.collisionEnabled = true -- enable collision for the button
+    
+    healerButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
+        -- show the tooltip 
+        showTooltip(
+            localization.get("ui.healer_button"), -- entity hovered only    
+            localization.get("ui.healer_tooltip_body") -- tooltip body
+        )
+    end
+    local damageCushionButtonGameObject = registry:get(globals.ui.damageCushionButtonElement, GameObject)
+    damageCushionButtonGameObject.state.hoverEnabled = true -- enable hover for the button_UIE
+    damageCushionButtonGameObject.state.collisionEnabled = true -- enable collision for the button
+    damageCushionButtonGameObject.methods.onHover = function(registry, hoveredOn, hovered)
+        -- show the tooltip 
+        showTooltip(
+            localization.get("ui.damage_cushion_button"), -- entity hovered on
+            localization.get("ui.damage_cushion_tooltip_body") -- tooltip body
+        )
+    end
+    
     
     -- show current weather
     globals.ui.weatherTextEntity = ui.definitions.getNewDynamicTextEntry(

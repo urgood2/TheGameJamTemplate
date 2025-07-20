@@ -583,7 +583,7 @@ function main.init()
         require("lldebugger").start()
     end
     
-    timer.every(1, function()
+    timer.every(0.2, function()
         if registry:valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
             hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
         end

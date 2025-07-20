@@ -383,6 +383,45 @@ function handleNewDay()
         transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH  * 2 -- show above the shop UI box
       end
       
+      -- for each healer & damage cushion, detract currency and show text popup
+      for _, healerEntry in ipairs(globals.healers) do
+        
+        local transformComp = registry:get(healerEntry, Transform)
+        local healerDef = findInTable(globals.creature_defs, "id", "healer")
+        local maintenance_cost = healerDef.maintenance_cost
+        
+        -- show text popup at the location of the healer
+        newTextPopup(
+          "-"..maintenance_cost,
+          transformComp.actualX + transformComp.actualW / 2,
+          transformComp.actualY + transformComp.actualH / 2,
+          4.0, -- duration in seconds
+          "color=fiery_red;slide" -- effect string
+        )
+        
+        --- detract the currency from the player's resources
+        globals.currency = globals.currency - maintenance_cost
+      end
+      
+      for _, damageCushionEntry in ipairs(globals.damage_cushions) do
+        
+        local transformComp = registry:get(damageCushionEntry, Transform)
+        local damageCushionDef = findInTable(globals.creature_defs, "id", "damage_cushion")
+        local maintenance_cost = damageCushionDef.maintenance_cost
+        
+        -- show text popup at the location of the damage cushion
+        newTextPopup(
+          "-"..maintenance_cost,
+          transformComp.actualX + transformComp.actualW / 2,
+          transformComp.actualY + transformComp.actualH / 2,
+          4.0, -- duration in seconds
+          "color=fiery_red;slide" -- effect string
+        )
+        
+        --- detract the currency from the player's resources
+        globals.currency = globals.currency - maintenance_cost
+      end
+      
       -- for each colonist home, add a coin image to the location, tween it to the currency ui, then vanish it. Then add the currency to the player's resources
       for _, colonistHomeEntry in ipairs(globals.structures.colonist_homes) do
         
@@ -395,6 +434,19 @@ function handleNewDay()
           coinImage,
             globals.tileSize,   -- width
             globals.tileSize    -- height
+        )
+        
+        -- text popup at the location of the colonist home
+        newTextPopup(
+          "+"..math.floor(findInTable(
+            globals.structure_defs,
+            "id",
+            "colonist_home"
+          ).currency_per_day * globals.end_of_day_gold_multiplier),
+          colonistHomeEntry.x * globals.tileSize + globals.tileSize / 2,
+          colonistHomeEntry.y * globals.tileSize + globals.tileSize / 2,
+          1.0, -- duration in seconds
+          "color=marigold;slide" -- effect string
         )
         
         local transformComp = registry:get(coinImage, Transform)
@@ -441,11 +493,11 @@ function handleNewDay()
               registry:destroy(coinImage) -- remove the coin image entity
             end
             -- add the currency to the player's resources
-            globals.currency = globals.currency + findInTable(
+            globals.currency = globals.currency + math.floor(findInTable(
               globals.structure_defs,
               "id",
               "colonist_home"
-            ).currency_per_day -- add the currency per day for the colonist home
+            ).currency_per_day * globals.end_of_day_gold_multiplier) -- add the currency per day for the colonist home
           end
         )
       end

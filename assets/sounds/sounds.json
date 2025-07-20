@@ -3,15 +3,29 @@
 
     "music": 
     {
-        "main-menu": "NyctoPhobia.ogg",
-        "main-game": "background.ogg",
-        "whale-song": "whale_melody.ogg"
+        "main-menu": "Main Menu Theme.wav",
+        "snow-ambiance": "Snow Ambience.wav",
+        "regular-ambiance": "Regular Ambience.wav",
+        "rain-ambiance": "Rain Ambience.wav",
+        "fair_weather": "Difficulty 1 Fair Weather.wav",
+        "acid_rain": "Difficulty 3 Acid Rain.wav",
+        "radioactive_snow": "Difficulty 4 Radioactive Snow.wav"
     },
     "music_volume": 0.5,
     "categories": {
         "effects": {
             "sounds": {
-                "button-click": "UI_Click_Snappy_mono.wav"                
+                "button-click": "UI_Click_Snappy_mono.wav" ,
+                "building-placed": "Building Place.wav",  
+                "building-plop": "Building Plop.wav",      
+                "damage-tick": "Damage Tick.wav",    
+                "dig-sound": "Dig Sound.wav",
+                "drop-duplicate": "Dropped into Duplicate Window.wav",
+                "duplicate": "Duplicate.wav",
+                "end-of-day": "End of Day.wav",
+                "gold-gain": "Gold Gain.wav",
+                "pick-up": "Pick Up.wav",
+                "shop-buy": "Shop Buy.wav"
             },
             "volume": 0.3
         },

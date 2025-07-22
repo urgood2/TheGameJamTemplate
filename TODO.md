@@ -7,8 +7,12 @@ local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 
 ```
 
 ## New features
-- [ ] try here to reduce wasm file size? https://www.reddit.com/r/godot/comments/8b67lb/guide_how_to_compress_wasmpck_file_to_make_html5/
-
+- [ ] change image color on hover
+- [ ] screen shake (jiggle)
+- [ ] how do draw animated dashed lines?
+- [ ] color-coded tooltips which can be updated on the fly to reflect info-how?
+- [ ] dynamic text notifications which can fade, and also contain images.
+- [ ] tilemap + test physics integration + above mentioned upgrades.
 
 - [ ] prob add docs for entity_gamestate_management
 - [ ] document using shaders with ui elements (just use pipeline comp)

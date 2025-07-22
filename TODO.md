@@ -13,6 +13,7 @@ local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 
 - [ ] color-coded tooltips which can be updated on the fly to reflect info-how?
 - [ ] dynamic text notifications which can fade, and also contain images.
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree
+- [ ] scrolling panes in ui boxes?
 
 - [ ] prob add docs for entity_gamestate_management
 - [ ] document using shaders with ui elements (just use pipeline comp)

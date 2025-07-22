@@ -1149,6 +1149,9 @@
             <key type="filename">pre-packing-files_globbed/4181-TheRoguelike_1_10_alpha_974.png</key>
             <key type="filename">pre-packing-files_globbed/4182-TheRoguelike_1_10_alpha_975.png</key>
             <key type="filename">pre-packing-files_globbed/4183-TheRoguelike_1_10_alpha_976.png</key>
+            <key type="filename">pre-packing-files_globbed/jamegam51/Defended2.png</key>
+            <key type="filename">pre-packing-files_globbed/jamegam51/Defended3.png</key>
+            <key type="filename">pre-packing-files_globbed/jamegam51/Defended4.png</key>
             <key type="filename">rounded_rect_small.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -1216,6 +1219,28 @@
                 <rect>13,13,25,25</rect>
                 <key>scale9Paddings</key>
                 <rect>13,13,25,25</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</key>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
+            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
+            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
+            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
+            <key type="filename">rounded_rect_very_small.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,4,8,8</rect>
+                <key>scale9Paddings</key>
+                <rect>4,4,8,8</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -1701,26 +1726,6 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-2.png</key>
-            <key type="filename">pre-packing-files_globbed/blue-whale-with-krill/krill-3.png</key>
-            <key type="filename">pre-packing-files_globbed/shader_textures/tile-grid-boundary.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Bsky.png</key>
-            <key type="filename">pre-packing-files_globbed/socials/Socials 16x16_Discord.png</key>
-            <key type="filename">rounded_rect_very_small.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9Paddings</key>
-                <rect>4,4,8,8</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
             <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-000.png</key>
             <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-001.png</key>
             <key type="filename">pre-packing-files_globbed/fantasy_ui_border/Double/Border/panel-border-002.png</key>
@@ -1947,6 +1952,36 @@
                 <rect>25,25,50,50</rect>
                 <key>scale9Paddings</key>
                 <rect>25,25,50,50</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/jamegam51/Rainman2.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>8,11,17,22</rect>
+                <key>scale9Paddings</key>
+                <rect>8,11,17,22</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">pre-packing-files_globbed/jamegam51/logo.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>32,16,64,32</rect>
+                <key>scale9Paddings</key>
+                <rect>32,16,64,32</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -3690,6 +3725,13 @@
                     <filename>../../../../../Downloads/musicnote5.png</filename>
                     <filename>../../../../../Downloads/title3.png</filename>
                     <filename>../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</filename>
+                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0537.png</filename>
+                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Input Prompts Pixel 16×/Tiles/tile_0538.png</filename>
+                    <filename>pre-packing-files_globbed/jamegam51/Defended2.png</filename>
+                    <filename>pre-packing-files_globbed/jamegam51/Defended3.png</filename>
+                    <filename>pre-packing-files_globbed/jamegam51/Defended4.png</filename>
+                    <filename>pre-packing-files_globbed/jamegam51/Rainman2.png</filename>
+                    <filename>pre-packing-files_globbed/jamegam51/logo.png</filename>
                 </array>
             </struct>
         </map>

@@ -417,6 +417,23 @@ function setBlackboardFloat(...) end
 function getBlackboardFloat(...) end
 
 ---
+--- Sets a Vector2 value on an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@param value Vector2
+---@return nil
+function setBlackboardVector2(...) end
+
+---
+--- Gets a Vector2 value from an entity's blackboard.
+---
+---@param entity Entity
+---@param key string
+---@return Vector2
+function getBlackboardVector2(...) end
+
+---
 --- Sets a boolean value on an entity's blackboard.
 ---
 ---@param entity Entity
@@ -432,6 +449,14 @@ function setBlackboardBool(...) end
 ---@param key string
 ---@return boolean
 function getBlackboardBool(...) end
+
+---
+--- Checks if the blackboard contains a specific key.
+---
+---@param entity Entity
+---@param key string
+---@return boolean
+function blackboardContains(...) end
 
 ---
 --- Sets an integer value on an entity's blackboard.
@@ -705,6 +730,18 @@ ai = {
 }
 
 ---
+--- This is useful for debugging or when you want to temporarily halt AI processing.
+---
+Pauses the AI system, preventing any updates or actions from being processed.
+function ai:pause_ai_system(...) end
+
+---
+--- This allows the AI system to continue processing updates and actions.
+---
+Resumes the AI system after it has been paused.
+function ai:resume_ai_system(...) end
+
+---
 --- Returns the mutable AI-definition table for the given entity.
 ---
 ---@param e Entity
@@ -719,6 +756,14 @@ function ai:get_entity_ai_def(...) end
 ---@param value boolean
 ---@return nil
 function ai:set_worldstate(...) end
+
+---
+--- Retrieves the value of a single world-state flag from the entity’s current state; returns nil if the flag is not set or is marked as 'don't care'.
+---
+---@param e Entity
+---@param key string
+---@return boolean|nil
+function ai:get_worldstate(...) end
 
 ---
 --- Clears existing goal and assigns new goal flags for the entity.
@@ -2740,6 +2785,7 @@ InheritedProperties = {
     location_bond = nil, -- InheritedPropertiesSync|nil The sync bond for location.
     size_bond = nil, -- InheritedPropertiesSync|nil The sync bond for size.
     rotation_bond = nil, -- InheritedPropertiesSync|nil The sync bond for rotation.
+    extraAlignmentFinetuningOffset = nil, -- Vector2 An additional fine-tuning offset for alignment.
     scale_bond = nil, -- InheritedPropertiesSync|nil The sync bond for scale.
     flags = nil, -- Alignment|nil Alignment flags and data.
 }
@@ -3906,6 +3952,13 @@ function UIElementTemplateNodeBuilder:addConfig(...) end
 function UIElementTemplateNodeBuilder:addChild(...) end
 
 ---
+--- Adds multiple child template nodes from a Lua table.
+---
+---@param children table<integer, UIElementTemplateNode>
+---@return self
+function UIElementTemplateNodeBuilder:addChildren(...) end
+
+---
 --- Builds the final template node.
 ---
 ---@return UIElementTemplateNode
@@ -4276,6 +4329,12 @@ HIDFlags = {
 }
 
 ---
+--- Creates a new transform entity with default parameters.
+---
+---@return Entity
+function .create_transform_entity(...) end
+
+---
 --- Adds a fullscreen shader to the game.
 ---
 ---@param shaderName string
@@ -4469,6 +4528,14 @@ function animation_system.update(...) end
 ---@return NPatchInfo info # Border slicing information
 ---@return Texture2D texture # Associated texture
 function animation_system.getNinepatchUIBorderInfo(...) end
+
+---
+--- Sets the foreground color for all animation objects in an entity
+---
+---@param e entt.entity # Target entity
+---@param fgColor Color # Foreground color to set
+Sets the foreground color for all animation objects in an entity
+function animation_system.setFGColorForAllAnimationObjects(...) end
 
 ---
 --- Creates an animated object with a transform
@@ -5213,46 +5280,6 @@ function layer.queueRenderNPatchRect(...) end
 function layer.queueDrawTriangle(...) end
 
 ---
---- Assigns the given entity the current top Z-index and increments the counter.
----
----@param registry registry
----@param e Entity
----@param incrementIndexAfterwards boolean Defaults to true
----@return nil
-function layer.layer_order_system.setToTopZIndex(...) end
-
----
---- Ensures entity a’s zIndex is at least one above b’s.
----
----@param registry registry
----@param a Entity The entity to move above b
----@param b Entity The reference entity
----@return nil
-function layer.layer_order_system.putAOverB(...) end
-
----
---- Walks all UIBoxComponents without a LayerOrderComponent and pushes them to the top Z-stack.
----
----@param registry registry
----@return nil
-function layer.layer_order_system.updateLayerZIndexesAsNecessary(...) end
-
----
---- Resets the global Z-index counter back to zero.
----
----@return nil
-function layer.layer_order_system.resetRunningZIndex(...) end
-
----
---- Force-sets an entity’s zIndex to the given value.
----
----@param registry registry
----@param e Entity
----@param zIndex number The exact zIndex to assign
----@return nil
-function layer.layer_order_system.assignZIndexToEntity(...) end
-
----
 --- Removes a post-process shader from the layer by name.
 ---
 ---@param layer Layer # Target layer
@@ -5275,6 +5302,46 @@ function layer.Layer.addPostProcessShader(...) end
 ---@param layer Layer # Target layer
         ---@return void
 function layer.Layer.clearPostProcessShaders(...) end
+
+---
+--- Assigns the given entity the current top Z-index and increments the counter.
+---
+---@param registry registry
+---@param e Entity
+---@param incrementIndexAfterwards boolean Defaults to true
+---@return nil
+function layer_order_system.setToTopZIndex(...) end
+
+---
+--- Ensures entity a’s zIndex is at least one above b’s.
+---
+---@param registry registry
+---@param a Entity The entity to move above b
+---@param b Entity The reference entity
+---@return nil
+function layer_order_system.putAOverB(...) end
+
+---
+--- Walks all UIBoxComponents without a LayerOrderComponent and pushes them to the top Z-stack.
+---
+---@param registry registry
+---@return nil
+function layer_order_system.updateLayerZIndexesAsNecessary(...) end
+
+---
+--- Resets the global Z-index counter back to zero.
+---
+---@return nil
+function layer_order_system.resetRunningZIndex(...) end
+
+---
+--- Force-sets an entity’s zIndex to the given value.
+---
+---@param registry registry
+---@param e Entity
+---@param zIndex number The exact zIndex to assign
+---@return nil
+function layer_order_system.assignZIndexToEntity(...) end
 
 ---
 --- Loads a language file for the given language code from a specific path.
@@ -6365,6 +6432,16 @@ function ui.box.TreeCalcSubNonContainer(...) end
 ---@param self Entity
 ---@return nil
 function ui.box.RenewAlignment(...) end
+
+---
+--- Adds a template definition to a UI box.
+---
+---@param registry registry
+---@param uiBoxEntity Entity
+---@param templateDef UIElementTemplateNode
+---@param maybeParent Entity|nil
+---@return nil
+function ui.box.AddTemplateToUIBox(...) end
 
 ---
 --- Calculates the size for a container sub-element.

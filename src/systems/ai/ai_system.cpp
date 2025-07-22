@@ -32,6 +32,8 @@
 
 namespace ai_system
 {
+    bool ai_system_paused = false; // global flag to pause the AI system, from lua
+    
     sol::state masterStateLua; // stores all scripts in one state
 
     std::map<std::string, std::map<std::string, bool>> allPostconditionsForEveryAction; // Contains all post-conditions for every action
@@ -172,27 +174,33 @@ namespace ai_system
      * This function resets the action planner's atoms, actions, and world states,
      * and frees any dynamically allocated memory. Must be called before exiting the program.
      */
-    void goap_actionplanner_clear_memory(actionplanner_t *ap)
-    {
-        // Free atom names
-        for (int i = 0; i < ap->numatoms; ++i)
-        {
-            free(&(ap->atm_names[i])); // Free the memory allocated for each atom name
-            ap->atm_names[i] = NULL;   // Reset pointer to null after freeing
-        }
-        ap->numatoms = 0; // Reset the number of atoms
-
-        // Free action names
-        for (int i = 0; i < ap->numactions; ++i)
-        {
-            free(&(ap->act_names[i]));              // Free the memory allocated for each action name
-            ap->act_names[i] = NULL;                // Reset pointer to null after freeing
-            ap->act_costs[i] = 0;                   // Reset all action costs
-            goap_worldstate_clear(ap->act_pre + i); // Clear preconditions for the action
-            goap_worldstate_clear(ap->act_pst + i); // Clear postconditions for the action
-        }
-        ap->numactions = 0; // Reset the number of actions
-    }
+     void goap_actionplanner_clear_memory(actionplanner_t *ap)
+     {
+         // 1) Free all atom‐name strings
+         for (int i = 0; i < ap->numatoms; ++i)
+         {
+             if (ap->atm_names[i] != nullptr)
+             {
+                 free(ap->atm_names[i]);          // ✅ free the allocated char*
+                 ap->atm_names[i] = nullptr;
+             }
+         }
+         ap->numatoms = 0;
+     
+         // 2) Free all action‐name strings and clear their world‐states
+         for (int i = 0; i < ap->numactions; ++i)
+         {
+             if (ap->act_names[i] != nullptr)
+             {
+                 free(ap->act_names[i]);          // ✅ free the allocated char*
+                 ap->act_names[i] = nullptr;
+             }
+             ap->act_costs[i] = 0;
+             goap_worldstate_clear(&ap->act_pre[i]);
+             goap_worldstate_clear(&ap->act_pst[i]);
+         }
+         ap->numactions = 0;
+     }
 
     /**
      * Retrieves the value of a specific atom from the given world state.
@@ -511,6 +519,7 @@ namespace ai_system
                                  goap.current_state,
                                  goap.goal);
         goap.type = type;
+        runBlackboardInitFunction(entity, type); // Initialize the blackboard for this entity type
         select_goal(entity);
     }
 
@@ -858,7 +867,7 @@ namespace ai_system
                 const std::string post_key = postCondition.first;
                 const bool post_value = postCondition.second;
                 goap_worldstate_set(&goapComponent.ap, &goapComponent.current_state, post_key.c_str(), post_value);
-                // SPDLOG_DEBUG("Automatically setting postcondition {} to {}", post_key, post_value);
+                SPDLOG_DEBUG("Automatically setting postcondition {} to {}", post_key, post_value);
             }
 
             // Move to the next action
@@ -925,6 +934,11 @@ namespace ai_system
 
     void bind_ai_utilities(sol::state &lua)
     {
+        auto &rec = BindingRecorder::instance();
+
+        // 1) InputState usertype
+        rec.add_type("ai");
+
 
         // 1) Create (or overwrite) the `ai` table:
         lua.create_named_table("ai"); // equivalent to lua["ai"] = {}
@@ -938,13 +952,54 @@ namespace ai_system
             return cmp.def;
         }
         );
-
-
+        
+        ai.set_function(
+            "pause_ai_system",
+            []() {
+                ai_system_paused = true;
+                SPDLOG_DEBUG("AI system paused.");
+            });
+            
+        rec.record_method("ai", {
+            "pause_ai_system",
+            "Pauses the AI system, preventing any updates or actions from being processed.",
+            "This is useful for debugging or when you want to temporarily halt AI processing."
+        });
+        ai.set_function(
+            "resume_ai_system",
+            []() {
+                ai_system_paused = false;
+                SPDLOG_DEBUG("AI system resumed.");
+            });
+        rec.record_method("ai", {
+            "resume_ai_system",
+            "Resumes the AI system after it has been paused.",
+            "This allows the AI system to continue processing updates and actions."
+        });
         // 2) Move each binding into ai:
         ai.set_function("set_worldstate", [](entt::entity e, std::string key, bool value)
                         {
             auto& goap = globals::registry.get<GOAPComponent>(e);
             goap_worldstate_set(&goap.ap, &goap.current_state, key.c_str(), value); });
+        
+        // 3. Expose a getter for a single world-state flag:
+        ai.set_function("get_worldstate",
+            // we need to capture lua state in order to return sol::nil on error
+            [&](sol::this_state L, entt::entity e, const std::string & key) -> sol::object {
+            auto &goap = globals::registry.get<GOAPComponent>(e);
+            bool value = false;
+            bool ok = goap_worldstate_get(&goap.ap,
+                                            goap.current_state,
+                                            key.c_str(),
+                                            &value);
+            if (!ok) {
+                // atom not found or "dontcare" bit set → return nil
+                return sol::make_object(L, sol::lua_nil);
+            }
+            // otherwise return the boolean
+            return sol::make_object(L, value);
+            }
+        );
 
         ai.set_function("set_goal", [](entt::entity e, sol::table goal)
                         {
@@ -978,10 +1033,11 @@ namespace ai_system
                                      "set_int", &Blackboard::set<int>,
                                      "set_double", &Blackboard::set<double>,
                                      "set_string", &Blackboard::set<std::string>,
-
+                                     "set_float", &Blackboard::set<float>,
                                      "get_bool", &Blackboard::get<bool>,
                                      "get_int", &Blackboard::get<int>,
                                      "get_double", &Blackboard::get<double>,
+                                     "get_float", &Blackboard::get<float>,
                                      "get_string", &Blackboard::get<std::string>,
 
                                      "contains", &Blackboard::contains,
@@ -1048,11 +1104,7 @@ namespace ai_system
                             return result; // Sol2 → Lua table
                         });
 
-        auto &rec = BindingRecorder::instance();
-
-        // 1) InputState usertype
-        rec.add_type("ai");
-
+        
         // 2) Record it in your BindingRecorder:
         rec.record_method("ai", {
         "get_entity_ai_def",
@@ -1067,6 +1119,14 @@ namespace ai_system
                                  "---@param value boolean\n"
                                  "---@return nil",
                                  "Sets a single world-state flag on the entity’s current state."});
+                                 
+        rec.record_method("ai", {
+        "get_worldstate",
+        "---@param e Entity\n"
+        "---@param key string\n"
+        "---@return boolean|nil",
+        "Retrieves the value of a single world-state flag from the entity’s current state; returns nil if the flag is not set or is marked as 'don't care'."
+    });
 
         rec.record_method("ai", {"set_goal",
                                  "---@param e Entity\n"
@@ -1131,7 +1191,7 @@ namespace ai_system
         // Check if re-planning is necessary based on action failure or mismatch with expected state / plan is empty
         if (is_goap_info_valid == false && plan_is_running_valid == false)
         { // plan might be running one action, but plan can be empty otherwise
-            // SPDLOG_DEBUG("GOAP plan is empty, re-selecting goal...");
+            SPDLOG_DEBUG("GOAP plan is empty, re-selecting goal...");
             select_goal(entity);
         }
         // if plan is running, but the world state has changed since the plan was made, then replan
@@ -1139,23 +1199,31 @@ namespace ai_system
         {
             if (!goap_worldstate_match(&goapStruct.ap, goapStruct.current_state, goapStruct.cached_current_state))
             {
-                // SPDLOG_DEBUG("World state has changed, re-planning required...");
+                SPDLOG_DEBUG("World state has changed, re-planning required...");
                 // print current state
                 char desc[4096];
                 goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
-                // SPDLOG_DEBUG("Current world state: {}", desc);
+                SPDLOG_DEBUG("Current world state: {}", desc);
                 // compare to next state
                 goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
-                // SPDLOG_DEBUG("Cached current state: {}", desc);
+                SPDLOG_DEBUG("Cached current state: {}", desc);
                 select_goal(entity);
+                // replan(entity);
             }
         }
         // the plan is no longer valid (running actions encountered an error)
         else if (plan_is_running_valid == false)
         {
             // If the plan is not running, re-plan
-            // SPDLOG_DEBUG("Plan is not running properly, re-planning...");
+            // SPDLOG_DEBUG("Plan is not running properly for entity {}, replanning...", static_cast<int>(entity));
+            // char desc[4096];
+            // goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
+            // SPDLOG_DEBUG("Current world state: {}", desc);
+            // // compare to next state
+            // goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
+            // SPDLOG_DEBUG("Cached current state: {}", desc);
             select_goal(entity);
+            // replan(entity);
         }
 
         // update cached state
@@ -1281,20 +1349,40 @@ namespace ai_system
         // SPDLOG_INFO("Action planner description: {}", desc);
 
         // SPDLOG_INFO("plancost = {}", goapStruct.planCost);
-        // goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
-        // SPDLOG_INFO("{:<23}{}", "", desc);
-        // for (int i = 0; i < goapStruct.planSize && i < 16; ++i) {
-        //     goap_worldstate_description(&goapStruct.ap, &goapStruct.states[i], desc, sizeof(desc));
-        //     SPDLOG_INFO("{}: {:<20}{}", i, goapStruct.plan[i], desc);
-        // }
+        if (goapStruct.planCost == 0)
+        {
+            SPDLOG_ERROR("No plan found for entity {}. Current world state does not match goal.", static_cast<int>(entity));
+            // If no plan is found, we can try to reselect the goal or handle it
+        }
+        if (goapStruct.planCost > 0)
+        {
+            SPDLOG_INFO("PLAN FOUND: {} steps", goapStruct.planSize);
+        }
+        SPDLOG_DEBUG("Current world state:");
+        goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
+        SPDLOG_INFO("{:<23}{}", "", desc);
+        
+        char buf[512];
+        goap_worldstate_description(&goapStruct.ap, &goapStruct.goal, buf, sizeof(buf));
+        SPDLOG_DEBUG("Goal world state: {}", buf);
+        
+        if (goapStruct.planSize > 0)
+        {
+            SPDLOG_DEBUG("Plan steps:");
+        }
+        
+        for (int i = 0; i < goapStruct.planSize && i < 16; ++i) {
+            goap_worldstate_description(&goapStruct.ap, &goapStruct.states[i], desc, sizeof(desc));
+            SPDLOG_INFO("step {}: {:<20}{}", i, goapStruct.plan[i], desc);
+        }
 
         goapStruct.current_action = 0;
         goapStruct.retries = 0; // Reset retries after re-planning
         checkAndSetGOAPDirty(goapStruct, globals::MAX_ACTIONS);
         if (goapStruct.dirty == false)
         {
-            // clear and reinit the blackboard
-            runBlackboardInitFunction(entity, goapStruct.type); // FIXME: placeholder value, these should come from the entity type (file)
+            // // clear and reinit the blackboard
+            // runBlackboardInitFunction(entity, goapStruct.type); // FIXME: placeholder value, these should come from the entity type (file)
 
             fill_action_queue_based_on_plan(entity, goapStruct.plan, goapStruct.planSize);
 
@@ -1303,7 +1391,7 @@ namespace ai_system
         }
         else
         {
-            // SPDLOG_ERROR("Call to replan() produced no plan... There are no actions to take.");
+            SPDLOG_ERROR("Call to replan() produced no plan for entity {}.", static_cast<int>(entity));
 
             handle_no_plan(entity); // Call a function to handle this scenario
         }
@@ -1311,6 +1399,7 @@ namespace ai_system
 
     auto updateHumanAI(float deltaTime) -> void
     {
+        if (ai_system_paused) return;
 
         // add deltaTime to aiUpdateTickTotal
         aiUpdateTickTotal += deltaTime;

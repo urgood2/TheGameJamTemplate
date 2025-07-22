@@ -3,37 +3,34 @@
 
     "music": 
     {
-        "main-menu": "NyctoPhobia.ogg",
-        "main-game": "background.ogg",
-        "whale-song": "whale_melody.ogg"
+        "main-menu": "Main Menu Theme.wav",
+        "snow-ambiance": "Snow Ambience.wav",
+        "regular-ambiance": "Regular Ambience.wav",
+        "rain-ambiance": "Rain Ambience.wav",
+        "fair_weather": "Difficulty 1 Fair Weather.wav",
+        "acid_rain": "Difficulty 3 Acid Rain.wav",
+        "radioactive_snow": "Difficulty 4 Radioactive Snow.wav"
     },
     "music_volume": 0.5,
     "categories": {
         "effects": {
             "sounds": {
-                "black-hole-before": "SCIFI_Up_01_mono.wav",
-                "black-hole-after": "MAGIC_SPELL_Deep_Tone_Bubbling_Zaps_Subtle_stereo.wav",
-                "whale-click": "BUTTON_Deep_Smooth_Click_mono.wav",
-                "currency-click-1": "BUTTON_Light_Switch_01_stereo.wav",
-                "currency-click-2": "BUTTON_Light_Switch_02_stereo.wav",
-                "currency-click-3": "BUTTON_Light_Switch_03_stereo.wav",
-                "currency-click-4": "BUTTON_Light_Switch_04_stereo.wav",
-                "krill-spawn": "MAGIC_SPELL_Spawn_mono",
-                "new-unlock": "MAGIC_SPELL_Morphing_Synth_Harp_Scales_Subtle_stereo.wav",
-                "krill-hit": "WHOOSH_Air_Fast_Subtle_RR1_mono.wav",
-                "buy-building": "UI_Animate_Dirty_Whistle_Appear_stereo.wav",
-                "place-building": "UI_Animate_Dirty_Whistle_Disappear_stereo.wav",
-                "cannot-buy": "UI_Error_Orchestral_Brass_stereo.wav",
-                "button-click": "UI_Click_Snappy_mono.wav",
-                "item-drop": "UI_Click_Tap_Short_mono.wav",
-                "basic_dust_collector": "NOTIFICATION_Pop_01_mono.wav",
-                "MK2_dust_collector" : "NOTIFICATION_Pop_02_mono.wav",
-                "whale_song_gatherer": "NOTIFICATION_Pop_03_mono.wav",
-                "dust_to_crystal" : "NOTIFICATION_Pop_04_mono.wav",
-                "crystal_to_wafer" : "NOTIFICATION_Pop_05_mono.wav",
-                "wafer_to_chip" : "NOTIFICATION_Pop_06_mono.wav",
-                "new_achievement": "UI_Notification_Triple_Drops_01_stereo.wav"
-                
+                "button-click": "UI_Click_Snappy_mono.wav" ,
+                "building-placed": "Building Place.wav",  
+                "building-plop": "Building Plop.wav",      
+                "damage-tick": "Damage Tick.wav",    
+                "dig-sound": "Dig Sound.wav",
+                "drop-duplicate": "Dropped into Duplicate Window.wav",
+                "duplicate": "Duplicate.wav",
+                "end-of-day": "End of Day.wav",
+                "gold-gain": "Gold Gain.wav",
+                "pick-up": "Pick Up.wav",
+                "shop-buy": "Shop Buy.wav",
+                "cannot-buy": "NOTIFICATION_Subtle_07_mono.wav",
+                "heal": "MAGIC_SPELL_Spawn_mono.wav",
+                "money-to-cash-pile": "CASH_REGISTER_Cha-ching_04_mono.wav",
+                "dodge": "FABRIC_Movement_Fast_01_mono.wav",
+                "die": "MONSTER_Breath_01_mono.wav"
             },
             "volume": 0.3
         },

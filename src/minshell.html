@@ -1,17 +1,17 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-us">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    
+
     <title>raylib web game</title>
-    
+
     <meta name="title" content="raylib web game">
     <meta name="description" content="New raylib web videogame, developed using raylib videogames library">
     <meta name="keywords" content="raylib, games, html5, programming, C, C++, library, learn, videogames">
     <meta name="viewport" content="width=device-width">
-    
-    <!-- Open Graph metatags for sharing -->
+
+    <!-- Open Graph -->
     <meta property="og:title" content="raylib web game">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image" content="https://www.raylib.com/common/img/raylib_logo.png">
@@ -19,67 +19,131 @@
     <meta property="og:url" content="https://www.raylib.com/games.html">
     <meta property="og:description" content="New raylib web videogame, developed using raylib videogames library">
 
-    <!-- Twitter metatags for sharing -->
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@raysan5">
     <meta name="twitter:title" content="raylib web game">
     <meta name="twitter:image" content="https://www.raylib.com/common/raylib_logo.png">
     <meta name="twitter:url" content="https://www.raylib.com/games.html">
     <meta name="twitter:description" content="New raylib web game, developed using raylib videogames library">
-    
+
     <!-- Favicon -->
     <link rel="shortcut icon" href="https://www.raylib.com/favicon.ico">
-    
+
     <style>
-        body { 
-            margin: 0px;
+        body {
+            margin: 0;
+            background-color: black;
             text-align: center;
         }
-        canvas.emscripten { border: 0px none; background-color: black; }
-    </style>
-    <script type='text/javascript' src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js/dist/FileSaver.min.js"> </script>
-    <script type='text/javascript'>
-        function saveFileFromMEMFSToDisk(memoryFSname, localFSname)     // This can be called by C/C++ code
-        {
-            var isSafari = false; // Not supported, navigator.userAgent access is being restricted
-            //var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-            var data = FS.readFile(memoryFSname);
-            var blob;
 
-            if (isSafari) blob = new Blob([data.buffer], { type: "application/octet-stream" });
-            else blob = new Blob([data.buffer], { type: "application/octet-binary" });
-
-            // NOTE: SaveAsDialog is a browser setting. For example, in Google Chrome,
-            // in Settings/Advanced/Downloads section you have a setting:
-            // 'Ask where to save each file before downloading' - which you can set true/false.
-            // If you enable this setting it would always ask you and bring the SaveAsDialog
-            saveAs(blob, localFSname);
+        canvas.emscripten {
+            border: 0;
+            background-color: black;
         }
+
+        #splash {
+            position: absolute;
+            z-index: 1000;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #splash-image {
+            max-width: 80%;
+            max-height: 50%;
+            margin-bottom: 20px;
+        }
+
+        #progress-container {
+            width: 70%;
+            height: 16px;
+            background-color: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #ffffff;
+            transition: width 0.2s ease;
+        }
+
+        #progress-text {
+            color: white;
+            font-family: sans-serif;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash loading screen -->
+    <div id="splash">
+        <img id="splash-image" src="splash.png" alt="Loading..." />
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="progress-text">0%</div>
+    </div>
+
+    <!-- Canvas for the game -->
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+
+    <p id="output"></p>
+
+    <script>
+        var Module = {
+            preRun: [],
+            postRun: [
+                function () {
+                    // Hide splash screen after game is ready
+                    const splash = document.getElementById('splash');
+                    if (splash) splash.style.display = 'none';
+                }
+            ],
+            print: (function () {
+                var element = document.getElementById('output');
+                if (element) element.value = ''; // clear browser cache
+                return function (text) {
+                    if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                    console.log(text);
+                    if (element) {
+                        element.value += text + "\n";
+                        element.scrollTop = element.scrollHeight;
+                    }
+                };
+            })(),
+            canvas: (function () {
+                return document.getElementById('canvas');
+            })(),
+            setStatus: function (text) {
+                let match = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+                if (match) {
+                    var percent = Math.floor((parseFloat(match[2]) / parseFloat(match[4])) * 100);
+                    document.getElementById('progress-bar').style.width = percent + '%';
+                    document.getElementById('progress-text').textContent = percent + '%';
+                } else {
+                    document.getElementById('progress-text').textContent = text;
+                }
+            },
+            totalDependencies: 0,
+            monitorRunDependencies: function (left) {
+                this.totalDependencies = Math.max(this.totalDependencies, left);
+                Module.setStatus(left
+                    ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')'
+                    : 'All downloads complete.');
+            }
+        };
+        Module.setStatus('Downloading...');
     </script>
-    </head>
-    <body>
-        <canvas class=emscripten id=canvas oncontextmenu=event.preventDefault() tabindex=-1></canvas>
-        <p id="output" />
-        <script>
-            var Module = {
-                print: (function() {
-                    var element = document.getElementById('output');
-                    if (element) element.value = ''; // clear browser cache
-                    return function(text) {
-                        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                        console.log(text);
-                        if (element) {
-                          element.value += text + "\n";
-                          element.scrollTop = element.scrollHeight; // focus on bottom
-                        }
-                    };
-                })(),            
-                canvas: (function() {
-                    var canvas = document.getElementById('canvas');
-                    return canvas;
-                })()
-            };
-        </script>
-        {{{ SCRIPT }}}
-    </body>
+
+    {{{ SCRIPT }}}
+</body>
 </html>

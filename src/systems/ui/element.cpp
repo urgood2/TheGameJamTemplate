@@ -891,8 +891,8 @@ namespace ui
 
             if (!role || !node || !uiElement || !transform || !uiState || !uiConfig) continue;
 
-            SPDLOG_DEBUG("Applying scaling factor to entity {} with initial width: {}, height: {}, content dimensions: {}, scale: {}",
-                        static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
+            // SPDLOG_DEBUG("Applying scaling factor to entity {} with initial width: {}, height: {}, content dimensions: {}, scale: {}",
+            //             static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
 
             transform->setActualW(transform->getActualW() * scaling);
             transform->setActualH(transform->getActualH() * scaling);
@@ -906,8 +906,8 @@ namespace ui
                 UpdateUIObjectScalingAndRecnter(uiConfig, uiConfig->scale.value(), transform);
             }
 
-            SPDLOG_DEBUG("Applying scaling factor to entity {} resulted in width: {}, height: {}, content dimensions: {}, scale: {}",
-                        static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
+            // SPDLOG_DEBUG("Applying scaling factor to entity {} resulted in width: {}, height: {}, content dimensions: {}, scale: {}",
+            //             static_cast<int>(entity), transform->getActualW(), transform->getActualH(), uiState->contentDimensions->x, uiConfig->scale.value_or(1.0f));
         }
     }
 
@@ -973,8 +973,8 @@ namespace ui
             role->offset->x += x;
             role->offset->y += y;
 
-            SPDLOG_DEBUG("Applying alignment to entity {} with x: {}, y: {}, resulted in offset x: {}, y: {}. This entity has {} children.",
-                        static_cast<int>(entity), x, y, role->offset->x, role->offset->y, node->children.size());
+            // SPDLOG_DEBUG("Applying alignment to entity {} with x: {}, y: {}, resulted in offset x: {}, y: {}. This entity has {} children.",
+            //             static_cast<int>(entity), x, y, role->offset->x, role->offset->y, node->children.size());
         }
     }
  
@@ -1608,8 +1608,9 @@ namespace ui
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
-        else if (config->uiType == UITypeEnum::OBJECT && config->object)
+        else if (config->uiType == UITypeEnum::OBJECT && config->object && globals::registry.any_of<transform::GameObject>(config->object.value()))
         {
+            // ZoneScopedN("UI Element: Object Logic");
             //TODO: this part needs fixing
             // hightlighted object outline
             auto &objectNode = globals::registry.get<transform::GameObject>(config->object.value());
@@ -2315,6 +2316,13 @@ namespace ui
                 // no uiconfig entity. emplace one.
                 registry.emplace_or_replace<ui::UIConfig>(object);
             }
+            
+            // skip if transform is destroyed
+            if (!registry.valid(object) || !registry.any_of<transform::Transform>(object))
+            {
+                SPDLOG_ERROR("UI Element: UpdateObject: Object entity {} does not have a Transform component or is not valid.", static_cast<int>(object));
+                return;
+            }
 
             UpdateObject(registry, entity, &globalUIGroup.get<ui::UIConfig>(entity), 
                          &globalUIGroup.get<transform::GameObject>(entity), 
@@ -2524,7 +2532,7 @@ namespace ui
         AssertThat(node, Is().Not().EqualTo(nullptr));
         AssertThat(roomTransform, Is().Not().EqualTo(nullptr));
         
-        SPDLOG_DEBUG("ApplyHover(): Applying hover for entity: {}", static_cast<int>(entity));
+        // SPDLOG_DEBUG("ApplyHover(): Applying hover for entity: {}", static_cast<int>(entity));
 
         // Step 1: Handle On-Demand Tooltip
         if (uiConfig->onDemandTooltip)
@@ -2602,10 +2610,10 @@ namespace ui
 
         // TODO: question, should this call release on the corresponding node? Assuming so, since ui elements are also nodes and transforms.
         // TODO: other seems to be the object being dragged, if any.
-        if (node->methods.onRelease)
-        {
-            node->methods.onRelease(registry, entity, objectBeingDragged);
-        }
+        // if (node->methods.onRelease)
+        // {
+        //     node->methods.onRelease(registry, entity, objectBeingDragged);
+        // }
         
         if (uiElement && registry.valid(*node->parent))
         {

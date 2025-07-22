@@ -1,5 +1,627 @@
 
-function spawnCircularBurstParticles(x, y, count, seconds)
+-- meant to be called within a coroutine.
+-- returns false if entity should stop.
+function moveEntityTowardGoalOneIncrement(e, goalLoc, dt) 
+    -- get the current position of the entity
+    local transformComp = registry:get(e, Transform)
+    local absYDiff = math.abs(transformComp.actualY - goalLoc.y)
+    local absXDiff = math.abs(transformComp.actualX - goalLoc.x)
+    -- check if the entity is close enough to the target location
+    if absYDiff < globals.defaultColonistMoveSpeed and absXDiff < globals.defaultColonistMoveSpeed then
+        log_debug("Entity", e, "has reached the wander target at", goalLoc)
+        -- stop the walk timer
+        timer.cancel(e .. "_walk_timer")
+        transformComp.actualR = 0 -- reset the rotation to 0
+        return false -- exit the loop if the entity is close enough to the target location 
+    else 
+        -- move towards the target location
+        local direction = Vec2(goalLoc.x - transformComp.actualX, goalLoc.y - transformComp.actualY)
+        -- normalize the direction vector
+        local length = math.sqrt(direction.x * direction.x + direction.y * direction.y)
+        if length > 0 then
+            direction.x = direction.x / length
+            direction.y = direction.y / length
+        end
+        -- move the entity in the direction of the target location
+        transformComp.actualX = transformComp.actualX + direction.x * globals.defaultColonistMoveSpeed * dt -- speed is 100 units per second 
+        transformComp.actualY = transformComp.actualY + direction.y * globals.defaultColonistMoveSpeed * dt
+        log_debug("Entity", e, "is walking towards", goalLoc, "at position", Vec2(transformComp.actualX, transformComp.actualY))
+        -- yield to allow other actions to run
+        coroutine.yield()
+    end
+end
+
+function spawnGoldDigger(x, y)
+    -- 1) Spawn a new kobold AI entity
+    local colonist = create_ai_entity("gold_digger")
+        
+    globals.gold_diggers[#globals.gold_diggers+1] = colonist -- add to the global gold digger list
+
+    local sprite = findInTable(globals.creature_defs, "id", "gold_digger").spriteID -- get the sprite ID for the damage cushion from the creature_defs table
+
+    -- 2) Set up its animation & sizing
+    animation_system.setupAnimatedObjectOnEntity(
+        colonist,
+        sprite,
+        true,
+        nil,
+        true
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        colonist,
+        64,
+        64
+    )
+    
+    -- set the blackboard values for the gold digger
+    setBlackboardFloat(colonist, "health", findInTable(globals.creature_defs, "id", "gold_digger").initial_hp) -- set the initial health of the gold digger
+    setBlackboardFloat(colonist, "max_health", findInTable(globals.creature_defs, "id", "gold_digger").initial_hp) -- set the max health of the gold digger
+    
+    local nodeComp = registry:get(colonist, GameObject)
+    local gameObjectState = nodeComp.state
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true
+    gameObjectState.dragEnabled = true -- allow dragging the colonist
+    nodeComp.methods.onHover = function()
+        -- log_debug("krill hovered!")
+        showTooltip(
+            localization.get("ui.gold_digger_tooltip_title"), 
+        localization.get("ui.gold_digger_tooltip_body") -- tooltip body text
+        )
+    end
+    
+    local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
+
+    shaderPipelineComp:addPass("random_displacement_anim")
+    
+    -- 3) Randomize its start position, unless x and y are provided
+    if (x and y) then
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = x
+        tr.actualY = y
+    else
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
+        tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+    end
+    
+    globals.ui.colonist_ui[colonist] = {
+        id = colonist, -- the entity ID of the colonist
+        hp_ui_text = nil -- will be set later
+    }
+    
+    local textDef =  ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") }) end,  -- initial text
+        20.0,                                 -- font size
+        ""                       -- animation spec
+    )
+
+    local rootDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        
+    :addChild(textDef)
+    :build()
+
+        
+    
+    globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
+    
+    -- put in a uibox
+    globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
+    
+    -- update hp text every 0.5 seconds
+    timer.every(
+        0.5, -- every 0.5 seconds
+        function()
+            if (registry:valid(colonist) == true and colonist ~= entt_null) then
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
+                
+                TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
+            end
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "colonist_hp_text_update_" .. colonist -- unique tag per colonist
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        4 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+        4 -- make sure it is below show window
+    )
+    -- anchor to the top center of the colonist 
+    transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak
+        -- Vec2(0, -50) -- offset it a bit upwards
+    );
+    
+    -- set the alignment flag for the uibox to be centered above the colonist
+    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
+
+    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+
+    log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
+    
+    -- timer.every(
+    --     0.1, -- every 0.1 seconds
+    --     function()
+    --         -- print the location of the text entity every frame
+    --         -- log_debug("colonist", colonist, "ui text entity:", globals.ui.colonist_ui[colonist].hp_ui_text)
+    --         local transform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
+    --         log_debug("colonist", colonist, "ui text entity", globals.ui.colonist_ui[colonist].hp_ui_text, " location:", transform.actualX, transform.actualY)
+
+    --         -- print the root entity location as well
+    --         local rootTransform = registry:get(uiRoot, Transform)
+    --         log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
+
+    --         -- print the uibox location
+    --         local uiboxTransform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
+    --         log_debug("colonist", colonist, "uibox entity", globals.ui.colonist_ui[colonist].hp_ui_box, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
+
+    --         log_debug(ui.box.DebugPrint(registry, globals.ui.colonist_ui[colonist].hp_ui_box, 4)) -- print the uibox debug info
+    --     end,
+    --     0, -- infinite repetitions
+    --     true, -- start immediately
+    --     nil, -- no "after" callback
+    --     "colonist_ui_update_" .. colonist -- unique tag per colonist
+    -- )
+    
+end
+
+function spawnHealer(x, y)
+    -- 1) Spawn a new kobold AI entity
+    local colonist = create_ai_entity("healer")
+        
+    globals.healers[#globals.healers+1] = colonist -- add to the global healer list
+
+    local sprite = findInTable(globals.creature_defs, "id", "healer").spriteID -- get the sprite ID for the damage cushion from the creature_defs table
+
+    -- 2) Set up its animation & sizing
+    animation_system.setupAnimatedObjectOnEntity(
+        colonist,
+        sprite,
+        true,
+        nil,
+        true
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        colonist,
+        64,
+        64
+    )
+    
+    -- set the blackboard values for the gold digger
+    setBlackboardFloat(colonist, "health", findInTable(globals.creature_defs, "id", "healer").initial_hp) -- set the initial health of the gold digger
+    setBlackboardFloat(colonist, "max_health", findInTable(globals.creature_defs, "id", "healer").initial_hp) -- set the max health of the gold digger
+    
+    local nodeComp = registry:get(colonist, GameObject)
+    local gameObjectState = nodeComp.state
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true
+    gameObjectState.dragEnabled = true -- allow dragging the colonist
+    nodeComp.methods.onHover = function()
+        -- log_debug("krill hovered!")
+        showTooltip(
+            localization.get("ui.healer_tooltip_title"), 
+        localization.get("ui.healer_tooltip_body") -- tooltip body text
+        )
+    end
+    
+    local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
+
+    shaderPipelineComp:addPass("random_displacement_anim")
+    
+    -- 3) Randomize its start position, unless x and y are provided
+    if (x and y) then
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = x
+        tr.actualY = y
+    else
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
+        tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+    end
+    
+    globals.ui.colonist_ui[colonist] = {
+        id = colonist, -- the entity ID of the colonist
+        hp_ui_text = nil -- will be set later
+    }
+    
+    local textDef =  ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") }) end,  -- initial text
+        20.0,                                 -- font size
+        ""                       -- animation spec
+    )
+
+    local rootDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        
+    :addChild(textDef)
+    :build()
+
+        
+    
+    globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
+    
+    -- put in a uibox
+    globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
+    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        4 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+        4 -- make sure it is below show window
+    )
+    
+    -- update hp text every 0.5 seconds
+    timer.every(
+        0.5, -- every 0.5 seconds
+        function()
+            if (registry:valid(colonist) == true and colonist ~= entt_null) then
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
+                
+                TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
+            end
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "colonist_hp_text_update_" .. colonist -- unique tag per colonist
+    )
+    
+    -- anchor to the top center of the colonist 
+    transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak
+        -- Vec2(0, -50) -- offset it a bit upwards
+    );
+    
+    -- set the alignment flag for the uibox to be centered above the colonist
+    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
+
+    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+
+    log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
+    
+    
+end
+
+function spawnDamageCushion(x, y)
+    -- 1) Spawn a new kobold AI entity
+    local colonist = create_ai_entity("kobold")
+        
+    globals.damage_cushions[#globals.damage_cushions+1] = colonist -- add to the global damage cushion list
+
+    local sprite = findInTable(globals.creature_defs, "id", "damage_cushion").spriteID -- get the sprite ID for the damage cushion from the creature_defs table
+
+    -- 2) Set up its animation & sizing
+    animation_system.setupAnimatedObjectOnEntity(
+        colonist,
+        sprite,
+        true,
+        nil,
+        true
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        colonist,
+        64,
+        64
+    )
+    
+    -- set the blackboard values for the gold digger
+    setBlackboardFloat(colonist, "health", findInTable(globals.creature_defs, "id", "damage_cushion").initial_hp) -- set the initial health of the gold digger
+    setBlackboardFloat(colonist, "max_health", findInTable(globals.creature_defs, "id", "damage_cushion").initial_hp) -- set the max health of the gold digger
+    
+    local nodeComp = registry:get(colonist, GameObject)
+    local gameObjectState = nodeComp.state
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true
+    gameObjectState.dragEnabled = true -- allow dragging the colonist
+    nodeComp.methods.onHover = function()
+        -- log_debug("krill hovered!")
+        showTooltip(
+            localization.get("ui.damage_cushion_tooltip_title"), 
+        localization.get("ui.damage_cushion_tooltip_body") -- tooltip body text
+        )
+    end
+    
+    local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
+
+    shaderPipelineComp:addPass("random_displacement_anim")
+    
+    -- 3) Randomize its start position, unless x and y are provided
+    if (x and y) then
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = x
+        tr.actualY = y
+    else
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
+        tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+    end
+    
+    globals.ui.colonist_ui[colonist] = {
+        id = colonist, -- the entity ID of the colonist
+        hp_ui_text = nil -- will be set later
+    }
+    
+    local textDef =  ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") }) end,  -- initial text
+        20.0,                                 -- font size
+        ""                       -- animation spec
+    )
+
+    local rootDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        
+    :addChild(textDef)
+    :build()
+
+        
+    
+    globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
+    
+    -- put in a uibox
+    globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
+    
+    -- update hp text every 0.5 seconds
+    timer.every(
+        0.5, -- every 0.5 seconds
+        function()
+            if (registry:valid(colonist) == true and colonist ~= entt_null) then
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
+                
+                TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
+            end
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "colonist_hp_text_update_" .. colonist -- unique tag per colonist
+    )
+    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        4 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+         4 -- make sure it is below show window
+    )
+    
+    -- anchor to the top center of the colonist 
+    transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak
+        -- Vec2(0, -50) -- offset it a bit upwards
+    );
+    
+    -- set the alignment flag for the uibox to be centered above the colonist
+    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
+
+    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+
+    log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
+    
+    
+end
+
+function spawnNewColonist(x, y)
+    -- 1) Spawn a new kobold AI entity
+    local colonist = create_ai_entity("kobold")
+        
+    globals.colonists[#globals.colonists+1] = colonist -- add to the global krill list
+
+    -- local sprite = random_utils.random_element_string({
+    --     "3916-TheRoguelike_1_10_alpha_709.png",
+    --     "3915-TheRoguelike_1_10_alpha_708.png",
+    --     "3914-TheRoguelike_1_10_alpha_707.png",
+    --     "3913-TheRoguelike_1_10_alpha_706.png"
+    -- })
+    
+    -- Rainman2.png Defended2.png Defended3.png Defended4.png
+    local sprite = random_utils.random_element_string({
+        "Rainman2.png",
+        "Defended2.png",
+        "Defended3.png",
+        "Defended4.png"
+    })
+
+    -- 2) Set up its animation & sizing
+    animation_system.setupAnimatedObjectOnEntity(
+        colonist,
+        sprite,
+        true,
+        nil,
+        true
+    )
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        colonist,
+        64,
+        64
+    )
+    
+    local nodeComp = registry:get(colonist, GameObject)
+    local gameObjectState = nodeComp.state
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true
+    gameObjectState.dragEnabled = true -- allow dragging the colonist
+    nodeComp.methods.onHover = function()
+        -- log_debug("krill hovered!")
+        showTooltip(
+            localization.get("ui.colonist_tooltip_title"), 
+        localization.get("ui.colonist_tooltip_body")
+        )
+    end
+    
+    nodeComp.methods.onRelease = function(registry, releasedOn, released)
+        log_debug("colonist", released, "released on", releasedOn)
+    end
+    
+    local shaderPipelineComp = registry:emplace(colonist, shader_pipeline.ShaderPipelineComponent)
+
+    shaderPipelineComp:addPass("random_displacement_anim")
+    
+    -- 3) Randomize its start position, unless x and y are provided
+    if (x and y) then
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = x
+        tr.actualY = y
+    else
+        local tr = registry:get(colonist, Transform)
+        tr.actualX = random_utils.random_int(200, globals.screenWidth() - 200)
+        tr.actualY = random_utils.random_int(200, globals.screenHeight() - 200)
+    end
+    
+    globals.ui.colonist_ui[colonist] = {
+        id = colonist, -- the entity ID of the colonist
+        hp_ui_text = nil -- will be set later
+    }
+    
+    local textDef =  ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.colonistHPText", { hp = getBlackboardFloat(colonist, "health"), maxHp = getBlackboardFloat(colonist, "max_health") }) end,  -- initial text
+        25.0,                                 -- font size
+        ""                       -- animation spec
+    )
+
+    local rootDef = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.ROOT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("blank"))
+                :addAlign(AlignmentFlag.HORIZONTAL_LEFT | AlignmentFlag.VERTICAL_TOP)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        
+    :addChild(textDef)
+    :build()
+
+        
+    
+    globals.ui.colonist_ui[colonist].hp_ui_text =textDef.config.object -- the text entity for the colonist's HP UI
+    
+    -- put in a uibox
+    globals.ui.colonist_ui[colonist].hp_ui_box = ui.box.Initialize({}, rootDef   )
+    
+    layer_order_system.assignZIndexToEntity(
+        colonist, 
+        4 -- make sure it is below show window
+    )
+    
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_box, 
+        4 -- make sure it is below show window
+    )
+    layer_order_system.assignZIndexToEntity(
+        globals.ui.colonist_ui[colonist].hp_ui_text, 
+        4 -- make sure it is below show window
+    )
+    
+    -- update hp text every 0.5 seconds
+    timer.every(
+        0.5, -- every 0.5 seconds
+        function()
+            if (registry:valid(colonist) == true and colonist ~= entt_null) then
+                text = localization.get("ui.colonistHPText", { hp = math.floor(getBlackboardFloat(colonist, "health")), maxHp = getBlackboardFloat(colonist, "max_health") })
+                
+                TextSystem.Functions.setText(globals.ui.colonist_ui[colonist].hp_ui_text, text)
+            end
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "colonist_hp_text_update_" .. colonist -- unique tag per colonist
+    )
+    
+    -- anchor to the top center of the colonist 
+    transform.AssignRole(registry, globals.ui.colonist_ui[colonist].hp_ui_box, InheritedPropertiesType.PermanentAttachment, colonist,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak
+        -- Vec2(0, -50) -- offset it a bit upwards
+    );
+    
+    -- set the alignment flag for the uibox to be centered above the colonist
+    local roleComp = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, InheritedProperties)
+    roleComp.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_BOTTOM
+
+    local uiRoot = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, UIBoxComponent).uiRoot
+
+    log_debug("uibox", globals.ui.colonist_ui[colonist].hp_ui_box, "created for colonist", colonist, "uiroot is", uiRoot)
+    
+    -- timer.every(
+    --     0.1, -- every 0.1 seconds
+    --     function()
+    --         -- print the location of the text entity every frame
+    --         -- log_debug("colonist", colonist, "ui text entity:", globals.ui.colonist_ui[colonist].hp_ui_text)
+    --         local transform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_text, Transform)
+    --         log_debug("colonist", colonist, "ui text entity", globals.ui.colonist_ui[colonist].hp_ui_text, " location:", transform.actualX, transform.actualY)
+
+    --         -- print the root entity location as well
+    --         local rootTransform = registry:get(uiRoot, Transform)
+    --         log_debug("colonist", colonist, "ui root entity", uiRoot, "location:", rootTransform.actualX, rootTransform.actualY)
+
+    --         -- print the uibox location
+    --         local uiboxTransform = registry:get(globals.ui.colonist_ui[colonist].hp_ui_box, Transform)
+    --         log_debug("colonist", colonist, "uibox entity", globals.ui.colonist_ui[colonist].hp_ui_box, "location:", uiboxTransform.actualX, uiboxTransform.actualY)
+
+    --         log_debug(ui.box.DebugPrint(registry, globals.ui.colonist_ui[colonist].hp_ui_box, 4)) -- print the uibox debug info
+    --     end,
+    --     0, -- infinite repetitions
+    --     true, -- start immediately
+    --     nil, -- no "after" callback
+    --     "colonist_ui_update_" .. colonist -- unique tag per colonist
+    -- )
+    
+end
+
+function spawnCircularBurstParticles(x, y, count, seconds, startColorParam, endColorParam)
     local initialSize   = 10             -- starting diameter of each circle
     local burstSpeed    = 200           -- pixels per second
     local growRate      = 20            -- how fast scale increases (same as your other function)
@@ -19,8 +641,8 @@ function spawnCircularBurstParticles(x, y, count, seconds)
                 velocity       = Vec2(vx, vy),
                 acceleration   = 0,      -- no gravity
                 lifespan       = seconds,
-                startColor     = util.getColor("WHITE"),
-                endColor       = util.getColor("WHITE"),
+                startColor     = startColorParam or util.getColor("WHITE"),
+                endColor       = endColorParam or util.getColor("WHITE"),
                 rotationSpeed  = rotationSpeed,
                 onUpdateCallback = function(comp, dt)
                 end,

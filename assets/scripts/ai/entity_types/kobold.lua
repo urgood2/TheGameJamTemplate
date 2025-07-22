@@ -2,7 +2,8 @@ return {
     initial = {
         hungry = true,
         enemyvisible = false,
-        has_food = true
+        resourceAvailable = false,
+        underAttack = false
     },
     goal = {
         hungry = false

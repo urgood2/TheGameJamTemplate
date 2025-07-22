@@ -27,6 +27,11 @@ namespace animation_system {
         sol::table anim = lua.create_named_table("animation_system");
         // Emit: local animation_system = {}
         rec.add_type("animation_system").doc = "Animation system functions";
+        
+        lua.new_usertype<AnimationQueueComponent>(
+            "AnimationQueueComponent", 
+            "noDraw", &AnimationQueueComponent::noDraw,
+            "type_id", []() { return entt::type_hash<AnimationQueueComponent>::value(); });
 
         // 2) Bind & record free functions under animation_system
 
@@ -45,6 +50,15 @@ namespace animation_system {
             "---@return NPatchInfo info # Border slicing information\n"
             "---@return Texture2D texture # Associated texture",
             "Returns nine-patch border info and texture"
+        );
+        
+        
+        rec.bind_function(lua, {"animation_system"}, "setFGColorForAllAnimationObjects",
+            &animation_system::setFGColorForAllAnimationObjects,
+            "---@param e entt.entity # Target entity\n"
+            "---@param fgColor Color # Foreground color to set\n"
+            "Sets the foreground color for all animation objects in an entity",
+            "Sets the foreground color for all animation objects in an entity"
         );
 
         // createAnimatedObjectWithTransform(defaultAnimationIDOrSpriteUUID: string, generateNewAnimFromSprite?: boolean, x?: number, y?: number, shaderPassConfigFunc?: fun(entt.entity), shadowEnabled?: boolean) -> entt.entity
@@ -309,7 +323,7 @@ namespace animation_system {
         auto &transform = registry.get<transform::Transform>(e);
 
         // 1) attach animation queue
-        auto &animQueue = registry.emplace<AnimationQueueComponent>(e);
+        auto &animQueue = registry.emplace_or_replace<AnimationQueueComponent>(e);
 
         if (generateNewAnimFromSprite) {
             animQueue.defaultAnimation =
@@ -362,6 +376,22 @@ namespace animation_system {
         }
         if (!animQueue.defaultAnimation.animationList.empty()) {
             animQueue.defaultAnimation.intrinsincRenderScale = scale;
+        }
+    }
+    
+    auto setFGColorForAllAnimationObjects(entt::entity e, Color fgColor) -> void {
+        auto &animQueue = globals::registry.get<AnimationQueueComponent>(e);
+        
+        // set the foreground color for all animation objects
+        for (auto &animObject : animQueue.animationQueue) {
+            for (auto &frame : animObject.animationList) {
+                frame.first.fgColor = fgColor;
+            }
+        }
+        
+        // also set the default animation's frames
+        for (auto &frame : animQueue.defaultAnimation.animationList) {
+            frame.first.fgColor = fgColor;
         }
     }
     
@@ -502,6 +532,9 @@ namespace animation_system {
                 continue;
             }
             else if (ac.animationQueue.empty()) {
+                if (ac.defaultAnimation.animationList.empty()) {
+                    continue; // nothing to update
+                }
                 ac.defaultAnimation.currentElapsedTime += delta;
     
                 if (ac.defaultAnimation.currentElapsedTime > ac.defaultAnimation.animationList.at(ac.defaultAnimation.currentAnimIndex).second) {

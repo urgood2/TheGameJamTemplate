@@ -493,16 +493,19 @@ namespace game
         globals::registry.view<TextSystem::Text>()
             .each([](entt::entity e, TextSystem::Text &text) {
                 // attach tag
+                if (globals::registry.valid(e) == false) return; // skip invalid entities
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });
         globals::registry.view<AnimationQueueComponent>()
             .each([](entt::entity e, AnimationQueueComponent &anim) {
+                if (globals::registry.valid(e) == false) return; // skip invalid entities
                 // attach tag
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });
         globals::registry.view<ui::InventoryGrid>()
             .each([](entt::entity e, ui::InventoryGrid &inv) {
                 // attach tag
+                if (globals::registry.valid(e) == false) return; // skip invalid entities
                 globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
             });
         
@@ -676,7 +679,7 @@ namespace game
                 
                 if (!isScreenSpace)
                 {
-                    SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
+                    // SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
                 }
                 
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
@@ -834,6 +837,7 @@ namespace game
             }
             
             {
+#ifndef __EMSCRIPTEN__
                 // ZoneScopedN("Debug UI");
                 rlImGuiBegin(); // Required: starts ImGui frame
 
@@ -841,6 +845,7 @@ namespace game
                 ShowDebugUI();
 
                 rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+#endif
             }
             
 

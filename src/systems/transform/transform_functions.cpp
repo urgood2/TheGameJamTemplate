@@ -3,11 +3,13 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cmath>
+#include "spdlog/spdlog.h"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
+#include "systems/ui/ui_data.hpp"
 #include "systems/ui/util.hpp"
 #include "systems/ui/element.hpp"
 #include "systems/text/textVer2.hpp"
@@ -191,10 +193,10 @@ namespace transform
     {
         if (registry->valid(e) == false) return;
         
-        auto &node = registry->get<transform::GameObject>(e);
-        if (node.methods.onRelease) {
-            node.methods.onRelease(*registry, e, entt::null);
-        }
+        // auto &node = registry->get<transform::GameObject>(e);
+        // if (node.methods.onRelease) {
+        //     node.methods.onRelease(*registry, e, entt::null);
+        // }
     }
 
     
@@ -229,6 +231,14 @@ namespace transform
     // not exposed publicly
     auto AlignToMaster(entt::registry *registry, entt::entity e, bool forceAlign) -> void
     {
+        static auto getRotationAwareOffset = [](float ox, float oy, float angle) -> Vector2 {
+            float cosA = cos(angle);
+            float sinA = sin(angle);
+            return {
+                ox * cosA - oy * sinA,
+                ox * sinA + oy * cosA
+            };
+        };
         
         // ZoneScopedN("AlignToMaster");
         //TODO: this sshould probably take into account cases where parent has its own offset. (due to alignment)
@@ -257,8 +267,8 @@ namespace transform
         }
         // 
 
-        if (role.master == globals::gameWorldContainerEntity)
-            SPDLOG_DEBUG("Aligning to master (game world)");
+        // if (role.master == globals::gameWorldContainerEntity)
+        //     SPDLOG_DEBUG("Aligning to master (game world)");
         
 
         entt::entity midEntity = transform.middleEntityForAlignment.value();
@@ -347,15 +357,22 @@ namespace transform
         // parent is 43
         if (static_cast<int>(parent) == 36)
         {
-            SPDLOG_DEBUG("Parent is UIBOX");
-            if (parentRole.offset) SPDLOG_DEBUG("UIBOx offsets are: x: {}, y: {}", parentRole.offset->x, parentRole.offset->y);
+            // SPDLOG_DEBUG("Parent is UIBOX");
+            // if (parentRole.offset) SPDLOG_DEBUG("UIBOx offsets are: x: {}, y: {}", parentRole.offset->x, parentRole.offset->y);
         }
 
         // so this should cover cases where uibox, which is the master of a uiroot, has an actual offset. In which case, the uiroot will align its location to that offset and act as though its relative location to the master is actually 0,0 (making ui offset caculations for layout simpler)
-        transform.getXSpring().targetValue = parentTransform.getXSpring().value + (parentRole.offset ? parentRole.offset->x : 0) + role.offset->x;
-        transform.getYSpring().targetValue = parentTransform.getYSpring().value + (parentRole.offset ? parentRole.offset->y : 0) + role.offset->y;
+        float rawOffsetX = role.offset->x + (parentRole.offset ? parentRole.offset->x : 0);
+        float rawOffsetY = role.offset->y + (parentRole.offset ? parentRole.offset->y : 0);
+
+        float parentAngle = parentTransform.getVisualR(); // This is your rotation source
+        Vector2 rotatedOffset = getRotationAwareOffset(rawOffsetX, rawOffsetY, parentAngle);
+
+        transform.getXSpring().targetValue = parentTransform.getVisualX() + rotatedOffset.x;
+        transform.getYSpring().targetValue = parentTransform.getVisualY() + rotatedOffset.y;
+
         if (role.master == globals::gameWorldContainerEntity)
-            SPDLOG_DEBUG("Aligning to master (game world) at values: x: {}, y: {}", transform.getXSpring().targetValue, transform.getYSpring().targetValue);
+            // SPDLOG_DEBUG("Aligning to master (game world) at values: x: {}, y: {}", transform.getXSpring().targetValue, transform.getYSpring().targetValue);
 
         //TODO: now where are these offsets used?
 
@@ -390,6 +407,11 @@ namespace transform
     auto MoveWithMaster(entt::entity e, float dt, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode) -> void
     {
         auto registry = &globals::registry;
+
+        // if (registry->any_of<ui::UIConfig>(e) && registry->get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
+        // {
+        //     SPDLOG_DEBUG("MoveWithMaster called for entity {} (root)", (int)e);
+        // }
         
         // ZoneScopedN("MoveWithMaster");
         Vector2 tempRotatedOffset{};
@@ -411,9 +433,17 @@ namespace transform
         Transform *parentTransform = nullptr;
         InheritedProperties *parentRole = nullptr;
         
+        
+        
         auto parentRetVal = GetMaster(e, selfTransform, selfRole, selfNode, parentTransform, parentRole);
         auto parent = parentRetVal.master.value();
-
+        // getmaster for a ui root entity returns the ui box's master, which is not what we want. if this is a ui root, use the immediate master instead.
+        if (ui::globalUIGroup.contains(e) &&
+            ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT)
+        {
+            parent = selfRole.master; // use the immediate master instead of the master of the ui box
+        }
+        //FIXME: parent != selfRole.master after the lambda below. why?
         static auto fillParentTransformAndRole = [](entt::entity parent, Transform *&parentTransform, InheritedProperties *&parentRole)
         {
             auto &registry = globals::registry;
@@ -423,10 +453,10 @@ namespace transform
             {
                 auto &entry = it->second;
 
-                if (entry.parentTransform == nullptr)
+                // if (entry.parentTransform == nullptr)
                     entry.parentTransform = registry.try_get<Transform>(parent);
 
-                if (entry.parentRole == nullptr)
+                // if (entry.parentRole == nullptr)
                     entry.parentRole = registry.try_get<InheritedProperties>(parent);
 
                 parentTransform = entry.parentTransform;
@@ -442,13 +472,19 @@ namespace transform
         fillParentTransformAndRole(parent, parentTransform, parentRole);
 
         // an object that is attached to a UI element (of type OBJECT) should use the immediate master
+        bool isUIElementObjectWrapper = ui::globalUIGroup.contains(e) && ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::OBJECT;
         bool isUIElementObject = registry->any_of<ui::ObjectAttachedToUITag>(e);
-        if (isUIElementObject) 
-        {
+        if (isUIElementObject || isUIElementObjectWrapper) 
+        { 
             // if this is a UI element object, we need to use the immediate master
             parent = selfRole.master;
-            fillParentTransformAndRole(e, parentTransform, parentRole);
+            fillParentTransformAndRole(parent, parentTransform, parentRole);
         }
+        
+        // if (isUIElementObjectWrapper)
+        // {
+        //     SPDLOG_DEBUG("Moving with master for UI element object wrapper: {}", (int)e);
+        // }
         
         UpdateDynamicMotion(e, dt, selfTransform);
         
@@ -463,7 +499,7 @@ namespace transform
         auto selfVisualY = selfSprings.y->value;
         auto selfVisualW = selfSprings.w->value;
         auto selfVisualH = selfSprings.h->value;
-        
+        // FIXME: for root, ui box x, y is different. why is it pulling wrong 
         auto parentActualW = parentSprings.w->targetValue;
         auto parentActualH = parentSprings.h->targetValue;
         auto parentVisualX = parentSprings.x->value;
@@ -471,11 +507,14 @@ namespace transform
         auto parentVisualW = parentSprings.w->value;
         auto parentVisualH = parentSprings.h->value;
         auto parentVisualR = parentSprings.r->value;
+        
+        
+        
 
         if (selfRole.location_bond == InheritedProperties::Sync::Weak)
         {
-            tempRotatedOffset.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
-            tempRotatedOffset.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y;
+            tempRotatedOffset.x = selfRole.offset->x + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
+            tempRotatedOffset.y = selfRole.offset->y + layeredDisplacement.y;
         }
         else
         {
@@ -491,14 +530,30 @@ namespace transform
                 tempWidth = -selfActualW / 2 + parentActualW / 2;
                 tempHeight = -selfActualH / 2 + parentActualH / 2;
                 tempIntermediateOffsets.x = selfRole.offset->x + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.x - tempWidth;
-                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->x) + layeredDisplacement.y - tempHeight;
+                tempIntermediateOffsets.y = selfRole.offset->y + (isUIElementObject ? 0 : parentRole->offset->y) + layeredDisplacement.y - tempHeight;
                 tempRotatedOffset.x = tempIntermediateOffsets.x * tempAngleCos - tempIntermediateOffsets.y * tempAngleSin + tempWidth;
                 tempRotatedOffset.y = tempIntermediateOffsets.x * tempAngleSin + tempIntermediateOffsets.y * tempAngleCos + tempHeight;
             }
         }
         
+        // hacky fix to ensure ui roots don't revolve strangely ?
+        if (isUIElementObject || isUIElementObjectWrapper || (ui::globalUIGroup.contains(e) && ui::globalUIGroup.get<ui::UIConfig>(e).uiType == ui::UITypeEnum::ROOT))
+        {
+            tempRotatedOffset.x = selfRole.offset->x + layeredDisplacement.x; // ignore the additional offset if this is a UI element object (REVIEW: not sure if this is correct)
+            tempRotatedOffset.y = selfRole.offset->y + layeredDisplacement.y;
+            
+            
+        }
+        
+        
         selfSprings.x->targetValue = parentSprings.x->value + tempRotatedOffset.x;
         selfSprings.y->targetValue = parentSprings.y->value + tempRotatedOffset.y;
+        
+        if (selfRole.location_bond == InheritedProperties::Sync::Strong) {
+            // snap to target values immediately
+            selfSprings.x->value = selfSprings.x->targetValue;
+            selfSprings.y->value = selfSprings.y->targetValue;
+        }
         // SPDLOG_DEBUG("Moving with master set to targets: x: {}, y: {}", selfTransform.getXSpring().targetValue, selfTransform.getYSpring().targetValue);
 
         if (selfRole.location_bond == InheritedProperties::Sync::Strong)
@@ -724,6 +779,11 @@ namespace transform
 
     auto GetMaster(entt::entity selfEntity, Transform &selfTransform, InheritedProperties &selfRole, GameObject &selfNode, Transform*& parentTransformStorage, InheritedProperties*& parentRoleStorage) -> Transform::FrameCalculation::MasterCache
     {
+
+        // if ((int)selfEntity == 1365)
+        // {
+        //     SPDLOG_DEBUG("GetMaster called for entity 1365 (UIBOX)");
+        // }
         // Check the global cache first
         auto it = globals::getMasterCacheEntityToParentCompMap.find(selfEntity);
         if (it != globals::getMasterCacheEntityToParentCompMap.end())
@@ -749,6 +809,7 @@ namespace transform
         Transform::FrameCalculation::MasterCache toReturn;
         toReturn.master = selfEntity;
         toReturn.offset = Vector2{0, 0};
+        
 
         if (selfRole.master == globals::gameWorldContainerEntity || selfRole.role_type == InheritedProperties::Type::RoleRoot || selfRole.master == selfEntity)
         {
@@ -772,6 +833,14 @@ namespace transform
         parentTransformStorage = globals::registry.try_get<Transform>(selfRole.master);
         parentRoleStorage = globals::registry.try_get<InheritedProperties>(selfRole.master);
         auto parentNode = globals::registry.try_get<GameObject>(selfRole.master);
+        
+        if (!parentTransformStorage || !parentRoleStorage || !parentNode)
+        {
+            // If parent is not found, return self as master
+            // SPDLOG_DEBUG("Parent not found for entity {}: using self as master", static_cast<int>(selfEntity));
+            globals::getMasterCacheEntityToParentCompMap[selfEntity] = {selfEntity, toReturn.offset.value(), nullptr, nullptr};
+            return toReturn;
+        }
 
         if (!parentTransformStorage || !parentRoleStorage)
         {
@@ -900,7 +969,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
      */
     auto InjectDynamicMotion(entt::registry *registry, entt::entity e, float amount, float rotationAmount) -> void
     {
-        SPDLOG_DEBUG("Injecting dynamic motion for entity {} with amount: {}, rotationAmount: {}", static_cast<int>(e), amount, rotationAmount);
+        // SPDLOG_DEBUG("Injecting dynamic motion for entity {} with amount: {}, rotationAmount: {}", static_cast<int>(e), amount, rotationAmount);
         AssertThat(amount >= 0 && amount <= 1, Is().EqualTo(true));
         
         float startTime = GetTime();
@@ -994,7 +1063,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
         if (offset)
         {
-            SPDLOG_DEBUG("AssignRole called for entity {} with offset x: {}, y: {}", static_cast<int>(e), offset->x, offset->y);
+            // SPDLOG_DEBUG("AssignRole called for entity {} with offset x: {}, y: {}", static_cast<int>(e), offset->x, offset->y);
             role.offset = offset.value();
         }
 
@@ -1064,6 +1133,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     {
         // ZoneScopedN("UpdateTransform");
         
+        // if (globals::registry.any_of<ui::UIBoxComponent>(e))
+        // {
+        //     SPDLOG_DEBUG("UpdateTransform called for UIBoxComponent entity {}", static_cast<int>(e));
+        // }
+        
         auto registry = &globals::registry;
 
         if (transform.frameCalculation.lastUpdatedFrame >= main_loop::mainLoop.frame && transform.frameCalculation.alignmentChanged == false)
@@ -1114,7 +1188,11 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 // recursively move on parent
                 if (parentTransform->frameCalculation.lastUpdatedFrame < main_loop::mainLoop.frame ||transform.frameCalculation.alignmentChanged == true)
                 {
-                    UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
+                    if (registry->valid(role.master))
+                    {
+                        // SPDLOG_DEBUG("Updating transform for entity {} with master {}",
+                        UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
+                    }
                 }
                 
                 
@@ -1154,44 +1232,44 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 {
                     UpdateTransform(role.master, dt, *parentTransform, *parentRole, *parentNode);
                 }
+
+                // Fully inherit parent's stationary state
+                transform.frameCalculation.stationary = parentTransform->frameCalculation.stationary;
+
+                float parentRotationAngle = parentTransform->getVisualRWithDynamicMotionAndXLeaning();
+
+                // convert to radians
+                float angle = parentRotationAngle * DEG2RAD;
+
+                // parent center
+                float parentCenterX = parentTransform->getVisualX() + parentTransform->getVisualW() * 0.5;
+                float parentCenterY = parentTransform->getVisualY() + parentTransform->getVisualH() * 0.5;
+
+                // child's offset relative to the parent's center
+                float childOffsetX = role.offset->x - parentTransform->getVisualW() * 0.5 + transform.getVisualW() * 0.5;
+                float childOffsetY = role.offset->y - parentTransform->getVisualH() * 0.5 + transform.getVisualH() * 0.5;
+
+                // apply rotation around the parent's center
+                float rotatedX = childOffsetX * cos(angle) - childOffsetY * sin(angle);
+                float rotatedY = childOffsetX * sin(angle) + childOffsetY * cos(angle);
+
+                // convert back to absolute coordinates
+                float absoluteX = parentCenterX + rotatedX;
+                float absoluteY = parentCenterY + rotatedY;
+
+                // adjust for child's size
+                absoluteX -= transform.getVisualW() * 0.5;
+                absoluteY -= transform.getVisualH() * 0.5;
+
+                // child inherits parent's rotation
+                transform.setVisualRotation(parentRotationAngle);
+                transform.setActualRotation(parentRotationAngle);
+
+                transform.setVisualX(absoluteX);
+                transform.setVisualY(absoluteY);
+                transform.setActualX(absoluteX);
+                transform.setActualY(absoluteY);
             }
-
-            // Fully inherit parent's stationary state
-            transform.frameCalculation.stationary = parentTransform->frameCalculation.stationary;
-
-            float parentRotationAngle = parentTransform->getVisualRWithDynamicMotionAndXLeaning();
-
-            // convert to radians
-            float angle = parentRotationAngle * DEG2RAD;
-
-            // parent center
-            float parentCenterX = parentTransform->getVisualX() + parentTransform->getVisualW() * 0.5;
-            float parentCenterY = parentTransform->getVisualY() + parentTransform->getVisualH() * 0.5;
-
-            // child's offset relative to the parent's center
-            float childOffsetX = role.offset->x - parentTransform->getVisualW() * 0.5 + transform.getVisualW() * 0.5;
-            float childOffsetY = role.offset->y - parentTransform->getVisualH() * 0.5 + transform.getVisualH() * 0.5;
-
-            // apply rotation around the parent's center
-            float rotatedX = childOffsetX * cos(angle) - childOffsetY * sin(angle);
-            float rotatedY = childOffsetX * sin(angle) + childOffsetY * cos(angle);
-
-            // convert back to absolute coordinates
-            float absoluteX = parentCenterX + rotatedX;
-            float absoluteY = parentCenterY + rotatedY;
-
-            // adjust for child's size
-            absoluteX -= transform.getVisualW() * 0.5;
-            absoluteY -= transform.getVisualH() * 0.5;
-
-            // child inherits parent's rotation
-            transform.setVisualRotation(parentRotationAngle);
-            transform.setActualRotation(parentRotationAngle);
-
-            transform.setVisualX(absoluteX);
-            transform.setVisualY(absoluteY);
-            transform.setActualX(absoluteX);
-            transform.setActualY(absoluteY);
         }
 
         else if (role.role_type == InheritedProperties::Type::RoleRoot)
@@ -1933,7 +2011,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         { // click
             node.clickOffset.x = tempOffsetPoint.x - transform.getActualX();
             node.clickOffset.y = tempOffsetPoint.y - transform.getActualY();
-            SPDLOG_DEBUG("Click offset set to: ({}, {}) for entity {}", node.clickOffset.x, node.clickOffset.y, static_cast<int>(e));
+            // SPDLOG_DEBUG("Click offset set to: ({}, {}) for entity {}", node.clickOffset.x, node.clickOffset.y, static_cast<int>(e));
         }
         else
         { // hover
@@ -2200,7 +2278,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
         if (registry->valid(node.container) == false || node.container == e)
         {
-            SPDLOG_DEBUG("Container is invalid");
+            // SPDLOG_DEBUG("Container is invalid");
             return;
         }
 
@@ -2435,8 +2513,19 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                 return *p.flags;
             },
             // setter: replace the entire Alignment
-            [](InheritedProperties &p, InheritedProperties::Alignment v) {
-                p.flags = v;
+            [](InheritedProperties &p, int v) {
+                p.flags->alignment = v;
+            }
+        ),
+        "extraAlignmentFinetuningOffset", sol::property(
+            // getter: default-construct if needed, then return ref
+            [](InheritedProperties &p)->Vector2& {
+                if (!p.flags) p.flags.emplace();
+                return p.flags->extraAlignmentFinetuningOffset;
+            },
+            // setter: replace the entire Vector2
+            [](InheritedProperties &p, const Vector2 &v) {
+                p.flags->extraAlignmentFinetuningOffset = v;
             }
         ),
         "type_id",         []() { return entt::type_hash<InheritedProperties>::value(); }
@@ -2450,6 +2539,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     rec.record_property("InheritedProperties", {"location_bond", "InheritedPropertiesSync|nil", "The sync bond for location."});
     rec.record_property("InheritedProperties", {"size_bond", "InheritedPropertiesSync|nil", "The sync bond for size."});
     rec.record_property("InheritedProperties", {"rotation_bond", "InheritedPropertiesSync|nil", "The sync bond for rotation."});
+    //extraAlignmentFinetuningOffset
+    rec.record_property("InheritedProperties", {"extraAlignmentFinetuningOffset", "Vector2", "An additional fine-tuning offset for alignment."});
     rec.record_property("InheritedProperties", {"scale_bond", "InheritedPropertiesSync|nil", "The sync bond for scale."});
     rec.record_property("InheritedProperties", {"flags", "Alignment|nil", "Alignment flags and data."});
 
@@ -2632,6 +2723,13 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     
     transform_tbl.set_function("CreateOrEmplace", &transform::CreateOrEmplace);
     rec.record_free_function({"transform"}, {"CreateOrEmplace", "---@param registry registry\n---@param container Entity\n---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@param entityToEmplaceTo? Entity\n---@return Entity", "Creates or emplaces an entity with core components.", true, false});
+    
+    lua.set_function("create_transform_entity", 
+        []() {
+            return transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0.0f, 0.0f, 1.0f, 1.0f);
+        }
+    );
+    rec.record_free_function({""}, {"create_transform_entity", "---@return Entity", "Creates a new transform entity with default parameters.", true, false});
     
     transform_tbl.set_function("CreateGameWorldContainerEntity", &transform::CreateGameWorldContainerEntity);
     rec.record_free_function({"transform"}, {"CreateGameWorldContainerEntity", "---@param registry registry\n---@param x number\n---@param y number\n---@param w number\n---@param h number\n---@return Entity", "Creates a root container entity for the game world.", true, false});

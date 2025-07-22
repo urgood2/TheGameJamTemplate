@@ -1,9 +1,11 @@
 #include "timer.hpp"
 
+#include "types.hpp"
 #include "util/common_headers.hpp"
 #include "../../core/globals.hpp"
 #include "../../core/game.hpp"
 
+#include "systems/ai/ai_system.hpp"
 #include "systems/scripting/binding_recorder.hpp"
 #include <cstdlib>
 
@@ -74,30 +76,88 @@ wrap_noarg_callback(sol::function luaFunc) {
     };
 }
 
+void dump_lua_state(lua_State* L) {
+    // 1) Status (OK, YIELD, ERRRUN, ERRMEM, ERRERR, etc)
+    int stat = lua_status(L);
+    SPDLOG_DEBUG("Lua status: {} ({})", stat, lua_typename(L, stat));
+
+    // 2) Memory usage (in KBytes)
+    int kb = lua_gc(L, LUA_GCCOUNT, 0);
+    SPDLOG_DEBUG("Lua memory: {} KB", kb);
+
+    // 3) Stack top
+    int top = lua_gettop(L);
+    SPDLOG_DEBUG("Lua stack top = {}", top);
+
+
+    // 5) Backtrace of call frames
+    {
+      lua_Debug ar;
+      int level = 0;
+      while (lua_getstack(L, level, &ar)) {
+        lua_getinfo(L, "nSl", &ar);
+        SPDLOG_DEBUG(
+          "[frame {}] {}:{}  function = {}",
+          level,
+          ar.short_src,
+          ar.currentline,
+          (ar.name ? ar.name : "<anonymous>")
+        );
+        ++level;
+      }
+    }
+}
+
+    auto clone_to_main = [](sol::function thread_fn) {
+        // 1) get a view of your real, main-state Lua
+        sol::state_view main_sv{ ai_system::masterStateLua };
+
+        // 2) stash the passed-in function into a temporary global
+        main_sv.set("__timer_import", thread_fn);
+
+        // 3) pull it back out — now it’s bound to the main-state lua_State*
+        sol::function main_fn = main_sv.get<sol::function>("__timer_import");
+
+        // 4) clean up the temp
+        main_sv["__timer_import"] = sol::lua_nil;
+
+        return main_fn;
+    };
+
+
     // for main actions in timers
     static std::function<void(std::optional<float>)>
 wrap_timer_action(sol::function action) {
-        // move the raw Lua function into a protected wrapper
-        sol::protected_function protectedAction(std::move(action));
+    sol::protected_function protectedAction(std::move(action));
 
-        // return a std::function that checks dt and handles errors
-        return [protectedAction = std::move(protectedAction)]
-            (std::optional<float> dt) mutable
-        {
-            sol::protected_function_result result;
-            if (dt.has_value()) {
-                result = protectedAction(*dt);
-            } else {
-                result = protectedAction();  // call with no args
-            }
+    return [protectedAction = std::move(protectedAction)]
+           (std::optional<float> dt) mutable
+    {
+        // 1) Grab the raw lua_State pointer
+        lua_State* L = protectedAction.lua_state();
+        
+        // dump_lua_state(L);
 
-            if (!result.valid()) {
-                sol::error err = result;
-                SPDLOG_ERROR("Timer action failed: {}", err.what());
-                std::abort();
-            }
-        };
-    }
+        sol::protected_function_result result;
+        if (dt.has_value()) {
+            // SPDLOG_DEBUG("   -> calling Lua with dt");
+            result = protectedAction(*dt);
+            // SPDLOG_DEBUG("   -> returned from Lua dt-call");
+        } else {
+            // SPDLOG_DEBUG("   -> calling Lua with NO args");
+            result = protectedAction();
+            // SPDLOG_DEBUG("   -> returned from Lua no-arg call");
+        }
+
+        if (!result.valid()) {
+            sol::error err = result;
+            SPDLOG_ERROR("Timer action failed: {}", err.what());
+            std::abort();
+        }
+
+        // SPDLOG_DEBUG("<< Timer callback end");
+    };
+}
 
     
     /*
@@ -257,16 +317,32 @@ wrap_timer_action(sol::function action) {
         t.set_function("update", &timer::TimerSystem::update_timers);
         // Recorder: ticking function
         rec.record_free_function({"timer"}, {"update", "---@param dt number # Delta time.\n---@return nil", "Updates all active timers, should be called once per frame.", true, false});
-
+        
+        // clone whatever function is passed in to the main Lua state, so we won't have issues with lua threads going out of scope (if timers are called from a coroutine)
+        auto clone_to_main = [](sol::function thread_fn) {
+            // 1) get a view of your real, main-state Lua
+            sol::state_view main_sv{ ai_system::masterStateLua };
+        
+            // 2) stash the passed-in function into a temporary global
+            main_sv.set("__timer_import", thread_fn);
+        
+            // 3) pull it back out — now it’s bound to the main-state lua_State*
+            sol::function main_fn = main_sv.get<sol::function>("__timer_import");
+        
+            // 4) clean up the temp
+            main_sv["__timer_import"] = sol::lua_nil;
+        
+            return main_fn;
+        };
         // 6) Creation APIs
         // timer_run(action, after, tag)
         t.set_function("run",
-            [](sol::function action,
+            [clone_to_main](sol::function action,
             sol::function after,
             sol::optional<std::string> maybeTag,
             sol::optional<std::string> maybeGroup)
             {
-                auto actionWrapper = wrap_timer_action(std::move(action));
+                auto actionWrapper = wrap_timer_action(clone_to_main(action));
                 auto afterWrapper  = wrap_noarg_callback(std::move(after));
                 std::string tag = maybeTag.value_or("");
                 std::string group = maybeGroup.value_or("");
@@ -274,18 +350,18 @@ wrap_timer_action(sol::function action) {
             });
         // timer_after(delay, action, tag)
         t.set_function("after",
-            [](std::variant<float,std::pair<float,float>> delay,
+            [clone_to_main](std::variant<float,std::pair<float,float>> delay,
             sol::function action,
             sol::optional<std::string> maybeTag,
             sol::optional<std::string> maybeGroup)
             {
-                auto actionWrapper = wrap_timer_action(std::move(action));
+                auto actionWrapper = wrap_timer_action(clone_to_main(action));
                 std::string tag = maybeTag.value_or("");
                 timer::TimerSystem::timer_after(delay, actionWrapper, tag, maybeGroup.value_or(""));
             });
         // timer_cooldown(delay, condition, action, times, after, tag)
         t.set_function("cooldown",
-            [](std::variant<float,std::pair<float,float>> delay,
+            [clone_to_main](std::variant<float,std::pair<float,float>> delay,
             sol::function condition,
             sol::function action,
             sol::optional<int> maybeTimes,
@@ -294,16 +370,16 @@ wrap_timer_action(sol::function action) {
             sol::optional<std::string> maybeGroup)
             {
                 int times = maybeTimes.value_or(0);
-                auto condWrapper   = wrap_condition(std::move(condition));
-                auto actionWrapper = wrap_timer_action(std::move(action));
-                auto afterWrapper  = wrap_noarg_callback(std::move(after));
+                auto condWrapper   = wrap_condition(clone_to_main(condition));
+                auto actionWrapper = wrap_timer_action(clone_to_main(action));
+                auto afterWrapper  = wrap_noarg_callback(clone_to_main(after));
                 std::string tag = maybeTag.value_or("");
                 timer::TimerSystem::timer_cooldown(
                     delay, condWrapper, actionWrapper, times, afterWrapper, tag, maybeGroup.value_or(""));
             });
         // t.set_function("every",      &timer::TimerSystem::timer_every);
         t.set_function("every",
-        [](std::variant<float, std::pair<float, float>> interval,
+        [clone_to_main](std::variant<float, std::pair<float, float>> interval,
            sol::function action,
            sol::optional<int> maybeTimes,
            sol::optional<bool> maybeImmediate,
@@ -311,18 +387,18 @@ wrap_timer_action(sol::function action) {
            sol::optional<std::string> maybeTag,
            sol::optional<std::string> maybeGroup) 
         {
-            std::function<void(std::optional<float>)> actionWrapper = wrap_timer_action(action);
+            std::function<void(std::optional<float>)> actionWrapper = wrap_timer_action(clone_to_main(action));
             // if the user passed nil (i.e. no 3rd arg), maybeTimes will be empty
             int times = maybeTimes.value_or(0);
             bool immediate = maybeImmediate.value_or(false);
             // std::function<void()> after = maybeAfter.value_or(sol::function{});
-            auto maybeAfterWrapper = wrap_noarg_callback(maybeAfter);
+            auto maybeAfterWrapper = wrap_noarg_callback(clone_to_main(maybeAfter));
             std::string tag = maybeTag.value_or("");
             timer::TimerSystem::timer_every(interval, actionWrapper, times, immediate, maybeAfterWrapper, tag, maybeGroup.value_or(""));
         });
         // timer_every_step(start, end, times, action, immediate, step, after, tag)
         t.set_function("every_step",
-            [](float start_delay,
+            [clone_to_main](float start_delay,
             float end_delay,
             int times,
             sol::function action,
@@ -333,9 +409,9 @@ wrap_timer_action(sol::function action) {
             sol::optional<std::string> maybeGroup)
             {
                 bool immediate = maybeImmediate.value_or(false);
-                auto actionWrapper = wrap_timer_action(std::move(action));
-                auto stepWrapper   = wrap_ff(std::move(step_method));
-                auto afterWrapper  = wrap_noarg_callback(std::move(after));
+                auto actionWrapper = wrap_timer_action(clone_to_main(action));
+                auto stepWrapper   = wrap_ff(clone_to_main(step_method));
+                auto afterWrapper  = wrap_noarg_callback(clone_to_main(after));
                 std::string tag = maybeTag.value_or("");
                 timer::TimerSystem::timer_every_step(
                     start_delay, end_delay, times,
@@ -344,15 +420,15 @@ wrap_timer_action(sol::function action) {
                     tag, maybeGroup.value_or("")
                 );
             });
-        t.set_function("for",
-            [](std::variant<float,std::pair<float,float>> duration,
+        t.set_function("for_time",
+            [clone_to_main](std::variant<float,std::pair<float,float>> duration,
                 sol::function action,
                 sol::function after,
                 sol::optional<std::string> maybeTag,
                 sol::optional<std::string> maybeGroup)
             {
-                auto actionWrapper = wrap_timer_action(std::move(action));
-                auto afterWrapper  = wrap_noarg_callback(std::move(after));
+                auto actionWrapper = wrap_timer_action(clone_to_main(action));
+                auto afterWrapper  = wrap_noarg_callback(clone_to_main(after));
                 std::string tag = maybeTag.value_or("");
                 timer::TimerSystem::timer_for(duration, actionWrapper, afterWrapper, tag, maybeGroup.value_or(""));
             });
@@ -362,7 +438,7 @@ wrap_timer_action(sol::function action) {
         // Now bind them all, *including* the full seven-arg C++ function:
         // timer_tween(duration, getter, setter, target, tag, easing, after)
         t.set_function("tween",
-            [](std::variant<float,std::pair<float,float>> duration,
+            [clone_to_main](std::variant<float,std::pair<float,float>> duration,
             sol::function getter,
             sol::function setter,
             float target_value,
@@ -371,8 +447,8 @@ wrap_timer_action(sol::function action) {
             sol::function easing_method,
             sol::function after)
             {
-                auto getWrapper = [] (sol::function f) {
-                    sol::protected_function pf(std::move(f));
+                auto getWrapper = [clone_to_main] (sol::function f) {
+                    sol::protected_function pf(clone_to_main(f));
                     return [pf=std::move(pf)]() mutable {
                         auto r = pf();
                         if (!r.valid()) {
@@ -381,22 +457,22 @@ wrap_timer_action(sol::function action) {
                         }
                         return r.get<float>();
                     };
-                }(std::move(getter));
+                }(clone_to_main(getter));
 
-                auto setWrapper = [] (sol::function f) {
-                    sol::protected_function pf(std::move(f));
+                auto setWrapper = [clone_to_main] (sol::function f) {
+                    sol::protected_function pf(clone_to_main(f));
                     return [pf=std::move(pf)](float v) mutable {
                         auto r = pf(v);
                         if (!r.valid()) {
                             sol::error err = r; SPDLOG_ERROR("Tween setter failed: {}", err.what());
                         }
                     };
-                }(std::move(setter));
+                }(clone_to_main(setter));
 
                 auto easeWrapper = easing_method.valid() ?
-                    wrap_ff(std::move(easing_method)) :
+                    wrap_ff(clone_to_main(easing_method)) :
                     [](float t) { return t < 0.5 ? 2 * t * t : t * (4 - 2 * t) - 1; }; // Default easing method (ease-in-out quad)
-                auto afterWrapper = wrap_noarg_callback(std::move(after));
+                auto afterWrapper = wrap_noarg_callback(clone_to_main(after));
                 std::string tag = maybeTag.value_or("");
 
                 timer::TimerSystem::timer_tween(

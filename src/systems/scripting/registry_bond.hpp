@@ -32,6 +32,7 @@ namespace scripting
                               sol::this_state s)
     {
         assert(registry);
+        // NOTE: an error can occur here if the entity get() called from lua doesn't exist or is invalid.
         auto &comp = registry->get_or_emplace<Component>(entity);
         return sol::make_reference(s, std::ref(comp));
     }

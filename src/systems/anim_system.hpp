@@ -13,6 +13,7 @@ namespace animation_system {
 
     extern auto update(float dt) -> void;
     extern auto getNinepatchUIBorderInfo(std::string uuid_or_raw_identifier) -> std::tuple<NPatchInfo, Texture2D>;
+    extern auto setFGColorForAllAnimationObjects(entt::entity e, Color fgColor) -> void;
     
     // pass a function which sets up shader pipeline if desired.
     extern auto createAnimatedObjectWithTransform (std::string defaultAnimationIDOrSpriteUUID, bool generateNewAnimFromSprite = false, int x = 0, int y = 0, std::function<void(entt::entity)> shaderPassConfigFunc = [](entt::entity e){}, bool shadowEnabled = true) ->  entt::entity;

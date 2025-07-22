@@ -122,6 +122,15 @@
         "r": 255
     },
     {
+        "a": 0,
+        "auto_generated_uuid": "blank",
+        "b": 0,
+        "family": "Whites/Pastels",
+        "g": 0,
+        "name": "blank",
+        "r": 0
+    },
+    {
         "auto_generated_uuid": "almond_blanched",
         "b": 205,
         "family": "Whites/Pastels",
@@ -1570,5 +1579,517 @@
         "g": 225,
         "name": "Tiffany Blue",
         "r": 151
+    },
+    {
+        "auto_generated_uuid": "blackberry",
+        "b": 47,
+        "family": "RESURRECT-64",
+        "g": 34,
+        "name": "Blackberry",
+        "r": 46
+    },
+    {
+        "auto_generated_uuid": "dark_lavender",
+        "b": 70,
+        "family": "RESURRECT-64",
+        "g": 53,
+        "name": "Dark Lavender",
+        "r": 62
+    },
+    {
+        "auto_generated_uuid": "muted_plum",
+        "b": 101,
+        "family": "RESURRECT-64",
+        "g": 85,
+        "name": "Muted Plum",
+        "r": 98
+    },
+    {
+        "auto_generated_uuid": "dusty_rose",
+        "b": 108,
+        "family": "RESURRECT-64",
+        "g": 108,
+        "name": "Dusty Rose",
+        "r": 150
+    },
+    {
+        "auto_generated_uuid": "taupe_warm",
+        "b": 122,
+        "family": "RESURRECT-64",
+        "g": 148,
+        "name": "Warm Taupe",
+        "r": 171
+    },
+    {
+        "auto_generated_uuid": "mauve_shadow",
+        "b": 98,
+        "family": "RESURRECT-64",
+        "g": 79,
+        "name": "Shadow Mauve",
+        "r": 105
+    },
+    {
+        "auto_generated_uuid": "purple_slate",
+        "b": 138,
+        "family": "RESURRECT-64",
+        "g": 112,
+        "name": "Slate Purple",
+        "r": 127
+    },
+    {
+        "auto_generated_uuid": "soft_steel",
+        "b": 178,
+        "family": "RESURRECT-64",
+        "g": 171,
+        "name": "Soft Steel",
+        "r": 155
+    },
+    {
+        "auto_generated_uuid": "mint_pale",
+        "b": 208,
+        "family": "RESURRECT-64",
+        "g": 220,
+        "name": "Pale Mint",
+        "r": 199
+    },
+    {
+        "auto_generated_uuid": "white",
+        "b": 255,
+        "family": "RESURRECT-64",
+        "g": 255,
+        "name": "White",
+        "r": 255
+    },
+    {
+        "auto_generated_uuid": "crimson_dark",
+        "b": 39,
+        "family": "RESURRECT-64",
+        "g": 39,
+        "name": "Dark Crimson",
+        "r": 110
+    },
+    {
+        "auto_generated_uuid": "fiery_red",
+        "b": 49,
+        "family": "RESURRECT-64",
+        "g": 56,
+        "name": "Fiery Red",
+        "r": 179
+    },
+    {
+        "auto_generated_uuid": "red_tomato",
+        "b": 54,
+        "family": "RESURRECT-64",
+        "g": 79,
+        "name": "Tomato Red",
+        "r": 234
+    },
+    {
+        "auto_generated_uuid": "apricot",
+        "b": 74,
+        "family": "RESURRECT-64",
+        "g": 125,
+        "name": "Apricot",
+        "r": 245
+    },
+    {
+        "auto_generated_uuid": "burgundy",
+        "b": 52,
+        "family": "RESURRECT-64",
+        "g": 35,
+        "name": "Burgundy",
+        "r": 174
+    },
+    {
+        "auto_generated_uuid": "coral_red",
+        "b": 59,
+        "family": "RESURRECT-64",
+        "g": 59,
+        "name": "Coral Red",
+        "r": 232
+    },
+    {
+        "auto_generated_uuid": "tangerine",
+        "b": 29,
+        "family": "RESURRECT-64",
+        "g": 107,
+        "name": "Tangerine",
+        "r": 251
+    },
+    {
+        "auto_generated_uuid": "goldenrod",
+        "b": 23,
+        "family": "RESURRECT-64",
+        "g": 150,
+        "name": "Goldenrod",
+        "r": 247
+    },
+    {
+        "auto_generated_uuid": "sunflower",
+        "b": 43,
+        "family": "RESURRECT-64",
+        "g": 194,
+        "name": "Sunflower",
+        "r": 249
+    },
+    {
+        "auto_generated_uuid": "mulberry",
+        "b": 69,
+        "family": "RESURRECT-64",
+        "g": 48,
+        "name": "Mulberry",
+        "r": 122
+    },
+    {
+        "auto_generated_uuid": "chestnut",
+        "b": 57,
+        "family": "RESURRECT-64",
+        "g": 69,
+        "name": "Chestnut",
+        "r": 158
+    },
+    {
+        "auto_generated_uuid": "rust",
+        "b": 61,
+        "family": "RESURRECT-64",
+        "g": 104,
+        "name": "Rust",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "amber",
+        "b": 78,
+        "family": "RESURRECT-64",
+        "g": 144,
+        "name": "Amber",
+        "r": 230
+    },
+    {
+        "auto_generated_uuid": "marigold",
+        "b": 84,
+        "family": "RESURRECT-64",
+        "g": 185,
+        "name": "Marigold",
+        "r": 251
+    },
+    {
+        "auto_generated_uuid": "espresso",
+        "b": 36,
+        "family": "RESURRECT-64",
+        "g": 62,
+        "name": "Espresso",
+        "r": 76
+    },
+    {
+        "auto_generated_uuid": "drab_olive",
+        "b": 51,
+        "family": "RESURRECT-64",
+        "g": 102,
+        "name": "Olive Drab",
+        "r": 103
+    },
+    {
+        "auto_generated_uuid": "green_mos",
+        "b": 71,
+        "family": "RESURRECT-64",
+        "g": 169,
+        "name": "Moss Green",
+        "r": 162
+    },
+    {
+        "auto_generated_uuid": "chartreuse",
+        "b": 75,
+        "family": "RESURRECT-64",
+        "g": 224,
+        "name": "Chartreuse",
+        "r": 213
+    },
+    {
+        "auto_generated_uuid": "chiffon_lemon",
+        "b": 134,
+        "family": "RESURRECT-64",
+        "g": 255,
+        "name": "Lemon Chiffon",
+        "r": 251
+    },
+    {
+        "auto_generated_uuid": "deep_teal",
+        "b": 76,
+        "family": "RESURRECT-64",
+        "g": 90,
+        "name": "Deep Teal",
+        "r": 22
+    },
+    {
+        "auto_generated_uuid": "green_jade",
+        "b": 99,
+        "family": "RESURRECT-64",
+        "g": 144,
+        "name": "Jade Green",
+        "r": 35
+    },
+    {
+        "auto_generated_uuid": "green_seafoam",
+        "b": 115,
+        "family": "RESURRECT-64",
+        "g": 188,
+        "name": "Seafoam Green",
+        "r": 30
+    },
+    {
+        "auto_generated_uuid": "green_mint",
+        "b": 105,
+        "family": "RESURRECT-64",
+        "g": 219,
+        "name": "Mint Green",
+        "r": 145
+    },
+    {
+        "auto_generated_uuid": "lime",
+        "b": 108,
+        "family": "RESURRECT-64",
+        "g": 223,
+        "name": "Lime",
+        "r": 205
+    },
+    {
+        "auto_generated_uuid": "charcoal",
+        "b": 56,
+        "family": "RESURRECT-64",
+        "g": 54,
+        "name": "Charcoal",
+        "r": 49
+    },
+    {
+        "auto_generated_uuid": "forest_slate",
+        "b": 74,
+        "family": "RESURRECT-64",
+        "g": 78,
+        "name": "Forest Slate",
+        "r": 55
+    },
+    {
+        "auto_generated_uuid": "verdigri",
+        "b": 100,
+        "family": "RESURRECT-64",
+        "g": 126,
+        "name": "Verdigris",
+        "r": 84
+    },
+    {
+        "auto_generated_uuid": "sage",
+        "b": 132,
+        "family": "RESURRECT-64",
+        "g": 169,
+        "name": "Sage",
+        "r": 146
+    },
+    {
+        "auto_generated_uuid": "mist_olive",
+        "b": 144,
+        "family": "RESURRECT-64",
+        "g": 186,
+        "name": "Olive Mist",
+        "r": 178
+    },
+    {
+        "auto_generated_uuid": "blue_teal",
+        "b": 101,
+        "family": "RESURRECT-64",
+        "g": 94,
+        "name": "Teal Blue",
+        "r": 11
+    },
+    {
+        "auto_generated_uuid": "cyan_green",
+        "b": 143,
+        "family": "RESURRECT-64",
+        "g": 138,
+        "name": "Cyan Green",
+        "r": 11
+    },
+    {
+        "auto_generated_uuid": "turquoise",
+        "b": 155,
+        "family": "RESURRECT-64",
+        "g": 175,
+        "name": "Turquoise",
+        "r": 14
+    },
+    {
+        "auto_generated_uuid": "aqua",
+        "b": 185,
+        "family": "RESURRECT-64",
+        "g": 225,
+        "name": "Aqua",
+        "r": 48
+    },
+    {
+        "auto_generated_uuid": "aqua_pale",
+        "b": 226,
+        "family": "RESURRECT-64",
+        "g": 248,
+        "name": "Pale Aqua",
+        "r": 143
+    },
+    {
+        "auto_generated_uuid": "blue_midnight",
+        "b": 83,
+        "family": "RESURRECT-64",
+        "g": 51,
+        "name": "Midnight Blue",
+        "r": 50
+    },
+    {
+        "auto_generated_uuid": "indigo",
+        "b": 119,
+        "family": "RESURRECT-64",
+        "g": 74,
+        "name": "Indigo",
+        "r": 72
+    },
+    {
+        "auto_generated_uuid": "blue_royal",
+        "b": 180,
+        "family": "RESURRECT-64",
+        "g": 101,
+        "name": "Royal Blue",
+        "r": 77
+    },
+    {
+        "auto_generated_uuid": "blue_sky",
+        "b": 230,
+        "family": "RESURRECT-64",
+        "g": 155,
+        "name": "Sky Blue",
+        "r": 77
+    },
+    {
+        "auto_generated_uuid": "baby_blue",
+        "b": 255,
+        "family": "RESURRECT-64",
+        "g": 211,
+        "name": "Baby Blue",
+        "r": 143
+    },
+    {
+        "auto_generated_uuid": "plum",
+        "b": 63,
+        "family": "RESURRECT-64",
+        "g": 41,
+        "name": "Plum",
+        "r": 69
+    },
+    {
+        "auto_generated_uuid": "violet",
+        "b": 117,
+        "family": "RESURRECT-64",
+        "g": 62,
+        "name": "Violet",
+        "r": 107
+    },
+    {
+        "auto_generated_uuid": "orchid_purple",
+        "b": 169,
+        "family": "RESURRECT-64",
+        "g": 94,
+        "name": "Purple Orchid",
+        "r": 144
+    },
+    {
+        "auto_generated_uuid": "lavender",
+        "b": 243,
+        "family": "RESURRECT-64",
+        "g": 132,
+        "name": "Lavender",
+        "r": 168
+    },
+    {
+        "auto_generated_uuid": "blush_pink",
+        "b": 237,
+        "family": "RESURRECT-64",
+        "g": 173,
+        "name": "Pink Blush",
+        "r": 234
+    },
+    {
+        "auto_generated_uuid": "wine",
+        "b": 84,
+        "family": "RESURRECT-64",
+        "g": 60,
+        "name": "Wine",
+        "r": 117
+    },
+    {
+        "auto_generated_uuid": "rosewood",
+        "b": 111,
+        "family": "RESURRECT-64",
+        "g": 75,
+        "name": "Rosewood",
+        "r": 162
+    },
+    {
+        "auto_generated_uuid": "blush_pink",
+        "b": 127,
+        "family": "RESURRECT-64",
+        "g": 101,
+        "name": "Blush Pink",
+        "r": 207
+    },
+    {
+        "auto_generated_uuid": "coral_pink",
+        "b": 153,
+        "family": "RESURRECT-64",
+        "g": 128,
+        "name": "Coral Pink",
+        "r": 237
+    },
+    {
+        "auto_generated_uuid": "deep_magenta",
+        "b": 93,
+        "family": "RESURRECT-64",
+        "g": 28,
+        "name": "Deep Magenta",
+        "r": 131
+    },
+    {
+        "auto_generated_uuid": "raspberry",
+        "b": 84,
+        "family": "RESURRECT-64",
+        "g": 36,
+        "name": "Raspberry",
+        "r": 195
+    },
+    {
+        "auto_generated_uuid": "fuchsia",
+        "b": 120,
+        "family": "RESURRECT-64",
+        "g": 79,
+        "name": "Fuchsia",
+        "r": 240
+    },
+    {
+        "auto_generated_uuid": "pastel_pink",
+        "b": 129,
+        "family": "RESURRECT-64",
+        "g": 129,
+        "name": "Pastel Pink",
+        "r": 246
+    },
+    {
+        "auto_generated_uuid": "peach",
+        "b": 144,
+        "family": "RESURRECT-64",
+        "g": 167,
+        "name": "Peach",
+        "r": 252
+    },
+    {
+        "auto_generated_uuid": "apricot_cream",
+        "b": 176,
+        "family": "RESURRECT-64",
+        "g": 203,
+        "name": "Apricot Cream",
+        "r": 253
     }
 ]

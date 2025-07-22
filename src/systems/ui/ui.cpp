@@ -771,7 +771,8 @@ namespace ui {
 
         // 2) Initialization & placement
         // box.set_function("Initialize", &ui::box::Initialize);
-        box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) -> entt::entity {
+        box.set_function("Initialize", 
+            []( sol::table table, ui::UIElementTemplateNode temp) -> entt::entity {
             ui::TransformConfig config{};
             config.x = table["x"].get_or(0);
             config.y = table["y"].get_or(0);
@@ -781,7 +782,18 @@ namespace ui {
                 SPDLOG_DEBUG("UI box {} has UIBoxComponent", static_cast<uint32_t>(result));
             }
             return result;
-        };
+        });
+        // box["Initialize"] = []( sol::table table, ui::UIElementTemplateNode temp) -> entt::entity {
+        //     ui::TransformConfig config{};
+        //     config.x = table["x"].get_or(0);
+        //     config.y = table["y"].get_or(0);
+        //     auto result = ui::box::Initialize(globals::registry, config, temp, ui::UIConfig{});
+        //     SPDLOG_DEBUG("Initialized UI box {} with config: x={}, y={}", static_cast<uint32_t>(result), config.x, config.y);
+        //     if (globals::registry.any_of<ui::UIBoxComponent>(result)) {
+        //         SPDLOG_DEBUG("UI box {} has UIBoxComponent", static_cast<uint32_t>(result));
+        //     }
+        //     return result;
+        // };
         rec.record_free_function({"ui", "box"}, {"Initialize", "---@param registry registry\n---@param transformData table\n---@param definition UIElementTemplateNode\n---@param config? UIConfig\n---@return Entity", "Initializes a new UI box from a definition.", true, false});
 
         box.set_function("placeUIElementsRecursively", &ui::box::placeUIElementsRecursively);

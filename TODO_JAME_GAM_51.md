@@ -1,31 +1,8 @@
 # immediate todos
-- add image for website
-- add simple tutorial
-- add simple how-to-window
 
 - 
-```
---FIXME: why/ does is this nil in web? ui.box
-if not ui.box then
-                        log_error("UI box system is not available, cannot remove HP UI box.")
-                        registry:destroy(ui_elem.hp_ui_box)
-                        registry:destroy(ui_elem.hp_ui_text)
-                    else
-                        ui.box.Remove(registry, ui_elem.hp_ui_box)
-                    end
-```
-- really long dynamic texts cause massive slowdowns.
-- attempt to call number value (uibox initialize method) sometimes happens, why?
-```
-[2025-07-21 00:56:56.708] [error] [timer.cpp:154] Timer action failed: attempt to call a number value
-stack traceback:
-	[C]: in field 'Initialize'
-	...emplate/TheGameJamTemplate/assets/scripts/ui/ui_defs.lua:998: in field 'generateUI'
-	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:405: in function 'base.initMainGame'
-	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:602: in function 'base.changeGameState'
-	...Template/TheGameJamTemplate/assets/scripts/core/main.lua:290: in function <...Template/TheGameJamTemplate/assets/scripts/core/main.lua:281>
-```
-- color coding (part) for dynamic text as well
+
+
 
 - get static text formatting in ui working
 
@@ -35,7 +12,7 @@ stack traceback:
 - make hurt entities blink
 - need simple way of showing current stats, probably just use text ui element (how to update this on demand?)
 - relic purchasing & shop randomization & functionality
-- use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
+
 - ui window reordering
 
 
@@ -165,21 +142,12 @@ stack traceback:
  - [ ] Really need to make use of the layer order thing. To show stuff on top
  - [ ] Customizinf transform shadows to have a bottom shadow instead
  - [ ] Damage flash shader (customizable color)
-- dedicated Alignment callback for windows on resize
-- text updating wrong. not easy to configure updates with on update method for some reason.
-- renew alignment needs to cache so it can be called every frame
-- add chain funcionality to timer?
-- maybe a text log of sorts, with scroll?
-- bug whre fine tuning offset not respected at render time, ui box aligns correctly, but not the root for ui box 
-- is there a way to make blackboard a lua table that can be reliably fetched from lua?
-- ui box aligned to a transform with extrafintuning goes haywire when trasnform's rotation changes
-- some way to hook up lua table state, easily retriveable, through lua code, with entt entities
-- sprite order sorting so what's behind somehting can properly go behind, etc.
-- erase blackboard value, check if value exists in blackboard
-- make get/set blackboard methods return lua nil if invalid instead of throwing error
-- cancel_self() function which will queue a cancel for the current timer after loop finishes to avoid triggering errors
+
+
+
+
+
 - dynamic text entity will reset its alignment and set to center on its master entity when updated via setText
 - performance optimizations for ai system, namely blackboard access
--  need streamlined way to access quadtree features, like collision checking specific areas 
-- how to make text popup include an image that fades with it?
+
 - how to do progress indicators or overlays for ui/icon?

@@ -1,18 +1,28 @@
 # ✅ TODOs: Organized by Category
 
-## Bugs to kill
-- [ ] sometimes I get a bug at this line (called a number..?): 
-```lua
-local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 500}, helpButtonRoot)
-```
-
-## New features
+## Next game ideas
 - [ ] change image color on hover
 - [ ] screen shake (jiggle)
 - [ ] how do draw animated dashed lines?
 - [ ] color-coded tooltips which can be updated on the fly to reflect info-how?
 - [ ] dynamic text notifications which can fade, and also contain images.
-- [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree
+- [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
+
+## New features
+- color coding (in part of strings only) for dynamic text as well
+- use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
+- maybe a text log of sorts, with scroll?
+- renew alignment needs to cache so it can be called every frame
+- dedicated Alignment callback for windows on resize
+- text updating wrong. not easy to configure updates with on update method for some reason.
+- add chain funcionality to timer?
+- is there a way to make blackboard a lua table that can be reliably fetched from lua?
+- auto sprite order sorting so what's behind somehting can properly go behind, etc.
+- make get/set blackboard methods return lua nil if invalid instead of throwing error
+- cancel_self() function which will queue a cancel for the current timer after loop finishes to avoid triggering errors
+-  need streamlined way to access quadtree features, like collision checking specific areas 
+- how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
+- [ ] better lua friendly drawing api for queue command
 - [ ] scrolling panes in ui boxes?
 
 - [ ] prob add docs for entity_gamestate_management

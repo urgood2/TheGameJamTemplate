@@ -29,12 +29,13 @@ local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 
     - [ ] ninepatch not tested
         
 - [ ] take some shaders (esp. pixelate) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate
+- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
+- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
 
 
 ## Bug fixes
 
-- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
-- [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
+
 - [ ] test edge_effect shader
 
     - uniforms:

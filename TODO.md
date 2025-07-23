@@ -7,35 +7,185 @@ local helpButtonUIBox = ui.box.Initialize({x = globals.screenWidth() - 300, y = 
 ```
 
 ## New features
+- [ ] add dashed lines from here, how to animate them? animation here: https://chatgpt.com/share/6880e2c6-ff68-800a-b30b-c2c1514e1772
+```lua
+
+function graphics.dashed_circle(x, y, rs, dash_size, gap_size, color, line_width)
+  local r, g, b, a = love.graphics.getColor()
+  if color then love.graphics.setColor(color.r, color.g, color.b, color.a) end
+  if line_width then love.graphics.setLineWidth(line_width) end
+
+  local r = 0
+  local dash_or_gap = 'dash'
+  while r <= 2*math.pi do
+    if dash_or_gap == 'dash' then
+      local x1, y1 = x + rs*math.cos(r), y + rs*math.sin(r)
+      r = r + math.asin(dash_size/rs)
+      local x2, y2 = x + rs*math.cos(r), y + rs*math.sin(r)
+      love.graphics.line(x1, y1, x2, y2)
+      dash_or_gap = 'gap'
+    elseif dash_or_gap == 'gap' then
+      r = r + math.asin(gap_size/rs)
+      dash_or_gap = 'dash'
+    end
+  end
+end
+
+function graphics.centered_dashed_line(x1, y1, x2, y2, dash_size, gap_size, color, line_width)
+  local r, g, b, a = love.graphics.getColor()
+  if color then love.graphics.setColor(color.r, color.g, color.b, color.a) end
+  if line_width then love.graphics.setLineWidth(line_width) end
+
+  local r, l = math.angle_to_point(x1, y1, x2, y2), math.distance(x1, y1, x2, y2)
+  local x, y = x1, y1
+  local dash_positions = {}
+  while true do
+    table.insert(dash_positions, {x = x, y = y})
+    x, y = x + (dash_size + gap_size)*math.cos(r), y + (dash_size + gap_size)*math.sin(r)
+    if math.distance(x1, y1, x + dash_size*math.cos(r), y + dash_size*math.sin(r)) > l then 
+      -- if adding a dash next goes beyond the line's size, then end the loop and thus don't add it
+      break
+    end
+  end
+
+  -- Get the x, y position of the end of the right edge dash, and calculate the size of the gap at the end
+  local end_x, end_y = dash_positions[#dash_positions].x + dash_size*math.cos(r), dash_positions[#dash_positions].y + dash_size*math.sin(r)
+  local end_gap = math.distance(end_x, end_y, x2, y2)
+
+  -- Move all dashes to the right by half the size of the gap at the end and then draw
+  for _, p in ipairs(dash_positions) do p.x, p.y = p.x + 0.5*end_gap*math.cos(r), p.y + 0.5*end_gap*math.sin(r) end
+  for _, p in ipairs(dash_positions) do love.graphics.line(p.x, p.y, p.x + dash_size*math.cos(r), p.y + dash_size*math.sin(r)) end
+end
+
+function graphics.dashed_line(x1, y1, x2, y2, dash_size, gap_size, color, line_width)
+  local r, g, b, a = love.graphics.getColor()
+  if color then love.graphics.setColor(color.r, color.g, color.b, color.a) end
+  if line_width then love.graphics.setLineWidth(line_width) end
+
+  local r, l = math.angle_to_point(x1, y1, x2, y2), math.distance(x1, y1, x2, y2)
+  local edge_dash_positions = {}
+  table.insert(edge_dash_positions, {x = x1, y = y1})
+  table.insert(edge_dash_positions, {x = x2 + dash_size*math.cos(r + math.pi), y = y2 + dash_size*math.sin(r + math.pi)})
+  l = l - 2*dash_size
+  local inner_l = l
+  local gap_sizes = {} -- a list of all calculated gap sizes until dashes can't be added anymore, this is used later to figure out which one is the closest to the target gap_size value
+  local gap_size_index_to_inner_dash_positions = {} -- each gap size in the gap_sizes table has an index, that index also indexes the positions of the inner dashes in this table
+  local inner_dash_count = 0
+  while true do
+    if inner_l - dash_size > 0 then
+      inner_l = inner_l - dash_size
+      inner_dash_count = inner_dash_count + 1
+      local g = inner_l/(inner_dash_count + 1)
+      table.insert(gap_sizes, g)
+      local gap_size_index = #gap_sizes
+      gap_size_index_to_inner_dash_positions[gap_size_index] = {}
+      local x, y = edge_dash_positions[1].x + dash_size*math.cos(r), edge_dash_positions[1].y + dash_size*math.sin(r)
+      for i = 1, inner_dash_count do
+        table.insert(gap_size_index_to_inner_dash_positions[gap_size_index], {x = x + g*math.cos(r), y = y + g*math.sin(r)})
+        x, y = x + (g + dash_size)*math.cos(r), y + (g + dash_size)*math.sin(r)
+      end
+    else
+      break
+    end
+  end
+
+  local dash_positions = {}
+  if #gap_sizes <= 0 then -- there were no gaps added because the line's distance is too small, just make a list with edge positions
+    dash_positions[1] = edge_dash_positions[1]
+    table.insert(dash_positions, edge_dash_positions[2])
+  else
+    -- Find the gap size index that points to the gap size that is closest to the one passed in by the user (gap_size)
+    local closest_gap_size, closest_gap_size_index = 1000000, 0
+    for i, g in ipairs(gap_sizes) do
+      if math.abs(gap_size - g) < closest_gap_size then
+        closest_gap_size = math.abs(gap_size - g)
+        closest_gap_size_index = i
+      end
+    end
+
+    -- Create the final table by merging edge dash positions and the inner dash positions of the closest gap size index.
+    dash_positions[1] = edge_dash_positions[1]
+    array.concat(dash_positions, gap_size_index_to_inner_dash_positions[closest_gap_size_index])
+    table.insert(dash_positions, edge_dash_positions[2])
+  end
+
+  for _, p in ipairs(dash_positions) do
+    love.graphics.line(p.x, p.y, p.x + dash_size*math.cos(r), p.y + dash_size*math.sin(r))
+  end
+end
+
+function graphics.dashed_line_2(x1, y1, x2, y2, dash_size, gap_size, color, line_width)
+  local r, g, b, a = love.graphics.getColor()
+  if color then love.graphics.setColor(color.r, color.g, color.b, color.a) end
+  if line_width then love.graphics.setLineWidth(line_width) end
+
+  local r, l = math.angle_to_point(x1, y1, x2, y2), math.distance(x1, y1, x2, y2)
+  if l < dash_size then
+    love.graphics.line(x1, y1, x2, y2)
+  else
+    local gap_sizes = {} -- a list of all calculated gap sizes until dashes can't be added anymore, this is used later to figure out which one is the closest to the target gap_size value
+    local gap_size_index_to_dash_positions = {} -- each gap size in the gap_sizes table has an index, that index also indexes the positions of the dashes in this table
+    local dash_count = 0
+    while true do
+      if l - dash_size > 0 then
+        l = l - dash_size
+        dash_count = dash_count + 1
+        local g = l/(dash_count + 1)
+        table.insert(gap_sizes, g)
+        local gap_size_index = #gap_sizes
+        gap_size_index_to_dash_positions[gap_size_index] = {}
+        local x, y = x1 + g*math.cos(r), y1 + g*math.sin(r)
+        for i = 1, dash_count do
+          table.insert(gap_size_index_to_dash_positions[gap_size_index], {x = x, y = y})
+          x, y = x + (dash_size + g)*math.cos(r), y + (dash_size + g)*math.sin(r)
+        end
+      else
+        break
+      end
+    end
+
+    -- Find the gap size index that points to the gap size that is closest to the one passed in by the user (gap_size)
+    local closest_gap_size, closest_gap_size_index = 1000000, 0
+    for i, g in ipairs(gap_sizes) do
+      if math.abs(gap_size - g) < closest_gap_size then
+        closest_gap_size = math.abs(gap_size - g)
+        closest_gap_size_index = i
+      end
+    end
+
+    local dash_positions = gap_size_index_to_dash_positions[closest_gap_size_index]
+    for _, p in ipairs(dash_positions) do
+      love.graphics.line(p.x, p.y, p.x + dash_size*math.cos(r), p.y + dash_size*math.sin(r))
+    end
+  end
+end
+
+function graphics.dashed_rectangle(x, y, w, h, dash_size, gap_size, color, line_width)
+  graphics.dashed_line(x-w/2, y-h/2, x+w/2, y-h/2, dash_size, gap_size, color, line_width)
+  graphics.dashed_line(x+w/2, y-h/2, x+w/2, y+h/2, dash_size, gap_size, color, line_width)
+  graphics.dashed_line(x+w/2, y+h/2, x-w/2, y+h/2, dash_size, gap_size, color, line_width)
+  graphics.dashed_line(x-w/2, y+h/2, x-w/2, y-h/2, dash_size, gap_size, color, line_width)
+end
+```
 - [ ] change image color on hover
 - [ ] screen shake (jiggle)
-- [ ] how do draw animated dashed lines?
 - [ ] color-coded tooltips which can be updated on the fly to reflect info-how?
 - [ ] dynamic text notifications which can fade, and also contain images.
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree
 - [ ] scrolling panes in ui boxes?
-
 - [ ] prob add docs for entity_gamestate_management
 - [ ] document using shaders with ui elements (just use pipeline comp)
 - [ ] document exposeGlobalsToLua with lua doc bindings
-
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
-
 - [] way to make sure certain texts & images should be worldspace, or not
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
-
 - [ ] localize rendering of ui animations & text to the ui draw tree itself
     - [ ] ninepatch not tested
-        
-- [ ] take some shaders (esp. pixelate) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate
+- [ ] add pixelate shader and test : https://chatgpt.com/share/6880e3c7-7548-800a-9467-a82cc67898f3
+- [ ] add glow shader and test: https://chatgpt.com/share/6880e3c7-7548-800a-9467-a82cc67898f3
 - [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
 - [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
-
-
-## Bug fixes
-
-
 - [ ] test edge_effect shader
 
     - uniforms:
@@ -59,25 +209,23 @@ globalShaderUniforms.set("edge_shader", "iResolution",
     Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
 
 ```
+
+
+## Bug fixes
+
 - [ ] figure out how to do outline/border shaders done  here with arbitrary sprites https://github.com/mob-sakai/UIEffect -> shader code is in UIEffect.cginc, also scrape textures too /  want: pattern background overlay, edge shiny, transition (dissolve), 
     - [ ] Sampling Filter 
     - [ ] Transition filter
     - [ ] Shadow Mode
     - [ ] Edge mode
-
 - [ ] Unexplored areas: chipmunk2d in a game (how to mesh with my transforms?
 - [ ] unexplored option: 1 bit or simple shapes + global shadow shader like with SNKRX
 - [ ] unexplored option: static sprites with jitter + noise as in shader_todos.md for visual uniformity & style
-
 - [ ] lua libraries to use later for my game dev
     - https://github.com/love2d-community/awesome-love2d?tab=readme-ov-file
     - behavior tree & state machine libs for love might be interesting to explore @ later point if necessary
-
-- [ ] update the gamejam 50 branch with the new branch, then test
 - [ ] have all shadows for sprites, text, etc. in the same layer, below the sprites, text, etc.
-
 - [ ] Dont update text and ui that is out of bounds 
-
 - [ ] way to keep track of y-values for successive test mesages so they don't overlap
 
 

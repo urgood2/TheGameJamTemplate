@@ -1,6 +1,28 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+
+- [ ] implement textual data display from chipmunk demo. Also, the rendering seems more detailed. Also, how does it do mouse dragging? It seems to form a joint in the center of the scren? and turning objects into circles on collision (shatter demo)
+- [ ] what are aribters?
+- [ ] how to limit rotation & overshoot for objects when dragging them?
+- [ ] how to do rounded rectangles for collision shapes?
+- [ ] how to do arbitrary deformable maps like in bouncy hexagons demo?
+- [ ] how to do orbiting like in planet demo?
+- [ ] curshing detection & weight measrement in contact graph demo
+- [ ] sticky surfaces demo for sticky collisions
+- [ ] simple sensor based fluids demo for simple 2d objects floating in a fluid.
+- [ ] slice demo for 2d slicing.
+- [ ] convex demo for changing the shape of an object on the fly (convex polygon)
+- [ ] pump demo for engine-like pump machinery simulation
+- [ ] breakable chains demo for chains which break when force is applied
+- [ ] crane demo for wall world type resource clustering 
+- [ ] fabric-like springs (maybe use for gui at some point?) in the springies demo
+- [ ] one-way pass thorugh platforms - one way platforms demo
+- [ ] how are joints moved in tank demo? how does it steer? 
+- [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
+- [ ]
+
+- [ ] add dashed lines from here, how to animate them? animation here: https://chatgpt.com/share/6880e2c6-ff68-800a-b30b-c2c1514e1772
 - [ ] finish extracting from: https://chipmunk-physics.net/tutorials/ChipmunkTileDemo/
 - [ ] also, port over all the code from the objective c section of chipmunk for my own use
     - [ ] then check out the examples here: http://chipmunk-physics.net/documentation.php#examples to extract what I can into my physics class

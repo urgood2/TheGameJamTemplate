@@ -7,10 +7,13 @@
 #include <string>
 
 #include "systems/layer/layer.hpp"
+#include "systems/physics/physics_world.hpp"
 
 
 
 namespace game {
+    
+    extern std::shared_ptr<physics::PhysicsWorld> physicsWorld;
     
     extern std::vector<std::string> fullscreenShaders;
     

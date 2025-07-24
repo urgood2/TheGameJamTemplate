@@ -14,6 +14,7 @@
 #include "game.hpp" // game.hpp must be included after components.hpp
 
 #include "gui.hpp"
+#include "raylib.h"
 #include "raymath.h"
 
 #include "../third_party/rlImGui/extras/IconsFontAwesome6.h"
@@ -36,6 +37,7 @@
 #include "systems/ldtk_loader/ldtk_combined.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "rlgl.h"
+#include "systems/physics/physics_world.hpp"
 
 using std::pair;
 
@@ -420,6 +422,8 @@ namespace game
         rec.record_property("layers", {"ui_layer", "Layer", "Layer for UI elements."});
         rec.record_property("layers", {"finalOutput", "Layer", "Layer for final output, used for post-processing effects."});
     }
+    
+    std::shared_ptr<physics::PhysicsWorld> physicsWorld = nullptr;
 
     // perform game-specific initialization here. This makes it easier to find all the initialization code
     // specific to a game project
@@ -465,8 +469,34 @@ namespace game
         transform::registerDestroyListeners(globals::registry);
 
         SetUpShaderUniforms();
+        
+        // init physics
+        physicsWorld = physics::InitPhysicsWorld(&globals::registry, 64.0f, 0.0f, 0.f);
+        
+        entt::entity testEntity = globals::registry.create();
+        
+        physicsWorld->AddCollider(testEntity, "player", "rectangle", 100, 100, -1, -1, false);
+        
+        physicsWorld->SetBodyPosition(testEntity, 300.f, 300.f);
 
-        // init lua main script        
+        physicsWorld->AddScreenBounds(0, 0, GetScreenWidth(), GetScreenHeight());
+
+        // physicsWorld->SetDamping(testEntity, 0.4f);
+        // physicsWorld->SetAngularDamping(testEntity, 0.4f);
+        // physicsWorld->SetFriction(testEntity, 0.2f);
+
+        // some things I can do:
+        
+        /*
+        world.SetRestitution(player, 0.8f);   // make it bouncy
+world.SetFriction(player, 0.2f);      // make it slippery
+world.SetMass(player, 2.0f);          // change its mass at runtime
+world.SetBodyType(player, "kinematic");  // switch between static/kinematic/dynamic
+world.SetDamping(player, 0.05f);      // velocity damping
+world.SetGlobalDamping(0.2f);         // world‑wide damping
+        */
+
+        // init                                  lua main script        
         luaMainInitFunc = ai_system::masterStateLua["main"]["init"];
         luaMainUpdateFunc = ai_system::masterStateLua["main"]["update"];
         luaMainDrawFunc = ai_system::masterStateLua["main"]["draw"];
@@ -484,7 +514,24 @@ namespace game
 
     auto update(float delta) -> void
     {
+        physicsWorld->Update(delta);
         
+        //TODO: remove later
+        
+        // 1) On mouse‐down:
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
+
+        // 2) While dragging:
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            physicsWorld->UpdateMouseDrag(GetMouseX(), GetMouseY());
+        else
+            physicsWorld->EndMouseDrag();
+
+        // 3) On mouse‐up:
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+            physicsWorld->EndMouseDrag();
+
         globals::getMasterCacheEntityToParentCompMap.clear();
         globals::g_springCache.clear();
         
@@ -851,6 +898,9 @@ namespace game
 
             // Display UPS and FPS
             // DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
+            
+            // -- draw physics world
+            physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
 
             fade_system::draw();
 

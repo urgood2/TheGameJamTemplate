@@ -2844,5 +2844,104 @@ namespace physics
             throw std::invalid_argument("Invalid body type: " + bodyType);
         }
     }
+    
+    entt::entity PhysicsWorld::PointQuery(float x, float y) {
+        // Use nearest-point query with zero radius to pick the shape containing the point.
+        cpPointQueryInfo info;
+        cpShape* hit = cpSpacePointQueryNearest(
+            space,
+            cpv(x, y),
+            0.0f,
+            CP_SHAPE_FILTER_ALL,
+            &info
+        );
+        if (!hit) return entt::null;
+        return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(cpShapeGetUserData(hit)));
+    }
+
+    void PhysicsWorld::SetBodyPosition(entt::entity e, float x, float y) {
+        auto &c = registry->get<ColliderComponent>(e);
+        cpBodySetPosition(c.body.get(), cpv(x, y));
+    }
+
+    void PhysicsWorld::SetBodyVelocity(entt::entity e, float vx, float vy) {
+        auto &c = registry->get<ColliderComponent>(e);
+        cpBodySetVelocity(c.body.get(), cpv(vx, vy));
+    }
+    
+    /// Create four static segment‐shapes around [xMin,yMin]→[xMax,yMax].
+    /// 'thickness' is the segment radius.
+    void PhysicsWorld::AddScreenBounds(float xMin, float yMin,
+                                    float xMax, float yMax,
+                                    float thickness)
+    {
+        // Grab the built‑in static body (infinite mass)
+        cpBody* staticBody = cpSpaceGetStaticBody(space);
+
+        auto makeWall = [&](float ax, float ay, float bx, float by) {
+            // segment from A→B with given thickness
+            cpShape* seg = cpSegmentShapeNew(staticBody, cpv(ax, ay), cpv(bx, by), thickness);
+            // optional: tune friction/elasticity
+            cpShapeSetFriction(seg,    1.0f);
+            cpShapeSetElasticity(seg,  0.0f);
+            cpSpaceAddShape(space, seg);
+        };
+
+        // bottom
+        makeWall(xMin, yMin, xMax, yMin);
+        // right
+        makeWall(xMax, yMin, xMax, yMax);
+        // top
+        makeWall(xMax, yMax, xMin, yMax);
+        // left
+        makeWall(xMin, yMax, xMin, yMin);
+    }
+
+    void PhysicsWorld::StartMouseDrag(float x, float y) {
+    if (mouseJoint) return;     // already dragging
+    EndMouseDrag();             // tear down any stray joint
+
+    // 1) Ensure we have a static mouseBody, and position it
+    if (!mouseBody) {
+        mouseBody = cpBodyNewStatic();
+    }
+    cpBodySetPosition(mouseBody, cpv(x, y));
+
+    // 2) Pick the entity under the mouse
+    draggedEntity = PointQuery(x, y);
+    if (draggedEntity == entt::null) return;
+
+    auto &c = registry->get<ColliderComponent>(draggedEntity);
+
+    // 3) Compute each body's local anchor for that world point
+    cpVect worldPt = cpv(x, y);
+    cpVect anchorA = cpBodyWorldToLocal(mouseBody,    worldPt);
+    cpVect anchorB = cpBodyWorldToLocal(c.body.get(), worldPt);
+
+    // 4) Create a pivot joint using those local anchors
+    mouseJoint = cpPivotJointNew2(
+        mouseBody,
+        c.body.get(),
+        anchorA,
+        anchorB
+    );
+    cpSpaceAddConstraint(space, mouseJoint);
+}
+
+
+    void PhysicsWorld::UpdateMouseDrag(float x, float y) {
+        if (mouseBody) {
+            cpBodySetPosition(mouseBody, cpv(x, y));
+        }
+    }
+
+    void PhysicsWorld::EndMouseDrag() {
+        if (mouseJoint) {
+            cpSpaceRemoveConstraint(space, mouseJoint);
+            cpConstraintFree(mouseJoint);
+            mouseJoint = nullptr;
+        }
+        draggedEntity = entt::null;
+    }
 
 }

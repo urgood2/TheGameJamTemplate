@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "entt/entt.hpp"
 #include "raylib.h"
+#include "systems/layer/layer.hpp"
 
 namespace physics
 {
@@ -23,6 +24,7 @@ namespace physics
         {0x2a/255.0f, 0xa1/255.0f, 0x98/255.0f, 1.0f},
         {0x85/255.0f, 0x99/255.0f, 0x00/255.0f, 1.0f},
     };
+    
     
     // Draw a circle
     inline static void DrawCircle(cpVect p, cpFloat a, cpFloat r, cpSpaceDebugColor outline, cpSpaceDebugColor fill, cpDataPointer data) {
@@ -110,6 +112,7 @@ namespace physics
     
     // Call this function to draw the physics objects for a cpSpace when debugging. NOTE: if using a camera, call this function after beginMode2D(camera)
     inline static void ChipmunkDemoDefaultDrawImpl(cpSpace *space) {
+        
         cpSpaceDebugDrawOptions drawOptions = {
             DrawCircle,
             DrawSegment,
@@ -209,6 +212,10 @@ namespace physics
         entt::registry *registry;
         cpSpace *space;
         float meter; // REVIEW: unused
+        // Internal state for mouse dragging
+        cpBody* mouseBody = nullptr;           // a static body to attach the mouse joint
+        cpConstraint* mouseJoint = nullptr;    // the active pivot joint
+        entt::entity draggedEntity = entt::null; // which entity is being dragged
 
         // Collision Event Maps
         std::unordered_map<std::string, std::vector<CollisionEvent>> collisionEnter;
@@ -252,6 +259,21 @@ namespace physics
         void UpdateColliderTag(entt::entity entity, const std::string &newTag);
 
         // Utility Functions
+        /// Query the first entity at world point (x,y). Returns entt::null if none found.
+        void AddScreenBounds(float xMin, float yMin,
+                                    float xMax, float yMax,
+                                    float thickness = 1.0f);
+        entt::entity PointQuery(float x, float y);
+        /// Teleport an entity's body to (x,y).
+        void SetBodyPosition(entt::entity e, float x, float y);\
+        /// Directly set an entity's linear velocity.
+        void SetBodyVelocity(entt::entity e, float vx, float vy);
+        /// Begin dragging the body under (x,y) with a pivot joint.
+        void StartMouseDrag(float x, float y);
+        /// Update the drag target to follow (x,y).
+        void UpdateMouseDrag(float x, float y);
+        /// End the current mouse drag.
+        void EndMouseDrag();
         const std::vector<CollisionEvent> &GetCollisionEnter(const std::string &type1, const std::string &type2);
         const std::vector<void *> &GetTriggerEnter(const std::string &type1, const std::string &type2);
         std::vector<RaycastHit> Raycast(float x1, float y1, float x2, float y2);
@@ -323,5 +345,9 @@ namespace physics
         std::vector<cpVect> GetVertices(entt::entity entity);
         void SetBodyType(entt::entity entity, const std::string &bodyType);
     };
-
+    
+    
+    inline static std::shared_ptr<PhysicsWorld> InitPhysicsWorld(entt::registry *registry, float meter = 64.0f, float gravityX = 0.0f, float gravityY = 0.0f) {
+        return std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY);
+    }
 }

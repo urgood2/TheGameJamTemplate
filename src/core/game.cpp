@@ -475,7 +475,7 @@ namespace game
         
         entt::entity testEntity = globals::registry.create();
         
-        physicsWorld->AddCollider(testEntity, "player", "rectangle", 100, 100, -1, -1, false);
+        physicsWorld->AddCollider(testEntity, "player", "rectangle", 50, 50, -1, -1, false);
         
         physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
 
@@ -489,6 +489,7 @@ namespace game
         
         //TODO: test CreateTilemapColliders
         // original row‑major map (6 rows, 8 cols)
+        /// 0 = empty, 1 = solid
         std::vector<std::vector<bool>> rowMajor = {
             {0,0,0,0,0,0,0,0},
             {0,1,1,1,1,1,1,0},

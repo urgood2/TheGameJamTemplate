@@ -2851,7 +2851,7 @@ namespace physics
         cpShape* hit = cpSpacePointQueryNearest(
             space,
             cpv(x, y),
-            0.0f,
+            3.0f,
             CP_SHAPE_FILTER_ALL,
             &info
         );
@@ -2867,6 +2867,20 @@ namespace physics
     void PhysicsWorld::SetBodyVelocity(entt::entity e, float vx, float vy) {
         auto &c = registry->get<ColliderComponent>(e);
         cpBodySetVelocity(c.body.get(), cpv(vx, vy));
+    }
+    
+    /// In your PhysicsWorld class:
+    void PhysicsWorld::AddUprightSpring(entt::entity e, float stiffness, float damping) {
+        auto &c = registry->get<ColliderComponent>(e);
+        // Attach the body to the static world body at restAngle = 0
+        cpConstraint* spring = cpDampedRotarySpringNew(
+            cpSpaceGetStaticBody(space),  // bodyA: the static “world” body
+            c.body.get(),                 // bodyB: your rotating body
+            0.0f,                         // restAngle = 0 radians (upright)
+            stiffness,                    // spring stiffness
+            damping                       // spring damping
+        );
+        cpSpaceAddConstraint(space, spring);
     }
     
     /// Create four static segment‐shapes around [xMin,yMin]→[xMax,yMax].

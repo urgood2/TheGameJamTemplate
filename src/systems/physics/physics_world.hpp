@@ -260,6 +260,7 @@ namespace physics
 
         // Utility Functions
         /// Query the first entity at world point (x,y). Returns entt::null if none found.
+        void AddUprightSpring(entt::entity e, float stiffness = 100.0f, float damping = 10.0f);
         void AddScreenBounds(float xMin, float yMin,
                                     float xMax, float yMax,
                                     float thickness = 1.0f);

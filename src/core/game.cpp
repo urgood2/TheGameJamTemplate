@@ -481,9 +481,10 @@ namespace game
 
         physicsWorld->AddScreenBounds(0, 0, GetScreenWidth(), GetScreenHeight());
 
-        // physicsWorld->SetDamping(testEntity, 0.4f);
-        // physicsWorld->SetAngularDamping(testEntity, 0.4f);
-        // physicsWorld->SetFriction(testEntity, 0.2f);
+        physicsWorld->SetDamping(testEntity, 0.4f);
+        physicsWorld->SetAngularDamping(testEntity, 0.4f);
+        physicsWorld->AddUprightSpring(testEntity, 1500.0f, 400.0f);
+        physicsWorld->SetFriction(testEntity, 0.2f);
 
         // some things I can do:
         

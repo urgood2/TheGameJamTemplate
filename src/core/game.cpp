@@ -477,14 +477,37 @@ namespace game
         
         physicsWorld->AddCollider(testEntity, "player", "rectangle", 100, 100, -1, -1, false);
         
-        physicsWorld->SetBodyPosition(testEntity, 300.f, 300.f);
+        physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
 
         physicsWorld->AddScreenBounds(0, 0, GetScreenWidth(), GetScreenHeight());
 
-        physicsWorld->SetDamping(testEntity, 0.4f);
-        physicsWorld->SetAngularDamping(testEntity, 0.4f);
-        physicsWorld->AddUprightSpring(testEntity, 1500.0f, 400.0f);
+        physicsWorld->SetDamping(testEntity, 3.5f);
+        physicsWorld->SetAngularDamping(testEntity, 3.0f);
+        physicsWorld->AddUprightSpring(testEntity, 1900.0f, 1500.0f);
         physicsWorld->SetFriction(testEntity, 0.2f);
+        physicsWorld->CreateTopDownController(testEntity);
+        
+        //TODO: test CreateTilemapColliders
+        // original row‑major map (6 rows, 8 cols)
+        std::vector<std::vector<bool>> rowMajor = {
+            {0,0,0,0,0,0,0,0},
+            {0,1,1,1,1,1,1,0},
+            {0,1,0,0,0,0,1,0},
+            {0,1,0,1,1,0,1,0},
+            {0,1,0,0,0,0,1,0},
+            {0,1,1,1,1,1,1,0},
+        };
+
+        // transpose → colMajor[x][y]
+        std::vector<std::vector<bool>> sampleMap(8, std::vector<bool>(6));
+        for(int y = 0; y < 6; y++){
+            for(int x = 0; x < 8; x++){
+                sampleMap[x][y] = rowMajor[y][x];
+            }
+        }
+
+        // now width = 8, height = 6 as expected
+        physicsWorld->CreateTilemapColliders(sampleMap, 100.0f, 5.0f);
 
         // some things I can do:
         
@@ -520,18 +543,23 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //TODO: remove later
         
         // 1) On mouse‐down:
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-            physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
-
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            // physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
+            
+            // top down controller movement
+            cpBodySetPosition(physicsWorld->controlBody, cpv(GetMouseX(), GetMouseY()));
+            // cpBodySetPosition(controlBody, desiredTouchPos);
+        }
+            
         // 2) While dragging:
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-            physicsWorld->UpdateMouseDrag(GetMouseX(), GetMouseY());
-        else
-            physicsWorld->EndMouseDrag();
+        // if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+        //     physicsWorld->UpdateMouseDrag(GetMouseX(), GetMouseY());
+        // else
+        //     physicsWorld->EndMouseDrag();
 
         // 3) On mouse‐up:
-        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
-            physicsWorld->EndMouseDrag();
+        // if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+        //     physicsWorld->EndMouseDrag();
 
         globals::getMasterCacheEntityToParentCompMap.clear();
         globals::g_springCache.clear();

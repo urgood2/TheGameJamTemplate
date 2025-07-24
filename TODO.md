@@ -1,6 +1,21 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] need to test: 
+```cpp
+void PhysicsWorld::CreateTilemapColliders(
+        const std::vector<std::vector<bool>>& collidable,
+        float tileSize,
+        float segmentRadius /*= 1.0f*/
+    )
+```
+- [ ] How to mesh my transforms with chipmunk 2d to do lesast amount of work and be performant?
+- [ ] Rendering sprites based on the cpbodies? How? What about text? Mesh with current system? What if it has multiiple shapes?
+- [ ] Try out chipmunk2d demo
+- [ ] Gotta add scroll pane
+- [ ] Add scissoring to layer queue code
+- [ ] refer to autogeometry chipmunk demo for auto digging - make this implementable so I can use it later.
+- scrool pane for ui: https://chatgpt.com/share/6881dd9f-27ac-800a-af9f-935b61355da7
 - [ ] change image color on hover
 - [ ] screen shake (jiggle)
 - [ ] how do draw animated dashed lines?

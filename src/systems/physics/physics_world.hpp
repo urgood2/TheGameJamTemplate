@@ -216,7 +216,9 @@ namespace physics
         cpBody* mouseBody = nullptr;           // a static body to attach the mouse joint
         cpConstraint* mouseJoint = nullptr;    // the active pivot joint
         entt::entity draggedEntity = entt::null; // which entity is being dragged
-
+        cpBody* controlBody = nullptr;    // for your player/controller joint
+        //TODO: isolate the above into the collision component later
+            
         // Collision Event Maps
         std::unordered_map<std::string, std::vector<CollisionEvent>> collisionEnter;
         std::unordered_map<std::string, std::vector<CollisionEvent>> collisionActive;
@@ -260,6 +262,15 @@ namespace physics
 
         // Utility Functions
         /// Query the first entity at world point (x,y). Returns entt::null if none found.
+        void CreateTilemapColliders(
+            const std::vector<std::vector<bool>>& collidable,
+            float tileSize,
+            float segmentRadius = 1.0f
+        );
+        void CreateTopDownController(
+            entt::entity entity,
+            float maxBias  = 200.0f,
+            float maxForce = 3000.0f);
         void AddUprightSpring(entt::entity e, float stiffness = 100.0f, float damping = 10.0f);
         void AddScreenBounds(float xMin, float yMin,
                                     float xMax, float yMax,

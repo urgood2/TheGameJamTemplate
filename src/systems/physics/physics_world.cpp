@@ -3,6 +3,8 @@
 #include <raylib.h>
 #include "util/common_headers.hpp"
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "../../third_party/chipmunk/include/chipmunk/cpPolyline.h"
+#include "../../third_party/chipmunk/include/chipmunk/cpMarch.h"
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -2957,5 +2959,109 @@ namespace physics
         }
         draggedEntity = entt::null;
     }
+    
+    /// @brief Build static geometry from a boolean tilemap exactly like the Obj‑C demo.
+    /// @param collidable  grid[w][h] where true = solid tile, false = empty
+    /// @param tileSize    world‑units per tile (assumes square tiles)
+    /// @param segmentRadius  segment thickness (defaults to 1.0)
+    void PhysicsWorld::CreateTilemapColliders(
+        const std::vector<std::vector<bool>>& collidable,
+        float tileSize,
+        float segmentRadius /*= 1.0f*/
+    ) {
+        int w = (int)collidable.size();
+        int h = w ? (int)collidable[0].size() : 0;
+        if (w == 0 || h == 0) return;
 
+        // 1) Sampling rect: from -0.5→w+0.5 so that samples hit tile centers 0.5,1.5,…,w-0.5
+        cpBB sampleRect = cpBBNew(-0.5f, -0.5f, w + 0.5f, h + 0.5f);
+
+        // 2) Clamp region so out‑of‑bounds samples snap to the edge tiles
+        cpBB clampBB = cpBBNew(0.5f, 0.5f, w - 0.5f, h - 0.5f);
+
+        struct Sampler {
+            const std::vector<std::vector<bool>>* grid;
+            int w, h;
+            cpBB clamp;
+        } sampler{ &collidable, w, h, clampBB };
+
+        // 3) Density sampler returns 1.0 if solid, 0.0 if empty
+        auto sampleFunc = +[](cpVect pt, void* data)->cpFloat {
+            auto* s = static_cast<Sampler*>(data);
+            pt = cpBBClampVect(s->clamp, pt);
+            int tx = (int)pt.x;
+            int ty = (int)pt.y;
+            ty = s->h - 1 - ty;  // flip Y
+            return (*s->grid)[tx][ty] ? 1.0f : 0.0f;
+        };
+
+        // 4) Marching‑squares: w+2 × h+2 samples, threshold = 0.5
+        cpPolylineSet* polys = cpPolylineSetNew();
+        cpMarchHard(
+            sampleRect,
+            (unsigned)w + 2,
+            (unsigned)h + 2,
+            0.5f,
+            (cpMarchSegmentFunc)cpPolylineSetCollectSegment,
+            polys,
+            sampleFunc,
+            &sampler
+        );
+
+        // 5) For each polyline, simplify (tol=0→exact), then emit segments
+        for (int i = 0; i < polys->count; ++i) {
+            cpPolyline* line = polys->lines[i];
+            cpPolyline* simp = cpPolylineSimplifyCurves(line, 0.0f);
+
+            for (int j = 0; j < simp->count - 1; ++j) {
+                cpVect a = cpvmult(simp->verts[j],     tileSize);
+                cpVect b = cpvmult(simp->verts[j + 1], tileSize);
+                cpShape* seg = cpSegmentShapeNew(
+                    cpSpaceGetStaticBody(space),
+                    a, b,
+                    segmentRadius
+                );
+                cpShapeSetFriction(seg, 1.0f);
+                cpSpaceAddShape(space, seg);
+            }
+
+            if (simp != line) cpPolylineFree(simp);
+        }
+
+        // 6) Clean up
+        cpPolylineSetFree(polys, cpTrue);
+    }
+
+    
+    /// @brief Turn any dynamic body into a “touch‐to‐move” top‑down controller.
+    ///    (Matches the Obj‑C demo’s targetPointBody + pivot joint approach.)
+    /// In your game loop / input handler, simply do:
+    ///     cpBodySetPosition(controlBody, desiredTouchPos);
+    /// and then step the space as usual.
+    /// @param entity    The EnTT entity you want to drive.
+    /// @param maxBias   Joint bias = max correction speed (→ player top speed).
+    /// @param maxForce  Joint force = how hard we “pull” the player body.
+    void PhysicsWorld::CreateTopDownController(
+        entt::entity entity,
+        float maxBias,
+        float maxForce
+    ) {
+        // stash a static controlBody once
+        if (!controlBody) {
+            controlBody = cpBodyNewStatic();
+            cpSpaceAddBody(space, controlBody);
+        }
+
+        auto& col = registry->get<ColliderComponent>(entity);
+        // pivot both bodies together at their respective centers
+        cpConstraint* joint = cpPivotJointNew2(
+            controlBody,
+            col.body.get(),
+            cpvzero,
+            cpvzero
+        );
+        cpConstraintSetMaxBias(joint,  maxBias);
+        cpConstraintSetMaxForce(joint, maxForce);
+        cpSpaceAddConstraint(space, joint);
+    }
 }

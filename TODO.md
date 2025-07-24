@@ -1,14 +1,10 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
-- [ ] need to test: 
-```cpp
-void PhysicsWorld::CreateTilemapColliders(
-        const std::vector<std::vector<bool>>& collidable,
-        float tileSize,
-        float segmentRadius /*= 1.0f*/
-    )
-```
+- [ ] finish extracting from: https://chipmunk-physics.net/tutorials/ChipmunkTileDemo/
+- [ ] also, port over all the code from the objective c section of chipmunk for my own use
+    - [ ] then check out the examples here: http://chipmunk-physics.net/documentation.php#examples to extract what I can into my physics class
+- [ ] extract ideas from: https://chipmunk-physics.net/tutorials/SimpleObjectiveChipmunk/
 - [ ] How to mesh my transforms with chipmunk 2d to do lesast amount of work and be performant?
 - [ ] Rendering sprites based on the cpbodies? How? What about text? Mesh with current system? What if it has multiiple shapes?
 - [ ] Try out chipmunk2d demo

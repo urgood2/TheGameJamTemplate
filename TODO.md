@@ -1,7 +1,48 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] changing color of a hit circle using chaining:
+```lua
+function HitCircle:change_color(delay_multiplier, target_color)
+  delay_multiplier = delay_multiplier or 0.5
+  self.t:after(delay_multiplier * self.duration,
+               function() self.color = target_color end)
+  return self
+end
+```
+- [ ] note that chipmunk2d uses center of gravity as the location for an ojbect's coordinates.
+- [ ] tweening timer function is much simpler here and can handle multiple variables at the same time. HOw to do this in my impl?
+```lua
+-- Tweens the target's values specified by the source table for delay seconds using the given tweening method.
+-- All tween methods can be found in the math/math file.
+-- If after is passed in then it is called after the duration ends.
+-- If tag is passed in then any other trigger actions with the same tag are automatically cancelled.
+-- trigger:tween(0.2, self, {sx = 0, sy = 0}, math.linear) -> tweens this object's scale variables to 0 linearly over 0.2 seconds
+-- trigger:tween(0.2, self, {sx = 0, sy = 0}, math.linear, function() self.dead = true end) -> tweens this object's scale variables to 0 linearly over 0.2 seconds and then kills it
+function Trigger:tween(delay, target, source, method, after, tag)
+  local method = method or math.linear
+  local after = after or function() end
+  local tag = tag or random:uid()
+  local initial_values = {}
+  for k, _ in pairs(source) do initial_values[k] = target[k] end
+  self.triggers[tag] = {type = "tween", timer = 0, unresolved_delay = delay, delay = self:resolve_delay(delay), target = target, initial_values = initial_values, source = source, method = method, after = after}
+end
 
+```
+- [ ] smooth particle movement:
+```lua
+self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, function() self.dead = true end)
+```
+- [ ] understand & implement working copies of files in the todo_from_snkrx folder
+- [ ] do what SNKRX does and add a sort of dark overlay behind everything else.
+- [ ] add some kind of screen which shares the amount of points scored
+- [ ]add simple crash reporting to web builds 
+- [ ] copy what I can from SNKRX repo. including shape primitives.
+- [ ] Raylib stencil. https://github.com/raysan5/raylib/discussions/2964 Add queue command ver. Also, how to use? (2025-07-24 > todo/daily)
+- [ ] Explore game firmulaa like autochess (2025-07-25 > todo/daily)
+- [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula
+- [ ] how to do world space vs screen space for chipmunk (2025-07-25 > todo/daily)
+Also, fuse chipmunk like this eventuallu: https://chatgpt.com/share/688262af-d40c-800a-87e3-d1b2ad49645d (2025-07-25 > todo/daily)
 - [ ] implement textual data display from chipmunk demo. Also, the rendering seems more detailed. Also, how does it do mouse dragging? It seems to form a joint in the center of the scren? and turning objects into circles on collision (shatter demo)
 - [ ] what are aribters?
 - [ ] how to limit rotation & overshoot for objects when dragging them?

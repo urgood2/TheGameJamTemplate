@@ -49,7 +49,7 @@ public:
     cpTransform transform() const { return _body.transform; }
 
     // Properties: getters and setters
-    cpBodyType type() const;
+    cpBodyType type();
     void setType(cpBodyType value);
 
     cpFloat mass() const;

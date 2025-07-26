@@ -1,6 +1,8 @@
 
 // ChipmunkSpace.cpp
 #include "ChipmunkSpace.hpp"
+#include "ChipmunkConstraints.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk_private.h"
 #include <cstring>
 
 // C-style callbacks for handlers
@@ -41,20 +43,20 @@ ChipmunkSpace::~ChipmunkSpace() {
 #define ACCESSOR(name, ctype, getter, setter) \
 ctype ChipmunkSpace::name() const { return getter(_space); } \
 void ChipmunkSpace::set##name(ctype v) { setter(_space, v); }
-ACCESSOR(iterations, int, cpSpaceGetIterations, cpSpaceSetIterations)
-ACCESSOR(gravity, cpVect, cpSpaceGetGravity, cpSpaceSetGravity)
-ACCESSOR(damping, cpFloat, cpSpaceGetDamping, cpSpaceSetDamping)
-ACCESSOR(idleSpeedThreshold, cpFloat, cpSpaceGetIdleSpeedThreshold, cpSpaceSetIdleSpeedThreshold)
-ACCESSOR(sleepTimeThreshold, cpFloat, cpSpaceGetSleepTimeThreshold, cpSpaceSetSleepTimeThreshold)
-ACCESSOR(collisionSlop, cpFloat, cpSpaceGetCollisionSlop, cpSpaceSetCollisionSlop)
-ACCESSOR(collisionBias, cpFloat, cpSpaceGetCollisionBias, cpSpaceSetCollisionBias)
-ACCESSOR(collisionPersistence, cpTimestamp, cpSpaceGetCollisionPersistence, cpSpaceSetCollisionPersistence)
+ACCESSOR(Iterations, int, cpSpaceGetIterations, cpSpaceSetIterations)
+ACCESSOR(Gravity, cpVect, cpSpaceGetGravity, cpSpaceSetGravity)
+ACCESSOR(Damping, cpFloat, cpSpaceGetDamping, cpSpaceSetDamping)
+ACCESSOR(IdleSpeedThreshold, cpFloat, cpSpaceGetIdleSpeedThreshold, cpSpaceSetIdleSpeedThreshold)
+ACCESSOR(SleepTimeThreshold, cpFloat, cpSpaceGetSleepTimeThreshold, cpSpaceSetSleepTimeThreshold)
+ACCESSOR(CollisionSlop, cpFloat, cpSpaceGetCollisionSlop, cpSpaceSetCollisionSlop)
+ACCESSOR(CollisionBias, cpFloat, cpSpaceGetCollisionBias, cpSpaceSetCollisionBias)
+ACCESSOR(CollisionPersistence, cpTimestamp, cpSpaceGetCollisionPersistence, cpSpaceSetCollisionPersistence)
 
 cpSpace* ChipmunkSpace::space() const { return _space; }
 ChipmunkBody* ChipmunkSpace::staticBody() const { return _staticBody; }
 cpFloat ChipmunkSpace::currentTimeStep() const { return cpSpaceGetCurrentTimeStep(_space); }
 bool ChipmunkSpace::isLocked() const { return cpSpaceIsLocked(_space); }
-void* ChipmunkSpace::userData() const { return cpSpaceGetUserData(_space); }
+void* ChipmunkSpace::UserData() const { return cpSpaceGetUserData(_space); }
 void ChipmunkSpace::setUserData(void* data) { cpSpaceSetUserData(_space, data); }
 
 ChipmunkSpace* ChipmunkSpace::SpaceFromCPSpace(cpSpace* s) {

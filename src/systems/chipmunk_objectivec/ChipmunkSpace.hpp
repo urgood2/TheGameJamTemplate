@@ -35,8 +35,6 @@
 #include "ChipmunkBody.hpp"
 #include "ChipmunkShape.hpp"
 #include "ChipmunkConstraints.hpp"
-#include "ChipmunkPointQueryInfo.hpp"
-#include "ChipmunkSegmentQueryInfo.hpp"
 
 // Arbiter helper macros
 #define CHIPMUNK_ARBITER_GET_SHAPES(__arb__, __a__, __b__) \
@@ -60,21 +58,21 @@ public:
     virtual ~ChipmunkSpace();
 
     // Properties
-    int iterations() const;
+    int Iterations() const;
     void setIterations(int v);
-    cpVect gravity() const;
+    cpVect Gravity() const;
     void setGravity(cpVect v);
-    cpFloat damping() const;
+    cpFloat Damping() const;
     void setDamping(cpFloat v);
-    cpFloat idleSpeedThreshold() const;
+    cpFloat IdleSpeedThreshold() const;
     void setIdleSpeedThreshold(cpFloat v);
-    cpFloat sleepTimeThreshold() const;
+    cpFloat SleepTimeThreshold() const;
     void setSleepTimeThreshold(cpFloat v);
-    cpFloat collisionSlop() const;
+    cpFloat CollisionSlop() const;
     void setCollisionSlop(cpFloat v);
-    cpFloat collisionBias() const;
+    cpFloat CollisionBias() const;
     void setCollisionBias(cpFloat v);
-    cpTimestamp collisionPersistence() const;
+    cpTimestamp CollisionPersistence() const;
     void setCollisionPersistence(cpTimestamp v);
 
     cpSpace* space() const;
@@ -82,7 +80,7 @@ public:
     cpFloat currentTimeStep() const;
     bool isLocked() const;
 
-    void* userData() const;
+    void* UserData() const;
     void setUserData(void* data);
 
     static ChipmunkSpace* SpaceFromCPSpace(cpSpace* s);

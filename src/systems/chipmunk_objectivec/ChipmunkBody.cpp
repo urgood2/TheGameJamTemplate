@@ -8,7 +8,13 @@
 
 // Check if a virtual method is overridden in subclass
 bool ChipmunkBody::methodIsOverridden(void* methodPtr) const {
-    return methodPtr != *reinterpret_cast<void**>(reinterpret_cast<char*>(this) + /* offset to vtable */ 0);
+    constexpr std::size_t vtableOffset = /* your vtable offset */;
+    // Don’t drop const here:
+    const char* base = reinterpret_cast<const char*>(this);
+    // Read a pointer‐sized value out of the vtable slot:
+    void* current =
+      *reinterpret_cast<void* const*>(base + vtableOffset);
+    return methodPtr != current;
 }
 
 // Factory methods
@@ -33,17 +39,16 @@ ChipmunkBody* ChipmunkBody::KinematicBody() {
 }
 
 // Constructor / Destructor
+
 ChipmunkBody::ChipmunkBody(cpFloat mass, cpFloat moment) {
     cpBodyInit(&_body, mass, moment);
     _body.userData = this;
 
-    if (methodIsOverridden(reinterpret_cast<void*>(&ChipmunkBody::updateVelocity))) {
-        _body.velocity_func = VelocityFunc;
-    }
-    if (methodIsOverridden(reinterpret_cast<void*>(&ChipmunkBody::updatePosition))) {
-        _body.position_func = PositionFunc;
-    }
+    // Always install these trampolines:
+    _body.velocity_func = VelocityFunc;
+    _body.position_func = PositionFunc;
 }
+
 
 ChipmunkBody::~ChipmunkBody() {
     cpBodyDestroy(&_body);
@@ -104,8 +109,8 @@ void ChipmunkBody::sleep() { cpBodySleep(&_body); }
 
 // Protocol implementations
 std::vector<ChipmunkBaseObject*> ChipmunkBody::chipmunkObjects() const { return { const_cast<ChipmunkBody*>(this) }; }
-void ChipmunkBody::addToSpace(ChipmunkSpace* space) { space->addBody(this); }
-void ChipmunkBody::removeFromSpace(ChipmunkSpace* space) { space->removeBody(this); }
+void ChipmunkBody::addToSpace(ChipmunkSpace* space) { space->add(this); }
+void ChipmunkBody::removeFromSpace(ChipmunkSpace* space) { space->remove(this); }
 
 // Integration callback wrappers
 void ChipmunkBody::VelocityFunc(cpBody* body, cpVect gravity, cpFloat damping, cpFloat dt) {
@@ -121,8 +126,6 @@ void ChipmunkBody::updateVelocity(cpFloat dt, cpVect gravity, cpFloat damping) {
 void ChipmunkBody::updatePosition(cpFloat dt) {
     cpBodyUpdatePosition(&_body, dt);
 }
-
-#include <chipmunk/chipmunk.h>
 
 ChipmunkBody* ChipmunkSpaceDispatch::addBody(ChipmunkBody* obj) {
     cpSpace* space = /* obtain underlying cpSpace pointer */ nullptr;

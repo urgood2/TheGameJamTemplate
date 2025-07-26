@@ -38,14 +38,61 @@
 #include "ChipmunkSpace.hpp"
 #include <vector>
 
+
+
+// ChipmunkPointQueryInfo.hpp
+class ChipmunkPointQueryInfo {
+public:
+    ChipmunkPointQueryInfo() { std::memset(&_info, 0, sizeof(_info)); }
+    ChipmunkPointQueryInfo(cpShape* s, const cpPointQueryInfo& info) : _info(info) { _shape = static_cast<ChipmunkShape*>(s->userData); }
+    ChipmunkShape* shape() const { return _shape; }
+    cpVect point() const { return _info.point; }
+    cpFloat distance() const { return _info.distance; }
+    cpVect gradient() const { return _info.gradient; }
+private:
+    ChipmunkShape* _shape = nullptr;
+    cpPointQueryInfo _info;
+};
+
+class ChipmunkSegmentQueryInfo {
+public:
+    ChipmunkSegmentQueryInfo() { std::memset(&_info, 0, sizeof(_info)); }
+    ChipmunkSegmentQueryInfo(cpShape* s, const cpSegmentQueryInfo& info) : _info(info) { _shape = static_cast<ChipmunkShape*>(s->userData); }
+    ChipmunkShape* shape() const { return _shape; }
+    cpFloat t() const { return _info.alpha; }
+    cpVect normal() const { return _info.normal; }
+    cpVect point() const { return _info.point; }
+    cpFloat dist() const { return cpvdist(_start, _end)*_info.alpha; }
+private:
+    ChipmunkShape* _shape = nullptr;
+    cpSegmentQueryInfo _info;
+    cpVect _start, _end;
+};
+
+class ChipmunkShapeQueryInfo {
+public:
+    ChipmunkShapeQueryInfo() = default;
+    ChipmunkShapeQueryInfo(ChipmunkShape* s, const cpContactPointSet& pts) : _shape(s), _points(pts) {}
+    ChipmunkShape* shape() const { return _shape; }
+    const cpContactPointSet& contactPoints() const { return _points; }
+private:
+    ChipmunkShape* _shape = nullptr;
+    cpContactPointSet _points;
+};
+
+
 class ChipmunkShape : public ChipmunkBaseObject {
+private:
+    cpShape* _shape;
 public:
     static ChipmunkShape* ShapeFromCPShape(cpShape* shape) {
         auto* obj = static_cast<ChipmunkShape*>(shape->userData);
         return obj;
     }
 
-    virtual cpShape* shape() const = 0;
+    // virtual cpShape* shape() const = 0;
+    virtual cpShape* shape() const { return _shape; }
+
     virtual ~ChipmunkShape() = default;
 
     ChipmunkBody* body() const {
@@ -109,16 +156,18 @@ public:
     }
 
     void addToSpace(ChipmunkSpace* sp) override {
-        sp->addShape(this);
+        sp->add(this);
     }
     void removeFromSpace(ChipmunkSpace* sp) override {
-        sp->removeShape(this);
+        sp->remove(this);
     }
 };
 
 
+
 // ChipmunkCircleShape
 class ChipmunkCircleShape : public ChipmunkShape {
+
 public:
     static ChipmunkCircleShape* CircleWithBody(ChipmunkBody* body, cpFloat radius, cpVect offset) {
         return new ChipmunkCircleShape(body, radius, offset);
@@ -145,7 +194,7 @@ public:
         _shape.shape.userData = this;
     }
     cpShape* shape() const override { return reinterpret_cast<cpShape*>(const_cast<cpSegmentShape*>(&_shape)); }
-    void setPrevNeighbor(cpVect prev, cpVect next) { cpSegmentShapeSetNeighbors(&_shape, prev, next); }
+    void setPrevNeighbor(cpVect prev, cpVect next) { cpSegmentShapeSetNeighbors(&(_shape.shape), prev, next); }
     cpVect a() const { return cpSegmentShapeGetA(shape()); }
     cpVect b() const { return cpSegmentShapeGetB(shape()); }
     cpVect normal() const { return cpSegmentShapeGetNormal(shape()); }
@@ -173,44 +222,4 @@ public:
     cpVect getVertex(int i) const { return cpPolyShapeGetVert(shape(), i); }
 private:
     cpPolyShape _shape;
-};
-
-// ChipmunkPointQueryInfo.hpp
-class ChipmunkPointQueryInfo {
-public:
-    ChipmunkPointQueryInfo() { std::memset(&_info, 0, sizeof(_info)); }
-    ChipmunkPointQueryInfo(cpShape* s, const cpPointQueryInfo& info) : _info(info) { _shape = static_cast<ChipmunkShape*>(s->userData); }
-    ChipmunkShape* shape() const { return _shape; }
-    cpVect point() const { return _info.point; }
-    cpFloat distance() const { return _info.distance; }
-    cpVect gradient() const { return _info.gradient; }
-private:
-    ChipmunkShape* _shape = nullptr;
-    cpPointQueryInfo _info;
-};
-
-class ChipmunkSegmentQueryInfo {
-public:
-    ChipmunkSegmentQueryInfo() { std::memset(&_info, 0, sizeof(_info)); }
-    ChipmunkSegmentQueryInfo(cpShape* s, const cpSegmentQueryInfo& info) : _info(info) { _shape = static_cast<ChipmunkShape*>(s->userData); }
-    ChipmunkShape* shape() const { return _shape; }
-    cpFloat t() const { return _info.alpha; }
-    cpVect normal() const { return _info.normal; }
-    cpVect point() const { return _info.point; }
-    cpFloat dist() const { return cpvdist(_start, _end)*_info.alpha; }
-private:
-    ChipmunkShape* _shape = nullptr;
-    cpSegmentQueryInfo _info;
-    cpVect _start, _end;
-};
-
-class ChipmunkShapeQueryInfo {
-public:
-    ChipmunkShapeQueryInfo() = default;
-    ChipmunkShapeQueryInfo(ChipmunkShape* s, const cpContactPointSet& pts) : _shape(s), _points(pts) {}
-    ChipmunkShape* shape() const { return _shape; }
-    const cpContactPointSet& contactPoints() const { return _points; }
-private:
-    ChipmunkShape* _shape = nullptr;
-    cpContactPointSet _points;
 };

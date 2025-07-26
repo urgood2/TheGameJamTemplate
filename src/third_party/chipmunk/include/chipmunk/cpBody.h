@@ -1,3 +1,6 @@
+#ifndef CP_BODY_H
+#define CP_BODY_H
+
 /* Copyright (c) 2013 Scott Lembcke and Howling Moon Software
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -187,3 +190,5 @@ typedef void (*cpBodyArbiterIteratorFunc)(cpBody *body, cpArbiter *arbiter, void
 CP_EXPORT void cpBodyEachArbiter(cpBody *body, cpBodyArbiterIteratorFunc func, void *data);
 
 ///@}
+
+#endif // CP_BODY_H

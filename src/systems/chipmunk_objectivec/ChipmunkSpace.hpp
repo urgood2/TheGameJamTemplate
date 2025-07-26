@@ -25,15 +25,16 @@
 
 #define CHIPMUNK_SPACE_USE_HASTY_SPACE 1
 
-#include <chipmunk/chipmunk.h>
-#include <chipmunk/cpHastySpace.h>
+
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "third_party/chipmunk/include/chipmunk/cpHastySpace.h"
 #include <vector>
 #include <set>
 #include <functional>
-#include "ChipmunkObject.hpp"
+#include "ChipmunkBaseObject.hpp"
 #include "ChipmunkBody.hpp"
 #include "ChipmunkShape.hpp"
-#include "ChipmunkConstraint.hpp"
+#include "ChipmunkConstraints.hpp"
 #include "ChipmunkPointQueryInfo.hpp"
 #include "ChipmunkSegmentQueryInfo.hpp"
 
@@ -136,7 +137,7 @@ public:
     bool shapeTest(ChipmunkShape* shape) const;
     std::vector<ChipmunkBody*> bodies() const;
     std::vector<ChipmunkShape*> shapes() const;
-    std::vector<ChipmunkConstraint*> constraints() const;
+    std::vector<Constraint*> constraints() const;
 
     // Reindexing
     void reindexStatic();

@@ -24,8 +24,10 @@
  */
 
 #include <vector>
-#include <chipmunk/chipmunk.h>
-#include "ObjectiveChipmunk.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "third_party/chipmunk/include/chipmunk/cpBody.h"
+#include "third_party/chipmunk/include/chipmunk/chipmunk_structs.h"
+#include "ChipmunkBaseObject.hpp"
 
 class ChipmunkShape;
 class ChipmunkSpace;

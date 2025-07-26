@@ -1,4 +1,7 @@
 // ChipmunkBody.cpp
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+
+#include "third_party/chipmunk/include/chipmunk/cpBody.h"
 #include "ChipmunkBody.hpp"
 #include "ChipmunkSpace.hpp"
 #include "ChipmunkShape.hpp"

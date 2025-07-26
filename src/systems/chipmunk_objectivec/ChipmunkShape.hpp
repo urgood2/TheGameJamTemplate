@@ -24,17 +24,18 @@
  */
 
 #ifdef CP_ALLOW_PRIVATE_ACCESS
-#include <chipmunk/chipmunk_private.h>
+
+#include "third_party/chipmunk/include/chipmunk/chipmunk_private.h"
 #else
-#include <chipmunk/chipmunk.h>
-#include <chipmunk/chipmunk_structs.h>
+
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "third_party/chipmunk/include/chipmunk/chipmunk_structs.h"
 #endif
 
 #include "ChipmunkBaseObject.hpp"
 #include "ChipmunkBody.hpp"
-#include "ChipmunkPointQueryInfo.hpp"
-#include "ChipmunkSegmentQueryInfo.hpp"
-#include "ChipmunkShapeQueryInfo.hpp"
+#include "ChipmunkShape.hpp"
+#include "ChipmunkSpace.hpp"
 #include <vector>
 
 class ChipmunkShape : public ChipmunkBaseObject {
@@ -117,7 +118,6 @@ public:
 
 
 // ChipmunkCircleShape
-#pragma once
 class ChipmunkCircleShape : public ChipmunkShape {
 public:
     static ChipmunkCircleShape* CircleWithBody(ChipmunkBody* body, cpFloat radius, cpVect offset) {
@@ -135,7 +135,6 @@ private:
 };
 
 // ChipmunkSegmentShape
-#pragma once
 class ChipmunkSegmentShape : public ChipmunkShape {
 public:
     static ChipmunkSegmentShape* SegmentWithBody(ChipmunkBody* body, cpVect a, cpVect b, cpFloat r) {
@@ -156,7 +155,6 @@ private:
 };
 
 // ChipmunkPolyShape
-#pragma once
 class ChipmunkPolyShape : public ChipmunkShape {
 public:
     static ChipmunkPolyShape* PolyWithBody(ChipmunkBody* body, int count, const cpVect* verts, cpTransform transform, cpFloat radius) {
@@ -178,10 +176,6 @@ private:
 };
 
 // ChipmunkPointQueryInfo.hpp
-#pragma once
-#include <chipmunk/chipmunk.h>
-#include "ChipmunkShape.hpp"
-
 class ChipmunkPointQueryInfo {
 public:
     ChipmunkPointQueryInfo() { std::memset(&_info, 0, sizeof(_info)); }
@@ -194,11 +188,6 @@ private:
     ChipmunkShape* _shape = nullptr;
     cpPointQueryInfo _info;
 };
-
-// ChipmunkSegmentQueryInfo.hpp
-#pragma once
-#include <chipmunk/chipmunk.h>
-#include "ChipmunkShape.hpp"
 
 class ChipmunkSegmentQueryInfo {
 public:
@@ -214,11 +203,6 @@ private:
     cpSegmentQueryInfo _info;
     cpVect _start, _end;
 };
-
-// ChipmunkShapeQueryInfo.hpp
-#pragma once
-#include <chipmunk/chipmunk.h>
-#include "ChipmunkShape.hpp"
 
 class ChipmunkShapeQueryInfo {
 public:

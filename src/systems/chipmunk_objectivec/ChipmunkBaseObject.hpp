@@ -55,9 +55,10 @@ public:
     virtual void removeFromSpace(ChipmunkSpace* space) = 0;
 };
 
-#include "ChipmunkBody.h"
-#include "ChipmunkShape.h"
-#include "ChipmunkConstraint.h"
-#include "ChipmunkSpace.h"
-#include "ChipmunkMultiGrab.h"
+#include "ChipmunkBody.hpp"
+#include "ChipmunkShape.hpp"
+#include "ChipmunkConstraints.hpp"
+#include "ChipmunkSpace.hpp"
+#include "ChipmunkMultiGrab.hpp"
+
 

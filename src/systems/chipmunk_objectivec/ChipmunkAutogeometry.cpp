@@ -1,5 +1,7 @@
 
 // CppChipmunkAutoGeometry.cpp
+
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "ChipmunkAutogeometry.hpp"
 #include <cassert>
 

@@ -4,9 +4,10 @@
 
 #include <vector>
 #include <functional>
-#include "chipmunk/chipmunk.h"
-#include "chipmunk/cpMarch.h"
-#include "chipmunk/cpPolyline.h"
+
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "third_party/chipmunk/include/chipmunk/cpPolyline.h"
+#include "third_party/chipmunk/include/chipmunk/cpMarch.h"
 
 // Wrapper for cpPolyline
 class Polyline {

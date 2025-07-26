@@ -49,7 +49,7 @@ public:
     cpTransform transform() const { return _body.transform; }
 
     // Properties: getters and setters
-    cpBodyType type();
+    cpBodyType type() const;
     void setType(cpBodyType value);
 
     cpFloat mass() const;
@@ -124,7 +124,6 @@ private:
     // Integration callbacks
     static void VelocityFunc(cpBody* body, cpVect gravity, cpFloat damping, cpFloat dt);
     static void PositionFunc(cpBody* body, cpFloat dt);
-    bool methodIsOverridden(void* methodPtr) const;
 };
 
 // Double-dispatch helpers for ChipmunkSpace

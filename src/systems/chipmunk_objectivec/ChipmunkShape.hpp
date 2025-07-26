@@ -35,7 +35,6 @@
 #include "ChipmunkBaseObject.hpp"
 #include "ChipmunkBody.hpp"
 #include "ChipmunkShape.hpp"
-#include "ChipmunkSpace.hpp"
 #include <vector>
 
 
@@ -45,6 +44,7 @@ class ChipmunkPointQueryInfo {
 public:
     ChipmunkPointQueryInfo() { std::memset(&_info, 0, sizeof(_info)); }
     ChipmunkPointQueryInfo(cpShape* s, const cpPointQueryInfo& info) : _info(info) { _shape = static_cast<ChipmunkShape*>(s->userData); }
+    
     ChipmunkShape* shape() const { return _shape; }
     cpVect point() const { return _info.point; }
     cpFloat distance() const { return _info.distance; }
@@ -82,16 +82,14 @@ private:
 
 
 class ChipmunkShape : public ChipmunkBaseObject {
-private:
-    cpShape* _shape;
 public:
     static ChipmunkShape* ShapeFromCPShape(cpShape* shape) {
         auto* obj = static_cast<ChipmunkShape*>(shape->userData);
         return obj;
     }
 
-    // virtual cpShape* shape() const = 0;
-    virtual cpShape* shape() const { return _shape; }
+    virtual cpShape* shape() const = 0;
+    // virtual cpShape* shape() const { return _shape; }
 
     virtual ~ChipmunkShape() = default;
 
@@ -154,13 +152,17 @@ public:
     std::vector<ChipmunkBaseObject*> chipmunkObjects() const override {
         return { const_cast<ChipmunkShape*>(this) };
     }
+    
+    void addToSpace(ChipmunkSpace* sp) override;
+    void removeFromSpace(ChipmunkSpace* sp) override;
 
-    void addToSpace(ChipmunkSpace* sp) override {
-        sp->add(this);
-    }
-    void removeFromSpace(ChipmunkSpace* sp) override {
-        sp->remove(this);
-    }
+
+    // void addToSpace(ChipmunkSpace* sp) override {
+    //     sp->add(this);
+    // }
+    // void removeFromSpace(ChipmunkSpace* sp) override {
+    //     sp->remove(this);
+    // }
 };
 
 

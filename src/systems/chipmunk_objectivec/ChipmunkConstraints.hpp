@@ -89,16 +89,16 @@ public:
         return new PinJoint(a, b, anchorA, anchorB);
     }
     PinJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB)
-    : Constraint(cpPinJointNew(a->getBody(), b->getBody(), anchorA, anchorB)) {}
+    : Constraint(cpPinJointNew(a->body(), b->body(), anchorA, anchorB)) {}
 
-    cpVect anchorA() const { return cpPinJointGetAnchorA(reinterpret_cast<cpPinJoint*>(constraint_)); }
-    void setAnchorA(const cpVect& v) { cpPinJointSetAnchorA(reinterpret_cast<cpPinJoint*>(constraint_), v); }
+    cpVect anchorA() const { return cpPinJointGetAnchorA(constraint_); }
+    void setAnchorA(const cpVect& v) { cpPinJointSetAnchorA(constraint_, v); }
 
-    cpVect anchorB() const { return cpPinJointGetAnchorB(reinterpret_cast<cpPinJoint*>(constraint_)); }
-    void setAnchorB(const cpVect& v) { cpPinJointSetAnchorB(reinterpret_cast<cpPinJoint*>(constraint_), v); }
+    cpVect anchorB() const { return cpPinJointGetAnchorB(constraint_); }
+    void setAnchorB(const cpVect& v) { cpPinJointSetAnchorB(constraint_, v); }
 
-    cpFloat dist() const { return cpPinJointGetDist(reinterpret_cast<cpPinJoint*>(constraint_)); }
-    void setDist(cpFloat v) { cpPinJointSetDist(reinterpret_cast<cpPinJoint*>(constraint_), v); }
+    cpFloat dist() const { return cpPinJointGetDist(constraint_); }
+    void setDist(cpFloat v) { cpPinJointSetDist(constraint_, v); }
 };
 
 // Slide joint (telescoping rod)
@@ -108,19 +108,19 @@ public:
         return new SlideJoint(a, b, anchorA, anchorB, min, max);
     }
     SlideJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB, cpFloat min_v, cpFloat max_v)
-    : Constraint(cpSlideJointNew(a->getBody(), b->getBody(), anchorA, anchorB, min_v, max_v)) {}
+    : Constraint(cpSlideJointNew(a->body(), b->body(), anchorA, anchorB, min_v, max_v)) {}
 
-    cpVect anchorA() const { return cpSlideJointGetAnchorA(reinterpret_cast<cpSlideJoint*>(constraint_)); }
-    void setAnchorA(const cpVect& v) { cpSlideJointSetAnchorA(reinterpret_cast<cpSlideJoint*>(constraint_), v); }
+    cpVect anchorA() const { return cpSlideJointGetAnchorA(constraint_); }
+    void setAnchorA(const cpVect& v) { cpSlideJointSetAnchorA(constraint_, v); }
 
-    cpVect anchorB() const { return cpSlideJointGetAnchorB(reinterpret_cast<cpSlideJoint*>(constraint_)); }
-    void setAnchorB(const cpVect& v) { cpSlideJointSetAnchorB(reinterpret_cast<cpSlideJoint*>(constraint_), v); }
+    cpVect anchorB() const { return cpSlideJointGetAnchorB(constraint_); }
+    void setAnchorB(const cpVect& v) { cpSlideJointSetAnchorB(constraint_, v); }
 
-    cpFloat min() const { return cpSlideJointGetMin(reinterpret_cast<cpSlideJoint*>(constraint_)); }
-    void setMin(cpFloat v) { cpSlideJointSetMin(reinterpret_cast<cpSlideJoint*>(constraint_), v); }
+    cpFloat min() const { return cpSlideJointGetMin(constraint_); }
+    void setMin(cpFloat v) { cpSlideJointSetMin(constraint_, v); }
 
-    cpFloat max() const { return cpSlideJointGetMax(reinterpret_cast<cpSlideJoint*>(constraint_)); }
-    void setMax(cpFloat v) { cpSlideJointSetMax(reinterpret_cast<cpSlideJoint*>(constraint_), v); }
+    cpFloat max() const { return cpSlideJointGetMax(constraint_); }
+    void setMax(cpFloat v) { cpSlideJointSetMax(constraint_, v); }
 };
 
 // Pivot joint (free rotation around a point)
@@ -133,19 +133,19 @@ public:
         return new PivotJoint(a, b, pivot, true);
     }
     PivotJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB)
-    : Constraint(cpPivotJointNew(a->getBody(), b->getBody(), anchorA, anchorB)) {}
+    : Constraint(cpPivotJointNew2(a->body(), b->body(), anchorA, anchorB)) {}
     // usePivot == true selects world-to-local variant
     PivotJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& pivot, bool usePivot)
-    : Constraint(cpPivotJointNew(
-            a->getBody(), b->getBody(),
-            cpBodyWorldToLocal(a->getBody(), pivot), cpBodyWorldToLocal(b->getBody(), pivot)
+    : Constraint(cpPivotJointNew2(
+            a->body(), b->body(),
+            cpBodyWorldToLocal(a->body(), pivot), cpBodyWorldToLocal(b->body(), pivot)
         )) {}
 
-    cpVect anchorA() const { return cpPivotJointGetAnchorA(reinterpret_cast<cpPivotJoint*>(constraint_)); }
-    void setAnchorA(const cpVect& v) { cpPivotJointSetAnchorA(reinterpret_cast<cpPivotJoint*>(constraint_), v); }
+    cpVect anchorA() const { return cpPivotJointGetAnchorA(constraint_); }
+    void setAnchorA(const cpVect& v) { cpPivotJointSetAnchorA(constraint_, v); }
 
-    cpVect anchorB() const { return cpPivotJointGetAnchorB(reinterpret_cast<cpPivotJoint*>(constraint_)); }
-    void setAnchorB(const cpVect& v) { cpPivotJointSetAnchorB(reinterpret_cast<cpPivotJoint*>(constraint_), v); }
+    cpVect anchorB() const { return cpPivotJointGetAnchorB(constraint_); }
+    void setAnchorB(const cpVect& v) { cpPivotJointSetAnchorB(constraint_, v); }
 };
 
 // Groove joint (pin slides along groove)
@@ -155,16 +155,16 @@ public:
         return new GrooveJoint(a, b, grooveA, grooveB, anchorB);
     }
     GrooveJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& grooveA, const cpVect& grooveB, const cpVect& anchorB)
-    : Constraint(cpGrooveJointNew(a->getBody(), b->getBody(), grooveA, grooveB, anchorB)) {}
+    : Constraint(cpGrooveJointNew(a->body(), b->body(), grooveA, grooveB, anchorB)) {}
 
-    cpVect grooveA() const { return cpGrooveJointGetGrooveA(reinterpret_cast<cpGrooveJoint*>(constraint_)); }
-    void setGrooveA(const cpVect& v) { cpGrooveJointSetGrooveA(reinterpret_cast<cpGrooveJoint*>(constraint_), v); }
+    cpVect grooveA() const { return cpGrooveJointGetGrooveA(constraint_); }
+    void setGrooveA(const cpVect& v) { cpGrooveJointSetGrooveA(constraint_, v); }
 
-    cpVect grooveB() const { return cpGrooveJointGetGrooveB(reinterpret_cast<cpGrooveJoint*>(constraint_)); }
-    void setGrooveB(const cpVect& v) { cpGrooveJointSetGrooveB(reinterpret_cast<cpGrooveJoint*>(constraint_), v); }
+    cpVect grooveB() const { return cpGrooveJointGetGrooveB(constraint_); }
+    void setGrooveB(const cpVect& v) { cpGrooveJointSetGrooveB(constraint_, v); }
 
-    cpVect anchorB() const { return cpGrooveJointGetAnchorB(reinterpret_cast<cpGrooveJoint*>(constraint_)); }
-    void setAnchorB(const cpVect& v) { cpGrooveJointSetAnchorB(reinterpret_cast<cpGrooveJoint*>(constraint_), v); }
+    cpVect anchorB() const { return cpGrooveJointGetAnchorB(constraint_); }
+    void setAnchorB(const cpVect& v) { cpGrooveJointSetAnchorB(constraint_, v); }
 };
 
 // Damped spring (spring + damper)
@@ -176,22 +176,22 @@ public:
     }
     DampedSpring(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB,
                  cpFloat restLength, cpFloat stiffness, cpFloat damping)
-    : Constraint(cpDampedSpringNew(a->getBody(), b->getBody(), anchorA, anchorB, restLength, stiffness, damping)) {}
+    : Constraint(cpDampedSpringNew(a->body(), b->body(), anchorA, anchorB, restLength, stiffness, damping)) {}
 
-    cpVect anchorA() const { return cpDampedSpringGetAnchorA(reinterpret_cast<cpDampedSpring*>(constraint_)); }
-    void setAnchorA(const cpVect& v) { cpDampedSpringSetAnchorA(reinterpret_cast<cpDampedSpring*>(constraint_), v); }
+    cpVect anchorA() const { return cpDampedSpringGetAnchorA(constraint_); }
+    void setAnchorA(const cpVect& v) { cpDampedSpringSetAnchorA(constraint_, v); }
 
-    cpVect anchorB() const { return cpDampedSpringGetAnchorB(reinterpret_cast<cpDampedSpring*>(constraint_)); }
-    void setAnchorB(const cpVect& v) { cpDampedSpringSetAnchorB(reinterpret_cast<cpDampedSpring*>(constraint_), v); }
+    cpVect anchorB() const { return cpDampedSpringGetAnchorB(constraint_); }
+    void setAnchorB(const cpVect& v) { cpDampedSpringSetAnchorB(constraint_, v); }
 
-    cpFloat restLength() const { return cpDampedSpringGetRestLength(reinterpret_cast<cpDampedSpring*>(constraint_)); }
-    void setRestLength(cpFloat v) { cpDampedSpringSetRestLength(reinterpret_cast<cpDampedSpring*>(constraint_), v); }
+    cpFloat restLength() const { return cpDampedSpringGetRestLength(constraint_); }
+    void setRestLength(cpFloat v) { cpDampedSpringSetRestLength(constraint_, v); }
 
-    cpFloat stiffness() const { return cpDampedSpringGetStiffness(reinterpret_cast<cpDampedSpring*>(constraint_)); }
-    void setStiffness(cpFloat v) { cpDampedSpringSetStiffness(reinterpret_cast<cpDampedSpring*>(constraint_), v); }
+    cpFloat stiffness() const { return cpDampedSpringGetStiffness(constraint_); }
+    void setStiffness(cpFloat v) { cpDampedSpringSetStiffness(constraint_, v); }
 
-    cpFloat damping() const { return cpDampedSpringGetDamping(reinterpret_cast<cpDampedSpring*>(constraint_)); }
-    void setDamping(cpFloat v) { cpDampedSpringSetDamping(reinterpret_cast<cpDampedSpring*>(constraint_), v); }
+    cpFloat damping() const { return cpDampedSpringGetDamping(constraint_); }
+    void setDamping(cpFloat v) { cpDampedSpringSetDamping(constraint_, v); }
 };
 
 // Damped rotary spring
@@ -201,16 +201,16 @@ public:
         return new DampedRotarySpring(a, b, restAngle, stiffness, damping);
     }
     DampedRotarySpring(ChipmunkBody* a, ChipmunkBody* b, cpFloat restAngle, cpFloat stiffness, cpFloat damping)
-    : Constraint(cpDampedRotarySpringNew(a->getBody(), b->getBody(), restAngle, stiffness, damping)) {}
+    : Constraint(cpDampedRotarySpringNew(a->body(), b->body(), restAngle, stiffness, damping)) {}
 
-    cpFloat restAngle() const { return cpDampedRotarySpringGetRestAngle(reinterpret_cast<cpDampedRotarySpring*>(constraint_)); }
-    void setRestAngle(cpFloat v) { cpDampedRotarySpringSetRestAngle(reinterpret_cast<cpDampedRotarySpring*>(constraint_), v); }
+    cpFloat restAngle() const { return cpDampedRotarySpringGetRestAngle(constraint_); }
+    void setRestAngle(cpFloat v) { cpDampedRotarySpringSetRestAngle(constraint_, v); }
 
-    cpFloat stiffness() const { return cpDampedRotarySpringGetStiffness(reinterpret_cast<cpDampedRotarySpring*>(constraint_)); }
-    void setStiffness(cpFloat v) { cpDampedRotarySpringSetStiffness(reinterpret_cast<cpDampedRotarySpring*>(constraint_), v); }
+    cpFloat stiffness() const { return cpDampedRotarySpringGetStiffness(constraint_); }
+    void setStiffness(cpFloat v) { cpDampedRotarySpringSetStiffness(constraint_, v); }
 
-    cpFloat damping() const { return cpDampedRotarySpringGetDamping(reinterpret_cast<cpDampedRotarySpring*>(constraint_)); }
-    void setDamping(cpFloat v) { cpDampedRotarySpringSetDamping(reinterpret_cast<cpDampedRotarySpring*>(constraint_), v); }
+    cpFloat damping() const { return cpDampedRotarySpringGetDamping(constraint_); }
+    void setDamping(cpFloat v) { cpDampedRotarySpringSetDamping(constraint_, v); }
 };
 
 // Rotary limit joint
@@ -220,13 +220,13 @@ public:
         return new RotaryLimitJoint(a, b, min, max);
     }
     RotaryLimitJoint(ChipmunkBody* a, ChipmunkBody* b, cpFloat min_v, cpFloat max_v)
-    : Constraint(cpRotaryLimitJointNew(a->getBody(), b->getBody(), min_v, max_v)) {}
+    : Constraint(cpRotaryLimitJointNew(a->body(), b->body(), min_v, max_v)) {}
 
-    cpFloat min() const { return cpRotaryLimitJointGetMin(reinterpret_cast<cpRotaryLimitJoint*>(constraint_)); }
-    void setMin(cpFloat v) { cpRotaryLimitJointSetMin(reinterpret_cast<cpRotaryLimitJoint*>(constraint_), v); }
+    cpFloat min() const { return cpRotaryLimitJointGetMin(constraint_); }
+    void setMin(cpFloat v) { cpRotaryLimitJointSetMin(constraint_, v); }
 
-    cpFloat max() const { return cpRotaryLimitJointGetMax(reinterpret_cast<cpRotaryLimitJoint*>(constraint_)); }
-    void setMax(cpFloat v) { cpRotaryLimitJointSetMax(reinterpret_cast<cpRotaryLimitJoint*>(constraint_), v); }
+    cpFloat max() const { return cpRotaryLimitJointGetMax(constraint_); }
+    void setMax(cpFloat v) { cpRotaryLimitJointSetMax(constraint_, v); }
 };
 
 // Simple motor
@@ -236,10 +236,10 @@ public:
         return new SimpleMotor(a, b, rate);
     }
     SimpleMotor(ChipmunkBody* a, ChipmunkBody* b, cpFloat rate_v)
-    : Constraint(cpSimpleMotorNew(a->getBody(), b->getBody(), rate_v)) {}
+    : Constraint(cpSimpleMotorNew(a->body(), b->body(), rate_v)) {}
 
-    cpFloat rate() const { return cpSimpleMotorGetRate(reinterpret_cast<cpSimpleMotor*>(constraint_)); }
-    void setRate(cpFloat v) { cpSimpleMotorSetRate(reinterpret_cast<cpSimpleMotor*>(constraint_), v); }
+    cpFloat rate() const { return cpSimpleMotorGetRate(constraint_); }
+    void setRate(cpFloat v) { cpSimpleMotorSetRate(constraint_, v); }
 };
 
 // Gear joint
@@ -249,13 +249,13 @@ public:
         return new GearJoint(a, b, phase, ratio);
     }
     GearJoint(ChipmunkBody* a, ChipmunkBody* b, cpFloat phase_v, cpFloat ratio_v)
-    : Constraint(cpGearJointNew(a->getBody(), b->getBody(), phase_v, ratio_v)) {}
+    : Constraint(cpGearJointNew(a->body(), b->body(), phase_v, ratio_v)) {}
 
-    cpFloat phase() const { return cpGearJointGetPhase(reinterpret_cast<cpGearJoint*>(constraint_)); }
-    void setPhase(cpFloat v) { cpGearJointSetPhase(reinterpret_cast<cpGearJoint*>(constraint_), v); }
+    cpFloat phase() const { return cpGearJointGetPhase(constraint_); }
+    void setPhase(cpFloat v) { cpGearJointSetPhase(constraint_, v); }
 
-    cpFloat ratio() const { return cpGearJointGetRatio(reinterpret_cast<cpGearJoint*>(constraint_)); }
-    void setRatio(cpFloat v) { cpGearJointSetRatio(reinterpret_cast<cpGearJoint*>(constraint_), v); }
+    cpFloat ratio() const { return cpGearJointGetRatio(constraint_); }
+    void setRatio(cpFloat v) { cpGearJointSetRatio(constraint_, v); }
 };
 
 // Ratchet joint
@@ -265,16 +265,16 @@ public:
         return new RatchetJoint(a, b, phase, ratchet);
     }
     RatchetJoint(ChipmunkBody* a, ChipmunkBody* b, cpFloat phase_v, cpFloat ratchet_v)
-    : Constraint(cpRatchetJointNew(a->getBody(), b->getBody(), phase_v, ratchet_v)) {}
+    : Constraint(cpRatchetJointNew(a->body(), b->body(), phase_v, ratchet_v)) {}
 
-    cpFloat angle() const { return cpRatchetJointGetAngle(reinterpret_cast<cpRatchetJoint*>(constraint_)); }
-    void setAngle(cpFloat v) { cpRatchetJointSetAngle(reinterpret_cast<cpRatchetJoint*>(constraint_), v); }
+    cpFloat angle() const { return cpRatchetJointGetAngle(constraint_); }
+    void setAngle(cpFloat v) { cpRatchetJointSetAngle(constraint_, v); }
 
-    cpFloat phase() const { return cpRatchetJointGetPhase(reinterpret_cast<cpRatchetJoint*>(constraint_)); }
-    void setPhase(cpFloat v) { cpRatchetJointSetPhase(reinterpret_cast<cpRatchetJoint*>(constraint_), v); }
+    cpFloat phase() const { return cpRatchetJointGetPhase(constraint_); }
+    void setPhase(cpFloat v) { cpRatchetJointSetPhase(constraint_, v); }
 
-    cpFloat ratchet() const { return cpRatchetJointGetRatchet(reinterpret_cast<cpRatchetJoint*>(constraint_)); }
-    void setRatchet(cpFloat v) { cpRatchetJointSetRatchet(reinterpret_cast<cpRatchetJoint*>(constraint_), v); }
+    cpFloat ratchet() const { return cpRatchetJointGetRatchet(constraint_); }
+    void setRatchet(cpFloat v) { cpRatchetJointSetRatchet(constraint_, v); }
 };
 
 #endif // CHIPMUNK_CONSTRAINTS_HPP

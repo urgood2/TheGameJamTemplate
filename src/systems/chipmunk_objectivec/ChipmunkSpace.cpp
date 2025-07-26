@@ -2,29 +2,36 @@
 // ChipmunkSpace.cpp
 #include "ChipmunkSpace.hpp"
 #include "ChipmunkConstraints.hpp"
+extern "C" {
 #include "third_party/chipmunk/include/chipmunk/chipmunk_private.h"
+}
 #include <cstring>
 
 // C-style callbacks for handlers
 static bool DefaultBeginFunc(cpArbiter* arb, cpSpace* space, void* context) {
-    auto ctx = static_cast<ChipmunkSpace::HandlerContext*>(context);
+    auto* ctx = static_cast<ChipmunkSpace::HandlerContext*>(context);
+    auto* wrapper = static_cast<ChipmunkSpace*>(cpSpaceGetUserData(space));
     using Fn = bool(*)(void*, cpArbiter*, ChipmunkSpace*);
-    return reinterpret_cast<Fn>(ctx->begin)(ctx->delegate, arb, ctx->space());
+    return reinterpret_cast<Fn>(ctx->begin)(ctx->delegate, arb, wrapper);
 }
+
 static bool DefaultPreSolveFunc(cpArbiter* arb, cpSpace* space, void* context) {
     auto ctx = static_cast<ChipmunkSpace::HandlerContext*>(context);
+    auto* wrapper = static_cast<ChipmunkSpace*>(cpSpaceGetUserData(space));
     using Fn = bool(*)(void*, cpArbiter*, ChipmunkSpace*);
-    return reinterpret_cast<Fn>(ctx->preSolve)(ctx->delegate, arb, ctx->space());
+    return reinterpret_cast<Fn>(ctx->preSolve)(ctx->delegate, arb, wrapper);
 }
 static void DefaultPostSolveFunc(cpArbiter* arb, cpSpace* space, void* context) {
     auto ctx = static_cast<ChipmunkSpace::HandlerContext*>(context);
+    auto* wrapper = static_cast<ChipmunkSpace*>(cpSpaceGetUserData(space));
     using Fn = void(*)(void*, cpArbiter*, ChipmunkSpace*);
-    reinterpret_cast<Fn>(ctx->postSolve)(ctx->delegate, arb, ctx->space());
+    reinterpret_cast<Fn>(ctx->postSolve)(ctx->delegate, arb, wrapper);
 }
 static void DefaultSeparateFunc(cpArbiter* arb, cpSpace* space, void* context) {
     auto ctx = static_cast<ChipmunkSpace::HandlerContext*>(context);
+    auto* wrapper = static_cast<ChipmunkSpace*>(cpSpaceGetUserData(space));
     using Fn = void(*)(void*, cpArbiter*, ChipmunkSpace*);
-    reinterpret_cast<Fn>(ctx->separate)(ctx->delegate, arb, ctx->space());
+    reinterpret_cast<Fn>(ctx->separate)(ctx->delegate, arb, wrapper);
 }
 
 ChipmunkSpace::ChipmunkSpace() {
@@ -140,21 +147,33 @@ std::vector<ChipmunkObject*> ChipmunkSpace::addBounds(
     auto l = bounds.l - radius; auto b = bounds.b - radius;
     auto r = bounds.r + radius; auto t = bounds.t + radius;
     std::vector<ChipmunkObject*> segs;
-    auto makeSeg = [&](cpVect a, cpVect bb) {
-        auto seg = new ChipmunkShape(cpSegmentShapeNew(_staticBody->body(), a, bb, radius));
+
+    auto makeSeg = [&](cpVect a, cpVect bb){
+        // Instantiate the concrete segment‐shape wrapper, not the abstract base:
+        auto* seg = new ChipmunkSegmentShape(
+            _staticBody,   // body to attach it to
+            a,             // start point
+            bb,            // end point
+            radius         // thickness
+        );
         seg->setElasticity(elasticity);
         seg->setFriction(friction);
         seg->setFilter(filter);
         seg->setCollisionType(collisionType);
-        return seg;
+        return seg;     // returns a ChipmunkSegmentShape*, which is-a ChipmunkShape*
     };
+
     segs.push_back(makeSeg(cpv(l,b), cpv(l,t)));
     segs.push_back(makeSeg(cpv(l,t), cpv(r,t)));
     segs.push_back(makeSeg(cpv(r,t), cpv(r,b)));
     segs.push_back(makeSeg(cpv(r,b), cpv(l,b)));
-    for (auto* o : segs) add(o);
+
+    for(auto* o : segs){
+        add(o);
+    }
     return segs;
 }
+
 
 // Post-step callbacks
 bool ChipmunkSpace::addPostStepCallback(void* target, cpPostStepFunc func, void* key, void* context) {
@@ -188,7 +207,14 @@ void ChipmunkSpace::addPostStepRemoval(ChipmunkObject* obj) { addPostStepCallbac
 std::vector<ChipmunkPointQueryInfo> ChipmunkSpace::pointQueryAll(cpVect point, cpFloat dist, cpShapeFilter filter) {
     std::vector<ChipmunkPointQueryInfo> out;
     cpSpacePointQuery(_space, point, dist, filter,
-        [](cpShape* s, cpVect p, cpFloat d, cpVect g, void* cntx){ reinterpret_cast<std::vector<ChipmunkPointQueryInfo>*>(cntx)->emplace_back(s,p,d,g); }, &out);
+    [](cpShape* s, cpVect p, cpFloat d, cpVect g, void* ctx){
+        auto &vec = *reinterpret_cast<std::vector<ChipmunkPointQueryInfo>*>(ctx);
+        cpPointQueryInfo info{ .point = p, .distance = d, .gradient = g };            // build the C struct
+        vec.emplace_back(s, info);                    // use the ctor you already have
+    },
+    &out
+);
+
     return out;
 }
 ChipmunkPointQueryInfo ChipmunkSpace::pointQueryNearest(cpVect point, cpFloat dist, cpShapeFilter filter) {
@@ -196,10 +222,23 @@ ChipmunkPointQueryInfo ChipmunkSpace::pointQueryNearest(cpVect point, cpFloat di
     auto* s = cpSpacePointQueryNearest(_space, point, dist, filter, &info);
     return s ? ChipmunkPointQueryInfo(s, info) : ChipmunkPointQueryInfo();
 }
-std::vector<ChipmunkSegmentQueryInfo> ChipmunkSpace::segmentQueryAll(cpVect a, cpVect b, cpFloat r, cpShapeFilter filter) {
+std::vector<ChipmunkSegmentQueryInfo> ChipmunkSpace::segmentQueryAll(
+    cpVect a, cpVect b, cpFloat r, cpShapeFilter filter
+) {
     std::vector<ChipmunkSegmentQueryInfo> out;
     cpSpaceSegmentQuery(_space, a, b, r, filter,
-        [](cpShape* s, cpVect p, cpVect n, cpFloat t, void* ctx){ reinterpret_cast<std::vector<ChipmunkSegmentQueryInfo>*>(ctx)->emplace_back(s,p,n,t); }, &out);
+        [](cpShape* s, cpVect p, cpVect n, cpFloat t, void* ctx){
+            auto &vec = *reinterpret_cast<std::vector<ChipmunkSegmentQueryInfo>*>(ctx);
+            // Build the C struct first:
+            cpSegmentQueryInfo info;
+            info.point  = p;
+            info.normal = n;
+            info.alpha  = t;
+            // Then wrap it:
+            vec.emplace_back(s, info);
+        },
+        &out
+    );
     return out;
 }
 ChipmunkSegmentQueryInfo ChipmunkSpace::segmentQueryFirst(cpVect a, cpVect b, cpFloat r, cpShapeFilter filter) {
@@ -213,12 +252,24 @@ std::vector<ChipmunkShape*> ChipmunkSpace::bbQueryAll(cpBB bb, cpShapeFilter fil
         [](cpShape* s, void* ctx){ reinterpret_cast<std::vector<ChipmunkShape*>*>(ctx)->push_back(static_cast<ChipmunkShape*>(cpShapeGetUserData(s))); }, &out);
     return out;
 }
-std::vector<ChipmunkShapeQueryInfo> ChipmunkSpace::shapeQueryAll(ChipmunkShape* shape) {
+std::vector<ChipmunkShapeQueryInfo>
+ChipmunkSpace::shapeQueryAll(ChipmunkShape* chipmunkShape/*unused*/) {
     std::vector<ChipmunkShapeQueryInfo> out;
-    cpSpaceShapeQuery(_space, shape->shape(),
-        [](cpShape* s, cpContactPointSet* pts, void* ctx){ reinterpret_cast<std::vector<ChipmunkShapeQueryInfo>*>(ctx)->emplace_back(s, *pts); }, &out);
+    cpSpaceShapeQuery(_space, chipmunkShape->shape() /* only need the raw cpShape* */,
+        [](cpShape* s, cpContactPointSet* pts, void* ctx){
+            auto &vec = *reinterpret_cast<std::vector<ChipmunkShapeQueryInfo>*>(ctx);
+            // Rebuild the C struct
+            cpContactPointSet info = *pts;
+            // Recover the C++ wrapper from userData:
+            auto* wrapper = static_cast<ChipmunkShape*>(cpShapeGetUserData(s));
+            // Push the wrapped info
+            vec.push_back(ChipmunkShapeQueryInfo(wrapper, info));
+        },
+        &out
+    );
     return out;
 }
+
 bool ChipmunkSpace::shapeTest(ChipmunkShape* shape) const { return cpSpaceShapeQuery(_space, shape->shape(), nullptr, nullptr); }
 std::vector<ChipmunkBody*> ChipmunkSpace::bodies() const {
     std::vector<ChipmunkBody*> out;
@@ -230,9 +281,9 @@ std::vector<ChipmunkShape*> ChipmunkSpace::shapes() const {
     cpSpaceEachShape(_space, [](cpShape* s, void* ctx){ reinterpret_cast<std::vector<ChipmunkShape*>*>(ctx)->push_back(static_cast<ChipmunkShape*>(cpShapeGetUserData(s))); }, &out);
     return out;
 }
-std::vector<ChipmunkConstraint*> ChipmunkSpace::constraints() const {
-    std::vector<ChipmunkConstraint*> out;
-    cpSpaceEachConstraint(_space, [](cpConstraint* c, void* ctx){ reinterpret_cast<std::vector<ChipmunkConstraint*>*>(ctx)->push_back(static_cast<ChipmunkConstraint*>(cpConstraintGetUserData(c))); }, &out);
+std::vector<Constraint*> ChipmunkSpace::constraints() const {
+    std::vector<Constraint*> out;
+    cpSpaceEachConstraint(_space, [](cpConstraint* c, void* ctx){ reinterpret_cast<std::vector<Constraint*>*>(ctx)->push_back(static_cast<Constraint*>(cpConstraintGetUserData(c))); }, &out);
     return out;
 }
 

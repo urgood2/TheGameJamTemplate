@@ -7,16 +7,6 @@
 #include "ChipmunkShape.hpp"
 
 // Check if a virtual method is overridden in subclass
-bool ChipmunkBody::methodIsOverridden(void* methodPtr) const {
-    constexpr std::size_t vtableOffset = /* your vtable offset */;
-    // Don’t drop const here:
-    const char* base = reinterpret_cast<const char*>(this);
-    // Read a pointer‐sized value out of the vtable slot:
-    void* current =
-      *reinterpret_cast<void* const*>(base + vtableOffset);
-    return methodPtr != current;
-}
-
 // Factory methods
 ChipmunkBody* ChipmunkBody::BodyFromCPBody(cpBody* body) {
     return static_cast<ChipmunkBody*>(body->userData);
@@ -55,7 +45,11 @@ ChipmunkBody::~ChipmunkBody() {
 }
 
 // Getters and setters
-#define GETTER(NAME, TYPE, FN) TYPE ChipmunkBody::NAME() const { return FN(&_body); }
+#define GETTER(NAME, TYPE, FN) \
+  TYPE ChipmunkBody::NAME() const { \
+    return FN(const_cast<cpBody*>(&_body)); \
+  }
+
 #define SETTER(NAME, TYPE, FN) void ChipmunkBody::set##NAME(TYPE value) { FN(&_body, value); }
 
 GETTER(type, cpBodyType, cpBodyGetType)

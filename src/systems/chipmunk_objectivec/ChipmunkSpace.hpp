@@ -27,7 +27,9 @@
 
 
 #include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+extern "C" {
 #include "third_party/chipmunk/include/chipmunk/cpHastySpace.h"
+}
 #include <vector>
 #include <set>
 #include <functional>
@@ -144,11 +146,7 @@ public:
 
     // Stepping
     virtual void step(cpFloat dt);
-
-protected:
-    cpSpace* _space;
-    ChipmunkBody* _staticBody;
-    std::set<ChipmunkObject*> _children;
+    
     struct HandlerContext {
         void* delegate;
         cpCollisionType a, b;
@@ -157,6 +155,12 @@ protected:
         cpCollisionPostSolveFunc postSolve;
         cpCollisionSeparateFunc separate;
     };
+
+protected:
+    cpSpace* _space;
+    ChipmunkBody* _staticBody;
+    std::set<ChipmunkObject*> _children;
+    
     std::vector<HandlerContext> _handlers;
 };
 

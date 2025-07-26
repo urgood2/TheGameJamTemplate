@@ -205,6 +205,13 @@ namespace physics
     // PhysicsWorld Class
     // ----------------------------------------------------------------------------
 
+    
+    // A small node for our union-find structure.
+    struct UFNode {
+        UFNode* parent;   // If this points to itself, it’s a root.
+        int     count;    // Only accurate on root nodes.
+    };
+    
     class PhysicsWorld
     {
     public:
@@ -218,6 +225,32 @@ namespace physics
         entt::entity draggedEntity = entt::null; // which entity is being dragged
         cpBody* controlBody = nullptr;    // for your player/controller joint
         //TODO: isolate the above into the collision component later
+        
+        
+/**
+ * ===== Example Usage for union find feature (think detection for touching balls of same color for X balls, etc.) =====
+ *
+ *  1) Create your PhysicsWorld as usual:
+ * PhysicsWorld world;
+ *
+ *  2) Enable grouping on collision types 1 through 6,
+ *     so that whenever 4 or more like-typed bodies connect via collisions,
+ *     your callback is invoked once (with the “root” body of that set).
+ * world.EnableCollisionGrouping(
+ *     minType     1,
+ *      maxType     6,
+ *     threshold   4,
+ *     onRemoved   [](cpBody* groupRoot){
+ *          Called once per set of ≥4 bodies.
+ *          E.g. remove them, play effects, etc.
+ *         RemoveBodyAndChildren(groupRoot);
+ *     }
+ * );
+ *
+ *  3) In your main loop:
+ * float  dt = GetDeltaTime();
+ * world.Step(dt);  // steps physics and then processes grouping
+ */
             
         // Collision Event Maps
         std::unordered_map<std::string, std::vector<CollisionEvent>> collisionEnter;
@@ -261,7 +294,23 @@ namespace physics
         void UpdateColliderTag(entt::entity entity, const std::string &newTag);
 
         // Utility Functions
-        /// Query the first entity at world point (x,y). Returns entt::null if none found.
+        /**
+        * Enable union-find grouping on collisions.
+        *
+        * @param minType      The lowest collisionType to watch.
+        * @param maxType      The highest collisionType to watch.
+        * @param threshold    How many bodies in one set before firing onGroupRemoved.
+        * @param onGroupRemoved
+        *        A function called once per root body when its set size ≥ threshold.
+        */
+        void EnableCollisionGrouping(cpCollisionType minType,
+                                    cpCollisionType maxType,
+                                    int threshold,
+                                    std::function<void(cpBody*)> onGroupRemoved);
+        void AddScreenBounds(float xMin, float yMin,
+                                   float xMax, float yMax,
+                                   float thickness,
+                                   const std::string& collisionTag);
         void CreateTilemapColliders(
             const std::vector<std::vector<bool>>& collidable,
             float tileSize,
@@ -356,10 +405,32 @@ namespace physics
         // Geometry and Body Management
         std::vector<cpVect> GetVertices(entt::entity entity);
         void SetBodyType(entt::entity entity, const std::string &bodyType);
+        
+        
+    private:
+        
+        // —— Union-Find state ——
+        std::unordered_map<cpBody*, UFNode>           _groupNodes;
+        int                                            _groupThreshold   = 0;
+        std::function<void(cpBody*)>                   _onGroupRemoved;
+
+        // —— Union-Find helpers ——
+        UFNode&  MakeNode(cpBody* body);
+        UFNode&  FindNode(cpBody* body);
+        void     UnionBodies(cpBody* a, cpBody* b);
+        void     ProcessGroups();
+
+        // —— Collision callback trampoline ——
+        static void GroupPostSolveCallback(cpArbiter* arb,
+                                            cpSpace*   space,
+                                            void*      userData);
+        // Called by the static callback; unions the two colliding bodies.
+        void    OnGroupPostSolve(cpArbiter* arb);
     };
     
     
     inline static std::shared_ptr<PhysicsWorld> InitPhysicsWorld(entt::registry *registry, float meter = 64.0f, float gravityX = 0.0f, float gravityY = 0.0f) {
         return std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY);
     }
+    
 }

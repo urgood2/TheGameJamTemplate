@@ -1,6 +1,16 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] steering: https://chatgpt.com/canvas/shared/6885095fef408191a7a78d4805d80a5c this needs more work based on sterring.lua, lots not added in yet, needs timer use, etc.
+- [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
+- [ ] make sample map with ldtk that has colliders i can base chipmunk on.
+- Deformable Chipmunk2D demo from http://chipmunk-physics.net/documentation.php#examples is what I want to copy (second demo in the app) if I want deformable terrain.
+- add steering stuff in from snkrx
+- add navmesh so it can work with chipmunk auto tile colliders + a ldtk loader implementatino
+- [ ] more chipmunk2d (mostly terrain stuff) examples to extract modules from: http://chipmunk-physics.net/documentation.php#examples
+- [ ] render sprites based on physics object location / transform (configurable)
+- [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives
+- [ ] keep render pipeline (also configuraable) but instead of an animatino or a sprite, draw whatever shapes I want through a function  (or by some supplied enum), also customize draw dimensions if necessary (if drawing goes beyond bounds of transform or collision body)
 - [ ] changing color of a hit circle using chaining:
 ```lua
 function HitCircle:change_color(delay_multiplier, target_color)
@@ -34,6 +44,7 @@ end
 self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, function() self.dead = true end)
 ```
 - [ ] understand & implement working copies of files in the todo_from_snkrx folder
+- [ ] copy SNKRX's dead-simple transition thing. Circle with text. 
 - [ ] do what SNKRX does and add a sort of dark overlay behind everything else.
 - [ ] add some kind of screen which shares the amount of points scored
 - [ ]add simple crash reporting to web builds 
@@ -41,10 +52,8 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] Raylib stencil. https://github.com/raysan5/raylib/discussions/2964 Add queue command ver. Also, how to use? (2025-07-24 > todo/daily)
 - [ ] Explore game firmulaa like autochess (2025-07-25 > todo/daily)
 - [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula
-- [ ] how to do world space vs screen space for chipmunk (2025-07-25 > todo/daily)
+- [ ] how to do world space vs screen space for chipmunk (2025-07-25 > todo/daily) / cameras
 Also, fuse chipmunk like this eventuallu: https://chatgpt.com/share/688262af-d40c-800a-87e3-d1b2ad49645d (2025-07-25 > todo/daily)
-- [ ] implement textual data display from chipmunk demo. Also, the rendering seems more detailed. Also, how does it do mouse dragging? It seems to form a joint in the center of the scren? and turning objects into circles on collision (shatter demo)
-- [ ] what are aribters?
 - [ ] how to limit rotation & overshoot for objects when dragging them?
 - [ ] how to do rounded rectangles for collision shapes?
 - [ ] how to do arbitrary deformable maps like in bouncy hexagons demo?
@@ -61,16 +70,8 @@ Also, fuse chipmunk like this eventuallu: https://chatgpt.com/share/688262af-d40
 - [ ] one-way pass thorugh platforms - one way platforms demo
 - [ ] how are joints moved in tank demo? how does it steer? 
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
-- [ ]
-
 - [ ] add dashed lines from here, how to animate them? animation here: https://chatgpt.com/share/6880e2c6-ff68-800a-b30b-c2c1514e1772
-- [ ] finish extracting from: https://chipmunk-physics.net/tutorials/ChipmunkTileDemo/
-- [ ] also, port over all the code from the objective c section of chipmunk for my own use
-    - [ ] then check out the examples here: http://chipmunk-physics.net/documentation.php#examples to extract what I can into my physics class
-- [ ] extract ideas from: https://chipmunk-physics.net/tutorials/SimpleObjectiveChipmunk/
 - [ ] How to mesh my transforms with chipmunk 2d to do lesast amount of work and be performant?
-- [ ] Rendering sprites based on the cpbodies? How? What about text? Mesh with current system? What if it has multiiple shapes?
-- [ ] Try out chipmunk2d demo
 - [ ] Gotta add scroll pane
 - [ ] Add scissoring to layer queue code
 - [ ] refer to autogeometry chipmunk demo for auto digging - make this implementable so I can use it later.

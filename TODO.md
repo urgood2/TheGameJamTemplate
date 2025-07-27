@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] snkrx-like camera movement
 - [ ] steering: https://chatgpt.com/canvas/shared/6885095fef408191a7a78d4805d80a5c this needs more work based on sterring.lua, lots not added in yet, needs timer use, etc.
 - [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on.

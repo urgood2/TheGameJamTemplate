@@ -1,6 +1,8 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] tweak pointcloudsampler so it's feature complete: https://chatgpt.com/share/68865127-f880-800a-a33b-745a7bc5a793
+- [ ] compare all objective c files except image sampler (won't be using it) against originals for missing features
 - [ ] do a pass through of objective c port of chipmunk so that I can use shared ptr instead of new() operator.
 - [ ] snkrx-like camera movement
 - [ ] steering: https://chatgpt.com/canvas/shared/6885095fef408191a7a78d4805d80a5c this needs more work based on sterring.lua, lots not added in yet, needs timer use, etc.

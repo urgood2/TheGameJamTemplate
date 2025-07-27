@@ -1,6 +1,6 @@
-// SamplerWrappers.cpp
-#include "ChipmunkWrappers.hpp"
-
+#include "third_party/chipmunk/include/chipmunk/cpBB.h"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "third_party/chipmunk/include/chipmunk/cpPolyline.h"
 
 // Helper for fast floor
 static inline int floorInt(float f) {

@@ -281,9 +281,9 @@ std::vector<ChipmunkShape*> ChipmunkSpace::shapes() const {
     cpSpaceEachShape(_space, [](cpShape* s, void* ctx){ reinterpret_cast<std::vector<ChipmunkShape*>*>(ctx)->push_back(static_cast<ChipmunkShape*>(cpShapeGetUserData(s))); }, &out);
     return out;
 }
-std::vector<Constraint*> ChipmunkSpace::constraints() const {
-    std::vector<Constraint*> out;
-    cpSpaceEachConstraint(_space, [](cpConstraint* c, void* ctx){ reinterpret_cast<std::vector<Constraint*>*>(ctx)->push_back(static_cast<Constraint*>(cpConstraintGetUserData(c))); }, &out);
+std::vector<ChipmunkConstraint*> ChipmunkSpace::constraints() const {
+    std::vector<ChipmunkConstraint*> out;
+    cpSpaceEachConstraint(_space, [](cpConstraint* c, void* ctx){ reinterpret_cast<std::vector<ChipmunkConstraint*>*>(ctx)->push_back(static_cast<ChipmunkConstraint*>(cpConstraintGetUserData(c))); }, &out);
     return out;
 }
 

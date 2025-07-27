@@ -39,8 +39,15 @@ class ChipmunkBaseObject;
  * ChipmunkObjectFlatten(), and return it in chipmunkObjects().
  */
 class ChipmunkObject {
+protected:
+    std::vector<ChipmunkBaseObject*> _objects;
+
 public:
-    virtual std::vector<ChipmunkBaseObject*> chipmunkObjects() const = 0;
+    // Default: just return whatever you've pushed into _objects.
+    virtual std::vector<ChipmunkBaseObject*> chipmunkObjects() const {
+        return _objects;
+    }
+
     virtual ~ChipmunkObject() = default;
 };
 

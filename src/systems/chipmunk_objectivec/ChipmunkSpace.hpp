@@ -137,7 +137,7 @@ public:
     bool shapeTest(ChipmunkShape* shape) const;
     std::vector<ChipmunkBody*> bodies() const;
     std::vector<ChipmunkShape*> shapes() const;
-    std::vector<Constraint*> constraints() const;
+    std::vector<ChipmunkConstraint*> constraints() const;
 
     // Reindexing
     void reindexStatic();

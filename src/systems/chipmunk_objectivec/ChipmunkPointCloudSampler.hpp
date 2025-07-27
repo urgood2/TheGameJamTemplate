@@ -1,7 +1,8 @@
 // PointCloudSamplerWrappers.cpp
 // Port of ChipmunkPointCloudSampler (Objective-C) to C++
 
-#include <chipmunk/chipmunk.h>
+#include "third_party/chipmunk/include/chipmunk/cpBB.h"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include <cstdlib>
 
 // Internal struct matching DeformPoint in ObjC
@@ -39,17 +40,7 @@ static void PointQuery(cpVect* v, DeformPoint* p, cpCollisionID, cpFloat* densit
     *density *= FuzzSample(*v, *p);
 }
 
-// Sampling function for marching (could be passed to cpMarch)
-static cpFloat PointCloudSample(void* userData, cpVect pos) {
-    // userData is a PointCloudSampler*
-    PointCloudSampler* sampler = static_cast<PointCloudSampler*>(userData);
-    cpFloat density = 1.0f;
-    cpBB bb = cpBBNewForCircle(pos, 0.0f);
-    cpSpatialIndexQuery(sampler->_index, &pos, bb,
-                        reinterpret_cast<cpSpatialIndexQueryFunc>(PointQuery),
-                        &density);
-    return density;
-}
+
 
 // C++ wrapper for ChipmunkPointCloudSampler
 class PointCloudSampler {
@@ -88,7 +79,18 @@ public:
     // Expose the spatial index for marching or manual queries
     cpSpatialIndex* index() const { return _index; }
 
-private:
     cpFloat _cellSize;
     cpSpatialIndex* _index;
 };
+
+// Sampling function for marching (could be passed to cpMarch)
+static cpFloat PointCloudSample(void* userData, cpVect pos) {
+    // userData is a PointCloudSampler*
+    PointCloudSampler* sampler = static_cast<PointCloudSampler*>(userData);
+    cpFloat density = 1.0f;
+    cpBB bb = cpBBNewForCircle(pos, 0.0f);
+    cpSpatialIndexQuery(sampler->_index, &pos, bb,
+                        reinterpret_cast<cpSpatialIndexQueryFunc>(PointQuery),
+                        &density);
+    return density;
+}

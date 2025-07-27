@@ -6,20 +6,21 @@
 
 #include "third_party/chipmunk/include/chipmunk/cpConstraint.h"
 #include "ChipmunkBody.hpp"
-#include "ChipmunkSpace.hpp"
 #include <cassert>
 
+class ChipmunkSpace;
+
 // Base class for all constraints
-class Constraint {
+class ChipmunkConstraint : public ChipmunkBaseObject {
 public:
     // Takes ownership of the cpConstraint pointer; will destroy it in destructor
-    explicit Constraint(cpConstraint* constraint)
+    explicit ChipmunkConstraint(cpConstraint* constraint)
     : constraint_(constraint) {
         assert(constraint_ && "Constraint pointer must not be null");
         constraint_->userData = this;
         setupCallbacks();
     }
-    virtual ~Constraint() {
+    virtual ~ChipmunkConstraint() {
         // Destroy the underlying constraint
         cpConstraintDestroy(constraint_);
     }
@@ -75,21 +76,21 @@ private:
         cpConstraintSetPostSolveFunc(constraint_, postSolveFunc);
     }
     static void preSolveFunc(cpConstraint* c, cpSpace* s) {
-        static_cast<Constraint*>(c->userData)->preSolve(static_cast<ChipmunkSpace*>(s->userData));
+        static_cast<ChipmunkConstraint*>(c->userData)->preSolve(static_cast<ChipmunkSpace*>(s->userData));
     }
     static void postSolveFunc(cpConstraint* c, cpSpace* s) {
-        static_cast<Constraint*>(c->userData)->postSolve(static_cast<ChipmunkSpace*>(s->userData));
+        static_cast<ChipmunkConstraint*>(c->userData)->postSolve(static_cast<ChipmunkSpace*>(s->userData));
     }
 };
 
 // Pin joint (rod) between two anchor points
-class PinJoint : public Constraint {
+class PinJoint : public ChipmunkConstraint {
 public:
     static PinJoint* create(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB) {
         return new PinJoint(a, b, anchorA, anchorB);
     }
     PinJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB)
-    : Constraint(cpPinJointNew(a->body(), b->body(), anchorA, anchorB)) {}
+    : ChipmunkConstraint(cpPinJointNew(a->body(), b->body(), anchorA, anchorB)) {}
 
     cpVect anchorA() const { return cpPinJointGetAnchorA(constraint_); }
     void setAnchorA(const cpVect& v) { cpPinJointSetAnchorA(constraint_, v); }
@@ -102,13 +103,13 @@ public:
 };
 
 // Slide joint (telescoping rod)
-class SlideJoint : public Constraint {
+class SlideJoint : public ChipmunkConstraint {
 public:
     static SlideJoint* create(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB, cpFloat min, cpFloat max) {
         return new SlideJoint(a, b, anchorA, anchorB, min, max);
     }
     SlideJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB, cpFloat min_v, cpFloat max_v)
-    : Constraint(cpSlideJointNew(a->body(), b->body(), anchorA, anchorB, min_v, max_v)) {}
+    : ChipmunkConstraint(cpSlideJointNew(a->body(), b->body(), anchorA, anchorB, min_v, max_v)) {}
 
     cpVect anchorA() const { return cpSlideJointGetAnchorA(constraint_); }
     void setAnchorA(const cpVect& v) { cpSlideJointSetAnchorA(constraint_, v); }
@@ -124,7 +125,7 @@ public:
 };
 
 // Pivot joint (free rotation around a point)
-class PivotJoint : public Constraint {
+class PivotJoint : public ChipmunkConstraint {
 public:
     static PivotJoint* create(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB) {
         return new PivotJoint(a, b, anchorA, anchorB);
@@ -133,10 +134,10 @@ public:
         return new PivotJoint(a, b, pivot, true);
     }
     PivotJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB)
-    : Constraint(cpPivotJointNew2(a->body(), b->body(), anchorA, anchorB)) {}
+    : ChipmunkConstraint(cpPivotJointNew2(a->body(), b->body(), anchorA, anchorB)) {}
     // usePivot == true selects world-to-local variant
     PivotJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& pivot, bool usePivot)
-    : Constraint(cpPivotJointNew2(
+    : ChipmunkConstraint(cpPivotJointNew2(
             a->body(), b->body(),
             cpBodyWorldToLocal(a->body(), pivot), cpBodyWorldToLocal(b->body(), pivot)
         )) {}
@@ -149,13 +150,13 @@ public:
 };
 
 // Groove joint (pin slides along groove)
-class GrooveJoint : public Constraint {
+class GrooveJoint : public ChipmunkConstraint {
 public:
     static GrooveJoint* create(ChipmunkBody* a, ChipmunkBody* b, const cpVect& grooveA, const cpVect& grooveB, const cpVect& anchorB) {
         return new GrooveJoint(a, b, grooveA, grooveB, anchorB);
     }
     GrooveJoint(ChipmunkBody* a, ChipmunkBody* b, const cpVect& grooveA, const cpVect& grooveB, const cpVect& anchorB)
-    : Constraint(cpGrooveJointNew(a->body(), b->body(), grooveA, grooveB, anchorB)) {}
+    : ChipmunkConstraint(cpGrooveJointNew(a->body(), b->body(), grooveA, grooveB, anchorB)) {}
 
     cpVect grooveA() const { return cpGrooveJointGetGrooveA(constraint_); }
     void setGrooveA(const cpVect& v) { cpGrooveJointSetGrooveA(constraint_, v); }
@@ -168,7 +169,7 @@ public:
 };
 
 // Damped spring (spring + damper)
-class DampedSpring : public Constraint {
+class DampedSpring : public ChipmunkConstraint {
 public:
     static DampedSpring* create(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB,
                                  cpFloat restLength, cpFloat stiffness, cpFloat damping) {
@@ -176,7 +177,7 @@ public:
     }
     DampedSpring(ChipmunkBody* a, ChipmunkBody* b, const cpVect& anchorA, const cpVect& anchorB,
                  cpFloat restLength, cpFloat stiffness, cpFloat damping)
-    : Constraint(cpDampedSpringNew(a->body(), b->body(), anchorA, anchorB, restLength, stiffness, damping)) {}
+    : ChipmunkConstraint(cpDampedSpringNew(a->body(), b->body(), anchorA, anchorB, restLength, stiffness, damping)) {}
 
     cpVect anchorA() const { return cpDampedSpringGetAnchorA(constraint_); }
     void setAnchorA(const cpVect& v) { cpDampedSpringSetAnchorA(constraint_, v); }
@@ -195,13 +196,13 @@ public:
 };
 
 // Damped rotary spring
-class DampedRotarySpring : public Constraint {
+class DampedRotarySpring : public ChipmunkConstraint {
 public:
     static DampedRotarySpring* create(ChipmunkBody* a, ChipmunkBody* b, cpFloat restAngle, cpFloat stiffness, cpFloat damping) {
         return new DampedRotarySpring(a, b, restAngle, stiffness, damping);
     }
     DampedRotarySpring(ChipmunkBody* a, ChipmunkBody* b, cpFloat restAngle, cpFloat stiffness, cpFloat damping)
-    : Constraint(cpDampedRotarySpringNew(a->body(), b->body(), restAngle, stiffness, damping)) {}
+    : ChipmunkConstraint(cpDampedRotarySpringNew(a->body(), b->body(), restAngle, stiffness, damping)) {}
 
     cpFloat restAngle() const { return cpDampedRotarySpringGetRestAngle(constraint_); }
     void setRestAngle(cpFloat v) { cpDampedRotarySpringSetRestAngle(constraint_, v); }
@@ -214,13 +215,13 @@ public:
 };
 
 // Rotary limit joint
-class RotaryLimitJoint : public Constraint {
+class RotaryLimitJoint : public ChipmunkConstraint {
 public:
     static RotaryLimitJoint* create(ChipmunkBody* a, ChipmunkBody* b, cpFloat min, cpFloat max) {
         return new RotaryLimitJoint(a, b, min, max);
     }
     RotaryLimitJoint(ChipmunkBody* a, ChipmunkBody* b, cpFloat min_v, cpFloat max_v)
-    : Constraint(cpRotaryLimitJointNew(a->body(), b->body(), min_v, max_v)) {}
+    : ChipmunkConstraint(cpRotaryLimitJointNew(a->body(), b->body(), min_v, max_v)) {}
 
     cpFloat min() const { return cpRotaryLimitJointGetMin(constraint_); }
     void setMin(cpFloat v) { cpRotaryLimitJointSetMin(constraint_, v); }
@@ -230,26 +231,26 @@ public:
 };
 
 // Simple motor
-class SimpleMotor : public Constraint {
+class SimpleMotor : public ChipmunkConstraint {
 public:
     static SimpleMotor* create(ChipmunkBody* a, ChipmunkBody* b, cpFloat rate) {
         return new SimpleMotor(a, b, rate);
     }
     SimpleMotor(ChipmunkBody* a, ChipmunkBody* b, cpFloat rate_v)
-    : Constraint(cpSimpleMotorNew(a->body(), b->body(), rate_v)) {}
+    : ChipmunkConstraint(cpSimpleMotorNew(a->body(), b->body(), rate_v)) {}
 
     cpFloat rate() const { return cpSimpleMotorGetRate(constraint_); }
     void setRate(cpFloat v) { cpSimpleMotorSetRate(constraint_, v); }
 };
 
 // Gear joint
-class GearJoint : public Constraint {
+class GearJoint : public ChipmunkConstraint {
 public:
     static GearJoint* create(ChipmunkBody* a, ChipmunkBody* b, cpFloat phase, cpFloat ratio) {
         return new GearJoint(a, b, phase, ratio);
     }
     GearJoint(ChipmunkBody* a, ChipmunkBody* b, cpFloat phase_v, cpFloat ratio_v)
-    : Constraint(cpGearJointNew(a->body(), b->body(), phase_v, ratio_v)) {}
+    : ChipmunkConstraint(cpGearJointNew(a->body(), b->body(), phase_v, ratio_v)) {}
 
     cpFloat phase() const { return cpGearJointGetPhase(constraint_); }
     void setPhase(cpFloat v) { cpGearJointSetPhase(constraint_, v); }
@@ -259,13 +260,13 @@ public:
 };
 
 // Ratchet joint
-class RatchetJoint : public Constraint {
+class RatchetJoint : public ChipmunkConstraint {
 public:
     static RatchetJoint* create(ChipmunkBody* a, ChipmunkBody* b, cpFloat phase, cpFloat ratchet) {
         return new RatchetJoint(a, b, phase, ratchet);
     }
     RatchetJoint(ChipmunkBody* a, ChipmunkBody* b, cpFloat phase_v, cpFloat ratchet_v)
-    : Constraint(cpRatchetJointNew(a->body(), b->body(), phase_v, ratchet_v)) {}
+    : ChipmunkConstraint(cpRatchetJointNew(a->body(), b->body(), phase_v, ratchet_v)) {}
 
     cpFloat angle() const { return cpRatchetJointGetAngle(constraint_); }
     void setAngle(cpFloat v) { cpRatchetJointSetAngle(constraint_, v); }

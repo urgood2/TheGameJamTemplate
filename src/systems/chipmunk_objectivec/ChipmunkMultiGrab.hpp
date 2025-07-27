@@ -23,6 +23,9 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include "ChipmunkSpace.hpp"
+#include "systems/chipmunk_objectivec/ChipmunkBaseObject.hpp"
+#include <functional>
 
 // Forward declarations
 class Grab;
@@ -31,14 +34,14 @@ class MultiGrab;
 //=======================================================
 // Grab: Handles a single pointer grab
 //=======================================================
-class Grab : public Constraint {
+class Grab : public ChipmunkConstraint {
 public:
     // Construct grab with owner, grab position, nearest contact, target body and shape, and all chipmunk objects to add.
-    Grab(MultiGrab* owner, cpVect pos, cpVect nearest, Body* body, Shape* grabbedShape, const std::vector<Constraint*>& chipmunkObjects);
+    Grab(MultiGrab* owner, cpVect pos, cpVect nearest, ChipmunkBody* body, ChipmunkShape* grabbedShape, const std::vector<ChipmunkBaseObject*>& chipmunkObjects);
     ~Grab() override;
 
     // Override preSolve callback
-    void preSolve(Space* space) override;
+    void preSolve(ChipmunkSpace* space) override;
 
     // Accessors
     cpVect pos() const { return _pos; }
@@ -48,8 +51,8 @@ public:
 private:
     cpVect _pos;
     float _smoothing;
-    Shape* _grabbedShape;
-    std::vector<Constraint*> _objects;
+    ChipmunkShape* _grabbedShape;
+    std::vector<ChipmunkBaseObject*> _objects;
 
     // PreSolve helper bound to cpConstraint
     static void PreSolveFunc(cpConstraint* constraint, cpSpace* space);
@@ -60,7 +63,7 @@ private:
 //=======================================================
 class MultiGrab {
 public:
-    MultiGrab(Space* space, float smoothing, float grabForce);
+    MultiGrab(ChipmunkSpace* space, float smoothing, float grabForce);
     ~MultiGrab();
 
     // Begin a grab at world position pos. Returns Grab if object pulled or pushed, else nullptr.
@@ -77,8 +80,8 @@ public:
     float grabForce;
     float smoothing;
     cpShapeFilter filter;
-    std::function<bool(Shape*)> grabFilter;
-    std::function<float(Shape*, float)> grabSort;
+    std::function<bool(ChipmunkShape*)> grabFilter;
+    std::function<float(ChipmunkShape*, float)> grabSort;
     float grabFriction;
     float grabRotaryFriction;
     float grabRadius;
@@ -89,8 +92,7 @@ public:
     float pushElasticity;
     unsigned int pushCollisionType;
 
-private:
-    Space* _space;
+    ChipmunkSpace* _space;
     std::vector<Grab*> _grabs;
 
     // Helper to find best grab by proximity
@@ -102,28 +104,28 @@ private:
 //=======================================================
 
 void Grab::PreSolveFunc(cpConstraint* constraint, cpSpace* space) {
-    Body* grabBody = static_cast<Body*>(cpBodyGetUserData(cpConstraintGetBodyA(constraint)));
+    ChipmunkBody* grabBody = static_cast<ChipmunkBody*>(cpBodyGetUserData(cpConstraintGetBodyA(constraint)));
     Grab* grab = static_cast<Grab*>(constraint->userData);
     float dt = cpSpaceGetCurrentTimeStep(space);
     float coef = std::pow(grab->_smoothing, dt);
-    cpVect targetPos = cpvlerp(grab->_pos, cpBodyGetPosition(grabBody->get()), coef);
-    cpBodySetVelocity(grabBody->get(), cpvmult(cpvsub(targetPos, cpBodyGetPosition(grabBody->get())), 1.0f/dt));
+    cpVect targetPos = cpvlerp(grab->_pos, cpBodyGetPosition(grabBody->body()), coef);
+    cpBodySetVelocity(grabBody->body(), cpvmult(cpvsub(targetPos, cpBodyGetPosition(grabBody->body())), 1.0f/dt));
 }
 
 Grab::Grab(MultiGrab* owner,
            cpVect pos,
            cpVect nearest,
-           Body* body,
-           Shape* grabbedShape,
-           const std::vector<Constraint*>& chipmunkObjects)
-: Constraint(nullptr)
+           ChipmunkBody* body,
+           ChipmunkShape* grabbedShape,
+           const std::vector<ChipmunkBaseObject*>& chipmunkObjects)
+: ChipmunkConstraint(nullptr)
 , _pos(pos)
 , _smoothing(owner->smoothing)
 , _grabbedShape(grabbedShape)
 , _objects(chipmunkObjects)
 {
     // Create kinematic grab body
-    Body* grabBody = Body::createKinematic();
+    ChipmunkBody* grabBody = ChipmunkBody::KinematicBody();
     grabBody->setPosition(pos);
 
     // Build initial pivot joint
@@ -135,13 +137,13 @@ Grab::Grab(MultiGrab* owner,
 
     // Friction pivot if shape exists
     if(grabbedShape) {
-        if(owner->grabFriction > 0.0f && (1.0f/body->getMass() + 1.0f/grabBody->getMass() != 0.0f)) {
+        if(owner->grabFriction > 0.0f && (1.0f/body->mass() + 1.0f/grabBody->mass() != 0.0f)) {
             PivotJoint* friction = PivotJoint::create(grabBody, body, cpvzero, body->worldToLocal(nearest));
             friction->setMaxForce(owner->grabFriction);
             friction->setMaxBias(0.0f);
             _objects.push_back(friction);
         }
-        if(owner->grabRotaryFriction > 0.0f && (1.0f/body->getMoment() + 1.0f/grabBody->getMoment() != 0.0f)) {
+        if(owner->grabRotaryFriction > 0.0f && (1.0f/body->moment() + 1.0f/grabBody->moment() != 0.0f)) {
             GearJoint* rotary = GearJoint::create(grabBody, body, 0.0f, 1.0f);
             rotary->setMaxForce(owner->grabRotaryFriction);
             rotary->setMaxBias(0.0f);
@@ -153,7 +155,8 @@ Grab::Grab(MultiGrab* owner,
     _objects.push_back(this); // include self if managing deletion
     // Add all to space
     for(auto c : _objects) {
-        owner->_space->addConstraint(static_cast<Constraint*>(c));
+        owner->_space->constraints().push_back(static_cast<ChipmunkConstraint*>(c));
+        // owner->_space->addConstraint(static_cast<ChipmunkConstraint*>(c));
     }
 }
 
@@ -163,7 +166,7 @@ Grab::~Grab() {
     }
 }
 
-void Grab::preSolve(Space* space) {
+void Grab::preSolve(ChipmunkSpace* space) {
     // No-op: handled in static PreSolveFunc callback
 }
 
@@ -171,13 +174,13 @@ void Grab::preSolve(Space* space) {
 // MultiGrab Implementation
 //=======================================================
 
-MultiGrab::MultiGrab(Space* space, float smoothing, float grabForce)
+MultiGrab::MultiGrab(ChipmunkSpace* space, float smoothing, float grabForce)
 : _space(space)
 , grabForce(grabForce)
 , smoothing(smoothing)
 , filter(CP_SHAPE_FILTER_ALL)
-, grabFilter([](Shape*) { return true; })
-, grabSort([](Shape*, float depth) { return depth; })
+, grabFilter([](ChipmunkShape*) { return true; })
+, grabSort([](ChipmunkShape*, float depth) { return depth; })
 , grabFriction(0.0f)
 , grabRotaryFriction(0.0f)
 , grabRadius(0.0f)
@@ -200,34 +203,39 @@ static void PushBodyVelocityFunc(cpBody* body, cpVect gravity, cpFloat damping, 
 Grab* MultiGrab::beginLocation(cpVect pos) {
     float minSort = INFINITY;
     cpVect nearest = pos;
-    Shape* grabbedShape = nullptr;
+    ChipmunkShape* grabbedShape = nullptr;
 
-    if(pullMode) {
-        cpSpacePointQuery(_space->get(), pos, grabRadius, filter, [&](cpShape* c_shape, cpVect point, cpFloat dist, cpVect gradient){
-            Shape* shape = Shape::from(c_shape);
+    if(pullMode) {        
+        auto hits = _space->pointQueryAll(pos, grabRadius, filter);
+        for(auto &hit : hits){
+            cpShape* c_shape = hit.shape()->shape();
+            cpVect   point   = hit.point();
+            cpFloat  dist    = hit.distance();
+            cpVect   grad    = hit.gradient();
+            
             float sortVal = dist;
             if(dist <= 0.0f) {
-                sortVal = -grabSort(shape, -dist);
+                sortVal = -grabSort(hit.shape(), -dist);
             }
             if(sortVal < minSort && cpShapeGetBody(c_shape)->m > 0) {
-                if(grabFilter(shape)) {
+                if(grabFilter(hit.shape())) {
                     minSort = sortVal;
                     nearest = (dist > 0.0f ? point : pos);
-                    grabbedShape = shape;
+                    grabbedShape = hit.shape();
                 }
             }
-        });
+        }
     }
 
-    Body* pushBody = nullptr;
-    std::vector<Constraint*> chipmunkObjects;
+    ChipmunkBody* pushBody = nullptr;
+    std::vector<ChipmunkBaseObject*> chipmunkObjects;
 
     if(!grabbedShape && pushMode) {
-        pushBody = Body::create(pushMass, INFINITY);
+        pushBody = ChipmunkBody::BodyWithMassAndMoment(pushMass, INFINITY);
         pushBody->setPosition(pos);
-        cpBodySetVelocityUpdateFunc(pushBody->get(), PushBodyVelocityFunc);
+        cpBodySetVelocityUpdateFunc(pushBody->body(), PushBodyVelocityFunc);
 
-        Shape* pushShape = CircleShape::create(pushBody, grabRadius, cpvzero);
+        ChipmunkShape* pushShape = ChipmunkCircleShape::CircleWithBody(pushBody, grabRadius, cpvzero);
         pushShape->setFriction(pushFriction);
         pushShape->setElasticity(pushElasticity);
         pushShape->setFilter(filter);
@@ -235,7 +243,7 @@ Grab* MultiGrab::beginLocation(cpVect pos) {
         chipmunkObjects.push_back(pushShape);
     }
 
-    Body* targetBody = grabbedShape ? grabbedShape->getBody() : pushBody;
+    ChipmunkBody* targetBody = grabbedShape ? grabbedShape->body() : pushBody;
     Grab* grab = new Grab(this, pos, nearest, targetBody, grabbedShape, chipmunkObjects);
     _grabs.push_back(grab);
     return grab->hasGrabbed() ? grab : nullptr;

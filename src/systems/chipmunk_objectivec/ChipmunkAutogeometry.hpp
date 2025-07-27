@@ -69,7 +69,6 @@ public:
 
     PolylineSet march(cpBB bb, size_t xSamples, size_t ySamples, bool hard) const;
 
-private:
     cpMarchSampleFunc sampleFunc;
     cpFloat marchThreshold;
 };

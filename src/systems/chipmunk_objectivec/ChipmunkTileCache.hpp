@@ -3,13 +3,14 @@
 
 #include "ChipmunkAutogeometry.hpp"
 #include "ChipmunkSpace.hpp"
+#include "ChipmunkPointCloudSampler.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include <vector>
 #include <cassert>
 #include <cmath>
 
 // Forward declaration for segment creation wrapper
-class SegmentShape;
+class ChipmunkChipmunkSegmentShape;
 
 // Cached tile node for LRU cache and spatial index
 struct CachedTile {
@@ -17,7 +18,7 @@ struct CachedTile {
     bool dirty;
     CachedTile* next;
     CachedTile* prev;
-    std::vector<SegmentShape*> shapes;
+    std::vector<ChipmunkSegmentShape*> shapes;
 
     explicit CachedTile(const cpBB& bounds)
     : bb(bounds), dirty(true), next(nullptr), prev(nullptr) {}
@@ -28,7 +29,7 @@ class AbstractTileCache {
 public:
     // ctor: sampler, space to add segments, tileSize in world units, samples per tile, cacheSize = max tile count
     AbstractTileCache(AbstractSampler* sampler,
-                      Space* space,
+                      ChipmunkSpace* space,
                       cpFloat tileSize,
                       unsigned samplesPerTile,
                       unsigned cacheSize)
@@ -49,14 +50,25 @@ public:
         }
         if(_tileIndex) cpSpatialIndexFree(_tileIndex);
     }
+    
+    // Extract the bb from a CachedTile*, wrapped for the C API:
+    static cpBB CachedTileBB(void *obj) {
+        auto *tile = static_cast<CachedTile*>(obj);
+        return tile->bb;  // or tile->_bb if your member is private
+    }
+
 
     // Reset all tiles, clear space and index
     void resetCache() {
         _ensuredDirty = true;
         if(_tileIndex) cpSpatialIndexFree(_tileIndex);
-        _tileIndex = cpSpaceHashNew(_tileSize, static_cast<int>(_cacheSize),
-                                    reinterpret_cast<cpSpatialIndexBBFunc>(&::PointBB<CachedTile>),
-                                    nullptr);
+        _tileIndex = cpSpaceHashNew(
+            _tileSize,
+            static_cast<int>(_cacheSize),
+            CachedTileBB,   // your cpSpatialIndexBBFunc = cpBB(*)(void*)
+            nullptr
+        );
+
         // remove shapes and delete tiles
         for(CachedTile* t = _cacheTail; t; ) {
             CachedTile* next = t->next;
@@ -126,7 +138,7 @@ public:
     }
 
     // Create a segment shape in space from a->b; override in subclass
-    virtual SegmentShape* makeSegmentFor(Body* staticBody,
+    virtual ChipmunkSegmentShape* makeSegmentFor(ChipmunkBody* staticBody,
                                          const cpVect& a,
                                          const cpVect& b) {
         // stub: user must override
@@ -143,7 +155,7 @@ public:
 
 protected:
     AbstractSampler* _sampler;
-    Space* _space;
+    ChipmunkSpace* _space;
     cpFloat _tileSize;
     unsigned _samplesPerTile;
     cpVect _tileOffset;
@@ -185,16 +197,37 @@ protected:
         cpVect pt = cpv((i + 0.5f)*_tileSize + _tileOffset.x,
                         (j + 0.5f)*_tileSize + _tileOffset.y);
         CachedTile* out = nullptr;
-        cpSpatialIndexQuery(_tileIndex, &pt, cpBBNewForCircle(pt, 0.0f),
-                            reinterpret_cast<cpSpatialIndexQueryFunc>([](cpVect* p, CachedTile* t, cpCollisionID, CachedTile** o){ if(cpBBContainsVect(t->bb, *p)) *o = t; }),
-                            &out);
+
+        cpSpatialIndexQuery(
+            _tileIndex,
+            &pt,
+            cpBBNewForCircle(pt, 0.0f),
+
+            // Note: exact signature, no captures
+            +[](void *obj, void *data, cpCollisionID /*id*/, void *userData)
+                -> unsigned int 
+            {
+                auto  p   = static_cast<cpVect*>(obj);
+                auto  t   = static_cast<CachedTile*>(data);
+                auto& out = *static_cast<CachedTile**>(userData);
+
+                if(cpBBContainsVect(t->bb, *p)) {
+                    out = t;
+                    return 1;
+                }
+                return 0;
+            },
+
+            &out
+        );
+
         return out;
     }
 
     // Remove shapes of a tile from space
     void removeShapesForTile(CachedTile* tile) {
         for(auto* s : tile->shapes) {
-            _space->removeShape(s);
+            _space->remove(s);
             delete s;
         }
         tile->shapes.clear();
@@ -205,24 +238,24 @@ protected:
         cpPolylineSet* set = cpPolylineSetNew();
         if(_marchHard)
             cpMarchHard(tile->bb, _samplesPerTile, _samplesPerTile,
-                        _sampler->marchThreshold(),
+                        _sampler->marchThreshold,
                         reinterpret_cast<cpMarchSegmentFunc>(cpPolylineSetCollectSegment), set,
-                        _sampler->sampleFunc(), _sampler);
+                        _sampler->sampleFunc, _sampler);
         else
             cpMarchSoft(tile->bb, _samplesPerTile, _samplesPerTile,
-                        _sampler->marchThreshold(),
+                        _sampler->marchThreshold,
                         reinterpret_cast<cpMarchSegmentFunc>(cpPolylineSetCollectSegment), set,
-                        _sampler->sampleFunc(), _sampler);
+                        _sampler->sampleFunc, _sampler);
 
         if(set->count > 0) {
-            Body* staticBody = Body::staticBody();
+            ChipmunkBody* staticBody = ChipmunkBody::StaticBody();
             for(int i = 0; i < set->count; ++i) {
                 cpPolyline* pl = simplify(set->lines[i]);
                 for(int v = 0; v < pl->count - 1; ++v) {
-                    SegmentShape* seg = makeSegmentFor(staticBody,
+                    ChipmunkSegmentShape* seg = makeSegmentFor(staticBody,
                                                        pl->verts[v], pl->verts[v+1]);
                     tile->shapes.push_back(seg);
-                    _space->addShape(seg);
+                    _space->add(seg);
                 }
                 cpPolylineFree(pl);
             }
@@ -255,7 +288,7 @@ protected:
 class BasicTileCache : public AbstractTileCache {
 public:
     BasicTileCache(AbstractSampler* sampler,
-                   Space* space,
+                   ChipmunkSpace* space,
                    cpFloat tileSize,
                    unsigned samplesPerTile,
                    unsigned cacheSize)
@@ -271,10 +304,10 @@ public:
         return cpPolylineSimplifyCurves(polyline, simplifyThreshold);
     }
     // override segment creation
-    SegmentShape* makeSegmentFor(Body* staticBody,
+    ChipmunkSegmentShape* makeSegmentFor(ChipmunkBody* staticBody,
                                  const cpVect& a,
                                  const cpVect& b) override {
-        SegmentShape* seg = SegmentShape::create(staticBody, a, b, segmentRadius);
+        ChipmunkSegmentShape* seg = ChipmunkSegmentShape::SegmentWithBody(staticBody, a, b, segmentRadius);
         seg->setFriction(segmentFriction);
         seg->setElasticity(segmentElasticity);
         seg->setFilter(segmentFilter);

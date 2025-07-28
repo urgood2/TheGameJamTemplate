@@ -1,6 +1,35 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] apply autogeometry manipulation methods: (also debug)
+```cpp
+
+void DeformableDemo::leftMouse(const cpVect& pos) {
+    // carve only where density is high enough
+    if(_sampler->sample(pos) < 0.25f) return;
+    cpBB dirty = _pointCloud.addPoint(pos, 32.0f, 0.5f);
+    _tiles.markDirtyRect(dirty);
+}
+
+void DeformableDemo::rightMouse(const cpVect& pos) {
+    // spawn a ball only where density is low (i.e. empty space)
+    if(_sampler->sample(pos) > 0.5f) return;
+    
+    cpFloat mass   = 1.0f;
+    cpFloat radius = 10.0f;
+    cpFloat moment = cpMomentForCircle(mass, 0.0f, radius, cpvzero);
+    
+    // create body + shape via your C++ wrappers
+    auto *body = ChipmunkBody::BodyWithMassAndMoment(mass, moment);
+    _space->add(body);
+    body->setPosition(pos);
+    
+    auto *shape = ChipmunkCircleShape::CircleWithBody(body, radius, cpvzero);
+    _space->add(shape);
+    shape->setFriction(0.7f);
+}
+
+```
 - [ ] tweak pointcloudsampler so it's feature complete: https://chatgpt.com/share/68865127-f880-800a-a33b-745a7bc5a793
 - [ ] compare all objective c files except image sampler (won't be using it) against originals for missing features
 - [ ] do a pass through of objective c port of chipmunk so that I can use shared ptr instead of new() operator.

@@ -2,6 +2,7 @@
 // ChipmunkSpace.cpp
 #include "ChipmunkSpace.hpp"
 #include "ChipmunkConstraints.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 extern "C" {
 #include "third_party/chipmunk/include/chipmunk/chipmunk_private.h"
 }
@@ -108,12 +109,20 @@ void ChipmunkSpace::addCollisionHandler(
 
 // Object management
 void ChipmunkSpace::add(ChipmunkObject* obj) {
-    if (auto* base = dynamic_cast<ChipmunkBaseObject*>(obj)) {
-        base->addToSpace(this);
-    } else {
-        for (auto* child : obj->chipmunkObjects()) child->addToSpace(this);
-    }
-    _children.insert(obj);
+  for(auto *child : obj->chipmunkObjects()) {
+    child->addToSpace(this);
+  }
+  _children.insert(obj);
+}
+
+void ChipmunkSpace::add(ChipmunkShape* shape) {
+    cpSpaceAddBody( _space, shape->body()->body());  // add the body first
+    cpSpaceAddShape(_space, shape->shape());   // raw C API
+    _children.insert(shape);
+}
+void ChipmunkSpace::add(ChipmunkBody* body) {
+    cpSpaceAddBody(_space, body->body());
+    _children.insert(body);
 }
 
 void ChipmunkSpace::remove(ChipmunkObject* obj) {

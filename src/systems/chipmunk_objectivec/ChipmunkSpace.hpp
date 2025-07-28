@@ -56,6 +56,11 @@ extern "C" {
 
 class ChipmunkSpace {
 public:
+/// “Wrap” an existing cpSpace*.  Does *not* call cpSpaceNew().
+    explicit ChipmunkSpace(cpSpace* space)
+    : _space(space)
+    , _staticBody(ChipmunkBody::BodyFromCPBody(cpSpaceGetStaticBody(space)))
+    {}
     ChipmunkSpace();
     virtual ~ChipmunkSpace();
 
@@ -106,6 +111,9 @@ public:
 
     // Object management
     void add(ChipmunkObject* obj);
+    void add(ChipmunkShape*  shape);
+    void add(ChipmunkBody*   body);
+    void add(ChipmunkConstraint* constraint);
     void remove(ChipmunkObject* obj);
     bool contains(ChipmunkObject* obj) const;
     void smartAdd(ChipmunkObject* obj);

@@ -38,6 +38,10 @@
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "rlgl.h"
 #include "systems/physics/physics_world.hpp"
+#include "systems/chipmunk_objectivec/ChipmunkAutogeometry.hpp"
+#include "systems/chipmunk_objectivec/ChipmunkTileCache.hpp"
+#include "systems/chipmunk_objectivec/ChipmunkPointCloudSampler.hpp"
+#include "third_party/chipmunk/include/chipmunk/cpBB.h"
 
 using std::pair;
 
@@ -424,6 +428,75 @@ namespace game
     }
     
     std::shared_ptr<physics::PhysicsWorld> physicsWorld = nullptr;
+    
+    
+//-----------------------------------------------------------------------------
+// 1) Worley (cellular) noise
+//-----------------------------------------------------------------------------
+cpFloat CellularNoise(cpVect pos) {
+    static const uint8_t permute[] = { /* 512‐entry table as in ObjC */ 
+      151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,
+      69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,
+      94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,
+      136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,
+      111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,
+      54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,
+      135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,
+      124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,
+      17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,
+      101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,
+      185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,
+      241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,
+      84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,
+      24,72,243,141,128,195,78,66,215,61,156,180,
+      // repeat
+      151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,
+      69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,
+      94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,
+      136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,
+      111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,
+      54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,
+      135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,
+      124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,
+      17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,
+      101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,
+      185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,
+      241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,
+      84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,
+      24,72,243,141,128,195,78,66,215,61,156,180
+    };
+    
+    cpFloat fx = floorf(pos.x);
+    cpFloat fy = floorf(pos.y);
+    cpFloat rx = pos.x - fx;
+    cpFloat ry = pos.y - fy;
+    int    ix = (int)fx & 255;
+    int    iy = (int)fy & 255;
+    
+    cpFloat mindist = INFINITY;
+    for(int dy = -1; dy <= 1; ++dy) {
+      for(int dx = -1; dx <= 1; ++dx) {
+        int cell = permute[permute[ix + dx] + iy + dy];
+        int cx   = permute[cell];
+        int cy   = permute[cx];
+        cpFloat ox = (cpFloat)cx / 255.0f + dx - rx;
+        cpFloat oy = (cpFloat)cy / 255.0f + dy - ry;
+        mindist   = cpfmin(mindist, ox*ox + oy*oy);
+      }
+    }
+    return mindist;
+}
+
+cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
+    cpFloat v = 0.0f;
+    for(int i = 0; i < octaves; ++i){
+        cpFloat coef = (cpFloat)(2 << i);
+        v += CellularNoise(cpvmult(pos, coef)) / coef;
+    }
+    return v;
+}
+
+    std::shared_ptr<BasicTileCache> _tileCache = nullptr;
 
     // perform game-specific initialization here. This makes it easier to find all the initialization code
     // specific to a game project
@@ -483,32 +556,69 @@ namespace game
 
         physicsWorld->SetDamping(testEntity, 3.5f);
         physicsWorld->SetAngularDamping(testEntity, 3.0f);
-        physicsWorld->AddUprightSpring(testEntity, 1900.0f, 1500.0f);
+        physicsWorld->AddUprightSpring(testEntity, 4500.0f, 1500.0f);
         physicsWorld->SetFriction(testEntity, 0.2f);
         physicsWorld->CreateTopDownController(testEntity);
+        
+        static PointCloudSampler                      _pointCloud(32.0f);
+        static std::unique_ptr<BlockSampler>         _sampler;
+        
+        static cpVect                                 _randomOffset;
+        
+        static std::shared_ptr<ChipmunkSpace> physicsSpace = std::make_shared<ChipmunkSpace>(physicsWorld->space);
+        static auto sampler = std::make_unique<BlockSampler>([](cpVect pos){
+        // 2 octaves of worley + pointCloud sampling
+        cpFloat noise = CellularNoiseOctaves(cpvadd(pos, _randomOffset) * (1.0f/300.0f), 2);
+        return cpfmin(2.8f * noise, 1.0f) * _pointCloud.sample(pos);
+        });
+        // BasicTileCache(_sampler.get(), ChipmunkSpace::SpaceFromCPSpace(physicsWorld->space), 128.0f, 8, 64);
+        _tileCache = std::make_shared<BasicTileCache>(
+            sampler.get(),
+            physicsSpace.get(),
+            128.0f, // tile size
+            8,      // tile margin
+            64      // max tiles per segment
+        );
+        
+        // pick a random offset once
+        _randomOffset = cpvmult(
+        cpv((cpFloat)rand()/RAND_MAX, (cpFloat)rand()/RAND_MAX),
+        10000.0f
+        );
+        
+        // configure terrain segments
+        _tileCache->segmentRadius     = 2.0f;
+        _tileCache->segmentFriction   = 0.7f;
+        _tileCache->segmentElasticity = 0.3f;
+
         
         //TODO: test CreateTilemapColliders
         // original row‑major map (6 rows, 8 cols)
         /// 0 = empty, 1 = solid
-        std::vector<std::vector<bool>> rowMajor = {
-            {0,0,0,0,0,0,0,0},
-            {0,1,1,1,1,1,1,0},
-            {0,1,0,0,0,0,1,0},
-            {0,1,0,1,1,0,1,0},
-            {0,1,0,0,0,0,1,0},
-            {0,1,1,1,1,1,1,0},
-        };
+        // std::vector<std::vector<bool>> rowMajor = {
+        //     {0,0,0,0,0,0,0,0},
+        //     {0,1,1,1,1,1,1,0},
+        //     {0,1,0,0,0,0,1,0},
+        //     {0,1,0,1,1,0,1,0},
+        //     {0,1,0,0,0,0,1,0},
+        //     {0,1,1,1,1,1,1,0},
+        // };
 
         // transpose → colMajor[x][y]
-        std::vector<std::vector<bool>> sampleMap(8, std::vector<bool>(6));
-        for(int y = 0; y < 6; y++){
-            for(int x = 0; x < 8; x++){
-                sampleMap[x][y] = rowMajor[y][x];
-            }
-        }
+        // std::vector<std::vector<bool>> sampleMap(8, std::vector<bool>(6));
+        // for(int y = 0; y < 6; y++){
+        //     for(int x = 0; x < 8; x++){
+        //         sampleMap[x][y] = rowMajor[y][x];
+        //     }
+        // }
 
         // now width = 8, height = 6 as expected
-        physicsWorld->CreateTilemapColliders(sampleMap, 100.0f, 5.0f);
+        // physicsWorld->CreateTilemapColliders(sampleMap, 100.0f, 5.0f);
+        
+        _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
+        
+        
+        
 
         // some things I can do:
         
@@ -540,6 +650,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
     auto update(float delta) -> void
     {
         physicsWorld->Update(delta);
+        // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
         //TODO: remove later
         

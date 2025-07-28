@@ -39,16 +39,9 @@ class ChipmunkBaseObject;
  * ChipmunkObjectFlatten(), and return it in chipmunkObjects().
  */
 class ChipmunkObject {
-protected:
-    std::vector<ChipmunkBaseObject*> _objects;
-
 public:
-    // Default: just return whatever you've pushed into _objects.
-    virtual std::vector<ChipmunkBaseObject*> chipmunkObjects() const {
-        return _objects;
-    }
-
-    virtual ~ChipmunkObject() = default;
+  virtual std::vector<ChipmunkBaseObject*> chipmunkObjects() const = 0;
+  virtual ~ChipmunkObject() = default;
 };
 
 /**
@@ -57,9 +50,16 @@ public:
  * implement it yourself.
  */
 class ChipmunkBaseObject : public ChipmunkObject {
+protected:
+    std::vector<ChipmunkBaseObject*> _children;
 public:
-    virtual void addToSpace(ChipmunkSpace* space) = 0;
-    virtual void removeFromSpace(ChipmunkSpace* space) = 0;
+  // “Atomic” objects (bodies, shapes, constraints) simply return {this}.
+  std::vector<ChipmunkBaseObject*> chipmunkObjects() const {
+    return { const_cast<ChipmunkBaseObject*>(this) };
+  }
+
+  virtual void addToSpace(ChipmunkSpace* space) = 0;
+  virtual void removeFromSpace(ChipmunkSpace* space) = 0;
 };
 
 // #include "ChipmunkBody.hpp"

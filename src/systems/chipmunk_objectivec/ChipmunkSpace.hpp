@@ -115,6 +115,10 @@ public:
     void add(ChipmunkBody*   body);
     void add(ChipmunkConstraint* constraint);
     void remove(ChipmunkObject* obj);
+    void remove(ChipmunkShape*      shape);
+    void remove(ChipmunkBody*       body);
+    void remove(ChipmunkConstraint* constraint);
+
     bool contains(ChipmunkObject* obj) const;
     void smartAdd(ChipmunkObject* obj);
     void smartRemove(ChipmunkObject* obj);

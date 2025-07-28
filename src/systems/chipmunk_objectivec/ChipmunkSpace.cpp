@@ -116,8 +116,15 @@ void ChipmunkSpace::add(ChipmunkObject* obj) {
 }
 
 void ChipmunkSpace::add(ChipmunkShape* shape) {
-    cpSpaceAddBody( _space, shape->body()->body());  // add the body first
-    cpSpaceAddShape(_space, shape->shape());   // raw C API
+    auto* rawBody = shape->body()->body();
+
+    // Only add the body if it isn’t already in this space
+    if(!cpSpaceContainsBody(_space, rawBody)) {
+        cpSpaceAddBody(_space, rawBody);
+    }
+
+    // Now add the shape itself
+    cpSpaceAddShape(_space, shape->shape());
     _children.insert(shape);
 }
 void ChipmunkSpace::add(ChipmunkBody* body) {
@@ -125,14 +132,33 @@ void ChipmunkSpace::add(ChipmunkBody* body) {
     _children.insert(body);
 }
 
+
+void ChipmunkSpace::remove(ChipmunkShape* shape) {
+    // 1) raw C‐API remove
+    cpSpaceRemoveShape(_space, shape->shape());
+    // 2) bookkeeping
+    _children.erase(shape);
+}
+
+void ChipmunkSpace::remove(ChipmunkBody* body) {
+    cpSpaceRemoveBody(_space, body->body());
+    _children.erase(body);
+}
+
+void ChipmunkSpace::remove(ChipmunkConstraint* constraint) {
+    cpSpaceRemoveConstraint(_space, constraint->get());
+    _children.erase(constraint);
+}
+
+// the fallback that flattens composites:
 void ChipmunkSpace::remove(ChipmunkObject* obj) {
-    if (auto* base = dynamic_cast<ChipmunkBaseObject*>(obj)) {
-        base->removeFromSpace(this);
-    } else {
-        for (auto* child : obj->chipmunkObjects()) child->removeFromSpace(this);
+    for(auto* leaf : obj->chipmunkObjects()) {
+        leaf->removeFromSpace(this);
     }
     _children.erase(obj);
 }
+
+
 
 bool ChipmunkSpace::contains(ChipmunkObject* obj) const {
     return _children.find(obj) != _children.end();

@@ -1,6 +1,10 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] bug where bigger screen seems to cut off the geometry at the center of the screen
+- [ ] how to put bounding boxes outside the geometry ?
+= [ ] how to color in only the ground? shader?
+= [ ] how to know which part is in the ground, and which isnt?
 - [ ] apply autogeometry manipulation methods: (also debug)
 ```cpp
 

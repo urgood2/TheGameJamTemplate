@@ -642,11 +642,11 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
         
         auto debugTile = _tileCache->GetTileAt(0, 0);
         
-        for (auto &shape : debugTile->shapes) {
-            auto boundingBox = shape->bb();
-            SPDLOG_DEBUG("Tile at (0, 0) has shape with bounding box: ({}, {}) to ({}, {})",
-                boundingBox.l, boundingBox.b, boundingBox.r, boundingBox.t);
-        }
+        // for (auto &shape : debugTile->shapes) {
+        //     auto boundingBox = shape->bb();
+        //     SPDLOG_DEBUG("Tile at (0, 0) has shape with bounding box: ({}, {}) to ({}, {})",
+        //         boundingBox.l, boundingBox.b, boundingBox.r, boundingBox.t);
+        // }
         // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
         

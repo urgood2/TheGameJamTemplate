@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] debug getTileAt() with this: https://chatgpt.com/share/688a3233-e608-800a-9b24-dd60ace3e51d
 - [ ] bug where bigger screen seems to cut off the geometry at the center of the screen
 - [ ] how to put bounding boxes outside the geometry ?
 = [ ] how to color in only the ground? shader?

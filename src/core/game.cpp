@@ -34,6 +34,7 @@
 #include "../systems/scripting/scripting_functions.hpp"
 #include "../systems/scripting/scripting_system.hpp"
 #include "../systems/ai/ai_system.hpp"
+#include "spdlog/spdlog.h"
 #include "systems/ldtk_loader/ldtk_combined.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "rlgl.h"
@@ -577,7 +578,7 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
             physicsSpace.get(),
             128.0f, // tile size
             8,      // tile margin
-            64      // max tiles per segment
+            500      // max tiles
         );
         
         // pick a random offset once
@@ -615,7 +616,38 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
         // now width = 8, height = 6 as expected
         // physicsWorld->CreateTilemapColliders(sampleMap, 100.0f, 5.0f);
         
-        _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
+        // Assuming 'camera' is your Camera2D…
+        Vector2 topLeft     = GetScreenToWorld2D({ 0, 0 },            globals::camera);
+        Vector2 bottomRight = GetScreenToWorld2D({ (float)GetScreenWidth(),
+        (float)GetScreenHeight() }, globals::camera);
+
+        
+        // Now topLeft.y < bottomRight.y
+        cpBB viewBB = cpBBNew(
+            topLeft.x,      // minX
+            topLeft.y,      // minY  ← the smaller Y
+            bottomRight.x,  // maxX
+            bottomRight.y   // maxY  ← the larger Y
+        );
+
+
+        _tileCache->ensureRect(viewBB);
+        
+        // After your ensureRect call, do:
+        for(CachedTile* t = _tileCache->_cacheTail; t; t = t->next) {
+            spdlog::info("CachedTile: l={} b={} r={} t={}",
+                        t->bb.l, t->bb.b,
+                        t->bb.r, t->bb.t);
+        }
+        
+        auto debugTile = _tileCache->GetTileAt(0, 0);
+        
+        for (auto &shape : debugTile->shapes) {
+            auto boundingBox = shape->bb();
+            SPDLOG_DEBUG("Tile at (0, 0) has shape with bounding box: ({}, {}) to ({}, {})",
+                boundingBox.l, boundingBox.b, boundingBox.r, boundingBox.t);
+        }
+        // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
         
         

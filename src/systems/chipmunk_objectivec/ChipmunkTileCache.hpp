@@ -99,7 +99,7 @@ public:
         Rect rect = TileRectForBB(bounds);
         cpBB ensure = BBForRect(rect);
         if(!_ensuredDirty && cpBBContainsBB(_ensuredBB, ensure)) return;
-
+        //NOTE: starts at -1, -1 for padding
         // Iterate over tile coords
         for(int i = rect.l; i < rect.r; ++i) {
             for(int j = rect.b; j < rect.t; ++j) {
@@ -153,7 +153,6 @@ public:
     cpVect tileOffset() const { return _tileOffset; }
     void setTileOffset(const cpVect& v) { _tileOffset = v; }
 
-protected:
     AbstractSampler* _sampler;
     ChipmunkSpace* _space;
     cpFloat _tileSize;
@@ -200,29 +199,25 @@ protected:
 
         cpSpatialIndexQuery(
             _tileIndex,
-            &pt,
-            cpBBNewForCircle(pt, 0.0f),
-
-            // Note: exact signature, no captures
-            +[](void *obj, void *data, cpCollisionID /*id*/, void *userData)
+            &pt,                                 // queryObj
+            cpBBNewForCircle(pt, 0.0f),          // bounding box for the query
+            +[](void *obj, void *queryObj, cpCollisionID, void *userData)
                 -> unsigned int 
             {
-                auto  p   = static_cast<cpVect*>(obj);
-                auto  t   = static_cast<CachedTile*>(data);
-                auto& out = *static_cast<CachedTile**>(userData);
-
-                if(cpBBContainsVect(t->bb, *p)) {
-                    out = t;
+                auto *tile  = static_cast<CachedTile*>(obj);     // now correct
+                auto *point = static_cast<cpVect*>(queryObj);    // now correct
+                if(cpBBContainsVect(tile->bb, *point)) {
+                    *static_cast<CachedTile**>(userData) = tile;
                     return 1;
                 }
                 return 0;
             },
-
             &out
         );
 
         return out;
     }
+
 
     // Remove shapes of a tile from space
     void removeShapesForTile(CachedTile* tile) {

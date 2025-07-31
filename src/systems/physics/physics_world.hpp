@@ -11,6 +11,29 @@
 
 namespace physics
 {
+    
+    
+    // 1) Screen‐space (y↓, top‐left=0,0) ↔ Physics‐space (y↑, bottom‐left=0,0)
+    //    * only valid outside BeginMode2D
+    inline Vector2 ScreenToPhys_NoCam(Vector2 screenPos, int screenHeight) {
+        // Flip Y
+        return { screenPos.x, float(screenHeight) - screenPos.y };
+    }
+    inline Vector2 PhysToScreen_NoCam(Vector2 physPos, int screenHeight) {
+        // Flip Y back
+        return { physPos.x, float(screenHeight) - physPos.y };
+    }
+
+    // 2) Camera2D wrappers (y↑ world‐space)
+    inline Vector2 PhysToScreen_Cam(Vector2 physPos, const Camera2D& cam) {
+        // Cast cpVect → Vector2
+        return GetWorldToScreen2D( { physPos.x, physPos.y }, cam );
+    }
+    inline Vector2 ScreenToPhys_Cam(Vector2 screenPos, const Camera2D& cam) {
+        // Returns a world‐space y↑ point, ready for physics
+        return GetScreenToWorld2D( screenPos, cam );
+    }
+
     // ----------------------------------------------------------------------------
     // debug drawing functions: these are called by cpSpaceDebugDraw() to render the physics objects when debugging
     // ----------------------------------------------------------------------------

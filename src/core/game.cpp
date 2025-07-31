@@ -42,6 +42,7 @@
 #include "systems/chipmunk_objectivec/ChipmunkAutogeometry.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkTileCache.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkPointCloudSampler.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
 
 using std::pair;
@@ -634,19 +635,31 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
         _tileCache->ensureRect(viewBB);
         
         // After your ensureRect call, do:
-        for(CachedTile* t = _tileCache->_cacheTail; t; t = t->next) {
-            spdlog::info("CachedTile: l={} b={} r={} t={}",
-                        t->bb.l, t->bb.b,
-                        t->bb.r, t->bb.t);
-        }
+        // for(CachedTile* t = _tileCache->_cacheTail; t; t = t->next) {
+        //     spdlog::info("CachedTile: l={} b={} r={} t={}",
+        //                 t->bb.l, t->bb.b,
+        //                 t->bb.r, t->bb.t);
+        // }
+        cpSpatialIndexEach(
+            _tileCache->_tileIndex,        // your cpSpatialIndex*
+            +[](void *obj, void *){
+                auto *tile = static_cast<CachedTile*>(obj);
+                spdlog::info("CACHED TILE: l={:.2f}, b={:.2f}, r={:.2f}, t={:.2f}",
+                            tile->bb.l, tile->bb.b,
+                            tile->bb.r, tile->bb.t);
+            },
+            nullptr                         // no extra userData needed
+        );
+
+
         
         auto debugTile = _tileCache->GetTileAt(0, 0);
         
-        // for (auto &shape : debugTile->shapes) {
-        //     auto boundingBox = shape->bb();
-        //     SPDLOG_DEBUG("Tile at (0, 0) has shape with bounding box: ({}, {}) to ({}, {})",
-        //         boundingBox.l, boundingBox.b, boundingBox.r, boundingBox.t);
-        // }
+        for (auto &shape : debugTile->shapes) {
+            auto boundingBox = shape->bb();
+            SPDLOG_DEBUG("Tile at (0, 0) has shape with bounding box: ({}, {}) to ({}, {})",
+                boundingBox.l, boundingBox.b, boundingBox.r, boundingBox.t);
+        }
         // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
         
@@ -817,6 +830,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             spdlog::error("Lua update failed: {}", err.what());
         }
         
+        
+        
+
+    
     }
 
     auto draw(float dt) -> void
@@ -839,6 +856,87 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
                 spdlog::error("Lua draw failed: {}", err.what());
             }
         }
+        
+        //--------------------
+        // testing
+        
+        
+        
+        // 1) Compute your sample point and the BB you’re querying:
+        cpVect pt = cpv((0 + 0.5f)*_tileCache->_tileSize + _tileCache->_tileOffset.x,
+                        (0 + 0.5f)*_tileCache->_tileSize + _tileCache->_tileOffset.y);
+        cpBB   queryBB = cpBBNewForCircle(pt, 0.0f);
+        
+        // 2) Log what you’re about to ask:
+        spdlog::info("Querying spatial index at pt = ({:.2f}, {:.2f}), BB = l={:.2f},b={:.2f},r={:.2f},t={:.2f}",
+             pt.x, pt.y,
+             queryBB.l, queryBB.b, queryBB.r, queryBB.t);
+             
+        // 3) Wrap your callback in a named function so you can add logs:
+        auto debugQuery = +[](void *obj, void *queryObj, cpCollisionID, void *userData) -> unsigned {
+            auto *tile  = static_cast<CachedTile*>(obj);
+            auto *point = static_cast<cpVect*>(queryObj);
+
+            // log each candidate tile the index returns:
+            spdlog::info("  → candidate tile BB l={:.2f},b={:.2f},r={:.2f},t={:.2f}; checking point ({:.2f},{:.2f})",
+                        tile->bb.l, tile->bb.b, tile->bb.r, tile->bb.t,
+                        point->x, point->y);
+
+            if(cpBBContainsVect(tile->bb, *point)) {
+                *static_cast<CachedTile**>(userData) = tile;
+                spdlog::info("    → point INSIDE this tile!");
+                return 1;   // stop on first hit
+            }
+            return 0;
+        };
+
+        // 4) Fire the query and capture the return count:
+        CachedTile* out = nullptr;
+        cpSpatialIndexQuery(
+            _tileCache->_tileIndex,
+            &pt,
+            queryBB,
+            debugQuery,
+            &out
+        );
+        
+        // world coordinate of my query is (0, 0)
+        cpVect queryPointWorldRaylib = cpv(0, 0);
+        
+        
+        
+        // Pick the world coords of the tile’s top-left and bottom-right:
+        cpFloat l = 0, b = 0, r = 128, t = 128;
+
+        // top-left in world is (l, t)
+        Vector2 screenTL = GetWorldToScreen2D({(float) l, (float)t }, globals::camera);
+        // bottom-right in world is (r, b)
+        Vector2 screenBR = GetWorldToScreen2D({ (float)r, (float)b }, globals::camera);
+
+        layer::QueueCommand<layer::CmdDrawRectangle>(
+        sprites, [screenTL, screenBR](auto* cmd) {
+            cmd->x      = screenTL.x;
+            cmd->y      = screenTL.y;
+            cmd->width  = screenBR.x - screenTL.x;
+            cmd->height = screenBR.y - screenTL.y;  // now positive
+            cmd->color  = RED;
+        }, 1000
+        );
+
+        // Draw the query point (yellow dot)
+        Vector2 pScr = GetWorldToScreen2D({64,64}, globals::camera);
+        // DrawCircleV(pScr, 4.0f, YELLOW);
+        layer::QueueCommand<layer::CmdDrawCircleFilled>(
+            sprites, [pScr](auto* cmd) {
+                cmd->x = pScr.x;
+                cmd->y = pScr.y;
+                cmd->radius = 4.0f;
+                cmd->color = YELLOW;
+            },
+            1000 // zIndex for debug drawing
+        );
+        
+        // end testing ---------------------
 
 
         {

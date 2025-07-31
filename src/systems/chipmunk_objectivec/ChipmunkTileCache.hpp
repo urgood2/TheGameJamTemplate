@@ -1,6 +1,8 @@
 // TileCacheWrappers.cpp
 // Port of ObjectiveChipmunk's ChipmunkAbstractTileCache and ChipmunkBasicTileCache to C++
 
+#include "util/common_headers.hpp"
+
 #include "ChipmunkAutogeometry.hpp"
 #include "ChipmunkSpace.hpp"
 #include "ChipmunkPointCloudSampler.hpp"
@@ -23,6 +25,25 @@ struct CachedTile {
     explicit CachedTile(const cpBB& bounds)
     : bb(bounds), dirty(true), next(nullptr), prev(nullptr) {}
 };
+
+// above your class…
+static unsigned int queryTileCB(void *obj,
+                                void *queryObj,
+                                cpCollisionID,
+                                void *userData)
+{
+    // this log will ONLY show if the hash actually found a candidate
+    spdlog::info("  → spatialIndexCallback fired!");
+
+    auto* tile  = static_cast<CachedTile*>(queryObj);
+    auto* point = static_cast<cpVect*>(obj);
+
+    if(cpBBContainsVect(tile->bb, *point)) {
+        *static_cast<CachedTile**>(userData) = tile;
+        return 1;
+    }
+    return 0;
+}
 
 // Abstract tile cache: manages grid of tiles for deformable terrain
 class AbstractTileCache {
@@ -196,24 +217,28 @@ public:
         cpVect pt = cpv((i + 0.5f)*_tileSize + _tileOffset.x,
                         (j + 0.5f)*_tileSize + _tileOffset.y);
         CachedTile* out = nullptr;
+        spdlog::info("About to GetTileAt(0,0): query point = ({:.2f},{:.2f})", pt.x, pt.y);
+        
+        // Walk *every* tile in the index at this exact moment:
+        cpSpatialIndexEach(
+            _tileIndex,
+            +[](void *obj, void*) {
+            auto *t = static_cast<CachedTile*>(obj);
+            spdlog::info("  INDEXED: BB l={:.2f},b={:.2f},r={:.2f},t={:.2f}",
+                        t->bb.l, t->bb.b, t->bb.r, t->bb.t);
+            },
+            nullptr
+        );
 
         cpSpatialIndexQuery(
             _tileIndex,
             &pt,                                 // queryObj
             cpBBNewForCircle(pt, 0.0f),          // bounding box for the query
-            +[](void *obj, void *queryObj, cpCollisionID, void *userData)
-                -> unsigned int 
-            {
-                auto *tile  = static_cast<CachedTile*>(obj);     // now correct
-                auto *point = static_cast<cpVect*>(queryObj);    // now correct
-                if(cpBBContainsVect(tile->bb, *point)) {
-                    *static_cast<CachedTile**>(userData) = tile;
-                    return 1;
-                }
-                return 0;
-            },
+            queryTileCB,
             &out
         );
+        
+        spdlog::info("GetTileAt → out = {}", (void*)out);
 
         return out;
     }

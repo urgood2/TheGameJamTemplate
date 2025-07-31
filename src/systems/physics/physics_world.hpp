@@ -11,27 +11,47 @@
 
 namespace physics
 {
-    
-    
-    // 1) Screen‐space (y↓, top‐left=0,0) ↔ Physics‐space (y↑, bottom‐left=0,0)
-    //    * only valid outside BeginMode2D
-    inline Vector2 ScreenToPhys_NoCam(Vector2 screenPos, int screenHeight) {
-        // Flip Y
-        return { screenPos.x, float(screenHeight) - screenPos.y };
-    }
-    inline Vector2 PhysToScreen_NoCam(Vector2 physPos, int screenHeight) {
-        // Flip Y back
-        return { physPos.x, float(screenHeight) - physPos.y };
+    /**
+    * @brief Scale factor: number of pixels that correspond to one Chipmunk unit.
+    *
+    * @details
+    * - If you want 100 pixels to equal 1 physics‐unit, set this to 100.0f.
+    /// - Default is 1.0f (1px == 1 unit).
+    */
+    constexpr float PIXELS_PER_PIXEL_UNIT = 1.0f;
+
+    /**
+    * @brief Convert a Raylib world‐space point (pixels, Y‐down) to Chipmunk physics‐space (units, Y‐up).
+    *
+    * @param world
+    *   A position in Raylib world‐space (in pixels), *after* applying your camera’s screen→world transform:
+    *     Vector2 world = GetScreenToWorld2D(screenPos, camera);
+    *
+    * @return
+    *   The corresponding cpVect in Chipmunk physics‐space (in units), with Y flipped.
+    */
+    inline cpVect raylibToChipmunkCoords(const Vector2 &world) {
+        return cpv(
+            world.x / PIXELS_PER_PIXEL_UNIT,
+            -world.y / PIXELS_PER_PIXEL_UNIT    // flip Y‐axis
+        );
     }
 
-    // 2) Camera2D wrappers (y↑ world‐space)
-    inline Vector2 PhysToScreen_Cam(Vector2 physPos, const Camera2D& cam) {
-        // Cast cpVect → Vector2
-        return GetWorldToScreen2D( { physPos.x, physPos.y }, cam );
-    }
-    inline Vector2 ScreenToPhys_Cam(Vector2 screenPos, const Camera2D& cam) {
-        // Returns a world‐space y↑ point, ready for physics
-        return GetScreenToWorld2D( screenPos, cam );
+    /**
+    * @brief Convert a Chipmunk physics‐space point (units, Y‐up) back to Raylib world‐space (pixels, Y‐down).
+    *
+    * @param p
+    *   A position in Chipmunk physics‐space (in units).
+    *
+    * @return
+    *   The corresponding Vector2 in Raylib world‐space (in pixels), ready for Camera2D world→screen:
+    *     Vector2 screenPos = GetWorldToScreen2D(worldPos, camera);
+    */
+    inline Vector2 chipmunkToRaylibCoords(const cpVect &p) {
+        return {
+            (float)p.x * PIXELS_PER_PIXEL_UNIT,
+            (float)-p.y * PIXELS_PER_PIXEL_UNIT   // flip Y back
+        };
     }
 
     // ----------------------------------------------------------------------------

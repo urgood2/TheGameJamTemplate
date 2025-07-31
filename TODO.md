@@ -1,6 +1,9 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] how to get the chipmunk world moving with the camera?
+- [ ] chipmunk seems to use same coords as raylib?
+- [ ] how to get drawing pritimitives to optionall respect camera? (screen space/world space drawing)
 - [ ] apply camera. also,currently, the map infinitely regenerates. how do make hard borders with a defined area?
 - [ ] #to-process 00:41 physics - set physics layer method for object layers so they only collide with specific objects
 - [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?

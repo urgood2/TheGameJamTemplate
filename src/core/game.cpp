@@ -35,6 +35,7 @@
 #include "../systems/scripting/scripting_system.hpp"
 #include "../systems/ai/ai_system.hpp"
 #include "spdlog/spdlog.h"
+#include "systems/camera/camera_manager.hpp"
 #include "systems/ldtk_loader/ldtk_combined.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "rlgl.h"
@@ -624,14 +625,33 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
 
         
         // Now topLeft.y < bottomRight.y
-        cpBB viewBB = cpBBNew(
-            topLeft.x,      // minX
-            topLeft.y,      // minY  ← the smaller Y
-            bottomRight.x,  // maxX
-            bottomRight.y   // maxY  ← the larger Y
-        );
+        // cpBB viewBB = cpBBNew(
+        //     topLeft.x,      // minX
+        //     topLeft.y,      // minY  ← the smaller Y
+        //     bottomRight.x,  // maxX
+        //     bottomRight.y   // maxY  ← the larger Y
+        // );
 
 
+        // _tileCache->ensureRect(viewBB);
+        
+        // 1) Convert those Raylib-world (px,Y-down) points → Chipmunk-space (units,Y-up)
+        // cpVect physTL = physics::raylibToChipmunkCoords(topLeft);
+        // cpVect physBR = physics::raylibToChipmunkCoords(bottomRight);
+        
+        cpVect physTL = cpv((cpFloat)topLeft.x, (cpFloat)topLeft.y);
+        cpVect physBR = cpv((cpFloat)bottomRight.x, (cpFloat)bottomRight.y);
+
+        // 2) Ensure we supply min / max in each axis
+        cpFloat minX = fmin(physTL.x, physBR.x);
+        cpFloat maxX = fmax(physTL.x, physBR.x);
+        cpFloat minY = fmin(physTL.y, physBR.y);
+        cpFloat maxY = fmax(physTL.y, physBR.y);
+
+        // 3) Build the BB in physics‐space
+        cpBB viewBB = cpBBNew(minX, minY, maxX, maxY);
+
+        // 4) Query your tile-cache in physics units
         _tileCache->ensureRect(viewBB);
         
         // After your ensureRect call, do:
@@ -697,6 +717,20 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         physicsWorld->Update(delta);
         // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
+        // pan camera based on arrow keys
+        if (IsKeyDown(KEY_LEFT)) {
+            globals::camera.target.x -= 200.0f * delta;
+        }
+        if (IsKeyDown(KEY_RIGHT)) {
+            globals::camera.target.x += 200.0f * delta;
+        }
+        if (IsKeyDown(KEY_UP)) {
+            globals::camera.target.y -= 200.0f * delta;
+        }
+        if (IsKeyDown(KEY_DOWN)) {
+            globals::camera.target.y += 200.0f * delta;
+        }
+        
         //TODO: remove later
         
         // 1) On mouse‐down:
@@ -704,7 +738,8 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
             
             // top down controller movement
-            cpBodySetPosition(physicsWorld->controlBody, cpv(GetMouseX(), GetMouseY()));
+            auto mousePosWorld = GetScreenToWorld2D(GetMousePosition(), globals::camera);
+            cpBodySetPosition(physicsWorld->controlBody, cpv(mousePosWorld.x, mousePosWorld.y));
             // cpBodySetPosition(controlBody, desiredTouchPos);
         }
             
@@ -901,12 +936,24 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         );
         
         // world coordinate of my query is (0, 0)
-        cpVect queryPointWorldRaylib = cpv(0, 0);
+        cpVect queryPointWorldRaylibGridTopLeft = cpv(0, 0);
         
+        // actual coordinate of the query point in the tile cache -> this actually centers the point in the tile, which we don't want.
+        Vector2 queryPointWorldRaylibPixels = {
+            (float)((queryPointWorldRaylibGridTopLeft.x + 0.5f) * _tileCache->_tileSize) + (float)_tileCache->_tileOffset.x,
+            (float)((queryPointWorldRaylibGridTopLeft.y + 0.5f) * _tileCache->_tileSize) + (float)_tileCache->_tileOffset.y
+        };
         
+        cpVect rectWidthHeight = cpv(_tileCache->_tileSize, _tileCache->_tileSize);
+        
+        // convert to chimunk coords
+        cpVect queryPointPhysics = physics::raylibToChipmunkCoords(queryPointWorldRaylibPixels);
         
         // Pick the world coords of the tile’s top-left and bottom-right:
-        cpFloat l = 0, b = 0, r = 128, t = 128;
+        float l = queryPointWorldRaylibGridTopLeft.x * _tileCache->_tileSize, 
+              t = queryPointWorldRaylibGridTopLeft.y * _tileCache->_tileSize,
+              r = l + rectWidthHeight.x, 
+              b = t + rectWidthHeight.y;
 
         // top-left in world is (l, t)
         Vector2 screenTL = GetWorldToScreen2D({(float) l, (float)t }, globals::camera);
@@ -917,10 +964,23 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         sprites, [screenTL, screenBR](auto* cmd) {
             cmd->x      = screenTL.x;
             cmd->y      = screenTL.y;
-            cmd->width  = screenBR.x - screenTL.x;
-            cmd->height = screenBR.y - screenTL.y;  // now positive
+            cmd->width  = screenBR.x - screenTL.x; // width is positive
+            cmd->height = screenBR.y - screenTL.y; // height is positive
             cmd->color  = RED;
         }, 1000
+        );
+        
+        auto camera = globals::camera;
+        
+         layer::QueueCommand<layer::CmdDrawRectangle>(
+        sprites, [](auto* cmd) {
+            cmd->lineWidth = 5.0f; // make it a thicker line
+            cmd->x      = 0;
+            cmd->y      = 0;
+            cmd->width  = 200; // width is positive
+            cmd->height = 200; // height is positive
+            cmd->color  = GREEN;
+        }, 1000, layer::DrawCommandSpace::World
         );
 
         // Draw the query point (yellow dot)
@@ -1171,8 +1231,12 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
             
             // -- draw physics world
+            
+            camera_manager::Begin(globals::camera); // begin camera mode for the physics world
+            
             physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
 
+            camera_manager::End(); // end camera mode for the physics world
             fade_system::draw();
 
             {
@@ -1182,9 +1246,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
             layer::Pop();
 
-            // BeginMode2D(globals::camera2D);
-
-            // EndMode2D();
 
             layer::End();
         }

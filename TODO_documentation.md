@@ -1,5 +1,6 @@
 # Documentation
-- entt_null binding
+- [ ] how to get drawing pritimitives to optionall respect camera? -> use drawCommandSpace specifier in QueueCommand method
+- entt_null binding in lua
 - How to instantiate some ui in place in an existing ui window -- refer to existing lua code & document
 - add children method (which takes lua table) for ui builder
 - document this:

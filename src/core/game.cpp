@@ -962,27 +962,14 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
         layer::QueueCommand<layer::CmdDrawRectangle>(
         sprites, [screenTL, screenBR](auto* cmd) {
-            cmd->x      = screenTL.x;
-            cmd->y      = screenTL.y;
+            cmd->x      = screenTL.x + 0.5f * (screenBR.x - screenTL.x); // center the rectangle
+            cmd->y      = screenTL.y + 0.5f * (screenBR.y - screenTL.y); // center the rectangle
             cmd->width  = screenBR.x - screenTL.x; // width is positive
             cmd->height = screenBR.y - screenTL.y; // height is positive
             cmd->color  = RED;
         }, 1000
         );
         
-        auto camera = globals::camera;
-        
-         layer::QueueCommand<layer::CmdDrawRectangle>(
-        sprites, [](auto* cmd) {
-            cmd->lineWidth = 5.0f; // make it a thicker line
-            cmd->x      = 0;
-            cmd->y      = 0;
-            cmd->width  = 200; // width is positive
-            cmd->height = 200; // height is positive
-            cmd->color  = GREEN;
-        }, 1000, layer::DrawCommandSpace::World
-        );
-
         // Draw the query point (yellow dot)
         Vector2 pScr = GetWorldToScreen2D({64,64}, globals::camera);
         // DrawCircleV(pScr, 4.0f, YELLOW);

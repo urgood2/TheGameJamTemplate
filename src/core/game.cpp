@@ -490,6 +490,8 @@ cpFloat CellularNoise(cpVect pos) {
     return mindist;
 }
 
+static float clamp01(float v) { return std::clamp(v, 0.0f, 1.0f); }
+
 cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
     cpFloat v = 0.0f;
     for(int i = 0; i < octaves; ++i){
@@ -498,6 +500,85 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
     }
     return v;
 }
+
+// Generates (and returns) a Texture2D whose each texel encodes sampler->sample()
+// at the corresponding world‐space position under your Camera2D.
+Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) {
+    int w = GetScreenWidth();
+    int h = GetScreenHeight();
+
+    // Allocate a raw buffer for RGBA8 pixels
+    Image img = {
+        .data    = malloc(w * h * sizeof(Color)),
+        .width   = w,
+        .height  = h,
+        .mipmaps = 1,
+        .format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+    };
+    Color* pixels = (Color*)img.data;
+
+    // Fill buffer
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            // Map screen pixel → world coordinate
+            Vector2 world = GetScreenToWorld2D({ (float)x, (float)y }, camera);
+
+            // Sample your density function (convert to chipmunk coords if needed)
+            cpVect p = cpv(world.x, world.y);
+            float d  = sampler->sample(p);
+
+            // Gray = density*255
+            unsigned char v = (unsigned char)(clamp01(d) * 255.0f);
+            pixels[y*w + x] = (Color){ v, v, v, 255 };
+        }
+    }
+
+    // Upload to GPU
+    Texture2D tex = LoadTextureFromImage(img);
+
+    // Free CPU‐side image
+    UnloadImage(img);
+
+    return tex;
+}
+
+    Texture2D GeneratePointCloudDensityTexture(PointCloudSampler* sampler, const Camera2D& camera) {
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
+
+        // Allocate RGBA8 buffer
+        Image img = {
+            .data    = malloc(w * h * sizeof(Color)),
+            .width   = w,
+            .height  = h,
+            .mipmaps = 1,
+            .format  = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+        };
+        Color* pixels = (Color*)img.data;
+
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                // Screen → world
+                Vector2 world = GetScreenToWorld2D({ (float)x, (float)y }, camera);
+                cpVect  p     = cpv(world.x, world.y);
+
+                // Sample density from the point cloud
+                float d = sampler->sample(p);
+
+                unsigned char v = (unsigned char)(clamp01(d) * 255.0f);
+                pixels[y*w + x] = (Color){ v, v, v, 255 };
+            }
+        }
+
+        // GPU upload + cleanup
+        Texture2D tex = LoadTextureFromImage(img);
+        UnloadImage(img);
+        return tex;
+    }
+
+    
+    Texture2D blockSamplerTexture{}; // texture for the block sampler
+    Texture2D pointCloudSamplerTexture{}; // texture for the point cloud sampler
 
     std::shared_ptr<BasicTileCache> _tileCache = nullptr;
 
@@ -583,6 +664,7 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
             500      // max tiles
         );
         
+        
         // pick a random offset once
         _randomOffset = cpvmult(
         cpv((cpFloat)rand()/RAND_MAX, (cpFloat)rand()/RAND_MAX),
@@ -653,6 +735,10 @@ cpFloat CellularNoiseOctaves(cpVect pos, int octaves) {
 
         // 4) Query your tile-cache in physics units
         _tileCache->ensureRect(viewBB);
+        
+        // generate a texture for the block sampler
+        blockSamplerTexture = GenerateDensityTexture(sampler.get(), globals::camera2D);
+        pointCloudSamplerTexture = GeneratePointCloudDensityTexture(&_pointCloud, globals::camera2D);
         
         // After your ensureRect call, do:
         // for(CachedTile* t = _tileCache->_cacheTail; t; t = t->next) {
@@ -981,6 +1067,21 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
                 cmd->color = YELLOW;
             },
             1000 // zIndex for debug drawing
+        );
+        
+        // draw density texture
+        layer::QueueCommand<layer::CmdDrawImage>(
+            sprites, [](auto* cmd) {
+                // cmd->image = blockSamplerTexture;
+                cmd->image = pointCloudSamplerTexture;
+                cmd->x = 0;
+                cmd->y = 0;
+                cmd->scaleX = 1.0f;
+                cmd->scaleY = 1.0f;
+                cmd->color = WHITE;
+            },
+            1000, // zIndex for debug drawing
+            layer::DrawCommandSpace::World // draw in world space
         );
         
         // end testing ---------------------

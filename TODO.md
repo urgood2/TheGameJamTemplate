@@ -5,9 +5,6 @@
 - [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?
 - [ ] Predictive flight path rendering via angrychipmunks demo.
 - [ ] Final updates to physics world for ease of use https://chatgpt.com/share/688a4653-d110-800a-90e1-8506e26f3653
-- [ ] debug getTileAt() with this: https://chatgpt.com/share/688a3233-e608-800a-9b24-dd60ace3e51d
-- [ ] bug where bigger screen seems to cut off the geometry at the center of the screen
-- [ ] how to put bounding boxes outside the geometry ?
 = [ ] how to color in only the ground? shader?
 = [ ] how to know which part is in the ground, and which isnt?
 - [ ] apply autogeometry manipulation methods: (also debug)

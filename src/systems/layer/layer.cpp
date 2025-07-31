@@ -2003,6 +2003,11 @@ void DrawLayerCommandsToSpecificCanvasOptimizedVersion(
   // {
   //     EndMode2D();
   // }
+  
+  // ensure we leave the camera off
+  if(cameraActive) {
+    camera_manager::End();
+  }
 
   render_stack_switch_internal::Pop();
 }

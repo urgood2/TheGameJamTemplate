@@ -4,6 +4,7 @@
 
 #include "entt/entt.hpp"
 
+#include "systems/camera/camera_manager.hpp"
 #include "systems/collision/broad_phase.hpp"
 #include "util/common_headers.hpp"
 
@@ -2295,7 +2296,7 @@ namespace input
         }; // flag to help clear non-colliding entities
 
         // Use quadtree broad-phase + precise collision check
-        auto entitiesAtCursor = transform::FindAllEntitiesAtPoint(cursor_trans, &globals::camera);
+        auto entitiesAtCursor = transform::FindAllEntitiesAtPoint(cursor_trans, &camera_manager::Get("world_camera")->cam);
 
         // Clear previous collision state
         state.nodes_at_cursor.clear();

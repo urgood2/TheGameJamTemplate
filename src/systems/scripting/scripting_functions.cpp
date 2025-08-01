@@ -530,8 +530,10 @@ namespace scripting {
             "zoom", &Camera2D::zoom
         );
         
+        //FIXME: remove this static camera2D object, and use the camera manager isntead
+        static Camera2D camera2D{}; // create a static camera2D object to use as a global
         lua["globals"]["camera"] = []() -> Camera2D& {
-            return std::ref(globals::camera);
+            return std::ref(camera2D);
         };
         
         lua["GetFrameTime"] = []() -> float {

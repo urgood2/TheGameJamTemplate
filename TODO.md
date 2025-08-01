@@ -1,7 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
-- [ ] springy camera + hump/snkrx camera features: https://github.com/a327ex/STALKER-X
+- [ ] expose current camera manager & camera custom class to lua
 - [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
 - [ ] physics - set physics layer method for object layers so they only collide with specific objects
 - [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?

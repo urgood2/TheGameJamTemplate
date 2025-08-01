@@ -43,6 +43,7 @@
 #include "systems/chipmunk_objectivec/ChipmunkAutogeometry.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkTileCache.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkPointCloudSampler.hpp"
+#include "systems/spring/spring.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
 
@@ -592,12 +593,18 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         gameMapNode.debug.debugText = "Map Container";
         
         // set camera to fill the screen
-        globals::camera = {0};
-        globals::camera.zoom = 1;
-        globals::camera.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-        globals::camera.rotation = 0;
-        globals::camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-
+        // globals::camera = {0};
+        // globals::camera.zoom = 1;
+        // globals::camera.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // globals::camera.rotation = 0;
+        // globals::camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        
+        camera_manager::Create("world_camera", globals::registry);
+        auto worldCamera = camera_manager::Get("world_camera");
+        worldCamera->SetActualOffset({GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f});
+        worldCamera->SetActualTarget({GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f});
+        worldCamera->SetActualZoom(1.0f);
+        worldCamera->SetActualRotation(0.0f);
 
         sound_system::SetCategoryVolume("ui", 0.8f);
 
@@ -614,11 +621,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         layer::AddCanvasToLayer(finalOutput, "render_double_buffer", GetScreenWidth(), GetScreenHeight());
 
         // set camera to fill the screen
-        globals::camera2D = {0};
-        globals::camera2D.zoom = 1;
-        globals::camera2D.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-        globals::camera2D.rotation = 0;
-        globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // globals::camera2D = {0};
+        // globals::camera2D.zoom = 1;
+        // globals::camera2D.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // globals::camera2D.rotation = 0;
+        // globals::camera2D.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 
         exposeToLua(ai_system::masterStateLua); // so layer values will be saved after initialization
 
@@ -701,9 +708,9 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // physicsWorld->CreateTilemapColliders(sampleMap, 100.0f, 5.0f);
         
         // Assuming 'camera' is your Camera2D…
-        Vector2 topLeft     = GetScreenToWorld2D({ 0, 0 },            globals::camera);
+        Vector2 topLeft     = GetScreenToWorld2D({ 0, 0 },            camera_manager::Get("world_camera")->cam);
         Vector2 bottomRight = GetScreenToWorld2D({ (float)GetScreenWidth(),
-        (float)GetScreenHeight() }, globals::camera);
+        (float)GetScreenHeight() }, camera_manager::Get("world_camera")->cam);
 
         
         // Now topLeft.y < bottomRight.y
@@ -737,8 +744,8 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         _tileCache->ensureRect(viewBB);
         
         // generate a texture for the block sampler
-        blockSamplerTexture = GenerateDensityTexture(sampler.get(), globals::camera2D);
-        pointCloudSamplerTexture = GeneratePointCloudDensityTexture(&_pointCloud, globals::camera2D);
+        blockSamplerTexture = GenerateDensityTexture(sampler.get(), camera_manager::Get("world_camera")->cam);
+        pointCloudSamplerTexture = GeneratePointCloudDensityTexture(&_pointCloud, camera_manager::Get("world_camera")->cam);
         
         // After your ensureRect call, do:
         // for(CachedTile* t = _tileCache->_cacheTail; t; t = t->next) {
@@ -803,18 +810,41 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         physicsWorld->Update(delta);
         // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
+        camera_manager::UpdateAll(delta);
+        
+        auto worldCamera = camera_manager::Get("world_camera");
+        
         // pan camera based on arrow keys
         if (IsKeyDown(KEY_LEFT)) {
-            globals::camera.target.x -= 200.0f * delta;
+            // globals::camera.target.x -= 200.0f * delta;
+            worldCamera->SetActualTarget(
+                {worldCamera->GetActualTarget().x - 50, worldCamera->GetActualTarget().y}
+            );
         }
         if (IsKeyDown(KEY_RIGHT)) {
-            globals::camera.target.x += 200.0f * delta;
+            // globals::camera.target.x += 200.0f * delta;
+            worldCamera->SetActualTarget(
+                {worldCamera->GetActualTarget().x + 50, worldCamera->GetActualTarget().y}
+            );
         }
         if (IsKeyDown(KEY_UP)) {
-            globals::camera.target.y -= 200.0f * delta;
+            // globals::camera.target.y -= 200.0f * delta;
+            worldCamera->SetActualTarget(
+                {worldCamera->GetActualTarget().x, worldCamera->GetActualTarget().y - 50}
+            );
         }
         if (IsKeyDown(KEY_DOWN)) {
-            globals::camera.target.y += 200.0f * delta;
+            // globals::camera.target.y += 200.0f * delta;
+            worldCamera->SetActualTarget(
+                {worldCamera->GetActualTarget().x, worldCamera->GetActualTarget().y + 50}
+            );
+        }
+        
+        if (IsKeyDown(KEY_R)) {
+            // jiggle camera rotation
+            worldCamera->SetVisualRotation(10);
+            
+            // spring::pull(worldCamera->GetSpringRotation(), 100);
         }
         
         //TODO: remove later
@@ -824,7 +854,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
             
             // top down controller movement
-            auto mousePosWorld = GetScreenToWorld2D(GetMousePosition(), globals::camera);
+            auto mousePosWorld = camera_manager::Get("world_camera")->GetMouseWorld();
             cpBodySetPosition(physicsWorld->controlBody, cpv(mousePosWorld.x, mousePosWorld.y));
             // cpBodySetPosition(controlBody, desiredTouchPos);
         }
@@ -1042,9 +1072,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
               b = t + rectWidthHeight.y;
 
         // top-left in world is (l, t)
-        Vector2 screenTL = GetWorldToScreen2D({(float) l, (float)t }, globals::camera);
+        auto worldCamera = camera_manager::Get("world_camera");
+        Vector2 screenTL = GetWorldToScreen2D({(float) l, (float)t }, worldCamera->cam);
         // bottom-right in world is (r, b)
-        Vector2 screenBR = GetWorldToScreen2D({ (float)r, (float)b }, globals::camera);
+        Vector2 screenBR = GetWorldToScreen2D({ (float)r, (float)b }, worldCamera->cam);
 
         layer::QueueCommand<layer::CmdDrawRectangle>(
         sprites, [screenTL, screenBR](auto* cmd) {
@@ -1057,7 +1088,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         );
         
         // Draw the query point (yellow dot)
-        Vector2 pScr = GetWorldToScreen2D({64,64}, globals::camera);
+        Vector2 pScr = GetWorldToScreen2D({64,64}, worldCamera->cam);
         // DrawCircleV(pScr, 4.0f, YELLOW);
         layer::QueueCommand<layer::CmdDrawCircleFilled>(
             sprites, [pScr](auto* cmd) {
@@ -1165,7 +1196,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             }
         }
         
-        
         // uiProfiler.Stop();
         
         {
@@ -1177,14 +1207,14 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // ZoneScopedN("LayerCommandsToCanvas Draw");
             {
                 // ZoneScopedN("background layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &globals::camera);  // render the background layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &worldCamera->cam);  // render the background layer commands to its main canvas
             }
             
             
             
             {
                 // ZoneScopedN("sprites layer commands");
-                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &globals::camera);     // render the sprite layer commands to its main canvas
+                layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &worldCamera->cam);     // render the sprite layer commands to its main canvas
             }
             
             {
@@ -1207,7 +1237,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             
             
-            layer::Push(&globals::camera2D);
+            layer::Push(&worldCamera->cam);
 
             
             // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
@@ -1320,7 +1350,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             // -- draw physics world
             
-            camera_manager::Begin(globals::camera); // begin camera mode for the physics world
+            camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
             
             physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
 

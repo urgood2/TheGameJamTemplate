@@ -194,7 +194,7 @@ namespace globals
     extern json configJSON;
 
     // game camera
-    extern Camera2D camera;
+    // extern Camera2D camera;
     extern float cameraDamping, cameraStiffness;
     extern Vector2 cameraVelocity;
     extern Vector2 nextCameraTarget; // keep track of desired next camera target position
@@ -341,7 +341,7 @@ namespace globals
     // ECS registry
     extern entt::registry registry;
 
-    extern Camera2D camera2D;
+    // extern Camera2D camera2D;
 
     extern void updateGlobalVariables();
     extern Vector2 getWorldMousePosition();

@@ -24,6 +24,8 @@ namespace spring {
         std::function<double(double)> easingFunction{}; // Custom easing function (optional)
 
         bool preventOvershoot = false;  // New flag to enforce non-overshooting behavior
+        
+        bool usingForTransforms = true; // If true, this spring is used for transforms and will use a different update logic
 
     };
     
@@ -32,7 +34,7 @@ namespace spring {
     extern auto update(Spring& spring, float deltaTime) -> void;
      
     // Pull the spring with a certain amount of force. This force should be related to the initial value you set to the spring.
-    extern auto pull(Spring& spring, float force, float stiffness, float damping) -> void;
+    extern auto pull(Spring& spring, float force, float stiffness = -1, float damping = -1) -> void;
 
     // Animates the spring such that it reaches the target value in a smoothy springy motion.
     // Unlike pull, which tugs on the spring so that it bounces around the anchor, this changes that anchor itself.

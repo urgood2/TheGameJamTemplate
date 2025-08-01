@@ -46,23 +46,23 @@ namespace graphics {
     }
 
     auto updateCameraForSpringierMovement(Vector2 targetPosition, float deltaTime) -> void {
-        // Increase the stiffness for faster response
-        float increasedStiffness = globals::cameraStiffness * 2.0f; // Example: doubling the stiffness
+        // // Increase the stiffness for faster response
+        // float increasedStiffness = globals::cameraStiffness * 2.0f; // Example: doubling the stiffness
 
-        // Increase the damping to prevent bouncing
-        float increasedDamping = globals::cameraDamping * 1.5f; // Example: 50% more damping
+        // // Increase the damping to prevent bouncing
+        // float increasedDamping = globals::cameraDamping * 1.5f; // Example: 50% more damping
 
-        // Calculate the difference between the target and current position
-        Vector2 diff = Vector2Subtract(targetPosition, globals::camera.target);
+        // // Calculate the difference between the target and current position
+        // Vector2 diff = Vector2Subtract(targetPosition, globals::camera.target);
 
-        // Apply the spring force with increased stiffness
-        Vector2 force = Vector2Scale(diff, increasedStiffness);
+        // // Apply the spring force with increased stiffness
+        // Vector2 force = Vector2Scale(diff, increasedStiffness);
 
-        // Apply damping to the velocity with increased damping
-        globals::cameraVelocity = Vector2Add(Vector2Scale(globals::cameraVelocity, increasedDamping), force);
+        // // Apply damping to the velocity with increased damping
+        // globals::cameraVelocity = Vector2Add(Vector2Scale(globals::cameraVelocity, increasedDamping), force);
 
-        // Update the camera target position
-        globals::camera.target = Vector2Add(globals::camera.target, Vector2Scale(globals::cameraVelocity, deltaTime));
+        // // Update the camera target position
+        // globals::camera.target = Vector2Add(globals::camera.target, Vector2Scale(globals::cameraVelocity, deltaTime));
     }
     
     // --------------------------------------------------------

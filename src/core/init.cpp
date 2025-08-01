@@ -580,9 +580,6 @@ namespace init {
             globals::loadingStateIndex++;
             initECS();
             globals::loadingStateIndex++;
-            // init camera
-            globals::camera.zoom = 2.5;
-            globals::camera.offset = {globals::screenWidth / 2.0f, globals::screenHeight / 2.0f};
             localization::setFallbackLanguage("en_us");
             localization::loadLanguage("en_us", util::getRawAssetPathNoUUID("localization/"));
             localization::loadLanguage("ko_kr", util::getRawAssetPathNoUUID("localization/"));

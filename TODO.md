@@ -1,6 +1,7 @@
 # ✅ TODOs: Organized by Category
 
 ## Next game ideas
+- [ ] add strafe tilt & offset damping from here: https://chatgpt.com/share/688d07b0-a18c-800a-9565-a797bdfaaab3
 - [ ] expose current camera manager & camera custom class to lua
 - [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
 - [ ] physics - set physics layer method for object layers so they only collide with specific objects

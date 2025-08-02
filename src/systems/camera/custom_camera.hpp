@@ -53,6 +53,56 @@ enum class FollowStyle {
 // Alias for spring component
 using Spring = spring::Spring;
 
+struct Shake {
+    float amplitude;
+    float duration;
+    float frequency;
+    std::vector<float> samples;
+    float elapsedTime = 0.0f;
+    bool shaking     = true;
+
+    Shake(float amp, float dur, float freq)
+      : amplitude(amp)
+      , duration(dur)
+      , frequency(freq)
+    {
+        int count = static_cast<int>(duration * frequency);
+        samples.reserve(count+1);
+        for(int i = 0; i < count; ++i) {
+            // random float in [-1..1]
+            samples.push_back(2.0f * (static_cast<float>(rand()) / RAND_MAX) - 1.0f);
+        }
+    }
+
+    void Update(float dt) {
+        if(!shaking) return;
+        elapsedTime += dt;
+        if(elapsedTime >= duration) shaking = false;
+    }
+
+    float GetNoise(int idx) const {
+        return (idx >= 0 && idx < (int)samples.size()) ? samples[idx] : 0.0f;
+    }
+
+    float GetDecay() const {
+        return (elapsedTime > duration)
+             ? 0.0f
+             : (duration - elapsedTime) / duration;
+    }
+
+    float GetAmplitude() const {
+        if(!shaking) return 0.0f;
+        float s  = elapsedTime * frequency;
+        int   s0 = static_cast<int>(floorf(s));
+        int   s1 = s0 + 1;
+        float k  = GetDecay();
+        float n0 = GetNoise(s0);
+       float n1 = GetNoise(s1);
+        float interp = n0 + (s - s0) * (n1 - n0);
+        return amplitude * interp * k;
+    }
+};
+
 /**
  * @class GameCamera
  * @brief Manages a 2D camera with smoothing, follow logic, bounds, and visual effects.
@@ -79,6 +129,10 @@ public:
     FollowStyle style = FollowStyle::NONE;  ///< Current follow mode
     float followLerpX = 1.0f, followLerpY = 1.0f;  ///< Lerp amounts for X/Y movement
     float followLeadX = 0.0f, followLeadY = 0.0f;  ///< Lead multipliers for lookahead
+    
+    // --- noise-based shake storage ---
+    std::vector<Shake> shakesX, shakesY;
+    float shakeOffsetX = 0.0f, shakeOffsetY = 0.0f;
 
     // --- World bounds clamping ---
     Rectangle bounds{0,0,0,0};     ///< World-space bounds rectangle
@@ -210,6 +264,37 @@ public:
         sx.targetValue += dx;
         sy.targetValue += dy;
     }
+    
+    /**
+    * @brief Trigger a short noise‐based camera shake.
+    * @param amplitude Maximum displacement (world units).
+    * @param duration  How long it lasts (seconds).
+    * @param frequency Samples per second (higher = jerkier).
+    */
+    void Shake(float amplitude, float duration, float frequency = 60.0f) {
+        shakesX.emplace_back(amplitude, duration, frequency);
+        shakesY.emplace_back(amplitude, duration, frequency);
+    }
+
+    /**
+    * @brief Trigger a spring‐based shake by pulsing the offset springs. Overwrites stiffness and damping in the x and y springs with the given values.
+    * @param intensity  Magnitude of the impulse.
+    * @param angle      Direction (radians).
+    * @param stiffness  New spring stiffness for this impulse.
+    * @param damping    New spring damping for this impulse.
+    */
+    void SpringShake(float intensity, float angle, float stiffness, float damping) {
+        auto &sox = registry.get<Spring>(springOffsetX);
+        auto &soy = registry.get<Spring>(springOffsetY);
+        // apply an immediate impulse toward negative direction, springs will pull back
+        sox.value += -intensity * cosf(angle);
+        soy.value += -intensity * sinf(angle);
+        sox.stiffness = stiffness;
+        sox.damping   = damping;
+        soy.stiffness = stiffness;
+        soy.damping   = damping;
+    }
+
 
     /**
      * @brief Convert the current mouse screen position to world coordinates.
@@ -418,6 +503,29 @@ public:
             cam.offset.x = sox.value;
             cam.offset.y = soy.value;
         }
+        
+        auto &offsetVisualX = registry.get<Spring>(springOffsetX).value;
+        auto &offsetVisualY = registry.get<Spring>(springOffsetY).value;
+        
+        // 1.5) noise‐based shakes
+        shakeOffsetX = shakeOffsetY = 0.0f;
+        // X‐axis
+        for(auto it = shakesX.begin(); it != shakesX.end();) {
+            it->Update(dt);
+            shakeOffsetX += it->GetAmplitude();
+            if(!it->shaking) it = shakesX.erase(it);
+            else ++it;
+        }
+        // Y‐axis
+        for(auto it = shakesY.begin(); it != shakesY.end();) {
+            it->Update(dt);
+            shakeOffsetY += it->GetAmplitude();
+            if(!it->shaking) it = shakesY.erase(it);
+            else ++it;
+        }
+        // apply the jitter on top of whatever offset the springs have given us
+        offsetVisualX += shakeOffsetX;
+        offsetVisualY += shakeOffsetY;
 
         // 2) Handle flash timing
         if (flashing) {
@@ -502,6 +610,8 @@ public:
 
             sx.targetValue = Lerp(sx.value, sx.value + worldDX, followLerpX);
             sy.targetValue = Lerp(sy.value, sy.value + worldDY, followLerpY);
+            
+            
 
         }
 

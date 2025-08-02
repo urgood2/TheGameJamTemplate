@@ -847,6 +847,11 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // spring::pull(worldCamera->GetSpringRotation(), 100);
         }
         
+        if (IsKeyDown(KEY_S)) {
+            // shake camera
+            worldCamera->Shake(10, 2.0f);
+        }
+        
         //TODO: remove later
         
         // 1) On mouse‐down:

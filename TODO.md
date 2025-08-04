@@ -74,7 +74,6 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 ## Things to fix/implement
 - [ ] look throughl queue bindings and make generally easier to work with
 - [ ] add worldspace/screenspace specifier for draw queue commands in lua
-- [ ] add strafe tilt & offset damping from here: https://chatgpt.com/share/688d07b0-a18c-800a-9565-a797bdfaaab3
 - [ ] changing color of a hit circle using chaining:
 ```lua
 function HitCircle:change_color(delay_multiplier, target_color)

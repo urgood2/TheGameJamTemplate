@@ -1,8 +1,10 @@
 # ✅ TODOs: Organized by Category
 
-## Next game ideas
-- [ ] add strafe tilt & offset damping from here: https://chatgpt.com/share/688d07b0-a18c-800a-9565-a797bdfaaab3
+## lua exposure & integration
 - [ ] expose current camera manager & camera custom class to lua
+- [ ] neat lua state machine code i will want to integrate for later use: https://github.com/kyleconroy/lua-state-machine
+
+## physics
 - [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
 - [ ] physics - set physics layer method for object layers so they only collide with specific objects
 - [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?
@@ -42,7 +44,6 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] tweak pointcloudsampler so it's feature complete: https://chatgpt.com/share/68865127-f880-800a-a33b-745a7bc5a793
 - [ ] compare all objective c files except image sampler (won't be using it) against originals for missing features
 - [ ] do a pass through of objective c port of chipmunk so that I can use shared ptr instead of new() operator.
-- [ ] snkrx-like camera movement
 - [ ] steering: https://chatgpt.com/canvas/shared/6885095fef408191a7a78d4805d80a5c this needs more work based on sterring.lua, lots not added in yet, needs timer use, etc.
 - [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on.
@@ -53,6 +54,27 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] render sprites based on physics object location / transform (configurable)
 - [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives
 - [ ] keep render pipeline (also configuraable) but instead of an animatino or a sprite, draw whatever shapes I want through a function  (or by some supplied enum), also customize draw dimensions if necessary (if drawing goes beyond bounds of transform or collision body)
+- [ ] note that chipmunk2d uses center of gravity as the location for an ojbect's coordinates.
+- [ ] how to do rounded rectangles for collision shapes?
+- [ ] how to do arbitrary deformable maps like in bouncy hexagons demo?
+- [ ] how to do orbiting like in planet demo?
+- [ ] curshing detection & weight measrement in contact graph demo
+- [ ] sticky surfaces demo for sticky collisions
+- [ ] simple sensor based fluids demo for simple 2d objects floating in a fluid.
+- [ ] slice demo for 2d slicing.
+- [ ] convex demo for changing the shape of an object on the fly (convex polygon)
+- [ ] pump demo for engine-like pump machinery simulation
+- [ ] breakable chains demo for chains which break when force is applied
+- [ ] crane demo for wall world type resource clustering 
+- [ ] fabric-like springs (maybe use for gui at some point?) in the springies demo
+- [ ] one-way pass thorugh platforms - one way platforms demo
+- [ ] how are joints moved in tank demo? how does it steer? 
+- [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
+
+## Things to fix/implement
+- [ ] look throughl queue bindings and make generally easier to work with
+- [ ] add worldspace/screenspace specifier for draw queue commands in lua
+- [ ] add strafe tilt & offset damping from here: https://chatgpt.com/share/688d07b0-a18c-800a-9565-a797bdfaaab3
 - [ ] changing color of a hit circle using chaining:
 ```lua
 function HitCircle:change_color(delay_multiplier, target_color)
@@ -62,7 +84,6 @@ function HitCircle:change_color(delay_multiplier, target_color)
   return self
 end
 ```
-- [ ] note that chipmunk2d uses center of gravity as the location for an ojbect's coordinates.
 - [ ] tweening timer function is much simpler here and can handle multiple variables at the same time. HOw to do this in my impl?
 ```lua
 -- Tweens the target's values specified by the source table for delay seconds using the given tweening method.
@@ -87,39 +108,16 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 ```
 - [ ] understand & implement working copies of files in the todo_from_snkrx folder
 - [ ] copy SNKRX's dead-simple transition thing. Circle with text. 
-- [ ] do what SNKRX does and add a sort of dark overlay behind everything else.
+- [ ] do what SNKRX does and add a sort of dark overlay behind everything else when showing gui -> probably render a rect
 - [ ] add some kind of screen which shares the amount of points scored
-- [ ]add simple crash reporting to web builds 
-- [ ] copy what I can from SNKRX repo. including shape primitives.
-- [ ] Raylib stencil. https://github.com/raysan5/raylib/discussions/2964 Add queue command ver. Also, how to use? (2025-07-24 > todo/daily)
-- [ ] Explore game firmulaa like autochess (2025-07-25 > todo/daily)
+- [ ] add simple crash reporting to web builds 
+- [ ] Raylib stencil. https://github.com/raysan5/raylib/discussions/2964 Add queue command ver. Also, how to use? Add to layer queue code
 - [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula
-- [ ] how to do world space vs screen space for chipmunk (2025-07-25 > todo/daily) / cameras
-Also, fuse chipmunk like this eventuallu: https://chatgpt.com/share/688262af-d40c-800a-87e3-d1b2ad49645d (2025-07-25 > todo/daily)
-- [ ] how to limit rotation & overshoot for objects when dragging them?
-- [ ] how to do rounded rectangles for collision shapes?
-- [ ] how to do arbitrary deformable maps like in bouncy hexagons demo?
-- [ ] how to do orbiting like in planet demo?
-- [ ] curshing detection & weight measrement in contact graph demo
-- [ ] sticky surfaces demo for sticky collisions
-- [ ] simple sensor based fluids demo for simple 2d objects floating in a fluid.
-- [ ] slice demo for 2d slicing.
-- [ ] convex demo for changing the shape of an object on the fly (convex polygon)
-- [ ] pump demo for engine-like pump machinery simulation
-- [ ] breakable chains demo for chains which break when force is applied
-- [ ] crane demo for wall world type resource clustering 
-- [ ] fabric-like springs (maybe use for gui at some point?) in the springies demo
-- [ ] one-way pass thorugh platforms - one way platforms demo
-- [ ] how are joints moved in tank demo? how does it steer? 
-- [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 - [ ] add dashed lines from here, how to animate them? animation here: https://chatgpt.com/share/6880e2c6-ff68-800a-b30b-c2c1514e1772
 - [ ] How to mesh my transforms with chipmunk 2d to do lesast amount of work and be performant?
 - [ ] Gotta add scroll pane
-- [ ] Add scissoring to layer queue code
-- [ ] refer to autogeometry chipmunk demo for auto digging - make this implementable so I can use it later.
 - scrool pane for ui: https://chatgpt.com/share/6881dd9f-27ac-800a-af9f-935b61355da7
 - [ ] change image color on hover
-- [ ] screen shake (jiggle)
 - [ ] how do draw animated dashed lines?
 - [ ] color-coded tooltips which can be updated on the fly to reflect info-how?
 - [ ] dynamic text notifications which can fade, and also contain images.

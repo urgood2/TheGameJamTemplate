@@ -31,6 +31,7 @@
 #include <entt/entt.hpp>        // EnTT ECS registry
 #include "raylib.h"             // Raylib types and functions
 
+#include "spdlog/spdlog.h"
 #include "systems/spring/spring.hpp"                  // Spring component definition
 #include "systems/layer/layer.hpp"                    // Layer drawing abstraction
 #include "systems/layer/layer_command_buffer.hpp"     // Buffered draw commands
@@ -38,6 +39,12 @@
 // Clamp a float between min and max
 static inline float ClampF(float v, float mn, float mx) {
     return (v < mn ? mn : (v > mx ? mx : v));
+}
+
+// shortest‐angle lerp in degrees
+static inline float LerpAngle(float from, float to, float t) {
+    float diff = fmodf((to - from) + 180.f, 360.f) - 180.f;
+    return from + diff * t;
 }
 
 // Camera follow behavior modes
@@ -129,6 +136,29 @@ public:
     FollowStyle style = FollowStyle::NONE;  ///< Current follow mode
     float followLerpX = 1.0f, followLerpY = 1.0f;  ///< Lerp amounts for X/Y movement
     float followLeadX = 0.0f, followLeadY = 0.0f;  ///< Lead multipliers for lookahead
+    
+    // -- Offset damping/strafing settings ---
+    float strafeTiltAngle = 0.0f;  // updated each frame
+    // keep track of previous frame’s actual target to compute velocity
+    Vector2 prevActualTarget{0,0};
+    /// fraction of screen width/height before damping kicks in
+    float offsetThreshX = 0.24f, offsetThreshY = 0.24f;
+    /// max camera‐target offset speed (world units/sec)
+    float maxOffsetX   = 200.0f,  maxOffsetY   =  200.0f;
+    /// maximum tilt angle in degrees
+    float tiltAngle         = 360.f/256.f;  // ≈1.4°
+    /// how quickly to tilt toward max (per second)
+    float tiltSpeed         =  8.0f;
+    /// how quickly to recover back to 0° (per second)
+    float tiltRecoverSpeed  =  2.0f;
+    float maxExpectedVelocityX = 100.0f;  // Tweak based on gameplay feel
+    Vector2 offset = { 0.0f, 0.0f };  // persistent across frames
+    float offsetDecayRate = 5.0f;     // higher = faster decay
+    float offsetAmplify   = 2.f;     // how much to respond to velocity
+    float maxOffsetVel    = 100.0f;   // clamp velocity
+    bool enableOffsetDamping = true;
+    bool enableStrafeTilt   = true;
+
     
     // --- noise-based shake storage ---
     std::vector<Shake> shakesX, shakesY;
@@ -313,6 +343,42 @@ public:
         registry.get<Spring>(springTargetY).targetValue = worldPos.y;
         useDeadzone = true;
     }
+    
+    //───────────────────────────────────────────────────────────────────────────
+    // New: gently offset camera‐target based on how fast it’s moving
+    void ApplyOffsetDamping(float dt) {
+        auto &sx = registry.get<Spring>(springTargetX);
+        auto &sy = registry.get<Spring>(springTargetY);
+
+        Vector2 pos = { sx.value, sy.value };
+        Vector2 vel = {
+            (pos.x - prevActualTarget.x) / dt,
+            (pos.y - prevActualTarget.y) / dt
+        };
+
+        // Clamp input velocity to avoid spikes
+        vel.x = ClampF(vel.x, -maxOffsetVel, maxOffsetVel);
+        vel.y = ClampF(vel.y, -maxOffsetVel, maxOffsetVel);
+
+        // Apply velocity as additive offset influence
+        offset.x += vel.x * offsetAmplify * dt;
+        offset.y += vel.y * offsetAmplify * dt;
+
+        // Decay offset back to zero smoothly
+        float decay = 1.0f - expf(-offsetDecayRate * dt);
+        offset.x -= offset.x * decay;
+        offset.y -= offset.y * decay;
+        
+        SPDLOG_DEBUG("Camera offset: ({}, {})", offset.x, offset.y);
+
+        // Apply the offset to your camera target
+        cam.target.x = sx.value + offset.x;
+        cam.target.y = sy.value + offset.y;
+        // sx.targetValue += offset.x;
+        // sy.targetValue += offset.y;
+    }
+
+
 
     /**
      * @brief Configure a custom deadzone rectangle.
@@ -373,6 +439,14 @@ public:
         cam.rotation = r;  // Set the rotation directly for visual purposes
         registry.get<Spring>(springRot).value = r;  // Update the spring value too
     }
+    
+    // Offset Damping
+    void SetOffsetDampingEnabled(bool enabled) { enableOffsetDamping = enabled; }
+    bool IsOffsetDampingEnabled() const { return enableOffsetDamping; }
+
+    // Strafe Tilt
+    void SetStrafeTiltEnabled(bool enabled) { enableStrafeTilt = enabled; }
+    bool IsStrafeTiltEnabled() const { return enableStrafeTilt; }
     
     float GetActualRotation() const {
         return registry.get<Spring>(springRot).value;
@@ -467,6 +541,26 @@ public:
         flashColor = c;
         flashTimer = 0.0f;
     }
+    
+    //───────────────────────────────────────────────────────────────────────────
+    // New: tilt camera a bit when strafing (without overriding springRot)
+    void StrafeTiltAdditive(float dt) {
+    auto &sx = registry.get<Spring>(springTargetX);
+    Vector2 actual = { sx.value, registry.get<Spring>(springTargetY).value };
+    float vx = (actual.x - prevActualTarget.x) / dt;
+
+    // Normalize to [-1, 1] based on max expected movement
+    float dir = ClampF(vx / maxExpectedVelocityX, -1.0f, 1.0f);
+
+    float desired = dir * tiltAngle;
+
+    float speed = (fabsf(dir) > 0.01f) ? tiltSpeed : tiltRecoverSpeed;
+    strafeTiltAngle = LerpAngle(strafeTiltAngle, desired, speed * dt);
+
+    // Only add tilt at render time; don’t touch the spring’s value
+    auto &sr = registry.get<Spring>(springRot);
+    cam.rotation = sr.value + strafeTiltAngle;
+}
 
     /**
      * @brief Fade screen to a color over time, then invoke callback.
@@ -488,21 +582,7 @@ public:
      * @param dt Delta time in seconds since last update.
      */
     void Update(float dt) {
-        // 1) Pull spring values into the camera
-        {
-            auto &sx  = registry.get<Spring>(springTargetX);
-            auto &sy  = registry.get<Spring>(springTargetY);
-            auto &sz  = registry.get<Spring>(springZoom);
-            auto &sr  = registry.get<Spring>(springRot);
-            auto &sox = registry.get<Spring>(springOffsetX);
-            auto &soy = registry.get<Spring>(springOffsetY);
-            cam.target.x = sx.value;
-            cam.target.y = sy.value;
-            cam.zoom     = sz.value;
-            cam.rotation = sr.value;
-            cam.offset.x = sox.value;
-            cam.offset.y = soy.value;
-        }
+        
         
         auto &offsetVisualX = registry.get<Spring>(springOffsetX).value;
         auto &offsetVisualY = registry.get<Spring>(springOffsetY).value;
@@ -614,6 +694,32 @@ public:
             
 
         }
+        
+        
+        // 1) Pull spring values into the camera
+        {
+            auto &sx  = registry.get<Spring>(springTargetX);
+            auto &sy  = registry.get<Spring>(springTargetY);
+            auto &sz  = registry.get<Spring>(springZoom);
+            auto &sr  = registry.get<Spring>(springRot);
+            auto &sox = registry.get<Spring>(springOffsetX);
+            auto &soy = registry.get<Spring>(springOffsetY);
+            cam.target.x = sx.value;
+            cam.target.y = sy.value;
+            cam.zoom     = sz.value;
+            cam.rotation = sr.value;
+            cam.offset.x = sox.value;
+            cam.offset.y = soy.value;
+        }
+        
+        
+        // 4.5) APPLY OFFSET-DAMPING
+        if (enableOffsetDamping)
+            ApplyOffsetDamping(dt);
+
+        // 4.6) APPLY STRAFE-TILT
+        if (enableStrafeTilt)
+            StrafeTiltAdditive(dt);
 
         // 5) Clamp within world bounds
         if (useBounds) {
@@ -622,6 +728,13 @@ public:
             cam.target.x = ClampF(cam.target.x, bounds.x + halfW, bounds.x + bounds.width - halfW);
             cam.target.y = ClampF(cam.target.y, bounds.y + halfH, bounds.y + bounds.height - halfH);
         }
+        
+        // Store actual position for next-frame velocity estimates
+        prevActualTarget = {
+            registry.get<Spring>(springTargetX).value,
+            registry.get<Spring>(springTargetY).value
+        };
+
     }
 
 private:

@@ -991,6 +991,265 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
     
     }
+    
+    // Draws an animated dashed line between 'start' and 'end'.
+// 'dashLength' and 'gapLength' define the pattern in world units.
+// 'phase' shifts the pattern along the line (advance it by phase units).
+// 'thickness' is the line width.
+// 'color' is the line color.
+auto DrawDashedLine(const Vector2 &start,
+                    const Vector2 &end,
+                    float dashLength,
+                    float gapLength,
+                    float phase,
+                    float thickness,
+                    Color color) -> void
+{
+    const float dx = end.x - start.x;
+    const float dy = end.y - start.y;
+    const float length = std::sqrt(dx*dx + dy*dy);
+    if (length <= 0.0f) return;
+
+    // Normalize direction
+    const float dirX = dx / length;
+    const float dirY = dy / length;
+
+    const float pattern = dashLength + gapLength;
+    phase = std::fmod(phase, pattern);
+
+    // Start at -phase so we shift the dashes forward
+    float pos = -phase;
+    while (pos < length)
+    {
+        float segStart = (pos < 0) ? 0 : pos;
+        float segEnd   = (pos + dashLength > length) ? length : pos + dashLength;
+
+        if (segEnd > 0.0f)
+        {
+            Vector2 p1 = { start.x + dirX * segStart,
+                           start.y + dirY * segStart };
+            Vector2 p2 = { start.x + dirX * segEnd,
+                           start.y + dirY * segEnd };
+            DrawLineEx(p1, p2, thickness, color);
+        }
+        pos += pattern;
+    }
+}
+
+// Draw a dashed rectangle (optionally rounded).
+// rec        : The rectangle area.
+// dashLength : Length of each dash (in pixels).
+// gapLength  : Length of each gap between dashes.
+// phase      : Shift along the perimeter (in pixels).
+// radius     : Corner radius. If <= 0, corners are sharp.
+// segments   : Resolution for approximating curved dashes (full-circle subdivision).
+// thickness  : Line thickness.
+// color      : Line color.
+auto DrawDashedRectangle(const Rectangle &rec,
+                         float dashLength,
+                         float gapLength,
+                         float phase,
+                         float radius,
+                         int segments,
+                         float thickness,
+                         Color color) -> void
+{
+    // clamp and prep
+    radius = std::fmax(0.0f, radius);
+    radius = std::fmin(radius, rec.width*0.5f);
+    radius = std::fmin(radius, rec.height*0.5f);
+
+    const float pattern = dashLength + gapLength;
+    if (pattern <= 0 || dashLength <= 0) return;   // avoid infinite loops
+    phase = std::fmod(phase, pattern);
+    if (phase < 0) phase += pattern;
+
+    // build your segs exactly as before
+    struct Seg {
+        bool    isArc;
+        Vector2 p0, p1;    // for straight
+        Vector2 center;    // for arc
+        float   ang0;      // start angle
+        float   length;    // arc-length or line length
+    };
+    std::vector<Seg> segs;
+    segs.reserve(8);
+    float x=rec.x, y=rec.y, w=rec.width, h=rec.height;
+
+    segs.push_back({false, {x+radius,y},     {x+w-radius,y},      {},      0, w-2*radius});
+    segs.push_back({true,  {},               {},                  {x+w-radius,y+radius}, 1.5f*PI, radius*(0.5f*PI)});
+    segs.push_back({false, {x+w,y+radius},   {x+w,y+h-radius},    {},      0, h-2*radius});
+    segs.push_back({true,  {},               {},                  {x+w-radius,y+h-radius}, 0.0f, radius*(0.5f*PI)});
+    segs.push_back({false, {x+w-radius,y+h}, {x+radius,y+h},      {},      0, w-2*radius});
+    segs.push_back({true,  {},               {},                  {x+radius,y+h-radius},  0.5f*PI, radius*(0.5f*PI)});
+    segs.push_back({false, {x,y+h-radius},   {x,y+radius},        {},      0, h-2*radius});
+    segs.push_back({true,  {},               {},                  {x+radius,y+radius},    PI,      radius*(0.5f*PI)});
+
+    // build cumulative segment offsets
+    int n = (int)segs.size();
+    std::vector<float> segStart(n+1, 0.0f);
+    for (int i = 0; i < n; ++i)
+        segStart[i+1] = segStart[i] + segs[i].length;
+    float totalLen = segStart[n];
+
+    // for each dash window around the total perimeter
+    for (float t = -phase; t < totalLen; t += pattern) {
+        float t0 = t;
+        float t1 = t + dashLength;
+        if (t1 <= 0 || t0 >= totalLen) continue;
+        t0 = std::fmax(t0, 0.0f);
+        t1 = std::fmin(t1, totalLen);
+
+        // slice [t0..t1] across every segment
+        for (int i = 0; i < n; ++i) {
+            float a = std::fmax(t0, segStart[i]);
+            float b = std::fmin(t1, segStart[i+1]);
+            if (b <= a) continue;
+
+            float local0 = a - segStart[i];
+            float local1 = b - segStart[i];
+            const Seg &s = segs[i];
+
+            if (!s.isArc) {
+                // straight line
+                Vector2 dir = { s.p1.x - s.p0.x, s.p1.y - s.p0.y };
+                float invL = 1.0f / s.length;
+                Vector2 A = { s.p0.x + dir.x * (local0 * invL),
+                              s.p0.y + dir.y * (local0 * invL) };
+                Vector2 B = { s.p0.x + dir.x * (local1 * invL),
+                              s.p0.y + dir.y * (local1 * invL) };
+                DrawLineEx(A, B, thickness, color);
+            } else {
+                // arc segment
+                float a0 = s.ang0 + (local0 / radius);
+                float a1 = s.ang0 + (local1 / radius);
+                int   steps = std::fmax(1, (int)std::ceil((a1 - a0)/(2*PI)*segments));
+                for (int k = 0; k < steps; ++k) {
+                    float ta = a0 + (a1 - a0) * (k   / (float)steps);
+                    float tb = a0 + (a1 - a0) * ((k+1) / (float)steps);
+                    Vector2 P1 = { s.center.x + std::cos(ta)*radius,
+                                   s.center.y + std::sin(ta)*radius };
+                    Vector2 P2 = { s.center.x + std::cos(tb)*radius,
+                                   s.center.y + std::sin(tb)*radius };
+                    DrawLineEx(P1, P2, thickness, color);
+                }
+            }
+        }
+    }
+}
+
+
+
+// Draws an animated dashed circle centered at 'center' with radius 'radius'.
+// 'dashLength' and 'gapLength' define the pattern along the circumference.
+// 'phase' shifts the pattern around the circle (advance by phase units).
+// 'segments' is the resolution for approximating each dash arc.
+// 'thickness' is the line width, 'color' is the circle color.
+auto DrawDashedCircle(const Vector2 &center,
+                      float radius,
+                      float dashLength,
+                      float gapLength,
+                      float phase,
+                      int segments,
+                      float thickness,
+                      Color color) -> void
+{
+    // circumference-based pattern
+    const float pattern      = dashLength + gapLength;
+    // clamp phase to [0, pattern)
+    phase = std::fmod(phase, pattern);
+    if (phase < 0) phase += pattern;
+
+    // angles in radians
+    const float dashAng  = dashLength / radius;
+    const float gapAng   = gapLength  / radius;
+    const float phaseAng = phase      / radius;
+
+    // we'll do two sweeps: main, then wrapped
+    auto drawSweep = [&](float startTheta, float endTheta)
+    {
+        float theta = startTheta;
+        while (theta < endTheta)
+        {
+            float segStart = std::max(theta, startTheta);
+            float segEnd   = std::min(theta + dashAng, endTheta);
+            if (segEnd > segStart)
+            {
+                // approximate arc by subdividing proportional to full-circle segments
+                int arcSegs = std::max(1,
+                    (int)std::ceil((segEnd - segStart) / (2.0f * PI) * segments));
+                for (int i = 0; i < arcSegs; ++i)
+                {
+                    float t1 = segStart + (segEnd - segStart) * i / (float)arcSegs;
+                    float t2 = segStart + (segEnd - segStart) * (i + 1) / (float)arcSegs;
+                    Vector2 p1 = { center.x + std::cos(t1) * radius,
+                                   center.y + std::sin(t1) * radius };
+                    Vector2 p2 = { center.x + std::cos(t2) * radius,
+                                   center.y + std::sin(t2) * radius };
+                    DrawLineEx(p1, p2, thickness, color);
+                }
+            }
+            theta += dashAng + gapAng;
+        }
+    };
+
+    // Primary arc from -phaseAng to (2π - phaseAng)
+    drawSweep(-phaseAng, 2 * PI - phaseAng);
+
+    // Wrapped arc: shift by +2π so any dash spilling over the top is drawn
+    drawSweep(2 * PI - phaseAng, 2 * (2 * PI) - phaseAng);
+}
+
+#include "rlgl.h"
+#include "external/glad.h"
+
+// Stencil masks
+
+void clearStencilBuffer()
+{
+    rlDrawRenderBatchActive();
+    glStencilMask(0xFF);      // make sure all bits can be cleared
+    glClearStencil(0);        // the value they’ll be cleared to
+    glClear(GL_STENCIL_BUFFER_BIT);
+}
+
+void beginStencil()
+{
+    rlDrawRenderBatchActive();
+    glEnable(GL_STENCIL_TEST);
+
+    // Clear all existing stencil bits to zero, and allow writing to all bits:
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glStencilMask(0xFF);
+}
+
+void beginStencilMask()
+{
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+}
+
+void endStencilMask()
+{
+    rlDrawRenderBatchActive();
+    // Now only draw where stencil == 1, and never change the stencil buffer:
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    // Stop writing to stencil bits
+    glStencilMask(0x00);
+
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+}
+
+void endStencil()
+{
+	rlDrawRenderBatchActive();
+	glDisable(GL_STENCIL_TEST);
+}
+
+
 
     auto draw(float dt) -> void
     {
@@ -1357,10 +1616,45 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
             
+            // --testing stencil 
+            clearStencilBuffer(); // clear the stencil buffer
+            beginStencil();
+            beginStencilMask();
+
+            
+            endStencilMask();
+            
+            
             physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
+            
+            endStencil();
+            
+            
 
             camera_manager::End(); // end camera mode for the physics world
+            
+            // rect in the center   
+            DrawRectangleLines(
+                GetScreenWidth() / 2 - 100, 
+                GetScreenHeight() / 2 - 100, 
+                200, 200, 
+                RED
+            );
+            
             fade_system::draw();
+            
+            static float phase = 0;
+            phase += dt * 10.0f; // advance phase for dashes
+            // -- testing --
+            DrawDashedCircle({ 100, 100 }, 50, 10, 5, phase, 32, 2, GREEN);
+            DrawDashedLine({ 200, 200 }, { 300, 300 }, 10, 5, phase, 2, GREEN);
+            DrawDashedRectangle(
+                { 400, 400, 100, 100 }, 
+                10, 5, phase, 
+                10, 32, 
+                2, 
+                BLUE
+            );
 
             {
                 // ZoneScopedN("EndDrawing call");

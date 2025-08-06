@@ -123,6 +123,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
 
 ## New features
+- fold stencil & dashed line and circle into the queue system
 - color coding (in part of strings only) for dynamic text as well
 - use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
 - maybe a text log of sorts, with scroll?

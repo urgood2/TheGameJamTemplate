@@ -1036,6 +1036,7 @@ auto DrawDashedLine(const Vector2 &start,
     }
 }
 
+static constexpr float EPSILON_SEAM = 1e-4f;   
 // Draw a dashed rectangle (optionally rounded).
 // rec        : The rectangle area.
 // dashLength : Length of each dash (in pixels).
@@ -1045,6 +1046,7 @@ auto DrawDashedLine(const Vector2 &start,
 // segments   : Resolution for approximating curved dashes (full-circle subdivision).
 // thickness  : Line thickness.
 // color      : Line color.
+
 auto DrawDashedRectangle(const Rectangle &rec,
                          float dashLength,
                          float gapLength,
@@ -1054,90 +1056,100 @@ auto DrawDashedRectangle(const Rectangle &rec,
                          float thickness,
                          Color color) -> void
 {
-    // clamp and prep
-    radius = std::fmax(0.0f, radius);
-    radius = std::fmin(radius, rec.width*0.5f);
-    radius = std::fmin(radius, rec.height*0.5f);
+    // 1) clamp radius
+    radius = std::clamp(radius, 0.0f, std::min(rec.width, rec.height) * 0.5f);
 
+    // 2) dash/gap sanity
     const float pattern = dashLength + gapLength;
-    if (pattern <= 0 || dashLength <= 0) return;   // avoid infinite loops
+    if (dashLength <= 0 || pattern <= 0) return;
+
+    // 3) normalize phase
     phase = std::fmod(phase, pattern);
     if (phase < 0) phase += pattern;
 
-    // build your segs exactly as before
-    struct Seg {
-        bool    isArc;
-        Vector2 p0, p1;    // for straight
-        Vector2 center;    // for arc
-        float   ang0;      // start angle
-        float   length;    // arc-length or line length
-    };
+    // 4) build segments (4 straight edges + 4 quarter-arcs)
+    struct Seg { bool isArc; Vector2 p0,p1,center; float ang0,length; };
     std::vector<Seg> segs;
     segs.reserve(8);
+
     float x=rec.x, y=rec.y, w=rec.width, h=rec.height;
+    segs.push_back({false, {x+radius,y},     {x+w-radius,y},       {},      0.0f,       w-2*radius});
+    segs.push_back({true,  {},               {},                   {x+w-radius,y+radius}, 1.5f*PI, radius*0.5f*PI});
+    segs.push_back({false, {x+w,y+radius},   {x+w,y+h-radius},     {},      0.0f,       h-2*radius});
+    segs.push_back({true,  {},               {},                   {x+w-radius,y+h-radius}, 0.0f,   radius*0.5f*PI});
+    segs.push_back({false, {x+w-radius,y+h}, {x+radius,y+h},       {},      0.0f,       w-2*radius});
+    segs.push_back({true,  {},               {},                   {x+radius,y+h-radius},   0.5f*PI, radius*0.5f*PI});
+    segs.push_back({false, {x,y+h-radius},   {x,y+radius},         {},      0.0f,       h-2*radius});
+    segs.push_back({true,  {},               {},                   {x+radius,y+radius},     PI,      radius*0.5f*PI}); // top-left arc
 
-    segs.push_back({false, {x+radius,y},     {x+w-radius,y},      {},      0, w-2*radius});
-    segs.push_back({true,  {},               {},                  {x+w-radius,y+radius}, 1.5f*PI, radius*(0.5f*PI)});
-    segs.push_back({false, {x+w,y+radius},   {x+w,y+h-radius},    {},      0, h-2*radius});
-    segs.push_back({true,  {},               {},                  {x+w-radius,y+h-radius}, 0.0f, radius*(0.5f*PI)});
-    segs.push_back({false, {x+w-radius,y+h}, {x+radius,y+h},      {},      0, w-2*radius});
-    segs.push_back({true,  {},               {},                  {x+radius,y+h-radius},  0.5f*PI, radius*(0.5f*PI)});
-    segs.push_back({false, {x,y+h-radius},   {x,y+radius},        {},      0, h-2*radius});
-    segs.push_back({true,  {},               {},                  {x+radius,y+radius},    PI,      radius*(0.5f*PI)});
-
-    // build cumulative segment offsets
+    // 5) prefix–sum the lengths
     int n = (int)segs.size();
     std::vector<float> segStart(n+1, 0.0f);
     for (int i = 0; i < n; ++i)
         segStart[i+1] = segStart[i] + segs[i].length;
     float totalLen = segStart[n];
 
-    // for each dash window around the total perimeter
-    for (float t = -phase; t < totalLen; t += pattern) {
-        float t0 = t;
-        float t1 = t + dashLength;
-        if (t1 <= 0 || t0 >= totalLen) continue;
-        t0 = std::fmax(t0, 0.0f);
-        t1 = std::fmin(t1, totalLen);
-
-        // slice [t0..t1] across every segment
+    // 6) helper draws any [a..b) interval around the loop
+    auto DrawInterval = [&](float a, float b) {
         for (int i = 0; i < n; ++i) {
-            float a = std::fmax(t0, segStart[i]);
-            float b = std::fmin(t1, segStart[i+1]);
-            if (b <= a) continue;
-
-            float local0 = a - segStart[i];
-            float local1 = b - segStart[i];
+            float A = std::max(a, segStart[i]);
+            float B = std::min(b, segStart[i+1]);
+            if (B <= A) continue;
+            float local0 = A - segStart[i];
+            float local1 = B - segStart[i];
             const Seg &s = segs[i];
 
             if (!s.isArc) {
                 // straight line
                 Vector2 dir = { s.p1.x - s.p0.x, s.p1.y - s.p0.y };
-                float invL = 1.0f / s.length;
-                Vector2 A = { s.p0.x + dir.x * (local0 * invL),
-                              s.p0.y + dir.y * (local0 * invL) };
-                Vector2 B = { s.p0.x + dir.x * (local1 * invL),
-                              s.p0.y + dir.y * (local1 * invL) };
-                DrawLineEx(A, B, thickness, color);
+                float invL = 1.0f/s.length;
+                Vector2 P0 = { s.p0.x + dir.x*(local0*invL),
+                               s.p0.y + dir.y*(local0*invL) };
+                Vector2 P1 = { s.p0.x + dir.x*(local1*invL),
+                               s.p0.y + dir.y*(local1*invL) };
+                DrawLineEx(P0, P1, thickness, color);
             } else {
-                // arc segment
+                // quarter-circle arc
                 float a0 = s.ang0 + (local0 / radius);
                 float a1 = s.ang0 + (local1 / radius);
-                int   steps = std::fmax(1, (int)std::ceil((a1 - a0)/(2*PI)*segments));
+                int steps = std::max(1, (int)std::ceil((a1 - a0)/(2*PI)*segments));
                 for (int k = 0; k < steps; ++k) {
-                    float ta = a0 + (a1 - a0) * (k   / (float)steps);
-                    float tb = a0 + (a1 - a0) * ((k+1) / (float)steps);
-                    Vector2 P1 = { s.center.x + std::cos(ta)*radius,
-                                   s.center.y + std::sin(ta)*radius };
-                    Vector2 P2 = { s.center.x + std::cos(tb)*radius,
-                                   s.center.y + std::sin(tb)*radius };
-                    DrawLineEx(P1, P2, thickness, color);
+                    float t0 = a0 + (a1 - a0)*(  k/(float)steps);
+                    float t1 = a0 + (a1 - a0)*((k+1)/(float)steps);
+                    Vector2 Q0 = { s.center.x + std::cos(t0)*radius,
+                                   s.center.y + std::sin(t0)*radius };
+                    Vector2 Q1 = { s.center.x + std::cos(t1)*radius,
+                                   s.center.y + std::sin(t1)*radius };
+                    DrawLineEx(Q0, Q1, thickness, color);
                 }
             }
         }
+    };
+
+    // 7) step the dash window around the loop
+    for (float t = -phase; t < totalLen; t += pattern) {
+        float u = std::fmod(t, totalLen);
+        if (u < 0) u += totalLen;
+        float v = u + dashLength;
+
+        if (v <= totalLen) {
+            // simple case: fits inside one loop
+            DrawInterval(u, v);
+        } else {
+            // multi-piece dash: 
+            //   1) finish off from u to the very end (this draws into the top-left arc)
+            DrawInterval(u, totalLen);
+
+            //   2) extra length beyond the seam should only live in that same corner arc
+            float wrapLen = v - totalLen;
+            // indices 7→8 define the top-left arc
+            float arcStart = segStart[7];
+            float arcEnd   = std::min(segStart[8], arcStart + wrapLen);
+            if (arcEnd > arcStart) 
+                DrawInterval(arcStart, arcEnd);
+        }
     }
 }
-
 
 
 // Draws an animated dashed circle centered at 'center' with radius 'radius'.

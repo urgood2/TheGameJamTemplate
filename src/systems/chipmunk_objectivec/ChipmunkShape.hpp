@@ -23,6 +23,7 @@
  * SOFTWARE.
  */
 
+#include <cstring>
 #ifdef CP_ALLOW_PRIVATE_ACCESS
 
 #include "third_party/chipmunk/include/chipmunk/chipmunk_private.h"

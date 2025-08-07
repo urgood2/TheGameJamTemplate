@@ -1047,108 +1047,147 @@ static constexpr float EPSILON_SEAM = 1e-4f;
 // thickness  : Line thickness.
 // color      : Line color.
 
-auto DrawDashedRectangle(const Rectangle &rec,
-                         float dashLength,
-                         float gapLength,
-                         float phase,
-                         float radius,
-                         int segments,
-                         float thickness,
-                         Color color) -> void
+void DrawDashedPolylineLoop(const std::vector<Vector2>& pts,
+                            const std::vector<float>& cum,
+                            float dashLen,
+                            float gapLen,
+                            float phase,
+                            float thickness,
+                            Color color)
 {
-    // 1) clamp radius
-    radius = std::clamp(radius, 0.0f, std::min(rec.width, rec.height) * 0.5f);
+    float total = cum.back();
+    float pattern = dashLen + gapLen;
 
-    // 2) dash/gap sanity
-    const float pattern = dashLength + gapLength;
-    if (dashLength <= 0 || pattern <= 0) return;
-
-    // 3) normalize phase
+    // normalize phase into [0,pattern)
     phase = std::fmod(phase, pattern);
     if (phase < 0) phase += pattern;
 
-    // 4) build segments (4 straight edges + 4 quarter-arcs)
-    struct Seg { bool isArc; Vector2 p0,p1,center; float ang0,length; };
-    std::vector<Seg> segs;
-    segs.reserve(8);
-
-    float x=rec.x, y=rec.y, w=rec.width, h=rec.height;
-    segs.push_back({false, {x+radius,y},     {x+w-radius,y},       {},      0.0f,       w-2*radius});
-    segs.push_back({true,  {},               {},                   {x+w-radius,y+radius}, 1.5f*PI, radius*0.5f*PI});
-    segs.push_back({false, {x+w,y+radius},   {x+w,y+h-radius},     {},      0.0f,       h-2*radius});
-    segs.push_back({true,  {},               {},                   {x+w-radius,y+h-radius}, 0.0f,   radius*0.5f*PI});
-    segs.push_back({false, {x+w-radius,y+h}, {x+radius,y+h},       {},      0.0f,       w-2*radius});
-    segs.push_back({true,  {},               {},                   {x+radius,y+h-radius},   0.5f*PI, radius*0.5f*PI});
-    segs.push_back({false, {x,y+h-radius},   {x,y+radius},         {},      0.0f,       h-2*radius});
-    segs.push_back({true,  {},               {},                   {x+radius,y+radius},     PI,      radius*0.5f*PI}); // top-left arc
-
-    // 5) prefix–sum the lengths
-    int n = (int)segs.size();
-    std::vector<float> segStart(n+1, 0.0f);
-    for (int i = 0; i < n; ++i)
-        segStart[i+1] = segStart[i] + segs[i].length;
-    float totalLen = segStart[n];
-
-    // 6) helper draws any [a..b) interval around the loop
-    auto DrawInterval = [&](float a, float b) {
-        for (int i = 0; i < n; ++i) {
-            float A = std::max(a, segStart[i]);
-            float B = std::min(b, segStart[i+1]);
-            if (B <= A) continue;
-            float local0 = A - segStart[i];
-            float local1 = B - segStart[i];
-            const Seg &s = segs[i];
-
-            if (!s.isArc) {
-                // straight line
-                Vector2 dir = { s.p1.x - s.p0.x, s.p1.y - s.p0.y };
-                float invL = 1.0f/s.length;
-                Vector2 P0 = { s.p0.x + dir.x*(local0*invL),
-                               s.p0.y + dir.y*(local0*invL) };
-                Vector2 P1 = { s.p0.x + dir.x*(local1*invL),
-                               s.p0.y + dir.y*(local1*invL) };
-                DrawLineEx(P0, P1, thickness, color);
-            } else {
-                // quarter-circle arc
-                float a0 = s.ang0 + (local0 / radius);
-                float a1 = s.ang0 + (local1 / radius);
-                int steps = std::max(1, (int)std::ceil((a1 - a0)/(2*PI)*segments));
-                for (int k = 0; k < steps; ++k) {
-                    float t0 = a0 + (a1 - a0)*(  k/(float)steps);
-                    float t1 = a0 + (a1 - a0)*((k+1)/(float)steps);
-                    Vector2 Q0 = { s.center.x + std::cos(t0)*radius,
-                                   s.center.y + std::sin(t0)*radius };
-                    Vector2 Q1 = { s.center.x + std::cos(t1)*radius,
-                                   s.center.y + std::sin(t1)*radius };
-                    DrawLineEx(Q0, Q1, thickness, color);
-                }
-            }
-        }
+    auto EvalPos = [&](float dist) {
+        // wrap into [0,total)
+        dist = std::fmod(dist, total);
+        if (dist < 0) dist += total;
+        // binary-search segment
+        auto it = std::upper_bound(cum.begin(), cum.end(), dist);
+        int idx = std::clamp(int(it - cum.begin()) - 1, 0, (int)pts.size()-1);
+        float local = (dist - cum[idx]) / (cum[idx+1] - cum[idx]);
+        Vector2 A = pts[idx];
+        Vector2 B = pts[ (idx+1) % pts.size() ];
+        return Vector2{ A.x + (B.x-A.x)*local,
+                        A.y + (B.y-A.y)*local };
     };
 
-    // 7) step the dash window around the loop
-    for (float t = -phase; t < totalLen; t += pattern) {
-        float u = std::fmod(t, totalLen);
-        if (u < 0) u += totalLen;
-        float v = u + dashLength;
+    // step the dash window
+    for (float t = -phase; t < total; t += pattern) {
+        float start = t;
+        float end   = t + dashLen;
 
-        if (v <= totalLen) {
-            // simple case: fits inside one loop
-            DrawInterval(u, v);
+        if (end <= total) {
+            Vector2 P0 = EvalPos(start), P1 = EvalPos(end);
+            DrawLineEx(P0, P1, thickness, color);
         } else {
-            // multi-piece dash: 
-            //   1) finish off from u to the very end (this draws into the top-left arc)
-            DrawInterval(u, totalLen);
-
-            //   2) extra length beyond the seam should only live in that same corner arc
-            float wrapLen = v - totalLen;
-            // indices 7→8 define the top-left arc
-            float arcStart = segStart[7];
-            float arcEnd   = std::min(segStart[8], arcStart + wrapLen);
-            if (arcEnd > arcStart) 
-                DrawInterval(arcStart, arcEnd);
+            // two-part dash: tail + head
+            Vector2 P0 = EvalPos(start);
+            Vector2 Pmid = EvalPos(total);
+            DrawLineEx(P0, Pmid, thickness, color);
+            Vector2 P1 = EvalPos(end);
+            Vector2 PheadStart = EvalPos(0.0f);
+            DrawLineEx(PheadStart, P1, thickness, color);
         }
     }
+}
+
+static std::vector<Vector2> BuildPerimeter(const Rectangle& rec, float radius, int arcSteps) {
+    std::vector<Vector2> pts;
+    pts.reserve(4*arcSteps + 8);
+
+    float x = rec.x, y = rec.y, w = rec.width, h = rec.height;
+    float R = std::clamp(radius, 0.0f, std::min(w,h)*0.5f);
+
+    // 1. Top edge: left→right
+    pts.push_back({ x+R, y });
+    pts.push_back({ x+w-R, y });
+
+    // 2. Top-right quarter-arc (270°→360°)
+    for (int i = 1; i <= arcSteps; ++i) {
+        float t = (PI/2)*(i/(float)arcSteps);
+        pts.push_back({
+          x + w - R + std::cos(1.5f*PI + t)*R,
+          y +     R + std::sin(1.5f*PI + t)*R
+        });
+    }
+
+    // 3. Right edge: top→bottom
+    pts.push_back({ x+w, y+R });
+    pts.push_back({ x+w, y+h-R });
+
+    // 4. Bottom-right quarter-arc (0°→90°)
+    for (int i = 1; i <= arcSteps; ++i) {
+        float t = (PI/2)*(i/(float)arcSteps);
+        pts.push_back({
+          x + w - R + std::cos(0.0f + t)*R,
+          y + h - R + std::sin(0.0f + t)*R
+        });
+    }
+
+    // 5. Bottom edge: right→left
+    pts.push_back({ x+w-R, y+h });
+    pts.push_back({ x+R,   y+h });
+
+    // 6. Bottom-left quarter-arc (90°→180°)
+    for (int i = 1; i <= arcSteps; ++i) {
+        float t = (PI/2)*(i/(float)arcSteps);
+        pts.push_back({
+          x +     R + std::cos(0.5f*PI + t)*R,
+          y + h - R + std::sin(0.5f*PI + t)*R
+        });
+    }
+
+    // 7. Left edge: bottom→top
+    pts.push_back({ x, y+h-R });
+    pts.push_back({ x, y+R });
+
+    // 8. Top-left quarter-arc (180°→270°)
+    for (int i = 1; i <= arcSteps; ++i) {
+        float t = (PI/2)*(i/(float)arcSteps);
+        pts.push_back({
+          x +     R + std::cos(PI + t)*R,
+          y +     R + std::sin(PI + t)*R
+        });
+    }
+
+    return pts;
+}
+
+static std::vector<float> BuildCumLengths(const std::vector<Vector2>& pts) {
+    int m = (int)pts.size();
+    std::vector<float> cum(m+1, 0.0f);
+    for (int i = 0; i < m; ++i) {
+        float dx = pts[i+1 == m ? 0 : i+1].x - pts[i].x;
+        float dy = pts[i+1 == m ? 0 : i+1].y - pts[i].y;
+        cum[i+1] = cum[i] + std::hypot(dx, dy);
+    }
+    return cum;
+}
+
+void DrawDashedRoundedRect(const Rectangle& rec,
+                           float dashLen,
+                           float gapLen,
+                           float phase,
+                           float radius,
+                           int arcSteps,
+                           float thickness,
+                           Color color)
+{
+    static std::vector<Vector2> perimeter;
+    static std::vector<float> cumLen;
+
+    // Rebuild only if your rec/radius/arcSteps change:
+    perimeter = BuildPerimeter(rec, radius, arcSteps);
+    cumLen    = BuildCumLengths(perimeter);
+
+    DrawDashedPolylineLoop(perimeter, cumLen,
+                           dashLen, gapLen, phase,
+                           thickness, color);
 }
 
 
@@ -1660,12 +1699,15 @@ void endStencil()
             // -- testing --
             DrawDashedCircle({ 100, 100 }, 50, 10, 5, phase, 32, 2, GREEN);
             DrawDashedLine({ 200, 200 }, { 300, 300 }, 10, 5, phase, 2, GREEN);
-            DrawDashedRectangle(
-                { 400, 400, 100, 100 }, 
-                10, 5, phase, 
-                10, 32, 
-                2, 
-                BLUE
+            DrawDashedRoundedRect(
+                { 400, 400, 200, 100 }, // rectangle
+                10,                   // dash length
+                5,                    // gap length
+                phase,                // phase
+                20,                   // radius
+                16,                   // arc steps
+                2,                    // thickness
+                BLUE                 // color
             );
 
             {

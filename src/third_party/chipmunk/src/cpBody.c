@@ -58,8 +58,9 @@ cpBodyInit(cpBody *body, cpFloat mass, cpFloat moment)
 	body->userData = NULL;
 	
 	// Setters must be called after full initialization so the sanity checks don't assert on garbage data.
-	cpBodySetMass(body, mass);
 	cpBodySetMoment(body, moment);
+	cpBodySetMass(body, mass);
+	
 	cpBodySetAngle(body, 0.0f);
 	
 	return body;

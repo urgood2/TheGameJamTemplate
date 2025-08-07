@@ -17,7 +17,7 @@ ChipmunkBody* ChipmunkBody::BodyWithMassAndMoment(cpFloat mass, cpFloat moment) 
 }
 
 ChipmunkBody* ChipmunkBody::StaticBody() {
-    auto* b = new ChipmunkBody(0.0f, 0.0f);
+    auto* b = new ChipmunkBody(0.1f, 0.1f); // to avoid 0 error
     b->setType(CP_BODY_TYPE_STATIC);
     return b;
 }
@@ -31,12 +31,17 @@ ChipmunkBody* ChipmunkBody::KinematicBody() {
 // Constructor / Destructor
 
 ChipmunkBody::ChipmunkBody(cpFloat mass, cpFloat moment) {
+    _body.m = mass;
+    _body.i = moment;
+    
     cpBodyInit(&_body, mass, moment);
     _body.userData = this;
 
     // Always install these trampolines:
     _body.velocity_func = VelocityFunc;
     _body.position_func = PositionFunc;
+
+    
 }
 
 

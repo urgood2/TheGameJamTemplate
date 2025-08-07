@@ -1103,55 +1103,55 @@ static std::vector<Vector2> BuildPerimeter(const Rectangle& rec, float radius, i
     float x = rec.x, y = rec.y, w = rec.width, h = rec.height;
     float R = std::clamp(radius, 0.0f, std::min(w,h)*0.5f);
 
-    // 1. Top edge: left→right
-    pts.push_back({ x+R, y });
-    pts.push_back({ x+w-R, y });
+    // 1. Top edge
+    pts.push_back({ x+R,       y });
+    pts.push_back({ x+w-R,     y });
 
-    // 2. Top-right quarter-arc (270°→360°)
-    for (int i = 1; i <= arcSteps; ++i) {
-        float t = (PI/2)*(i/(float)arcSteps);
+    // 2. Top-right quarter-arc (270°→360°), EXCLUDE both end-points
+    for (int i = 1; i < arcSteps; ++i) {
+        float a = 1.5f*PI + (PI/2)*(i/(float)arcSteps);
         pts.push_back({
-          x + w - R + std::cos(1.5f*PI + t)*R,
-          y +     R + std::sin(1.5f*PI + t)*R
+            x + w - R + std::cos(a)*R,
+            y +     R + std::sin(a)*R
         });
     }
 
-    // 3. Right edge: top→bottom
-    pts.push_back({ x+w, y+R });
-    pts.push_back({ x+w, y+h-R });
+    // 3. Right edge
+    pts.push_back({ x+w,       y+R });
+    pts.push_back({ x+w,       y+h-R });
 
     // 4. Bottom-right quarter-arc (0°→90°)
-    for (int i = 1; i <= arcSteps; ++i) {
-        float t = (PI/2)*(i/(float)arcSteps);
+    for (int i = 1; i < arcSteps; ++i) {
+        float a = 0.0f     + (PI/2)*(i/(float)arcSteps);
         pts.push_back({
-          x + w - R + std::cos(0.0f + t)*R,
-          y + h - R + std::sin(0.0f + t)*R
+            x + w - R + std::cos(a)*R,
+            y + h - R + std::sin(a)*R
         });
     }
 
-    // 5. Bottom edge: right→left
-    pts.push_back({ x+w-R, y+h });
-    pts.push_back({ x+R,   y+h });
+    // 5. Bottom edge
+    pts.push_back({ x+w-R,     y+h });
+    pts.push_back({ x+R,       y+h });
 
     // 6. Bottom-left quarter-arc (90°→180°)
-    for (int i = 1; i <= arcSteps; ++i) {
-        float t = (PI/2)*(i/(float)arcSteps);
+    for (int i = 1; i < arcSteps; ++i) {
+        float a = 0.5f*PI + (PI/2)*(i/(float)arcSteps);
         pts.push_back({
-          x +     R + std::cos(0.5f*PI + t)*R,
-          y + h - R + std::sin(0.5f*PI + t)*R
+            x +     R + std::cos(a)*R,
+            y + h - R + std::sin(a)*R
         });
     }
 
-    // 7. Left edge: bottom→top
-    pts.push_back({ x, y+h-R });
-    pts.push_back({ x, y+R });
+    // 7. Left edge
+    pts.push_back({ x,         y+h-R });
+    pts.push_back({ x,         y+R });
 
     // 8. Top-left quarter-arc (180°→270°)
-    for (int i = 1; i <= arcSteps; ++i) {
-        float t = (PI/2)*(i/(float)arcSteps);
+    for (int i = 1; i < arcSteps; ++i) {
+        float a = PI      + (PI/2)*(i/(float)arcSteps);
         pts.push_back({
-          x +     R + std::cos(PI + t)*R,
-          y +     R + std::sin(PI + t)*R
+            x +     R + std::cos(a)*R,
+            y +     R + std::sin(a)*R
         });
     }
 

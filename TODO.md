@@ -124,6 +124,34 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 ## New features
 - fold stencil & dashed line and circle into the queue system
+- rectangle/arc/ellipses/polyline rendering from snkrx
+```lua
+
+-- Draws an arc of radius r from angle r1 to angle r2 centered on x, y.
+-- If color is passed in then the arc will be filled with that color (color is Color object)
+-- If line_width is passed in then the arc will not be filled and will instead be drawn as a set of lines of the given width.
+function graphics.arc(arctype, x, y, r, r1, r2, color, line_width)
+  graphics.shape("arc", color, line_width, arctype, x, y, r, r1, r2)
+end
+
+function graphics.polyline(color, line_width, ...)
+  local r, g, b, a = love.graphics.getColor()
+  if color then love.graphics.setColor(color.r, color.g, color.b, color.a) end
+  if line_width then love.graphics.setLineWidth(line_width) end
+  love.graphics.line(...)
+  love.graphics.setColor(r, g, b, a)
+  love.graphics.setLineWidth(1)
+end
+
+-- Draws an ellipse with radius rx, ry centered on x, y.
+-- If color is passed in then the ellipse will be filled with that color (color is Color object)
+-- If line_width is passed in then the ellipse will not be filled and will instead be drawn as a set of lines of the given width.
+function graphics.ellipse(x, y, rx, ry, color, line_width)
+  graphics.shape("ellipse", color, line_width, x, y, rx, ry)
+end
+
+
+```
 - color coding (in part of strings only) for dynamic text as well
 - use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
 - maybe a text log of sorts, with scroll?

@@ -496,7 +496,7 @@ namespace timer
         extern void timer_tween(std::variant<float, std::pair<float, float>> duration, const std::function<float()> &getter, const std::function<void(float)> &setter, float target_value, const std::string &tag = "", const std::string& group=default_group_tag, const std::function<float(float)> &easing_method = [](float t)
                                                                                                                                                                                            { return t < 0.5 ? 2 * t * t : t * (4 - 2 * t) - 1; }, // Default easing method (ease-in-out quad)
                                 const std::function<void()> &after = []() {});
-
+                  
     }
 
     namespace EventQueueSystem

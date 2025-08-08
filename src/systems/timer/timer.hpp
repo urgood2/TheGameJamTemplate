@@ -22,6 +22,7 @@
 
 // TODO: probably use a separate random isntance instead of default one
 #include "effolkronium/random.hpp"
+#include "spdlog/spdlog.h"
 using Random = effolkronium::random_static;
 
 namespace timer
@@ -86,6 +87,10 @@ namespace timer
 
     namespace TimerSystem
     {
+        // in TimerSystem globals
+        extern bool inUpdate;
+        extern std::vector<std::string> pendingCancels;
+        
         extern std::unordered_map<std::string, Timer> timers; // Timer Storage
         
         // new: store groups of timers by tag, does not interfere with the main timers map
@@ -123,22 +128,38 @@ namespace timer
         inline void pause_timer(const std::string& tag)   { timers.at(tag).paused = true; }
         inline void resume_timer(const std::string& tag)  { timers.at(tag).paused = false; }
 
+        // inline void cancel_timer(const std::string &tag)
+        // {
+        //     auto it = timers.find(tag);
+        //     if (it != timers.end())
+        //     {
+        //         // Call the "after" function before removing the timer
+        //         if (it->second.after)
+        //         {
+        //             it->second.after();
+        //         }
+
+        //         // Remove the timer
+        //         timers.erase(it);
+
+        //         // Debug: Notify the timer was canceled
+        //         std::cout << "Canceled timer with tag: " << tag << "\n";
+        //     }
+        // }
+        
         inline void cancel_timer(const std::string &tag)
         {
             auto it = timers.find(tag);
-            if (it != timers.end())
-            {
-                // Call the "after" function before removing the timer
-                if (it->second.after)
-                {
-                    it->second.after();
-                }
+            if (it == timers.end()) return;
 
-                // Remove the timer
+            // call the after() if you want
+            if (it->second.after) it->second.after();
+
+            // if we’re inside update_timers, defer the actual erase
+            if (inUpdate) {
+                pendingCancels.push_back(tag);
+            } else {
                 timers.erase(it);
-
-                // Debug: Notify the timer was canceled
-                std::cout << "Canceled timer with tag: " << tag << "\n";
             }
         }
 
@@ -345,6 +366,8 @@ namespace timer
 
         inline void update_timers(float dt)
         {
+            inUpdate = true;
+
             // ZoneScopedN("Update Timers"); // custom label
             for (auto it = timers.begin(); it != timers.end();)
             {
@@ -481,6 +504,15 @@ namespace timer
 
                 ++it; // Move to the next timer
             }
+            inUpdate = false;
+            
+            // now perform any deferred cancels
+            for (auto &tag : pendingCancels) {
+                timers.erase(tag);  // safe now, we’re outside the loop
+                // Debug: Notify the timer was canceled
+                SPDLOG_DEBUG("Canceled timer with tag: {}", tag);
+            }
+            pendingCancels.clear();
         }
 
         // ------------------------------------------------

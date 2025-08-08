@@ -11,6 +11,7 @@
 
 namespace timer
 {
+    
     // 1) Four-arg version
     static void lua_tween4(std::variant<float,std::pair<float,float>> d,
         const std::function<float()>& getter,
@@ -951,6 +952,9 @@ wrap_timer_action(sol::function action) {
 
     namespace TimerSystem
     {
+        // in TimerSystem globals
+        bool inUpdate = false;
+        std::vector<std::string> pendingCancels;
         std::unordered_map<std::string, Timer> timers{}; // Timer Storage
         std::unordered_map<std::string, std::vector<std::string>> groups{}; // Groups of timers w/ tags
         int uuid_counter = base_uid;                     // Counter for generating unique IDs

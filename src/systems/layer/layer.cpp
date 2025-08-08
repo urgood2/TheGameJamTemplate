@@ -995,17 +995,35 @@ void exposeToLua(sol::state &lua) {
     layerTbl["command_buffer"] = cb;
   }
 
+  
+  
+  // 1) Make a DrawCommandSpace table
+  sol::table drawSpace = layerTbl.create_named("DrawCommandSpace",
+      "World", DrawCommandSpace::World,
+      "Screen", DrawCommandSpace::Screen
+  );
+
+  rec.add_type("layer.DrawCommandSpace", true);
+  rec.record_property("layer.DrawCommandSpace",
+                      {"Screen", "number", "Screen space draw commands"});
+  rec.record_property("layer.DrawCommandSpace",
+                      {"World", "number", "World space draw commands"});
+                      
+                      
+  
   // Recorder: Top-level namespace
   rec.add_type("command_buffer");
 
 // 3) For each CmdXXX, expose a queueXXX helper
-//    Pattern: queueCmdName(layer, init_fn, z)
+//    Pattern: queueCmdName(layer, init_fn, z, space)
 #define QUEUE_CMD(cmd)                                                         \
-  cb.set_function("queue" #cmd, [](std::shared_ptr<layer::Layer> lyr,          \
-                                   sol::function init, int z) {                \
-    return ::layer::QueueCommand<::layer::Cmd##cmd>(                           \
-        lyr, [&](::layer::Cmd##cmd *c) { init(c); }, z);                       \
-  });
+  cb.set_function(                                                             \
+      "queue" #cmd,                                                            \
+      [](std::shared_ptr<layer::Layer> lyr, sol::function init, int z,         \
+         DrawCommandSpace space = DrawCommandSpace::Screen) {                  \
+        return ::layer::QueueCommand<::layer::Cmd##cmd>(                       \
+            lyr, [&](::layer::Cmd##cmd *c) { init(c); }, z, space);            \
+      });
 
   QUEUE_CMD(BeginDrawing)
   QUEUE_CMD(EndDrawing)

@@ -14249,9 +14249,15 @@
     "chain": [
         "chain.lua"
     ],
+    "chain_core_timer": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/core/timer_chain.lua"
+    ],
     "chain_knife": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/knife/chain.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\knife\\chain.lua"
+    ],
+    "chain_timer": [
+        "timer_chain.lua"
     ],
     "char_example": [
         "example_char"
@@ -17171,6 +17177,12 @@
     "exclamation_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_exclamation.svg"
     ],
+    "external_graph": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/graph.lua"
+    ],
+    "external_grid": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/grid.lua"
+    ],
     "external_hump": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/hump",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\hump"
@@ -17997,6 +18009,9 @@
     "goldenrod_palette_resurrect": [
         "RESURRECT_PALETTE_GOLDENROD"
     ],
+    "graph": [
+        "graph.lua"
+    ],
     "graphic": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/graphics/.DS_Store",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/graphics\\.DS_Store",
@@ -18124,6 +18139,9 @@
     ],
     "green_yellow": [
         "YELLOW GREEN"
+    ],
+    "grid": [
+        "grid.lua"
     ],
     "grid_overlay_shader_tile_vertex": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_vertex.vs",

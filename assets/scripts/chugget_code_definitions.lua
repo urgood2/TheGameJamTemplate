@@ -2207,6 +2207,16 @@ layer.DrawCommandV2 = {
 ---
 --- 
 ---
+---@class layer.DrawCommandSpace
+layer.DrawCommandSpace = {
+    Screen = nil, -- number Screen space draw commands
+    World = nil, -- number World space draw commands
+}
+
+
+---
+--- 
+---
 ---@class command_buffer
 command_buffer = {
 }

@@ -72,8 +72,8 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- [ ] use posthog for analytics? learn how randy does it.
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
-
 
 - [ ] look throughl queue bindings and make generally easier to work with
 - [ ] add worldspace/screenspace specifier for draw queue commands in lua
@@ -157,9 +157,7 @@ end
 - renew alignment needs to cache so it can be called every frame
 - dedicated Alignment callback for windows on resize
 - text updating wrong. not easy to configure updates with on update method for some reason.
-- add chain funcionality to timer?
-- is there a way to make blackboard a lua table that can be reliably fetched from lua?
-- auto sprite order sorting so what's behind somehting can properly go behind, etc.
+
 - make get/set blackboard methods return lua nil if invalid instead of throwing error
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
@@ -268,6 +266,7 @@ globalShaderUniforms.set("edge_shader", "iResolution",
 ---
 
 ## Immediate laters
+- auto sprite order sorting so what's behind somehting can properly go behind, etc.
 - use hump.gamestate. How to hook with raylib?
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file
 - [ ] how to request a new GOAP plan and run it from lua?

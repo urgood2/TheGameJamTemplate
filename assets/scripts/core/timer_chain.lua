@@ -63,8 +63,6 @@ end
 function TimerChain:tweenTable(config)
     return self:tween(config.delay, config.getter, config.setter, config.target, config.tag, config.group, config.easing, config.after)
 end
-
-return TimerChain
 function TimerChain.new(group)
     local self = setmetatable({}, TimerChain)
     self._chain_id    = "chain_" .. tostring(os.time()) .. "_" .. math.random(1,9999)
@@ -117,7 +115,6 @@ end
 function TimerChain:then_(fn, tag, group)
     return self:after(0, fn, tag, group)
 end
-TimerChain.then = TimerChain.then_
 
 --- Pause for a given delay without action.
 ---@param delay number Seconds to wait.

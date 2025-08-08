@@ -151,6 +151,10 @@ namespace scripting
             // Expose ScriptComponent to Lua
             lua.new_usertype<ScriptComponent>("ScriptComponent",
                 "add_task", &ScriptComponent::add_task,
+                // expose the renamed member as "script" (or "table", or whatever you like)
+                "self", sol::property([](ScriptComponent &sc){
+                    return sc.self;
+                }),
                 "count_tasks", &ScriptComponent::count_tasks,
                 "type_id", []() { return entt::type_hash<ScriptComponent>::value(); }
             );

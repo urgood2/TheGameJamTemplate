@@ -73,6 +73,8 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 
 ## Things to fix/implement
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
+
+
 - [ ] look throughl queue bindings and make generally easier to work with
 - [ ] add worldspace/screenspace specifier for draw queue commands in lua
 - [ ] changing color of a hit circle using chaining:
@@ -111,14 +113,11 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] do what SNKRX does and add a sort of dark overlay behind everything else when showing gui -> probably render a rect
 - [ ] add some kind of screen which shares the amount of points scored
 - [ ] add simple crash reporting to web builds 
-- [ ] Raylib stencil. https://github.com/raysan5/raylib/discussions/2964 Add queue command ver. Also, how to use? Add to layer queue code
 - [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula
-- [ ] add dashed lines from here, how to animate them? animation here: https://chatgpt.com/share/6880e2c6-ff68-800a-b30b-c2c1514e1772
 - [ ] How to mesh my transforms with chipmunk 2d to do lesast amount of work and be performant?
 - [ ] Gotta add scroll pane
 - scrool pane for ui: https://chatgpt.com/share/6881dd9f-27ac-800a-af9f-935b61355da7
 - [ ] change image color on hover
-- [ ] how do draw animated dashed lines?
 - [ ] color-coded tooltips which can be updated on the fly to reflect info-how?
 - [ ] dynamic text notifications which can fade, and also contain images.
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
@@ -154,7 +153,6 @@ end
 
 ```
 - color coding (in part of strings only) for dynamic text as well
-- use script component's script (store in lua) to make blackboard accessing easier and more sustainable performance wise
 - maybe a text log of sorts, with scroll?
 - renew alignment needs to cache so it can be called every frame
 - dedicated Alignment callback for windows on resize
@@ -163,7 +161,6 @@ end
 - is there a way to make blackboard a lua table that can be reliably fetched from lua?
 - auto sprite order sorting so what's behind somehting can properly go behind, etc.
 - make get/set blackboard methods return lua nil if invalid instead of throwing error
-- cancel_self() function which will queue a cancel for the current timer after loop finishes to avoid triggering errors
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] better lua friendly drawing api for queue command

@@ -1,4 +1,9 @@
 # Documentation
+- [ ] document use script component's script table (self) to make blackboard accessing easier and more sustainable performance wise
+```lua
+local comp = get_script_component(myEntity)
+print( comp.self.someField )
+```
 - [ ] how to get drawing pritimitives to optionall respect camera? -> use drawCommandSpace specifier in QueueCommand method
 - entt_null binding in lua
 - How to instantiate some ui in place in an existing ui window -- refer to existing lua code & document

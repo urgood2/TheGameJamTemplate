@@ -23,6 +23,8 @@ namespace layer
                     DELETE_COMMAND(layer, RenderUISliceFromDrawList, CmdRenderUISliceFromDrawList)
                     DELETE_COMMAND(layer, BeginDrawing, CmdBeginDrawing)
                     DELETE_COMMAND(layer, EndDrawing, CmdEndDrawing)
+                    DELETE_COMMAND(layer, BeginScissorMode, CmdBeginScissorMode)
+                    DELETE_COMMAND(layer, EndScissorMode, CmdEndScissorMode)
                     DELETE_COMMAND(layer, ClearBackground, CmdClearBackground)
                     DELETE_COMMAND(layer, Translate, CmdTranslate)
                     DELETE_COMMAND(layer, Scale, CmdScale)

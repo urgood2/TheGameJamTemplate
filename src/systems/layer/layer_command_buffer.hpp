@@ -45,6 +45,8 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdBeginDrawing>() { return DrawCommandType::BeginDrawing; }
         template<> inline DrawCommandType GetDrawCommandType<CmdEndDrawing>() { return DrawCommandType::EndDrawing; }
         template<> inline DrawCommandType GetDrawCommandType<CmdClearBackground>() { return DrawCommandType::ClearBackground; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdBeginScissorMode>() { return DrawCommandType::BeginScissorMode; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdEndScissorMode>() { return DrawCommandType::EndScissorMode; }
         template<> inline DrawCommandType GetDrawCommandType<CmdRenderUISelfImmediate>() { return DrawCommandType::RenderUISelfImmediate; }
         template<> inline DrawCommandType GetDrawCommandType<CmdRenderUISliceFromDrawList>() { return DrawCommandType::RenderUISliceFromDrawList; }
         template<> inline DrawCommandType GetDrawCommandType<CmdTranslate>() { return DrawCommandType::Translate; }
@@ -188,6 +190,8 @@ namespace layer
             CmdBeginDrawing,
             CmdEndDrawing,
             CmdClearBackground,
+            CmdBeginScissorMode,
+            CmdEndScissorMode,
             CmdTranslate,
             CmdScale,
             CmdRotate,

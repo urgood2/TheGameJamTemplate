@@ -15,6 +15,7 @@
 #include "systems/camera/camera_manager.hpp"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
+#include "systems/scripting/script_process.hpp"
 #include "systems/shaders/shader_pipeline.hpp"
 #include "systems/ui/box.hpp"
 #include "systems/ui/element.hpp"
@@ -500,6 +501,9 @@ void exposeToLua(sol::state &lua) {
            &layer::CmdTranslate::y)
   BIND_CMD(Scale, "scaleX", &layer::CmdScale::scaleX, "scaleY",
            &layer::CmdScale::scaleY)
+  BIND_CMD(BeginScissorMode, "area",
+           &layer::CmdBeginScissorMode::area)
+  BIND_CMD(EndScissorMode, "dummy", &layer::CmdEndScissorMode::dummy)
   BIND_CMD(Rotate, "angle", &layer::CmdRotate::angle)
   BIND_CMD(AddPush, "camera", &layer::CmdAddPush::camera)
   BIND_CMD(AddPop, "dummy", &layer::CmdAddPop::dummy)
@@ -655,7 +659,13 @@ void exposeToLua(sol::state &lua) {
   rec.add_type("layer.CmdClearBackground", true);
   rec.record_property("layer.CmdClearBackground",
                       {"color", "Color", "Background color"});
-
+    
+  rec.add_type("layer.CmdBeginScissorMode", true);
+  rec.record_property("layer.CmdBeginScissorMode",
+                      {"area", "Rectangle", "Scissor area rectangle"}); 
+  rec.add_type("layer.CmdEndScissorMode", true);
+  rec.record_property("layer.CmdEndScissorMode",
+                      {"dummy", "false", "Unused field"});
   rec.add_type("layer.CmdTranslate", true);
   rec.record_property("layer.CmdTranslate", {"x", "number", "X offset"});
   rec.record_property("layer.CmdTranslate", {"y", "number", "Y offset"});
@@ -1081,6 +1091,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdBeginDrawing) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdBeginDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1094,6 +1105,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdEndDrawing) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1107,9 +1119,38 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdClearBackground) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdClearBackground into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+    rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueBeginScissorMode",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginScissorMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdBeginScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+    rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueEndScissorMode",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndScissorMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdEndScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
 
@@ -1120,6 +1161,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdTranslate) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdTranslate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1133,6 +1175,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdScale) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdScale into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1146,6 +1189,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRotate) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdRotate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1159,6 +1203,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdAddPush) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdAddPush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1172,6 +1217,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdAddPop) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1185,6 +1231,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdPushMatrix) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1198,6 +1245,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdPopMatrix) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdPopMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1211,6 +1259,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawCircleFilled) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawCircleFilled into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1224,6 +1273,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawRectangle) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawRectangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1237,6 +1287,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawRectanglePro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawRectanglePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1250,6 +1301,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawRectangleLinesPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1263,6 +1315,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawLine) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1276,6 +1329,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1289,6 +1343,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawText) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawText into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1302,6 +1357,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTextCentered) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawTextCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1315,6 +1371,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdTextPro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdTextPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1328,6 +1385,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawImage) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawImage into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1341,6 +1399,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdTexturePro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdTexturePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1354,6 +1413,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawEntityAnimation) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1367,6 +1427,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawTransformEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1380,6 +1441,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawTransformEntityAnimationPipeline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1393,6 +1455,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetShader) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1406,6 +1469,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdResetShader) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdResetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1419,6 +1483,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetBlendMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1432,6 +1497,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdUnsetBlendMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdUnsetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1445,6 +1511,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformFloat) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSendUniformFloat into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1458,6 +1525,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformInt) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSendUniformInt into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1471,6 +1539,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformVec2) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSendUniformVec2 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1484,6 +1553,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformVec3) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSendUniformVec3 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1497,6 +1567,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformVec4) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSendUniformVec4 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1510,6 +1581,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformFloatArray) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSendUniformFloatArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1523,6 +1595,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformIntArray) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSendUniformIntArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1536,6 +1609,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdVertex) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdVertex into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1549,6 +1623,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdBeginOpenGLMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdBeginOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1562,6 +1637,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdEndOpenGLMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdEndOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1575,6 +1651,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetColor) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSetColor into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1588,6 +1665,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetLineWidth) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSetLineWidth into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1601,6 +1679,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetTexture) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdSetTexture into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1614,6 +1693,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdRenderRectVerticesFilledLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1627,6 +1707,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdRenderRectVerticesOutlineLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1640,6 +1721,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawPolygon) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawPolygon into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1653,6 +1735,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRenderNPatchRect) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdRenderNPatchRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -1666,6 +1749,7 @@ void exposeToLua(sol::state &lua) {
           .signature = R"(---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTriangle) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawTriangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
@@ -3917,6 +4001,7 @@ void AddDrawImage(std::shared_ptr<Layer> layer, const Texture2D &image, float x,
   AddDrawCommand(layer, "draw_image",
                  {image, x, y, rotation, scaleX, scaleY, color}, z);
 }
+
 
 void DrawTextCentered(const std::string &text, const Font &font, float x,
                       float y, const Color &color, float fontSize) {

@@ -2,6 +2,7 @@
 
 #include "layer.hpp"
 #include "core/globals.hpp"
+#include "raylib.h"
 #include "systems/ui/element.hpp"
 
 #include "systems/ui/ui_data.hpp"
@@ -208,6 +209,12 @@ namespace layer
         RegisterRenderer<CmdEndDrawing>(DrawCommandType::EndDrawing, [](std::shared_ptr<layer::Layer> layer, CmdEndDrawing*) { EndDrawingAction(); });
         RegisterRenderer<CmdClearBackground>(DrawCommandType::ClearBackground, [](std::shared_ptr<layer::Layer> layer, CmdClearBackground* c) { 
             ClearBackgroundAction(c->color); 
+        });
+        RegisterRenderer<CmdBeginScissorMode>(DrawCommandType::BeginScissorMode, [](std::shared_ptr<layer::Layer> layer, CmdBeginScissorMode* c) { 
+            BeginScissorMode(c->area.x, c->area.y, c->area.width, c->area.height);
+        });
+        RegisterRenderer<CmdEndScissorMode>(DrawCommandType::EndScissorMode, [](std::shared_ptr<layer::Layer> layer, CmdEndScissorMode*) { 
+            EndScissorMode(); 
         });
         RegisterRenderer<CmdRenderUISliceFromDrawList>(DrawCommandType::RenderUISliceFromDrawList, [](std::shared_ptr<layer::Layer> layer, CmdRenderUISliceFromDrawList* c) { 
             renderSliceOffscreenFromDrawList(globals::registry, c->drawList, c->startIndex, c->endIndex, layer, c->pad); 

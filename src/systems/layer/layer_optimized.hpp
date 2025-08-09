@@ -50,6 +50,8 @@ namespace layer
         BeginDrawing,
         EndDrawing,
         ClearBackground,
+        BeginScissorMode,
+        EndScissorMode,
         Translate,
         Scale,
         Rotate,
@@ -118,6 +120,14 @@ namespace layer
         // Components needed for rendering
         // These should be fetched from the registry in the render function
         // UIElementComponent, UIConfig, UIState, GameObject, Transform
+    };
+    
+    struct CmdBeginScissorMode {
+        Rectangle area;
+    };
+    
+    struct CmdEndScissorMode {
+        bool dummy = false; // Placeholder, struct can't be empty
     };
 
     struct CmdBeginDrawing {

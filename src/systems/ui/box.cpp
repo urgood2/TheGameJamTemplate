@@ -1307,11 +1307,11 @@ namespace ui
             registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
             
             // add onHover method that sets the active scroll pane
-            node.methods.onHover = [uiElement](entt::registry &registry, entt::entity /*e*/) {
-                globals::inputState.activeScrollPane = uiElement;
-            };
+            // node.methods.onHover = [uiElement](entt::registry &registry, entt::entity /*e*/) {
+            //     globals::inputState.activeScrollPane = uiElement;
+            // };
             node.state.collisionEnabled = true; // enable collision for scroll pane
-            node.state.hoverEnabled = true; // enable hover for scroll pane
+            // node.state.hoverEnabled = true; // enable hover for scroll pane
         }
 
         SubCalculateContainerSize(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);

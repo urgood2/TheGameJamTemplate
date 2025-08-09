@@ -897,13 +897,14 @@ namespace input
         static const float scrollSpeed = 10.0f;
         // apply scrollpane movement
         {
+            float mouseWheelMove = GetMouseWheelMove();
             if (registry.valid(inputState.activeScrollPane) && inputState.activeScrollPane != entt::null && registry.any_of<ui::UIScrollComponent>(inputState.activeScrollPane) && std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeScrollPane) != inputState.nodes_at_cursor.end())
             {
                 // active scroll pane is under cursor, apply scroll
-                SPDLOG_DEBUG("Applying scroll to active scroll pane: {}, amt = {}", static_cast<int>(inputState.activeScrollPane), GetMouseWheelMove() * scrollSpeed);
+                SPDLOG_DEBUG("Applying scroll to active scroll pane: {}, amt = {}", static_cast<int>(inputState.activeScrollPane), mouseWheelMove * scrollSpeed);
                 
                 auto &scrollComponent = registry.get<ui::UIScrollComponent>(inputState.activeScrollPane);
-                scrollComponent.offset += GetMouseWheelMove() * scrollSpeed;
+                scrollComponent.offset += mouseWheelMove * scrollSpeed;
                 scrollComponent.offset  = Clamp(scrollComponent.offset, 0.0f, scrollComponent.maxOffset);
                 
                 SPDLOG_DEBUG("New scroll offset: {}", scrollComponent.offset);
@@ -2347,6 +2348,13 @@ namespace input
 
             state.nodes_at_cursor.push_back(e);
             state.collision_list.push_back(e);
+            
+            // if it contains a uiConfig and it's a scrollpane, set it to the active scrollpane
+            auto uiConfig = registry.try_get<ui::UIConfig>(e);
+            if (uiConfig && uiConfig->uiType == ui::UITypeEnum::SCROLL_PANE)
+            {
+                state.activeScrollPane = e; // Set the active scrollpane
+            }
         }
 
         // Clear collision state for entities not at cursor

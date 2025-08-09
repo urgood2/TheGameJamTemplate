@@ -53,8 +53,8 @@ namespace ui
     };
     
     struct UIScrollComponent {
-        float   offset    = 0;       // current scroll in px
-        float   maxOffset = 0;       // contentSize − viewportSize
+        float   offset    = -100.f;       // current scroll in px
+        float   maxOffset = 100.f;       // contentSize − viewportSize
     };
 
 

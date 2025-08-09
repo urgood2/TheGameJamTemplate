@@ -76,7 +76,6 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- [ ] use posthog for analytics? learn how randy does it.
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
 
 - [ ] changing color of a hit circle using chaining:
@@ -124,7 +123,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 ## New features
 - fold stencil & dashed line and circle into the queue system
-- fold all shape primitives in game.cpp into the queue system
+- fold all shape primitives  & sprite rendering in game.cpp into the queue system
 - color coding (in part of strings only) for dynamic text as well
 - maybe a text log of sorts, with scroll?
 - renew alignment needs to cache so it can be called every frame
@@ -232,6 +231,7 @@ globalShaderUniforms.set("edge_shader", "iResolution",
 ---
 
 ## Immediate laters
+- [ ] use posthog for analytics? learn how randy does it.
 - auto sprite order sorting so what's behind somehting can properly go behind, etc.
 - use hump.gamestate. How to hook with raylib?
 - [ ] how to improve web launcher? -> this might work https://github.com/cn04/emscripten-webgl-loader?tab=readme-ov-file

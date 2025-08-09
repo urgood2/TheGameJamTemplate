@@ -6068,6 +6068,31 @@ function timer.for_time(...) end
 function timer.tween(...) end
 
 ---
+--- Tween multiple numeric fields on a Lua table with a single timer (progress 0→1). Captures start values at creation; one tag/after for the whole batch. Default easing: linear.
+---
+---@param duration number|{number, number} # Seconds or {min,max} range (randomized at start).
+---@param target table # Table/object whose numeric fields will be tweened.
+---@param source table<string, number> # Map of field -> target value (e.g., { sx=0, sy=0 }).
+---@param method? fun(t:number):number # Easing function; default is linear (t).
+---@param after? fun() # Called once when all fields reach targets.
+---@param tag? string # Cancels existing tweens with the same tag.
+---@param group? string # Optional group bucket for management.
+---@return integer # timerHandle
+function timer.tween(...) end
+
+---
+--- Tween multiple engine-backed values (get/set pairs) with a single timer. Each track defines get(), set(v), to, and optional from. Captures starts at creation; one tag/after for the whole batch. Default easing: linear.
+---
+---@param duration number|{number, number} # Seconds or {min,max} range (randomized at start).
+---@param tracks { {get:fun():number, set:fun(value:number), to:number, from?:number}[] }|table # Array-like table of descriptors.
+---@param method? fun(t:number):number # Easing function; default is linear (t).
+---@param after? fun() # Called once when all tracks reach targets.
+---@param tag? string # Cancels existing tweens with the same tag.
+---@param group? string # Optional group bucket for management.
+---@return integer # timerHandle
+function timer.tween(...) end
+
+---
 --- Pauses the timer with the given tag.
 ---
 ---@param tag string # The tag/handle of the timer to pause.

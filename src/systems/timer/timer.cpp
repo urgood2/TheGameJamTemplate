@@ -436,57 +436,403 @@ wrap_timer_action(sol::function action) {
         
         
         
-        // Now bind them all, *including* the full seven-arg C++ function:
-        // timer_tween(duration, getter, setter, target, tag, easing, after)
-        t.set_function("tween",
-            [clone_to_main](std::variant<float,std::pair<float,float>> duration,
-            sol::function getter,
-            sol::function setter,
-            float target_value,
-            sol::optional<std::string> maybeTag,
-            sol::optional<std::string> maybeGroup,
-            sol::function easing_method,
-            sol::function after)
-            {
-                auto getWrapper = [clone_to_main] (sol::function f) {
-                    sol::protected_function pf(clone_to_main(f));
-                    return [pf=std::move(pf)]() mutable {
-                        auto r = pf();
-                        if (!r.valid()) {
-                            sol::error err = r; SPDLOG_ERROR("Tween getter failed: {}", err.what());
-                            return 0.f;
-                        }
-                        return r.get<float>();
-                    };
-                }(clone_to_main(getter));
+    //     // Now bind them all, *including* the full seven-arg C++ function:
+    //     // timer_tween(duration, getter, setter, target, tag, easing, after)
+    //     t.set_function("tween",
+    //         [clone_to_main](std::variant<float,std::pair<float,float>> duration,
+    //         sol::function getter,
+    //         sol::function setter,
+    //         float target_value,
+    //         sol::optional<std::string> maybeTag,
+    //         sol::optional<std::string> maybeGroup,
+    //         sol::function easing_method,
+    //         sol::function after)
+    //         {
+    //             auto getWrapper = [clone_to_main] (sol::function f) {
+    //                 sol::protected_function pf(clone_to_main(f));
+    //                 return [pf=std::move(pf)]() mutable {
+    //                     auto r = pf();
+    //                     if (!r.valid()) {
+    //                         sol::error err = r; SPDLOG_ERROR("Tween getter failed: {}", err.what());
+    //                         return 0.f;
+    //                     }
+    //                     return r.get<float>();
+    //                 };
+    //             }(clone_to_main(getter));
 
-                auto setWrapper = [clone_to_main] (sol::function f) {
-                    sol::protected_function pf(clone_to_main(f));
-                    return [pf=std::move(pf)](float v) mutable {
-                        auto r = pf(v);
-                        if (!r.valid()) {
-                            sol::error err = r; SPDLOG_ERROR("Tween setter failed: {}", err.what());
-                        }
-                    };
-                }(clone_to_main(setter));
+    //             auto setWrapper = [clone_to_main] (sol::function f) {
+    //                 sol::protected_function pf(clone_to_main(f));
+    //                 return [pf=std::move(pf)](float v) mutable {
+    //                     auto r = pf(v);
+    //                     if (!r.valid()) {
+    //                         sol::error err = r; SPDLOG_ERROR("Tween setter failed: {}", err.what());
+    //                     }
+    //                 };
+    //             }(clone_to_main(setter));
 
-                auto easeWrapper = easing_method.valid() ?
-                    wrap_ff(clone_to_main(easing_method)) :
-                    [](float t) { return t < 0.5 ? 2 * t * t : t * (4 - 2 * t) - 1; }; // Default easing method (ease-in-out quad)
-                auto afterWrapper = wrap_noarg_callback(clone_to_main(after));
-                std::string tag = maybeTag.value_or("");
+    //             auto easeWrapper = easing_method.valid() ?
+    //                 wrap_ff(clone_to_main(easing_method)) :
+    //                 [](float t) { return t < 0.5 ? 2 * t * t : t * (4 - 2 * t) - 1; }; // Default easing method (ease-in-out quad)
+    //             auto afterWrapper = wrap_noarg_callback(clone_to_main(after));
+    //             std::string tag = maybeTag.value_or("");
 
-                timer::TimerSystem::timer_tween(
-                    duration,
-                    getWrapper,
-                    setWrapper,
-                    target_value,
-                    tag,
-                    maybeGroup.value_or(""),
-                    easeWrapper,
-                    afterWrapper
-                );
-            });
+    //             timer::TimerSystem::timer_tween(
+    //                 duration,
+    //                 getWrapper,
+    //                 setWrapper,
+    //                 target_value,
+    //                 tag,
+    //                 maybeGroup.value_or(""),
+    //                 easeWrapper,
+    //                 afterWrapper
+    //             );
+    //         });
+            
+    //     // Overload: tween(duration, tracks, method?, after?, tag?, group?)
+    // // tracks = { {get=function().., set=function(v).., to=number, from?=number}, ... }
+    // t.set_function("tween",
+    //     [clone_to_main](std::variant<float,std::pair<float,float>> duration,
+    //                     sol::table tracksTbl,
+    //                     sol::optional<sol::function> maybeMethod,
+    //                     sol::optional<sol::function> maybeAfter,
+    //                     sol::optional<std::string> maybeTag,
+    //                     sol::optional<std::string> maybeGroup)
+    //     {
+    //         struct Track {
+    //             std::function<void(float)> set;
+    //             float start = 0.f;
+    //             float delta = 0.f;
+    //         };
+
+    //         std::vector<Track> tracks;
+    //         tracks.reserve(tracksTbl.size());
+
+    //         // Helpers (same wrapping style you already use)
+    //         auto wrapGetter = [clone_to_main](sol::function f) {
+    //             sol::protected_function pf(clone_to_main(f));
+    //             return [pf=std::move(pf)]() mutable -> float {
+    //                 auto r = pf();
+    //                 if (!r.valid()) { sol::error e = r; SPDLOG_ERROR("Tween get failed: {}", e.what()); return 0.f; }
+    //                 return r.get<float>();
+    //             };
+    //         };
+    //         auto wrapSetter = [clone_to_main](sol::function f) {
+    //             sol::protected_function pf(clone_to_main(f));
+    //             return [pf=std::move(pf)](float v) mutable {
+    //                 auto r = pf(v);
+    //                 if (!r.valid()) { sol::error e = r; SPDLOG_ERROR("Tween set failed: {}", e.what()); }
+    //             };
+    //         };
+
+    //         // Build tracks: compute start/delta now
+    //         for (auto &kv : tracksTbl) {
+    //             sol::table desc = kv.second.as<sol::table>();
+
+    //             sol::object getObj = desc["get"];
+    //             sol::object setObj = desc["set"];
+    //             if (!getObj.is<sol::function>() || !setObj.is<sol::function>()) {
+    //                 SPDLOG_ERROR("tween(): each track needs get=function and set=function");
+    //                 continue;
+    //             }
+
+    //             float to = 0.f;
+    //             if (auto toObj = desc["to"]; toObj.valid() && toObj.is<float>()) {
+    //                 to = toObj.get<float>();
+    //             } else {
+    //                 SPDLOG_ERROR("tween(): each track needs numeric 'to'");
+    //                 continue;
+    //             }
+
+    //             float start;
+    //             if (auto fromObj = desc["from"]; fromObj.valid() && fromObj.is<float>()) {
+    //                 start = fromObj.get<float>();
+    //             } else {
+    //                 start = wrapGetter(getObj.as<sol::function>())();
+    //             }
+
+    //             Track tr;
+    //             tr.set   = wrapSetter(setObj.as<sol::function>());
+    //             tr.start = start;
+    //             tr.delta = to - start;
+    //             tracks.push_back(std::move(tr));
+    //         }
+
+    //         if (tracks.empty()) {
+    //             if (maybeAfter && (*maybeAfter).valid()) {
+    //                 sol::protected_function pf(clone_to_main(*maybeAfter));
+    //                 auto r = pf(); (void)r;
+    //             }
+    //             return;
+    //         }
+
+    //         // Easing: default to linear to match your old Lua behavior
+    //         auto ease = (maybeMethod && (*maybeMethod).valid())
+    //             ? wrap_ff(clone_to_main(*maybeMethod))
+    //             : [](float t){ return t; };
+
+    //         // Compose a single setter that applies progress to all tracks
+    //         auto compositeSetter = [tracks = std::move(tracks)](float p) mutable {
+    //             for (auto &tr : const_cast<std::vector<Track>&>(tracks)) {
+    //                 tr.set(tr.start + tr.delta * p);
+    //             }
+    //         };
+
+    //         // After callback
+    //         auto afterWrapper = (maybeAfter && (*maybeAfter).valid())
+    //             ? wrap_noarg_callback(clone_to_main(*maybeAfter))
+    //             : [](){};
+
+    //         // Drive progress 0→1 using your existing scalar tween
+    //         timer::TimerSystem::timer_tween(
+    //             duration,
+    //             /*getter*/ [](){ return 0.f; },
+    //             /*setter*/ compositeSetter,
+    //             /*target*/ 1.f,
+    //             /*tag   */ maybeTag.value_or(""),
+    //             /*group */ maybeGroup.value_or(""),
+    //             /*ease  */ ease,
+    //             /*after */ afterWrapper
+    //         );
+    //     });
+        
+    //     // Add this overload alongside your existing t.set_function("tween", ...)
+    //     t.set_function("tween",
+    //         [clone_to_main](std::variant<float, std::pair<float,float>> duration,
+    //                         sol::table target,          // table/object whose fields we set
+    //                         sol::table source,          // { key = targetValue, ... }
+    //                         sol::optional<sol::function> maybeMethod,
+    //                         sol::optional<sol::function> maybeAfter,
+    //                         sol::optional<std::string> maybeTag,
+    //                         sol::optional<std::string> maybeGroup)
+    //     {
+    //         struct Track { std::string key; double start; double goal; double delta; };
+    //         std::vector<Track> tracks;
+    //         tracks.reserve(source.size());
+
+    //         // 1) Snapshot initial values and deltas
+    //         for (auto &kv : source) {
+    //             std::string key = kv.first.as<std::string>();
+    //             double goal = kv.second.as<double>();
+    //             sol::object cur = target.raw_get<sol::object>(key);
+    //             if (!cur.is<double>()) {
+    //                 SPDLOG_ERROR("tween(): target.%s is not a number", key.c_str());
+    //                 continue;
+    //             }
+    //             double start = cur.as<double>();
+    //             tracks.push_back(Track{key, start, goal, goal - start});
+    //         }
+
+    //         // If nothing to tween, just call after and bail
+    //         if (tracks.empty()) {
+    //             if (maybeAfter && (*maybeAfter).valid()) {
+    //                 sol::protected_function pf(clone_to_main(*maybeAfter));
+    //                 auto r = pf(); (void)r;
+    //             }
+    //             return;
+    //         }
+
+    //         // 2) Easing (default: linear to match the Lua version)
+    //         auto ease = (maybeMethod && (*maybeMethod).valid())
+    //             ? wrap_ff(clone_to_main(*maybeMethod))
+    //             : [](float t){ return t; };
+
+    //         // 3) Build a "progress" setter that applies to all fields
+    //         sol::table target_on_main = target; // or clone_to_main(target) if you truly run off-thread
+    //         sol::reference target_ref = target_on_main;
+
+    //         auto setter = [target_ref, tracks = std::move(tracks)](float p) {
+    //             sol::table tgt = target_ref;
+    //             for (const auto& tr : tracks) {
+    //                 const double v = tr.start + tr.delta * p;
+    //                 tgt[tr.key] = v;
+    //             }
+    //         };
+
+    //         // 4) Getter always returns 0; target_value is 1 (progress 0→1)
+    //         auto getter = [](){ return 0.0f; };
+
+    //         // 5) After-callback
+    //         auto afterWrapper = (maybeAfter && (*maybeAfter).valid())
+    //             ? wrap_noarg_callback(clone_to_main(*maybeAfter))
+    //             : [](){};
+
+    //         // 6) Dispatch to the existing scalar tween
+    //         timer::TimerSystem::timer_tween(
+    //             duration,
+    //             getter,
+    //             setter,
+    //             /*target_value*/ 1.0f,
+    //             /*tag*/   maybeTag.value_or(""),
+    //             /*group*/ maybeGroup.value_or(""),
+    //             ease,
+    //             afterWrapper
+    //         );
+    //     });
+
+
+    
+        // 1) scalar: tween(duration, getter, setter, target, [tag], [group], easing, after)
+        auto tween_scalar =
+        [clone_to_main](std::variant<float,std::pair<float,float>> duration,
+                        sol::function getter,
+                        sol::function setter,
+                        float target_value,
+                        sol::optional<std::string> maybeTag,
+                        sol::optional<std::string> maybeGroup,
+                        sol::function easing_method,
+                        sol::function after)
+        {
+            auto getWrapper = [clone_to_main] (sol::function f) {
+                sol::protected_function pf(clone_to_main(f));
+                return [pf=std::move(pf)]() mutable {
+                    auto r = pf();
+                    if (!r.valid()) { sol::error err = r; SPDLOG_ERROR("Tween getter failed: {}", err.what()); return 0.f; }
+                    return r.get<float>();
+                };
+            }(clone_to_main(getter));
+
+            auto setWrapper = [clone_to_main] (sol::function f) {
+                sol::protected_function pf(clone_to_main(f));
+                return [pf=std::move(pf)](float v) mutable {
+                    auto r = pf(v);
+                    if (!r.valid()) { sol::error err = r; SPDLOG_ERROR("Tween setter failed: {}", err.what()); }
+                };
+            }(clone_to_main(setter));
+
+            auto easeWrapper = easing_method.valid()
+                ? wrap_ff(clone_to_main(easing_method))
+                : [](float t){ return t; }; // recommend unify to linear
+
+            auto afterWrapper = wrap_noarg_callback(clone_to_main(after));
+
+            timer::TimerSystem::timer_tween(
+                duration, getWrapper, setWrapper, target_value,
+                /*tag*/   maybeTag.value_or(""),
+                /*group*/ maybeGroup.value_or(""),
+                easeWrapper, afterWrapper
+            );
+        };
+
+        // 2) tracks: tween(duration, tracksTbl, [method], [after], [tag], [group])
+        auto tween_tracks =
+        [clone_to_main](std::variant<float,std::pair<float,float>> duration,
+                        sol::table tracksTbl,
+                        sol::optional<sol::function> maybeMethod,
+                        sol::optional<sol::function> maybeAfter,
+                        sol::optional<std::string> maybeTag,
+                        sol::optional<std::string> maybeGroup)
+        {
+            struct Track { std::function<void(float)> set; float start=0.f; float delta=0.f; };
+            std::vector<Track> tracks;
+            tracks.reserve(tracksTbl.size());
+
+            auto wrapGetter = [clone_to_main](sol::function f){
+                sol::protected_function pf(clone_to_main(f));
+                return [pf=std::move(pf)]() mutable -> float {
+                    auto r = pf(); if (!r.valid()) { sol::error e=r; SPDLOG_ERROR("Tween get failed: {}", e.what()); return 0.f; }
+                    return r.get<float>();
+                };
+            };
+            auto wrapSetter = [clone_to_main](sol::function f){
+                sol::protected_function pf(clone_to_main(f));
+                return [pf=std::move(pf)](float v) mutable {
+                    auto r = pf(v); if (!r.valid()) { sol::error e=r; SPDLOG_ERROR("Tween set failed: {}", e.what()); }
+                };
+            };
+
+            for (auto &kv : tracksTbl) {
+                sol::table desc = kv.second.as<sol::table>();
+                sol::object getObj = desc["get"];
+                sol::object setObj = desc["set"];
+                if (!getObj.is<sol::function>() || !setObj.is<sol::function>()) { SPDLOG_ERROR("tween(): each track needs get=function and set=function"); continue; }
+
+                float to = desc["to"].is<float>() ? desc["to"].get<float>() : (SPDLOG_ERROR("tween(): each track needs numeric 'to'"), 0.f);
+                float start = desc["from"].is<float>() ? desc["from"].get<float>() : wrapGetter(getObj.as<sol::function>())();
+
+                Track tr;
+                tr.set   = wrapSetter(setObj.as<sol::function>());
+                tr.start = start;
+                tr.delta = to - start;
+                tracks.push_back(std::move(tr));
+            }
+
+            if (tracks.empty()) {
+                if (maybeAfter && (*maybeAfter).valid()) { sol::protected_function pf(clone_to_main(*maybeAfter)); auto r = pf(); (void)r; }
+                return;
+            }
+
+            auto ease = (maybeMethod && (*maybeMethod).valid()) ? wrap_ff(clone_to_main(*maybeMethod))
+                                                                : [](float t){ return t; };
+
+            auto compositeSetter = [tracks = std::move(tracks)](float p) mutable {
+                for (auto &tr : tracks) tr.set(tr.start + tr.delta * p);
+            };
+
+            auto afterWrapper = (maybeAfter && (*maybeAfter).valid()) ? wrap_noarg_callback(clone_to_main(*maybeAfter)) : [](){};
+
+            timer::TimerSystem::timer_tween(
+                duration,
+                [](){ return 0.f; },
+                compositeSetter,
+                1.f,
+                /*tag*/   maybeTag.value_or(""),
+                /*group*/ maybeGroup.value_or(""),
+                ease, afterWrapper
+            );
+        };
+
+        // 3) table fields: tween(duration, targetTable, sourceTable, [method], [after], [tag], [group])
+        auto tween_fields =
+        [clone_to_main](std::variant<float,std::pair<float,float>> duration,
+                        sol::table target,
+                        sol::table source,
+                        sol::optional<sol::function> maybeMethod,
+                        sol::optional<sol::function> maybeAfter,
+                        sol::optional<std::string> maybeTag,
+                        sol::optional<std::string> maybeGroup)
+        {
+            struct Track { std::string key; double start; double delta; };
+            std::vector<Track> tracks;
+            tracks.reserve(source.size());
+
+            for (auto &kv : source) {
+                std::string key = kv.first.as<std::string>();
+                double goal = kv.second.as<double>();
+                sol::object cur = target.raw_get<sol::object>(key);
+                if (!cur.is<double>()) { SPDLOG_ERROR("tween(): target.%s is not a number", key.c_str()); continue; }
+                double start = cur.as<double>();
+                tracks.push_back(Track{key, start, goal - start});
+            }
+
+            if (tracks.empty()) {
+                if (maybeAfter && (*maybeAfter).valid()) { sol::protected_function pf(clone_to_main(*maybeAfter)); auto r = pf(); (void)r; }
+                return;
+            }
+
+            auto ease = (maybeMethod && (*maybeMethod).valid()) ? wrap_ff(clone_to_main(*maybeMethod))
+                                                                : [](float t){ return t; };
+
+            sol::reference target_ref = target; // pin table
+            auto setter = [target_ref, tracks = std::move(tracks)](float p) {
+                sol::table tgt = target_ref;
+                for (auto& tr : tracks) tgt[tr.key] = tr.start + tr.delta * p;
+            };
+
+            auto afterWrapper = (maybeAfter && (*maybeAfter).valid()) ? wrap_noarg_callback(clone_to_main(*maybeAfter)) : [](){};
+
+            timer::TimerSystem::timer_tween(
+                duration,
+                [](){ return 0.0f; },
+                setter,
+                1.0f,
+                /*tag*/   maybeTag.value_or(""),
+                /*group*/ maybeGroup.value_or(""),
+                ease, afterWrapper
+            );
+        };
+
+        // Register all 3 as ONE function:
+        t.set_function("tween", sol::overload(tween_scalar, tween_tracks, tween_fields));   
         
 
         rec.record_free_function({"timer"}, {
@@ -579,6 +925,35 @@ wrap_timer_action(sol::function action) {
             "---@param group? string # Optional group to assign this timer to.\n"
             "---@return integer # timerHandle",
             "Creates a timer that interpolates a value towards a target over a duration.",
+            true, false
+        });
+        
+        // Overload 1: table fields -> target[sourceKeys] tweened in one timer
+        rec.record_free_function({"timer"}, {
+            "tween",
+            "---@param duration number|{number, number} # Seconds or {min,max} range (randomized at start).\n"
+            "---@param target table # Table/object whose numeric fields will be tweened.\n"
+            "---@param source table<string, number> # Map of field -> target value (e.g., { sx=0, sy=0 }).\n"
+            "---@param method? fun(t:number):number # Easing function; default is linear (t).\n"
+            "---@param after? fun() # Called once when all fields reach targets.\n"
+            "---@param tag? string # Cancels existing tweens with the same tag.\n"
+            "---@param group? string # Optional group bucket for management.\n"
+            "---@return integer # timerHandle",
+            "Tween multiple numeric fields on a Lua table with a single timer (progress 0→1). Captures start values at creation; one tag/after for the whole batch. Default easing: linear.",
+            true, false
+        });
+        
+        // Overload 2: tracks -> array of getter/setter descriptors, all driven by one timer
+        rec.record_free_function({"timer"}, {
+            "tween",
+            "---@param duration number|{number, number} # Seconds or {min,max} range (randomized at start).\n"
+            "---@param tracks { {get:fun():number, set:fun(value:number), to:number, from?:number}[] }|table # Array-like table of descriptors.\n"
+            "---@param method? fun(t:number):number # Easing function; default is linear (t).\n"
+            "---@param after? fun() # Called once when all tracks reach targets.\n"
+            "---@param tag? string # Cancels existing tweens with the same tag.\n"
+            "---@param group? string # Optional group bucket for management.\n"
+            "---@return integer # timerHandle",
+            "Tween multiple engine-backed values (get/set pairs) with a single timer. Each track defines get(), set(v), to, and optional from. Captures starts at creation; one tag/after for the whole batch. Default easing: linear.",
             true, false
         });
         

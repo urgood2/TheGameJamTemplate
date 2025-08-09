@@ -2991,11 +2991,12 @@ UITypeEnum = {
     ROOT = 1,  -- The root of a UI tree.
     VERTICAL_CONTAINER = 2,  -- Arranges children vertically.
     HORIZONTAL_CONTAINER = 3,  -- Arranges children horizontally.
-    SLIDER_UI = 4,  -- A slider control.
-    INPUT_TEXT = 5,  -- A text input field.
-    RECT_SHAPE = 6,  -- A simple rectangular shape.
-    TEXT = 7,  -- A text label.
-    OBJECT = 8  -- A UI element that displays a game object.
+    SCROLL_PANE = 4,  -- A scrollable panel for content.
+    SLIDER_UI = 5,  -- A slider UI element.
+    INPUT_TEXT = 6,  -- A text input UI element.
+    RECT_SHAPE = 7,  -- A rectangular shape UI element.
+    TEXT = 8,  -- A simple text UI element.
+    OBJECT = 9  -- A game object UI element.
 }
 
 

@@ -10,6 +10,7 @@
 #include "components/graphics.hpp"
 #include "inventory_ui.hpp"
 #include "core/globals.hpp"
+#include "systems/ui/ui_data.hpp"
 namespace std {
 template<>
 struct hash<ui::UIElementTemplateNode> {
@@ -78,6 +79,7 @@ namespace ui
             //     SPDLOG_DEBUG("Debugging UI element with entity ID 840");
             // }
             
+            //FIXME: bug with lua where it doesn't set the type properly?
             if (magic_enum::enum_name<UITypeEnum>(def.type) == "") {
                 SPDLOG_ERROR("UITypeEnum is not set for entity {}, parent {}, type {}", static_cast<int>(entity), static_cast<int>(parent), magic_enum::enum_name<UITypeEnum>(def.type));
                 throw std::runtime_error("UITypeEnum is not set for entity " + std::to_string(static_cast<int>(entity)) + ", parent " + std::to_string(static_cast<int>(parent)) + ", value is: " + std::to_string((int)def.type));
@@ -187,7 +189,7 @@ namespace ui
             }
 
             // Push children in reverse order so the first child is processed first
-            if (def.type == UITypeEnum::VERTICAL_CONTAINER || def.type == UITypeEnum::HORIZONTAL_CONTAINER || def.type == UITypeEnum::ROOT)
+            if (def.type == UITypeEnum::VERTICAL_CONTAINER || def.type == UITypeEnum::HORIZONTAL_CONTAINER || def.type == UITypeEnum::ROOT || def.type == UITypeEnum::SCROLL_PANE)
             {
                 // SPDLOG_DEBUG("Processing children for container entity {} (type: {})", static_cast<int>(entity), magic_enum::enum_name<UITypeEnum>(def.type));
                 for (int i = static_cast<int>(def.children.size()) - 1; i >= 0; --i)
@@ -635,7 +637,7 @@ namespace ui
                         auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (childDimensions.y / 2);
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
                     }
-                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
+                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
                     {
                         // self's padded context area / 2 - (sum of all child heights + (child count - 1) * padding) / 2
                         // -> y starting location
@@ -657,7 +659,7 @@ namespace ui
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
                         runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
-                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
+                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
                     {
                         auto xLoc = selfContentOffset.x + (selfContentDimensions.x / 2) - (childDimensions.x / 2);
                         // childRole.offset->x = xLoc;
@@ -676,7 +678,7 @@ namespace ui
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
                         runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
-                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
+                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
                     {
                         auto xLoc = selfContentOffset.x + selfContentDimensions.x - childDimensions.x;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
@@ -691,7 +693,7 @@ namespace ui
                         auto yLoc = selfContentOffset.y + selfContentDimensions.y - childDimensions.y;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
                     }
-                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
+                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
                     {
                         // self's padded context offset + self's padded content height - child's height
                         // -> y starting location
@@ -889,7 +891,7 @@ namespace ui
                 continue;
             }
 
-            // 2. containers - vertical, horizontal, root
+            // 2. containers - vertical, horizontal, root, scroll pane
             auto dimensions = TreeCalcSubContainer(registry, entity, parentUINodeRect, forceRecalculateLayout, scale, calcCurrentNodeTransform, contentSizes);
             // SPDLOG_DEBUG("Calculated content size for container {}: ({}, {})", static_cast<int>(entity), dimensions.x, dimensions.y);
             contentSizes[entity] = dimensions;
@@ -1141,7 +1143,7 @@ namespace ui
     auto isVertContainer(entt::registry &registry, entt::entity uiElement) -> bool
     {
         auto &uiConfig = registry.get<UIConfig>(uiElement);
-        return uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT;
+        return uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE;
     }
 
     auto box::placeUIElementsRecursively(entt::registry &registry, entt::entity uiElement, ui::LocalTransform &runningTransform, ui::UITypeEnum parentType, entt::entity parent) -> void
@@ -1296,6 +1298,10 @@ namespace ui
         float accumulated_w = 0.f, accumulated_h = 0.f;
         float padding = uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
         float factor = scale.value_or(1.0f);
+        
+        if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
+            registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
+        }
 
         SubCalculateContainerSize(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
 
@@ -1357,6 +1363,8 @@ namespace ui
             calcCurrentNodeTransform.w = selfUIConfig.minWidth.value_or(0.0f);
             calcCurrentNodeTransform.h = selfUIConfig.minHeight.value_or(0.0f);
         }
+        
+        
 
         // _ct is offset by padding and reset to (0,0) size. (child transform will be passed to children)
         // calcChildTransform.x = calcCurrentNodeTransform.x + padding;
@@ -1388,7 +1396,7 @@ namespace ui
 
             // self can be horizontal or vertical.
 
-            if (childUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || childUIConfig.uiType == UITypeEnum::ROOT || childUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
+            if (childUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || childUIConfig.uiType == UITypeEnum::ROOT || childUIConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER || childUIConfig.uiType == UITypeEnum::SCROLL_PANE)
             {
                 hasAtLeastOneContainerChild = true;
             }
@@ -1411,7 +1419,7 @@ namespace ui
                 // }
 
             } // increment by width fo each colum item.
-            else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || selfUIConfig.uiType == UITypeEnum::ROOT)
+            else if (selfUIConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || selfUIConfig.uiType == UITypeEnum::ROOT || selfUIConfig.uiType == UITypeEnum::SCROLL_PANE)
             {
                 // calcChildTransform.h = std::max(calcChildTransform.h, child_h + padding);
                 calcChildTransform.h += child_h + padding;

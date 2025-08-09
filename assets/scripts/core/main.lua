@@ -186,7 +186,7 @@ function initMainMenu()
     --TODO:
         
     local startMenuRoot = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.ROOT)
+    :addType(UITypeEnum.SCROLL_PANE)
     :addConfig(
         UIConfigBuilder.create()
             :addColor(util.getColor("mauve_shadow"))

@@ -27,6 +27,7 @@ namespace ui {
                 {"ROOT",                 UITypeEnum::ROOT},
                 {"VERTICAL_CONTAINER",   UITypeEnum::VERTICAL_CONTAINER},
                 {"HORIZONTAL_CONTAINER", UITypeEnum::HORIZONTAL_CONTAINER},
+                {"SCROLL_PANE",          UITypeEnum::SCROLL_PANE},
                 {"SLIDER_UI",            UITypeEnum::SLIDER_UI},
                 {"INPUT_TEXT",           UITypeEnum::INPUT_TEXT},
                 {"RECT_SHAPE",           UITypeEnum::RECT_SHAPE},
@@ -40,12 +41,12 @@ namespace ui {
         rec.record_property("UITypeEnum", {"ROOT", "1", "The root of a UI tree."});
         rec.record_property("UITypeEnum", {"VERTICAL_CONTAINER", "2", "Arranges children vertically."});
         rec.record_property("UITypeEnum", {"HORIZONTAL_CONTAINER", "3", "Arranges children horizontally."});
-        rec.record_property("UITypeEnum", {"SLIDER_UI", "4", "A slider control."});
-        rec.record_property("UITypeEnum", {"INPUT_TEXT", "5", "A text input field."});
-        rec.record_property("UITypeEnum", {"RECT_SHAPE", "6", "A simple rectangular shape."});
-        rec.record_property("UITypeEnum", {"TEXT", "7", "A text label."});
-        rec.record_property("UITypeEnum", {"OBJECT", "8", "A UI element that displays a game object."});
-
+        rec.record_property("UITypeEnum", {"SCROLL_PANE", "4", "A scrollable panel for content."});
+        rec.record_property("UITypeEnum", {"SLIDER_UI", "5", "A slider UI element."});
+        rec.record_property("UITypeEnum", {"INPUT_TEXT", "6", "A text input UI element."});
+        rec.record_property("UITypeEnum", {"RECT_SHAPE", "7", "A rectangular shape UI element."});
+        rec.record_property("UITypeEnum", {"TEXT", "8", "A simple text UI element."});
+        rec.record_property("UITypeEnum", {"OBJECT", "9", "A game object UI element."});
         // 3) UIElementComponent
         lua.new_usertype<UIElementComponent>("UIElementComponent",
             sol::constructors<>(),

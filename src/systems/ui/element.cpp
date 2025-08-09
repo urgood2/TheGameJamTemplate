@@ -283,6 +283,7 @@ namespace ui
             case UITypeEnum::RECT_SHAPE:
             case UITypeEnum::VERTICAL_CONTAINER:
             case UITypeEnum::HORIZONTAL_CONTAINER:
+            case UITypeEnum::SCROLL_PANE:
             {
                 uiConfig->color = BLANK;
                 break;
@@ -304,6 +305,7 @@ namespace ui
             case UITypeEnum::OBJECT:
             case UITypeEnum::RECT_SHAPE:
             case UITypeEnum::VERTICAL_CONTAINER:
+            case UITypeEnum::SCROLL_PANE:
             case UITypeEnum::HORIZONTAL_CONTAINER:
                 uiConfig->outlineColor = globals::uiOutlineLight;
                 break;
@@ -1470,7 +1472,7 @@ namespace ui
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
-        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT)
+        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE)
         {
             // ZoneScopedN("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
@@ -1937,7 +1939,7 @@ namespace ui
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         }
-        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT)
+        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE)
         {
             // ZoneScopedN("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values

@@ -76,6 +76,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- [ ] mash in raylib text input box with the text input box in the ui system somehow.
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
 
 - [ ] changing color of a hit circle using chaining:
@@ -86,24 +87,6 @@ function HitCircle:change_color(delay_multiplier, target_color)
                function() self.color = target_color end)
   return self
 end
-```
-- [ ] tweening timer function is much simpler here and can handle multiple variables at the same time. HOw to do this in my impl?
-```lua
--- Tweens the target's values specified by the source table for delay seconds using the given tweening method.
--- All tween methods can be found in the math/math file.
--- If after is passed in then it is called after the duration ends.
--- If tag is passed in then any other trigger actions with the same tag are automatically cancelled.
--- trigger:tween(0.2, self, {sx = 0, sy = 0}, math.linear) -> tweens this object's scale variables to 0 linearly over 0.2 seconds
--- trigger:tween(0.2, self, {sx = 0, sy = 0}, math.linear, function() self.dead = true end) -> tweens this object's scale variables to 0 linearly over 0.2 seconds and then kills it
-function Trigger:tween(delay, target, source, method, after, tag)
-  local method = method or math.linear
-  local after = after or function() end
-  local tag = tag or random:uid()
-  local initial_values = {}
-  for k, _ in pairs(source) do initial_values[k] = target[k] end
-  self.triggers[tag] = {type = "tween", timer = 0, unresolved_delay = delay, delay = self:resolve_delay(delay), target = target, initial_values = initial_values, source = source, method = method, after = after}
-end
-
 ```
 - [ ] smooth particle movement:
 ```lua

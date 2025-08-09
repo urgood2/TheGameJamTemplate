@@ -32,13 +32,14 @@ namespace ui
         ROOT = 1,   // container, base ui element which serves as head of hierarchy.
         VERTICAL_CONTAINER = 2, // container, a columnar ui element
         HORIZONTAL_CONTAINER = 3,    // container, a row ui element
+        SCROLL_PANE = 4, // container, a scrollable panel ui element
 
         // ui elements.
-        SLIDER_UI = 4, // element, a slider bar ui element
-        INPUT_TEXT = 5, // element, a text input ui element
-        RECT_SHAPE = 6,   // element, box shape
-        TEXT = 7,  // element, Simple text (not dynamic or animated)
-        OBJECT = 8 // element, game object (like animated text, sprite, etc.)
+        SLIDER_UI = 5, // element, a slider bar ui element
+        INPUT_TEXT = 6, // element, a text input ui element
+        RECT_SHAPE = 7,   // element, box shape
+        TEXT = 8,  // element, Simple text (not dynamic or animated)
+        OBJECT = 9 // element, game object (like animated text, sprite, etc.)
     };
 
     /**
@@ -50,6 +51,12 @@ namespace ui
         entt::entity uiBox = entt::null;                     // The UIBox this element belongs to
         std::unordered_map<std::string, std::string> config; // Configuration properties specific to this element
     };
+    
+    struct UIScrollComponent {
+        float   offset    = 0;       // current scroll in px
+        float   maxOffset = 0;       // contentSize − viewportSize
+    };
+
 
     /**
      * For ui elements which allow tet input.

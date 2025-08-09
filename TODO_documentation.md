@@ -1,5 +1,7 @@
 # Documentation
-
+- [ ] document using shaders with ui elements (just use pipeline comp)
+- [ ] document exposeGlobalsToLua with lua doc bindings
+- [ ] prob add docs for entity_gamestate_management
 - [ ] using layer.DrawCommandSpace with queuecommand methods.
 - [ ] document use script component's script table (self) to make blackboard accessing easier and more sustainable performance wise
 ```lua

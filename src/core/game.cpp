@@ -1251,6 +1251,288 @@ auto DrawDashedCircle(const Vector2 &center,
     drawSweep(2 * PI - phaseAng, 2 * (2 * PI) - phaseAng);
 }
 
+// -- new shape calls
+inline float rad2deg(float r) { return r * 180.0f / PI; }
+
+// Pick a reasonable default tessellation for arcs/rings based on radius.
+// Raylib wants an explicit segment count for DrawRing/DrawCircleSector.
+inline int autoSegments(float radius) {
+    // ~ 1 segment per 6 px of circumference, clamped.
+    int seg = std::max(12, (int)std::round((2.0f * PI * radius) / 6.0f));
+    return std::min(seg, 256);
+}
+
+// Convenience: default color when user doesn't supply one (mirrors LÖVE "state")
+// We just pick WHITE; Raylib doesn't track a global draw color.
+inline Color defaultColor() { return WHITE; }
+
+// -----------------------------------------------------------------------------
+// Arc types (LÖVE has "pie", "open", "closed")
+// -----------------------------------------------------------------------------
+enum class ArcType { Pie, Open, Closed };
+
+inline ArcType ArcTypeFromString(const char* s) {
+    if (!s) return ArcType::Open;
+    if (std::strcmp(s, "pie") == 0)    return ArcType::Pie;
+    if (std::strcmp(s, "closed") == 0) return ArcType::Closed;
+    // LÖVE also uses "open"
+    return ArcType::Open;
+}
+
+// -----------------------------------------------------------------------------
+// Rectangle centered at (x,y). Optional rounded corners.
+// rx, ry are pixel radii in LÖVE; Raylib only supports a single roundness.
+// We map to roundness = min(rx,ry)/min(w,h). Different rx/ry are approximated.
+// -----------------------------------------------------------------------------
+inline void rectangle(float x, float y, float w, float h,
+                      std::optional<float> rx = {},
+                      std::optional<float> ry = {},
+                      std::optional<Color> color = {},
+                      std::optional<float> lineWidth = {}) {
+    Rectangle rec{ x - w*0.5f, y - h*0.5f, w, h };
+
+    const bool doStroke = lineWidth.has_value();
+    const bool doFill   = color.has_value() && !doStroke;
+    Color C = color.value_or(defaultColor());
+
+    if (rx.has_value() || ry.has_value()) {
+        // Raylib uses [0..1] roundness proportion of min(width,height).
+        float px = rx.value_or(0.0f);
+        float py = ry.value_or(px);
+        float pxMin = std::max(0.0f, std::min(px, py));
+        float roundness = (std::min(w, h) <= 0) ? 0.0f : std::clamp(pxMin / std::min(w, h), 0.0f, 1.0f);
+        int segments = 12 + (int)std::round(8.0f * roundness);
+
+        if (doStroke) {
+            DrawRectangleRoundedLinesEx(rec, roundness, segments, std::max(1.0f, lineWidth.value()), C);
+        } else {
+            DrawRectangleRounded(rec, roundness, segments, C);
+        }
+        return;
+    }
+
+    if (doStroke) {
+        DrawRectangleLinesEx(rec, std::max(1.0f, lineWidth.value()), C);
+    } else if (doFill) {
+        DrawRectangleRec(rec, C);
+    } else {
+        DrawRectangleLines((int)rec.x, (int)rec.y, (int)rec.width, (int)rec.height, C);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Isosceles triangle pointing right (angle 0), centered at (x,y), size w (height across) and h (length).
+// -----------------------------------------------------------------------------
+inline void triangle(float x, float y, float w, float h,
+                     std::optional<Color> color = {},
+                     std::optional<float> lineWidth = {}) {
+    Vector2 p1{ x + h*0.5f, y };
+    Vector2 p2{ x - h*0.5f, y - w*0.5f };
+    Vector2 p3{ x - h*0.5f, y + w*0.5f };
+
+    Color C = color.value_or(defaultColor());
+    if (lineWidth.has_value()) {
+        float t = std::max(1.0f, lineWidth.value());
+        DrawLineEx(p1, p2, t, C);
+        DrawLineEx(p2, p3, t, C);
+        DrawLineEx(p3, p1, t, C);
+    } else if (color.has_value()) {
+        DrawTriangle(p1, p2, p3, C);
+    } else {
+        DrawTriangleLines(p1, p2, p3, C);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Equilateral triangle of width w, centered at (x,y), pointing right.
+// -----------------------------------------------------------------------------
+inline void triangle_equilateral(float x, float y, float w,
+                                 std::optional<Color> color = {},
+                                 std::optional<float> lineWidth = {}) {
+    float h = std::sqrt(w*w - (w*0.5f)*(w*0.5f)); // = w*sqrt(3)/2
+    triangle(x, y, w, h, color, lineWidth);
+}
+
+// -----------------------------------------------------------------------------
+// Circle at (x,y) radius r
+// - fill: DrawCircleV
+// - 1px:  DrawCircleLines
+// - thick stroke: DrawRing with inner/outer radii
+// -----------------------------------------------------------------------------
+inline void circle(float x, float y, float r,
+                   std::optional<Color> color = {},
+                   std::optional<float> lineWidth = {}) {
+    Color C = color.value_or(defaultColor());
+    Vector2 c{ x, y };
+
+    if (lineWidth.has_value()) {
+        float t = std::max(1.0f, lineWidth.value());
+        float inner = std::max(0.0f, r - t*0.5f);
+        float outer = r + t*0.5f;
+        DrawRing(c, inner, outer, 0.0f, 360.0f, autoSegments(r), C);
+    } else if (color.has_value()) {
+        DrawCircleV(c, r, C);
+    } else {
+        DrawCircleLines((int)x, (int)y, r, C);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Arc: angles r1..r2 in RADIANS.
+//  - Pie (filled wedge): DrawCircleSector
+//  - Open (stroked arc only): DrawRing with small thickness or provided lineWidth
+//  - Closed (stroked arc + chord): emulate with lines on ends + arc ring
+// -----------------------------------------------------------------------------
+inline void arc(ArcType type, float x, float y, float r, float r1, float r2,
+                std::optional<Color> color = {},
+                std::optional<float> lineWidth = {},
+                int segments = 0) {
+    Color C = color.value_or(defaultColor());
+    Vector2 c{ x, y };
+    float a1 = rad2deg(r1);
+    float a2 = rad2deg(r2);
+    if (a2 < a1) std::swap(a1, a2);
+
+    int seg = (segments > 0) ? segments : autoSegments(r);
+
+    if (!lineWidth.has_value() && color.has_value() && type == ArcType::Pie) {
+        DrawCircleSector(c, r, a1, a2, seg, C);
+        return;
+    }
+
+    // Stroke / open arc is best with a ring band
+    float t = std::max(1.0f, lineWidth.value_or(1.0f));
+    float inner = std::max(0.0f, r - t*0.5f);
+    float outer = r + t*0.5f;
+    DrawRing(c, inner, outer, a1, a2, seg, C);
+
+    if (type == ArcType::Closed && !lineWidth.has_value()) {
+        // If someone asked for "fill+closed" (rare in LÖVE), emulate a chord fill:
+        // simple approach: draw two skinny triangles to the center; keep it simple.
+        // (Keeping this minimal per your "use built-ins" request.)
+        DrawLineEx(c, Vector2{ x + r*std::cos(r1), y + r*std::sin(r1) }, 1.0f, C);
+        DrawLineEx(c, Vector2{ x + r*std::cos(r2), y + r*std::sin(r2) }, 1.0f, C);
+    }
+}
+
+// Convenience overload matching your LÖVE signature where arctype is a string.
+inline void arc(const char* arctype, float x, float y, float r, float r1, float r2,
+                std::optional<Color> color = {},
+                std::optional<float> lineWidth = {},
+                int segments = 0) {
+    arc(ArcTypeFromString(arctype), x, y, r, r1, r2, color, lineWidth, segments);
+}
+
+// -----------------------------------------------------------------------------
+// Polygon: vertices in order. For fill, assumes convex (or star-shaped) for DrawTriangleFan.
+// Stroke uses DrawLineEx per edge; closed polygon.
+// -----------------------------------------------------------------------------
+inline void polygon(const std::vector<Vector2>& vertices,
+                    std::optional<Color> color = {},
+                    std::optional<float> lineWidth = {}) {
+    if (vertices.size() < 2) return;
+    Color C = color.value_or(defaultColor());
+
+    if (lineWidth.has_value()) {
+        float t = std::max(1.0f, lineWidth.value());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const Vector2& a = vertices[i];
+            const Vector2& b = vertices[(i + 1) % vertices.size()];
+            DrawLineEx(a, b, t, C);
+        }
+    } else if (color.has_value()) {
+        // Simple convex fill path: triangle fan from v0
+        rlBegin(RL_TRIANGLES);
+        rlColor4ub(C.r, C.g, C.b, C.a);
+        const Vector2& v0 = vertices[0];
+        for (size_t i = 1; i + 1 < vertices.size(); ++i) {
+            const Vector2& v1 = vertices[i];
+            const Vector2& v2 = vertices[i + 1];
+            rlVertex2f(v0.x, v0.y);
+            rlVertex2f(v1.x, v1.y);
+            rlVertex2f(v2.x, v2.y);
+        }
+        rlEnd();
+    } else {
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const Vector2& a = vertices[i];
+            const Vector2& b = vertices[(i + 1) % vertices.size()];
+            DrawLineV(a, b, C);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Line: (x1,y1)-(x2,y2)
+// -----------------------------------------------------------------------------
+inline void line(float x1, float y1, float x2, float y2,
+                 std::optional<Color> color = {},
+                 std::optional<float> lineWidth = {}) {
+    Color C = color.value_or(defaultColor());
+    if (lineWidth.has_value()) {
+        DrawLineEx(Vector2{ x1,y1 }, Vector2{ x2,y2 }, std::max(1.0f, lineWidth.value()), C);
+    } else {
+        DrawLine((int)x1, (int)y1, (int)x2, (int)y2, C);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Polyline: draw connected segments (open path).
+// -----------------------------------------------------------------------------
+inline void polyline(const std::vector<Vector2>& points,
+                     std::optional<Color> color = {},
+                     std::optional<float> lineWidth = {}) {
+    if (points.size() < 2) return;
+    Color C = color.value_or(defaultColor());
+    float t = std::max(1.0f, lineWidth.value_or(1.0f));
+    for (size_t i = 0; i + 1 < points.size(); ++i) {
+        DrawLineEx(points[i], points[i + 1], t, C);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Rounded line caps: DrawLineEx + two endpoint circles for perfect round caps.
+// -----------------------------------------------------------------------------
+inline void rounded_line(float x1, float y1, float x2, float y2,
+                         std::optional<Color> color = {},
+                         std::optional<float> lineWidth = {}) {
+    Color C = color.value_or(defaultColor());
+    float t = std::max(1.0f, lineWidth.value_or(1.0f));
+    Vector2 a{ x1,y1 }, b{ x2,y2 };
+    DrawLineEx(a, b, t, C);
+    DrawCircleV(a, t*0.5f, C);
+    DrawCircleV(b, t*0.5f, C);
+}
+
+// -----------------------------------------------------------------------------
+// Ellipse centered at (x,y) with radii rx, ry.
+// - fill: DrawEllipse
+// - 1px stroke: DrawEllipseLines
+// - thick stroke: emulate with scaled ring (rlScale), keeping it simple.
+// -----------------------------------------------------------------------------
+inline void ellipse(float x, float y, float rx, float ry,
+                    std::optional<Color> color = {},
+                    std::optional<float> lineWidth = {}) {
+    Color C = color.value_or(defaultColor());
+    if (lineWidth.has_value()) {
+        float t = std::max(1.0f, lineWidth.value());
+        // Draw a unit circle ring at origin, scale to rx/ry, then translate.
+        // This keeps to built-ins (DrawRing) and avoids manual tessellation.
+        rlPushMatrix();
+        rlTranslatef(x, y, 0.0f);
+        rlScalef(1.0f, ry / rx, 1.0f); // scale Y so a circle of radius rx becomes ellipse rx,ry
+        float inner = std::max(0.0f, rx - t*0.5f);
+        float outer = rx + t*0.5f;
+        DrawRing(Vector2{0,0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
+        rlPopMatrix();
+    } else if (color.has_value()) {
+        DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
+    } else {
+        DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
+    }
+}
+
+
 #include "rlgl.h"
 #include "external/glad.h"
 
@@ -1697,18 +1979,59 @@ void endStencil()
             static float phase = 0;
             phase += dt * 10.0f; // advance phase for dashes
             // -- testing --
-            DrawDashedCircle({ 100, 100 }, 50, 10, 5, phase, 32, 2, GREEN);
-            DrawDashedLine({ 200, 200 }, { 300, 300 }, 10, 5, phase, 2, GREEN);
-            DrawDashedRoundedRect(
-                { 400, 400, 200, 100 }, // rectangle
-                10,                   // dash length
-                5,                    // gap length
-                phase,                // phase
-                20,                   // radius
-                16,                   // arc steps
-                2,                    // thickness
-                BLUE                 // color
+            // DrawDashedCircle({ 100, 100 }, 50, 10, 5, phase, 32, 2, GREEN);
+            // DrawDashedLine({ 200, 200 }, { 300, 300 }, 10, 5, phase, 2, GREEN);
+            // DrawDashedRoundedRect(
+            //     { 400, 400, 200, 100 }, // rectangle
+            //     10,                   // dash length
+            //     5,                    // gap length
+            //     phase,                // phase
+            //     20,                   // radius
+            //     16,                   // arc steps
+            //     2,                    // thickness
+            //     BLUE                 // color
+            // );
+            ellipse(
+                600, 600, 100, 50, // center x, y, radius x, radius y
+                std::nullopt,      // no color (default to WHITE)
+                std::nullopt       // no line width (default to 1px)
             );
+            rounded_line(
+                700, 700, 800, 800, // start x, y, end x, y
+                std::nullopt,       // no color (default to WHITE)
+                30        // no line width (default to 1px)
+            );
+            polyline(
+                { { 900, 900 }, { 950, 850 }, { 1000, 700 }, { 950, 300 } }, // points
+                YELLOW, // no color (default to WHITE)
+                20  // no line width (default to 1px)
+            );
+            polygon(
+                { { 1100, 850 }, { 1150, 400 }, { 1200, 500 }, { 1150, 800 } }, // vertices
+                GREEN, // no color (default to WHITE)
+                5  // no line width (default to 1px)
+            );
+            arc(
+                ArcType::Pie, // type
+                600, 200, 100, // center x, y, radius
+                0, PI / 2, // start angle, end angle
+                std::nullopt, // no color (default to WHITE)
+                std::nullopt, // no line width (default to 1px)
+                32 // segments
+            );
+            triangle_equilateral(
+                1400, 700, 100, // center x, y, width
+                std::nullopt, // no color (default to WHITE)
+                std::nullopt  // no line width (default to 1px)
+            );
+            rectangle(
+                1500, 300, 200, 100, // center x, y, width, height
+                10, 
+                10, 
+                std::nullopt, // no color (default to WHITE)
+                std::nullopt  // no line width (default to 1px)
+            );
+            
 
             {
                 // ZoneScopedN("EndDrawing call");

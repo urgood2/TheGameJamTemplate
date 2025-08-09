@@ -1,5 +1,10 @@
 # ✅ TODOs: Organized by Category
 
+## game design
+
+- [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula
+- [ ] add some kind of screen which shares the amount of points scored
+
 ## lua exposure & integration
 - [ ] expose current camera manager & camera custom class to lua
 
@@ -108,9 +113,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] understand & implement working copies of files in the todo_from_snkrx folder
 - [ ] copy SNKRX's dead-simple transition thing. Circle with text. 
 - [ ] do what SNKRX does and add a sort of dark overlay behind everything else when showing gui -> probably render a rect
-- [ ] add some kind of screen which shares the amount of points scored
 - [ ] add simple crash reporting to web builds 
-- [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula
 - [ ] How to mesh my transforms with chipmunk 2d to do lesast amount of work and be performant?
 - [ ] Gotta add scroll pane
 - scrool pane for ui: https://chatgpt.com/share/6881dd9f-27ac-800a-af9f-935b61355da7
@@ -121,34 +124,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 ## New features
 - fold stencil & dashed line and circle into the queue system
-- rectangle/arc/ellipses/polyline rendering from snkrx
-```lua
-
--- Draws an arc of radius r from angle r1 to angle r2 centered on x, y.
--- If color is passed in then the arc will be filled with that color (color is Color object)
--- If line_width is passed in then the arc will not be filled and will instead be drawn as a set of lines of the given width.
-function graphics.arc(arctype, x, y, r, r1, r2, color, line_width)
-  graphics.shape("arc", color, line_width, arctype, x, y, r, r1, r2)
-end
-
-function graphics.polyline(color, line_width, ...)
-  local r, g, b, a = love.graphics.getColor()
-  if color then love.graphics.setColor(color.r, color.g, color.b, color.a) end
-  if line_width then love.graphics.setLineWidth(line_width) end
-  love.graphics.line(...)
-  love.graphics.setColor(r, g, b, a)
-  love.graphics.setLineWidth(1)
-end
-
--- Draws an ellipse with radius rx, ry centered on x, y.
--- If color is passed in then the ellipse will be filled with that color (color is Color object)
--- If line_width is passed in then the ellipse will not be filled and will instead be drawn as a set of lines of the given width.
-function graphics.ellipse(x, y, rx, ry, color, line_width)
-  graphics.shape("ellipse", color, line_width, x, y, rx, ry)
-end
-
-
-```
+- fold all shape primitives in game.cpp into the queue system
 - color coding (in part of strings only) for dynamic text as well
 - maybe a text log of sorts, with scroll?
 - renew alignment needs to cache so it can be called every frame
@@ -158,12 +134,6 @@ end
 - make get/set blackboard methods return lua nil if invalid instead of throwing error
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
-- [ ] better lua friendly drawing api for queue command
-- [ ] scrolling panes in ui boxes?
-
-- [ ] prob add docs for entity_gamestate_management
-- [ ] document using shaders with ui elements (just use pipeline comp)
-- [ ] document exposeGlobalsToLua with lua doc bindings
 
 - [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 

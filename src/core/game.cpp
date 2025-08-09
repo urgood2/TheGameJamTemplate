@@ -879,25 +879,25 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         globals::g_springCache.clear();
         
         // tag all objects attached to UI so we don't have to check later
-        globals::registry.clear<ui::ObjectAttachedToUITag>();
-        globals::registry.view<TextSystem::Text>()
-            .each([](entt::entity e, TextSystem::Text &text) {
-                // attach tag
-                if (globals::registry.valid(e) == false) return; // skip invalid entities
-                globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
-            });
-        globals::registry.view<AnimationQueueComponent>()
-            .each([](entt::entity e, AnimationQueueComponent &anim) {
-                if (globals::registry.valid(e) == false) return; // skip invalid entities
-                // attach tag
-                globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
-            });
-        globals::registry.view<ui::InventoryGrid>()
-            .each([](entt::entity e, ui::InventoryGrid &inv) {
-                // attach tag
-                if (globals::registry.valid(e) == false) return; // skip invalid entities
-                globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
-            });
+        // globals::registry.clear<ui::ObjectAttachedToUITag>();
+        // globals::registry.view<TextSystem::Text>()
+        //     .each([](entt::entity e, TextSystem::Text &text) {
+        //         // attach tag
+        //         if (globals::registry.valid(e) == false) return; // skip invalid entities
+        //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+        //     });
+        // globals::registry.view<AnimationQueueComponent>()
+        //     .each([](entt::entity e, AnimationQueueComponent &anim) {
+        //         if (globals::registry.valid(e) == false) return; // skip invalid entities
+        //         // attach tag
+        //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+        //     });
+        // globals::registry.view<ui::InventoryGrid>()
+        //     .each([](entt::entity e, ui::InventoryGrid &inv) {
+        //         // attach tag
+        //         if (globals::registry.valid(e) == false) return; // skip invalid entities
+        //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
+        //     });
         
         // ZoneScopedN("game::update"); // custom label
         if (gameStarted == false)
@@ -1816,7 +1816,7 @@ void endStencil()
         // dynamic text
         {
             // ZoneScopedN("Dynamic Text Draw");
-            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
+            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : textView)
             {
                 // check if the entity is active
@@ -1841,7 +1841,7 @@ void endStencil()
 
         {
             // ZoneScopedN("AnimatedSprite Draw");
-            auto spriteView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>();
+            auto spriteView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : spriteView)
             {
                 // check if the entity is active

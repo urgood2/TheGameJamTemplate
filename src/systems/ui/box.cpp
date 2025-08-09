@@ -135,6 +135,9 @@ namespace ui
             {
                 registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(config->object.value());
                 
+                // make sure to mark the object as attached to UI, so it's not rendered doubly
+                registry.emplace_or_replace<ui::ObjectAttachedToUITag>(config->object.value());
+                
             }
 
             // If text, pre-calculate text bounds
@@ -2007,8 +2010,8 @@ namespace ui
                 // (if your Transform is center-based, convert to top-left)
                 float x = xf.getActualX(); // top-left x in screen coords
                 float y = xf.getActualY(); // top-left y in screen coords
-                float w = xf.getActualW() / 2;
-                float h = xf.getActualH() / 2;
+                float w = xf.getActualW() * 0.8;
+                float h = xf.getActualH() * 0.8;
                 Rectangle r{ x, y, w, h };
 
                 layer::QueueCommand<layer::CmdBeginScissorMode>(

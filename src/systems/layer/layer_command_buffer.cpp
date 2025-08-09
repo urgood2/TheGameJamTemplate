@@ -1,5 +1,6 @@
 #include "layer_command_buffer.hpp"
 #include "layer.hpp"
+#include "systems/camera/camera_manager.hpp"
 
 namespace layer
 {
@@ -79,5 +80,25 @@ namespace layer
             layer->commands.clear();
             layer->isSorted = true;
         }
+    }
+    
+    void ApplyCameraForSpace(Camera2D* camera,
+                                DrawCommandSpace space,
+                                bool& cameraActive)
+    {
+        const bool wantsCamera = (camera != nullptr);
+
+        if (wantsCamera && space == DrawCommandSpace::World && !cameraActive) {
+            camera_manager::Begin(*camera);
+            cameraActive = true;
+        } else if (space == DrawCommandSpace::Screen && cameraActive) {
+            camera_manager::End();
+            cameraActive = false;
+        }
+    }
+
+    // Optional helper to cleanly close at end-of-frame if still active.
+    void EnsureCameraClosed(bool& cameraActive) {
+        if (cameraActive) { camera_manager::End(); cameraActive = false; }
     }
 }

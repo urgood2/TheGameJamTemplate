@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "util/common_headers.hpp"
-#include "layer_optimized.hpp"
+// #include "layer_optimized.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
 #include "layer_dynamic_pool_wrapper.hpp"
 #include "layer.hpp"
@@ -31,6 +31,9 @@ namespace layer::layer_command_buffer {
 
 namespace layer
 {
+    
+    
+    
     namespace layer_command_buffer {
 
         extern void Clear(std::shared_ptr<Layer>& layer);
@@ -164,6 +167,63 @@ namespace layer
         init(cmd);
         return cmd;
     }
+    
+        // ===========================
+    // Immediate mode command execution
+    // ===========================
+    
+    extern void ApplyCameraForSpace(Camera2D* camera,
+                                DrawCommandSpace space,
+                                bool& cameraActive);
+
+    // Optional helper to cleanly close at end-of-frame if still active.
+    extern void EnsureCameraClosed(bool& cameraActive);
+    
+    /**
+     * @brief Executes a draw command immediately on the specified layer.
+     *
+     * This templated function constructs a temporary draw command of type T,
+     * initializes it using the provided initializer, and dispatches it using
+     * the registered command dispatcher. Optionally, it applies a camera
+     * transformation if a camera activity tracker is provided.
+     *
+     * @tparam T The type of the draw command to execute.
+     * @tparam Initializer A callable type used to initialize the draw command.
+     * @param layer The target layer on which to execute the command.
+     * @param init A callable that initializes the temporary draw command object.
+     * @param z (Optional) The Z-order for the command. Default is 0.
+     * @param space (Optional) The coordinate space for the command. Default is DrawCommandSpace::Screen.
+     * @param camera (Optional) Pointer to the camera to use for transformation. Default is nullptr.
+     * @param cameraActivePtr (Optional) Pointer to a boolean indicating if the camera should be applied. Default is nullptr.
+     *
+     * @note If the command type is not handled by the dispatcher, an error is logged.
+     */
+    template<typename T, typename Initializer>
+    inline void ImmediateCommand(std::shared_ptr<Layer> layer,
+                                Initializer&& init,
+                                int /*z*/ = 0,
+                                DrawCommandSpace space = DrawCommandSpace::Screen,
+                                Camera2D* camera = nullptr,
+                                bool* cameraActivePtr = nullptr)
+    {
+        // 1) Toggle camera exactly like your replay loop (if a tracker is provided)
+        if (cameraActivePtr) {
+            ApplyCameraForSpace(camera, space, *cameraActivePtr);
+        }
+
+        // 2) Build temp command and dispatch using your existing table
+        T tmp{};
+        init(&tmp);
+
+        auto type = layer::layer_command_buffer::GetDrawCommandType<T>();
+        auto it = dispatcher.find(type);
+        if (it != dispatcher.end()) {
+            it->second(layer, static_cast<void*>(&tmp));
+        } else {
+            SPDLOG_ERROR("Unhandled draw command type {}", magic_enum::enum_name(type));
+        }
+    }
+
     
     /// Logs the block count and current allocations for a given CmdType pool
     template<typename CmdType>

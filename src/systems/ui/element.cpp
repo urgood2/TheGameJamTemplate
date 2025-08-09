@@ -1,5 +1,8 @@
 #include "element.hpp"
 
+#include "components/graphics.hpp"
+#include "entt/entity/fwd.hpp"
+#include "snowhouse/fluent/fluent.h"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/reflection/reflection.hpp"
@@ -9,8 +12,10 @@
 #include "util/utilities.hpp"
 #include "inventory_ui.hpp"
 #include "systems/collision/broad_phase.hpp"
+#include "systems/shaders/shader_pipeline.hpp"
 
 #include "systems/layer/layer_command_buffer.hpp"
+#include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include <cstddef>
 
 namespace ui
@@ -1721,6 +1726,58 @@ namespace ui
             // }, zIndex);
             layer::Triangle(p1, p2, p3, RED);
         }
+        
+        if (config->uiType == UITypeEnum::OBJECT && config->object) {
+            // render the object itself from here.
+            //TODO: how to exclude the object from the other rendering?
+            
+            entt::entity e = config->object.value();
+            
+            // is it dynamic text?
+            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
+            auto animationView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>();
+            if (textView.contains(e))
+            {
+                // check if the entity is active
+                if (entity_gamestate_management::active_states_instance().is_active(globals::registry.get<entity_gamestate_management::StateTag>(e)))
+                {
+                    TextSystem::Functions::renderTextImmediate(e, layerPtr, true);
+                }
+                
+            } 
+            
+            // is it an animated sprite?
+            else if (animationView.contains(e))
+            {
+                 // check if the entity is active
+                if (entity_gamestate_management::active_states_instance().is_active(animationView.get<entity_gamestate_management::StateTag>(e))) {
+                    auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
+                    auto zIndex = layerOrder ? layerOrder->zIndex : 0;
+                    bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+                    
+                    if (!isScreenSpace)
+                    {
+                        // SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
+                    }
+                    
+                    if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
+                    {
+                        layer::ImmediateCommand<layer::CmdDrawTransformEntityAnimationPipeline>(layerPtr, [e](auto* cmd) {
+                            cmd->e = e;
+                            cmd->registry = &globals::registry;
+                        }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                    }
+                    else
+                    {
+                        layer::ImmediateCommand<layer::CmdDrawTransformEntityAnimation>(layerPtr, [e](auto* cmd) {
+                            cmd->e = e;
+                            cmd->registry = &globals::registry;
+                        }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                    }      
+                }
+            
+            } // end if animation object
+        }
 
         // call the object's own lambda draw function, if it has one
         if (node->drawFunction) {
@@ -2232,6 +2289,55 @@ namespace ui
                 cmd->p3 = p3;
                 cmd->color = RED;
             }, zIndex);
+        }
+        
+        if (config->uiType == UITypeEnum::OBJECT && config->object) {
+            // render the object itself from here.
+            //TODO: how to exclude the object from the other rendering?
+            
+            entt::entity e = config->object.value();
+            
+            // is it dynamic text?
+            auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
+            if (textView.contains(e))
+            {
+                // check if the entity is active
+                if (entity_gamestate_management::active_states_instance().is_active(globals::registry.get<entity_gamestate_management::StateTag>(e)))
+                {
+                    TextSystem::Functions::renderText(e, layerPtr, true);
+                }
+                
+            }
+            
+                
+                //  // check if the entity is active
+                // if (!entity_gamestate_management::active_states_instance().is_active(spriteView.get<entity_gamestate_management::StateTag>(e)))
+                //     continue; // skip inactive entities
+                // auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
+                // auto zIndex = layerOrder ? layerOrder->zIndex : 0;
+                // bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+                
+                // if (!isScreenSpace)
+                // {
+                //     // SPDLOG_DEBUG("Drawing animated sprite {} in world space at zIndex {}", (int)e, zIndex);
+                // }
+                
+                // if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
+                // {
+                //     layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
+                //         cmd->e = e;
+                //         cmd->registry = &globals::registry;
+                //     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                // }
+                // else
+                // {
+                //     layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(sprites, [e](auto* cmd) {
+                //         cmd->e = e;
+                //         cmd->registry = &globals::registry;
+                //     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                // }      
+            
+            
         }
 
         // call the object's own lambda draw function, if it has one

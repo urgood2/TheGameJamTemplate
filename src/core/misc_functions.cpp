@@ -69,10 +69,10 @@ namespace game
         });
 
         
-        globalShaderUniforms.set("pixelated_image", "texSize",
+        globalShaderUniforms.set("pixelate_image", "texSize",
             Vector2{ (float)globals::screenWidth, (float)globals::screenHeight });
-        globalShaderUniforms.set("pixelated_image", "pixelRatio",
-            0.5f);
+        globalShaderUniforms.set("pixelate_image", "pixelRatio",
+            0.25f);
 
 
         

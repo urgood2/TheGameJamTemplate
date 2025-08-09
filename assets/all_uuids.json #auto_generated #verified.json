@@ -17199,6 +17199,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external"
     ],
+    "external_statemachine": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/statemachine.lua"
+    ],
     "f10_keyboard": [
         "keyboard_f10.png"
     ],
@@ -19764,6 +19767,9 @@
     "squish_vertex_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\squish_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/squish_vertex.vs"
+    ],
+    "statemachine": [
+        "statemachine.lua"
     ],
     "suggestion_tileset_use": [
         "tileset use suggestions.md"

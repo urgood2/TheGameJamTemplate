@@ -2,7 +2,6 @@
 
 ## lua exposure & integration
 - [ ] expose current camera manager & camera custom class to lua
-- [ ] neat lua state machine code i will want to integrate for later use: https://github.com/kyleconroy/lua-state-machine
 
 ## physics
 - [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
@@ -75,8 +74,6 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] use posthog for analytics? learn how randy does it.
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
 
-- [ ] look throughl queue bindings and make generally easier to work with
-- [ ] add worldspace/screenspace specifier for draw queue commands in lua
 - [ ] changing color of a hit circle using chaining:
 ```lua
 function HitCircle:change_color(delay_multiplier, target_color)

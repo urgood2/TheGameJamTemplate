@@ -307,6 +307,9 @@ function startGameButtonCallback()
             
             add_fullscreen_shader("palette_quantize")
             
+            
+            add_fullscreen_shader("pixelate_image") -- Add the fade in shader
+            
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer
     )
@@ -465,6 +468,7 @@ function initMainGame()
     
     -- -- set game to paused
     togglePausedState(true) -- Set the game to paused state
+    
     
     -- -- now we will show a series of tutorials
     

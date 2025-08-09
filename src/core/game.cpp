@@ -1416,19 +1416,19 @@ void endStencil()
         );
         
         // draw density texture
-        layer::QueueCommand<layer::CmdDrawImage>(
-            sprites, [](auto* cmd) {
-                // cmd->image = blockSamplerTexture;
-                cmd->image = pointCloudSamplerTexture;
-                cmd->x = 0;
-                cmd->y = 0;
-                cmd->scaleX = 1.0f;
-                cmd->scaleY = 1.0f;
-                cmd->color = WHITE;
-            },
-            1000, // zIndex for debug drawing
-            layer::DrawCommandSpace::World // draw in world space
-        );
+        // layer::QueueCommand<layer::CmdDrawImage>(
+        //     sprites, [](auto* cmd) {
+        //         // cmd->image = blockSamplerTexture;
+        //         cmd->image = pointCloudSamplerTexture;
+        //         cmd->x = 0;
+        //         cmd->y = 0;
+        //         cmd->scaleX = 1.0f;
+        //         cmd->scaleY = 1.0f;
+        //         cmd->color = WHITE;
+        //     },
+        //     1000, // zIndex for debug drawing
+        //     layer::DrawCommandSpace::World // draw in world space
+        // );
         
         // end testing ---------------------
 

@@ -144,7 +144,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] localize rendering of ui animations & text to the ui draw tree itself
     - [ ] ninepatch not tested
         
-- [ ] take some shaders (esp. pixelate) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate
+- [ ] take some shaders (esp. glow) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate -
 
 
 ## Bug fixes
@@ -180,7 +180,6 @@ globalShaderUniforms.set("edge_shader", "iResolution",
     - [ ] Shadow Mode
     - [ ] Edge mode
 
-- [ ] Unexplored areas: chipmunk2d in a game (how to mesh with my transforms?
 - [ ] unexplored option: 1 bit or simple shapes + global shadow shader like with SNKRX
 - [ ] unexplored option: static sprites with jitter + noise as in shader_todos.md for visual uniformity & style
 

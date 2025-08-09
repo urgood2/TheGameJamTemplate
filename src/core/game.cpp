@@ -46,6 +46,7 @@
 #include "systems/spring/spring.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
+#include "systems/uuid/uuid.hpp"
 
 using std::pair;
 
@@ -1533,6 +1534,85 @@ inline void ellipse(float x, float y, float rx, float ry,
 }
 
 
+// -- immediate sprite render
+auto DrawSpriteTopLeft(const std::string& spriteName,
+                       float x, float y,
+                       std::optional<float> dstW = std::nullopt,
+                       std::optional<float> dstH = std::nullopt,
+                       Color tint = WHITE) -> void
+{
+    // Resolve atlas frame + texture
+    const auto spriteId = uuid::add(spriteName);
+    const auto& sfd = init::getSpriteFrame(spriteId); // expects .frame and .atlasUUID
+
+    auto it = globals::textureAtlasMap.find(sfd.atlasUUID);
+    if (it == globals::textureAtlasMap.end()) {
+        // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'", spriteName.c_str());
+        return;
+    }
+
+    Texture2D* tex = &it->second;
+    const Rectangle src = sfd.frame;
+
+    // Destination size (native if not provided). Keep aspect if only one is set.
+    float w = dstW.value_or(src.width);
+    float h = dstH.value_or(src.height);
+    if (dstW && !dstH) {
+        h = w * (src.height / src.width);
+    } else if (dstH && !dstW) {
+        w = h * (src.width / src.height);
+    }
+
+    // Top-left anchored destination rect
+    const Rectangle dst = { x, y, w, h };
+    const Vector2   origin = { 0.0f, 0.0f };
+
+    DrawTexturePro(*tex, src, dst, origin, 0.0f, tint);
+}
+
+// Draw the sprite named `spriteName` centered at (x,y).
+// - If both dstW and dstH are unset, draws at native (frame) size.
+// - If only one is set, preserves aspect ratio to compute the other.
+// - `tint` tints the sprite (WHITE = unchanged).
+auto DrawSpriteCentered(const std::string& spriteName,
+                        float x, float y,
+                        std::optional<float> dstW = std::nullopt,
+                        std::optional<float> dstH = std::nullopt,
+                        Color tint = WHITE) -> void
+{
+    // Resolve atlas frame + texture
+    const auto spriteId = uuid::add(spriteName);
+    const auto &sfd = init::getSpriteFrame(spriteId); // expect: has .frame (Rectangle) and .atlasUUID
+
+    auto it = globals::textureAtlasMap.find(sfd.atlasUUID);
+    if (it == globals::textureAtlasMap.end()) {
+        // TODO: replace with your logging/error path
+        // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'", spriteName.c_str());
+        return;
+    }
+
+    Texture2D *tex = &it->second;
+    const Rectangle src = sfd.frame; // sub-rect in the atlas
+
+    // Determine destination size
+    float w = dstW.value_or(src.width);
+    float h = dstH.value_or(src.height);
+    if (dstW && !dstH) {                 // width forced, keep aspect
+        h = w * (src.height / src.width);
+    } else if (dstH && !dstW) {          // height forced, keep aspect
+        w = h * (src.width / src.height);
+    }
+
+    // Centered destination rect
+    const Rectangle dst = { x - 0.5f * w, y - 0.5f * h, w, h };
+
+    // No rotation; origin is top-left of dst
+    const Vector2 origin = { 0.0f, 0.0f };
+    DrawTexturePro(*tex, src, dst, origin, 0.0f, tint);
+}
+
+
+
 #include "rlgl.h"
 #include "external/glad.h"
 
@@ -2032,6 +2112,12 @@ void endStencil()
                 std::nullopt  // no line width (default to 1px)
             );
             
+            DrawSpriteCentered("star_09.png", 500, 500, 
+                               std::nullopt, std::nullopt, GREEN); // draw centered sprite
+            DrawCircle(500, 500, 10, YELLOW); // draw circle
+            
+            DrawSpriteTopLeft("keyboard_w_outline.png", 500, 500, 
+                              std::nullopt, std::nullopt, WHITE); // draw top-left sprite
 
             {
                 // ZoneScopedN("EndDrawing call");

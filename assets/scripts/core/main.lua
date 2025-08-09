@@ -308,7 +308,7 @@ function startGameButtonCallback()
             add_fullscreen_shader("palette_quantize")
             
             
-            add_fullscreen_shader("pixelate_image") -- Add the fade in shader
+            add_fullscreen_shader("pixelate_image")
             
         end,
         "main_menu_to_game_state_change" -- unique tag for this timer

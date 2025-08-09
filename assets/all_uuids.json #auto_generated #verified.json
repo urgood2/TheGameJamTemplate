@@ -17676,6 +17676,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\glitch_fragment.fs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/glitch_fragment.fs"
     ],
+    "fragment_glow": [
+        "glow_fragment.fs"
+    ],
+    "fragment_glow_shader": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_fragment.fs"
+    ],
     "fragment_grid_overlay_shader_tile": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/tile_grid_overlay_fragment.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\tile_grid_overlay_fragment.fs"
@@ -17968,6 +17974,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/shaders\\glow.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow.fs",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\glow.vs"
+    ],
+    "glow_shader_vertex": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/glow_vertex.vs"
+    ],
+    "glow_vertex": [
+        "glow_vertex.vs"
     ],
     "glow_web": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\glow.vs",

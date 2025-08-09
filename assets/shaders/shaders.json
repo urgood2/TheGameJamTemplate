@@ -259,5 +259,14 @@
             "vertex": "web/edge_effect_vertex.vs",
             "fragment": "web/edge_effect_fragment.fs"
         }
+    },
+    "glow": {
+        "vertex": "glow_vertex.vs",
+        "fragment": "glow_fragment.fs",
+
+        "web": {
+            "vertex": "web/glow_vertex.vs",
+            "fragment": "web/glow_fragment.fs"
+        }
     }
 }

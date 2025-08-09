@@ -1697,6 +1697,24 @@ layer.CmdClearBackground = {
 ---
 --- 
 ---
+---@class layer.CmdBeginScissorMode
+layer.CmdBeginScissorMode = {
+    area = nil, -- Rectangle Scissor area rectangle
+}
+
+
+---
+--- 
+---
+---@class layer.CmdEndScissorMode
+layer.CmdEndScissorMode = {
+    dummy = nil, -- false Unused field
+}
+
+
+---
+--- 
+---
 ---@class layer.CmdTranslate
 layer.CmdTranslate = {
     x = nil, -- number X offset
@@ -4882,6 +4900,7 @@ function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdBeginDrawing) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueBeginDrawing(...) end
 
@@ -4891,6 +4910,7 @@ function layer.queueBeginDrawing(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdEndDrawing) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueEndDrawing(...) end
 
@@ -4900,8 +4920,29 @@ function layer.queueEndDrawing(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdClearBackground) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueClearBackground(...) end
+
+---
+--- Queues a CmdBeginScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginScissorMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueBeginScissorMode(...) end
+
+---
+--- Queues a CmdEndScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndScissorMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueEndScissorMode(...) end
 
 ---
 --- Queues a CmdTranslate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -4909,6 +4950,7 @@ function layer.queueClearBackground(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdTranslate) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueTranslate(...) end
 
@@ -4918,6 +4960,7 @@ function layer.queueTranslate(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdScale) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueScale(...) end
 
@@ -4927,6 +4970,7 @@ function layer.queueScale(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRotate) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueRotate(...) end
 
@@ -4936,6 +4980,7 @@ function layer.queueRotate(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdAddPush) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueAddPush(...) end
 
@@ -4945,6 +4990,7 @@ function layer.queueAddPush(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdAddPop) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueAddPop(...) end
 
@@ -4954,6 +5000,7 @@ function layer.queueAddPop(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdPushMatrix) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queuePushMatrix(...) end
 
@@ -4963,6 +5010,7 @@ function layer.queuePushMatrix(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdPopMatrix) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queuePopMatrix(...) end
 
@@ -4972,6 +5020,7 @@ function layer.queuePopMatrix(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawCircleFilled) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawCircle(...) end
 
@@ -4981,6 +5030,7 @@ function layer.queueDrawCircle(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawRectangle) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawRectangle(...) end
 
@@ -4990,6 +5040,7 @@ function layer.queueDrawRectangle(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawRectanglePro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawRectanglePro(...) end
 
@@ -4999,6 +5050,7 @@ function layer.queueDrawRectanglePro(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawRectangleLinesPro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawRectangleLinesPro(...) end
 
@@ -5008,6 +5060,7 @@ function layer.queueDrawRectangleLinesPro(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawLine) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawLine(...) end
 
@@ -5017,6 +5070,7 @@ function layer.queueDrawLine(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawDashedLine(...) end
 
@@ -5026,6 +5080,7 @@ function layer.queueDrawDashedLine(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawText) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawText(...) end
 
@@ -5035,6 +5090,7 @@ function layer.queueDrawText(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTextCentered) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawTextCentered(...) end
 
@@ -5044,6 +5100,7 @@ function layer.queueDrawTextCentered(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdTextPro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueTextPro(...) end
 
@@ -5053,6 +5110,7 @@ function layer.queueTextPro(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawImage) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawImage(...) end
 
@@ -5062,6 +5120,7 @@ function layer.queueDrawImage(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdTexturePro) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueTexturePro(...) end
 
@@ -5071,6 +5130,7 @@ function layer.queueTexturePro(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawEntityAnimation) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawEntityAnimation(...) end
 
@@ -5080,6 +5140,7 @@ function layer.queueDrawEntityAnimation(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimation) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawTransformEntityAnimation(...) end
 
@@ -5089,6 +5150,7 @@ function layer.queueDrawTransformEntityAnimation(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTransformEntityAnimationPipeline) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawTransformEntityAnimationPipeline(...) end
 
@@ -5098,6 +5160,7 @@ function layer.queueDrawTransformEntityAnimationPipeline(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetShader) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSetShader(...) end
 
@@ -5107,6 +5170,7 @@ function layer.queueSetShader(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdResetShader) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueResetShader(...) end
 
@@ -5116,6 +5180,7 @@ function layer.queueResetShader(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetBlendMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSetBlendMode(...) end
 
@@ -5125,6 +5190,7 @@ function layer.queueSetBlendMode(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdUnsetBlendMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueUnsetBlendMode(...) end
 
@@ -5134,6 +5200,7 @@ function layer.queueUnsetBlendMode(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformFloat) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSendUniformFloat(...) end
 
@@ -5143,6 +5210,7 @@ function layer.queueSendUniformFloat(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformInt) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSendUniformInt(...) end
 
@@ -5152,6 +5220,7 @@ function layer.queueSendUniformInt(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformVec2) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSendUniformVec2(...) end
 
@@ -5161,6 +5230,7 @@ function layer.queueSendUniformVec2(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformVec3) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSendUniformVec3(...) end
 
@@ -5170,6 +5240,7 @@ function layer.queueSendUniformVec3(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformVec4) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSendUniformVec4(...) end
 
@@ -5179,6 +5250,7 @@ function layer.queueSendUniformVec4(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformFloatArray) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSendUniformFloatArray(...) end
 
@@ -5188,6 +5260,7 @@ function layer.queueSendUniformFloatArray(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSendUniformIntArray) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSendUniformIntArray(...) end
 
@@ -5197,6 +5270,7 @@ function layer.queueSendUniformIntArray(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdVertex) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueVertex(...) end
 
@@ -5206,6 +5280,7 @@ function layer.queueVertex(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdBeginOpenGLMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueBeginOpenGLMode(...) end
 
@@ -5215,6 +5290,7 @@ function layer.queueBeginOpenGLMode(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdEndOpenGLMode) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueEndOpenGLMode(...) end
 
@@ -5224,6 +5300,7 @@ function layer.queueEndOpenGLMode(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetColor) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSetColor(...) end
 
@@ -5233,6 +5310,7 @@ function layer.queueSetColor(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetLineWidth) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSetLineWidth(...) end
 
@@ -5242,6 +5320,7 @@ function layer.queueSetLineWidth(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdSetTexture) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueSetTexture(...) end
 
@@ -5251,6 +5330,7 @@ function layer.queueSetTexture(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRenderRectVerticesFilledLayer) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueRenderRectVerticesFilledLayer(...) end
 
@@ -5260,6 +5340,7 @@ function layer.queueRenderRectVerticesFilledLayer(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRenderRectVerticesOutlineLayer) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueRenderRectVerticesOutlineLayer(...) end
 
@@ -5269,6 +5350,7 @@ function layer.queueRenderRectVerticesOutlineLayer(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawPolygon) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawPolygon(...) end
 
@@ -5278,6 +5360,7 @@ function layer.queueDrawPolygon(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdRenderNPatchRect) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueRenderNPatchRect(...) end
 
@@ -5287,6 +5370,7 @@ function layer.queueRenderNPatchRect(...) end
 ---@param layer Layer # Target layer to queue into
         ---@param init_fn fun(c: layer.CmdDrawTriangle) # Function to initialize the command
         ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueDrawTriangle(...) end
 

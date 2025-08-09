@@ -1915,6 +1915,11 @@ namespace ui
         }
         return i;  // one past the last descendant
     }
+    
+    struct ActiveScissor {
+        size_t endExclusive; // first index after the subtree
+        int    z;
+    };
 
     void box::drawAllBoxesShaderEnabled(entt::registry &registry,
                            std::shared_ptr<layer::Layer> layerPtr)
@@ -1922,6 +1927,8 @@ namespace ui
         // 1) Build a flat list in the exact order your old box::Draw would have used.
         std::vector<UIDrawListItem> drawOrder;
         drawOrder.reserve(200); // or an estimate of your total UI element count
+        
+        std::vector<ActiveScissor> scissorStack;
 
         // TODO call for all ui boxes
         auto view = registry.view<UIBoxComponent>();
@@ -1970,6 +1977,53 @@ namespace ui
                 continue;
 
             auto &cfg = globalUIGroup.get<UIConfig>(ent);
+            
+            auto &xf = globalUIGroup.get<transform::Transform>(ent);
+            
+            // close any finished scissor scopes before drawing item i
+            while (!scissorStack.empty() && i >= scissorStack.back().endExclusive) {
+                layer::QueueCommand<layer::CmdEndScissorMode>(
+                    layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
+                );
+                scissorStack.pop_back();
+            }
+
+            
+            // 1) Check if the UI element is a scroll pane
+            if (cfg.uiType == UITypeEnum::SCROLL_PANE) {
+                auto &scr = registry.get<UIScrollComponent>(ent);
+                
+                // find [start=i, end) where depth strictly increases and stays in same UIBox
+                size_t start = i;
+                int parentDepth = drawOrder[i].depth;
+                size_t end = i + 1;
+                while (end < drawOrder.size() && drawOrder[end].depth > parentDepth) {
+                    auto &nextElem = globalUIGroup.get<UIElementComponent>(drawOrder[end].e);
+                    if (nextElem.uiBox != uiBoxEntity) break;
+                    ++end;
+                }
+
+                // compute a SCREEN-SPACE rect; don't divide by 2
+                // (if your Transform is center-based, convert to top-left)
+                float x = xf.getActualX(); // top-left x in screen coords
+                float y = xf.getActualY(); // top-left y in screen coords
+                float w = xf.getActualW() / 2;
+                float h = xf.getActualH() / 2;
+                Rectangle r{ x, y, w, h };
+
+                layer::QueueCommand<layer::CmdBeginScissorMode>(
+                    layerPtr, [r](layer::CmdBeginScissorMode *cmd){ cmd->area = r; }, drawOrderZIndex
+                );
+
+                // keep the scope open until we reach 'end'
+                scissorStack.push_back({ end, drawOrderZIndex });
+
+                // Optional (if you want to offset children visually by scroll):
+                // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, ... , drawOrderZIndex);
+                // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [&, scr](auto* c){ c->dx = horiz? -scr.offset : 0; c->dy = vert? -scr.offset : 0; }, drawOrderZIndex);
+                // and later, when scope closes (in the while-pop above), queue PopMatrix before EndScissor.
+            }
+
 
             // Check pipeline
             auto* pipeline = registry.try_get<shader_pipeline::ShaderPipelineComponent>(ent);
@@ -2051,6 +2105,14 @@ namespace ui
                 transform::DrawBoundingBoxAndDebugInfo(&registry, box, layerPtr);
             }
         }
+        
+        // if anything remains open (e.g., if the last element ended a scope), close it
+        while (!scissorStack.empty()) {
+            layer::QueueCommand<layer::CmdEndScissorMode>(
+                layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
+            );
+            scissorStack.pop_back();
+        }
     }
 
 
@@ -2110,6 +2172,34 @@ namespace ui
                 // If this is a new UIBox, set the current box entity.
                 uiBoxEntity = elemComp.uiBox;
                 drawOrderZIndex = registry.get<layer::LayerOrderComponent>(uiBoxEntity).zIndex;
+            }
+            
+            // 1) Check if the UI element is a scroll pane
+            if (cfg.uiType == UITypeEnum::SCROLL_PANE) {
+                auto &scr = registry.get<UIScrollComponent>(ent);
+                
+                // 1.1) Set the scissor rectangle to the pane’s screen-space bounds:
+                Rectangle r = {
+                    xf.getActualX() ,
+                    xf.getActualY() ,
+                    xf.getActualW() ,
+                    xf.getActualH()
+                };
+                
+                layer::QueueCommand<layer::CmdBeginScissorMode>(
+                    layerPtr, [r](layer::CmdBeginScissorMode *cmd) {
+                        cmd->area = r;
+                    }, drawOrderZIndex
+                );
+                
+                //TODO: apply this in the drawself method?
+                //TODO: also, modify scroll value based on mouse wheel
+                //TODO: how to know which scroll pane is being scrolled?
+                // 1.2) Push a little “local transform” so children draw offset by –offset:
+                // rlPushMatrix();
+                // rlTranslatef(vertical ? 0 : -scr.offset,
+                //             vertical ? -scr.offset : 0,
+                //             0);
             }
 
             // Finally call your lean DrawSelf that only does `try_get`

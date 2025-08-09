@@ -4,6 +4,7 @@
 
 #include "entt/entt.hpp"
 
+#include "spdlog/spdlog.h"
 #include "systems/camera/camera_manager.hpp"
 #include "systems/collision/broad_phase.hpp"
 #include "util/common_headers.hpp"
@@ -24,6 +25,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include <algorithm>
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -890,6 +892,28 @@ namespace input
 
         handleRawCursor(inputState, registry);
         MarkEntitiesCollidingWithCursor(registry, inputState, {transform.getVisualX(), transform.getVisualY()});
+        
+        // static entt::entity activeScrollPane = entt::null;
+        static const float scrollSpeed = 10.0f;
+        // apply scrollpane movement
+        {
+            if (registry.valid(inputState.activeScrollPane) && inputState.activeScrollPane != entt::null && registry.any_of<ui::UIScrollComponent>(inputState.activeScrollPane) && std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeScrollPane) != inputState.nodes_at_cursor.end())
+            {
+                // active scroll pane is under cursor, apply scroll
+                SPDLOG_DEBUG("Applying scroll to active scroll pane: {}, amt = {}", static_cast<int>(inputState.activeScrollPane), GetMouseWheelMove() * scrollSpeed);
+                
+                auto &scrollComponent = registry.get<ui::UIScrollComponent>(inputState.activeScrollPane);
+                scrollComponent.offset += GetMouseWheelMove() * scrollSpeed;
+                scrollComponent.offset  = Clamp(scrollComponent.offset, 0.0f, scrollComponent.maxOffset);
+                
+                SPDLOG_DEBUG("New scroll offset: {}", scrollComponent.offset);
+            }
+            else {
+                // no scroll pane under cursor, reset
+                inputState.activeScrollPane = entt::null;
+            }
+        }
+        
         UpdateFocusForRelevantNodes(registry, inputState);
         UpdateCursorHoveringState(registry, inputState);
         processRaylibLeftClick(inputState, registry);

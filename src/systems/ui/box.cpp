@@ -1,5 +1,6 @@
 #include "box.hpp"
 
+#include "entt/entity/fwd.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -1304,6 +1305,13 @@ namespace ui
         
         if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
             registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
+            
+            // add onHover method that sets the active scroll pane
+            node.methods.onHover = [uiElement](entt::registry &registry, entt::entity /*e*/) {
+                globals::inputState.activeScrollPane = uiElement;
+            };
+            node.state.collisionEnabled = true; // enable collision for scroll pane
+            node.state.hoverEnabled = true; // enable hover for scroll pane
         }
 
         SubCalculateContainerSize(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
@@ -1985,6 +1993,10 @@ namespace ui
             
             // close any finished scissor scopes before drawing item i
             while (!scissorStack.empty() && i >= scissorStack.back().endExclusive) {
+                // Pop matrix first so only the children were translated
+                layer::QueueCommand<layer::CmdPopMatrix>(
+                    layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
+                );
                 layer::QueueCommand<layer::CmdEndScissorMode>(
                     layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
                 );
@@ -2022,7 +2034,16 @@ namespace ui
                 scissorStack.push_back({ end, drawOrderZIndex });
 
                 // Optional (if you want to offset children visually by scroll):
-                // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, ... , drawOrderZIndex);
+                layer::QueueCommand<layer::CmdPushMatrix>(
+                    layerPtr, [&](layer::CmdPushMatrix *cmd) {
+                    }, drawOrderZIndex
+                );
+                layer::QueueCommand<layer::CmdTranslate>(
+                    layerPtr, [&, scr](layer::CmdTranslate *c) {
+                        c->y = scr.offset; // scroll offset in screen space
+                    }, drawOrderZIndex
+                );
+                
                 // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [&, scr](auto* c){ c->dx = horiz? -scr.offset : 0; c->dy = vert? -scr.offset : 0; }, drawOrderZIndex);
                 // and later, when scope closes (in the while-pop above), queue PopMatrix before EndScissor.
             }
@@ -2111,6 +2132,9 @@ namespace ui
         
         // if anything remains open (e.g., if the last element ended a scope), close it
         while (!scissorStack.empty()) {
+            layer::QueueCommand<layer::CmdPopMatrix>(
+                layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
+            );
             layer::QueueCommand<layer::CmdEndScissorMode>(
                 layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
             );

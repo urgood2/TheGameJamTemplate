@@ -53,8 +53,10 @@ namespace ui
     };
     
     struct UIScrollComponent {
-        float   offset    = -100.f;       // current scroll in px
+        float   offset    = 0.f;       // current scroll in px
+        float   minOffset = 0.f;         // minimum offset (usually 0)
         float   maxOffset = 100.f;       // contentSize − viewportSize
+        float   prevOffset = 0.f;    // previous offset, used for smooth scrolling
     };
 
 

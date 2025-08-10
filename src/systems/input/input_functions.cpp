@@ -905,8 +905,19 @@ namespace input
                 
                 auto &scrollComponent = registry.get<ui::UIScrollComponent>(inputState.activeScrollPane);
                 scrollComponent.offset += mouseWheelMove * scrollSpeed;
-                scrollComponent.offset  = Clamp(scrollComponent.offset, 0.0f, scrollComponent.maxOffset);
+                scrollComponent.offset  = Clamp(scrollComponent.offset, scrollComponent.minOffset, scrollComponent.maxOffset);
                 
+                // if offset has changed, get all children of scroll pane and update their scroll displacement
+                if (scrollComponent.offset != scrollComponent.prevOffset) {
+                    ui::box::TraverseUITreeBottomUp(registry, inputState.activeScrollPane, [&](entt::entity child) {
+                        
+                        auto &gameObject = registry.get<transform::GameObject>(child);
+                        gameObject.scrollPaneDisplacement = Vector2{0, scrollComponent.offset};
+                    }, true);
+                }
+                
+                
+                scrollComponent.prevOffset = scrollComponent.offset;
                 SPDLOG_DEBUG("New scroll offset: {}", scrollComponent.offset);
             }
             else {

@@ -1045,7 +1045,7 @@ namespace ui
      * });
      * @endcode
      */
-    void box::TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor)
+    void box::TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor, bool excludeTopmostParent)
     {
         struct StackEntry
         {
@@ -1076,12 +1076,21 @@ namespace ui
                 }
             }
         }
-
+        
+        // After building processingOrder...
+        
         // Step 2: Bottom-up execution of lambda
-        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
-        {
+        for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it) {
+            if (excludeTopmostParent && it->uiElement == rootUIElement)         
+                continue; // exclude topmost parent
             visitor(it->uiElement);
         }
+
+
+        // for (auto it = processingOrder.rbegin(); it != processingOrder.rend(); ++it)
+        // {
+        //     visitor(it->uiElement);
+        // }
     }
 
     void box::AssignTreeOrderComponents(entt::registry &registry, entt::entity rootUIElement)
@@ -1994,9 +2003,9 @@ namespace ui
             // close any finished scissor scopes before drawing item i
             while (!scissorStack.empty() && i >= scissorStack.back().endExclusive) {
                 // Pop matrix first so only the children were translated
-                layer::QueueCommand<layer::CmdPopMatrix>(
-                    layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
-                );
+                // layer::QueueCommand<layer::CmdPopMatrix>(
+                //     layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
+                // );
                 layer::QueueCommand<layer::CmdEndScissorMode>(
                     layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
                 );
@@ -2034,15 +2043,15 @@ namespace ui
                 scissorStack.push_back({ end, drawOrderZIndex });
 
                 // Optional (if you want to offset children visually by scroll):
-                layer::QueueCommand<layer::CmdPushMatrix>(
-                    layerPtr, [&](layer::CmdPushMatrix *cmd) {
-                    }, drawOrderZIndex
-                );
-                layer::QueueCommand<layer::CmdTranslate>(
-                    layerPtr, [&, scr](layer::CmdTranslate *c) {
-                        c->y = scr.offset; // scroll offset in screen space
-                    }, drawOrderZIndex
-                );
+                // layer::QueueCommand<layer::CmdPushMatrix>(
+                //     layerPtr, [&](layer::CmdPushMatrix *cmd) {
+                //     }, drawOrderZIndex
+                // );
+                // layer::QueueCommand<layer::CmdTranslate>(
+                //     layerPtr, [&, scr](layer::CmdTranslate *c) {
+                //         c->y = scr.offset; // scroll offset in screen space
+                //     }, drawOrderZIndex
+                // );
                 
                 // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [&, scr](auto* c){ c->dx = horiz? -scr.offset : 0; c->dy = vert? -scr.offset : 0; }, drawOrderZIndex);
                 // and later, when scope closes (in the while-pop above), queue PopMatrix before EndScissor.
@@ -2132,9 +2141,9 @@ namespace ui
         
         // if anything remains open (e.g., if the last element ended a scope), close it
         while (!scissorStack.empty()) {
-            layer::QueueCommand<layer::CmdPopMatrix>(
-                layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
-            );
+            // layer::QueueCommand<layer::CmdPopMatrix>(
+            //     layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
+            // );
             layer::QueueCommand<layer::CmdEndScissorMode>(
                 layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
             );

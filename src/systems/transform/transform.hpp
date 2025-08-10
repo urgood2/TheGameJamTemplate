@@ -196,6 +196,7 @@ namespace transform
         Vector2 hoverOffset = {0, 0}; // offset from the mouse position when hovering
 
         std::optional<Vector2> shadowDisplacement; // parallax for shadows
+        std::optional<Vector2> scrollPaneDisplacement; // parallax for scroll panes, if an element is inside a scroll pane
         std::optional<Vector2> layerDisplacement;  // parallax for layers
         std::optional<Vector2> layerDisplacementPrev; // previous layer displacement for parallax
         std::optional<float> shadowHeight;         // depth of a shadow, used for rendering shadow

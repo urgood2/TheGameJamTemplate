@@ -59,7 +59,7 @@ namespace ui {
         auto AddChild(entt::registry& registry, entt::entity uiBox, UIElementTemplateNode uiElementDef, entt::entity parent) -> void;
         auto SetContainer(entt::registry &registry, entt::entity self, entt::entity container) -> void;
         auto DebugPrint(entt::registry &registry, entt::entity self, int indent = 0) -> std::string;
-        void TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor);
+        void TraverseUITreeBottomUp(entt::registry &registry, entt::entity rootUIElement, std::function<void(entt::entity)> visitor, bool excludeTopmostParent = false);
         void drawAllBoxes(entt::registry &registry,
             std::shared_ptr<layer::Layer> layerPtr);
         void drawAllBoxesShaderEnabled(entt::registry &registry,

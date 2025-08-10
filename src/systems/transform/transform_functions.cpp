@@ -489,6 +489,11 @@ namespace transform
         UpdateDynamicMotion(e, dt, selfTransform);
         
         Vector2 layeredDisplacement = selfNode.layerDisplacement.value_or(Vector2{0, 0});
+        if (selfNode.scrollPaneDisplacement)
+        {
+            layeredDisplacement.x += selfNode.scrollPaneDisplacement->x;
+            layeredDisplacement.y += selfNode.scrollPaneDisplacement->y;
+        }
         
         auto selfSprings = getSpringBundleCached(e, selfTransform);
         auto parentSprings = getSpringBundleCached(parent, *parentTransform);

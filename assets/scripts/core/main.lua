@@ -178,7 +178,30 @@ function initMainMenu()
         :addChild(blueskyIconTemplate)
         :build()
         
+    local inputTextElement = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.INPUT_TEXT)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(2.0)
+                :addShadow(true)
+                :addMinHeight(50) -- minimum height of the input text
+                :addMinWidth(300) -- minimum width of the input text
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :build()
+        )
+    :build()
         
+    local inputTextRow = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(util.getColor("taupe_warm"))
+                :addEmboss(2.0)
+                :build()
+        )
+    :addChild(inputTextElement)
+    :build()
     
     -- TODO: call OpenURL(link) when clicked
         
@@ -200,6 +223,7 @@ function initMainMenu()
     :addChild(startButtonTemplate)
     :addChild(discordRow)
     :addChild(blueskyRow)
+    :addChild(inputTextRow)
     :build()
     
     

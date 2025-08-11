@@ -126,6 +126,8 @@ namespace input
         // These track user inputs, including keypresses and cursor movements.
         
         entt::entity activeScrollPane = entt::null; // Currently active scroll pane, if any
+        
+        entt::entity activeTextInput = entt::null; // Currently active text input, if any
 
         std::vector<entt::entity> collision_list;  // List of entities cursor is colliding with
         std::vector<entt::entity> nodes_at_cursor; // List of entities directly under cursor

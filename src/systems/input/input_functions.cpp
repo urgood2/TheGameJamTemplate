@@ -1140,7 +1140,7 @@ namespace input
                     SPDLOG_DEBUG("Clicked on checkbox");
                 }
             }
-            else if (clickedTargetNode.methods.onClick)
+            if (clickedTargetNode.methods.onClick)
             {
                 clickedTargetNode.methods.onClick(registry, inputState.cursor_clicked_target);
             }
@@ -1287,6 +1287,17 @@ namespace input
             // TODO: this should probably take cursor collision entities into account instead of relying on hover.
             ProcessLeftMouseButtonPress(registry, inputState, inputState.L_cursor_queue.value().x, inputState.L_cursor_queue.value().y);
             inputState.L_cursor_queue.reset();
+            
+            // also, if cursor collision entities do not include the input text element, then make it inactive 
+            if (
+                registry.valid(inputState.activeTextInput) &&
+                inputState.activeTextInput != entt::null &&
+                std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeTextInput) == inputState.nodes_at_cursor.end())
+            {
+                // clear active text input
+                SPDLOG_DEBUG("Marking active text input {} as inactive", static_cast<int>(inputState.activeTextInput));
+                inputState.activeTextInput = entt::null;
+            }
         }
     }
 

@@ -881,7 +881,7 @@ namespace ui
             auto &role = registry.get<transform::InheritedProperties>(entity);
 
             // 1. non - containers - rect, text, and object, always bottom of tree.
-            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT)
+            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
             {
                 if (uiConfig.uiType == UITypeEnum::OBJECT)
                 {
@@ -967,7 +967,7 @@ namespace ui
             auto &role = registry.get<transform::InheritedProperties>(entity);
 
             // 1. non - containers - rect, text, and object, always bottom of tree.
-            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT)
+            if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
             {
                 continue;
             }
@@ -1171,7 +1171,7 @@ namespace ui
         role.offset = {runningTransform.x, runningTransform.y};
 
         // am I a ui element?
-        if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT)
+        if (uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::TEXT || uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
         {
             placeNonContainerUIE(role, runningTransform, uiElement, parentType, uiState, uiConfig);
             return;
@@ -1591,7 +1591,7 @@ namespace ui
             uiState.contentDimensions = Vector2{calcCurrentNodeTransform.w, calcCurrentNodeTransform.h};
             ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
         }
-        else if (uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::RECT_SHAPE)
+        else if (uiConfig.uiType == UITypeEnum::OBJECT || uiConfig.uiType == UITypeEnum::RECT_SHAPE || uiConfig.uiType == UITypeEnum::INPUT_TEXT)
         {
             // TODO: minwidth respecting for other types of objects
             if (uiConfig.uiType == UITypeEnum::OBJECT)
@@ -2031,8 +2031,8 @@ namespace ui
                 // (if your Transform is center-based, convert to top-left)
                 float x = xf.getActualX(); // top-left x in screen coords
                 float y = xf.getActualY(); // top-left y in screen coords
-                float w = xf.getActualW() * 0.8;
-                float h = xf.getActualH() * 0.8;
+                float w = xf.getActualW();
+                float h = xf.getActualH();
                 Rectangle r{ x, y, w, h };
 
                 layer::QueueCommand<layer::CmdBeginScissorMode>(

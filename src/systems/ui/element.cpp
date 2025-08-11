@@ -3,6 +3,7 @@
 #include "components/graphics.hpp"
 #include "entt/entity/fwd.hpp"
 #include "snowhouse/fluent/fluent.h"
+#include "spdlog/spdlog.h"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_optimized.hpp"
 #include "systems/reflection/reflection.hpp"
@@ -67,6 +68,25 @@ namespace ui
             // auto &objectUIElement = registry.get<UIElementComponent>(config->object.value());
             auto &objectUINode = registry.get<transform::GameObject>(config->object.value());
             objectUINode.parent = entity;
+        }
+        
+        
+        // is it a text input?
+        if (type == UITypeEnum::INPUT_TEXT)
+        {
+            // create a text input comp
+            registry.emplace_or_replace<TextInput>(entity);
+            // make hoverable & collidable
+            auto &node = registry.get<transform::GameObject>(entity);
+            node.state.hoverEnabled = true;
+            node.state.collisionEnabled = true;
+            node.state.clickEnabled = true; // enable click events
+            
+            // change active text input on click
+            node.methods.onClick = [entity](entt::registry &reg, entt::entity) {
+                globals::inputState.activeTextInput = entity;
+                SPDLOG_DEBUG("Set active text input to {}", static_cast<int>(entity));
+            };
         }
 
         // TODO: doesn't seem to add to the parent's children list? why?
@@ -262,6 +282,11 @@ namespace ui
                 transform::InjectDynamicMotion(&registry, entity);
             if (uiElement->UIT == UITypeEnum::HORIZONTAL_CONTAINER)
                 transform::InjectDynamicMotion(&registry, entity);
+            if (uiElement->UIT == UITypeEnum::SCROLL_PANE)
+                transform::InjectDynamicMotion(&registry, entity);
+            if (uiElement->UIT == UITypeEnum::INPUT_TEXT)
+                transform::InjectDynamicMotion(&registry, entity);
+            
             uiConfig->dynamicMotion = false;
         }
 
@@ -309,6 +334,7 @@ namespace ui
             case UITypeEnum::TEXT:
             case UITypeEnum::OBJECT:
             case UITypeEnum::RECT_SHAPE:
+            case UITypeEnum::INPUT_TEXT:
             case UITypeEnum::VERTICAL_CONTAINER:
             case UITypeEnum::SCROLL_PANE:
             case UITypeEnum::HORIZONTAL_CONTAINER:
@@ -1054,7 +1080,8 @@ namespace ui
                 {
                     if (childConfig->uiType == UITypeEnum::TEXT ||
                         childConfig->uiType == UITypeEnum::RECT_SHAPE ||
-                        childConfig->uiType == UITypeEnum::OBJECT)
+                        childConfig->uiType == UITypeEnum::OBJECT ||
+                        childConfig->uiType == UITypeEnum::INPUT_TEXT)
                     {
                         ApplyAlignment(registry, child, 0 + uiBoxOffsetX, 0.5f * (transform->getActualH() - 2 * padding - childTransform->getActualH())+ uiBoxOffsetY);
                     }
@@ -1477,7 +1504,7 @@ namespace ui
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();
         }
-        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE)
+        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT)
         {
             // ZoneScopedN("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values
@@ -1996,7 +2023,7 @@ namespace ui
 
             layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         }
-        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE)
+        else if (config->uiType == UITypeEnum::RECT_SHAPE || config->uiType == UITypeEnum::VERTICAL_CONTAINER || config->uiType == UITypeEnum::HORIZONTAL_CONTAINER || config->uiType == UITypeEnum::ROOT || config->uiType == UITypeEnum::SCROLL_PANE || config->uiType == UITypeEnum::INPUT_TEXT)
         {
             // ZoneScopedN("UI Element: Rectangle/Container Logic");
             //TODO: need to apply scale and rotation to the rounded rectangle - make a prepdraw method that applies the transform's values

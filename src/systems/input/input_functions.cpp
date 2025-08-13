@@ -1179,6 +1179,47 @@ namespace input
         }
     }
 
+    void HandleTextInput(ui::TextInput &input) {
+        // Process all characters pressed this frame
+        int key = GetCharPressed();
+        while (key > 0) {
+            // Optionally, filter which characters you allow
+            // Here we limit to printable ASCII 32..126
+            if ((key >= 32) && (key <= 126) && input.text.length() < input.maxLength) {
+                char c = static_cast<char>(key);
+
+                if (input.allCaps) {
+                    c = toupper(c);
+                }
+
+                // Insert at cursor position
+                input.text.insert(input.cursorPos, 1, c);
+                input.cursorPos++;
+            }
+
+            key = GetCharPressed(); // Get next character in queue
+        }
+
+        // Handle Backspace
+        if (IsKeyPressed(KEY_BACKSPACE) && input.cursorPos > 0) {
+            input.text.erase(input.cursorPos - 1, 1);
+            input.cursorPos--;
+        }
+
+        // Move cursor left/right
+        if (IsKeyPressed(KEY_LEFT) && input.cursorPos > 0) {
+            input.cursorPos--;
+        }
+        if (IsKeyPressed(KEY_RIGHT) && input.cursorPos < input.text.length()) {
+            input.cursorPos++;
+        }
+
+        // Handle Enter
+        if (IsKeyPressed(KEY_ENTER) && input.callback) {
+            input.callback();
+        }
+    }
+
     void handleCursorReleasedEvent(input::InputState &inputState, entt::registry &registry)
     {
         if (inputState.cursor_up_handled == false)
@@ -1297,6 +1338,15 @@ namespace input
                 // clear active text input
                 SPDLOG_DEBUG("Marking active text input {} as inactive", static_cast<int>(inputState.activeTextInput));
                 inputState.activeTextInput = entt::null;
+                // SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+            }
+            else if (
+                registry.valid(inputState.activeTextInput) &&
+                inputState.activeTextInput != entt::null &&
+                std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeTextInput) != inputState.nodes_at_cursor.end())
+            {
+                // active text input is still under cursor, so do not clear it
+                // SetMouseCursor(MOUSE_CURSOR_IBEAM);
             }
         }
     }

@@ -87,6 +87,16 @@ namespace ui
                 globals::inputState.activeTextInput = entity;
                 SPDLOG_DEBUG("Set active text input to {}", static_cast<int>(entity));
             };
+            
+            node.methods.onHover = [entity](entt::registry &reg, entt::entity) {
+                // set mouse cursor to IBEAM
+                SetMouseCursor(MOUSE_CURSOR_IBEAM);
+            };
+            
+            node.methods.onStopHover = [entity](entt::registry &reg, entt::entity) {
+                // reset mouse cursor to default
+                SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+            };
         }
 
         // TODO: doesn't seem to add to the parent's children list? why?

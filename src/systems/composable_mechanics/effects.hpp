@@ -147,6 +147,6 @@ void ExecuteEffectGraph(const CompiledEffectGraph& g,
                         
 // Optional: engine services hooks (place these in a shared header if you prefer)
 struct EngineServices {
-    entt::entity (*spawnUnit)(Context&, Sid species, int teamId, BoardPos pos) = nullptr;
+    entt::entity (*spawnUnit)(Context&, Sid species, int teamId) = nullptr;
     void (*refillShop)(Context&) = nullptr;
 };

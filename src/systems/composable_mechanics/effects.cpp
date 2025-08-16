@@ -1,4 +1,5 @@
 #include "effects.hpp"
+#include "board.hpp"
 #include "components.hpp"
 #include "pipelines.hpp"   // ResolveAndApplyDamage(...)
 #include "ability.hpp"     // AbilityDatabase (or forward declare & remove include)
@@ -68,21 +69,22 @@ static void Run_ApplyRR(const Op_ApplyRR_Params& p, Context& cx, const std::vect
 // ===== NEW ops: board/meta/shop =====
 static void Run_PushUnit(const Op_PushUnit_Params& p, Context& cx, const std::vector<entt::entity>& targets, entt::entity source) {
     auto& world = cx.world;
-    for (auto e : targets) {
-        int after = -1;
-        if (auto* bp = world.try_get<BoardPos>(e)) {
-            int ni = bp->index + p.delta;
-            if (p.clamp) {
-                ni = std::max(p.minIndex, std::min(p.maxIndex, ni));
-            }
-            bp->index = ni;
-            after = ni;
-        }
-        if (after >= 0) {
-            Event pushed{ EventType::EnemyPushed, source, e, nullptr };
-            world.ctx<EventBus>().dispatch(pushed, cx);
-        }
-    }
+    //TODO: implement this
+    // for (auto e : targets) {
+    //     int after = -1;
+    //     if (auto* bp = world.try_get<BoardPos>(e)) {
+    //         int ni = bp->index + p.delta;
+    //         if (p.clamp) {
+    //             ni = std::max(p.minIndex, std::min(p.maxIndex, ni));
+    //         }
+    //         bp->index = ni;
+    //         after = ni;
+    //     }
+    //     if (after >= 0) {
+    //         Event pushed{ EventType::EnemyPushed, source, e, nullptr };
+    //         world.ctx<EventBus>().dispatch(pushed, cx);
+    //     }
+    // }
 }
 
 static void Run_ShuffleAllies(const Op_ShuffleAllies_Params& p, Context& cx, entt::entity self) {
@@ -131,32 +133,34 @@ static void Run_SummonUnit(const Op_SummonUnit_Params& p, Context& cx, entt::ent
     auto* ps = r.try_get<BoardPos>(source);
     if (!ts || !ps) return;
 
-    if (auto* es = r.try_ctx<EngineServices>()) {
-        if (!(*es).spawnUnit) return; // no-op if not wired
-        for (int i = 0; i < p.count; ++i) {
-            BoardPos pos{ ps->lane, ps->index + p.positionOffset + i };
-            entt::entity child = (*es).spawnUnit(cx, p.species, ts->teamId, pos);
-            Event ev{ EventType::EnemySummoned, source, child, nullptr };
-            r.ctx<EventBus>().dispatch(ev, cx);
-        }
-    }
+    //TODO: implement this
+    // if (auto* es = r.try_ctx<EngineServices>()) {
+    //     if (!(*es).spawnUnit) return; // no-op if not wired
+    //     for (int i = 0; i < p.count; ++i) {
+    //         BoardPos pos{ ps->lane, ps->index + p.positionOffset + i };
+    //         entt::entity child = (*es).spawnUnit(cx, p.species, ts->teamId, pos);
+    //         Event ev{ EventType::EnemySummoned, source, child, nullptr };
+    //         r.ctx<EventBus>().dispatch(ev, cx);
+    //     }
+    // }
 }
 
 // ===== NEW ops: abilities/items =====
 static void Run_CopyAbilityFrom(const Op_CopyAbilityFrom_Params& p, Context& cx, entt::entity self, const std::vector<entt::entity>& fromTargets) {
-    auto* dbPtr = cx.world.try_ctx<AbilityDatabase*>();
-    if (!dbPtr) return;
-    auto* db = *dbPtr;
-    if (!db) return;
+    //TODO: implement this
+    // auto* dbPtr = cx.world.try_ctx<AbilityDatabase*>();
+    // if (!dbPtr) return;
+    // auto* db = *dbPtr;
+    // if (!db) return;
 
-    for (auto src : fromTargets) {
-        // Simpler: just add by name; you can check if src actually owns it if you want
-        if (db->find(p.abilityName)) {
-            auto& known = cx.world.get_or_emplace<KnownAbilities>(self);
-            known.list.push_back(AbilityRef{ p.abilityName });
-            // If temporary: attach a battle-duration flag/buff (not shown)
-        }
-    }
+    // for (auto src : fromTargets) {
+    //     // Simpler: just add by name; you can check if src actually owns it if you want
+    //     if (db->find(p.abilityName)) {
+    //         auto& known = cx.world.get_or_emplace<KnownAbilities>(self);
+    //         known.list.push_back(AbilityRef{ p.abilityName });
+    //         // If temporary: attach a battle-duration flag/buff (not shown)
+    //     }
+    // }
 }
 
 static void Run_ItemGive(const Op_Item_Params& p, Context& cx, const std::vector<entt::entity>& targets) {
@@ -185,22 +189,24 @@ static void Run_ItemCopyTo(const Op_Item_Params& p, Context& cx, entt::entity sr
 
 // ===== NEW ops: player/shop =====
 static void Run_ModifyPlayerResource(const Op_ModifyPlayerResource_Params& p, Context& cx) {
-    if (!cx.meta) return;
-    int& gold = cx.meta->player.gold;
-    switch (p.op) {
-        case Op_ModifyPlayerResource_Params::Add: gold += p.value; break;
-        case Op_ModifyPlayerResource_Params::Sub: gold -= p.value; break;
-        case Op_ModifyPlayerResource_Params::Mul: gold *= p.value; break;
-        case Op_ModifyPlayerResource_Params::Div: if (p.value!=0) gold /= p.value; break;
-    }
-    if (gold < 0) gold = 0;
+    //TODO: implement this
+    // if (!cx.meta) return;
+    // int& gold = cx.meta->player.gold;
+    // switch (p.op) {
+    //     case Op_ModifyPlayerResource_Params::Add: gold += p.value; break;
+    //     case Op_ModifyPlayerResource_Params::Sub: gold -= p.value; break;
+    //     case Op_ModifyPlayerResource_Params::Mul: gold *= p.value; break;
+    //     case Op_ModifyPlayerResource_Params::Div: if (p.value!=0) gold /= p.value; break;
+    // }
+    // if (gold < 0) gold = 0;
 }
 
 static void Run_SetLevel(const Op_SetLevel_Params& p, Context& cx, const std::vector<entt::entity>& targets) {
     for (auto e : targets) {
-        cx.world.emplace_or_replace<Level>(e, Level{ p.level });
-        Event ev{ EventType::AllyLevelUp, e, entt::null, nullptr };
-        cx.world.ctx<EventBus>().dispatch(ev, cx);
+        //TODO: implement this
+        // cx.world.emplace_or_replace<Level>(e, Level{ p.level });
+        // Event ev{ EventType::AllyLevelUp, e, entt::null, nullptr };
+        // cx.world.ctx<EventBus>().dispatch(ev, cx);
     }
 }
 static void Run_GiveXP(const Op_GiveExperience_Params& p, Context& cx, const std::vector<entt::entity>& targets) {
@@ -212,50 +218,55 @@ static void Run_GiveXP(const Op_GiveExperience_Params& p, Context& cx, const std
 }
 
 static void Run_ShopAddItem(const Op_ShopAddItem_Params& p, Context& cx) {
-    if (!cx.meta) return;
-    for (int i = 0; i < p.count; ++i) cx.meta->shop.items.push_back(ShopItem{ p.item, 1, false, 3 });
+    // if (!cx.meta) return;
+    //TODO: implement this
+    // for (int i = 0; i < p.count; ++i) cx.meta->shop.items.push_back(ShopItem{ p.item, 1, false, 3 });
 }
 
 static void Run_ShopDiscountUnit(const Op_ShopDiscountUnit_Params& p, Context& cx) {
-    if (!cx.meta) return;
-    for (auto& u : cx.meta->shop.units) {
-        if (p.percent) u.cost -= (u.cost * p.amount) / 100;
-        else           u.cost -= p.amount;
-        if (u.cost < 0) u.cost = 0;
-    }
+    //TODO: implement this
+    // if (!cx.meta) return;
+    // for (auto& u : cx.meta->shop.units) {
+    //     if (p.percent) u.cost -= (u.cost * p.amount) / 100;
+    //     else           u.cost -= p.amount;
+    //     if (u.cost < 0) u.cost = 0;
+    // }
 }
 
 static void Run_ShopDiscountItem(const Op_ShopDiscountItem_Params& p, Context& cx) {
-    if (!cx.meta) return;
-    for (auto& it : cx.meta->shop.items) {
-        if (p.percent) it.cost -= (it.cost * p.amount) / 100;
-        else           it.cost -= p.amount;
-        if (it.cost < 0) it.cost = 0;
-    }
+    //TODO: implement this
+    // if (!cx.meta) return;
+    // for (auto& it : cx.meta->shop.items) {
+    //     if (p.percent) it.cost -= (it.cost * p.amount) / 100;
+    //     else           it.cost -= p.amount;
+    //     if (it.cost < 0) it.cost = 0;
+    // }
 }
 
 static void Run_ShopRoll(const Op_ShopRoll_Params& p, Context& cx) {
-    if (!cx.meta) return;
-    auto& sh = cx.meta->shop;
-    for (int t = 0; t < p.times; ++t) {
-        // keep frozen; clear the rest
-        sh.units.erase(std::remove_if(sh.units.begin(), sh.units.end(), [](const ShopUnit& u){ return !u.frozen; }), sh.units.end());
-        sh.items.erase(std::remove_if(sh.items.begin(), sh.items.end(), [](const ShopItem& i){ return !i.frozen; }), sh.items.end());
+    //TODO: implement this
+    // if (!cx.meta) return;
+    // auto& sh = cx.meta->shop;
+    // for (int t = 0; t < p.times; ++t) {
+    //     // keep frozen; clear the rest
+    //     sh.units.erase(std::remove_if(sh.units.begin(), sh.units.end(), [](const ShopUnit& u){ return !u.frozen; }), sh.units.end());
+    //     sh.items.erase(std::remove_if(sh.items.begin(), sh.items.end(), [](const ShopItem& i){ return !i.frozen; }), sh.items.end());
 
-        if (auto* es = cx.world.try_ctx<EngineServices>()) {
-            if ((*es).refillShop) (*es).refillShop(cx);
-        }
-        Event ev{ EventType::RollShop, entt::null, entt::null, nullptr };
-        cx.world.ctx<EventBus>().dispatch(ev, cx);
-    }
+    //     if (auto* es = cx.world.try_ctx<EngineServices>()) {
+    //         if ((*es).refillShop) (*es).refillShop(cx);
+    //     }
+    //     Event ev{ EventType::RollShop, entt::null, entt::null, nullptr };
+    //     cx.world.ctx<EventBus>().dispatch(ev, cx);
+    // }
 }
 
 static void Run_ShopReplaceItems(const Op_ShopReplaceItems_Params& p, Context& cx) {
-    if (!cx.meta) return;
-    for (auto& it : cx.meta->shop.items) {
-        if (!p.from || p.all) it.item = p.to;
-        else if (it.item == p.from) it.item = p.to;
-    }
+    //TODO: implement this
+    // if (!cx.meta) return;
+    // for (auto& it : cx.meta->shop.items) {
+    //     if (!p.from || p.all) it.item = p.to;
+    //     else if (it.item == p.from) it.item = p.to;
+    // }
 }
 
 // ===== NEW ops: stats & classify =====
@@ -308,23 +319,25 @@ static void ExecuteOp(const CompiledEffectGraph& g, const EffectOp& op,
         } break;
 
         case EffectOpCode::Repeat: {
-            const auto& rp = g.repParams[(size_t)op.paramIndex];
-            for (int i = 0; i < rp.count; ++i) ExecuteRange(g, rp.childStart, rp.childCount, ev, cx, self, targets);
+            // TODO: implement this
+            // const auto& rp = g.repParams[(size_t)op.paramIndex];
+            // for (int i = 0; i < rp.count; ++i) ExecuteRange(g, rp.childStart, rp.childCount, ev, cx, self, targets);
         } break;
 
         case EffectOpCode::LimitPerTurn: {
-            auto& r = cx.world;
-            const auto& lp = g.lptParams[(size_t)op.paramIndex];
-            auto* ts = r.try_ctx<TurnState>();
-            auto& c  = r.ctx_or_set<PerTurnCounter>();
-            const int curTurn = ts ? ts->id : 0;
-            if (c.turnId != curTurn) { c.turnId = curTurn; c.used.clear(); }
-            const auto key = CounterKey(self, lp.key);
-            int used = c.used[key];
-            if (used < lp.maxTimes) {
-                ExecuteRange(g, lp.childStart, lp.childCount, ev, cx, self, targets);
-                c.used[key] = used + 1;
-            }
+            // TODO: implement this
+            // auto& r = cx.world;
+            // const auto& lp = g.lptParams[(size_t)op.paramIndex];
+            // auto* ts = r.try_ctx<TurnState>();
+            // auto& c  = r.ctx_or_set<PerTurnCounter>();
+            // const int curTurn = ts ? ts->id : 0;
+            // if (c.turnId != curTurn) { c.turnId = curTurn; c.used.clear(); }
+            // const auto key = CounterKey(self, lp.key);
+            // int used = c.used[key];
+            // if (used < lp.maxTimes) {
+            //     ExecuteRange(g, lp.childStart, lp.childCount, ev, cx, self, targets);
+            //     c.used[key] = used + 1;
+            // }
         } break;
 
         case EffectOpCode::ModifyStats:

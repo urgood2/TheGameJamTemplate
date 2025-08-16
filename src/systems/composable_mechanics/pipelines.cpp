@@ -70,9 +70,13 @@ void ResolveAndApplyDamage(entt::entity attacker,
     defPools.hp = std::max(0.0f, defPools.hp - total);
 
     if (emitEvents) {
-        Event dealt{ EventType::DamageDealt, attacker, defender, nullptr };
-        Event taken{ EventType::DamageTaken, defender, attacker, nullptr };
-        cx.world.ctx<EventBus>().dispatch(dealt, cx);
-        cx.world.ctx<EventBus>().dispatch(taken, cx);
-    }
+    Event dealt{ EventType::DamageDealt, attacker, defender, nullptr };
+    Event taken{ EventType::DamageTaken, defender, attacker, nullptr };
+
+    auto bus = cx.world.ctx().get<EventBus>();
+    bus.dispatch(dealt, cx);
+    bus.dispatch(taken, cx);
+
+}
+
 }

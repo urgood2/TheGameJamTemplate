@@ -47,6 +47,8 @@
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
 #include "systems/uuid/uuid.hpp"
+#include "systems/composable_mechanics/bootstrap.hpp"
+#include "systems/composable_mechanics/ability.hpp"
 
 using std::pair;
 

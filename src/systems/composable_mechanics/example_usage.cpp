@@ -78,10 +78,10 @@ spells = {
 
     // Simulate casting ShiverStrike on enemy
     Event castStart{ EventType::SpellCastStarted, player, enemy, nullptr };
-    world.ctx<EventBus>().dispatch(castStart, cx);
+    world.ctx().get<EventBus>().dispatch(castStart, cx);
 
     Event castEnd{ EventType::SpellCastResolved, player, enemy, nullptr };
-    world.ctx<EventBus>().dispatch(castEnd, cx);
+    world.ctx().get<EventBus>().dispatch(castEnd, cx);
 
     // Print resulting HP (pseudo; replace with your logger)
     auto& ehp = world.get<LifeEnergy>(enemy);

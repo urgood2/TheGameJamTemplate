@@ -5,14 +5,14 @@
 #include "loader_lua.hpp"
 
 struct EngineBootstrap {
-    EventBus bus;               // shared event bus
+    // EventBus bus;               // shared event bus
     AbilityDatabase abilityDb;  // content
 
     // Attach core systems to bus
     void wireCore(entt::registry& world) {
         // Make EventBus available via registry context for pipeline emission
-        world.set<EventBus>(bus);
-
+        auto bus = world.ctx().emplace<EventBus>();
+    
         // Ability system listens to relevant events. You can attach many.
         static AbilitySystem abilities(bus, abilityDb);
         abilities.attachTo(EventType::UnitDied, /*lane*/0, /*priority*/100);

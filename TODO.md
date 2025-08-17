@@ -76,7 +76,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- [ ] stat & trigger & skill syste in progress https://chatgpt.com/share/689f6c1d-4540-800a-beb4-5ea0d59a746e
+- [ ] stat & trigger & skill syste in progress https://chatgpt.com/share/689f6c1d-4540-800a-beb4-5ea0d59a746e / https://chatgpt.com/share/68a1db5c-5794-800a-bcf8-6ab001ec77c3
 - [ ] use handleTextInput()
 - [ ] examine current state of input system, does re-binding inputs work, for both keyboard and controller? input rebinding: https://chatgpt.com/share/689718e0-d830-800a-bfdb-446125c87ecd
 - [ ] now make scrolling work for scroll panes, also handle scroll pane focus (knowing which scroll pane should move when scrolling), show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, also handle scroll pane sizing (initial size must be passed in, must be different from the full content size), exclude scroll pane background in the scissoring process, cull rendering so only visible items in the scroll pane are rendered, disable input for culled entities

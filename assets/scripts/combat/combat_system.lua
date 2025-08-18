@@ -1351,6 +1351,37 @@ function Items.can_equip(e, item)
   return true
 end
 
+-- === Leveling curve registry ================================================
+Leveling.curves = Leveling.curves or {}
+
+-- Register a curve by id. fn(level) -> xp_to_next
+function Leveling.register_curve(id, fn)
+  Leveling.curves[id] = fn
+end
+
+-- Resolve xp needed for next level for entity e at its current level (or given L)
+function Leveling.xp_to_next(ctx, e, L)
+  local level = L or (e.level or 1)
+  local curve_id = e.level_curve or 'default'
+  local fn = Leveling.curves[curve_id] or Leveling.curves['default']
+  return (fn and fn(level)) or (1000 * level) -- fallback
+end
+
+-- Defaults: current behavior
+Leveling.register_curve('default', function(level)
+  return 1000 * level
+end)
+
+-- Example alternates (optional):
+Leveling.register_curve('fast_start', function(level)   -- generous early levels
+  return math.floor(600 + (level - 1) * 800)
+end)
+
+Leveling.register_curve('veteran', function(level)      -- steeper
+  return math.floor(1200 + (level - 1) * 1100)
+end)
+-- ============================================================================
+
 -- ============================================================================
 -- Leveling
 -- Simple EXP -> Level conversion:
@@ -1370,19 +1401,24 @@ function Leveling.grant_exp(ctx, e, base)
   e.xp    = (e.xp or 0) + gained
 
   local levels_gained = 0
-  while e.xp >= (e.level * 1000) do
-    e.xp = e.xp - (e.level * 1000)
-    Leveling.level_up(ctx, e)         -- assumes this increments e.level
-    e.level = e.level or (levels_gained + 2) -- belt-and-suspenders if level_up forgot
-    levels_gained = levels_gained + 1
+  while true do
+    local need = Leveling.xp_to_next(ctx, e, e.level or 1)
+    if (e.xp or 0) >= need then
+      e.xp = (e.xp or 0) - need
+      Leveling.level_up(ctx, e)         -- assumes this increments e.level
+      e.level = e.level or (levels_gained + 2) -- belt-and-suspenders if level_up forgot
+      levels_gained = levels_gained + 1
+    else
+      break
+    end
   end
 
   if ctx and ctx.debug then
-    local next_threshold = e.level * 1000
-    local to_next = next_threshold - e.xp
+    local next_threshold = Leveling.xp_to_next(ctx, e, e.level or 1)
+    local to_next = next_threshold - (e.xp or 0)
     print(string.format(
       "[DEBUG][Leveling] Level: %d | XP: %.1f | Next Threshold: %d | To Next: %.1f | Gained: %.1f (pct=%.1f%%) | Levels+%d",
-      e.level, e.xp, next_threshold, to_next, gained, pct, levels_gained
+      e.level, e.xp or 0, next_threshold, to_next, gained, pct, levels_gained
     ))
   end
 
@@ -1392,6 +1428,7 @@ function Leveling.grant_exp(ctx, e, base)
 
   return gained, levels_gained
 end
+
 
 function Leveling.level_up(ctx, e)
   e.level        = (e.level or 1) + 1
@@ -1985,6 +2022,7 @@ function Demo.run()
   -- Create actors -------------------------------------------------------------
   local hero = make_actor('Hero', defs, Content.attach_attribute_derivations)
   hero.side = 1
+  hero.level_curve = 'fast_start'  -- Example curve, default curve used otherwise
   hero.stats:add_base('physique',    16)
   hero.stats:add_base('cunning',     14)
   hero.stats:add_base('spirit',      10)

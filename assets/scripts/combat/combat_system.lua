@@ -1675,6 +1675,88 @@ local Flamebrand = {
 
 
 
+---------------------------
+-- Direct Casting: Cast (costs, cooldowns, OnCast emission)
+---------------------------
+local Cast = {}
+
+-- Internal: safe stat fetch
+-- Stats:get returns 0 for undefined names via our fallback; this just guards nil.
+local function _get(S, name)
+  local ok = S and S.get
+  if not ok then return 0 end
+  return S:get(name) or 0
+end
+
+--- Cast a spell from an entity.
+--  @param ctx table: needs ctx.bus (EventBus), ctx.time (Time), get_enemies_of/get_allies_of
+--  @param caster table: entity with .stats, .timers, .energy
+--  @param spell_ref table|string: spell table or key in Content.Spells
+--  @param primary_target any|nil: optional explicit target (bypasses spell.targeter)
+--  @return boolean ok, string|nil err
+function Cast.cast(ctx, caster, spell_ref, primary_target)
+  local spell = (type(spell_ref) == 'string') and Content.Spells[spell_ref] or spell_ref
+  if not spell then return false, 'unknown_spell' end
+
+  -- Cooldown ----------------------------------------------------------
+  caster.timers = caster.timers or {}
+  local key = 'cd:' .. (spell.id or spell.name or 'spell')
+  local cd  = spell.cooldown or 0
+
+  -- Item-granted spells ignore caster cooldown reduction
+  if not spell.item_granted then
+    local cdr = _get(caster.stats, 'cooldown_reduction')
+    cd = cd * math.max(0, 1 - cdr / 100)
+  end
+
+  if not ctx.time:is_ready(caster.timers, key) then
+    return false, 'cooldown'
+  end
+
+  -- Costs -------------------------------------------------------------
+  if spell.cost then
+    local red  = _get(caster.stats, 'skill_energy_cost_reduction')
+    local cost = spell.cost * math.max(0, 1 - red / 100)
+
+    caster.energy = caster.energy or _get(caster.stats, 'energy')
+    if caster.energy < cost then
+      return false, 'no_energy'
+    end
+    caster.energy = caster.energy - cost
+  end
+
+  -- Fire uniform trigger for listeners (SAP-style "ability used")
+  ctx.bus:emit('OnCast', {
+    ctx    = ctx,
+    source = caster,
+    spell  = spell,
+    target = primary_target
+  })
+
+  -- Target resolution -------------------------------------------------
+  local tgt_list
+  if primary_target then
+    tgt_list = { primary_target }
+  else
+    tgt_list = spell.targeter({
+      source        = caster,
+      target        = primary_target,
+      get_enemies_of= ctx.get_enemies_of,
+      get_allies_of = ctx.get_allies_of,
+    })
+  end
+
+  -- Execute spell effects for all targets
+  for _, t in ipairs(tgt_list or {}) do
+    spell.effects(ctx, caster, t)
+  end
+
+  -- Start cooldown
+  ctx.time:set_cooldown(caster.timers, key, cd)
+  return true
+end
+
+
 local Demo = {}
 
 function Demo.run()
@@ -1824,95 +1906,32 @@ function Demo.run()
 
     granted_spells = { 'Fireball' },
   }
+  
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  
   assert(ItemSystem.equip(ctx, hero, Flamebrand))
   
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  
   ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre })
   ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre })
   ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre })
   
+  
+  -- (1) Player presses key: cast Fireball at a chosen enemy now
+  
+  local ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
+
+  -- (2) Item-granted active with its own cooldown unaffected by CDR:
+  -- mark the spell once at init-time:
+  Content.Spells.Fireball.item_granted = true
+
+  -- (3) A ground-targeted or self-targeted buff:
+  -- just pass the appropriate primary_target, or leave nil and let targeter select.
 
 end
 
----------------------------
--- Direct Casting: Cast (costs, cooldowns, OnCast emission)
----------------------------
-local Cast = {}
 
--- Internal: safe stat fetch
--- Stats:get returns 0 for undefined names via our fallback; this just guards nil.
-local function _get(S, name)
-  local ok = S and S.get
-  if not ok then return 0 end
-  return S:get(name) or 0
-end
-
---- Cast a spell from an entity.
---  @param ctx table: needs ctx.bus (EventBus), ctx.time (Time), get_enemies_of/get_allies_of
---  @param caster table: entity with .stats, .timers, .energy
---  @param spell_ref table|string: spell table or key in Content.Spells
---  @param primary_target any|nil: optional explicit target (bypasses spell.targeter)
---  @return boolean ok, string|nil err
-function Cast.cast(ctx, caster, spell_ref, primary_target)
-  local spell = (type(spell_ref) == 'string') and Content.Spells[spell_ref] or spell_ref
-  if not spell then return false, 'unknown_spell' end
-
-  -- Cooldown ----------------------------------------------------------
-  caster.timers = caster.timers or {}
-  local key = 'cd:' .. (spell.id or spell.name or 'spell')
-  local cd  = spell.cooldown or 0
-
-  -- Item-granted spells ignore caster cooldown reduction
-  if not spell.item_granted then
-    local cdr = _get(caster.stats, 'cooldown_reduction')
-    cd = cd * math.max(0, 1 - cdr / 100)
-  end
-
-  if not ctx.time:is_ready(caster.timers, key) then
-    return false, 'cooldown'
-  end
-
-  -- Costs -------------------------------------------------------------
-  if spell.cost then
-    local red  = _get(caster.stats, 'skill_energy_cost_reduction')
-    local cost = spell.cost * math.max(0, 1 - red / 100)
-
-    caster.energy = caster.energy or _get(caster.stats, 'energy')
-    if caster.energy < cost then
-      return false, 'no_energy'
-    end
-    caster.energy = caster.energy - cost
-  end
-
-  -- Fire uniform trigger for listeners (SAP-style "ability used")
-  ctx.bus:emit('OnCast', {
-    ctx    = ctx,
-    source = caster,
-    spell  = spell,
-    target = primary_target
-  })
-
-  -- Target resolution -------------------------------------------------
-  local tgt_list
-  if primary_target then
-    tgt_list = { primary_target }
-  else
-    tgt_list = spell.targeter({
-      source        = caster,
-      target        = primary_target,
-      get_enemies_of= ctx.get_enemies_of,
-      get_allies_of = ctx.get_allies_of,
-    })
-  end
-
-  -- Execute spell effects for all targets
-  for _, t in ipairs(tgt_list or {}) do
-    spell.effects(ctx, caster, t)
-  end
-
-  -- Start cooldown
-  ctx.time:set_cooldown(caster.timers, key, cd)
-  return true
-end
 
 
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil

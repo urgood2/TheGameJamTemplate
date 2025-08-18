@@ -135,19 +135,37 @@ end
 -- ============================================================================
 
 -- === Spell mutator pipeline ==================================================
--- Items or traits can register wrappers for a spell per-caster.
--- A mutator is: function(effects_fn) -> new_effects_fn
+-- A mutator is: function(orig_effects_fn) -> new_effects_fn
 local function apply_spell_mutators(caster, spell_ref, effects_fn)
   local id = get_spell_id(spell_ref)
   local muts = caster and caster.spell_mutators and caster.spell_mutators[id]
-  if muts then
+
+  if muts and #muts > 0 then
+    -- sort by priority if present
+    table.sort(muts, function(a, b) return (a.pr or 0) < (b.pr or 0) end)
+
+    if caster and caster.ctx and caster.ctx.debug then
+      print(string.format("[DEBUG][Mutators] Applying %d mutator(s) to spell '%s'", #muts, tostring(id)))
+    end
+
     for i = 1, #muts do
-      effects_fn = muts[i](effects_fn)
+      local m = muts[i]
+      if caster and caster.ctx and caster.ctx.debug then
+        print(string.format("[DEBUG][Mutators]   #%d pr=%s wrap=%s", 
+          i, tostring(m.pr or 0), tostring(m.wrap)))
+      end
+      effects_fn = m.wrap(effects_fn)
+    end
+  else
+    if caster and caster.ctx and caster.ctx.debug then
+      print(string.format("[DEBUG][Mutators] No mutators for spell '%s'", tostring(id)))
     end
   end
+
   return effects_fn
 end
 -- ============================================================================
+
 
 -- Pretty-print a concise stat dump for an actor.
 -- Compact, readable stat dump with optional runtime sections.
@@ -1801,6 +1819,44 @@ function ItemSystem.equip(ctx, e, item)
       print(string.format("[DEBUG][ItemSystem] Subscribed proc for trigger '%s'", p.trigger or "?"))
     end
   end
+  
+  
+  -- Register spell mutators from the item (optional field on items)
+  -- item.spell_mutators = {
+  --   Fireball = {
+  --     { pr = 0, wrap = function(orig) return function(ctx, src, tgt) ... end end },
+  --     function(orig) return function(ctx, src, tgt) ... end end,  -- shorthand (pr=0)
+  --   },
+  --   BasicAttack = { ... }
+  -- }
+  if item.spell_mutators then
+    e.spell_mutators = e.spell_mutators or {}
+    item._mut_applied = {}  -- track inserts to remove on unequip
+
+    for spell_key, list in pairs(item.spell_mutators) do
+      local sid = get_spell_id(spell_key)  -- supports id or name as key
+      local bucket = e.spell_mutators[sid]
+      if not bucket then
+        bucket = {}
+        e.spell_mutators[sid] = bucket
+      end
+
+      -- Normalize each mutator to { pr=?, wrap=function } and insert
+      for _, entry in ipairs(list) do
+        local mut
+        if type(entry) == 'function' then
+          mut = { pr = 0, wrap = entry }
+        else
+          -- assume table { pr=?, wrap=function }
+          mut = { pr = entry.pr or 0, wrap = entry.wrap }
+        end
+        table.insert(bucket, mut)
+        -- remember where we inserted so we can remove later
+        item._mut_applied[#item._mut_applied + 1] = { sid = sid, ref = mut }
+      end
+    end
+  end
+
 
   -- Granted actives: toggle spell availability on the entity
   if item.granted_spells then
@@ -1846,6 +1902,27 @@ function ItemSystem.unequip(ctx, e, slot)
       table.remove(e.gear_conversions, i)
     end
     item._conv_start, item._conv_end = nil, nil
+  end
+  
+  -- Unregister mutators added by this item
+  if item._mut_applied and e.spell_mutators then
+    for i = 1, #item._mut_applied do
+      local rec = item._mut_applied[i]
+      local bucket = e.spell_mutators[rec.sid]
+      if bucket then
+        -- remove by identity
+        for j = #bucket, 1, -1 do
+          if bucket[j] == rec.ref then
+            table.remove(bucket, j)
+            break
+          end
+        end
+        if #bucket == 0 then
+          e.spell_mutators[rec.sid] = nil
+        end
+      end
+    end
+    item._mut_applied = nil
   end
 
   -- Unsubscribe proc listeners
@@ -2169,6 +2246,29 @@ function Demo.run()
     ability_mods = {
       Fireball = { dmg_pct = 20, cd_add = -0.5, cost_pct = -10 },
     },
+  }
+  
+  -- spell-mutator
+  local ThunderSeal = {
+    id='thunder_seal', slot='amulet',
+    mods = { },  -- normal stat mods if you want
+    -- Change BasicAttack to deal 100% weapon as lightning instead of physical.
+    spell_mutators = {
+      BasicAttack = {
+        { pr = 0, wrap = function(orig)
+            return function(ctx, src, tgt)
+              -- replace base behavior fully:
+              Effects.deal_damage {
+                weapon = true, scale_pct = 100,
+                skill_conversions = { { from='physical', to='lightning', pct=100 } }
+              } (ctx, src, tgt)
+              -- If you wanted to *augment* instead, also call the original:
+              -- orig(ctx, src, tgt)
+            end
+          end
+        }
+      }
+    }
   }
 
   local Flamebrand = {

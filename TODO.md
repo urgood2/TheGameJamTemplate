@@ -76,6 +76,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- [ ] test ThunderSeal
 - [ ] how does this handle multiple sources? is this enough?
 ```lua
 Effects.apply_rr    { kind = 'rr1', damage = 'fire', amount = 20, duration = 4, stack = { mode='count', max=3 }  -- enables up to 3 concurrent stacks

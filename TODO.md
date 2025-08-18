@@ -76,11 +76,13 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- [ ] test ThunderSeal
-- [ ] how does this handle multiple sources? is this enough?
+- [ ] how to spell mutators mesh with the skill build system-based on skill lelve?
+- [ ] test ThunderSeal -> the wrong attack activates here?
 ```lua
-Effects.apply_rr    { kind = 'rr1', damage = 'fire', amount = 20, duration = 4, stack = { mode='count', max=3 }  -- enables up to 3 concurrent stacks
-      },
+  -- Execute effects
+  for _, t in ipairs(tgt_list or {}) do
+    eff(ctx, caster, t)
+  end
 ```
 - [ ] does fireball apply RR every time it runs? is there a way to make it optionally stack? 
 - [ ] what is the lifetime of the context? how is the timers updated?

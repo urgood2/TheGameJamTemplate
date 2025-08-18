@@ -27,6 +27,12 @@ local Core = {}
 -- ============================================================================
 local util = {}
 
+-- ============================================================================
+-- Gameplay Modules (namespaces)
+-- These are placeholders for organization; you can attach functions later.
+-- ============================================================================
+local Effects, Combat, Items, Leveling, Content, StatusEngine, World = {}, {}, {}, {}, {}, {}, {}
+
 --- Deep copy a Lua table (recursively copies nested tables).
 --  Non-table values are copied by value; functions and metatables are not
 --  specially handled (intended for plain data tables).
@@ -136,7 +142,7 @@ end
 
 -- === Spell mutator pipeline ==================================================
 -- A mutator is: function(orig_effects_fn) -> new_effects_fn
-local function apply_spell_mutators(caster, spell_ref, effects_fn)
+local function apply_spell_mutators(caster, ctx, spell_ref, effects_fn)
   local id = get_spell_id(spell_ref)
   local muts = caster and caster.spell_mutators and caster.spell_mutators[id]
 
@@ -144,20 +150,20 @@ local function apply_spell_mutators(caster, spell_ref, effects_fn)
     -- sort by priority if present
     table.sort(muts, function(a, b) return (a.pr or 0) < (b.pr or 0) end)
 
-    if caster and caster.ctx and caster.ctx.debug then
+    if caster and ctx.debug then
       print(string.format("[DEBUG][Mutators] Applying %d mutator(s) to spell '%s'", #muts, tostring(id)))
     end
 
     for i = 1, #muts do
       local m = muts[i]
-      if caster and caster.ctx and caster.ctx.debug then
+      if caster and ctx.debug then
         print(string.format("[DEBUG][Mutators]   #%d pr=%s wrap=%s", 
           i, tostring(m.pr or 0), tostring(m.wrap)))
       end
       effects_fn = m.wrap(effects_fn)
     end
   else
-    if caster and caster.ctx and caster.ctx.debug then
+    if caster and ctx.debug then
       print(string.format("[DEBUG][Mutators] No mutators for spell '%s'", tostring(id)))
     end
   end
@@ -878,11 +884,7 @@ Core.DAMAGE_TYPES = DAMAGE_TYPES
 
 
 
--- ============================================================================
--- Gameplay Modules (namespaces)
--- These are placeholders for organization; you can attach functions later.
--- ============================================================================
-local Effects, Combat, Items, Leveling, Content, StatusEngine, World = {}, {}, {}, {}, {}, {}, {}
+
 
 -- Pull core dependencies out of Core (no behavior change)
 local util, EventBus, Time, StatDef, Stats, RR, Conv, Targeters, Cond, DAMAGE_TYPES =
@@ -1522,10 +1524,11 @@ Content.Spells = {
   -- },
   
   Fireball = {
-    id      = 'Fireball_learned', -- optional ID, can differ from name
-    name    = 'Fireball',
-    class   = 'pyromancy',
-    trigger = 'OnCast',
+    id           = 'Fireball', -- optional ID, can differ from name
+    name         = 'Fireball',
+    class        = 'pyromancy',
+    trigger      = 'OnCast',
+    item_granted = true, -- optional, used for item-granted spells which don't get cooldown reduction
     targeter = function(ctx) return { ctx.target } end,
 
     -- Level/mod-aware builder. If absent, Cast.cast falls back to .effects.
@@ -1537,14 +1540,20 @@ Content.Spells = {
       local rr   = 20  + (level - 1) * 5       -- +5% RR per level
       local dmg_scale = 1 + (mods.dmg_pct or 0) / 100
 
-      return Effects.seq {
-        Effects.deal_damage {
-          components = { { type = 'fire', amount = base * dmg_scale } }
-        },
-        Effects.apply_rr {
-          kind = 'rr1', damage = 'fire', amount = rr, duration = 4
-        },
-      }
+      -- return Effects.seq {
+      --   Effects.deal_damage {
+      --     components = { { type = 'fire', amount = base * dmg_scale } }
+      --   },
+      --   Effects.apply_rr {
+      --     kind = 'rr1', damage = 'fire', amount = rr, duration = 4
+      --   },
+      -- }
+      
+      return function (ctx, src, tgt)
+        -- If Cast.cast already called .build, .effects won’t be used.
+        Effects.deal_damage { components = { { type='fire', amount = base * dmg_scale } } } (ctx, src, tgt)
+        Effects.apply_rr { kind='rr1', damage='fire', amount=rr, duration=4 } (ctx, src, tgt)
+      end
     end,
 
     -- Backward compatible default:
@@ -1732,14 +1741,14 @@ end
 --  @return boolean ok, string|nil err
 function ItemSystem.equip(ctx, e, item)
   if ctx.debug then
-    print(string.format("[DEBUG][ItemSystem] Attempting to equip item '%s' into slot '%s'", item.name or "?", item.slot or "?"))
+    print(string.format("[DEBUG][ItemSystem] Attempting to equip item '%s' into slot '%s'", item.id or "?", item.slot or "?"))
   end
 
   -- Gate by attribute and slot rules
   local ok, err = Items.can_equip(e, item)
   if not ok then
     if ctx.debug then
-      print(string.format("[DEBUG][ItemSystem] Cannot equip '%s': %s", item.name or "?", err or "unknown error"))
+      print(string.format("[DEBUG][ItemSystem] Cannot equip '%s': %s", item.id or "?", err or "unknown error"))
     end
     return false, err
   end
@@ -1806,11 +1815,11 @@ function ItemSystem.equip(ctx, e, item)
       if math.random() * 100 <= (p.chance or 100) then
         local tgt = ev.target or e
         if ctx.debug then
-          print(string.format("[DEBUG][ItemSystem] Proc triggered on '%s': %s", item.name or "?", p.trigger or "?"))
+          print(string.format("[DEBUG][ItemSystem] Proc triggered on '%s': %s", item.id or "?", p.trigger or "?"))
         end
         p.effects(ctx, e, tgt)
       elseif ctx.debug then
-        print(string.format("[DEBUG][ItemSystem] Proc check failed for '%s' (%s)", item.name or "?", p.trigger or "?"))
+        print(string.format("[DEBUG][ItemSystem] Proc check failed for '%s' (%s)", item.id or "?", p.trigger or "?"))
       end
     end
 
@@ -1873,7 +1882,7 @@ function ItemSystem.equip(ctx, e, item)
   e.equipped[item.slot] = item
   e.stats:recompute()
   if ctx.debug then
-    print(string.format("[DEBUG][ItemSystem] Equipped '%s' into slot '%s'. Stats recomputed.", item.name or "?", item.slot or "?"))
+    print(string.format("[DEBUG][ItemSystem] Equipped '%s' into slot '%s'. Stats recomputed.", item.id or "?", item.slot or "?"))
   end
   return true
 end
@@ -2062,7 +2071,7 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
   if spell.build then
     eff = spell.build(lvl, mods)  -- pass both, non-breaking for old spells
   end
-  eff = apply_spell_mutators(caster, spell, eff)
+  eff = apply_spell_mutators(caster, ctx, spell, eff)
 
   -- Execute effects
   for _, t in ipairs(tgt_list or {}) do
@@ -2252,14 +2261,16 @@ function Demo.run()
   local ThunderSeal = {
     id='thunder_seal', slot='amulet',
     mods = { },  -- normal stat mods if you want
-    -- Change BasicAttack to deal 100% weapon as lightning instead of physical.
+    -- Change Fireball to deal 100% weapon as lightning instead of fire.
     spell_mutators = {
-      BasicAttack = {
-        { pr = 0, wrap = function(orig)
+      Fireball = {
+        { pr = 0, -- mutator priority, 0=first, higher=later
+          wrap = function(orig) -- pass the original effects fn
+            -- return a new function that replaces the original behavior
             return function(ctx, src, tgt)
               -- replace base behavior fully:
               Effects.deal_damage {
-                weapon = true, scale_pct = 100,
+                weapon = true, scale_pct = 200,
                 skill_conversions = { { from='physical', to='lightning', pct=100 } }
               } (ctx, src, tgt)
               -- If you wanted to *augment* instead, also call the original:
@@ -2306,6 +2317,10 @@ function Demo.run()
   util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
   
   assert(ItemSystem.equip(ctx, hero, FlamebandPlus))
+  
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  
+  assert(ItemSystem.equip(ctx, hero, ThunderSeal))
   
   util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
   

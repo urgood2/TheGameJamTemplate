@@ -1299,16 +1299,40 @@ end
 --   - xp threshold per level = (level * 1000)
 --   - on level-up: +1 attribute point, +3 skill points, +1 mastery up to 2,
 --     +10 OA and +10 DA via base add.
--- Emits: 'OnLevelUp'
+-- Emits: 'OnLevelUp' and 'OnExperienceGained' events.
 -- ============================================================================
 function Leveling.grant_exp(ctx, e, base)
-  local bonus = 1 + e.stats:get('experience_gained_pct') / 100
-  e.xp = (e.xp or 0) + base * bonus
-
-  while e.xp >= ((e.level or 1) * 1000) do
-    e.xp = e.xp - ((e.level or 1) * 1000)
-    Leveling.level_up(ctx, e)
+  local pct = 0
+  if e.stats and e.stats.get then
+    pct = e.stats:get('experience_gained_pct') or 0
   end
+  local gained = base * (1 + pct / 100)
+
+  e.level = e.level or 1
+  e.xp    = (e.xp or 0) + gained
+
+  local levels_gained = 0
+  while e.xp >= (e.level * 1000) do
+    e.xp = e.xp - (e.level * 1000)
+    Leveling.level_up(ctx, e)         -- assumes this increments e.level
+    e.level = e.level or (levels_gained + 2) -- belt-and-suspenders if level_up forgot
+    levels_gained = levels_gained + 1
+  end
+
+  if ctx and ctx.debug then
+    local next_threshold = e.level * 1000
+    local to_next = next_threshold - e.xp
+    print(string.format(
+      "[DEBUG][Leveling] Level: %d | XP: %.1f | Next Threshold: %d | To Next: %.1f | Gained: %.1f (pct=%.1f%%) | Levels+%d",
+      e.level, e.xp, next_threshold, to_next, gained, pct, levels_gained
+    ))
+  end
+
+  if ctx and ctx.bus and ctx.bus.emit then
+    ctx.bus:emit('OnExperienceGained', { entity = e, amount = gained, levels = levels_gained })
+  end
+
+  return gained, levels_gained
 end
 
 function Leveling.level_up(ctx, e)
@@ -1969,7 +1993,31 @@ function Demo.run()
 
   -- (3) A ground-targeted or self-targeted buff:
   -- just pass the appropriate primary_target, or leave nil and let targeter select.
-
+  
+  
+  
+  -- leveling & granted spells
+  ctx.bus:on('OnLevelUp', function(ev)
+    local e = ev.entity
+    -- Auto-allocate Physique each level:
+    e.stats:add_base('physique', 1)
+    e.stats:recompute()
+    
+    log_debug("Level up!", e.name, "now at level", e.level, "with", e.attr_points, "attribute points and", e.skill_points, "skill points.")
+    
+    -- Unlock Fireball at level 3:
+    if e.level == 3 then
+      e.granted_spells = e.granted_spells or {}
+      e.granted_spells['Fireball'] = true
+    end
+  end)
+  
+  Leveling.grant_exp(ctx, hero, 1500)  -- grant some exp to level up
+  Leveling.grant_exp(ctx, hero, 1500)  -- grant some exp to level up
+  
+  -- Final stats dump
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
 end
 
 

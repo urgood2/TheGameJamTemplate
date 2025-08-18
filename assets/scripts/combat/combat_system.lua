@@ -296,6 +296,23 @@ end
 -- Expose util in Core
 Core.util = util
 
+-- Core-level helper (optional)
+--- Subscribes a function to an event on the context's event bus and returns an unsubscribe function.
+-- @param ctx table The context containing the event bus (`ctx.bus`).
+-- @param ev string The event name to subscribe to.
+-- @param fn function The callback function to invoke when the event is triggered.
+-- @param pr any Optional priority or parameter passed to the bus's `on` method.
+-- @return function A function that, when called, unsubscribes the callback from the event.
+function Core.on(ctx, ev, fn, pr)
+  local bus = ctx.bus
+  bus:on(ev, fn, pr)
+  return function()  -- unsubscribe
+    local b = bus.listeners[ev]
+    if not b then return end
+    for i=#b,1,-1 do if b[i].fn == fn then table.remove(b, i) break end end
+  end
+end
+
 -- ============================================================================
 -- EventBus
 -- Minimal pub/sub system for decoupled event handling.
@@ -1362,7 +1379,8 @@ Content.Spells = {
     targeter = function(ctx) return { ctx.target } end,
     effects  = Effects.seq {
       Effects.deal_damage { components = { { type = 'fire', amount = 120 } } },
-      Effects.apply_rr    { kind = 'rr1', damage = 'fire', amount = 20, duration = 4 },
+      Effects.apply_rr    { kind = 'rr1', damage = 'fire', amount = 20, duration = 4, stack = { mode='count', max=3 }  -- enables up to 3 concurrent stacks
+      },
     },
   },
 

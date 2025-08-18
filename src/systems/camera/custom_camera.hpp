@@ -369,7 +369,7 @@ public:
         offset.x -= offset.x * decay;
         offset.y -= offset.y * decay;
         
-        SPDLOG_DEBUG("Camera offset: ({}, {})", offset.x, offset.y);
+        // SPDLOG_DEBUG("Camera offset: ({}, {})", offset.x, offset.y);
 
         // Apply the offset to your camera target
         cam.target.x = sx.value + offset.x;

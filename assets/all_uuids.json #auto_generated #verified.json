@@ -14426,6 +14426,15 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/colors.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\colors.json"
     ],
+    "combat_combat_system": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/combat/combat_system.lua"
+    ],
+    "combat_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/combat"
+    ],
+    "combat_system": [
+        "combat_system.lua"
+    ],
     "comma_default_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_comma.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_comma.png"

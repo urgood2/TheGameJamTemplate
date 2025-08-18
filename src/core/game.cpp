@@ -1698,9 +1698,9 @@ void endStencil()
         cpBB   queryBB = cpBBNewForCircle(pt, 0.0f);
         
         // 2) Log what you’re about to ask:
-        spdlog::info("Querying spatial index at pt = ({:.2f}, {:.2f}), BB = l={:.2f},b={:.2f},r={:.2f},t={:.2f}",
-             pt.x, pt.y,
-             queryBB.l, queryBB.b, queryBB.r, queryBB.t);
+        // spdlog::info("Querying spatial index at pt = ({:.2f}, {:.2f}), BB = l={:.2f},b={:.2f},r={:.2f},t={:.2f}",
+        //      pt.x, pt.y,
+        //      queryBB.l, queryBB.b, queryBB.r, queryBB.t);
              
         // 3) Wrap your callback in a named function so you can add logs:
         auto debugQuery = +[](void *obj, void *queryObj, cpCollisionID, void *userData) -> unsigned {
@@ -1708,9 +1708,9 @@ void endStencil()
             auto *point = static_cast<cpVect*>(queryObj);
 
             // log each candidate tile the index returns:
-            spdlog::info("  → candidate tile BB l={:.2f},b={:.2f},r={:.2f},t={:.2f}; checking point ({:.2f},{:.2f})",
-                        tile->bb.l, tile->bb.b, tile->bb.r, tile->bb.t,
-                        point->x, point->y);
+            // spdlog::info("  → candidate tile BB l={:.2f},b={:.2f},r={:.2f},t={:.2f}; checking point ({:.2f},{:.2f})",
+            //             tile->bb.l, tile->bb.b, tile->bb.r, tile->bb.t,
+            //             point->x, point->y);
 
             if(cpBBContainsVect(tile->bb, *point)) {
                 *static_cast<CachedTile**>(userData) = tile;

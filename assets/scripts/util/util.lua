@@ -738,7 +738,7 @@ end
 
 function hideTooltip()
   if (globals.ui.tooltipUIBox == nil) then
-    log_debug("hideTooltip: tooltipUIBox is not set up, skipping")
+    -- log_debug("hideTooltip: tooltipUIBox is not set up, skipping")
     return
   end
   local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)

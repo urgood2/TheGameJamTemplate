@@ -901,7 +901,7 @@ namespace input
             if (registry.valid(inputState.activeScrollPane) && inputState.activeScrollPane != entt::null && registry.any_of<ui::UIScrollComponent>(inputState.activeScrollPane) && std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeScrollPane) != inputState.nodes_at_cursor.end())
             {
                 // active scroll pane is under cursor, apply scroll
-                SPDLOG_DEBUG("Applying scroll to active scroll pane: {}, amt = {}", static_cast<int>(inputState.activeScrollPane), mouseWheelMove * scrollSpeed);
+                // SPDLOG_DEBUG("Applying scroll to active scroll pane: {}, amt = {}", static_cast<int>(inputState.activeScrollPane), mouseWheelMove * scrollSpeed);
                 
                 auto &scrollComponent = registry.get<ui::UIScrollComponent>(inputState.activeScrollPane);
                 scrollComponent.offset += mouseWheelMove * scrollSpeed;
@@ -918,7 +918,7 @@ namespace input
                 
                 
                 scrollComponent.prevOffset = scrollComponent.offset;
-                SPDLOG_DEBUG("New scroll offset: {}", scrollComponent.offset);
+                // SPDLOG_DEBUG("New scroll offset: {}", scrollComponent.offset);
             }
             else {
                 // no scroll pane under cursor, reset

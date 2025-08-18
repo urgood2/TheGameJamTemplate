@@ -4,6 +4,7 @@ require("ai.init") -- Read in ai scripts and populate the ai table
 require("util.util")
 require("ui.ui_defs")
 require("core.entity_factory")
+local combat_core = require("combat.combat_system")
 
 local shader_prepass = require("shaders.prepass_example")
 require("core.entity_factory")
@@ -856,13 +857,13 @@ function main.init()
         
         
         -- debug print the stats
-        log_debug("Total Global Damage Reduction:", totalGlobalDamageReduction)
-        log_debug("Total Acid Damage Reduction:", totalAcidDamageReduction)
-        log_debug("Total Cold Damage Reduction:", totalColdDamageReduction)
-        log_debug("Total Dodge Chance:", totalDodgeChance)
-        log_debug("Total Damage Taken Multiplier:", totalDamageTakenMultiplier)
-        log_debug("Total On Hit Callbacks:", #onHitCallbacks)
-        log_debug("Total On Dodge Callbacks:", #onDodgeCallbacks)
+        -- log_debug("Total Global Damage Reduction:", totalGlobalDamageReduction)
+        -- log_debug("Total Acid Damage Reduction:", totalAcidDamageReduction)
+        -- log_debug("Total Cold Damage Reduction:", totalColdDamageReduction)
+        -- log_debug("Total Dodge Chance:", totalDodgeChance)
+        -- log_debug("Total Damage Taken Multiplier:", totalDamageTakenMultiplier)
+        -- log_debug("Total On Hit Callbacks:", #onHitCallbacks)
+        -- log_debug("Total On Dodge Callbacks:", #onDodgeCallbacks)
         
         function convenientTrackFadeOut(trackName, duration)
             -- convenience function to fade out a track
@@ -1254,7 +1255,7 @@ function main.init()
         lume.extend(colonists, globals.gold_diggers or {})
         lume.extend(colonists, globals.damage_cushions or {})
 
-        log_debug("Checking colonists for death. Count:", #colonists)
+        -- log_debug("Checking colonists for death. Count:", #colonists)
 
         for _, colonist in pairs(colonists) do
             if registry:valid(colonist) and getBlackboardFloat(colonist, "health") <= 0 then
@@ -1296,6 +1297,10 @@ function main.init()
     end)
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
+    
+    
+    -- run combat demo
+    combat_core.Game.Demo.run()
 end
 
 function main.update(dt)

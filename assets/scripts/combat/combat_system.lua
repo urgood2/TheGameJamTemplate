@@ -91,6 +91,208 @@ function util.weighted_choice(entries)
   return entries[#entries].item
 end
 
+-- Pretty-print a concise stat dump for an actor.
+-- Compact, readable stat dump with optional runtime sections.
+-- Usage:
+--   util.dump_stats(hero)                       -- minimal
+--   util.dump_stats(hero, ctx)                  -- adds time-aware info (cooldowns/RR timers)
+--   util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+function util.dump_stats(e, ctx, opts)
+  opts = opts or {}
+  local S = e.stats
+  if not S then
+    print("[dump_stats] no stats for entity: " .. (e.name or "?"))
+    return
+  end
+
+  local function G(n) return S:get(n) end
+  local function gi(n) return math.floor(G(n) + 0.5) end
+  local function gf(n, p) return tonumber(string.format("%." .. (p or 1) .. "f", G(n))) end
+  local function fmt_pct(n) return string.format("%d%%", math.floor(G(n)+0.5)) end
+  local function nonzero(v) return v ~= 0 and v ~= nil end
+  local function join(arr, sep)
+    local s, t = "", arr or {}
+    for i=1,#t do
+      s = s .. (i>1 and (sep or " ") or "") .. tostring(t[i])
+    end
+    return s
+  end
+
+  local lines = {}
+  local function add(line) lines[#lines+1] = line end
+
+  local name = e.name or "Entity"
+  local maxhp = e.max_health or G("health")
+  local hp = e.hp or maxhp
+  add(("==== %s ===="):format(name))
+  add(("HP %d/%d | Energy %d"):format(math.floor(hp+0.5), math.floor(maxhp+0.5), gi("energy")))
+
+  -- Attributes
+  add("Attr   | " .. join({
+    ("physique=%d"):format(gi("physique")),
+    ("cunning=%d"):format(gi("cunning")),
+    ("spirit=%d"):format(gi("spirit")),
+  }, "  "))
+
+  -- Offense
+  add("Off    | " .. join({
+    ("OA=%d"):format(gi("offensive_ability")),
+    ("AtkSpd=%.1f"):format(gf("attack_speed")),
+    ("CastSpd=%.1f"):format(gf("cast_speed")),
+    ("CritDmg=%s"):format(fmt_pct("crit_damage_pct")),
+    ("Wpn=%d-%d"):format(gi("weapon_min"), gi("weapon_max")),
+  }, "  "))
+
+  -- Defense
+  local block_line = ("Block=%s/%d"):format(fmt_pct("block_chance_pct"), gi("block_amount"))
+  add("Def    | " .. join({
+    ("DA=%d"):format(gi("defensive_ability")),
+    ("Armor=%d"):format(gi("armor")),
+    block_line,
+    ("Dodge=%s"):format(fmt_pct("dodge_chance_pct")),
+    ("Absorb=%%=%s flat=%d"):format(fmt_pct("percent_absorb_pct"), gi("flat_absorb")),
+  }, "  "))
+
+  -- Damage modifiers (only nonzero)
+  do
+    local mods = {}
+    for _, t in ipairs(Core.DAMAGE_TYPES) do
+      local v = G(t .. "_modifier_pct")
+      if nonzero(v) then mods[#mods+1] = ("%s=%d%%"):format(t, math.floor(v+0.5)) end
+    end
+    if #mods > 0 then add("DmgMod | " .. join(mods, "  ")) end
+  end
+
+  -- Resistances (only nonzero)
+  do
+    local res = {}
+    for _, t in ipairs(Core.DAMAGE_TYPES) do
+      local v = G(t .. "_resist_pct")
+      if nonzero(v) then res[#res+1] = ("%s=%d%%"):format(t, math.floor(v+0.5)) end
+    end
+    if #res > 0 then add("Resist | " .. join(res, "  ")) end
+  end
+
+  -- Optional: Active RR (per damage type), compact
+  if opts.rr then
+    local now = (ctx and ctx.time and ctx.time.now) or nil
+    local rr_lines = {}
+    if e.active_rr then
+      for _, t in ipairs(Core.DAMAGE_TYPES) do
+        local bucket = e.active_rr[t]
+        if bucket and #bucket > 0 then
+          local parts = {}
+          for i=1,#bucket do
+            local r = bucket[i]
+            if (not r.until_time) or (not now) or (r.until_time > now) then
+              local left = (now and r.until_time) and math.max(0, r.until_time - now) or nil
+              parts[#parts+1] = string.format("%s:%d%%%s",
+                r.kind, math.floor((r.amount or 0)+0.5),
+                left and string.format("(%.1fs)", left) or "")
+            end
+          end
+          if #parts > 0 then
+            rr_lines[#rr_lines+1] = string.format("%s: %s", t, join(parts, ", "))
+          end
+        end
+      end
+    end
+    if #rr_lines > 0 then add("RR     | " .. join(rr_lines, "  |  ")) end
+  end
+
+  -- Optional: Statuses (buffs/debuffs) — list IDs with remaining time
+  if opts.statuses then
+    local now = (ctx and ctx.time and ctx.time.now) or nil
+    local st = {}
+    if e.statuses then
+      for id, b in pairs(e.statuses) do
+        for i=1,#b.entries do
+          local en = b.entries[i]
+          local left = (now and en.until_time) and math.max(0, en.until_time - now) or nil
+          st[#st+1] = left and (id .. string.format("(%.1fs)", left)) or id
+        end
+      end
+    end
+    if #st > 0 then add("Status | " .. join(st, "  ")) end
+  end
+
+  -- Optional: DoTs summary
+  if opts.dots then
+    local now = (ctx and ctx.time and ctx.time.now) or nil
+    local ds = {}
+    if e.dots then
+      for i=1,#e.dots do
+        local d = e.dots[i]
+        local left = (now and d.until_time) and math.max(0, d.until_time - now) or nil
+        local nt   = (now and d.next_tick) and math.max(0, d.next_tick - now) or nil
+        ds[#ds+1] = string.format("%s dps=%.1f tick=%.1f%s%s",
+          d.type, d.dps or 0, d.tick or 1,
+          left and string.format(" left=%.1fs", left) or "",
+          nt and string.format(" next=%.1fs", nt) or "")
+      end
+    end
+    if #ds > 0 then add("DoTs   | " .. join(ds, "  ||  ")) end
+  end
+
+  -- Optional: Gear conversions (compact)
+  if opts.conv then
+    local cvs = {}
+    local list = e.gear_conversions or {}
+    for i=1,#list do
+      local c = list[i]
+      cvs[#cvs+1] = string.format("%s->%s:%d%%", c.from, c.to, c.pct or 0)
+    end
+    if #cvs > 0 then add("Conv   | " .. join(cvs, "  ")) end
+  end
+
+  -- Optional: Granted spells
+  if opts.spells then
+    local gs = {}
+    if e.granted_spells then
+      for id, on in pairs(e.granted_spells) do
+        if on then gs[#gs+1] = id end
+      end
+      table.sort(gs)
+    end
+    if #gs > 0 then add("Spells | " .. join(gs, ", ")) end
+  end
+
+  -- Optional: Tags
+  if opts.tags then
+    local ts = {}
+    if e.tags then
+      for k, v in pairs(e.tags) do
+        if v then ts[#ts+1] = tostring(k) end
+      end
+      table.sort(ts)
+    end
+    if #ts > 0 then add("Tags   | " .. join(ts, ", ")) end
+  end
+
+  -- Optional: Cooldown snapshot (keys starting with "cd:" & "block")
+  if opts.timers then
+    local now = (ctx and ctx.time and ctx.time.now) or nil
+    local cds = {}
+    if e.timers then
+      for k, tready in pairs(e.timers) do
+        if not now then
+          cds[#cds+1] = string.format("%s=%.2f", k, tready)
+        else
+          local left = math.max(0, tready - now)
+          if left > 0 then
+            cds[#cds+1] = string.format("%s: %.2fs", k, left)
+          end
+        end
+      end
+    end
+    if #cds > 0 then add("Timers | " .. join(cds, "  ")) end
+  end
+
+  add(("============"):rep(2))
+  print(table.concat(lines, "\n"))
+end
+
+
 -- Expose util in Core
 Core.util = util
 
@@ -677,8 +879,7 @@ Effects.modify_stat = function(p)
     ctx.bus:emit('OnBuffApplied', { source = src, target = tgt, name = p.name })
   end
 end
-
---- Deal damage with optional weapon scaling and conversions.
+-- Deal damage with optional weapon scaling and conversions.
 --  p = {
 --    weapon = <bool>,          -- if true, use src weapon_min/max and scale_pct
 --    scale_pct = <number>|100, -- weapon damage scale %
@@ -687,6 +888,55 @@ end
 --  }
 Effects.deal_damage = function(p)
   return function(ctx, src, tgt)
+    -- ---------- DEBUG HELPERS (print only when ctx.debug == true) -----------
+    local function dbg(fmt, ...)
+      if ctx.debug then print(string.format("[DEBUG][deal_damage] " .. fmt, ...)) end
+    end
+
+    local function _round1(x) return (x ~= nil) and tonumber(string.format("%.1f", x)) or x end
+
+    -- comps: array of { type=string, amount=number }
+    local function _comps_to_string(comps)
+      if not ctx.debug then return "" end
+      local tmp = {}
+      for i = 1, #comps do
+        local c = comps[i]
+        tmp[#tmp+1] = string.format("%s=%0.1f", tostring(c.type), _round1(c.amount))
+      end
+      table.sort(tmp) -- stable-ish, alphabetical by "type=…"
+      return table.concat(tmp, ", ")
+    end
+
+    -- sums: map { [damageType]=amount }
+    local function _sums_to_string(sums)
+      if not ctx.debug then return "" end
+      local keys, tmp = {}, {}
+      for k in pairs(sums) do keys[#keys+1] = k end
+      table.sort(keys)
+      for i = 1, #keys do
+        local k = keys[i]
+        tmp[#tmp+1] = string.format("%s=%0.1f", tostring(k), _round1(sums[k]))
+      end
+      return table.concat(tmp, ", ")
+    end
+
+    local function _rr_bucket_to_string(rrs)
+      if not ctx.debug then return "" end
+      if not rrs or #rrs == 0 then return "(none)" end
+      local parts = {}
+      for i = 1, #rrs do
+        local r = rrs[i]
+        -- kind: rr1/rr2/rr3 | amount | time left if any
+        local tleft = (r.until_time and (r.until_time - ctx.time.now)) or nil
+        if tleft and tleft < 0 then tleft = 0 end
+        parts[#parts+1] = string.format("%s:%s=%0.1f%s",
+          tostring(r.kind), tostring(r.damage), _round1(r.amount),
+          tleft and string.format(" (%.1fs)", _round1(tleft)) or "")
+      end
+      return table.concat(parts, ", ")
+    end
+    -- ------------------------------------------------------------------------
+
     -- Build raw components ----------------------------------------------------
     local comps = {}
 
@@ -696,29 +946,29 @@ Effects.deal_damage = function(p)
       local base = math.random() * (max - min) + min
       local scale = (p.scale_pct or 100) / 100
 
-      -- Weapon base contributes as physical
       comps[#comps + 1] = { type = 'physical', amount = base * scale }
+      dbg("Weapon roll: min=%.1f max=%.1f base=%.1f scale=%.2f", min, max, base, scale)
 
-      -- Add all flat elemental/etc. from attacker, scaled
       for _, dt in ipairs(DAMAGE_TYPES) do
         local flat = src.stats:get(dt .. '_damage')
         if flat ~= 0 then
           comps[#comps + 1] = { type = dt, amount = flat * scale }
+          dbg("Flat %s damage (scaled): %.1f", dt, flat * scale)
         end
       end
     else
-      -- Direct components (e.g., spells)
       for _, c in ipairs(p.components or {}) do
         comps[#comps + 1] = { type = c.type, amount = c.amount }
       end
+      dbg("Direct components: %s", _comps_to_string(comps))
     end
 
     -- Apply conversions: skill stage then gear stage
     comps = Conv.apply(comps, p.skill_conversions, src.gear_conversions)
+    dbg("After conversions: %s", _comps_to_string(comps))
 
     -- Hit/crit and defense ----------------------------------------------------
     local function pth(OA, DA)
-      -- Probability to hit formula (kept exactly as provided)
       local term1 = 3.15 * (OA / (3.5 * OA + DA))
       local term2 = 0.0002275 * (OA - DA)
       return (term1 + term2 + 0.2) * 100
@@ -727,14 +977,16 @@ Effects.deal_damage = function(p)
     local OA  = src.stats:get('offensive_ability')
     local DA  = tgt.stats:get('defensive_ability')
     local PTH = util.clamp(pth(OA, DA), 60, 140)
+    dbg("Hit check: OA=%.1f DA=%.1f PTH=%.1f%%", OA, DA, PTH)
 
     -- Miss check
     if math.random() * 100 > PTH then
+      dbg("Attack missed!")
       ctx.bus:emit('OnMiss', { source = src, target = tgt, pth = PTH })
       return
     end
 
-    -- Crit multiplier from PTH (piecewise; preserved exactly)
+    -- Crit multiplier from PTH (piecewise)
     local crit_mult =
       (PTH < 75)  and (PTH / 75) or
       (PTH < 90)  and 1.0        or
@@ -742,6 +994,7 @@ Effects.deal_damage = function(p)
       (PTH < 120) and 1.2        or
       (PTH < 130) and 1.3        or
       (PTH < 135) and 1.4        or (1.5 + (PTH - 135) * 0.005)
+    dbg("Crit multiplier: %.2f", crit_mult)
 
     -- Shield block ------------------------------------------------------------
     tgt.timers = tgt.timers or {}
@@ -756,6 +1009,7 @@ Effects.deal_damage = function(p)
       local base = 1.0
       local rec  = base * (1 - tgt.stats:get('block_recovery_reduction_pct') / 100)
       ctx.time:set_cooldown(tgt.timers, 'block', math.max(0.1, rec))
+      dbg("Block triggered: amt=%.1f next_ready=%.2f", block_amt, tgt.timers['block'] or -1)
     end
 
     -- Aggregate per-type and apply crit --------------------------------------
@@ -766,18 +1020,19 @@ Effects.deal_damage = function(p)
     for t, amt in pairs(sums) do
       sums[t] = amt * crit_mult
     end
+    dbg("Post-crit sums: %s", _sums_to_string(sums))
 
     -- Apply outgoing modifiers (attacker) ------------------------------------
     local allpct = 1 + src.stats:get('all_damage_pct') / 100
     for t, amt in pairs(sums) do
       sums[t] = amt * allpct * (1 + src.stats:get(t .. '_modifier_pct') / 100)
     end
+    dbg("After attacker mods: %s", _sums_to_string(sums))
 
     -- Defenses (RR, armor, resist, absorbs, block) ----------------------------
     local dealt = 0
 
     for t, amt in pairs(sums) do
-      -- Base resistance
       local base_res = tgt.stats:get(t .. '_resist_pct')
 
       -- Collect alive RR entries for this type
@@ -791,6 +1046,8 @@ Effects.deal_damage = function(p)
       end
 
       local res = RR.apply_all(base_res, alive_rr)
+      dbg("Type %s: start=%.1f base_res=%.1f final_res=%.1f | RR: %s",
+          t, amt, base_res, res, _rr_bucket_to_string(alive_rr))
 
       -- Armor mitigation (physical only)
       if t == 'physical' then
@@ -798,9 +1055,9 @@ Effects.deal_damage = function(p)
         local abs   = 0.70 * (1 + tgt.stats:get('armor_absorption_bonus_pct') / 100)
         local mit   = math.min(amt, armor) * abs
         amt = amt - mit
+        dbg("  Armor: armor=%.1f abs=%.2f mit=%.1f remain=%.1f", armor, abs, mit, amt)
       end
 
-      -- Resist, percent absorb, block, then flat absorb (order preserved)
       local after_res   = amt * (1 - res / 100)
       local after_pct   = after_res * (1 - tgt.stats:get('percent_absorb_pct') / 100)
       local after_block = after_pct
@@ -809,15 +1066,19 @@ Effects.deal_damage = function(p)
         local used = math.min(block_amt, after_pct)
         after_block = after_pct - used
         block_amt   = block_amt - used
+        dbg("  Block: used=%.1f remain=%.1f", used, block_amt)
       end
 
       local after_flat = math.max(0, after_block - tgt.stats:get('flat_absorb'))
+      dbg("  After absorbs (flat=%0.1f): %s=%0.1f",
+          tgt.stats:get('flat_absorb') or 0, t, after_flat)
       dealt = dealt + after_flat
     end
 
     -- Apply damage to target --------------------------------------------------
     local maxhp = tgt.max_health or tgt.stats:get('health')
     tgt.hp = util.clamp((tgt.hp or maxhp) - dealt, 0, maxhp)
+    dbg("Damage dealt total=%.1f, Target HP=%.1f/%.1f", dealt, tgt.hp, maxhp)
 
     -- Lifesteal (attacker) ----------------------------------------------------
     local ls = src.stats:get('life_steal_pct') or 0
@@ -825,6 +1086,7 @@ Effects.deal_damage = function(p)
       local heal = dealt * (ls / 100)
       local smax = src.max_health or src.stats:get('health')
       src.hp = util.clamp((src.hp or smax) + heal, 0, smax)
+      dbg("Lifesteal: +%.1f, Attacker HP=%.1f/%.1f", heal, src.hp, smax)
     end
 
     -- Reflect (target -> attacker) -------------------------------------------
@@ -833,6 +1095,7 @@ Effects.deal_damage = function(p)
       local re   = dealt * (ref / 100)
       local smax = src.max_health or src.stats:get('health')
       src.hp = util.clamp((src.hp or smax) - re, 0, smax)
+      dbg("Reflect: -%.1f, Attacker HP=%.1f/%.1f", re, src.hp, smax)
     end
 
     -- Retaliation (flat sum across types) ------------------------------------
@@ -845,6 +1108,7 @@ Effects.deal_damage = function(p)
     if ret > 0 then
       local smax = src.max_health or src.stats:get('health')
       src.hp = util.clamp((src.hp or smax) - ret, 0, smax)
+      dbg("Retaliation: -%.1f, Attacker HP=%.1f/%.1f", ret, src.hp, smax)
     end
 
     ctx.bus:emit('OnHitResolved', {
@@ -1423,6 +1687,7 @@ function Demo.run()
   local combat    = Combat.new(RR, DTS)
 
   local ctx = {
+    debug = true,  -- Set to true for verbose debug output
     bus = bus,
     time = time,
     combat = combat,
@@ -1488,7 +1753,7 @@ function Demo.run()
   end)
   
   
-  bus:on('OnMissed', function(ev)
+  bus:on('OnMiss', function(ev)
     print(string.format(
       '[%s] missed [%s]!',
       ev.source.name, ev.target.name))
@@ -1502,12 +1767,16 @@ function Demo.run()
   if util.rand() * 100.0 < (Content.Traits.EmberStrike.chance or 0) then
     Content.Traits.EmberStrike.effects(ctx, hero, ogre)
   end
+  
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
 
   -- 2. Cast Fireball
   local FB = Content.Spells.Fireball
   for _, t in ipairs(FB.targeter({ source = hero, target = ogre, get_enemies_of = ctx.get_enemies_of })) do
     FB.effects(ctx, hero, t)
   end
+  
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
 
   -- 3. Cast Poison Dart and tick DoTs
   local PD = Content.Spells.PoisonDart

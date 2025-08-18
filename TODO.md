@@ -77,15 +77,17 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 
 ## Things to fix/implement
 - [ ] fireball seems to apply RR every time it runs? how to make it optionally stack? why isn't fireball printing anything? fireball RR should wear off, right? how does that work? 
-- [ ] world.update not always ticking the poison. why?
 - [ ] counterattack produces no damage. why?
-- [ ] ensure that the damage calculations are correct by enabling logging with a debug flag
 - [ ] is active rr table being cleared?
 - [ ] need better way to see where the source of the damage is (or at least document item procs, etc)
-- [ ] need better way to understand when ts andeal damage function short circuits and why
+- [ ] what is the lifetime of the context? how is the timers updated?
+- [ ] current system does not have binary crits, only scaling, constantly applied crits based on OA and DA.
 - [ ] ability to hook custom lamndas for triggers, item procs, etc. to the combat system? how far to take it?
 - [ ] explore full item definition feature and make demo of each feature
 - [ ] test with the various other additions to the system, also add better logging and a stat dump for actors
+- [ ] how to handle level ups?
+- [ ] how to do effects that depend on the result of the previous sequence, like if an attack hits, then apply a stun, or if the attack crits, do someething else?
+- [ ] comprehensive demo of all features of the combat system, including item procs, triggers, etc.
 - [ ] stat & trigger & skill syste in progress https://chatgpt.com/share/689f6c1d-4540-800a-beb4-5ea0d59a746e / https://chatgpt.com/share/68a1db5c-5794-800a-bcf8-6ab001ec77c3
 - [ ] use handleTextInput()
 - [ ] examine current state of input system, does re-binding inputs work, for both keyboard and controller? input rebinding: https://chatgpt.com/share/689718e0-d830-800a-bfdb-446125c87ecd

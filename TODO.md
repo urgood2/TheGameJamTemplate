@@ -76,6 +76,9 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- [ ] apply corrections to system here: https://chatgpt.com/share/68a3336a-3b40-800a-b255-f80ed5e6310f
+- [ ] then work on more features in the first chat, like set item bonuses and the like.
+- [ ] add in triggers from various games like siralim, path of exile, grim dawn.
 - [ ] how to spell mutators mesh with the skill build system-based on skill lelve?
 - [ ] test ThunderSeal -> the wrong attack activates here?
 ```lua

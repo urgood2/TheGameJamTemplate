@@ -1504,7 +1504,7 @@ Content.Spells = {
   -- },
   
   Fireball = {
-    id      = 'Fireball',
+    id      = 'Fireball_learned', -- optional ID, can differ from name
     name    = 'Fireball',
     class   = 'pyromancy',
     trigger = 'OnCast',

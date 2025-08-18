@@ -2007,6 +2007,42 @@ function Demo.run()
   local time  = Time.new()
   local defs, DTS = StatDef.make()
   local combat    = Combat.new(RR, DTS)
+  
+  --[[
+    How to manage ctx in a real-time, many-entity scene
+
+    Use one long-lived ctx per combat space (scene/arena/room).
+    Keep it around as long as that space exists. This ctx holds:
+
+      bus (events shared by everyone in the space)
+
+      time (single clock all statuses, DoTs, cooldowns reference)
+
+      get_enemies_of / get_allies_of (resolvers for that space)
+
+      side/teams lists for iteration (ctx.side1, ctx.side2, …)
+
+    Entities carry their own mutable state that must persist across frames:
+
+      e.stats, e.hp/max_health, e.statuses, e.dots, e.timers,
+      e.equipped, e.gear_conversions, e.granted_spells, etc.
+
+    Item procs and custom hooks get subscribed to ctx.bus and you keep
+    the unsubscribe closures somewhere on the entity/item to clean them up.
+
+    Real-time loop: call World.update(ctx, dt) every frame.
+    This advances ctx.time.now, ticks statuses/DoTs, and emits OnTick.
+
+    Multiple concurrent fights?
+    Make one ctx per arena. Moving an entity between arenas means:
+
+    Remove it from the old arena’s lists, unsubscribe its handlers/mutators,
+
+    Insert into the new arena’s lists, re-subscribe needed handlers/mutators.
+
+    Lifetime: keep ctx as long as that scene is active.
+    When the scene ends, discard the whole ctx (so clocks, listeners, etc. don’t leak).
+  ]]-- 
 
   local ctx = {
     debug = true,  -- Set to true for verbose debug output

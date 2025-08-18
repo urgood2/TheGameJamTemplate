@@ -76,15 +76,11 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- [ ] fireball seems to apply RR every time it runs? how to make it optionally stack? why isn't fireball printing anything? fireball RR should wear off, right? how does that work? 
-- [ ] counterattack produces no damage. why?
-- [ ] is active rr table being cleared?
-- [ ] need better way to see where the source of the damage is (or at least document item procs, etc)
+- [ ] does fireball apply RR every time it runs? is there a way to make it optionally stack? 
 - [ ] what is the lifetime of the context? how is the timers updated?
 - [ ] current system does not have binary crits, only scaling, constantly applied crits based on OA and DA.
 - [ ] ability to hook custom lamndas for triggers, item procs, etc. to the combat system? how far to take it?
 - [ ] explore full item definition feature and make demo of each feature
-- [ ] test with the various other additions to the system, also add better logging and a stat dump for actors
 - [ ] how to handle level ups?
 - [ ] if there is overlap between existing spell and item granted abilities, how to handle that?
 - [ ] what about ability levels? stat mods to apply to items or abilities?

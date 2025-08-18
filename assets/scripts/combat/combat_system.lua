@@ -817,14 +817,32 @@ local util, EventBus, Time, StatDef, Stats, RR, Conv, Targeters, Cond, DAMAGE_TY
 --     apply = function(entity) ... end,  -- runs immediately on apply
 --     remove = function(entity) ... end, -- should be called by your status engine on expiry
 --   }
+-- Add an opt: status.stack = { mode='replace'|'time_extend'|'count', max=3 }
 local function apply_status(target, status)
   target.statuses = target.statuses or {}
   local bucket = target.statuses[status.id] or { entries = {} }
   target.statuses[status.id] = bucket
 
-  -- Simple replace semantics: keep one entry at [1]
-  -- (Extend to stacking if desired.)
-  bucket.entries[1] = status
+  local st = status.stack
+  if not st or st.mode == 'replace' then
+    bucket.entries[1] = status
+  elseif st.mode == 'time_extend' then
+    -- Extend the first entry’s until_time if newer has longer/refresh
+    if bucket.entries[1] then
+      local cur = bucket.entries[1]
+      if status.until_time and (not cur.until_time or status.until_time > cur.until_time) then
+        cur.until_time = status.until_time
+      end
+    else
+      bucket.entries[1] = status
+    end
+  elseif st.mode == 'count' then
+    -- bounded stack count; all entries contribute to RR.apply_all
+    table.insert(bucket.entries, status)
+    if st.max and #bucket.entries > st.max then
+      table.remove(bucket.entries, 1) -- FIFO
+    end
+  end
 
   if status.apply then status.apply(target) end
 end
@@ -1868,6 +1886,9 @@ function Demo.run()
   for i = 1, 6 do
     World.update(ctx, 1.0)
   end
+  
+  -- check that ogre RR from fireball has disappeared
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
 
   -- 4. Custom trigger: provoke (forces counter-attack)
   bus:on('OnProvoke', function(ev)
@@ -1925,6 +1946,8 @@ function Demo.run()
   -- (2) Item-granted active with its own cooldown unaffected by CDR:
   -- mark the spell once at init-time:
   Content.Spells.Fireball.item_granted = true
+  
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
 
   -- (3) A ground-targeted or self-targeted buff:
   -- just pass the appropriate primary_target, or leave nil and let targeter select.

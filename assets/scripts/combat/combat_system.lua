@@ -91,6 +91,64 @@ function util.weighted_choice(entries)
   return entries[#entries].item
 end
 
+-- === Spell identity & grant helpers =========================================
+local function get_spell_id(spell_ref)
+  local s = (type(spell_ref) == 'table') and spell_ref or Content.Spells[spell_ref]
+  return (s and (s.id or s.name)) or tostring(spell_ref)
+end
+
+local function is_item_granted(caster, spell_ref)
+  local id = get_spell_id(spell_ref)
+  return caster and caster.granted_spells and caster.granted_spells[id] == true
+end
+-- ============================================================================
+
+-- === Ability level per-entity ===============================================
+local function get_ability_level(e, spell_ref)
+  local id = get_spell_id(spell_ref)
+  return (e.ability_levels and e.ability_levels[id]) or 1
+end
+
+local function set_ability_level(e, spell_ref, lvl)
+  e.ability_levels = e.ability_levels or {}
+  e.ability_levels[get_spell_id(spell_ref)] = math.max(1, math.floor(lvl or 1))
+end
+-- ============================================================================
+
+-- === Aggregate item-driven ability mods =====================================
+-- Accumulates item-provided mods for a specific spell id.
+-- Supports: dmg_pct (outgoing damage), cd_add (seconds), cost_pct (%).
+local function collect_ability_mods(caster, spell_ref)
+  local id = get_spell_id(spell_ref)
+  local out = { dmg_pct = 0, cd_add = 0, cost_pct = 0 }
+  if not caster or not caster.equipped then return out end
+  for _, it in pairs(caster.equipped) do
+    local m = it.ability_mods and it.ability_mods[id]
+    if m then
+      out.dmg_pct  = out.dmg_pct  + (m.dmg_pct  or 0)
+      out.cd_add   = out.cd_add   + (m.cd_add   or 0)
+      out.cost_pct = out.cost_pct + (m.cost_pct or 0)
+    end
+  end
+  return out
+end
+-- ============================================================================
+
+-- === Spell mutator pipeline ==================================================
+-- Items or traits can register wrappers for a spell per-caster.
+-- A mutator is: function(effects_fn) -> new_effects_fn
+local function apply_spell_mutators(caster, spell_ref, effects_fn)
+  local id = get_spell_id(spell_ref)
+  local muts = caster and caster.spell_mutators and caster.spell_mutators[id]
+  if muts then
+    for i = 1, #muts do
+      effects_fn = muts[i](effects_fn)
+    end
+  end
+  return effects_fn
+end
+-- ============================================================================
+
 -- Pretty-print a concise stat dump for an actor.
 -- Compact, readable stat dump with optional runtime sections.
 -- Usage:
@@ -1396,16 +1454,50 @@ end
 -- Example Spells ------------------------------------------------------
 -- Each spell: { name, class, trigger, targeter(ctx)->targets, effects(ctx,src,tgt) }
 Content.Spells = {
+  -- Fireball = {
+  --   name     = 'Fireball',
+  --   class    = 'pyromancy',
+  --   trigger  = 'OnCast',
+  --   targeter = function(ctx) return { ctx.target } end,
+  --   effects  = Effects.seq {
+  --     Effects.deal_damage { components = { { type = 'fire', amount = 120 } } },
+  --     Effects.apply_rr    { kind = 'rr1', damage = 'fire', amount = 20, duration = 4, stack = { mode='count', max=3 }  -- enables up to 3 concurrent stacks
+  --     },
+  --   },
+  -- },
+  
   Fireball = {
-    name     = 'Fireball',
-    class    = 'pyromancy',
-    trigger  = 'OnCast',
+    id      = 'Fireball',
+    name    = 'Fireball',
+    class   = 'pyromancy',
+    trigger = 'OnCast',
     targeter = function(ctx) return { ctx.target } end,
-    effects  = Effects.seq {
-      Effects.deal_damage { components = { { type = 'fire', amount = 120 } } },
-      Effects.apply_rr    { kind = 'rr1', damage = 'fire', amount = 20, duration = 4, stack = { mode='count', max=3 }  -- enables up to 3 concurrent stacks
-      },
-    },
+
+    -- Level/mod-aware builder. If absent, Cast.cast falls back to .effects.
+    build = function(level, mods)
+      level = level or 1
+      mods  = mods or { dmg_pct = 0 }
+
+      local base = 120 + (level - 1) * 40      -- +40 per level
+      local rr   = 20  + (level - 1) * 5       -- +5% RR per level
+      local dmg_scale = 1 + (mods.dmg_pct or 0) / 100
+
+      return Effects.seq {
+        Effects.deal_damage {
+          components = { { type = 'fire', amount = base * dmg_scale } }
+        },
+        Effects.apply_rr {
+          kind = 'rr1', damage = 'fire', amount = rr, duration = 4
+        },
+      }
+    end,
+
+    -- Backward compatible default:
+    effects = function(ctx, src, tgt)
+      -- If Cast.cast already called .build, .effects won’t be used.
+      Effects.deal_damage { components = { { type='fire', amount = 120 } } } (ctx, src, tgt)
+      Effects.apply_rr { kind='rr1', damage='fire', amount=20, duration=4 } (ctx, src, tgt)
+    end,
   },
 
   ViperSigil = {
@@ -1584,12 +1676,24 @@ end
 --  @param item table: see example at bottom for shape
 --  @return boolean ok, string|nil err
 function ItemSystem.equip(ctx, e, item)
+  if ctx.debug then
+    print(string.format("[DEBUG][ItemSystem] Attempting to equip item '%s' into slot '%s'", item.name or "?", item.slot or "?"))
+  end
+
   -- Gate by attribute and slot rules
   local ok, err = Items.can_equip(e, item)
-  if not ok then return false, err end
+  if not ok then
+    if ctx.debug then
+      print(string.format("[DEBUG][ItemSystem] Cannot equip '%s': %s", item.name or "?", err or "unknown error"))
+    end
+    return false, err
+  end
 
   e.equipped = e.equipped or {}
   if e.equipped[item.slot] then
+    if ctx.debug then
+      print(string.format("[DEBUG][ItemSystem] Slot '%s' already occupied, unequipping current item", item.slot))
+    end
     ItemSystem.unequip(ctx, e, item.slot)
   end
 
@@ -1600,14 +1704,23 @@ function ItemSystem.equip(ctx, e, item)
     if m.base then
       e.stats:add_base(n, m.base)
       table.insert(item._applied, { 'base', n, m.base })
+      if ctx.debug then
+        print(string.format("[DEBUG][ItemSystem] Applied base mod: %s %+d", n, m.base))
+      end
     end
     if m.add_pct then
       e.stats:add_add_pct(n, m.add_pct)
       table.insert(item._applied, { 'add_pct', n, m.add_pct })
+      if ctx.debug then
+        print(string.format("[DEBUG][ItemSystem] Applied add_pct mod: %s %+d%%", n, m.add_pct))
+      end
     end
     if m.mul_pct then
       e.stats:add_mul_pct(n, m.mul_pct)
       table.insert(item._applied, { 'mul_pct', n, m.mul_pct })
+      if ctx.debug then
+        print(string.format("[DEBUG][ItemSystem] Applied mul_pct mod: %s %+d%%", n, m.mul_pct))
+      end
     end
   end
 
@@ -1617,6 +1730,9 @@ function ItemSystem.equip(ctx, e, item)
     item._conv_start = #e.gear_conversions
     for _, cv in ipairs(item.conversions) do
       table.insert(e.gear_conversions, cv)
+      if ctx.debug then
+        print(string.format("[DEBUG][ItemSystem] Added conversion: %s -> %s", cv.from or "?", cv.to or "?"))
+      end
     end
     item._conv_end = #e.gear_conversions
   end
@@ -1634,11 +1750,19 @@ function ItemSystem.equip(ctx, e, item)
 
       if math.random() * 100 <= (p.chance or 100) then
         local tgt = ev.target or e
+        if ctx.debug then
+          print(string.format("[DEBUG][ItemSystem] Proc triggered on '%s': %s", item.name or "?", p.trigger or "?"))
+        end
         p.effects(ctx, e, tgt)
+      elseif ctx.debug then
+        print(string.format("[DEBUG][ItemSystem] Proc check failed for '%s' (%s)", item.name or "?", p.trigger or "?"))
       end
     end
 
     table.insert(item._unsubs, _listen(ctx.bus, p.trigger, handler))
+    if ctx.debug then
+      print(string.format("[DEBUG][ItemSystem] Subscribed proc for trigger '%s'", p.trigger or "?"))
+    end
   end
 
   -- Granted actives: toggle spell availability on the entity
@@ -1646,14 +1770,21 @@ function ItemSystem.equip(ctx, e, item)
     e.granted_spells = e.granted_spells or {}
     for _, id in ipairs(item.granted_spells) do
       e.granted_spells[id] = true
+      if ctx.debug then
+        print(string.format("[DEBUG][ItemSystem] Granted spell: %s", id))
+      end
     end
   end
 
   -- Commit equip and recompute stats
   e.equipped[item.slot] = item
   e.stats:recompute()
+  if ctx.debug then
+    print(string.format("[DEBUG][ItemSystem] Equipped '%s' into slot '%s'. Stats recomputed.", item.name or "?", item.slot or "?"))
+  end
   return true
 end
+
 
 --- Unequip the item in a given slot from an entity.
 --  Reverses stat mods, removes conversions, unsubscribes proc listeners,
@@ -1755,29 +1886,34 @@ end
 --  @param primary_target any|nil: optional explicit target (bypasses spell.targeter)
 --  @return boolean ok, string|nil err
 function Cast.cast(ctx, caster, spell_ref, primary_target)
-  local spell = (type(spell_ref) == 'string') and Content.Spells[spell_ref] or spell_ref
+  local spell = (type(spell_ref) == 'table') and spell_ref or Content.Spells[spell_ref]
   if not spell then return false, 'unknown_spell' end
 
-  -- Cooldown ----------------------------------------------------------
+  local spell_id = get_spell_id(spell)                    -- NEW: canonical id
   caster.timers = caster.timers or {}
-  local key = 'cd:' .. (spell.id or spell.name or 'spell')
+  local key = 'cd:' .. spell_id
   local cd  = spell.cooldown or 0
 
-  -- Item-granted spells ignore caster cooldown reduction
-  if not spell.item_granted then
+  -- Ability/item mods -------------------------------------------------------- NEW
+  local lvl  = get_ability_level(caster, spell)           -- per-caster level
+  local mods = collect_ability_mods(caster, spell)        -- dmg/cd/cost mods
+
+  -- Cooldown reduction: skip if item-granted (your policy), then apply cd_add.
+  if not is_item_granted(caster, spell) then
     local cdr = _get(caster.stats, 'cooldown_reduction')
     cd = cd * math.max(0, 1 - cdr / 100)
   end
+  cd = math.max(0, cd + (mods.cd_add or 0))               -- additive seconds
 
   if not ctx.time:is_ready(caster.timers, key) then
     return false, 'cooldown'
   end
 
-  -- Costs -------------------------------------------------------------
+  -- Cost with reductions and item cost_pct ---------------------------------- NEW
   if spell.cost then
     local red  = _get(caster.stats, 'skill_energy_cost_reduction')
     local cost = spell.cost * math.max(0, 1 - red / 100)
-
+    cost = cost * math.max(0, 1 + (mods.cost_pct or 0) / 100)
     caster.energy = caster.energy or _get(caster.stats, 'energy')
     if caster.energy < cost then
       return false, 'no_energy'
@@ -1785,15 +1921,15 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
     caster.energy = caster.energy - cost
   end
 
-  -- Fire uniform trigger for listeners (SAP-style "ability used")
   ctx.bus:emit('OnCast', {
     ctx    = ctx,
     source = caster,
     spell  = spell,
+    spell_id = spell_id,                                   -- NEW
     target = primary_target
   })
 
-  -- Target resolution -------------------------------------------------
+  -- Build target list (same as before)
   local tgt_list
   if primary_target then
     tgt_list = { primary_target }
@@ -1806,12 +1942,19 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
     })
   end
 
-  -- Execute spell effects for all targets
+  -- Prepare effects function, wrapping with mutators if any ------------------ NEW
+  local eff = spell.effects
+  -- If the spell provided a level-aware builder, prefer it:
+  if spell.build then
+    eff = spell.build(lvl, mods)  -- pass both, non-breaking for old spells
+  end
+  eff = apply_spell_mutators(caster, spell, eff)
+
+  -- Execute effects
   for _, t in ipairs(tgt_list or {}) do
-    spell.effects(ctx, caster, t)
+    eff(ctx, caster, t)
   end
 
-  -- Start cooldown
   ctx.time:set_cooldown(caster.timers, key, cd)
   return true
 end
@@ -1942,6 +2085,18 @@ function Demo.run()
   
   
   -- try item equip
+  
+  -- Example sword giving Fireball +20% damage and -0.5s cooldown, -10% cost
+  local FlamebandPlus = {
+    id='flameband_plus', slot='sword1',
+    requires = { attribute='cunning', value=12, mode='sole' },
+    mods = { { stat='weapon_min', base=6 }, { stat='weapon_max', base=10 } },
+
+    ability_mods = {
+      Fireball = { dmg_pct = 20, cd_add = -0.5, cost_pct = -10 },
+    },
+  }
+
   local Flamebrand = {
     id='flamebrand', slot='sword1',
     requires = { attribute='cunning', value=12, mode='sole' },
@@ -1973,6 +2128,10 @@ function Demo.run()
   util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
   
   assert(ItemSystem.equip(ctx, hero, Flamebrand))
+  
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  
+  assert(ItemSystem.equip(ctx, hero, FlamebandPlus))
   
   util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
   

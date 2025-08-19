@@ -1006,6 +1006,27 @@ function Cond.stat_below(stat, th)
   end
 end
 
+-- Extend Cond with ctx-aware predicates (keep your old ones for per-entity checks)
+function Cond.chance(pct)
+  return function(ctx, ev, src, tgt) return math.random()*100 <= pct end
+end
+
+function Cond.has_status_id(id)
+  return function(ctx, ev, src, tgt)
+    local b = tgt and tgt.statuses and tgt.statuses[id]
+    return b and #b.entries > 0
+  end
+end
+
+function Cond.event_has_tag(tag)
+  return function(ctx, ev) return ev and ev.tags and ev.tags[tag] end
+end
+
+function Cond.time_since_ev_le(dtmax)
+  return function(ctx, ev) return ev and ev.time and (ctx.time.now - ev.time) <= dtmax end
+end
+
+
 -- Expose Core ---------------------------------------------------------
 Core.util = util
 Core.EventBus = EventBus
@@ -1076,6 +1097,65 @@ local function apply_status(target, status)
   end
 
   if status.apply then status.apply(target) end
+end
+
+-- Parallel executor (fire-and-forget effects on same tick)
+Effects.par = function(list)
+  return function(ctx, src, tgt)
+    for i=1,#list do list[i](ctx, src, tgt) end
+  end
+end
+
+-- Cleanse: remove debuffs/status entries by id/predicate
+Effects.cleanse = function(p)
+  -- p = { ids = {...} } or { predicate = function(id, entry) return true end }
+  return function(ctx, src, tgt)
+    if not tgt.statuses then return end
+    for id, b in pairs(tgt.statuses) do
+      local keep = {}
+      for _, entry in ipairs(b.entries) do
+        local remove =
+          (p.ids and p.ids[id]) or
+          (p.predicate and p.predicate(id, entry)) or
+          false
+        if remove then
+          if entry.remove then entry.remove(tgt) end
+          ctx.bus:emit('OnStatusExpired', { entity=tgt, id=id })
+        else
+          keep[#keep+1] = entry
+        end
+      end
+      b.entries = keep
+    end
+  end
+end
+
+-- Extras Siralim-like (engine-backed) – safe stubs you can wire later:
+Effects.resurrect = function(p)
+  -- p={ hp_pct=50 }
+  return function(ctx, src, tgt)
+    if tgt.dead then
+      tgt.dead = false
+      local maxhp = tgt.max_health or tgt.stats:get('health')
+      tgt.hp = math.max(tgt.hp or 0, maxhp * ((p.hp_pct or 50)/100))
+      ctx.bus:emit('OnResurrect', { source=src, target=tgt, hp=tgt.hp })
+    end
+  end
+end
+
+Effects.summon = function(p)
+  -- p={ blueprint='Wolf', count=1, side_of='source' }
+  return function(ctx, src, tgt)
+    if not ctx.spawn_entity then return end -- plug in your factory when ready
+    for i=1,(p.count or 1) do ctx.spawn_entity(ctx, p.blueprint, p.side_of=='target' and tgt or src) end
+  end
+end
+
+Effects.grant_extra_turn = function(p)
+  -- requires your turn scheduler; for now, emit an intent event
+  return function(ctx, src, tgt)
+    ctx.bus:emit('OnExtraTurnGranted', { entity=tgt or src })
+  end
 end
 
 --- Apply Resistance Reduction (RR) to a specific damage type.

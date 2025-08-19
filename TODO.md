@@ -76,7 +76,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- [ ] extract what I can from siralim
+- [ ] extract what I can from siralim: tack on this rule system, then test with actual siralim rules: https://chatgpt.com/share/68a46896-78bc-800a-a14f-73605890a8a3
 - [ ] improvement to stat system
 How would i do set items giving bonuses and potentially altering stats of other items or skills when equipped?
 How to handle buffs that are timed, and items which are removed/put on? How to permanently upgrade items?

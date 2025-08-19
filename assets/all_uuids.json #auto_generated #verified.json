@@ -14429,6 +14429,9 @@
     "combat_combat_system": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/combat/combat_system.lua"
     ],
+    "combat_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/combat/README.md"
+    ],
     "combat_script": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/combat"
     ],

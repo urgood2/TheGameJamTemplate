@@ -2557,7 +2557,203 @@ function Demo.run()
   util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
 end
 
+function Demo.run_full()
+  math.randomseed(12345)
 
+  local bus   = EventBus.new()
+  local time  = Time.new()
+  local defs, DTS = StatDef.make()
+  local combat    = Combat.new(RR, DTS)
+
+  local ctx = {
+    debug = true,
+    bus   = bus,
+    time  = time,
+    combat = combat,
+    get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end,
+    get_allies_of  = function(a) return a.side == 1 and ctx.side1 or ctx.side2 end,
+  }
+
+  -- Actors
+  local hero = make_actor('Hero', defs, Content.attach_attribute_derivations)
+  hero.side = 1
+  hero.level_curve = 'fast_start'
+  hero.stats:add_base('physique',  16)
+  hero.stats:add_base('cunning',   18)
+  hero.stats:add_base('spirit',    12)
+  hero.stats:add_base('weapon_min', 18)
+  hero.stats:add_base('weapon_max', 25)
+  hero.stats:add_base('life_steal_pct', 10)
+  hero.stats:add_base('crit_damage_pct', 50) -- +50% crit damage
+  hero.stats:add_base('cooldown_reduction', 20)
+  hero.stats:add_base('skill_energy_cost_reduction', 15)
+  hero.stats:add_base('attack_speed', 1.0)
+  hero.stats:add_base('cast_speed',   1.0)
+  hero.stats:recompute()
+
+  local ogre = make_actor('Ogre', defs, Content.attach_attribute_derivations)
+  ogre.side = 2
+  ogre.stats:add_base('health', 400)
+  ogre.stats:add_base('defensive_ability', 95)
+  ogre.stats:add_base('armor', 50)
+  ogre.stats:add_base('armor_absorption_bonus_pct', 20)
+  ogre.stats:add_base('fire_resist_pct', 40)
+  ogre.stats:add_base('dodge_chance_pct', 10)
+  ogre.stats:add_base('deflect_chance_pct', 8)
+  ogre.stats:add_base('reflect_damage_pct', 5)
+  ogre.stats:add_base('retaliation_fire', 8)
+  ogre.stats:add_base('retaliation_fire_modifier_pct', 25)
+  ogre.stats:add_base('block_chance_pct', 30)
+  ogre.stats:add_base('block_amount', 60)
+  ogre.stats:add_base('block_recovery_reduction_pct', 25)
+  ogre.stats:recompute()
+
+  ctx.side1 = { hero }
+  ctx.side2 = { ogre }
+
+  -- Event logging
+  local function on(ev, name, fmt, fields)
+    bus:on(name, function(e)
+      local vals = {}
+      for _, k in ipairs(fields or {}) do vals[#vals+1] = tostring(e[k]) end
+      print(("[EVT] %-16s " .. fmt):format(name, table.unpack(vals)))
+    end)
+  end
+
+  on(bus, 'OnHitResolved', "[%s] -> [%s] dmg=%.1f crit=%s PTH=%.1f", {'source','target','damage','crit','pth'})
+  on(bus, 'OnHealed', "[%s] +%.1f", {'target','amount'})
+  on(bus, 'OnCounterAttack', "[%s] countered %s", {'source','target'})
+  on(bus, 'OnRRApplied', "%s RR %s=%.1f%%", {'source','kind','amount'})
+  on(bus, 'OnMiss', "[%s] missed %s", {'source','target'})
+  on(bus, 'OnDodge', "%s dodged %s", {'target','source'})
+  on(bus, 'OnStatusExpired', "status expired: %s", {'id'})
+  on(bus, 'OnDotApplied', "dot %s on %s", {'dot','target'})
+  on(bus, 'OnDotExpired', "dot expired on %s", {'entity'})
+  on(bus, 'OnDeath', "%s died (killer=%s)", {'entity','killer'})
+  on(bus, 'OnExperienceGained', "XP +%.1f (levels+%d)", {'amount','levels'})
+  on(bus, 'OnLevelUp', "Level up: %s", {'entity'})
+
+  -- Items: conversions, procs, mutators, granted spells, ability mods
+  local Flamebrand = {
+    id='flamebrand', slot='sword1',
+    requires = { attribute='cunning', value=12, mode='sole' },
+    mods = {
+      { stat='weapon_min', base=6 },
+      { stat='weapon_max', base=10 },
+      { stat='fire_modifier_pct', add_pct=15 },
+    },
+    conversions = { { from='physical', to='fire', pct=25 } },
+    procs = {
+      { trigger='OnBasicAttack', chance=70,
+        effects = Effects.deal_damage{
+          components = { { type='fire', amount=40 } }, tags = { ability = true }
+        },
+      },
+    },
+    granted_spells = { 'Fireball' },
+  }
+
+  local FlamebandPlus = {
+    id='flameband_plus', slot='sword1',
+    requires = { attribute='cunning', value=12, mode='sole' },
+    mods = { { stat='weapon_min', base=4 }, { stat='weapon_max', base=8 } },
+    ability_mods = { Fireball = { dmg_pct = 20, cd_add = -0.5, cost_pct = -10 }, },
+  }
+
+  local ThunderSeal = {
+    id='thunder_seal', slot='amulet',
+    spell_mutators = {
+      Fireball = {
+        { pr = 0, wrap = function(orig)
+            return function(ctx, src, tgt)
+              if orig then orig(ctx, src, tgt) end
+              Effects.deal_damage {
+                weapon = true, scale_pct = 200,
+                skill_conversions = { { from='physical', to='lightning', pct=100 } }
+              } (ctx, src, tgt)
+            end
+          end
+        }
+      }
+    }
+  }
+
+  print("\n== Equip sequence ==")
+  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+  assert(ItemSystem.equip(ctx, hero, Flamebrand))
+  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+  assert(ItemSystem.equip(ctx, hero, FlamebandPlus)) -- replaces sword
+  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+  assert(ItemSystem.equip(ctx, hero, ThunderSeal))
+  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+
+  -- Ability level & mods
+  set_ability_level(hero, 'Fireball', 3)
+
+  print("\n== Openers ==")
+  Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre)
+  ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre }) -- proc check
+
+  -- RR tier tests (rr1, rr2, rr3)
+  Content.Spells.ViperSigil.effects(ctx, hero, ogre)      -- rr2
+  Content.Spells.ElementalStorm.effects(ctx, hero, ogre)  -- rr3
+  util.dump_stats(ogre, ctx, { rr=true, timers=true })
+
+  print("\n== Fireball cast (with mutator, level, and item mods) ==")
+  local ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
+  if not ok then print("Cast failed:", why) end
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, timers=true })
+
+  print("\n== Poison DoT + tick ==")
+  Cast.cast(ctx, hero, 'PoisonDart', ogre)
+  for i=1,5 do World.update(ctx, 1.0) end
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, timers=true })
+
+  print("\n== Barrier & Heal ==")
+  Effects.grant_barrier { amount = 50, duration = 3 } (ctx, hero, hero)
+  Effects.heal { percent_of_max = 15 } (ctx, hero, hero)
+  util.dump_stats(hero, ctx, { statuses=true, timers=true })
+
+  print("\n== Provoke & counter chain ==")
+  bus:emit('OnProvoke', { source = hero, target = ogre })  -- your handler forces counter
+
+  print("\n== Cooldowns & costs ==")
+  -- Make Fireball have a cost/cd for demonstration:
+  Content.Spells.Fireball.cost = 40
+  Content.Spells.Fireball.cooldown = 3.0
+  ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
+  print("Fireball #1:", ok, why or "")
+  ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
+  print("Fireball #2 immediately:", ok, why or "")
+  World.update(ctx, 1.6)
+  ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
+  print("Fireball #3 at t=1.6:", ok, why or "")
+  World.update(ctx, 2.0)
+  ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
+  print("Fireball #4 at t=3.6:", ok, why or "")
+  util.dump_stats(hero, ctx, { timers=true })
+
+  print("\n== Leveling & granted spell at level 3 ==")
+  bus:on('OnLevelUp', function(ev)
+    local e = ev.entity
+    e.stats:add_base('physique', 1)
+    e.stats:recompute()
+    print(("Level up! %s -> L%d  attr=%d skill=%d"):format(
+      e.name, e.level, e.attr_points or 0, e.skill_points or 0))
+    if e.level == 3 then
+      e.granted_spells = e.granted_spells or {}
+      e.granted_spells['Fireball'] = true
+      print("Granted Fireball at level 3")
+    end
+  end)
+  Leveling.grant_exp(ctx, hero, 1500)
+  Leveling.grant_exp(ctx, hero, 1500)
+  util.dump_stats(hero, ctx, { spells=true })
+
+  print("\n== Cleanup ticks ==")
+  for i=1,5 do World.update(ctx, 1.0) end
+  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, timers=true })
+end
 
 
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil

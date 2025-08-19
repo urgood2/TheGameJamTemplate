@@ -588,6 +588,11 @@ function StatDef.make()
   }) do
     add_basic(defs, cc .. '_resist_pct')
   end
+  
+  -- cooldowns and energy costs
+  add_basic(defs, 'cooldown_reduction')               -- % reduces cooldowns (non-item-granted)
+  add_basic(defs, 'skill_energy_cost_reduction')      -- % cheaper
+
 
   return defs, DAMAGE_TYPES
 end
@@ -606,15 +611,36 @@ Stats.__index = Stats
 function Stats.new(defs)
   local t = {
     defs = defs,
-    values = {},        -- statName -> { base, add_pct, mul_pct }
-    derived_hooks = {}, -- list of functions(stats) called on recompute()
-    cached = {}         -- optional user caching
+    values = {},
+    derived_hooks = {},
+    _derived_marks = {},    -- track derived deltas: { {kind, name, amount}, ... }
   }
   for n, d in pairs(defs) do
     t.values[n] = { base = d.base, add_pct = 0, mul_pct = 0 }
   end
   return setmetatable(t, Stats)
 end
+
+-- Helpers to safely add derived deltas:
+function Stats:_mark(kind, n, amt)
+  self._derived_marks[#self._derived_marks+1] = { kind, n, amt }
+end
+function Stats:derived_add_base(n, a)    self.values[n].base    = self.values[n].base    + a; self:_mark('base',    n, a) end
+function Stats:derived_add_add_pct(n, a) self.values[n].add_pct = self.values[n].add_pct + a; self:_mark('add_pct', n, a) end
+function Stats:derived_add_mul_pct(n, a) self.values[n].mul_pct = self.values[n].mul_pct + a; self:_mark('mul_pct', n, a) end
+
+-- Remove past derived deltas
+function Stats:_clear_derived()
+  for i = #self._derived_marks, 1, -1 do
+    local kind, n, amt = self._derived_marks[i][1], self._derived_marks[i][2], self._derived_marks[i][3]
+    if     kind == 'base'    then self.values[n].base    = self.values[n].base    - amt
+    elseif kind == 'add_pct' then self.values[n].add_pct = self.values[n].add_pct - amt
+    elseif kind == 'mul_pct' then self.values[n].mul_pct = self.values[n].mul_pct - amt
+    end
+  end
+  self._derived_marks = {}
+end
+
 
 --- Get the raw stored value object for a stat (base/add_pct/mul_pct).
 function Stats:get_raw(n)
@@ -651,6 +677,9 @@ end
 
 --- Run all registered recompute hooks.
 function Stats:recompute()
+  -- 1) remove previous derived
+  self:_clear_derived()
+  -- 2) re-run derived hooks
   for _, fn in ipairs(self.derived_hooks) do
     fn(self)
   end
@@ -1107,7 +1136,17 @@ Effects.deal_damage = function(p)
       (PTH < 120) and 1.2        or
       (PTH < 130) and 1.3        or
       (PTH < 135) and 1.4        or (1.5 + (PTH - 135) * 0.005)
-    dbg("Crit multiplier: %.2f", crit_mult)
+    local crit_bonus = 1 + (src.stats:get('crit_damage_pct') or 0) / 100
+    crit_mult = crit_mult * crit_bonus
+    dbg("PTH-derived crit multiplier (with crit_damage_pct bonus): %.2f", crit_mult)
+    
+    -- Dodge (early-out, before block)
+    local dodge = tgt.stats:get('dodge_chance_pct') or 0
+    if math.random() * 100 < dodge then
+      dbg("Target dodged!")
+      ctx.bus:emit('OnDodge', { source = src, target = tgt, pth = PTH })
+      return
+    end
 
     -- Shield block ------------------------------------------------------------
     tgt.timers = tgt.timers or {}
@@ -1192,6 +1231,11 @@ Effects.deal_damage = function(p)
     local maxhp = tgt.max_health or tgt.stats:get('health')
     tgt.hp = util.clamp((tgt.hp or maxhp) - dealt, 0, maxhp)
     dbg("Damage dealt total=%.1f, Target HP=%.1f/%.1f", dealt, tgt.hp, maxhp)
+    
+    if tgt.hp <= 0 and not tgt.dead then
+      tgt.dead = true
+      ctx.bus:emit('OnDeath', { entity = tgt, killer = src })
+    end
 
     -- Lifesteal (attacker) ----------------------------------------------------
     local ls = src.stats:get('life_steal_pct') or 0
@@ -1201,7 +1245,7 @@ Effects.deal_damage = function(p)
       src.hp = util.clamp((src.hp or smax) + heal, 0, smax)
       dbg("Lifesteal: +%.1f, Attacker HP=%.1f/%.1f", heal, src.hp, smax)
     end
-
+  
     -- Reflect (target -> attacker) -------------------------------------------
     local ref = tgt.stats:get('reflect_damage_pct') or 0
     if ref > 0 then
@@ -1480,30 +1524,27 @@ function Content.attach_attribute_derivations(S)
     local c = S:get_raw('cunning').base
     local s = S:get_raw('spirit').base
 
-    -- Physique
-    S:add_base('health', 100 + p * 10)
+    S:derived_add_base('health', 100 + p * 10)
     local extra = math.max(0, p - 10)
-    S:add_base('health_regen', extra * 0.2)
+    S:derived_add_base('health_regen', extra * 0.2)
 
-    -- Cunning
-    S:add_base('offensive_ability', c * 1)
+    S:derived_add_base('offensive_ability', c * 1)
     local chunks_c = math.floor(c / 5)
-    S:add_add_pct('physical_modifier_pct', chunks_c * 1)
-    S:add_add_pct('pierce_modifier_pct',   chunks_c * 1)
-    S:add_add_pct('bleed_duration_pct',    chunks_c * 1)
-    S:add_add_pct('trauma_duration_pct',   chunks_c * 1)
+    S:derived_add_add_pct('physical_modifier_pct', chunks_c * 1)
+    S:derived_add_add_pct('pierce_modifier_pct',   chunks_c * 1)
+    S:derived_add_add_pct('bleed_duration_pct',    chunks_c * 1)
+    S:derived_add_add_pct('trauma_duration_pct',   chunks_c * 1)
 
-    -- Spirit
-    S:add_base('health',       s * 2)
-    S:add_base('energy',       s * 10)
-    S:add_base('energy_regen', s * 0.5)
+    S:derived_add_base('health',       s * 2)
+    S:derived_add_base('energy',       s * 10)
+    S:derived_add_base('energy_regen', s * 0.5)
 
     local chunks_s = math.floor(s / 5)
     for _, t in ipairs({ 'fire', 'cold', 'lightning', 'acid', 'vitality', 'aether', 'chaos' }) do
-      S:add_add_pct(t .. '_modifier_pct', chunks_s * 1)
+      S:derived_add_add_pct(t .. '_modifier_pct', chunks_s * 1)
     end
     for _, t in ipairs({ 'burn', 'frostburn', 'electrocute', 'poison', 'vitality_decay' }) do
-      S:add_add_pct(t .. '_duration_pct', chunks_s * 1)
+      S:derived_add_add_pct(t .. '_duration_pct', chunks_s * 1)
     end
   end)
 end
@@ -1646,13 +1687,25 @@ StatusEngine.update_entity = function(ctx, e, dt)
       b.entries = kept
     end
   end
+  
+  -- RR pruning
+  if e.active_rr then
+    for t, bucket in pairs(e.active_rr) do
+      local kept = {}
+      for i = 1, #bucket do
+        local r = bucket[i]
+        if (not r.until_time) or r.until_time > ctx.time.now then kept[#kept+1] = r end
+      end
+      e.active_rr[t] = kept
+    end
+  end
 
   -- Tick DoTs -----------------------------------------------------------------
   if e.dots then
     local kept = {}
     for _, d in ipairs(e.dots) do
       if d.until_time and d.until_time <= ctx.time.now then
-        -- drop expired dot
+        ctx.bus:emit('OnDotExpired', { entity = e, dot = d })
       else
         if ctx.time.now >= (d.next_tick or ctx.time.now) then
           Effects.deal_damage { components = { { type = d.type, amount = d.dps } } } (ctx, d.source, e)
@@ -1667,10 +1720,28 @@ end
 
 World.update = function(ctx, dt)
   ctx.time:tick(dt)
+  
+  local function regen(ent)
+    if not ent.stats then return end
+    -- Health regen
+    local maxhp  = ent.max_health or ent.stats:get('health')
+    local hpr    = ent.stats:get('health_regen') or 0
+    if hpr ~= 0 then
+      ent.hp = util.clamp((ent.hp or maxhp) + hpr * dt, 0, maxhp)
+    end
+    -- Energy regen
+    ent.max_energy = ent.max_energy or ent.stats:get('energy')
+    ent.energy     = ent.energy     or ent.max_energy
+    local epr = ent.stats:get('energy_regen') or 0
+    if epr ~= 0 then
+      ent.energy = util.clamp(ent.energy + epr * dt, 0, ent.max_energy)
+    end
+  end
 
   local function each(L)
     for _, ent in ipairs(L or {}) do
       StatusEngine.update_entity(ctx, ent, dt)
+      regen(ent)
     end
   end
 
@@ -1695,12 +1766,15 @@ local function make_actor(name, defs, attach)
   attach(s)
   s:recompute()
   local hp = s:get('health')
+  local en = s:get('energy')
 
   return {
     name            = name,
     stats           = s,
     hp              = hp,
     max_health      = hp,
+    energy          = en,
+    max_energy      = en,
     gear_conversions= {},
     tags            = {},
     timers          = {},

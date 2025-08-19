@@ -209,6 +209,113 @@ function util.dump_stats(e, ctx, opts)
   add(("==== %s ===="):format(name))
   add(("HP %d/%d | Energy %d"):format(math.floor(hp+0.5), math.floor(maxhp+0.5), gi("energy")))
 
+  -- Level progress (safe against missing Leveling.xp_to_next)
+  do
+    local lvl = e.level or 1
+    local xp  = e.xp or 0
+    local need
+    if Leveling and Leveling.xp_to_next then
+      local ok, res = pcall(Leveling.xp_to_next, ctx, e, lvl)
+      need = ok and res or (lvl * 1000)
+    else
+      need = lvl * 1000
+    end
+    local pct = (need > 0) and (xp / need * 100) or 0
+    add(("Level  | L=%d  XP %.1f/%d (%.1f%%)"):format(lvl, xp, need, pct))
+  end
+
+  -- Equipped items + available slots
+  do
+    local eq = e.equipped or {}
+    -- Equipped summary (sorted by slot)
+    local slot_keys = {}
+    for k in pairs(eq) do slot_keys[#slot_keys+1] = k end
+    table.sort(slot_keys)
+    if #slot_keys > 0 then
+      local parts = {}
+      for _, slot in ipairs(slot_keys) do
+        local it = eq[slot]
+        local label = it and (it.name or it.id or "?") or "-"
+        parts[#parts+1] = string.format("%s=%s", slot, label)
+      end
+      add("Equip  | " .. join(parts, "  "))
+    else
+      add("Equip  | (none)")
+    end
+
+    -- Available/free slots (best-effort)
+    local all = {}
+    local function add_slotname(s) if s and s ~= "" then all[s] = true end end
+
+    if Items then
+      if type(Items.SLOTS) == "table" then
+        for k, v in pairs(Items.SLOTS) do
+          if type(k) == "number" then add_slotname(v) else add_slotname(k) end
+        end
+      end
+      if type(Items.SlotOrder) == "table" then
+        for i=1,#Items.SlotOrder do add_slotname(Items.SlotOrder[i]) end
+      end
+    end
+    if Content and type(Content.ItemSlots) == "table" then
+      for k, v in pairs(Content.ItemSlots) do
+        if type(k) == "number" then add_slotname(v) else add_slotname(k) end
+      end
+    end
+    if ctx and type(ctx.item_slots) == "table" then
+      for k, v in pairs(ctx.item_slots) do
+        if type(k) == "number" then add_slotname(v) else add_slotname(k) end
+      end
+    end
+    -- Always include any slots we see in equipped
+    for s in pairs(eq) do add_slotname(s) end
+
+    local free = {}
+    for s in pairs(all) do
+      if eq[s] == nil then free[#free+1] = s end
+    end
+    table.sort(free)
+    if next(all) ~= nil then
+      add("Slots  | Free: " .. (#free > 0 and join(free, ", ") or "(none)"))
+    else
+      add("Slots  | (unknown slot set)")
+    end
+  end
+
+  -- Enabled skills (innate + granted)
+  do
+    local set = {}
+    local function add_skills(container)
+      if type(container) ~= "table" then return end
+      if #container > 0 then
+        for i=1,#container do
+          local v = container[i]
+          if type(v) == "string" then
+            set[v] = true
+          elseif type(v) == "table" then
+            local id = v.id or v.name
+            if id then set[id] = true end
+          end
+        end
+      else
+        for k, v in pairs(container) do
+          if v then set[tostring(k)] = true end
+        end
+      end
+    end
+
+    add_skills(e.spells)
+    add_skills(e.known_spells)
+    add_skills(e.innate_spells)
+    add_skills(e.abilities)
+    add_skills(e.granted_spells)
+
+    local skills = {}
+    for id in pairs(set) do skills[#skills+1] = id end
+    table.sort(skills)
+    add("Skills | " .. (#skills > 0 and join(skills, ", ") or "(none)"))
+  end
+
   -- Attributes
   add("Attr   | " .. join({
     ("physique=%d"):format(gi("physique")),
@@ -282,7 +389,7 @@ function util.dump_stats(e, ctx, opts)
     if #rr_lines > 0 then add("RR     | " .. join(rr_lines, "  |  ")) end
   end
 
-  -- Optional: Statuses (buffs/debuffs) — list IDs with remaining time
+  -- Optional: Statuses (buffs/debuffs)
   if opts.statuses then
     local now = (ctx and ctx.time and ctx.time.now) or nil
     local st = {}
@@ -327,7 +434,7 @@ function util.dump_stats(e, ctx, opts)
     if #cvs > 0 then add("Conv   | " .. join(cvs, "  ")) end
   end
 
-  -- Optional: Granted spells
+  -- Optional: Granted spells (legacy view)
   if opts.spells then
     local gs = {}
     if e.granted_spells then
@@ -351,7 +458,7 @@ function util.dump_stats(e, ctx, opts)
     if #ts > 0 then add("Tags   | " .. join(ts, ", ")) end
   end
 
-  -- Optional: Cooldown snapshot (keys starting with "cd:" & "block")
+  -- Optional: Cooldown snapshot
   if opts.timers then
     local now = (ctx and ctx.time and ctx.time.now) or nil
     local cds = {}

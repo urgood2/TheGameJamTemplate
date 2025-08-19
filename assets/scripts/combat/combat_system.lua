@@ -1354,10 +1354,18 @@ end
 --- Force an immediate counter-attack from target against source.
 --  p = { scale_pct = <number>|100 } -- uses weapon damage from the counter-attacker (tgt)
 Effects.force_counter_attack = function(p)
-  return function(ctx, src, tgt)
-    if not tgt or tgt.dead then return end
-    Effects.deal_damage { weapon = true, scale_pct = p.scale_pct or 100 } (ctx, tgt, src)
-    ctx.bus:emit('OnCounterAttack', { source = tgt, target = src })
+  p = p or {}
+  local scale = p.scale_pct or 100
+
+  return function(ctx, src, tgt)         -- src = counter-attacker (Ogre), tgt = defender (Hero)
+    if not src or src.dead or not tgt or tgt.dead then return end
+
+    -- ✅ attacker is src, defender is tgt
+    Effects.deal_damage { weapon = true, scale_pct = scale } (ctx, src, tgt)
+
+    if ctx and ctx.bus and ctx.bus.emit then
+      ctx.bus:emit('OnCounterAttack', { source = src, target = tgt, scale_pct = scale, is_counter = true })
+    end
   end
 end
 

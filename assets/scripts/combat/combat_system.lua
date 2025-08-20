@@ -2646,6 +2646,61 @@ function WPS.handle_default_attack(ctx, src, tgt, Skills)
   end
 end
 
+
+
+-- AURAS.lua
+local Auras = {}
+
+-- Tracks reservations: e._energy_reserved
+local function _reserve(e, pct)
+  local maxE = e.max_energy or (e.stats and e.stats:get('energy')) or 0
+  local need = maxE * (pct/100)
+  e._energy_reserved = (e._energy_reserved or 0) + need
+  e.max_energy = math.max(0, maxE - e._energy_reserved)
+  e.energy = math.min(e.energy or 0, e.max_energy)
+end
+
+local function _unreserve_all(e)
+  if not e._energy_reserved or e._energy_reserved == 0 then return end
+  local baseMax = e.stats and e.stats:get('energy') or (e.max_energy or 0) + e._energy_reserved
+  e.max_energy = baseMax
+  e._energy_reserved = 0
+end
+
+-- Toggle an exclusive aura from the skill tree
+function Auras.toggle_exclusive(ctx, e, Skills, id)
+  local node = Skills.DB[id]
+  if not node or node.kind ~= 'exclusive_aura' then return false, 'not_exclusive' end
+
+  -- turn off previous
+  if e._active_exclusive and e._active_exclusive.entry then
+    e._active_exclusive.remove_fn(e)
+    _unreserve_all(e)
+    e._active_exclusive = nil
+  end
+
+  if e.skills and e.skills.toggled_exclusive == id then
+    -- turn on
+    local r = (e.skills.ranks and e.skills.ranks[id]) or 1
+    local eff = node.apply_aura and node.apply_aura(ctx, e, r)
+    if eff then
+      local entry = { id='exclusive:'..id, until_time=nil, apply=eff.apply, remove=eff.remove }
+      local function apply_now()
+        if entry.apply then entry.apply(e) end
+      end
+      local function remove_now(ent)
+        if entry.remove then entry.remove(ent) end
+      end
+      apply_now()
+      if node.reservation_pct and node.reservation_pct > 0 then _reserve(e, node.reservation_pct) end
+      e._active_exclusive = { id=id, remove_fn=remove_now, entry=entry }
+    end
+  end
+  return true
+end
+
+-- ============================
+
 local Demo = {}
 
 function Demo.run()
@@ -3133,6 +3188,6 @@ end
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil
 if not _core then _core = (function() return Core end)() end
 local _game = (function() return { Effects = Effects, Combat = Combat, Items = Items, Leveling = Leveling, Content =
-  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Demo = Demo } end)()
+  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Auras = Auras, Demo = Demo } end)()
 
 return { Core = _core, Game = _game }

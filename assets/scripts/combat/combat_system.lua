@@ -2555,6 +2555,97 @@ end
 Skills.SkillTree = SkillTree
 
 
+-- WPS.lua
+local WPS = {}
+
+-- A WPS table: id -> { chance=%, effects = function(ctx, src, tgt) ... }
+WPS.DB = {
+  AmarastasQuickCut = {
+    id='AmarastasQuickCut', chance=20,
+    effects = function(ctx, src, tgt)
+      -- two rapid weapon strikes at reduced damage
+      Effects.deal_damage { weapon=true, scale_pct=70 } (ctx, src, tgt)
+      Effects.deal_damage { weapon=true, scale_pct=70 } (ctx, src, tgt)
+    end
+  },
+  MarkoviansAdvantage = {
+    id='MarkoviansAdvantage', chance=10,
+    effects = function(ctx, src, tgt)
+      Effects.deal_damage { weapon=true, scale_pct=180 } (ctx, src, tgt)
+      Effects.apply_rr { kind='rr1', damage='physical', amount=10, duration=3 } (ctx, src, tgt)
+    end
+  },
+}
+
+-- WPS bucket resolution: roll once per default attack, pick a single WPS based on weights
+local function _roll(wps_list)
+  local total=0
+  for i=1,#wps_list do total = total + (wps_list[i].chance or 0) end
+  if total <= 0 then return nil end
+  local r = math.random()*total; local acc=0
+  for i=1,#wps_list do
+    acc = acc + (wps_list[i].chance or 0)
+    if r <= acc then return wps_list[i] end
+  end
+end
+
+function WPS.collect_for(e, Skills)
+  local list = {}
+  for id, node in pairs(Skills.DB) do
+    if node.wps_unlocks then
+      local r = e.skills and e.skills.ranks and e.skills.ranks[node.id] or 0
+      for wps_id, spec in pairs(node.wps_unlocks) do
+        if r >= (spec.min_rank or 1) then
+          local base = WPS.DB[wps_id]
+          if base then
+            list[#list+1] = { id=wps_id, chance=spec.chance or base.chance, effects=base.effects }
+          end
+        end
+      end
+    end
+  end
+  return list
+end
+
+-- Default Attack Replacer pipeline (called on OnDefaultAttack)
+function WPS.handle_default_attack(ctx, src, tgt, Skills)
+  local sid = src.skills and src.skills.dar_override
+  if not sid then
+    -- vanilla: just do a weapon swing
+    Effects.deal_damage { weapon=true, scale_pct=100 } (ctx, src, tgt)
+  else
+    -- build from skill’s scaling
+    local node = Skills.DB[sid]
+    local r = (src.skills.ranks and src.skills.ranks[sid]) or 1
+    local knobs = node.scale and node.scale(r) or { weapon_scale_pct = 100 }
+    -- energy/cd
+    local cost = node.energy_cost and node.energy_cost(r) or 0
+    if cost > 0 then
+      if (src.energy or 0) < cost then return end
+      src.energy = src.energy - cost
+    end
+    local cd  = node.cooldown and node.cooldown(r) or 0
+    if cd > 0 then
+      src.timers = src.timers or {}
+      local key = 'dar:' .. sid
+      if not ctx.time:is_ready(src.timers, key) then return end
+      ctx.time:set_cooldown(src.timers, key, cd)
+    end
+    -- main hit
+    Effects.deal_damage { weapon=true, scale_pct=knobs.weapon_scale_pct or 100 } (ctx, src, tgt)
+    if knobs.flat_fire and knobs.flat_fire > 0 then
+      Effects.deal_damage { components = { {type='fire', amount=knobs.flat_fire} } } (ctx, src, tgt)
+    end
+  end
+
+  -- Roll WPS
+  local wps_list = WPS.collect_for(src, Skills)
+  if #wps_list > 0 then
+    local pick = _roll(wps_list)
+    if pick and pick.effects then pick.effects(ctx, src, tgt) end
+  end
+end
+
 local Demo = {}
 
 function Demo.run()
@@ -3042,6 +3133,6 @@ end
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil
 if not _core then _core = (function() return Core end)() end
 local _game = (function() return { Effects = Effects, Combat = Combat, Items = Items, Leveling = Leveling, Content =
-  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, Skills = Skills, Demo = Demo } end)()
+  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Demo = Demo } end)()
 
 return { Core = _core, Game = _game }

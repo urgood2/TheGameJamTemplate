@@ -2738,6 +2738,67 @@ end
 
 -- ================================
 
+-- SYSTEMS.lua
+local Systems = {}
+
+-- Charges (e.g., Savagery): stack on hit, decay over time, modifies stats
+local Charges = {}
+function Charges.add_track(e, id, max_stacks, decay_per_sec, apply_fn)
+  e._charges = e._charges or {}
+  e._charges[id] = { stacks=0, max=max_stacks, decay=decay_per_sec, apply=apply_fn }
+end
+function Charges.on_hit(e, id, add)
+  local c = e._charges and e._charges[id]; if not c then return end
+  c.stacks = math.min(c.max, c.stacks + (add or 1))
+end
+function Charges.update(e, dt)
+  if not e._charges then return end
+  for _, c in pairs(e._charges) do
+    if c.decay and c.decay>0 then
+      c.stacks = math.max(0, c.stacks - c.decay*dt)
+    end
+    if c.apply then c.apply(e, c.stacks) end
+  end
+end
+
+-- Channeling registry: drains energy while active; run a tick effect
+local Channel = {}
+function Channel.start(ctx, e, id, drain_per_sec, tick, period)
+  e._channel = e._channel or {}
+  e._channel[id] = { drain=drain_per_sec, tick=tick, period=period or 0.5, next=ctx.time.now }
+end
+function Channel.stop(e, id) if e._channel then e._channel[id] = nil end end
+function Channel.update(ctx, e, dt)
+  if not e._channel then return end
+  for id, c in pairs(e._channel) do
+    local need = c.drain * dt
+    if (e.energy or 0) < need then e._channel[id] = nil
+    else
+      e.energy = e.energy - need
+      if ctx.time.now >= (c.next or 0) then
+        if c.tick then c.tick(ctx, e) end
+        c.next = ctx.time.now + c.period
+      end
+    end
+  end
+end
+
+-- Glue update
+function Systems.update(ctx, dt)
+  local function step(list)
+    for i=1,#list do
+      local e = list[i]
+      Charges.update(e, dt)
+      Channel.update(ctx, e, dt)
+    end
+  end
+  step(ctx.side1 or {}); step(ctx.side2 or {})
+end
+
+Systems.Charges = Charges
+Systems.Channel = Channel
+
+-- ================================
 
 local Demo = {}
 
@@ -3237,6 +3298,6 @@ end
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil
 if not _core then _core = (function() return Core end)() end
 local _game = (function() return { Effects = Effects, Combat = Combat, Items = Items, Leveling = Leveling, Content =
-  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Auras = Auras, Demo = Demo } end)()
+  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Auras = Auras, Systems = Systems, Demo = Demo } end)()
 
 return { Core = _core, Game = _game }

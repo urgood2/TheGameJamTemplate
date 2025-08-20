@@ -2750,6 +2750,12 @@ function Demo.run()
   local defs, DTS = StatDef.make()
   local combat    = Combat.new(RR, DTS)
   
+  -- After creating bus, hook devotions
+  for _, evn in ipairs({'OnHitResolved','OnBasicAttack','OnCrit','OnDeath','OnDodge'}) do
+    bus:on(evn, function(ev) Devotion.handle_event(ctx, evn, ev) end)
+  end
+
+  
   --[[
     How to manage ctx in a real-time, many-entity scene
 
@@ -3031,6 +3037,11 @@ function Demo.run_full()
   local time  = Time.new()
   local defs, DTS = StatDef.make()
   local combat    = Combat.new(RR, DTS)
+  
+  -- After creating bus, hook devotions
+  for _, evn in ipairs({'OnHitResolved','OnBasicAttack','OnCrit','OnDeath','OnDodge'}) do
+    bus:on(evn, function(ev) Devotion.handle_event(ctx, evn, ev) end)
+  end
 
   local ctx = {
     debug = true,

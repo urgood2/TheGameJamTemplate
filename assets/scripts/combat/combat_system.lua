@@ -2798,6 +2798,79 @@ end
 Systems.Charges = Charges
 Systems.Channel = Channel
 
+
+-- PETS_AND_SETS.lua
+local PetsAndSets = {}
+
+-- Simple pet spawner: you plug your entity factory here
+function PetsAndSets.spawn_pet(ctx, owner, spec)
+  local make_actor = owner._make_actor or owner.__factory -- wire your factory
+  local pet = make_actor(spec.name or 'Pet', owner._defs, owner._attach)
+  pet.side = owner.side
+  pet.owner = owner
+  -- scale by owner's pet bonuses
+  local pct = (owner.stats and owner.stats:get('all_damage_pct') or 0)
+  pet.stats:add_add_pct('all_damage_pct', pct * (spec.inherit_damage_mult or 0.6))
+  pet.stats:recompute()
+  ctx.get_allies_of(owner)[#ctx.get_allies_of(owner)+1] = pet
+  return pet
+end
+
+-- Item sets
+local function _apply_set_bonus(ctx, e, bonus)
+  if bonus.effects then
+    bonus._applied = bonus.effects(ctx, e) -- return undo fn or applied records (optional)
+  end
+  if bonus.mutators then
+    for sid, wrap in pairs(bonus.mutators) do
+      e.spell_mutators = e.spell_mutators or {}
+      local bucket = e.spell_mutators[sid] or {}; e.spell_mutators[sid]=bucket
+      local rec = { pr=0, wrap=wrap }; table.insert(bucket, rec)
+      bonus._muts = bonus._muts or {}; table.insert(bonus._muts, {sid=sid, ref=rec})
+    end
+  end
+end
+
+local function _remove_set_bonus(e, bonus)
+  if bonus._muts and e.spell_mutators then
+    for i=#bonus._muts,1,-1 do
+      local m = bonus._muts[i]; local b = e.spell_mutators[m.sid]
+      if b then
+        for j=#b,1,-1 do if b[j]==m.ref then table.remove(b,j) break end end
+        if #b==0 then e.spell_mutators[m.sid]=nil end
+      end
+    end
+  end
+  bonus._muts=nil
+  -- undo stat effects if you returned records
+end
+
+function PetsAndSets.recompute_sets(ctx, e)
+  -- build counts
+  local cnt = {}
+  for slot, it in pairs(e.equipped or {}) do
+    if it.set_id then cnt[it.set_id] = (cnt[it.set_id] or 0) + 1 end
+  end
+  -- walk all sets present, apply best tier
+  e._active_sets = e._active_sets or {}
+  for set_id, pieces in pairs(cnt) do
+    local spec = Content.Sets and Content.Sets[set_id]
+    if spec then
+      local best = nil
+      for i=1,#spec.bonuses do
+        local b = spec.bonuses[i]
+        if pieces >= b.pieces then best = b end
+      end
+      local cur = e._active_sets[set_id]
+      if cur ~= best then
+        if cur then _remove_set_bonus(e, cur) end
+        e._active_sets[set_id] = best
+        if best then _apply_set_bonus(ctx, e, best) end
+      end
+    end
+  end
+end
+
 -- ================================
 
 local Demo = {}
@@ -3298,6 +3371,6 @@ end
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil
 if not _core then _core = (function() return Core end)() end
 local _game = (function() return { Effects = Effects, Combat = Combat, Items = Items, Leveling = Leveling, Content =
-  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Auras = Auras, Systems = Systems, Demo = Demo } end)()
+  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Auras = Auras, Systems = Systems, PetsAndSets = PetsAndSets, Demo = Demo } end)()
 
 return { Core = _core, Game = _game }

@@ -2351,6 +2351,209 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
   return true
 end
 
+-- SKILLS.lua
+local Skills = {}
+
+-- Design:
+-- - Node kinds: 'active', 'passive', 'modifier', 'transmuter', 'exclusive_aura'
+-- - Ranks with soft_cap and ultimate ranks beyond soft_cap with diminishing return curve
+-- - Modifiers and transmuters *wrap* base skill using your existing spell_mutators channel
+-- - Each skill can optionally be a default-attack replacer (DAR) and/or have WPS entries
+
+local function _lerp(a,b,t) return a + (b-a)*t end
+local function _dim_return(x, knee, min_mult)
+  if x <= knee then return 1 end
+  local over = x - knee
+  return math.max(min_mult or 0.5, 1 / (1 + 0.15*over))
+end
+
+-- Public DB
+Skills.DB = {
+  -- Example: Fire Strike-style default attack replacer
+  FireStrike = {
+    id = 'FireStrike', kind='active', is_dar=true,
+    soft_cap = 12, ult_cap = 26,
+    -- scaling function returns a table of scalar knobs used by the skill's build()
+    scale = function(rank)
+      local m = _dim_return(rank, 12, 0.6)
+      local flat = 6 + 2.5*rank
+      local wpn = 100 + 8*rank
+      return { flat_fire = flat*m, weapon_scale_pct = wpn*m }
+    end,
+    -- optional: add WPS unlocked while investing into this line
+    wps_unlocks = { -- id => {chance, effects}
+      AmarastasQuickCut = { min_rank=4, chance=20 }, -- details in WPS section
+    },
+    -- optional default attack on-cast cost/cd hooks
+    energy_cost = function(rank) return 0 end,
+    cooldown    = function(rank) return 0 end,
+  },
+
+  -- Modifiers that *augment* FireStrike's output (applied as mutators)
+  ExplosiveStrike = {
+    id='ExplosiveStrike', kind='modifier', base='FireStrike',
+    soft_cap=12, ult_cap=22,
+    apply_mutator = function(rank)
+      local radius = 1.8 + 0.05*rank
+      local pct    = 30 + 3*rank
+      return function(orig)
+        return function(ctx, src, tgt)
+          -- 1) run original
+          if orig then orig(ctx, src, tgt) end
+          -- 2) splash
+          local allies = ctx.get_enemies_of(src)
+          for i=1,#allies do
+            local e = allies[i]
+            if e ~= tgt then
+              Effects.deal_damage{
+                components = { { type='fire', amount = (src.stats:get('weapon_max') or 10) * (pct/100) } }
+              }(ctx, src, e)
+            end
+          end
+        end
+      end
+    end
+  },
+
+  -- Transmuter: toggled variant that changes base damage type/behavior
+  SearingStrike = {
+    id='SearingStrike', kind='transmuter', base='FireStrike',
+    exclusive=true, -- only one transmuter of a base can be enabled at once
+    apply_mutator = function()
+      return function(orig)
+        return function(ctx, src, tgt)
+          -- Override "weapon -> all to fire" feel
+          Effects.deal_damage{
+            weapon = true, scale_pct = 100,
+            skill_conversions = { {from='physical', to='fire', pct=100} }
+          }(ctx, src, tgt)
+          -- keep original secondary if desired:
+          if orig then orig(ctx, src, tgt) end
+        end
+      end
+    end
+  },
+
+  -- Passive example
+  FlameTouched = {
+    id='FlameTouched', kind='passive', soft_cap=12, ult_cap=22,
+    apply_stats = function(S, rank)
+      S:add_add_pct('fire_modifier_pct', 6 + 1.5*rank)
+      S:add_base('offensive_ability', 6 + 2*rank)
+    end
+  },
+
+  -- Exclusive aura (mutually exclusive—only one can be toggled)
+  PossessionLike = {
+    id='PossessionLike', kind='exclusive_aura',
+    reservation_pct = 25, -- reserve 25% of max energy
+    apply_aura = function(ctx, src, rank)
+      return Effects.modify_stat { id='possess_aura', name='chaos_modifier_pct', add_pct_add=8 + 2*rank }
+    end
+  },
+}
+
+-- Player state and manipulation
+local SkillTree = {}
+
+function SkillTree.create_state()
+  return {
+    ranks = {}, enabled_transmuter = {}, toggled_exclusive = nil,
+    dar_override = nil,
+    _mutators = {}, -- { [sid] = {mut1, mut2, ...} } to undo later
+    _passive_marks = {}, -- for removing passive stat adds
+  }
+end
+
+local function _apply_passive(e, id, rank, node)
+  local S = e.stats; if not S then return end
+  local before = { #S._derived_marks } -- mark start
+  if node.apply_stats then node.apply_stats(S, rank) end
+  e.skills._passive_marks[id] = { start = before[1] + 1 }
+  S:recompute()
+end
+
+local function _clear_passive(e, id)
+  local mark = e.skills._passive_marks[id]; if not mark then return end
+  -- we used permanent adds, so to remove we track via inverse application here:
+  -- Simpler: recompute full Stats from base if you keep base copies. For now, ignore removal;
+  -- typical flow only ever increases ranks. If you need removal, store diffs like ItemSystem does.
+end
+
+local function _attach_mutator(e, base_id, wrap)
+  e.spell_mutators = e.spell_mutators or {}
+  local bucket = e.spell_mutators[base_id] or {}
+  e.spell_mutators[base_id] = bucket
+  local rec = { pr=0, wrap=wrap }
+  bucket[#bucket+1] = rec
+  e.skills._mutators[base_id] = e.skills._mutators[base_id] or {}
+  table.insert(e.skills._mutators[base_id], rec)
+end
+
+local function _clear_mutators_for(e, base_id)
+  if not (e.skills and e.skills._mutators and e.skills._mutators[base_id]) then return end
+  local list = e.skills._mutators[base_id]
+  local bucket = e.spell_mutators and e.spell_mutators[base_id]
+  if bucket then
+    for i=#bucket,1,-1 do
+      for j=#list,1,-1 do
+        if bucket[i] == list[j] then table.remove(bucket, i); table.remove(list, j); break end
+      end
+    end
+    if #bucket == 0 then e.spell_mutators[base_id] = nil end
+  end
+end
+
+local function _apply_modifier(e, node, rank)
+  if not node.base then return end
+  _clear_mutators_for(e, node.base)
+  local wrap = node.apply_mutator and node.apply_mutator(rank)
+  if wrap then _attach_mutator(e, node.base, wrap) end
+end
+
+local function _apply_transmuter(e, node)
+  if not node.base then return end
+  _clear_mutators_for(e, node.base)
+  local wrap = node.apply_mutator and node.apply_mutator()
+  if wrap then _attach_mutator(e, node.base, wrap) end
+end
+
+function SkillTree.set_rank(e, id, rank)
+  e.skills = e.skills or SkillTree.create_state()
+  local node = Skills.DB[id]; if not node then return false, 'unknown_skill' end
+  rank = math.max(0, math.min(rank, node.ult_cap or rank))
+  e.skills.ranks[id] = rank
+
+  if node.kind == 'passive' then
+    _apply_passive(e, id, rank, node)
+  elseif node.kind == 'modifier' then
+    _apply_modifier(e, node, rank)
+  end
+
+  -- DAR marker
+  if node.is_dar and rank > 0 then
+    e.skills.dar_override = id
+  end
+
+  -- WPS unlocks are handled in WPS module by checking current ranks
+  return true
+end
+
+function SkillTree.enable_transmuter(e, id)
+  local node = Skills.DB[id]; if not (node and node.kind=='transmuter') then return false, 'not_transmuter' end
+  e.skills.enabled_transmuter[node.base] = id
+  _apply_transmuter(e, node)
+  return true
+end
+
+function SkillTree.toggle_exclusive(e, id)
+  local node = Skills.DB[id]; if not (node and node.kind=='exclusive_aura') then return false, 'not_exclusive' end
+  e.skills.toggled_exclusive = (e.skills.toggled_exclusive == id) and nil or id
+  return true
+end
+
+Skills.SkillTree = SkillTree
+
 
 local Demo = {}
 
@@ -2839,6 +3042,6 @@ end
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil
 if not _core then _core = (function() return Core end)() end
 local _game = (function() return { Effects = Effects, Combat = Combat, Items = Items, Leveling = Leveling, Content =
-  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, Demo = Demo } end)()
+  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, Skills = Skills, Demo = Demo } end)()
 
 return { Core = _core, Game = _game }

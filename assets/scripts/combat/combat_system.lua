@@ -1858,125 +1858,7 @@ Content.Traits = {
   },
 }
 
--- ============================================================================
--- Status engine + world tick
--- StatusEngine.update_entity:
---   - Expires timed buffs (calls entry.remove if present, emits 'OnStatusExpired')
---   - Ticks DoTs: on each tick, deals dps as instantaneous damage
--- World.update:
---   - Ticks global time, updates all entities on both sides, emits 'OnTick'
--- ============================================================================
-StatusEngine.update_entity = function(ctx, e, dt)
-  -- Expire timed buffs --------------------------------------------------------
-  if e.statuses then
-    for id, b in pairs(e.statuses) do
-      local kept = {}
-      for _, entry in ipairs(b.entries) do
-        if (not entry.until_time) or entry.until_time > ctx.time.now then
-          kept[#kept + 1] = entry
-        else
-          if entry.remove then entry.remove(e) end
-          ctx.bus:emit('OnStatusExpired', { entity = e, id = id })
-        end
-      end
-      b.entries = kept
-    end
-  end
-  
-  -- RR pruning
-  if e.active_rr then
-    for t, bucket in pairs(e.active_rr) do
-      local kept = {}
-      for i = 1, #bucket do
-        local r = bucket[i]
-        if (not r.until_time) or r.until_time > ctx.time.now then kept[#kept+1] = r end
-      end
-      e.active_rr[t] = kept
-    end
-  end
 
-  -- Tick DoTs -----------------------------------------------------------------
-  if e.dots then
-    local kept = {}
-    for _, d in ipairs(e.dots) do
-      if d.until_time and d.until_time <= ctx.time.now then
-        ctx.bus:emit('OnDotExpired', { entity = e, dot = d })
-      else
-        if ctx.time.now >= (d.next_tick or ctx.time.now) then
-          Effects.deal_damage { components = { { type = d.type, amount = d.dps } } } (ctx, d.source, e)
-          d.next_tick = (d.next_tick or ctx.time.now) + (d.tick or 1.0)
-        end
-        kept[#kept + 1] = d
-      end
-    end
-    e.dots = kept
-  end
-end
-
-World.update = function(ctx, dt)
-  ctx.time:tick(dt)
-  
-  local function regen(ent)
-    if not ent.stats then return end
-    -- Health regen
-    local maxhp  = ent.max_health or ent.stats:get('health')
-    local hpr    = ent.stats:get('health_regen') or 0
-    if hpr ~= 0 then
-      ent.hp = util.clamp((ent.hp or maxhp) + hpr * dt, 0, maxhp)
-    end
-    -- Energy regen
-    ent.max_energy = ent.max_energy or ent.stats:get('energy')
-    ent.energy     = ent.energy     or ent.max_energy
-    local epr = ent.stats:get('energy_regen') or 0
-    if epr ~= 0 then
-      ent.energy = util.clamp(ent.energy + epr * dt, 0, ent.max_energy)
-    end
-  end
-
-  local function each(L)
-    for _, ent in ipairs(L or {}) do
-      StatusEngine.update_entity(ctx, ent, dt)
-      regen(ent)
-    end
-  end
-
-  each(ctx.side1)
-  each(ctx.side2)
-
-  ctx.bus:emit('OnTick', { dt = dt, now = ctx.time.now })
-end
-
-
--- ============================================================================
--- Demo
--- Provides a runnable demonstration of the system:
---   - Creates hero + ogre actors with stats
---   - Hooks up EventBus listeners to print combat logs
---   - Executes: basic attack, EmberStrike chance, Fireball, Poison Dart with DoT ticks
---   - Demonstrates a custom trigger ("OnProvoke") causing counter-attack
--- ============================================================================
-local function make_actor(name, defs, attach)
-  -- Create a new Stats instance, attach attribute derivations, recompute, set HP.
-  local s = Stats.new(defs)
-  attach(s)
-  s:recompute()
-  local hp = s:get('health')
-  local en = s:get('energy')
-
-  return {
-    name            = name,
-    stats           = s,
-    hp              = hp,
-    max_health      = hp,
-    energy          = en,
-    max_energy      = en,
-    gear_conversions= {},
-    tags            = {},
-    timers          = {},
-  }
-end
-
-  
 ---------------------------
 -- Items & Actives: ItemSystem (equip/unequip, procs, granted actives)
 ---------------------------
@@ -2871,6 +2753,128 @@ function PetsAndSets.recompute_sets(ctx, e)
   end
 end
 
+-- ============================================================================
+-- Status engine + world tick
+-- StatusEngine.update_entity:
+--   - Expires timed buffs (calls entry.remove if present, emits 'OnStatusExpired')
+--   - Ticks DoTs: on each tick, deals dps as instantaneous damage
+-- World.update:
+--   - Ticks global time, updates all entities on both sides, emits 'OnTick'
+-- ============================================================================
+StatusEngine.update_entity = function(ctx, e, dt)
+  -- Expire timed buffs --------------------------------------------------------
+  if e.statuses then
+    for id, b in pairs(e.statuses) do
+      local kept = {}
+      for _, entry in ipairs(b.entries) do
+        if (not entry.until_time) or entry.until_time > ctx.time.now then
+          kept[#kept + 1] = entry
+        else
+          if entry.remove then entry.remove(e) end
+          ctx.bus:emit('OnStatusExpired', { entity = e, id = id })
+        end
+      end
+      b.entries = kept
+    end
+  end
+  
+  -- RR pruning
+  if e.active_rr then
+    for t, bucket in pairs(e.active_rr) do
+      local kept = {}
+      for i = 1, #bucket do
+        local r = bucket[i]
+        if (not r.until_time) or r.until_time > ctx.time.now then kept[#kept+1] = r end
+      end
+      e.active_rr[t] = kept
+    end
+  end
+
+  -- Tick DoTs -----------------------------------------------------------------
+  if e.dots then
+    local kept = {}
+    for _, d in ipairs(e.dots) do
+      if d.until_time and d.until_time <= ctx.time.now then
+        ctx.bus:emit('OnDotExpired', { entity = e, dot = d })
+      else
+        if ctx.time.now >= (d.next_tick or ctx.time.now) then
+          Effects.deal_damage { components = { { type = d.type, amount = d.dps } } } (ctx, d.source, e)
+          d.next_tick = (d.next_tick or ctx.time.now) + (d.tick or 1.0)
+        end
+        kept[#kept + 1] = d
+      end
+    end
+    e.dots = kept
+  end
+end
+
+World.update = function(ctx, dt)
+  ctx.time:tick(dt)
+  
+  local function regen(ent)
+    if not ent.stats then return end
+    -- Health regen
+    local maxhp  = ent.max_health or ent.stats:get('health')
+    local hpr    = ent.stats:get('health_regen') or 0
+    if hpr ~= 0 then
+      ent.hp = util.clamp((ent.hp or maxhp) + hpr * dt, 0, maxhp)
+    end
+    -- Energy regen
+    ent.max_energy = ent.max_energy or ent.stats:get('energy')
+    ent.energy     = ent.energy     or ent.max_energy
+    local epr = ent.stats:get('energy_regen') or 0
+    if epr ~= 0 then
+      ent.energy = util.clamp(ent.energy + epr * dt, 0, ent.max_energy)
+    end
+  end
+
+  local function each(L)
+    for _, ent in ipairs(L or {}) do
+      StatusEngine.update_entity(ctx, ent, dt)
+      regen(ent)
+    end
+  end
+
+  each(ctx.side1)
+  each(ctx.side2)
+  
+  Systems.update(ctx, dt)
+
+  ctx.bus:emit('OnTick', { dt = dt, now = ctx.time.now })
+end
+
+
+-- ============================================================================
+-- Demo
+-- Provides a runnable demonstration of the system:
+--   - Creates hero + ogre actors with stats
+--   - Hooks up EventBus listeners to print combat logs
+--   - Executes: basic attack, EmberStrike chance, Fireball, Poison Dart with DoT ticks
+--   - Demonstrates a custom trigger ("OnProvoke") causing counter-attack
+-- ============================================================================
+local function make_actor(name, defs, attach)
+  -- Create a new Stats instance, attach attribute derivations, recompute, set HP.
+  local s = Stats.new(defs)
+  attach(s)
+  s:recompute()
+  local hp = s:get('health')
+  local en = s:get('energy')
+
+  return {
+    name            = name,
+    stats           = s,
+    hp              = hp,
+    max_health      = hp,
+    energy          = en,
+    max_energy      = en,
+    gear_conversions= {},
+    tags            = {},
+    timers          = {},
+  }
+end
+
+  
+
 -- ================================
 
 local Demo = {}
@@ -3172,10 +3176,7 @@ function Demo.run_full()
   local defs, DTS = StatDef.make()
   local combat    = Combat.new(RR, DTS)
   
-  -- After creating bus, hook devotions
-  for _, evn in ipairs({'OnHitResolved','OnBasicAttack','OnCrit','OnDeath','OnDodge'}) do
-    bus:on(evn, function(ev) Devotion.handle_event(ctx, evn, ev) end)
-  end
+
 
   local ctx = {
     debug = true,
@@ -3185,6 +3186,11 @@ function Demo.run_full()
     get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end,
     get_allies_of  = function(a) return a.side == 1 and ctx.side1 or ctx.side2 end,
   }
+  
+    -- After creating bus, hook devotions
+  for _, evn in ipairs({'OnHitResolved','OnBasicAttack','OnCrit','OnDeath','OnDodge'}) do
+    bus:on(evn, function(ev) Devotion.handle_event(ctx, evn, ev) end)
+  end
 
   -- Actors
   local hero = make_actor('Hero', defs, Content.attach_attribute_derivations)
@@ -3224,10 +3230,32 @@ function Demo.run_full()
   ctx.side2 = { ogre }
 
   -- Event logging
+  -- Pretty-printer for event field values
+  local function display(v)
+    local tv = type(v)
+    if tv == "string" or tv == "number" or tv == "boolean" then
+      return tostring(v)
+    elseif tv == "table" then
+      -- Respect custom __tostring if present
+      local mt = getmetatable(v)
+      if mt and mt.__tostring then return tostring(v) end
+      -- Common human-readable fallbacks
+      if v.name then return tostring(v.name) end
+      if v.id then return tostring(v.id) end
+      if v.label then return tostring(v.label) end
+      -- Last resort: compact table tag
+      return "<tbl:" .. (tostring(v):match("0x[%da-fA-F]+") or "?") .. ">"
+    else
+      return tostring(v)
+    end
+  end
+
   local function on(ev, name, fmt, fields)
-    bus:on(name, function(e)
+    ev:on(name, function(e)
       local vals = {}
-      for _, k in ipairs(fields or {}) do vals[#vals+1] = tostring(e[k]) end
+      for _, k in ipairs(fields or {}) do
+        vals[#vals+1] = display(e[k])
+      end
       print(("[EVT] %-16s " .. fmt):format(name, table.unpack(vals)))
     end)
   end

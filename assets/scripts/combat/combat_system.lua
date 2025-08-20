@@ -2701,6 +2701,44 @@ end
 
 -- ============================
 
+
+-- DEVOTION.lua
+local Devotion = {}
+
+-- proc spec: { id, trigger, chance, icd, filter(ev)->bool, effects(ctx, source, target) }
+function Devotion.attach(e, spec)
+  e._devotion = e._devotion or {}
+  e._devotion[spec.id] = { spec=spec, next_ok=0 }
+end
+
+local function _try_fire(ctx, e, ev, rec)
+  local now = ctx.time.now
+  if now < (rec.next_ok or 0) then return end
+  local spec = rec.spec
+  if spec.filter and not spec.filter(ev) then return end
+  if math.random()*100 > (spec.chance or 100) then return end
+  local src = ev.source or e
+  local tgt = ev.target or e
+  spec.effects(ctx, src, tgt)
+  rec.next_ok = now + (spec.icd or 0)
+end
+
+function Devotion.handle_event(ctx, evname, ev)
+  -- call on both attacker and defender, if present
+  local function handle(e)
+    if not (e and e._devotion) then return end
+    for _, rec in pairs(e._devotion) do
+      local spec = rec.spec
+      if spec.trigger == evname then _try_fire(ctx, e, ev, rec) end
+    end
+  end
+  handle(ev.source); handle(ev.target)
+end
+
+
+-- ================================
+
+
 local Demo = {}
 
 function Demo.run()

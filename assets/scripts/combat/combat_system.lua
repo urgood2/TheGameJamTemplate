@@ -1105,27 +1105,44 @@ end
 
 -- Cleanse: remove debuffs/status entries by id/predicate
 Effects.cleanse = function(p)
-  -- p = { ids = {...} } or { predicate = function(id, entry) return true end }
+  -- p = { ids = { [id]=true, ... } } or
+  --     { predicate = function(id, entry) return true end }
   return function(ctx, src, tgt)
-    if not tgt.statuses then return end
+    if not (tgt and tgt.statuses) then return end
+
+    local to_nuke = {}  -- collect empty buckets to delete after the loop
+
     for id, b in pairs(tgt.statuses) do
       local keep = {}
-      for _, entry in ipairs(b.entries) do
+      for _, entry in ipairs(b.entries or {}) do
         local remove =
-          (p.ids and p.ids[id]) or
+          (p.ids and p.ids[id] == true) or
           (p.predicate and p.predicate(id, entry)) or
           false
+
         if remove then
           if entry.remove then entry.remove(tgt) end
-          ctx.bus:emit('OnStatusExpired', { entity=tgt, id=id })
+          if ctx and ctx.bus and ctx.bus.emit then
+            ctx.bus:emit('OnStatusExpired', { entity = tgt, id = id })
+          end
         else
           keep[#keep+1] = entry
         end
       end
       b.entries = keep
+
+      if #b.entries == 0 then
+        to_nuke[#to_nuke+1] = id
+      end
+    end
+
+    -- delete empty buckets after iteration
+    for i = 1, #to_nuke do
+      tgt.statuses[to_nuke[i]] = nil
     end
   end
 end
+
 
 -- Extras Siralim-like (engine-backed) – safe stubs you can wire later:
 Effects.resurrect = function(p)
@@ -1134,7 +1151,8 @@ Effects.resurrect = function(p)
     if tgt.dead then
       tgt.dead = false
       local maxhp = tgt.max_health or tgt.stats:get('health')
-      tgt.hp = math.max(tgt.hp or 0, maxhp * ((p.hp_pct or 50)/100))
+      -- tgt.hp = math.max(tgt.hp or 0, maxhp * ((p.hp_pct or 50)/100))
+      tgt.hp = maxhp * ((p.hp_pct or 50)/100)
       ctx.bus:emit('OnResurrect', { source=src, target=tgt, hp=tgt.hp })
     end
   end

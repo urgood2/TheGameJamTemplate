@@ -81,21 +81,18 @@ function util.choice(list) return list[math.random(1, #list)] end
 --  @param entries table
 --  @return any: chosen entries[i].item
 function util.weighted_choice(entries)
+  if not entries or #entries == 0 then return nil end
   local sum = 0
+  for _, e in ipairs(entries) do sum = sum + math.max(0, e.w or 0) end
+  if sum <= 0 then return entries[math.random(1, #entries)].item end
+  local r, acc = math.random() * sum, 0
   for _, e in ipairs(entries) do
-    sum = sum + (e.w or 0)
+    acc = acc + math.max(0, e.w or 0)
+    if r <= acc then return e.item end
   end
-  local r = math.random() * sum
-  local acc = 0
-  for _, e in ipairs(entries) do
-    acc = acc + (e.w or 0)
-    if r <= acc then
-      return e.item
-    end
-  end
-  -- Fallback to the last item (covers sum==0 or floating-point edge).
   return entries[#entries].item
 end
+
 
 -- === Spell identity & grant helpers =========================================
 local function get_spell_id(spell_ref)

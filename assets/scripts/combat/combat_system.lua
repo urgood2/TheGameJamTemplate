@@ -471,6 +471,48 @@ function util.dump_stats(e, ctx, opts)
     end
     if #cds > 0 then add("Timers | " .. join(cds, "  ")) end
   end
+  
+  -- Aura / Reservation snapshot (prints only if present)
+  do
+    local parts = {}
+
+    -- desired toggle from skill tree (intent)
+    local desired = e.skills and e.skills.toggled_exclusive or nil
+    if desired then parts[#parts+1] = "desired=" .. tostring(desired) end
+
+    -- actually active exclusive aura
+    local active = e._active_exclusive and e._active_exclusive.id or nil
+    if active then parts[#parts+1] = "active=" .. tostring(active) end
+
+    -- reservation summary (best-effort; supports several shapes)
+    local reserved_abs, reserved_pct = nil, nil
+    if type(e._reservations) == "table" then
+      local abs_sum, pct_sum = 0, 0
+      for _, r in pairs(e._reservations) do
+        if type(r) == "table" then
+          if tonumber(r.amount) then abs_sum = abs_sum + r.amount end
+          if tonumber(r.pct)    then pct_sum = pct_sum + r.pct    end
+        end
+      end
+      if abs_sum > 0 then reserved_abs = abs_sum end
+      if pct_sum > 0 then reserved_pct = pct_sum end
+    end
+    -- common alternates
+    if (not reserved_abs) and tonumber(e._reserved)        then reserved_abs = e._reserved end
+    if (not reserved_abs) and tonumber(e._energy_reserved)  then reserved_abs = e._energy_reserved end
+    if (not reserved_pct) and tonumber(e._reserved_pct)    then reserved_pct = e._reserved_pct end
+
+    if reserved_abs or reserved_pct then
+      local seg = "reserved="
+      if reserved_abs then seg = seg .. string.format("%.1f", reserved_abs) end
+      if reserved_pct then seg = seg .. (reserved_abs and "/" or "") .. tostring(reserved_pct) .. "%%" end
+      parts[#parts+1] = seg
+    end
+
+    if #parts > 0 then
+      add("Aura   | " .. join(parts, "  "))
+    end
+  end
 
   add(("============"):rep(2))
   print(table.concat(lines, "\n"))
@@ -1197,6 +1239,11 @@ Effects.apply_rr = function(p)
   end
 end
 
+
+-- one-time registry: maps effect runners to entry builders
+Effects._entry_of = Effects._entry_of or setmetatable({}, { __mode = "k" })
+
+
 --- Temporarily modify a stat via a status entry.
 --  p = {
 --    id = <string>|nil (defaults to "buff:<name>"),
@@ -1207,18 +1254,18 @@ end
 --    duration    = <number>|nil (secs; nil = permanent until manually removed)
 --  }
 Effects.modify_stat = function(p)
-  return function(ctx, src, tgt)
+  -- unchanged legacy runner (kept exactly as-is)
+  local function runner(ctx, src, tgt)
     local entry = {
       id         = p.id or ('buff:' .. p.name),
       until_time = p.duration and (ctx.time.now + p.duration) or nil,
-      stack      = p.stack,  -- <— pass stack spec through
-      extend_by = p.duration or 0,   -- <— new
+      stack      = p.stack,
+      extend_by  = p.duration or 0,
       apply = function(e)
         if p.base_add    then e.stats:add_base   (p.name, p.base_add)    end
         if p.add_pct_add then e.stats:add_add_pct(p.name, p.add_pct_add) end
         if p.mul_pct_add then e.stats:add_mul_pct(p.name, p.mul_pct_add) end
       end,
-
       remove = function(e)
         if p.base_add    then e.stats:add_base   (p.name, -p.base_add)    end
         if p.add_pct_add then e.stats:add_add_pct(p.name, -p.add_pct_add) end
@@ -1228,8 +1275,34 @@ Effects.modify_stat = function(p)
 
     apply_status(tgt, entry)
     ctx.bus:emit('OnBuffApplied', { source = src, target = tgt, name = p.name })
+    -- (no return; preserves legacy call sites)
   end
+
+  -- NEW: builder for a plain, removable entry (no status/timers applied automatically)
+  Effects._entry_of[runner] = function(ctx, opts)
+    local exclusive = opts and opts.exclusive
+    return {
+      id         = p.id or ('buff:' .. p.name),
+      until_time = exclusive and nil
+                   or (p.duration and (ctx.time.now + p.duration) or nil),
+      stack      = exclusive and nil or p.stack,
+      extend_by  = exclusive and 0   or (p.duration or 0),
+      apply = function(e)
+        if p.base_add    then e.stats:add_base   (p.name, p.base_add)    end
+        if p.add_pct_add then e.stats:add_add_pct(p.name, p.add_pct_add) end
+        if p.mul_pct_add then e.stats:add_mul_pct(p.name, p.mul_pct_add) end
+      end,
+      remove = function(e)
+        if p.base_add    then e.stats:add_base   (p.name, -p.base_add)    end
+        if p.add_pct_add then e.stats:add_add_pct(p.name, -p.add_pct_add) end
+        if p.mul_pct_add then e.stats:add_mul_pct(p.name, -p.mul_pct_add) end
+      end
+    }
+  end
+
+  return runner
 end
+
 -- Deal damage with optional weapon scaling and conversions.
 --  p = {
 --    weapon = <bool>,          -- if true, use src weapon_min/max and scale_pct
@@ -1478,7 +1551,7 @@ Effects.deal_damage = function(p)
       end
     end
     if #ret_components > 0 then
-      dbg("Exectuing retaliation (typed): %s", _comps_to_string(ret_components))
+      dbg(">> Executing target retaliation (typed): %s", _comps_to_string(ret_components))
       Effects.deal_damage { components = ret_components } (ctx, tgt, src)
     end
 
@@ -2597,24 +2670,36 @@ function Auras.toggle_exclusive(ctx, e, Skills, id)
   end
 
   if e.skills and e.skills.toggled_exclusive == id then
-    -- turn on
-    local r = (e.skills.ranks and e.skills.ranks[id]) or 1
+    local r   = (e.skills.ranks and e.skills.ranks[id]) or 1
     local eff = node.apply_aura and node.apply_aura(ctx, e, r)
-    if eff then
-      local entry = { id='exclusive:'..id, until_time=nil, apply=eff.apply, remove=eff.remove }
-      local function apply_now()
-        if entry.apply then entry.apply(e) end
-      end
-      local function remove_now(ent)
-        if entry.remove then entry.remove(ent) end
-      end
-      apply_now()
-      if node.reservation_pct and node.reservation_pct > 0 then _reserve(e, node.reservation_pct) end
-      e._active_exclusive = { id=id, remove_fn=remove_now, entry=entry }
+    if not eff then return true end
+
+    -- Normalize: accept either a prebuilt entry table, or a runner mapped in Effects._entry_of
+    local entry
+    if type(eff) == "table" then
+      entry = eff
+    elseif type(eff) == "function" and Effects._entry_of and Effects._entry_of[eff] then
+      entry = Effects._entry_of[eff](ctx, { exclusive = true })
+    else
+      return false, "bad_aura_entry"
     end
+
+    entry.id         = 'exclusive:' .. id
+    entry.until_time = nil  -- exclusives stay while toggled
+    entry.stack      = nil
+    entry.extend_by  = 0
+
+    if entry.apply then entry.apply(e) end
+    if node.reservation_pct and node.reservation_pct > 0 then _reserve(e, node.reservation_pct) end
+
+    local function remove_now(ent)
+      if entry.remove then entry.remove(ent) end
+    end
+    e._active_exclusive = { id = id, remove_fn = remove_now, entry = entry }
   end
   return true
 end
+
 
 -- ============================
 
@@ -3286,112 +3371,41 @@ function Demo.run_full()
     end
   end
 
-  -- ===== Logging helpers (fused) =====
-
-  local function keys_sorted(t)
-    local ks = {}
-    for k in pairs(t or {}) do ks[#ks+1] = k end
-    table.sort(ks)
-    return ks
-  end
-
   local function resolve(v)
-    local tv = type(v)
-    if tv == "table" then
-      if v.name then return tostring(v.name) end   -- prefer entity name
-      if v.id   then return tostring(v.id)   end   -- fallback id
-      return "<tbl>"
-    elseif tv == "boolean" then
+    if type(v) == "table" then
+      if v.name then return v.name end         -- prefer entity name
+      if v.id   then return v.id   end         -- fallback id if you have one
+      return "<tbl>"                           -- last-resort placeholder
+    elseif type(v) == "boolean" then
       return v and "true" or "false"
     elseif v == nil then
       return "nil"
     else
-      return tostring(v)
+      return v
     end
   end
 
-  local function fmt_flags(flags)
-    if not flags then return "" end
-    local on = {}
-    for k,v in pairs(flags) do if v then on[#on+1] = k end end
-    table.sort(on)
-    return (#on > 0) and (" [" .. table.concat(on, ",") .. "]") or ""
-  end
-
-  local function fmt_tags(tags)
-    if not tags or next(tags) == nil then return "{}" end
-    -- prefer well-known fields first
-    local order = {}
-    if tags.spell_id then order[#order+1] = "spell_id=" .. tostring(tags.spell_id) end
-    if tags.wps_id   then order[#order+1] = "wps_id="   .. tostring(tags.wps_id)   end
-    if tags.dot_type then order[#order+1] = "dot="      .. tostring(tags.dot_type) end
-    -- include the rest, sorted
-    local extra = {}
-    for _, k in ipairs(keys_sorted(tags)) do
-      if k ~= "spell_id" and k ~= "wps_id" and k ~= "dot_type" then
-        local v = tags[k]
-        extra[#extra+1] = (v == true) and k or (k .. "=" .. resolve(v))
-      end
-    end
-    for i=1,#extra do order[#order+1] = extra[i] end
-    return "{" .. table.concat(order, ",") .. "}"
-  end
-
-  -- Generic compact event logger:
   local function on(bus, name, fmt, fields)
     bus:on(name, function(e)
       local vals = {}
       for _, k in ipairs(fields or {}) do
         vals[#vals+1] = resolve(e[k])
       end
-      print(("[EVT] %-16s " .. fmt):format(name, table.unpack(vals)))
-    end)
-  end
 
-  -- Pretty damage logger:
-  local function attach_hit_logger(bus)
-    bus:on('OnHitResolved', function(e)
-      -- icon by reason
-      local icon = (e.reason == "basic"       and "⚔️")
-                or (e.reason == "spell"       and "✨")
-                or (e.reason == "dot"         and "🩸")
-                or (e.reason == "retaliation" and "🔁")
-                or (e.reason == "reflect"     and "🪞")
-                or (e.reason == "counter"     and "↩️")
-                or "❖"
+      local line = ("[EVT] %-16s " .. fmt):format(name, table.unpack(vals))
 
-      local src  = resolve(e.source)
-      local tgt  = resolve(e.target)
-      local dmg  = tonumber(e.damage or 0) or 0
-      local crit = e.crit and " CRIT" or ""
-      local why  = e.reason or "?"
-      local pth  = (e.pth and not (e.flags and e.flags.no_hit_check)) and string.format(" PTH=%.1f", e.pth) or ""
-      local chain = e.chain_id and (" #" .. tostring(e.chain_id)) or ""
-      local tags  = fmt_tags(e.tags)
-      local flags = fmt_flags(e.flags)
-
-      -- Optional per-type breakdown (when present)
-      local breakdown = ""
-      if e.components and type(e.components) == "table" then
-        local parts = {}
-        for _, k in ipairs(keys_sorted(e.components)) do
-          parts[#parts+1] = string.format("%s=%.1f", k, e.components[k])
-        end
-        if #parts > 0 then breakdown = " (" .. table.concat(parts, ", ") .. ")" end
+      -- Append tag/reason if present (keeps existing fmt untouched)
+      local extra = {}
+      if e.tag    ~= nil then extra[#extra+1] = "tag="    .. tostring(resolve(e.tag)) end
+      if e.reason ~= nil then extra[#extra+1] = "reason=" .. tostring(resolve(e.reason)) end
+      if #extra > 0 then
+        line = line .. " (" .. table.concat(extra, " ") .. ")"
       end
 
-      print(("[%s] %s %s -> %s  dmg=%.1f%s  %s%s%s%s"):format(
-        icon, tostring(why), src, tgt, dmg, crit, tags, pth, flags, breakdown
-      ))
+      print(line)
     end)
   end
 
-  -- ===== Usage =====
-  -- attach_hit_logger(bus)
-  -- on(bus, 'OnRetaliation', "RET %s vs %s (%s types)", {'source','target','count'})
-  -- on(bus, 'OnStatusExpired', "status expired: %s", {'id'})
-  
-  attach_hit_logger(bus)
 
   on(bus, 'OnHitResolved', "[%s] -> [%s] dmg=%.1f crit=%s PTH=%.1f", {'source','target','damage','crit','pth'})
   on(bus, 'OnHealed', "[%s] +%.1f", {'target','amount'})
@@ -3557,7 +3571,6 @@ function Demo.run_full()
   burst(ctx, hero, ogre)
   
   util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
---FIXME: is this working properly? the conversion order? also, why is ogre hitting back? (refer to log)
   print("\n== Conversions ordering (skill before gear) ==")
   hero.gear_conversions = { {from='physical', to='fire', pct=50} }
   Effects.deal_damage{
@@ -3569,7 +3582,7 @@ function Demo.run_full()
   Skills.SkillTree.set_rank(hero, 'PossessionLike', 5)
   Skills.SkillTree.toggle_exclusive(hero, 'PossessionLike')
   Auras.toggle_exclusive(ctx, hero, Skills, 'PossessionLike')
-  util.dump_stats(hero, ctx, { timers=true })
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
 
   print("\n== Modifier & Transmuter application ==")
   Skills.SkillTree.set_rank(hero, 'FireStrike', 8)

@@ -1172,7 +1172,10 @@ Effects.apply_rr = function(p)
       until_time = ctx.time.now + (p.duration or 0),
     })
 
-    ctx.bus:emit('OnRRApplied', { source = src, target = tgt, kind = p.damage, rr = p, amount = p.amount })
+    ctx.bus:emit('OnRRApplied', {
+      source = src, target = tgt,
+      rr_kind = p.kind, damage_type = p.damage, amount = p.amount
+    })
   end
 end
 
@@ -1442,17 +1445,19 @@ Effects.deal_damage = function(p)
       dbg("Reflect: -%.1f, Attacker HP=%.1f/%.1f", re, src.hp, smax)
     end
 
-    -- Retaliation (flat sum across types) ------------------------------------
-    local ret = 0
+    -- Retaliation (typed retaliation modification) ------------------------------------
+    
+    local ret_components = {}
     for _, dt in ipairs(DAMAGE_TYPES) do
       local base = tgt.stats:get('retaliation_' .. dt) or 0
-      local mod  = 1 + (tgt.stats:get('retaliation_' .. dt .. '_modifier_pct') or 0) / 100
-      ret = ret + base * mod
+      if base ~= 0 then
+        local mod  = 1 + (tgt.stats:get('retaliation_' .. dt .. '_modifier_pct') or 0) / 100
+        table.insert(ret_components, { type = dt, amount = base * mod })
+      end
     end
-    if ret > 0 then
-      local smax = src.max_health or src.stats:get('health')
-      src.hp = util.clamp((src.hp or smax) - ret, 0, smax)
-      dbg("Retaliation: -%.1f, Attacker HP=%.1f/%.1f", ret, src.hp, smax)
+    if #ret_components > 0 then
+      Effects.deal_damage { components = ret_components } (ctx, tgt, src)
+      dbg("Retaliation (typed): %s", _comps_to_string(ret_components))
     end
 
     ctx.bus:emit('OnHitResolved', {
@@ -2798,7 +2803,8 @@ StatusEngine.update_entity = function(ctx, e, dt)
         ctx.bus:emit('OnDotExpired', { entity = e, dot = d })
       else
         if ctx.time.now >= (d.next_tick or ctx.time.now) then
-          Effects.deal_damage { components = { { type = d.type, amount = d.dps } } } (ctx, d.source, e)
+          local tick = d.tick or 1.0
+          Effects.deal_damage { components = { { type = d.type, amount = (d.dps or 0) * tick } } } (ctx, d.source, e)
           d.next_tick = (d.next_tick or ctx.time.now) + (d.tick or 1.0)
         end
         kept[#kept + 1] = d
@@ -3263,7 +3269,8 @@ function Demo.run_full()
   on(bus, 'OnHitResolved', "[%s] -> [%s] dmg=%.1f crit=%s PTH=%.1f", {'source','target','damage','crit','pth'})
   on(bus, 'OnHealed', "[%s] +%.1f", {'target','amount'})
   on(bus, 'OnCounterAttack', "[%s] countered %s", {'source','target'})
-  on(bus, 'OnRRApplied', "%s RR %s=%.1f%%", {'source','kind','amount'})
+  on(bus, 'OnRRApplied', "%s RR %s=%.1f%%", {'damage_type','rr_kind','amount'})
+
   on(bus, 'OnMiss', "[%s] missed %s", {'source','target'})
   on(bus, 'OnDodge', "%s dodged %s", {'target','source'})
   on(bus, 'OnStatusExpired', "status expired: %s", {'id'})

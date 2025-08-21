@@ -420,16 +420,14 @@ function util.dump_stats(e, ctx, opts)
     if #ds > 0 then add("DoTs   | " .. join(ds, "  ||  ")) end
   end
 
-  -- Optional: Gear conversions (compact)
-  if opts.conv then
-    local cvs = {}
-    local list = e.gear_conversions or {}
-    for i=1,#list do
-      local c = list[i]
-      cvs[#cvs+1] = string.format("%s->%s:%d%%", c.from, c.to, c.pct or 0)
-    end
-    if #cvs > 0 then add("Conv   | " .. join(cvs, "  ")) end
+  -- Always: Gear conversions (compact)
+  local cvs = {}
+  local list = e.gear_conversions or {}
+  for i=1,#list do
+    local c = list[i]
+    cvs[#cvs+1] = string.format("%s->%s:%d%%", c.from, c.to, c.pct or 0)
   end
+  if #cvs > 0 then add("Conv   | " .. join(cvs, "  ")) end
 
   -- Optional: Granted spells (legacy view)
   if opts.spells then
@@ -1074,27 +1072,32 @@ local function apply_status(target, status)
 
   local st = status.stack
   if not st or st.mode == 'replace' then
+    local prev = bucket.entries[1]
+    if prev and prev.remove then prev.remove(target) end
     bucket.entries[1] = status
+    if status.apply then status.apply(target) end
+
   elseif st.mode == 'time_extend' then
-    -- Extend the first entry’s until_time if newer has longer/refresh
     if bucket.entries[1] then
       local cur = bucket.entries[1]
-      if status.until_time and (not cur.until_time or status.until_time > cur.until_time) then
-        cur.until_time = status.until_time
+      local add = status.extend_by or 0
+      if add > 0 then
+        cur.until_time = (cur.until_time or 0) + add
       end
     else
       bucket.entries[1] = status
+      if status.apply then status.apply(target) end
     end
   elseif st.mode == 'count' then
-    -- bounded stack count; all entries contribute to RR.apply_all
     table.insert(bucket.entries, status)
+    if status.apply then status.apply(target) end
     if st.max and #bucket.entries > st.max then
-      table.remove(bucket.entries, 1) -- FIFO
+      local dropped = table.remove(bucket.entries, 1)
+      if dropped and dropped.remove then dropped.remove(target) end
     end
   end
-
-  if status.apply then status.apply(target) end
 end
+
 
 -- Parallel executor (fire-and-forget effects on same tick)
 Effects.par = function(list)
@@ -1208,7 +1211,8 @@ Effects.modify_stat = function(p)
     local entry = {
       id         = p.id or ('buff:' .. p.name),
       until_time = p.duration and (ctx.time.now + p.duration) or nil,
-
+      stack      = p.stack,  -- <— pass stack spec through
+      extend_by = p.duration or 0,   -- <— new
       apply = function(e)
         if p.base_add    then e.stats:add_base   (p.name, p.base_add)    end
         if p.add_pct_add then e.stats:add_add_pct(p.name, p.add_pct_add) end
@@ -1235,6 +1239,9 @@ end
 --  }
 Effects.deal_damage = function(p)
   return function(ctx, src, tgt)
+    local reason = p.reason or "unknown"   -- <—
+    local tags   = p.tags   or {}          -- <—
+
     -- ---------- DEBUG HELPERS (print only when ctx.debug == true) -----------
     local function dbg(fmt, ...)
       if ctx.debug then print(string.format("[DEBUG][deal_damage] " .. fmt, ...)) end
@@ -1471,12 +1478,20 @@ Effects.deal_damage = function(p)
       end
     end
     if #ret_components > 0 then
+      dbg("Exectuing retaliation (typed): %s", _comps_to_string(ret_components))
       Effects.deal_damage { components = ret_components } (ctx, tgt, src)
-      dbg("Retaliation (typed): %s", _comps_to_string(ret_components))
     end
 
     ctx.bus:emit('OnHitResolved', {
       source = src, target = tgt, damage = dealt, crit = (crit_mult > 1.0), pth = PTH
+    })
+    ctx.bus:emit('OnHitResolved', {
+      source = src, target = tgt, damage = dealt,
+      crit = (crit_mult > 1.0) or false,
+      pth  = PTH or nil,
+      reason = reason,                     -- <— hit reason (for logging)
+      tags   = tags,                       -- <— just additional information for logging
+      components = sums,                   -- optional: type breakdown
     })
   end
 end
@@ -3271,20 +3286,58 @@ function Demo.run_full()
     end
   end
 
+  -- ===== Logging helpers (fused) =====
+
+  local function keys_sorted(t)
+    local ks = {}
+    for k in pairs(t or {}) do ks[#ks+1] = k end
+    table.sort(ks)
+    return ks
+  end
+
   local function resolve(v)
-    if type(v) == "table" then
-      if v.name then return v.name end         -- prefer entity name
-      if v.id   then return v.id   end         -- fallback id if you have one
-      return "<tbl>"                           -- last-resort placeholder
-    elseif type(v) == "boolean" then
+    local tv = type(v)
+    if tv == "table" then
+      if v.name then return tostring(v.name) end   -- prefer entity name
+      if v.id   then return tostring(v.id)   end   -- fallback id
+      return "<tbl>"
+    elseif tv == "boolean" then
       return v and "true" or "false"
     elseif v == nil then
       return "nil"
     else
-      return v
+      return tostring(v)
     end
   end
 
+  local function fmt_flags(flags)
+    if not flags then return "" end
+    local on = {}
+    for k,v in pairs(flags) do if v then on[#on+1] = k end end
+    table.sort(on)
+    return (#on > 0) and (" [" .. table.concat(on, ",") .. "]") or ""
+  end
+
+  local function fmt_tags(tags)
+    if not tags or next(tags) == nil then return "{}" end
+    -- prefer well-known fields first
+    local order = {}
+    if tags.spell_id then order[#order+1] = "spell_id=" .. tostring(tags.spell_id) end
+    if tags.wps_id   then order[#order+1] = "wps_id="   .. tostring(tags.wps_id)   end
+    if tags.dot_type then order[#order+1] = "dot="      .. tostring(tags.dot_type) end
+    -- include the rest, sorted
+    local extra = {}
+    for _, k in ipairs(keys_sorted(tags)) do
+      if k ~= "spell_id" and k ~= "wps_id" and k ~= "dot_type" then
+        local v = tags[k]
+        extra[#extra+1] = (v == true) and k or (k .. "=" .. resolve(v))
+      end
+    end
+    for i=1,#extra do order[#order+1] = extra[i] end
+    return "{" .. table.concat(order, ",") .. "}"
+  end
+
+  -- Generic compact event logger:
   local function on(bus, name, fmt, fields)
     bus:on(name, function(e)
       local vals = {}
@@ -3294,6 +3347,51 @@ function Demo.run_full()
       print(("[EVT] %-16s " .. fmt):format(name, table.unpack(vals)))
     end)
   end
+
+  -- Pretty damage logger:
+  local function attach_hit_logger(bus)
+    bus:on('OnHitResolved', function(e)
+      -- icon by reason
+      local icon = (e.reason == "basic"       and "⚔️")
+                or (e.reason == "spell"       and "✨")
+                or (e.reason == "dot"         and "🩸")
+                or (e.reason == "retaliation" and "🔁")
+                or (e.reason == "reflect"     and "🪞")
+                or (e.reason == "counter"     and "↩️")
+                or "❖"
+
+      local src  = resolve(e.source)
+      local tgt  = resolve(e.target)
+      local dmg  = tonumber(e.damage or 0) or 0
+      local crit = e.crit and " CRIT" or ""
+      local why  = e.reason or "?"
+      local pth  = (e.pth and not (e.flags and e.flags.no_hit_check)) and string.format(" PTH=%.1f", e.pth) or ""
+      local chain = e.chain_id and (" #" .. tostring(e.chain_id)) or ""
+      local tags  = fmt_tags(e.tags)
+      local flags = fmt_flags(e.flags)
+
+      -- Optional per-type breakdown (when present)
+      local breakdown = ""
+      if e.components and type(e.components) == "table" then
+        local parts = {}
+        for _, k in ipairs(keys_sorted(e.components)) do
+          parts[#parts+1] = string.format("%s=%.1f", k, e.components[k])
+        end
+        if #parts > 0 then breakdown = " (" .. table.concat(parts, ", ") .. ")" end
+      end
+
+      print(("[%s] %s %s -> %s  dmg=%.1f%s  %s%s%s%s"):format(
+        icon, tostring(why), src, tgt, dmg, crit, tags, pth, flags, breakdown
+      ))
+    end)
+  end
+
+  -- ===== Usage =====
+  -- attach_hit_logger(bus)
+  -- on(bus, 'OnRetaliation', "RET %s vs %s (%s types)", {'source','target','count'})
+  -- on(bus, 'OnStatusExpired', "status expired: %s", {'id'})
+  
+  attach_hit_logger(bus)
 
   on(bus, 'OnHitResolved', "[%s] -> [%s] dmg=%.1f crit=%s PTH=%.1f", {'source','target','damage','crit','pth'})
   on(bus, 'OnHealed', "[%s] +%.1f", {'target','amount'})
@@ -3425,6 +3523,115 @@ function Demo.run_full()
   Leveling.grant_exp(ctx, hero, 1500)
   Leveling.grant_exp(ctx, hero, 1500)
   util.dump_stats(hero, ctx, { spells=true })
+  
+  
+  
+  print("\n== Status stacking modes ==")
+  Effects.modify_stat{ id='buffA', name='fire_modifier_pct', add_pct_add=10, duration=2 }(ctx, hero, hero) -- replace default
+  Effects.modify_stat{ id='buffA', name='fire_modifier_pct', add_pct_add=5, duration=4, stack={mode='time_extend'} }(ctx, hero, hero)
+  Effects.modify_stat{ id='buffB', name='cunning', base_add=1, duration=3, stack={mode='count', max=3} }(ctx, hero, hero)
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  for i=1,5 do 
+    World.update(ctx, 1.0) 
+    util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  end
+
+  print("\n== Cleanse by id/predicate ==")
+  Effects.modify_stat{ id='burning', name='percent_absorb_pct', add_pct_add=5, duration=10 }(ctx, hero, hero)
+
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  Effects.cleanse{ ids={ burning=true }, predicate=function(id,entry) return false end }(ctx, hero, hero)
+  
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+
+  print("\n== par / seq / chance / scale_by_stat ==")
+  local burst = Effects.seq{
+    Effects.par{
+      Effects.deal_damage{ components={ {type='fire', amount=30} } },
+      Effects.chance(50, Effects.apply_rr{ kind='rr1', damage='fire', amount=10, duration=2 })
+    },
+    Effects.scale_by_stat('cunning', 0.5, function(x)
+      return function(ctx, src, tgt) Effects.deal_damage{ components={ {type='pierce', amount=x} } }(ctx, src, tgt) end
+    end)
+  }
+  burst(ctx, hero, ogre)
+  
+  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+--FIXME: is this working properly? the conversion order? also, why is ogre hitting back? (refer to log)
+  print("\n== Conversions ordering (skill before gear) ==")
+  hero.gear_conversions = { {from='physical', to='fire', pct=50} }
+  Effects.deal_damage{
+    components = { {type='physical', amount=100} },
+    skill_conversions = { {from='physical', to='cold', pct=50} }
+  }(ctx, hero, ogre)
+
+  print("\n== Exclusive aura toggle & reservation ==")
+  Skills.SkillTree.set_rank(hero, 'PossessionLike', 5)
+  Skills.SkillTree.toggle_exclusive(hero, 'PossessionLike')
+  Auras.toggle_exclusive(ctx, hero, Skills, 'PossessionLike')
+  util.dump_stats(hero, ctx, { timers=true })
+
+  print("\n== Modifier & Transmuter application ==")
+  Skills.SkillTree.set_rank(hero, 'FireStrike', 8)
+  Skills.SkillTree.set_rank(hero, 'ExplosiveStrike', 6)     -- modifier
+  Skills.SkillTree.enable_transmuter(hero, 'SearingStrike') -- transmuter
+  WPS.handle_default_attack(ctx, hero, ogre, Skills)
+
+  print("\n== Devotion trigger w/ ICD ==")
+  local devo = { id='HotHead', trigger='OnHitResolved', chance=100, icd=1.5,
+    effects=function(ctx, src, tgt) Effects.heal{ flat=10 }(ctx, src, src) end }
+  Devotion.attach(hero, devo)
+  bus:on('OnHitResolved', function(ev) Devotion.handle_event(ctx, 'OnHitResolved', ev) end)
+  Effects.deal_damage{ weapon=true, scale_pct=100 }(ctx, hero, ogre)
+  World.update(ctx, 0.5); Effects.deal_damage{ weapon=true, scale_pct=100 }(ctx, hero, ogre) -- should be on ICD
+  World.update(ctx, 1.5); Effects.deal_damage{ weapon=true, scale_pct=100 }(ctx, hero, ogre) -- off ICD
+
+  print("\n== Charges & Channel ==")
+  Systems.Charges.add_track(hero, 'Heat', 10, 2, function(e, stacks)
+    e.stats:recompute() -- in real code: add/remove marks then recompute
+  end)
+  Systems.Charges.on_hit(hero, 'Heat', 5)
+  Systems.Channel.start(ctx, hero, 'Beam', 8, function(ctx,e) Effects.deal_damage{ components={ {type='aether', amount=15} } }(ctx, e, ogre) end, 0.5)
+  for i=1,5 do World.update(ctx, 0.5) end
+  Systems.Channel.stop(hero, 'Beam')
+
+  print("\n== Pets & Sets (apply/unapply) ==")
+  local pet = PetsAndSets.spawn_pet(ctx, hero, { name='Imp', inherit_damage_mult=0.6 })
+  Content.Sets = {
+    EmberSet = {
+      bonuses = {
+        { pieces=2, mutators={ Fireball=function(orig) return function(ctx,src,tgt) if orig then orig(ctx,src,tgt) end end end } },
+        { pieces=3, effects=function(ctx,e)
+            e.stats:add_add_pct('fire_modifier_pct', 10)
+            return function(ent) ent.stats:add_add_pct('fire_modifier_pct', -10) end
+          end
+        },
+      }
+    }
+  }
+  local item2 = { id='E1', slot='ring', set_id='EmberSet' }
+  local item3 = { id='E2', slot='amulet', set_id='EmberSet' }
+  ItemSystem.equip(ctx, hero, item2); PetsAndSets.recompute_sets(ctx, hero)
+  ItemSystem.equip(ctx, hero, item3); PetsAndSets.recompute_sets(ctx, hero)
+  ItemSystem.unequip(ctx, hero, 'amulet'); PetsAndSets.recompute_sets(ctx, hero)
+
+  print("\n== Equip rules failure paths ==")
+  local bad = { id='HeavyAxe', slot='axe2', requires={ attribute='physique', value=999, mode='sole' } }
+  local ok,why = ItemSystem.equip(ctx, hero, bad); print("Equip heavy axe:", ok, why or "")
+
+  print("\n== CDR exclusion: item-granted vs native ==")
+  Content.Spells.Fireball.cooldown = 3.0
+  hero.granted_spells = { Fireball=true }      -- item-granted: CDR should NOT apply
+  hero.stats:add_add_pct('cooldown_reduction', 50)
+  Cast.cast(ctx, hero, 'Fireball', ogre)
+  local ok2,why2 = Cast.cast(ctx, hero, 'Fireball', ogre)
+  print("Immediate recast (should be on CD, ignoring CDR):", ok2, why2 or "")
+
+  print("\n== Ability level + item ability_mods (build path) ==")
+  set_ability_level(hero, 'Fireball', 4)
+  hero.equipped = { ring={ ability_mods = { Fireball = { dmg_pct=30, cd_add=-0.5, cost_pct=-10 } } } }
+  Cast.cast(ctx, hero, 'Fireball', ogre)
+
 
   print("\n== Cleanup ticks ==")
   for i=1,5 do World.update(ctx, 1.0) end

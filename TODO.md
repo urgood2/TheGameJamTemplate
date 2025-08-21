@@ -76,6 +76,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- add reason flags to deal damage, also finish debugging the most recent demo
 - siralim data is here: [folder](<assets/siralim_data>)
 - fix errors based on this: https://chatgpt.com/share/68a5ca7b-b75c-800a-ad1f-f98e7b7fd1ff
 - [ ] extract what I can from siralim: tack on this rule system, then test with actual siralim rules: https://chatgpt.com/share/68a46896-78bc-800a-a14f-73605890a8a3

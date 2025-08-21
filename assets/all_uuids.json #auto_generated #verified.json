@@ -12840,6 +12840,9 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/config.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/config.json"
     ],
+    "asset_data_siralim": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/siralim_data"
+    ],
     "asset_font": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/fonts",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/fonts",
@@ -14195,6 +14198,12 @@
     "capslock_keyboard_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\keyboard_capslock.svg"
     ],
+    "card_compendium_data_siralim_siralim_ultimate": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/siralim_data/Siralim Ultimate Compendium - Cards.csv"
+    ],
+    "card_compendium_siralim_ultimate": [
+        "Siralim Ultimate Compendium - Cards.csv"
+    ],
     "caret_default_keyboard": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Default\\keyboard_caret.png",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Keyboard & Mouse/Default/keyboard_caret.png"
@@ -14493,6 +14502,24 @@
     ],
     "command_key_vector": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\Keyboard & Mouse\\Vector\\key_command.svg"
+    ],
+    "compendium_data_relic_siralim_siralim_ultimate": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/siralim_data/Siralim Ultimate Compendium - Relics.csv"
+    ],
+    "compendium_data_siralim_siralim_spell_ultimate": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/siralim_data/Siralim Ultimate Compendium - Spells.csv"
+    ],
+    "compendium_data_siralim_siralim_trait_ultimate": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/siralim_data/Siralim Ultimate Compendium - Traits.csv"
+    ],
+    "compendium_relic_siralim_ultimate": [
+        "Siralim Ultimate Compendium - Relics.csv"
+    ],
+    "compendium_siralim_spell_ultimate": [
+        "Siralim Ultimate Compendium - Spells.csv"
+    ],
+    "compendium_siralim_trait_ultimate": [
+        "Siralim Ultimate Compendium - Traits.csv"
     ],
     "condition_every_tick_update": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/scripts/conditions/update_every_tick.lua",

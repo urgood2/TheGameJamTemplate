@@ -3256,11 +3256,25 @@ function Demo.run_full()
     end
   end
 
-  local function on(ev, name, fmt, fields)
-    ev:on(name, function(e)
+  local function resolve(v)
+    if type(v) == "table" then
+      if v.name then return v.name end         -- prefer entity name
+      if v.id   then return v.id   end         -- fallback id if you have one
+      return "<tbl>"                           -- last-resort placeholder
+    elseif type(v) == "boolean" then
+      return v and "true" or "false"
+    elseif v == nil then
+      return "nil"
+    else
+      return v
+    end
+  end
+
+  local function on(bus, name, fmt, fields)
+    bus:on(name, function(e)
       local vals = {}
       for _, k in ipairs(fields or {}) do
-        vals[#vals+1] = display(e[k])
+        vals[#vals+1] = resolve(e[k])
       end
       print(("[EVT] %-16s " .. fmt):format(name, table.unpack(vals)))
     end)

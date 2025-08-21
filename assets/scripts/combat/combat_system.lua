@@ -2599,42 +2599,84 @@ end
 
 -- Default Attack Replacer pipeline (called on OnDefaultAttack)
 function WPS.handle_default_attack(ctx, src, tgt, Skills)
+  -- Local deduper for this single attack sequence
+  local seen = {}
+  local function deal(p, meta)
+    -- shallow copy so we don't mutate shared tables
+    local q = {}
+    for k, v in pairs(p) do q[k] = v end
+    meta = meta or {}
+    q.reason = meta.reason or q.reason
+    q.tag    = meta.tag    or q.tag
+
+    -- dedupe key (only for this function invocation)
+    local key = meta.key or (tostring(q.reason) .. "|" .. tostring(q.tag) ..
+                 "|" .. (q.weapon and ("WD:" .. tostring(q.scale_pct or 100))
+                        or ("CMP:" .. (q.components and #q.components or 0))))
+    if seen[key] then return end
+    seen[key] = true
+
+    Effects.deal_damage(q)(ctx, src, tgt)
+  end
+
   local sid = src.skills and src.skills.dar_override
   if not sid then
     -- vanilla: just do a weapon swing
-    Effects.deal_damage { weapon=true, scale_pct=100 } (ctx, src, tgt)
+    deal({ weapon = true, scale_pct = 100 }, {
+      reason = "weapon",
+      tag    = "DefaultAttack",
+      key    = "basic:main"
+    })
   else
     -- build from skill’s scaling
-    local node = Skills.DB[sid]
-    local r = (src.skills.ranks and src.skills.ranks[sid]) or 1
+    local node  = Skills.DB[sid]
+    local r     = (src.skills.ranks and src.skills.ranks[sid]) or 1
     local knobs = node.scale and node.scale(r) or { weapon_scale_pct = 100 }
+
     -- energy/cd
     local cost = node.energy_cost and node.energy_cost(r) or 0
     if cost > 0 then
       if (src.energy or 0) < cost then return end
       src.energy = src.energy - cost
     end
-    local cd  = node.cooldown and node.cooldown(r) or 0
+    local cd = node.cooldown and node.cooldown(r) or 0
     if cd > 0 then
       src.timers = src.timers or {}
       local key = 'dar:' .. sid
       if not ctx.time:is_ready(src.timers, key) then return end
       ctx.time:set_cooldown(src.timers, key, cd)
     end
-    -- main hit
-    Effects.deal_damage { weapon=true, scale_pct=knobs.weapon_scale_pct or 100 } (ctx, src, tgt)
+
+    -- main hit (weapon replacer)
+    deal({ weapon = true, scale_pct = knobs.weapon_scale_pct or 100 }, {
+      reason = "weapon",
+      tag    = sid,                    -- e.g., "FireStrike"
+      key    = "dar:" .. sid .. ":main"
+    })
+
+    -- modifier packet (e.g., Explosive/Searing add-on) if present
     if knobs.flat_fire and knobs.flat_fire > 0 then
-      Effects.deal_damage { components = { {type='fire', amount=knobs.flat_fire} } } (ctx, src, tgt)
+      deal({ components = { { type = 'fire', amount = knobs.flat_fire } } }, {
+        reason = "modifier",
+        tag    = (node.mod_tag or (sid .. ":flat_fire")),  -- best-effort tag
+        key    = "dar:" .. sid .. ":mod:fire"
+      })
     end
   end
 
-  -- Roll WPS
+  -- Roll WPS (kept as-is; if your WPS effects support meta, pass it here)
   local wps_list = WPS.collect_for(src, Skills)
   if #wps_list > 0 then
     local pick = _roll(wps_list)
-    if pick and pick.effects then pick.effects(ctx, src, tgt) end
+    if pick and pick.effects then
+      -- If your WPS effect function accepts a meta arg, you can do:
+      -- pick.effects(ctx, src, tgt, { reason = "wps", tag = pick.id or pick.name })
+      -- For now, leave signature unchanged:
+      pick.effects(ctx, src, tgt)
+    end
   end
 end
+
 
 
 

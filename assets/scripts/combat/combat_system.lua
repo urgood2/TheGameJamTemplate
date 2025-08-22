@@ -204,7 +204,11 @@ function util.dump_stats(e, ctx, opts)
   local maxhp = e.max_health or G("health")
   local hp = e.hp or maxhp
   add(("==== %s ===="):format(name))
-  add(("HP %d/%d | Energy %d"):format(math.floor(hp+0.5), math.floor(maxhp+0.5), gi("energy")))
+  -- add(("HP %d/%d | Energy %d"):format(math.floor(hp+0.5), math.floor(maxhp+0.5), gi("energy")))
+  local maxe = e.max_energy or G("energy")
+  local ene  = (e.energy ~= nil) and e.energy or maxe
+  add(("HP %d/%d | Energy %.0f/%.0f"):format(
+  math.floor(hp+0.5), math.floor(maxhp+0.5), ene, maxe))
 
   -- Level progress (safe against missing Leveling.xp_to_next)
   do
@@ -2790,6 +2794,9 @@ local Charges = {}
 function Charges.add_track(e, id, max_stacks, decay_per_sec, apply_fn)
   e._charges = e._charges or {}
   e._charges[id] = { stacks=0, max=max_stacks, decay=decay_per_sec, apply=apply_fn }
+  
+  
+
 end
 function Charges.on_hit(e, id, add)
   local c = e._charges and e._charges[id]; if not c then return end
@@ -2848,7 +2855,7 @@ local PetsAndSets = {}
 
 -- Simple pet spawner: you plug your entity factory here
 function PetsAndSets.spawn_pet(ctx, owner, spec)
-  local make_actor = owner._make_actor or owner.__factory -- wire your factory
+  local make_actor = ctx._make_actor or owner.__factory -- wire your factory
   local pet = make_actor(spec.name or 'Pet', owner._defs, owner._attach)
   pet.side = owner.side
   pet.owner = owner
@@ -2976,20 +2983,34 @@ World.update = function(ctx, dt)
   
   local function regen(ent)
     if not ent.stats then return end
-    -- Health regen
+
+    -- HP
     local maxhp  = ent.max_health or ent.stats:get('health')
     local hpr    = ent.stats:get('health_regen') or 0
     if hpr ~= 0 then
       ent.hp = util.clamp((ent.hp or maxhp) + hpr * dt, 0, maxhp)
     end
-    -- Energy regen
-    ent.max_energy = ent.max_energy or ent.stats:get('energy')
-    ent.energy     = ent.energy     or ent.max_energy
+
+    -- ENERGY (recompute every tick so spirit/items/buffs/aura reservations reflect)
+    local baseMaxE = ent.stats:get('energy') or 0
+    local reservedAbs = ent._energy_reserved or 0
+    -- If you later add percent reservations, subtract them here too:
+    local reservedPct = ent._reserved_pct or 0
+    local effMaxE = math.max(0, baseMaxE * (1 - reservedPct/100) - reservedAbs)
+
+    -- First-time init / clamp if caps moved
+    if ent.max_energy == nil then ent.max_energy = effMaxE end
+    ent.max_energy = effMaxE
+    if ent.energy == nil then ent.energy = effMaxE end
+    if ent.energy > ent.max_energy then ent.energy = ent.max_energy end
+
+    -- Regen
     local epr = ent.stats:get('energy_regen') or 0
     if epr ~= 0 then
       ent.energy = util.clamp(ent.energy + epr * dt, 0, ent.max_energy)
     end
   end
+
 
   local function each(L)
     for _, ent in ipairs(L or {}) do
@@ -3094,6 +3115,7 @@ function Demo.run()
   ]]-- 
 
   local ctx = {
+    _make_actor = make_actor,  -- Factory for creating actors
     debug = true,  -- Set to true for verbose debug output
     bus = bus,
     time = time,

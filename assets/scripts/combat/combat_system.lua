@@ -3064,17 +3064,33 @@ local PetsAndSets = {}
 
 -- Simple pet spawner: you plug your entity factory here
 function PetsAndSets.spawn_pet(ctx, owner, spec)
-  local make_actor = ctx._make_actor or owner.__factory -- wire your factory
-  local pet = make_actor(spec.name or 'Pet', owner._defs, owner._attach)
-  pet.side = owner.side
+  spec = spec or {}
+
+  local ctor   = owner._make_actor or ctx._make_actor or make_actor
+  local defs   = owner._defs       or ctx._defs
+  local attach = owner._attach     or ctx._attach     or Content.attach_attribute_derivations
+
+  assert(type(ctor)   == "function", "spawn_pet: missing actor constructor")
+  assert(type(defs)   == "table",    "spawn_pet: missing stat defs (owner._defs/ctx._defs)")
+  assert(type(attach) == "function", "spawn_pet: missing attach function (owner._attach/ctx._attach)")
+
+  local pet = ctor(spec.name or "Pet", defs, attach)
+  pet.side  = owner.side
   pet.owner = owner
-  -- scale by owner's pet bonuses
-  local pct = (owner.stats and owner.stats:get('all_damage_pct') or 0)
-  pet.stats:add_add_pct('all_damage_pct', pct * (spec.inherit_damage_mult or 0.6))
+
+  -- inherit a portion of owner's all_damage_pct
+  local owner_all = (owner.stats and owner.stats:get("all_damage_pct")) or 0
+  local mult = (spec.inherit_damage_mult ~= nil) and spec.inherit_damage_mult or 0.6
+  if owner_all ~= 0 and mult ~= 0 then
+    pet.stats:add_add_pct("all_damage_pct", owner_all * mult)
+  end
   pet.stats:recompute()
-  ctx.get_allies_of(owner)[#ctx.get_allies_of(owner) + 1] = pet
+
+  local allies = ctx.get_allies_of(owner)
+  allies[#allies + 1] = pet
   return pet
 end
+
 
 -- Item sets
 local function _apply_set_bonus(ctx, e, bonus)
@@ -3249,7 +3265,6 @@ end
 --   - Demonstrates a custom trigger ("OnProvoke") causing counter-attack
 -- ============================================================================
 local function make_actor(name, defs, attach)
-  -- Create a new Stats instance, attach attribute derivations, recompute, set HP.
   local s = Stats.new(defs)
   attach(s)
   s:recompute()
@@ -3266,6 +3281,11 @@ local function make_actor(name, defs, attach)
     gear_conversions = {},
     tags             = {},
     timers           = {},
+
+    -- add these so spawn_pet can reuse them
+    _defs            = defs,
+    _attach          = attach,
+    _make_actor      = make_actor,
   }
 end
 
@@ -3579,15 +3599,19 @@ function Demo.run_full()
   local combat    = Combat.new(RR, DTS)
 
 
-
+  local ctx -- declare ahead so locals can capture it
+  
   local ctx = {
+    _make_actor    = make_actor, -- Factory for creating actors
     debug          = true,
     bus            = bus,
     time           = time,
-    combat         = combat,
-    get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end,
-    get_allies_of  = function(a) return a.side == 1 and ctx.side1 or ctx.side2 end,
+    combat         = combat
   }
+  
+  -- add side-aware accessors to ctx
+  ctx.get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end
+  ctx.get_allies_of  = function(a) return a.side == 1 and ctx.side1 or ctx.side2 end
 
   -- After creating bus, hook devotions
   for _, evn in ipairs({ 'OnHitResolved', 'OnBasicAttack', 'OnCrit', 'OnDeath', 'OnDodge' }) do
@@ -3630,6 +3654,12 @@ function Demo.run_full()
 
   ctx.side1 = { hero }
   ctx.side2 = { ogre }
+  
+  -- attach defs/derivations to ctx for easy access later for pets
+  ctx._defs       = defs
+  ctx._attach     = Content.attach_attribute_derivations
+  ctx._make_actor = make_actor
+
 
   -- Event logging
   -- Pretty-printer for event field values

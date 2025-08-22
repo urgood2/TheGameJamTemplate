@@ -76,24 +76,9 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- why is OverheatWithRank nil?
-- the dump stats thing should show current charges, channeling, etc. if any.
+- do full pass to add as many descriptive comments/ docs as possible to the codebase
+- the dump stats thing should show current charges, channeling, etc. if any. also, is it printing reason properly?
 - what if I wanted to add specific conditions to a devotion for instance, so heal triggers on hit resolve only when the hit actually did damage, as a percentage of the done damage, etc? basically i have to be able to have access to the information which is relevant.
-- cahrges & channel application onward needs work
-- does leveling spirit add energy for example? how is max energy and energy handled? it seems broken atm.
-- also, not seeing any actitivy from this code:
-```lua
-print("\n== Charges & Channel ==")
-  Systems.Charges.add_track(hero, 'Heat', 10, 2, function(e, stacks)
-    e.stats:recompute() -- in real code: add/remove marks then recompute
-  end)
-  Systems.Charges.on_hit(hero, 'Heat', 5)
-  Systems.Channel.start(ctx, hero, 'Beam', 8, function(ctx,e) Effects.deal_damage{ components={ {type='aether', amount=15} } }(ctx, e, ogre) end, 0.5)
-  for i=1,5 do World.update(ctx, 0.5) end
-  Systems.Channel.stop(hero, 'Beam')
-  ```
-  
-- add reason flags to deal damage, also finish debugging the most recent demo
 - siralim data is here: [folder](<assets/siralim_data>)
 - fix errors based on this: https://chatgpt.com/share/68a5ca7b-b75c-800a-ad1f-f98e7b7fd1ff
 - [ ] extract what I can from siralim: tack on this rule system, then test with actual siralim rules: https://chatgpt.com/share/68a46896-78bc-800a-a14f-73605890a8a3

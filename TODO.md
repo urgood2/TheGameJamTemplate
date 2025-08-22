@@ -76,6 +76,9 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- why is OverheatWithRank nil?
+- the dump stats thing should show current charges, channeling, etc. if any.
+- what if I wanted to add specific conditions to a devotion for instance, so heal triggers on hit resolve only when the hit actually did damage, as a percentage of the done damage, etc? basically i have to be able to have access to the information which is relevant.
 - cahrges & channel application onward needs work
 - does leveling spirit add energy for example? how is max energy and energy handled? it seems broken atm.
 - also, not seeing any actitivy from this code:

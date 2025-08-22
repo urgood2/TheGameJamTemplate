@@ -93,7 +93,6 @@ function util.weighted_choice(entries)
   return entries[#entries].item
 end
 
-
 -- === Spell identity & grant helpers =========================================
 local function get_spell_id(spell_ref)
   local s = (type(spell_ref) == 'table') and spell_ref or Content.Spells[spell_ref]
@@ -128,8 +127,8 @@ local function collect_ability_mods(caster, spell_ref)
   for _, it in pairs(caster.equipped) do
     local m = it.ability_mods and it.ability_mods[id]
     if m then
-      out.dmg_pct  = out.dmg_pct  + (m.dmg_pct  or 0)
-      out.cd_add   = out.cd_add   + (m.cd_add   or 0)
+      out.dmg_pct  = out.dmg_pct + (m.dmg_pct or 0)
+      out.cd_add   = out.cd_add + (m.cd_add or 0)
       out.cost_pct = out.cost_pct + (m.cost_pct or 0)
     end
   end
@@ -154,7 +153,7 @@ local function apply_spell_mutators(caster, ctx, spell_ref, effects_fn)
     for i = 1, #muts do
       local m = muts[i]
       if caster and ctx.debug then
-        print(string.format("[DEBUG][Mutators]   #%d pr=%s wrap=%s", 
+        print(string.format("[DEBUG][Mutators]   #%d pr=%s wrap=%s",
           i, tostring(m.pr or 0), tostring(m.wrap)))
       end
       effects_fn = m.wrap(effects_fn)
@@ -187,18 +186,18 @@ function util.dump_stats(e, ctx, opts)
   local function G(n) return S:get(n) end
   local function gi(n) return math.floor(G(n) + 0.5) end
   local function gf(n, p) return tonumber(string.format("%." .. (p or 1) .. "f", G(n))) end
-  local function fmt_pct(n) return string.format("%d%%", math.floor(G(n)+0.5)) end
+  local function fmt_pct(n) return string.format("%d%%", math.floor(G(n) + 0.5)) end
   local function nonzero(v) return v ~= 0 and v ~= nil end
   local function join(arr, sep)
     local s, t = "", arr or {}
-    for i=1,#t do
-      s = s .. (i>1 and (sep or " ") or "") .. tostring(t[i])
+    for i = 1, #t do
+      s = s .. (i > 1 and (sep or " ") or "") .. tostring(t[i])
     end
     return s
   end
 
   local lines = {}
-  local function add(line) lines[#lines+1] = line end
+  local function add(line) lines[#lines + 1] = line end
 
   local name = e.name or "Entity"
   local maxhp = e.max_health or G("health")
@@ -208,7 +207,7 @@ function util.dump_stats(e, ctx, opts)
   local maxe = e.max_energy or G("energy")
   local ene  = (e.energy ~= nil) and e.energy or maxe
   add(("HP %d/%d | Energy %.0f/%.0f"):format(
-  math.floor(hp+0.5), math.floor(maxhp+0.5), ene, maxe))
+    math.floor(hp + 0.5), math.floor(maxhp + 0.5), ene, maxe))
 
   -- Level progress (safe against missing Leveling.xp_to_next)
   do
@@ -230,14 +229,14 @@ function util.dump_stats(e, ctx, opts)
     local eq = e.equipped or {}
     -- Equipped summary (sorted by slot)
     local slot_keys = {}
-    for k in pairs(eq) do slot_keys[#slot_keys+1] = k end
+    for k in pairs(eq) do slot_keys[#slot_keys + 1] = k end
     table.sort(slot_keys)
     if #slot_keys > 0 then
       local parts = {}
       for _, slot in ipairs(slot_keys) do
         local it = eq[slot]
         local label = it and (it.name or it.id or "?") or "-"
-        parts[#parts+1] = string.format("%s=%s", slot, label)
+        parts[#parts + 1] = string.format("%s=%s", slot, label)
       end
       add("Equip  | " .. join(parts, "  "))
     else
@@ -255,7 +254,7 @@ function util.dump_stats(e, ctx, opts)
         end
       end
       if type(Items.SlotOrder) == "table" then
-        for i=1,#Items.SlotOrder do add_slotname(Items.SlotOrder[i]) end
+        for i = 1, #Items.SlotOrder do add_slotname(Items.SlotOrder[i]) end
       end
     end
     if Content and type(Content.ItemSlots) == "table" then
@@ -273,7 +272,7 @@ function util.dump_stats(e, ctx, opts)
 
     local free = {}
     for s in pairs(all) do
-      if eq[s] == nil then free[#free+1] = s end
+      if eq[s] == nil then free[#free + 1] = s end
     end
     table.sort(free)
     if next(all) ~= nil then
@@ -289,7 +288,7 @@ function util.dump_stats(e, ctx, opts)
     local function add_skills(container)
       if type(container) ~= "table" then return end
       if #container > 0 then
-        for i=1,#container do
+        for i = 1, #container do
           local v = container[i]
           if type(v) == "string" then
             set[v] = true
@@ -312,7 +311,7 @@ function util.dump_stats(e, ctx, opts)
     add_skills(e.granted_spells)
 
     local skills = {}
-    for id in pairs(set) do skills[#skills+1] = id end
+    for id in pairs(set) do skills[#skills + 1] = id end
     table.sort(skills)
     add("Skills | " .. (#skills > 0 and join(skills, ", ") or "(none)"))
   end
@@ -348,7 +347,7 @@ function util.dump_stats(e, ctx, opts)
     local mods = {}
     for _, t in ipairs(Core.DAMAGE_TYPES) do
       local v = G(t .. "_modifier_pct")
-      if nonzero(v) then mods[#mods+1] = ("%s=%d%%"):format(t, math.floor(v+0.5)) end
+      if nonzero(v) then mods[#mods + 1] = ("%s=%d%%"):format(t, math.floor(v + 0.5)) end
     end
     if #mods > 0 then add("DmgMod | " .. join(mods, "  ")) end
   end
@@ -358,7 +357,7 @@ function util.dump_stats(e, ctx, opts)
     local res = {}
     for _, t in ipairs(Core.DAMAGE_TYPES) do
       local v = G(t .. "_resist_pct")
-      if nonzero(v) then res[#res+1] = ("%s=%d%%"):format(t, math.floor(v+0.5)) end
+      if nonzero(v) then res[#res + 1] = ("%s=%d%%"):format(t, math.floor(v + 0.5)) end
     end
     if #res > 0 then add("Resist | " .. join(res, "  ")) end
   end
@@ -372,17 +371,17 @@ function util.dump_stats(e, ctx, opts)
         local bucket = e.active_rr[t]
         if bucket and #bucket > 0 then
           local parts = {}
-          for i=1,#bucket do
+          for i = 1, #bucket do
             local r = bucket[i]
             if (not r.until_time) or (not now) or (r.until_time > now) then
               local left = (now and r.until_time) and math.max(0, r.until_time - now) or nil
-              parts[#parts+1] = string.format("%s:%d%%%s",
-                r.kind, math.floor((r.amount or 0)+0.5),
+              parts[#parts + 1] = string.format("%s:%d%%%s",
+                r.kind, math.floor((r.amount or 0) + 0.5),
                 left and string.format("(%.1fs)", left) or "")
             end
           end
           if #parts > 0 then
-            rr_lines[#rr_lines+1] = string.format("%s: %s", t, join(parts, ", "))
+            rr_lines[#rr_lines + 1] = string.format("%s: %s", t, join(parts, ", "))
           end
         end
       end
@@ -396,10 +395,10 @@ function util.dump_stats(e, ctx, opts)
     local st = {}
     if e.statuses then
       for id, b in pairs(e.statuses) do
-        for i=1,#b.entries do
+        for i = 1, #b.entries do
           local en = b.entries[i]
           local left = (now and en.until_time) and math.max(0, en.until_time - now) or nil
-          st[#st+1] = left and (id .. string.format("(%.1fs)", left)) or id
+          st[#st + 1] = left and (id .. string.format("(%.1fs)", left)) or id
         end
       end
     end
@@ -411,11 +410,11 @@ function util.dump_stats(e, ctx, opts)
     local now = (ctx and ctx.time and ctx.time.now) or nil
     local ds = {}
     if e.dots then
-      for i=1,#e.dots do
-        local d = e.dots[i]
+      for i = 1, #e.dots do
+        local d    = e.dots[i]
         local left = (now and d.until_time) and math.max(0, d.until_time - now) or nil
         local nt   = (now and d.next_tick) and math.max(0, d.next_tick - now) or nil
-        ds[#ds+1] = string.format("%s dps=%.1f tick=%.1f%s%s",
+        ds[#ds + 1] = string.format("%s dps=%.1f tick=%.1f%s%s",
           d.type, d.dps or 0, d.tick or 1,
           left and string.format(" left=%.1fs", left) or "",
           nt and string.format(" next=%.1fs", nt) or "")
@@ -427,9 +426,9 @@ function util.dump_stats(e, ctx, opts)
   -- Always: Gear conversions (compact)
   local cvs = {}
   local list = e.gear_conversions or {}
-  for i=1,#list do
+  for i = 1, #list do
     local c = list[i]
-    cvs[#cvs+1] = string.format("%s->%s:%d%%", c.from, c.to, c.pct or 0)
+    cvs[#cvs + 1] = string.format("%s->%s:%d%%", c.from, c.to, c.pct or 0)
   end
   if #cvs > 0 then add("Conv   | " .. join(cvs, "  ")) end
 
@@ -438,7 +437,7 @@ function util.dump_stats(e, ctx, opts)
     local gs = {}
     if e.granted_spells then
       for id, on in pairs(e.granted_spells) do
-        if on then gs[#gs+1] = id end
+        if on then gs[#gs + 1] = id end
       end
       table.sort(gs)
     end
@@ -450,7 +449,7 @@ function util.dump_stats(e, ctx, opts)
     local ts = {}
     if e.tags then
       for k, v in pairs(e.tags) do
-        if v then ts[#ts+1] = tostring(k) end
+        if v then ts[#ts + 1] = tostring(k) end
       end
       table.sort(ts)
     end
@@ -464,29 +463,29 @@ function util.dump_stats(e, ctx, opts)
     if e.timers then
       for k, tready in pairs(e.timers) do
         if not now then
-          cds[#cds+1] = string.format("%s=%.2f", k, tready)
+          cds[#cds + 1] = string.format("%s=%.2f", k, tready)
         else
           local left = math.max(0, tready - now)
           if left > 0 then
-            cds[#cds+1] = string.format("%s: %.2fs", k, left)
+            cds[#cds + 1] = string.format("%s: %.2fs", k, left)
           end
         end
       end
     end
     if #cds > 0 then add("Timers | " .. join(cds, "  ")) end
   end
-  
+
   -- Aura / Reservation snapshot (prints only if present)
   do
     local parts = {}
 
     -- desired toggle from skill tree (intent)
     local desired = e.skills and e.skills.toggled_exclusive or nil
-    if desired then parts[#parts+1] = "desired=" .. tostring(desired) end
+    if desired then parts[#parts + 1] = "desired=" .. tostring(desired) end
 
     -- actually active exclusive aura
     local active = e._active_exclusive and e._active_exclusive.id or nil
-    if active then parts[#parts+1] = "active=" .. tostring(active) end
+    if active then parts[#parts + 1] = "active=" .. tostring(active) end
 
     -- reservation summary (best-effort; supports several shapes)
     local reserved_abs, reserved_pct = nil, nil
@@ -495,22 +494,22 @@ function util.dump_stats(e, ctx, opts)
       for _, r in pairs(e._reservations) do
         if type(r) == "table" then
           if tonumber(r.amount) then abs_sum = abs_sum + r.amount end
-          if tonumber(r.pct)    then pct_sum = pct_sum + r.pct    end
+          if tonumber(r.pct) then pct_sum = pct_sum + r.pct end
         end
       end
       if abs_sum > 0 then reserved_abs = abs_sum end
       if pct_sum > 0 then reserved_pct = pct_sum end
     end
     -- common alternates
-    if (not reserved_abs) and tonumber(e._reserved)        then reserved_abs = e._reserved end
-    if (not reserved_abs) and tonumber(e._energy_reserved)  then reserved_abs = e._energy_reserved end
-    if (not reserved_pct) and tonumber(e._reserved_pct)    then reserved_pct = e._reserved_pct end
+    if (not reserved_abs) and tonumber(e._reserved) then reserved_abs = e._reserved end
+    if (not reserved_abs) and tonumber(e._energy_reserved) then reserved_abs = e._energy_reserved end
+    if (not reserved_pct) and tonumber(e._reserved_pct) then reserved_pct = e._reserved_pct end
 
     if reserved_abs or reserved_pct then
       local seg = "reserved="
       if reserved_abs then seg = seg .. string.format("%.1f", reserved_abs) end
       if reserved_pct then seg = seg .. (reserved_abs and "/" or "") .. tostring(reserved_pct) .. "%%" end
-      parts[#parts+1] = seg
+      parts[#parts + 1] = seg
     end
 
     if #parts > 0 then
@@ -521,7 +520,6 @@ function util.dump_stats(e, ctx, opts)
   add(("============"):rep(2))
   print(table.concat(lines, "\n"))
 end
-
 
 -- Expose util in Core
 Core.util = util
@@ -536,10 +534,13 @@ Core.util = util
 function Core.on(ctx, ev, fn, pr)
   local bus = ctx.bus
   bus:on(ev, fn, pr)
-  return function()  -- unsubscribe
+  return function() -- unsubscribe
     local b = bus.listeners[ev]
     if not b then return end
-    for i=#b,1,-1 do if b[i].fn == fn then table.remove(b, i) break end end
+    for i = #b, 1, -1 do if b[i].fn == fn then
+        table.remove(b, i)
+        break
+      end end
   end
 end
 
@@ -715,9 +716,9 @@ function StatDef.make()
 
     -- DoT types also get duration modifiers
     if dt == 'bleed' or dt == 'trauma'
-       or dt == 'burn' or dt == 'frostburn'
-       or dt == 'electrocute' or dt == 'poison'
-       or dt == 'vitality_decay' then
+        or dt == 'burn' or dt == 'frostburn'
+        or dt == 'electrocute' or dt == 'poison'
+        or dt == 'vitality_decay' then
       add_basic(defs, dt .. '_duration_pct')
     end
   end
@@ -736,10 +737,10 @@ function StatDef.make()
   }) do
     add_basic(defs, cc .. '_resist_pct')
   end
-  
+
   -- cooldowns and energy costs
-  add_basic(defs, 'cooldown_reduction')               -- % reduces cooldowns (non-item-granted)
-  add_basic(defs, 'skill_energy_cost_reduction')      -- % cheaper
+  add_basic(defs, 'cooldown_reduction')          -- % reduces cooldowns (non-item-granted)
+  add_basic(defs, 'skill_energy_cost_reduction') -- % cheaper
 
 
   return defs, DAMAGE_TYPES
@@ -761,7 +762,7 @@ function Stats.new(defs)
     defs = defs,
     values = {},
     derived_hooks = {},
-    _derived_marks = {},    -- track derived deltas: { {kind, name, amount}, ... }
+    _derived_marks = {}, -- track derived deltas: { {kind, name, amount}, ... }
   }
   for n, d in pairs(defs) do
     t.values[n] = { base = d.base, add_pct = 0, mul_pct = 0 }
@@ -771,24 +772,35 @@ end
 
 -- Helpers to safely add derived deltas:
 function Stats:_mark(kind, n, amt)
-  self._derived_marks[#self._derived_marks+1] = { kind, n, amt }
+  self._derived_marks[#self._derived_marks + 1] = { kind, n, amt }
 end
-function Stats:derived_add_base(n, a)    self.values[n].base    = self.values[n].base    + a; self:_mark('base',    n, a) end
-function Stats:derived_add_add_pct(n, a) self.values[n].add_pct = self.values[n].add_pct + a; self:_mark('add_pct', n, a) end
-function Stats:derived_add_mul_pct(n, a) self.values[n].mul_pct = self.values[n].mul_pct + a; self:_mark('mul_pct', n, a) end
+
+function Stats:derived_add_base(n, a)
+  self.values[n].base = self.values[n].base + a; self:_mark('base', n, a)
+end
+
+function Stats:derived_add_add_pct(n, a)
+  self.values[n].add_pct = self.values[n].add_pct + a; self:_mark('add_pct', n, a)
+end
+
+function Stats:derived_add_mul_pct(n, a)
+  self.values[n].mul_pct = self.values[n].mul_pct + a; self:_mark('mul_pct', n, a)
+end
 
 -- Remove past derived deltas
 function Stats:_clear_derived()
   for i = #self._derived_marks, 1, -1 do
     local kind, n, amt = self._derived_marks[i][1], self._derived_marks[i][2], self._derived_marks[i][3]
-    if     kind == 'base'    then self.values[n].base    = self.values[n].base    - amt
-    elseif kind == 'add_pct' then self.values[n].add_pct = self.values[n].add_pct - amt
-    elseif kind == 'mul_pct' then self.values[n].mul_pct = self.values[n].mul_pct - amt
+    if kind == 'base' then
+      self.values[n].base = self.values[n].base - amt
+    elseif kind == 'add_pct' then
+      self.values[n].add_pct = self.values[n].add_pct - amt
+    elseif kind == 'mul_pct' then
+      self.values[n].mul_pct = self.values[n].mul_pct - amt
     end
   end
   self._derived_marks = {}
 end
-
 
 --- Get the raw stored value object for a stat (base/add_pct/mul_pct).
 function Stats:get_raw(n)
@@ -819,8 +831,16 @@ end
 
 --- Register a hook to be run when recompute() is called.
 --  Useful for maintaining derived stats.
+-- returns a function that, when called, removes the hook.
 function Stats:on_recompute(fn)
   table.insert(self.derived_hooks, fn)
+  return function()
+    for i = #self.derived_hooks, 1, -1 do
+      if self.derived_hooks[i] == fn then
+        table.remove(self.derived_hooks, i); break
+      end
+    end
+  end
 end
 
 --- Run all registered recompute hooks.
@@ -894,9 +914,6 @@ function RR.apply_all(base, list)
   return r
 end
 
-
-
-
 -- ============================================================================
 -- Conversions (skill then gear)
 -- Converts damage-component maps between types in two passes:
@@ -918,8 +935,8 @@ local function apply_bucket(m, bucket)
   local map = util.shallow_copy(m)
 
   for _, cv in ipairs(bucket) do
-    local avail = map[cv.from] or 0
-    local move  = avail * (cv.pct / 100)
+    local avail  = map[cv.from] or 0
+    local move   = avail * (cv.pct / 100)
     map[cv.from] = avail - move
     map[cv.to]   = (map[cv.to] or 0) + move
   end
@@ -1049,7 +1066,7 @@ end
 
 -- Extend Cond with ctx-aware predicates (keep your old ones for per-entity checks)
 function Cond.chance(pct)
-  return function(ctx, ev, src, tgt) return math.random()*100 <= pct end
+  return function(ctx, ev, src, tgt) return math.random() * 100 <= pct end
 end
 
 function Cond.has_status_id(id)
@@ -1066,7 +1083,6 @@ end
 function Cond.time_since_ev_le(dtmax)
   return function(ctx, ev) return ev and ev.time and (ctx.time.now - ev.time) <= dtmax end
 end
-
 
 -- Expose Core ---------------------------------------------------------
 Core.util = util
@@ -1086,7 +1102,8 @@ Core.DAMAGE_TYPES = DAMAGE_TYPES
 
 -- Pull core dependencies out of Core (no behavior change)
 local util, EventBus, Time, StatDef, Stats, RR, Conv, Targeters, Cond, DAMAGE_TYPES =
-  Core.util, Core.EventBus, Core.Time, Core.StatDef, Core.Stats, Core.RR, Core.Conv, Core.Targeters, Core.Cond, Core.DAMAGE_TYPES
+    Core.util, Core.EventBus, Core.Time, Core.StatDef, Core.Stats, Core.RR, Core.Conv, Core.Targeters, Core.Cond,
+    Core.DAMAGE_TYPES
 
 -- ============================================================================
 -- Effects
@@ -1122,7 +1139,6 @@ local function apply_status(target, status)
     if prev and prev.remove then prev.remove(target) end
     bucket.entries[1] = status
     if status.apply then status.apply(target) end
-
   elseif st.mode == 'time_extend' then
     if bucket.entries[1] then
       local cur = bucket.entries[1]
@@ -1148,7 +1164,7 @@ end
 -- Parallel executor (fire-and-forget effects on same tick)
 Effects.par = function(list)
   return function(ctx, src, tgt)
-    for i=1,#list do list[i](ctx, src, tgt) end
+    for i = 1, #list do list[i](ctx, src, tgt) end
   end
 end
 
@@ -1159,15 +1175,15 @@ Effects.cleanse = function(p)
   return function(ctx, src, tgt)
     if not (tgt and tgt.statuses) then return end
 
-    local to_nuke = {}  -- collect empty buckets to delete after the loop
+    local to_nuke = {} -- collect empty buckets to delete after the loop
 
     for id, b in pairs(tgt.statuses) do
       local keep = {}
       for _, entry in ipairs(b.entries or {}) do
         local remove =
-          (p.ids and p.ids[id] == true) or
-          (p.predicate and p.predicate(id, entry)) or
-          false
+            (p.ids and p.ids[id] == true) or
+            (p.predicate and p.predicate(id, entry)) or
+            false
 
         if remove then
           if entry.remove then entry.remove(tgt) end
@@ -1175,13 +1191,13 @@ Effects.cleanse = function(p)
             ctx.bus:emit('OnStatusExpired', { entity = tgt, id = id })
           end
         else
-          keep[#keep+1] = entry
+          keep[#keep + 1] = entry
         end
       end
       b.entries = keep
 
       if #b.entries == 0 then
-        to_nuke[#to_nuke+1] = id
+        to_nuke[#to_nuke + 1] = id
       end
     end
 
@@ -1201,8 +1217,8 @@ Effects.resurrect = function(p)
       tgt.dead = false
       local maxhp = tgt.max_health or tgt.stats:get('health')
       -- tgt.hp = math.max(tgt.hp or 0, maxhp * ((p.hp_pct or 50)/100))
-      tgt.hp = maxhp * ((p.hp_pct or 50)/100)
-      ctx.bus:emit('OnResurrect', { source=src, target=tgt, hp=tgt.hp })
+      tgt.hp = maxhp * ((p.hp_pct or 50) / 100)
+      ctx.bus:emit('OnResurrect', { source = src, target = tgt, hp = tgt.hp })
     end
   end
 end
@@ -1211,14 +1227,14 @@ Effects.summon = function(p)
   -- p={ blueprint='Wolf', count=1, side_of='source' }
   return function(ctx, src, tgt)
     if not ctx.spawn_entity then return end -- plug in your factory when ready
-    for i=1,(p.count or 1) do ctx.spawn_entity(ctx, p.blueprint, p.side_of=='target' and tgt or src) end
+    for i = 1, (p.count or 1) do ctx.spawn_entity(ctx, p.blueprint, p.side_of == 'target' and tgt or src) end
   end
 end
 
 Effects.grant_extra_turn = function(p)
   -- requires your turn scheduler; for now, emit an intent event
   return function(ctx, src, tgt)
-    ctx.bus:emit('OnExtraTurnGranted', { entity=tgt or src })
+    ctx.bus:emit('OnExtraTurnGranted', { entity = tgt or src })
   end
 end
 
@@ -1237,8 +1253,11 @@ Effects.apply_rr = function(p)
     })
 
     ctx.bus:emit('OnRRApplied', {
-      source = src, target = tgt,
-      rr_kind = p.kind, damage_type = p.damage, amount = p.amount
+      source = src,
+      target = tgt,
+      rr_kind = p.kind,
+      damage_type = p.damage,
+      amount = p.amount
     })
   end
 end
@@ -1265,13 +1284,13 @@ Effects.modify_stat = function(p)
       until_time = p.duration and (ctx.time.now + p.duration) or nil,
       stack      = p.stack,
       extend_by  = p.duration or 0,
-      apply = function(e)
-        if p.base_add    then e.stats:add_base   (p.name, p.base_add)    end
+      apply      = function(e)
+        if p.base_add then e.stats:add_base(p.name, p.base_add) end
         if p.add_pct_add then e.stats:add_add_pct(p.name, p.add_pct_add) end
         if p.mul_pct_add then e.stats:add_mul_pct(p.name, p.mul_pct_add) end
       end,
-      remove = function(e)
-        if p.base_add    then e.stats:add_base   (p.name, -p.base_add)    end
+      remove     = function(e)
+        if p.base_add then e.stats:add_base(p.name, -p.base_add) end
         if p.add_pct_add then e.stats:add_add_pct(p.name, -p.add_pct_add) end
         if p.mul_pct_add then e.stats:add_mul_pct(p.name, -p.mul_pct_add) end
       end
@@ -1288,16 +1307,16 @@ Effects.modify_stat = function(p)
     return {
       id         = p.id or ('buff:' .. p.name),
       until_time = exclusive and nil
-                   or (p.duration and (ctx.time.now + p.duration) or nil),
+          or (p.duration and (ctx.time.now + p.duration) or nil),
       stack      = exclusive and nil or p.stack,
-      extend_by  = exclusive and 0   or (p.duration or 0),
-      apply = function(e)
-        if p.base_add    then e.stats:add_base   (p.name, p.base_add)    end
+      extend_by  = exclusive and 0 or (p.duration or 0),
+      apply      = function(e)
+        if p.base_add then e.stats:add_base(p.name, p.base_add) end
         if p.add_pct_add then e.stats:add_add_pct(p.name, p.add_pct_add) end
         if p.mul_pct_add then e.stats:add_mul_pct(p.name, p.mul_pct_add) end
       end,
-      remove = function(e)
-        if p.base_add    then e.stats:add_base   (p.name, -p.base_add)    end
+      remove     = function(e)
+        if p.base_add then e.stats:add_base(p.name, -p.base_add) end
         if p.add_pct_add then e.stats:add_add_pct(p.name, -p.add_pct_add) end
         if p.mul_pct_add then e.stats:add_mul_pct(p.name, -p.mul_pct_add) end
       end
@@ -1316,8 +1335,8 @@ end
 --  }
 Effects.deal_damage = function(p)
   return function(ctx, src, tgt)
-    local reason = p.reason or "unknown"   -- <—
-    local tags   = p.tags   or {}          -- <—
+    local reason = p.reason or "unknown" -- <—
+    local tags   = p.tags or {}          -- <—
 
     -- ---------- DEBUG HELPERS (print only when ctx.debug == true) -----------
     local function dbg(fmt, ...)
@@ -1332,7 +1351,7 @@ Effects.deal_damage = function(p)
       local tmp = {}
       for i = 1, #comps do
         local c = comps[i]
-        tmp[#tmp+1] = string.format("%s=%0.1f", tostring(c.type), _round1(c.amount))
+        tmp[#tmp + 1] = string.format("%s=%0.1f", tostring(c.type), _round1(c.amount))
       end
       table.sort(tmp) -- stable-ish, alphabetical by "type=…"
       return table.concat(tmp, ", ")
@@ -1342,11 +1361,11 @@ Effects.deal_damage = function(p)
     local function _sums_to_string(sums)
       if not ctx.debug then return "" end
       local keys, tmp = {}, {}
-      for k in pairs(sums) do keys[#keys+1] = k end
+      for k in pairs(sums) do keys[#keys + 1] = k end
       table.sort(keys)
       for i = 1, #keys do
         local k = keys[i]
-        tmp[#tmp+1] = string.format("%s=%0.1f", tostring(k), _round1(sums[k]))
+        tmp[#tmp + 1] = string.format("%s=%0.1f", tostring(k), _round1(sums[k]))
       end
       return table.concat(tmp, ", ")
     end
@@ -1360,7 +1379,7 @@ Effects.deal_damage = function(p)
         -- kind: rr1/rr2/rr3 | amount | time left if any
         local tleft = (r.until_time and (r.until_time - ctx.time.now)) or nil
         if tleft and tleft < 0 then tleft = 0 end
-        parts[#parts+1] = string.format("%s:%s=%0.1f%s",
+        parts[#parts + 1] = string.format("%s:%s=%0.1f%s",
           tostring(r.kind), tostring(r.damage), _round1(r.amount),
           tleft and string.format(" (%.1fs)", _round1(tleft)) or "")
       end
@@ -1372,10 +1391,10 @@ Effects.deal_damage = function(p)
     local comps = {}
 
     if p.weapon then
-      local min  = src.stats:get('weapon_min')
-      local max  = src.stats:get('weapon_max')
-      local base = math.random() * (max - min) + min
-      local scale = (p.scale_pct or 100) / 100
+      local min         = src.stats:get('weapon_min')
+      local max         = src.stats:get('weapon_max')
+      local base        = math.random() * (max - min) + min
+      local scale       = (p.scale_pct or 100) / 100
 
       comps[#comps + 1] = { type = 'physical', amount = base * scale }
       dbg("Weapon roll: min=%.1f max=%.1f base=%.1f scale=%.2f", min, max, base, scale)
@@ -1419,16 +1438,16 @@ Effects.deal_damage = function(p)
 
     -- Crit multiplier from PTH (piecewise)
     local crit_mult =
-      (PTH < 75)  and (PTH / 75) or
-      (PTH < 90)  and 1.0        or
-      (PTH < 105) and 1.1        or
-      (PTH < 120) and 1.2        or
-      (PTH < 130) and 1.3        or
-      (PTH < 135) and 1.4        or (1.5 + (PTH - 135) * 0.005)
+        (PTH < 75) and (PTH / 75) or
+        (PTH < 90) and 1.0 or
+        (PTH < 105) and 1.1 or
+        (PTH < 120) and 1.2 or
+        (PTH < 130) and 1.3 or
+        (PTH < 135) and 1.4 or (1.5 + (PTH - 135) * 0.005)
     local crit_bonus = 1 + (src.stats:get('crit_damage_pct') or 0) / 100
     crit_mult = crit_mult * crit_bonus
     dbg("PTH-derived crit multiplier (with crit_damage_pct bonus): %.2f", crit_mult)
-    
+
     -- Dodge (early-out, before block)
     local dodge = tgt.stats:get('dodge_chance_pct') or 0
     if math.random() * 100 < dodge then
@@ -1438,14 +1457,14 @@ Effects.deal_damage = function(p)
     end
 
     -- Shield block ------------------------------------------------------------
-    tgt.timers = tgt.timers or {}
+    tgt.timers      = tgt.timers or {}
     local blocked   = false
     local block_amt = 0
 
     if ctx.time:is_ready(tgt.timers, 'block')
-       and math.random() * 100 < tgt.stats:get('block_chance_pct') then
-      blocked   = true
-      block_amt = tgt.stats:get('block_amount')
+        and math.random() * 100 < tgt.stats:get('block_chance_pct') then
+      blocked    = true
+      block_amt  = tgt.stats:get('block_amount')
 
       local base = 1.0
       local rec  = base * (1 - tgt.stats:get('block_recovery_reduction_pct') / 100)
@@ -1488,14 +1507,14 @@ Effects.deal_damage = function(p)
 
       local res = RR.apply_all(base_res, alive_rr)
       dbg("Type %s: start=%.1f base_res=%.1f final_res=%.1f | RR: %s",
-          t, amt, base_res, res, _rr_bucket_to_string(alive_rr))
+        t, amt, base_res, res, _rr_bucket_to_string(alive_rr))
 
       -- Armor mitigation (physical only)
       if t == 'physical' then
         local armor = tgt.stats:get('armor')
         local abs   = 0.70 * (1 + tgt.stats:get('armor_absorption_bonus_pct') / 100)
         local mit   = math.min(amt, armor) * abs
-        amt = amt - mit
+        amt         = amt - mit
         dbg("  Armor: armor=%.1f abs=%.2f mit=%.1f remain=%.1f", armor, abs, mit, amt)
       end
 
@@ -1504,7 +1523,7 @@ Effects.deal_damage = function(p)
       local after_block = after_pct
 
       if blocked then
-        local used = math.min(block_amt, after_pct)
+        local used  = math.min(block_amt, after_pct)
         after_block = after_pct - used
         block_amt   = block_amt - used
         dbg("  Block: used=%.1f remain=%.1f", used, block_amt)
@@ -1512,7 +1531,7 @@ Effects.deal_damage = function(p)
 
       local after_flat = math.max(0, after_block - tgt.stats:get('flat_absorb'))
       dbg("  After absorbs (flat=%0.1f): %s=%0.1f",
-          tgt.stats:get('flat_absorb') or 0, t, after_flat)
+        tgt.stats:get('flat_absorb') or 0, t, after_flat)
       dealt = dealt + after_flat
     end
 
@@ -1520,7 +1539,7 @@ Effects.deal_damage = function(p)
     local maxhp = tgt.max_health or tgt.stats:get('health')
     tgt.hp = util.clamp((tgt.hp or maxhp) - dealt, 0, maxhp)
     dbg("Damage dealt total=%.1f, Target HP=%.1f/%.1f", dealt, tgt.hp, maxhp)
-    
+
     if tgt.hp <= 0 and not tgt.dead then
       tgt.dead = true
       ctx.bus:emit('OnDeath', { entity = tgt, killer = src })
@@ -1534,23 +1553,23 @@ Effects.deal_damage = function(p)
       src.hp = util.clamp((src.hp or smax) + heal, 0, smax)
       dbg("Lifesteal: +%.1f, Attacker HP=%.1f/%.1f", heal, src.hp, smax)
     end
-  
+
     -- Reflect (target -> attacker) -------------------------------------------
     local ref = tgt.stats:get('reflect_damage_pct') or 0
     if ref > 0 then
       local re   = dealt * (ref / 100)
       local smax = src.max_health or src.stats:get('health')
-      src.hp = util.clamp((src.hp or smax) - re, 0, smax)
+      src.hp     = util.clamp((src.hp or smax) - re, 0, smax)
       dbg("Reflect: -%.1f, Attacker HP=%.1f/%.1f", re, src.hp, smax)
     end
 
     -- Retaliation (typed retaliation modification) ------------------------------------
-    
+
     local ret_components = {}
     for _, dt in ipairs(DAMAGE_TYPES) do
       local base = tgt.stats:get('retaliation_' .. dt) or 0
       if base ~= 0 then
-        local mod  = 1 + (tgt.stats:get('retaliation_' .. dt .. '_modifier_pct') or 0) / 100
+        local mod = 1 + (tgt.stats:get('retaliation_' .. dt .. '_modifier_pct') or 0) / 100
         table.insert(ret_components, { type = dt, amount = base * mod })
       end
     end
@@ -1563,12 +1582,14 @@ Effects.deal_damage = function(p)
       source = src, target = tgt, damage = dealt, crit = (crit_mult > 1.0), pth = PTH
     })
     ctx.bus:emit('OnHitResolved', {
-      source = src, target = tgt, damage = dealt,
-      crit = (crit_mult > 1.0) or false,
-      pth  = PTH or nil,
-      reason = reason,                     -- <— hit reason (for logging)
-      tags   = tags,                       -- <— just additional information for logging
-      components = sums,                   -- optional: type breakdown
+      source = src,
+      target = tgt,
+      damage = dealt,
+      crit       = (crit_mult > 1.0) or false,
+      pth        = PTH or nil,
+      reason     = reason, -- <— hit reason (for logging)
+      tags       = tags, -- <— just additional information for logging
+      components = sums, -- optional: type breakdown
     })
   end
 end
@@ -1579,9 +1600,9 @@ Effects.heal = function(p)
   return function(ctx, src, tgt)
     local maxhp = tgt.max_health or tgt.stats:get('health')
     local amt   = (p.flat or 0) + (p.percent_of_max and maxhp * (p.percent_of_max / 100) or 0)
-    amt = amt * (1 + tgt.stats:get('healing_received_pct') / 100)
+    amt         = amt * (1 + tgt.stats:get('healing_received_pct') / 100)
 
-    tgt.hp = util.clamp((tgt.hp or maxhp) + amt, 0, maxhp)
+    tgt.hp      = util.clamp((tgt.hp or maxhp) + amt, 0, maxhp)
     ctx.bus:emit('OnHealed', { source = src, target = tgt, amount = amt })
   end
 end
@@ -1590,10 +1611,10 @@ end
 --  p = { amount = <number>, duration = <secs> }
 Effects.grant_barrier = function(p)
   return Effects.modify_stat {
-    id        = 'barrier',
-    name      = 'flat_absorb',
-    base_add  = p.amount,
-    duration  = p.duration
+    id       = 'barrier',
+    name     = 'flat_absorb',
+    base_add = p.amount,
+    duration = p.duration
   }
 end
 
@@ -1656,7 +1677,7 @@ Effects.force_counter_attack = function(p)
   p = p or {}
   local scale = p.scale_pct or 100
 
-  return function(ctx, src, tgt)         -- src = counter-attacker (Ogre), tgt = defender (Hero)
+  return function(ctx, src, tgt) -- src = counter-attacker (Ogre), tgt = defender (Hero)
     if not src or src.dead or not tgt or tgt.dead then return end
 
     -- ✅ attacker is src, defender is tgt
@@ -1744,11 +1765,11 @@ Leveling.register_curve('default', function(level)
 end)
 
 -- Example alternates (optional):
-Leveling.register_curve('fast_start', function(level)   -- generous early levels
+Leveling.register_curve('fast_start', function(level) -- generous early levels
   return math.floor(600 + (level - 1) * 800)
 end)
 
-Leveling.register_curve('veteran', function(level)      -- steeper
+Leveling.register_curve('veteran', function(level) -- steeper
   return math.floor(1200 + (level - 1) * 1100)
 end)
 -- ============================================================================
@@ -1766,17 +1787,17 @@ function Leveling.grant_exp(ctx, e, base)
   if e.stats and e.stats.get then
     pct = e.stats:get('experience_gained_pct') or 0
   end
-  local gained = base * (1 + pct / 100)
+  local gained        = base * (1 + pct / 100)
 
-  e.level = e.level or 1
-  e.xp    = (e.xp or 0) + gained
+  e.level             = e.level or 1
+  e.xp                = (e.xp or 0) + gained
 
   local levels_gained = 0
   while true do
     local need = Leveling.xp_to_next(ctx, e, e.level or 1)
     if (e.xp or 0) >= need then
       e.xp = (e.xp or 0) - need
-      Leveling.level_up(ctx, e)         -- assumes this increments e.level
+      Leveling.level_up(ctx, e)                -- assumes this increments e.level
       e.level = e.level or (levels_gained + 2) -- belt-and-suspenders if level_up forgot
       levels_gained = levels_gained + 1
     else
@@ -1799,7 +1820,6 @@ function Leveling.grant_exp(ctx, e, base)
 
   return gained, levels_gained
 end
-
 
 function Leveling.level_up(ctx, e)
   e.level        = (e.level or 1) + 1
@@ -1838,12 +1858,12 @@ function Content.attach_attribute_derivations(S)
     S:derived_add_base('offensive_ability', c * 1)
     local chunks_c = math.floor(c / 5)
     S:derived_add_add_pct('physical_modifier_pct', chunks_c * 1)
-    S:derived_add_add_pct('pierce_modifier_pct',   chunks_c * 1)
-    S:derived_add_add_pct('bleed_duration_pct',    chunks_c * 1)
-    S:derived_add_add_pct('trauma_duration_pct',   chunks_c * 1)
+    S:derived_add_add_pct('pierce_modifier_pct', chunks_c * 1)
+    S:derived_add_add_pct('bleed_duration_pct', chunks_c * 1)
+    S:derived_add_add_pct('trauma_duration_pct', chunks_c * 1)
 
-    S:derived_add_base('health',       s * 2)
-    S:derived_add_base('energy',       s * 10)
+    S:derived_add_base('health', s * 2)
+    S:derived_add_base('energy', s * 10)
     S:derived_add_base('energy_regen', s * 0.5)
 
     local chunks_s = math.floor(s / 5)
@@ -1870,22 +1890,22 @@ Content.Spells = {
   --     },
   --   },
   -- },
-  
+
   Fireball = {
     id           = 'Fireball', -- optional ID, can differ from name
     name         = 'Fireball',
     class        = 'pyromancy',
     trigger      = 'OnCast',
     item_granted = true, -- optional, used for item-granted spells which don't get cooldown reduction
-    targeter = function(ctx) return { ctx.target } end,
+    targeter     = function(ctx) return { ctx.target } end,
 
     -- Level/mod-aware builder. If absent, Cast.cast falls back to .effects.
-    build = function(level, mods)
-      level = level or 1
-      mods  = mods or { dmg_pct = 0 }
+    build        = function(level, mods)
+      level           = level or 1
+      mods            = mods or { dmg_pct = 0 }
 
-      local base = 120 + (level - 1) * 40      -- +40 per level
-      local rr   = 20  + (level - 1) * 5       -- +5% RR per level
+      local base      = 120 + (level - 1) * 40 -- +40 per level
+      local rr        = 20 + (level - 1) * 5 -- +5% RR per level
       local dmg_scale = 1 + (mods.dmg_pct or 0) / 100
 
       -- return Effects.seq {
@@ -1896,19 +1916,19 @@ Content.Spells = {
       --     kind = 'rr1', damage = 'fire', amount = rr, duration = 4
       --   },
       -- }
-      
-      return function (ctx, src, tgt)
+
+      return function(ctx, src, tgt)
         -- If Cast.cast already called .build, .effects won’t be used.
-        Effects.deal_damage { components = { { type='fire', amount = base * dmg_scale } } } (ctx, src, tgt)
-        Effects.apply_rr { kind='rr1', damage='fire', amount=rr, duration=4 } (ctx, src, tgt)
+        Effects.deal_damage { components = { { type = 'fire', amount = base * dmg_scale } } } (ctx, src, tgt)
+        Effects.apply_rr { kind = 'rr1', damage = 'fire', amount = rr, duration = 4 } (ctx, src, tgt)
       end
     end,
 
     -- Backward compatible default:
-    effects = function(ctx, src, tgt)
+    effects      = function(ctx, src, tgt)
       -- If Cast.cast already called .build, .effects won’t be used.
-      Effects.deal_damage { components = { { type='fire', amount = 120 } } } (ctx, src, tgt)
-      Effects.apply_rr { kind='rr1', damage='fire', amount=20, duration=4 } (ctx, src, tgt)
+      Effects.deal_damage { components = { { type = 'fire', amount = 120 } } } (ctx, src, tgt)
+      Effects.apply_rr { kind = 'rr1', damage = 'fire', amount = 20, duration = 4 } (ctx, src, tgt)
     end,
   },
 
@@ -1943,10 +1963,10 @@ Content.Spells = {
 --  - a custom handler(ctx) reacting to ctx.event
 Content.Traits = {
   EmberStrike = {
-    name    = 'Ember Strike',
-    class   = 'weapon_proc',
-    trigger = 'OnBasicAttack',
-    chance  = 35,
+    name     = 'Ember Strike',
+    class    = 'weapon_proc',
+    trigger  = 'OnBasicAttack',
+    chance   = 35,
     targeter = function(ctx) return { ctx.target } end,
     effects  = Effects.deal_damage {
       weapon = true,
@@ -2004,7 +2024,8 @@ end
 --  @return boolean ok, string|nil err
 function ItemSystem.equip(ctx, e, item)
   if ctx.debug then
-    print(string.format("[DEBUG][ItemSystem] Attempting to equip item '%s' into slot '%s'", item.id or "?", item.slot or "?"))
+    print(string.format("[DEBUG][ItemSystem] Attempting to equip item '%s' into slot '%s'", item.id or "?",
+      item.slot or "?"))
   end
 
   -- Gate by attribute and slot rules
@@ -2091,8 +2112,8 @@ function ItemSystem.equip(ctx, e, item)
       print(string.format("[DEBUG][ItemSystem] Subscribed proc for trigger '%s'", p.trigger or "?"))
     end
   end
-  
-  
+
+
   -- Register spell mutators from the item (optional field on items)
   -- item.spell_mutators = {
   --   Fireball = {
@@ -2103,10 +2124,10 @@ function ItemSystem.equip(ctx, e, item)
   -- }
   if item.spell_mutators then
     e.spell_mutators = e.spell_mutators or {}
-    item._mut_applied = {}  -- track inserts to remove on unequip
+    item._mut_applied = {} -- track inserts to remove on unequip
 
     for spell_key, list in pairs(item.spell_mutators) do
-      local sid = get_spell_id(spell_key)  -- supports id or name as key
+      local sid = get_spell_id(spell_key) -- supports id or name as key
       local bucket = e.spell_mutators[sid]
       if not bucket then
         bucket = {}
@@ -2145,11 +2166,11 @@ function ItemSystem.equip(ctx, e, item)
   e.equipped[item.slot] = item
   e.stats:recompute()
   if ctx.debug then
-    print(string.format("[DEBUG][ItemSystem] Equipped '%s' into slot '%s'. Stats recomputed.", item.id or "?", item.slot or "?"))
+    print(string.format("[DEBUG][ItemSystem] Equipped '%s' into slot '%s'. Stats recomputed.", item.id or "?",
+      item.slot or "?"))
   end
   return true
 end
-
 
 --- Unequip the item in a given slot from an entity.
 --  Reverses stat mods, removes conversions, unsubscribes proc listeners,
@@ -2162,9 +2183,12 @@ function ItemSystem.unequip(ctx, e, slot)
   -- Revert stat mods (mirror of equip tracking)
   for _, ap in ipairs(item._applied or {}) do
     local kind, n, amt = ap[1], ap[2], ap[3]
-    if     kind == 'base'    then e.stats:add_base   (n, -amt)
-    elseif kind == 'add_pct' then e.stats:add_add_pct(n, -amt)
-    elseif kind == 'mul_pct' then e.stats:add_mul_pct(n, -amt)
+    if kind == 'base' then
+      e.stats:add_base(n, -amt)
+    elseif kind == 'add_pct' then
+      e.stats:add_add_pct(n, -amt)
+    elseif kind == 'mul_pct' then
+      e.stats:add_mul_pct(n, -amt)
     end
   end
 
@@ -2175,7 +2199,7 @@ function ItemSystem.unequip(ctx, e, slot)
     end
     item._conv_start, item._conv_end = nil, nil
   end
-  
+
   -- Unregister mutators added by this item
   if item._mut_applied and e.spell_mutators then
     for i = 1, #item._mut_applied do
@@ -2275,21 +2299,21 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
   local spell = (type(spell_ref) == 'table') and spell_ref or Content.Spells[spell_ref]
   if not spell then return false, 'unknown_spell' end
 
-  local spell_id = get_spell_id(spell)                    -- NEW: canonical id
-  caster.timers = caster.timers or {}
-  local key = 'cd:' .. spell_id
-  local cd  = spell.cooldown or 0
+  local spell_id = get_spell_id(spell) -- NEW: canonical id
+  caster.timers  = caster.timers or {}
+  local key      = 'cd:' .. spell_id
+  local cd       = spell.cooldown or 0
 
   -- Ability/item mods -------------------------------------------------------- NEW
-  local lvl  = get_ability_level(caster, spell)           -- per-caster level
-  local mods = collect_ability_mods(caster, spell)        -- dmg/cd/cost mods
+  local lvl      = get_ability_level(caster, spell) -- per-caster level
+  local mods     = collect_ability_mods(caster, spell) -- dmg/cd/cost mods
 
   -- Cooldown reduction: skip if item-granted (your policy), then apply cd_add.
   if not is_item_granted(caster, spell) then
     local cdr = _get(caster.stats, 'cooldown_reduction')
     cd = cd * math.max(0, 1 - cdr / 100)
   end
-  cd = math.max(0, cd + (mods.cd_add or 0))               -- additive seconds
+  cd = math.max(0, cd + (mods.cd_add or 0)) -- additive seconds
 
   if not ctx.time:is_ready(caster.timers, key) then
     return false, 'cooldown'
@@ -2297,9 +2321,9 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
 
   -- Cost with reductions and item cost_pct ---------------------------------- NEW
   if spell.cost then
-    local red  = _get(caster.stats, 'skill_energy_cost_reduction')
-    local cost = spell.cost * math.max(0, 1 - red / 100)
-    cost = cost * math.max(0, 1 + (mods.cost_pct or 0) / 100)
+    local red     = _get(caster.stats, 'skill_energy_cost_reduction')
+    local cost    = spell.cost * math.max(0, 1 - red / 100)
+    cost          = cost * math.max(0, 1 + (mods.cost_pct or 0) / 100)
     caster.energy = caster.energy or _get(caster.stats, 'energy')
     if caster.energy < cost then
       return false, 'no_energy'
@@ -2308,11 +2332,11 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
   end
 
   ctx.bus:emit('OnCast', {
-    ctx    = ctx,
-    source = caster,
-    spell  = spell,
-    spell_id = spell_id,                                   -- NEW
-    target = primary_target
+    ctx      = ctx,
+    source   = caster,
+    spell    = spell,
+    spell_id = spell_id, -- NEW
+    target   = primary_target
   })
 
   -- Build target list (same as before)
@@ -2321,10 +2345,10 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
     tgt_list = { primary_target }
   else
     tgt_list = spell.targeter({
-      source        = caster,
-      target        = primary_target,
-      get_enemies_of= ctx.get_enemies_of,
-      get_allies_of = ctx.get_allies_of,
+      source         = caster,
+      target         = primary_target,
+      get_enemies_of = ctx.get_enemies_of,
+      get_allies_of  = ctx.get_allies_of,
     })
   end
 
@@ -2332,7 +2356,7 @@ function Cast.cast(ctx, caster, spell_ref, primary_target)
   local eff = spell.effects
   -- If the spell provided a level-aware builder, prefer it:
   if spell.build then
-    eff = spell.build(lvl, mods)  -- pass both, non-breaking for old spells
+    eff = spell.build(lvl, mods) -- pass both, non-breaking for old spells
   end
   eff = apply_spell_mutators(caster, ctx, spell, eff)
 
@@ -2354,29 +2378,32 @@ local Skills = {}
 -- - Modifiers and transmuters *wrap* base skill using your existing spell_mutators channel
 -- - Each skill can optionally be a default-attack replacer (DAR) and/or have WPS entries
 
-local function _lerp(a,b,t) return a + (b-a)*t end
+local function _lerp(a, b, t) return a + (b - a) * t end
 local function _dim_return(x, knee, min_mult)
   if x <= knee then return 1 end
   local over = x - knee
-  return math.max(min_mult or 0.5, 1 / (1 + 0.15*over))
+  return math.max(min_mult or 0.5, 1 / (1 + 0.15 * over))
 end
 
 -- Public DB
 Skills.DB = {
   -- Example: Fire Strike-style default attack replacer
   FireStrike = {
-    id = 'FireStrike', kind='active', is_dar=true,
-    soft_cap = 12, ult_cap = 26,
+    id = 'FireStrike',
+    kind = 'active',
+    is_dar = true,
+    soft_cap = 12,
+    ult_cap = 26,
     -- scaling function returns a table of scalar knobs used by the skill's build()
-    scale = function(rank)
+    scale       = function(rank)
       local m = _dim_return(rank, 12, 0.6)
-      local flat = 6 + 2.5*rank
-      local wpn = 100 + 8*rank
-      return { flat_fire = flat*m, weapon_scale_pct = wpn*m }
+      local flat = 6 + 2.5 * rank
+      local wpn = 100 + 8 * rank
+      return { flat_fire = flat * m, weapon_scale_pct = wpn * m }
     end,
     -- optional: add WPS unlocked while investing into this line
-    wps_unlocks = { -- id => {chance, effects}
-      AmarastasQuickCut = { min_rank=4, chance=20 }, -- details in WPS section
+    wps_unlocks = {                                  -- id => {chance, effects}
+      AmarastasQuickCut = { min_rank = 4, chance = 20 }, -- details in WPS section
     },
     -- optional default attack on-cast cost/cd hooks
     energy_cost = function(rank) return 0 end,
@@ -2385,23 +2412,26 @@ Skills.DB = {
 
   -- Modifiers that *augment* FireStrike's output (applied as mutators)
   ExplosiveStrike = {
-    id='ExplosiveStrike', kind='modifier', base='FireStrike',
-    soft_cap=12, ult_cap=22,
+    id = 'ExplosiveStrike',
+    kind = 'modifier',
+    base = 'FireStrike',
+    soft_cap = 12,
+    ult_cap = 22,
     apply_mutator = function(rank)
-      local radius = 1.8 + 0.05*rank
-      local pct    = 30 + 3*rank
+      local radius = 1.8 + 0.05 * rank
+      local pct    = 30 + 3 * rank
       return function(orig)
         return function(ctx, src, tgt)
           -- 1) run original
           if orig then orig(ctx, src, tgt) end
           -- 2) splash
           local allies = ctx.get_enemies_of(src)
-          for i=1,#allies do
+          for i = 1, #allies do
             local e = allies[i]
             if e ~= tgt then
-              Effects.deal_damage{
-                components = { { type='fire', amount = (src.stats:get('weapon_max') or 10) * (pct/100) } }
-              }(ctx, src, e)
+              Effects.deal_damage {
+                components = { { type = 'fire', amount = (src.stats:get('weapon_max') or 10) * (pct / 100) } }
+              } (ctx, src, e)
             end
           end
         end
@@ -2411,16 +2441,18 @@ Skills.DB = {
 
   -- Transmuter: toggled variant that changes base damage type/behavior
   SearingStrike = {
-    id='SearingStrike', kind='transmuter', base='FireStrike',
-    exclusive=true, -- only one transmuter of a base can be enabled at once
+    id = 'SearingStrike',
+    kind = 'transmuter',
+    base = 'FireStrike',
+    exclusive = true, -- only one transmuter of a base can be enabled at once
     apply_mutator = function()
       return function(orig)
         return function(ctx, src, tgt)
           -- Override "weapon -> all to fire" feel
-          Effects.deal_damage{
+          Effects.deal_damage {
             weapon = true, scale_pct = 100,
-            skill_conversions = { {from='physical', to='fire', pct=100} }
-          }(ctx, src, tgt)
+            skill_conversions = { { from = 'physical', to = 'fire', pct = 100 } }
+          } (ctx, src, tgt)
           -- keep original secondary if desired:
           if orig then orig(ctx, src, tgt) end
         end
@@ -2430,21 +2462,56 @@ Skills.DB = {
 
   -- Passive example
   FlameTouched = {
-    id='FlameTouched', kind='passive', soft_cap=12, ult_cap=22,
+    id = 'FlameTouched',
+    kind = 'passive',
+    soft_cap = 12,
+    ult_cap = 22,
     apply_stats = function(S, rank)
-      S:add_add_pct('fire_modifier_pct', 6 + 1.5*rank)
-      S:add_base('offensive_ability', 6 + 2*rank)
+      S:add_add_pct('fire_modifier_pct', 6 + 1.5 * rank)
+      S:add_base('offensive_ability', 6 + 2 * rank)
     end
   },
 
   -- Exclusive aura (mutually exclusive—only one can be toggled)
   PossessionLike = {
-    id='PossessionLike', kind='exclusive_aura',
+    id = 'PossessionLike',
+    kind = 'exclusive_aura',
     reservation_pct = 25, -- reserve 25% of max energy
     apply_aura = function(ctx, src, rank)
-      return Effects.modify_stat { id='possess_aura', name='chaos_modifier_pct', add_pct_add=8 + 2*rank }
+      return Effects.modify_stat { id = 'possess_aura', name = 'chaos_modifier_pct', add_pct_add = 8 + 2 * rank }
     end
   },
+
+  -- passive with charge system
+  Overheat = {
+    id               = 'Overheat',
+    kind             = 'passive',
+    -- charge spec co-located with the skill
+    charges          = {
+      id = 'Heat',
+      max = 10,
+      decay = 2,
+      derived = function(S, e, stacks)
+        -- +2% fire damage per stack (demo)
+        S:derived_add_add_pct('fire_modifier_pct', 2 * stacks)
+      end,
+      on_change = function(e, stacks)
+        -- any side-effects (marks, visuals); then recompute
+        e.stats:recompute()
+      end,
+      on_remove = function(e)
+        -- cleanup if you added any out-of-band marks
+      end
+    },
+    -- alternate version which changes the charge spec based on rank of the spell
+    OverheatWithRank = { id = 'Overheat', kind = 'passive', 
+      charges = function(rank) 
+      rank = tonumber(rank) or 0            -- default if caller forgot
+      return { id = 'Heat', max = 8 +
+      math.floor(rank / 2), decay = 2, derived = function(S, e, s) S:derived_add_add_pct('fire_modifier_pct', 1.5 * s) end, on_change = function(
+          e) e.stats:recompute() end } end }
+  }
+
 }
 
 -- Player state and manipulation
@@ -2452,9 +2519,11 @@ local SkillTree = {}
 
 function SkillTree.create_state()
   return {
-    ranks = {}, enabled_transmuter = {}, toggled_exclusive = nil,
+    ranks = {},
+    enabled_transmuter = {},
+    toggled_exclusive = nil,
     dar_override = nil,
-    _mutators = {}, -- { [sid] = {mut1, mut2, ...} } to undo later
+    _mutators = {},      -- { [sid] = {mut1, mut2, ...} } to undo later
     _passive_marks = {}, -- for removing passive stat adds
   }
 end
@@ -2478,8 +2547,8 @@ local function _attach_mutator(e, base_id, wrap)
   e.spell_mutators = e.spell_mutators or {}
   local bucket = e.spell_mutators[base_id] or {}
   e.spell_mutators[base_id] = bucket
-  local rec = { pr=0, wrap=wrap }
-  bucket[#bucket+1] = rec
+  local rec = { pr = 0, wrap = wrap }
+  bucket[#bucket + 1] = rec
   e.skills._mutators[base_id] = e.skills._mutators[base_id] or {}
   table.insert(e.skills._mutators[base_id], rec)
 end
@@ -2489,9 +2558,11 @@ local function _clear_mutators_for(e, base_id)
   local list = e.skills._mutators[base_id]
   local bucket = e.spell_mutators and e.spell_mutators[base_id]
   if bucket then
-    for i=#bucket,1,-1 do
-      for j=#list,1,-1 do
-        if bucket[i] == list[j] then table.remove(bucket, i); table.remove(list, j); break end
+    for i = #bucket, 1, -1 do
+      for j = #list, 1, -1 do
+        if bucket[i] == list[j] then
+          table.remove(bucket, i); table.remove(list, j); break
+        end
       end
     end
     if #bucket == 0 then e.spell_mutators[base_id] = nil end
@@ -2512,6 +2583,8 @@ local function _apply_transmuter(e, node)
   if wrap then _attach_mutator(e, node.base, wrap) end
 end
 
+local Charges = {}
+
 function SkillTree.set_rank(e, id, rank)
   e.skills = e.skills or SkillTree.create_state()
   local node = Skills.DB[id]; if not node then return false, 'unknown_skill' end
@@ -2528,20 +2601,36 @@ function SkillTree.set_rank(e, id, rank)
   if node.is_dar and rank > 0 then
     e.skills.dar_override = id
   end
+  
+  -- if skill has a charge system, handle the rank change
+  if node.charges then
+    e.skills = e.skills or {}
+    e.skills._charge_handles = e.skills._charge_handles or {}
+
+    -- remove old handle if present
+    local old = e.skills._charge_handles[id]
+    if old then old.remove(); e.skills._charge_handles[id] = nil end
+
+    -- (re)attach only if rank > 0
+    if rank > 0 then
+      e.skills._charge_handles[id] =
+        Charges.add_track(e, node, nil, nil, nil, { rank = rank })
+    end
+  end
 
   -- WPS unlocks are handled in WPS module by checking current ranks
   return true
 end
 
 function SkillTree.enable_transmuter(e, id)
-  local node = Skills.DB[id]; if not (node and node.kind=='transmuter') then return false, 'not_transmuter' end
+  local node = Skills.DB[id]; if not (node and node.kind == 'transmuter') then return false, 'not_transmuter' end
   e.skills.enabled_transmuter[node.base] = id
   _apply_transmuter(e, node)
   return true
 end
 
 function SkillTree.toggle_exclusive(e, id)
-  local node = Skills.DB[id]; if not (node and node.kind=='exclusive_aura') then return false, 'not_exclusive' end
+  local node = Skills.DB[id]; if not (node and node.kind == 'exclusive_aura') then return false, 'not_exclusive' end
   e.skills.toggled_exclusive = (e.skills.toggled_exclusive == id) and nil or id
   return true
 end
@@ -2555,29 +2644,31 @@ local WPS = {}
 -- A WPS table: id -> { chance=%, effects = function(ctx, src, tgt) ... }
 WPS.DB = {
   AmarastasQuickCut = {
-    id='AmarastasQuickCut', chance=20,
+    id = 'AmarastasQuickCut',
+    chance = 20,
     effects = function(ctx, src, tgt)
       -- two rapid weapon strikes at reduced damage
-      Effects.deal_damage { weapon=true, scale_pct=70 } (ctx, src, tgt)
-      Effects.deal_damage { weapon=true, scale_pct=70 } (ctx, src, tgt)
+      Effects.deal_damage { weapon = true, scale_pct = 70 } (ctx, src, tgt)
+      Effects.deal_damage { weapon = true, scale_pct = 70 } (ctx, src, tgt)
     end
   },
   MarkoviansAdvantage = {
-    id='MarkoviansAdvantage', chance=10,
+    id = 'MarkoviansAdvantage',
+    chance = 10,
     effects = function(ctx, src, tgt)
-      Effects.deal_damage { weapon=true, scale_pct=180 } (ctx, src, tgt)
-      Effects.apply_rr { kind='rr1', damage='physical', amount=10, duration=3 } (ctx, src, tgt)
+      Effects.deal_damage { weapon = true, scale_pct = 180 } (ctx, src, tgt)
+      Effects.apply_rr { kind = 'rr1', damage = 'physical', amount = 10, duration = 3 } (ctx, src, tgt)
     end
   },
 }
 
 -- WPS bucket resolution: roll once per default attack, pick a single WPS based on weights
 local function _roll(wps_list)
-  local total=0
-  for i=1,#wps_list do total = total + (wps_list[i].chance or 0) end
+  local total = 0
+  for i = 1, #wps_list do total = total + (wps_list[i].chance or 0) end
   if total <= 0 then return nil end
-  local r = math.random()*total; local acc=0
-  for i=1,#wps_list do
+  local r = math.random() * total; local acc = 0
+  for i = 1, #wps_list do
     acc = acc + (wps_list[i].chance or 0)
     if r <= acc then return wps_list[i] end
   end
@@ -2592,7 +2683,7 @@ function WPS.collect_for(e, Skills)
         if r >= (spec.min_rank or 1) then
           local base = WPS.DB[wps_id]
           if base then
-            list[#list+1] = { id=wps_id, chance=spec.chance or base.chance, effects=base.effects }
+            list[#list + 1] = { id = wps_id, chance = spec.chance or base.chance, effects = base.effects }
           end
         end
       end
@@ -2609,14 +2700,14 @@ function WPS.handle_default_attack(ctx, src, tgt, Skills)
     -- shallow copy so we don't mutate shared tables
     local q = {}
     for k, v in pairs(p) do q[k] = v end
-    meta = meta or {}
-    q.reason = meta.reason or q.reason
-    q.tag    = meta.tag    or q.tag
+    meta      = meta or {}
+    q.reason  = meta.reason or q.reason
+    q.tag     = meta.tag or q.tag
 
     -- dedupe key (only for this function invocation)
     local key = meta.key or (tostring(q.reason) .. "|" .. tostring(q.tag) ..
-                 "|" .. (q.weapon and ("WD:" .. tostring(q.scale_pct or 100))
-                        or ("CMP:" .. (q.components and #q.components or 0))))
+      "|" .. (q.weapon and ("WD:" .. tostring(q.scale_pct or 100))
+        or ("CMP:" .. (q.components and #q.components or 0))))
     if seen[key] then return end
     seen[key] = true
 
@@ -2638,7 +2729,7 @@ function WPS.handle_default_attack(ctx, src, tgt, Skills)
     local knobs = node.scale and node.scale(r) or { weapon_scale_pct = 100 }
 
     -- energy/cd
-    local cost = node.energy_cost and node.energy_cost(r) or 0
+    local cost  = node.energy_cost and node.energy_cost(r) or 0
     if cost > 0 then
       if (src.energy or 0) < cost then return end
       src.energy = src.energy - cost
@@ -2654,7 +2745,7 @@ function WPS.handle_default_attack(ctx, src, tgt, Skills)
     -- main hit (weapon replacer)
     deal({ weapon = true, scale_pct = knobs.weapon_scale_pct or 100 }, {
       reason = "weapon",
-      tag    = sid,                    -- e.g., "FireStrike"
+      tag    = sid, -- e.g., "FireStrike"
       key    = "dar:" .. sid .. ":main"
     })
 
@@ -2662,7 +2753,7 @@ function WPS.handle_default_attack(ctx, src, tgt, Skills)
     if knobs.flat_fire and knobs.flat_fire > 0 then
       deal({ components = { { type = 'fire', amount = knobs.flat_fire } } }, {
         reason = "modifier",
-        tag    = (node.mod_tag or (sid .. ":flat_fire")),  -- best-effort tag
+        tag    = (node.mod_tag or (sid .. ":flat_fire")), -- best-effort tag
         key    = "dar:" .. sid .. ":mod:fire"
       })
     end
@@ -2681,16 +2772,13 @@ function WPS.handle_default_attack(ctx, src, tgt, Skills)
   end
 end
 
-
-
-
 -- AURAS.lua
 local Auras = {}
 
 -- Tracks reservations: e._energy_reserved
 local function _reserve(e, pct)
   local maxE = e.max_energy or (e.stats and e.stats:get('energy')) or 0
-  local need = maxE * (pct/100)
+  local need = maxE * (pct / 100)
   e._energy_reserved = (e._energy_reserved or 0) + need
   e.max_energy = math.max(0, maxE - e._energy_reserved)
   e.energy = math.min(e.energy or 0, e.max_energy)
@@ -2731,7 +2819,7 @@ function Auras.toggle_exclusive(ctx, e, Skills, id)
     end
 
     entry.id         = 'exclusive:' .. id
-    entry.until_time = nil  -- exclusives stay while toggled
+    entry.until_time = nil -- exclusives stay while toggled
     entry.stack      = nil
     entry.extend_by  = 0
 
@@ -2746,7 +2834,6 @@ function Auras.toggle_exclusive(ctx, e, Skills, id)
   return true
 end
 
-
 -- ============================
 
 
@@ -2756,7 +2843,7 @@ local Devotion = {}
 -- proc spec: { id, trigger, chance, icd, filter(ev)->bool, effects(ctx, source, target) }
 function Devotion.attach(e, spec)
   e._devotion = e._devotion or {}
-  e._devotion[spec.id] = { spec=spec, next_ok=0 }
+  e._devotion[spec.id] = { spec = spec, next_ok = 0 }
 end
 
 local function _try_fire(ctx, e, ev, rec)
@@ -2764,7 +2851,7 @@ local function _try_fire(ctx, e, ev, rec)
   if now < (rec.next_ok or 0) then return end
   local spec = rec.spec
   if spec.filter and not spec.filter(ev) then return end
-  if math.random()*100 > (spec.chance or 100) then return end
+  if math.random() * 100 > (spec.chance or 100) then return end
   local src = ev.source or e
   local tgt = ev.target or e
   spec.effects(ctx, src, tgt)
@@ -2783,32 +2870,150 @@ function Devotion.handle_event(ctx, evname, ev)
   handle(ev.source); handle(ev.target)
 end
 
-
 -- ================================
 
 -- SYSTEMS.lua
 local Systems = {}
 
 -- Charges (e.g., Savagery): stack on hit, decay over time, modifies stats
-local Charges = {}
-function Charges.add_track(e, id, max_stacks, decay_per_sec, apply_fn)
-  e._charges = e._charges or {}
-  e._charges[id] = { stacks=0, max=max_stacks, decay=decay_per_sec, apply=apply_fn }
-  
-  
+-- Replace your current Charges with this upgraded version
+local function _fail(msg) error("Charges.add_track: "..msg) end
 
+local function _validate_spec(spec)
+  if type(spec) ~= "table" then _fail("spec is not a table") end
+  if type(spec.id) ~= "string" or spec.id == "" then _fail("spec.id missing") end
+  spec.max   = tonumber(spec.max   or 0) or 0
+  spec.decay = tonumber(spec.decay or 0) or 0
+  return spec
 end
+
+local function _normalize_spec(e, what, max_stacks, decay_per_sec, on_change, opts)
+  opts = opts or {}
+
+  -- Legacy signature: ("Heat", 10, 2, on_change)
+  if type(what) == "string" then
+    return _validate_spec{
+      id = what, max = max_stacks or 0, decay = decay_per_sec or 0, on_change = on_change
+    }
+  end
+
+  local skill_id = (type(what) == "table" and what.id) or nil
+
+  -- Skill node with .charges (table | function)
+  if type(what) == "table" and what.charges then
+    local c = what.charges
+    if type(c) == "function" then
+      local r = (opts and opts.rank) or 0   -- ← default rank if not provided
+      local ok, res = pcall(c, r, e, opts)
+      if not ok then
+        _fail(("charges() for skill '%s' threw: %s"):format(tostring(skill_id or "?"), tostring(res)))
+      end
+      what = res
+    else
+      what = c
+    end
+  end
+
+  -- Flat spec table (support aliases + fallback id)
+  if type(what) == "table" then
+    local id = what.id or what.charge_id or what.name
+              or (skill_id and (tostring(skill_id)..":charges"))  -- ← fallback
+    local m  = what.max or what.max_stacks or what.stacks_max or what.limit or what.cap
+    local d  = what.decay or what.decay_per_sec or what.decay_rate or what.per_sec
+    return _validate_spec{
+      id        = id,
+      max       = m,
+      decay     = d,
+      on_change = what.on_change,
+      on_remove = what.on_remove,
+      derived   = what.derived or what.apply_derived,
+    }
+  end
+
+  _fail("unsupported spec format: "..tostring(type(what)))
+end
+
+
+-- spec form accepted:
+-- 1) ("Heat", max, decay, on_change)
+-- 2) { id, max, decay, on_change?, derived?(S,e,stacks), on_remove? }
+-- 3) skillNode where skillNode.charges is (table | function(rank,e,opts)->spec)
+function Charges.add_track(e, spec_or_skill, max_stacks, decay_per_sec, on_change, opts)
+  e._charges = e._charges or {}
+  local spec = _normalize_spec(e, spec_or_skill, max_stacks, decay_per_sec, on_change, opts)
+  assert(spec and spec.id, "Charges.add_track: spec.id required")
+
+  -- de-dupe
+  if e._charges[spec.id] then Charges.remove_track(e, spec.id) end
+
+  local rec = {
+    stacks = 0,
+    max = spec.max or 0,
+    decay = spec.decay or 0,
+    on_change = spec.on_change,
+    on_remove = spec.on_remove
+  }
+  e._charges[spec.id] = rec
+
+  -- optional derived hook
+  if spec.derived and e.stats and e.stats.on_recompute then
+    local hook = function(S)
+      local c = e._charges and e._charges[spec.id]; if not c then return end
+      local s = c.stacks or 0
+      if s > 0 then spec.derived(S, e, s) end
+    end
+    -- Try unsubscribe path; fall back to manual removal
+    local unsub = e.stats:on_recompute(hook)
+    rec._unsub, rec._hook, rec._stats = unsub, hook, e.stats
+  end
+
+  if rec.on_change then rec.on_change(e, rec.stacks) end
+
+  -- handle for easy removal
+  return { remove = function() Charges.remove_track(e, spec.id) end }
+end
+
+function Charges.remove_track(e, id)
+  local c = e._charges and e._charges[id]; if not c then return end
+
+  if c._unsub then
+    c._unsub()
+  elseif c._hook and c._stats and c._stats.derived_hooks then
+    local hooks = c._stats.derived_hooks
+    for i = #hooks, 1, -1 do
+      if hooks[i] == c._hook then
+        table.remove(hooks, i); break
+      end
+    end
+  end
+
+  if c.on_remove then c.on_remove(e) end
+  e._charges[id] = nil
+  if e.stats and e.stats.recompute then e.stats:recompute() end
+end
+
 function Charges.on_hit(e, id, add)
   local c = e._charges and e._charges[id]; if not c then return end
-  c.stacks = math.min(c.max, c.stacks + (add or 1))
+  local before = c.stacks or 0
+  c.stacks = math.min(c.max, before + (add or 1))
+  if c.on_change and c.stacks ~= before then c.on_change(e, c.stacks) end
 end
+
+function Charges.set(e, id, stacks)
+  local c = e._charges and e._charges[id]; if not c then return end
+  local before = c.stacks or 0
+  c.stacks = util.clamp(stacks or 0, 0, c.max or 0)
+  if c.on_change and c.stacks ~= before then c.on_change(e, c.stacks) end
+end
+
 function Charges.update(e, dt)
   if not e._charges then return end
   for _, c in pairs(e._charges) do
-    if c.decay and c.decay>0 then
-      c.stacks = math.max(0, c.stacks - c.decay*dt)
+    if (c.decay or 0) > 0 then
+      local before = c.stacks or 0
+      c.stacks = math.max(0, before - c.decay * dt)
+      if c.on_change and c.stacks ~= before then c.on_change(e, c.stacks) end
     end
-    if c.apply then c.apply(e, c.stacks) end
   end
 end
 
@@ -2816,14 +3021,17 @@ end
 local Channel = {}
 function Channel.start(ctx, e, id, drain_per_sec, tick, period)
   e._channel = e._channel or {}
-  e._channel[id] = { drain=drain_per_sec, tick=tick, period=period or 0.5, next=ctx.time.now }
+  e._channel[id] = { drain = drain_per_sec, tick = tick, period = period or 0.5, next = ctx.time.now }
 end
+
 function Channel.stop(e, id) if e._channel then e._channel[id] = nil end end
+
 function Channel.update(ctx, e, dt)
   if not e._channel then return end
   for id, c in pairs(e._channel) do
     local need = c.drain * dt
-    if (e.energy or 0) < need then e._channel[id] = nil
+    if (e.energy or 0) < need then
+      e._channel[id] = nil
     else
       e.energy = e.energy - need
       if ctx.time.now >= (c.next or 0) then
@@ -2837,7 +3045,7 @@ end
 -- Glue update
 function Systems.update(ctx, dt)
   local function step(list)
-    for i=1,#list do
+    for i = 1, #list do
       local e = list[i]
       Charges.update(e, dt)
       Channel.update(ctx, e, dt)
@@ -2863,7 +3071,7 @@ function PetsAndSets.spawn_pet(ctx, owner, spec)
   local pct = (owner.stats and owner.stats:get('all_damage_pct') or 0)
   pet.stats:add_add_pct('all_damage_pct', pct * (spec.inherit_damage_mult or 0.6))
   pet.stats:recompute()
-  ctx.get_allies_of(owner)[#ctx.get_allies_of(owner)+1] = pet
+  ctx.get_allies_of(owner)[#ctx.get_allies_of(owner) + 1] = pet
   return pet
 end
 
@@ -2875,24 +3083,27 @@ local function _apply_set_bonus(ctx, e, bonus)
   if bonus.mutators then
     for sid, wrap in pairs(bonus.mutators) do
       e.spell_mutators = e.spell_mutators or {}
-      local bucket = e.spell_mutators[sid] or {}; e.spell_mutators[sid]=bucket
-      local rec = { pr=0, wrap=wrap }; table.insert(bucket, rec)
-      bonus._muts = bonus._muts or {}; table.insert(bonus._muts, {sid=sid, ref=rec})
+      local bucket = e.spell_mutators[sid] or {}; e.spell_mutators[sid] = bucket
+      local rec = { pr = 0, wrap = wrap }; table.insert(bucket, rec)
+      bonus._muts = bonus._muts or {}; table.insert(bonus._muts, { sid = sid, ref = rec })
     end
   end
 end
 
 local function _remove_set_bonus(e, bonus)
   if bonus._muts and e.spell_mutators then
-    for i=#bonus._muts,1,-1 do
+    for i = #bonus._muts, 1, -1 do
       local m = bonus._muts[i]; local b = e.spell_mutators[m.sid]
       if b then
-        for j=#b,1,-1 do if b[j]==m.ref then table.remove(b,j) break end end
-        if #b==0 then e.spell_mutators[m.sid]=nil end
+        for j = #b, 1, -1 do if b[j] == m.ref then
+            table.remove(b, j)
+            break
+          end end
+        if #b == 0 then e.spell_mutators[m.sid] = nil end
       end
     end
   end
-  bonus._muts=nil
+  bonus._muts = nil
   -- undo stat effects if you returned records
 end
 
@@ -2908,7 +3119,7 @@ function PetsAndSets.recompute_sets(ctx, e)
     local spec = Content.Sets and Content.Sets[set_id]
     if spec then
       local best = nil
-      for i=1,#spec.bonuses do
+      for i = 1, #spec.bonuses do
         local b = spec.bonuses[i]
         if pieces >= b.pieces then best = b end
       end
@@ -2946,14 +3157,14 @@ StatusEngine.update_entity = function(ctx, e, dt)
       b.entries = kept
     end
   end
-  
+
   -- RR pruning
   if e.active_rr then
     for t, bucket in pairs(e.active_rr) do
       local kept = {}
       for i = 1, #bucket do
         local r = bucket[i]
-        if (not r.until_time) or r.until_time > ctx.time.now then kept[#kept+1] = r end
+        if (not r.until_time) or r.until_time > ctx.time.now then kept[#kept + 1] = r end
       end
       e.active_rr[t] = kept
     end
@@ -2980,13 +3191,13 @@ end
 
 World.update = function(ctx, dt)
   ctx.time:tick(dt)
-  
+
   local function regen(ent)
     if not ent.stats then return end
 
     -- HP
-    local maxhp  = ent.max_health or ent.stats:get('health')
-    local hpr    = ent.stats:get('health_regen') or 0
+    local maxhp = ent.max_health or ent.stats:get('health')
+    local hpr   = ent.stats:get('health_regen') or 0
     if hpr ~= 0 then
       ent.hp = util.clamp((ent.hp or maxhp) + hpr * dt, 0, maxhp)
     end
@@ -2996,7 +3207,7 @@ World.update = function(ctx, dt)
     local reservedAbs = ent._energy_reserved or 0
     -- If you later add percent reservations, subtract them here too:
     local reservedPct = ent._reserved_pct or 0
-    local effMaxE = math.max(0, baseMaxE * (1 - reservedPct/100) - reservedAbs)
+    local effMaxE = math.max(0, baseMaxE * (1 - reservedPct / 100) - reservedAbs)
 
     -- First-time init / clamp if caps moved
     if ent.max_energy == nil then ent.max_energy = effMaxE end
@@ -3021,7 +3232,7 @@ World.update = function(ctx, dt)
 
   each(ctx.side1)
   each(ctx.side2)
-  
+
   Systems.update(ctx, dt)
 
   ctx.bus:emit('OnTick', { dt = dt, now = ctx.time.now })
@@ -3045,19 +3256,19 @@ local function make_actor(name, defs, attach)
   local en = s:get('energy')
 
   return {
-    name            = name,
-    stats           = s,
-    hp              = hp,
-    max_health      = hp,
-    energy          = en,
-    max_energy      = en,
-    gear_conversions= {},
-    tags            = {},
-    timers          = {},
+    name             = name,
+    stats            = s,
+    hp               = hp,
+    max_health       = hp,
+    energy           = en,
+    max_energy       = en,
+    gear_conversions = {},
+    tags             = {},
+    timers           = {},
   }
 end
 
-  
+
 
 -- ================================
 
@@ -3067,17 +3278,17 @@ function Demo.run()
   math.randomseed(os.time())
 
   -- Core context --------------------------------------------------------------
-  local bus   = EventBus.new()
-  local time  = Time.new()
+  local bus       = EventBus.new()
+  local time      = Time.new()
   local defs, DTS = StatDef.make()
   local combat    = Combat.new(RR, DTS)
-  
+
   -- After creating bus, hook devotions
-  for _, evn in ipairs({'OnHitResolved','OnBasicAttack','OnCrit','OnDeath','OnDodge'}) do
+  for _, evn in ipairs({ 'OnHitResolved', 'OnBasicAttack', 'OnCrit', 'OnDeath', 'OnDodge' }) do
     bus:on(evn, function(ev) Devotion.handle_event(ctx, evn, ev) end)
   end
 
-  
+
   --[[
     How to manage ctx in a real-time, many-entity scene
 
@@ -3112,14 +3323,14 @@ function Demo.run()
 
     Lifetime: keep ctx as long as that scene is active.
     When the scene ends, discard the whole ctx (so clocks, listeners, etc. don’t leak).
-  ]]-- 
+  ]] --
 
   local ctx = {
-    _make_actor = make_actor,  -- Factory for creating actors
-    debug = true,  -- Set to true for verbose debug output
-    bus = bus,
-    time = time,
-    combat = combat,
+    _make_actor    = make_actor, -- Factory for creating actors
+    debug          = true,    -- Set to true for verbose debug output
+    bus            = bus,
+    time           = time,
+    combat         = combat,
 
     -- Side-aware accessors (hero is side1, ogre is side2).
     get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end,
@@ -3129,12 +3340,12 @@ function Demo.run()
   -- Create actors -------------------------------------------------------------
   local hero = make_actor('Hero', defs, Content.attach_attribute_derivations)
   hero.side = 1
-  hero.level_curve = 'fast_start'  -- Example curve, default curve used otherwise
-  hero.stats:add_base('physique',    16)
-  hero.stats:add_base('cunning',     14)
-  hero.stats:add_base('spirit',      10)
-  hero.stats:add_base('weapon_min',  12)
-  hero.stats:add_base('weapon_max',  18)
+  hero.level_curve = 'fast_start' -- Example curve, default curve used otherwise
+  hero.stats:add_base('physique', 16)
+  hero.stats:add_base('cunning', 14)
+  hero.stats:add_base('spirit', 10)
+  hero.stats:add_base('weapon_min', 12)
+  hero.stats:add_base('weapon_max', 18)
   hero.stats:add_base('life_steal_pct', 12)
   hero.stats:recompute()
 
@@ -3175,14 +3386,14 @@ function Demo.run()
       '[%s] counter-attacked [%s]!',
       ev.source.name, ev.target.name))
   end)
-  
+
   bus:on('OnRRApplied', function(ev)
     print(string.format(
       '[%s] applied %s RR to [%s] for %.1f%%',
       ev.source.name, ev.kind, ev.target.name, ev.amount))
   end)
-  
-  
+
+
   bus:on('OnMiss', function(ev)
     print(string.format(
       '[%s] missed [%s]!',
@@ -3197,16 +3408,16 @@ function Demo.run()
   if util.rand() * 100.0 < (Content.Traits.EmberStrike.chance or 0) then
     Content.Traits.EmberStrike.effects(ctx, hero, ogre)
   end
-  
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
   -- 2. Cast Fireball
   local FB = Content.Spells.Fireball
   for _, t in ipairs(FB.targeter({ source = hero, target = ogre, get_enemies_of = ctx.get_enemies_of })) do
     FB.effects(ctx, hero, t)
   end
-  
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
   -- 3. Cast Poison Dart and tick DoTs
   local PD = Content.Spells.PoisonDart
@@ -3216,9 +3427,9 @@ function Demo.run()
   for i = 1, 6 do
     World.update(ctx, 1.0)
   end
-  
+
   -- check that ogre RR from fireball has disappeared
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
   -- 4. Custom trigger: provoke (forces counter-attack)
   bus:on('OnProvoke', function(ev)
@@ -3227,36 +3438,39 @@ function Demo.run()
   end)
 
   ctx.bus:emit('OnProvoke', { source = hero, target = ogre })
-  
-  
+
+
   -- try item equip
-  
+
   -- Example sword giving Fireball +20% damage and -0.5s cooldown, -10% cost
   local FlamebandPlus = {
-    id='flameband_plus', slot='sword1',
-    requires = { attribute='cunning', value=12, mode='sole' },
-    mods = { { stat='weapon_min', base=6 }, { stat='weapon_max', base=10 } },
+    id = 'flameband_plus',
+    slot = 'sword1',
+    requires = { attribute = 'cunning', value = 12, mode = 'sole' },
+    mods = { { stat = 'weapon_min', base = 6 }, { stat = 'weapon_max', base = 10 } },
 
     ability_mods = {
       Fireball = { dmg_pct = 20, cd_add = -0.5, cost_pct = -10 },
     },
   }
-  
+
   -- spell-mutator
   local ThunderSeal = {
-    id='thunder_seal', slot='amulet',
-    mods = { },  -- normal stat mods if you want
+    id = 'thunder_seal',
+    slot = 'amulet',
+    mods = {},  -- normal stat mods if you want
     -- Change Fireball to deal 100% weapon as lightning instead of fire.
     spell_mutators = {
       Fireball = {
-        { pr = 0, -- mutator priority, 0=first, higher=later
+        {
+          pr = 0,               -- mutator priority, 0=first, higher=later
           wrap = function(orig) -- pass the original effects fn
             -- return a new function that replaces the original behavior
             return function(ctx, src, tgt)
               -- replace base behavior fully:
               Effects.deal_damage {
                 weapon = true, scale_pct = 200,
-                skill_conversions = { { from='physical', to='lightning', pct=100 } }
+                skill_conversions = { { from = 'physical', to = 'lightning', pct = 100 } }
               } (ctx, src, tgt)
               -- If you wanted to *augment* instead, also call the original:
               -- orig(ctx, src, tgt)
@@ -3268,25 +3482,26 @@ function Demo.run()
   }
 
   local Flamebrand = {
-    id='flamebrand', slot='sword1',
-    requires = { attribute='cunning', value=12, mode='sole' },
+    id = 'flamebrand',
+    slot = 'sword1',
+    requires = { attribute = 'cunning', value = 12, mode = 'sole' },
 
     mods = {
-      { stat='weapon_min', base=6 },
-      { stat='weapon_max', base=10 },
-      { stat='fire_modifier_pct', add_pct=15 },
+      { stat = 'weapon_min',      base = 6 },
+      { stat = 'weapon_max',      base = 10 },
+      { stat = 'fire_modifier_pct', add_pct = 15 },
     },
 
     conversions = {
-      { from='physical', to='fire', pct=25 }
+      { from = 'physical', to = 'fire', pct = 25 }
     },
 
     procs = {
       {
-        trigger='OnBasicAttack',
-        chance=70,
-        effects = Effects.deal_damage{
-          components = { { type='fire', amount=40 } },
+        trigger = 'OnBasicAttack',
+        chance = 70,
+        effects = Effects.deal_damage {
+          components = { { type = 'fire', amount = 40 } },
           tags = { ability = true }
         },
       },
@@ -3294,86 +3509,87 @@ function Demo.run()
 
     granted_spells = { 'Fireball' },
   }
-  
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
-  
+
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+
   assert(ItemSystem.equip(ctx, hero, Flamebrand))
-  
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
-  
+
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+
   assert(ItemSystem.equip(ctx, hero, FlamebandPlus))
-  
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
-  
+
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+
   assert(ItemSystem.equip(ctx, hero, ThunderSeal))
-  
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
-  
+
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+
   ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre })
   ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre })
   ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre })
-  
-  
+
+
   -- (1) Player presses key: cast Fireball at a chosen enemy now
-  
+
   local ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
 
   -- (2) Item-granted active with its own cooldown unaffected by CDR:
   -- mark the spell once at init-time:
   Content.Spells.Fireball.item_granted = true
-  
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
   -- (3) A ground-targeted or self-targeted buff:
   -- just pass the appropriate primary_target, or leave nil and let targeter select.
-  
-  
-  
+
+
+
   -- leveling & granted spells
   ctx.bus:on('OnLevelUp', function(ev)
     local e = ev.entity
     -- Auto-allocate Physique each level:
     e.stats:add_base('physique', 1)
     e.stats:recompute()
-    
-    log_debug("Level up!", e.name, "now at level", e.level, "with", e.attr_points, "attribute points and", e.skill_points, "skill points.")
-    
+
+    log_debug("Level up!", e.name, "now at level", e.level, "with", e.attr_points, "attribute points and", e
+    .skill_points, "skill points.")
+
     -- Unlock Fireball at level 3:
     if e.level == 3 then
       e.granted_spells = e.granted_spells or {}
       e.granted_spells['Fireball'] = true
     end
   end)
-  
-  Leveling.grant_exp(ctx, hero, 1500)  -- grant some exp to level up
-  Leveling.grant_exp(ctx, hero, 1500)  -- grant some exp to level up
-  
+
+  Leveling.grant_exp(ctx, hero, 1500) -- grant some exp to level up
+  Leveling.grant_exp(ctx, hero, 1500) -- grant some exp to level up
+
   -- Final stats dump
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 end
 
 function Demo.run_full()
   math.randomseed(12345)
 
-  local bus   = EventBus.new()
-  local time  = Time.new()
+  local bus       = EventBus.new()
+  local time      = Time.new()
   local defs, DTS = StatDef.make()
   local combat    = Combat.new(RR, DTS)
-  
+
 
 
   local ctx = {
-    debug = true,
-    bus   = bus,
-    time  = time,
-    combat = combat,
+    debug          = true,
+    bus            = bus,
+    time           = time,
+    combat         = combat,
     get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end,
     get_allies_of  = function(a) return a.side == 1 and ctx.side1 or ctx.side2 end,
   }
-  
-    -- After creating bus, hook devotions
-  for _, evn in ipairs({'OnHitResolved','OnBasicAttack','OnCrit','OnDeath','OnDodge'}) do
+
+  -- After creating bus, hook devotions
+  for _, evn in ipairs({ 'OnHitResolved', 'OnBasicAttack', 'OnCrit', 'OnDeath', 'OnDodge' }) do
     bus:on(evn, function(ev) Devotion.handle_event(ctx, evn, ev) end)
   end
 
@@ -3381,9 +3597,9 @@ function Demo.run_full()
   local hero = make_actor('Hero', defs, Content.attach_attribute_derivations)
   hero.side = 1
   hero.level_curve = 'fast_start'
-  hero.stats:add_base('physique',  16)
-  hero.stats:add_base('cunning',   18)
-  hero.stats:add_base('spirit',    12)
+  hero.stats:add_base('physique', 16)
+  hero.stats:add_base('cunning', 18)
+  hero.stats:add_base('spirit', 12)
   hero.stats:add_base('weapon_min', 18)
   hero.stats:add_base('weapon_max', 25)
   hero.stats:add_base('life_steal_pct', 10)
@@ -3391,7 +3607,7 @@ function Demo.run_full()
   hero.stats:add_base('cooldown_reduction', 20)
   hero.stats:add_base('skill_energy_cost_reduction', 15)
   hero.stats:add_base('attack_speed', 1.0)
-  hero.stats:add_base('cast_speed',   1.0)
+  hero.stats:add_base('cast_speed', 1.0)
   hero.stats:recompute()
 
   local ogre = make_actor('Ogre', defs, Content.attach_attribute_derivations)
@@ -3437,9 +3653,9 @@ function Demo.run_full()
 
   local function resolve(v)
     if type(v) == "table" then
-      if v.name then return v.name end         -- prefer entity name
-      if v.id   then return v.id   end         -- fallback id if you have one
-      return "<tbl>"                           -- last-resort placeholder
+      if v.name then return v.name end -- prefer entity name
+      if v.id then return v.id end     -- fallback id if you have one
+      return "<tbl>"                   -- last-resort placeholder
     elseif type(v) == "boolean" then
       return v and "true" or "false"
     elseif v == nil then
@@ -3453,15 +3669,15 @@ function Demo.run_full()
     bus:on(name, function(e)
       local vals = {}
       for _, k in ipairs(fields or {}) do
-        vals[#vals+1] = resolve(e[k])
+        vals[#vals + 1] = resolve(e[k])
       end
 
       local line = ("[EVT] %-16s " .. fmt):format(name, table.unpack(vals))
 
       -- Append tag/reason if present (keeps existing fmt untouched)
       local extra = {}
-      if e.tag    ~= nil then extra[#extra+1] = "tag="    .. tostring(resolve(e.tag)) end
-      if e.reason ~= nil then extra[#extra+1] = "reason=" .. tostring(resolve(e.reason)) end
+      if e.tag ~= nil then extra[#extra + 1] = "tag=" .. tostring(resolve(e.tag)) end
+      if e.reason ~= nil then extra[#extra + 1] = "reason=" .. tostring(resolve(e.reason)) end
       if #extra > 0 then
         line = line .. " (" .. table.concat(extra, " ") .. ")"
       end
@@ -3471,34 +3687,37 @@ function Demo.run_full()
   end
 
 
-  on(bus, 'OnHitResolved', "[%s] -> [%s] dmg=%.1f crit=%s PTH=%.1f", {'source','target','damage','crit','pth'})
-  on(bus, 'OnHealed', "[%s] +%.1f", {'target','amount'})
-  on(bus, 'OnCounterAttack', "[%s] countered %s", {'source','target'})
-  on(bus, 'OnRRApplied', "%s RR %s=%.1f%%", {'damage_type','rr_kind','amount'})
+  on(bus, 'OnHitResolved', "[%s] -> [%s] dmg=%.1f crit=%s PTH=%.1f", { 'source', 'target', 'damage', 'crit', 'pth' })
+  on(bus, 'OnHealed', "[%s] +%.1f", { 'target', 'amount' })
+  on(bus, 'OnCounterAttack', "[%s] countered %s", { 'source', 'target' })
+  on(bus, 'OnRRApplied', "%s RR %s=%.1f%%", { 'damage_type', 'rr_kind', 'amount' })
 
-  on(bus, 'OnMiss', "[%s] missed %s", {'source','target'})
-  on(bus, 'OnDodge', "%s dodged %s", {'target','source'})
-  on(bus, 'OnStatusExpired', "status expired: %s", {'id'})
-  on(bus, 'OnDotApplied', "dot %s on %s", {'dot','target'})
-  on(bus, 'OnDotExpired', "dot expired on %s", {'entity'})
-  on(bus, 'OnDeath', "%s died (killer=%s)", {'entity','killer'})
-  on(bus, 'OnExperienceGained', "XP +%.1f (levels+%d)", {'amount','levels'})
-  on(bus, 'OnLevelUp', "Level up: %s", {'entity'})
+  on(bus, 'OnMiss', "[%s] missed %s", { 'source', 'target' })
+  on(bus, 'OnDodge', "%s dodged %s", { 'target', 'source' })
+  on(bus, 'OnStatusExpired', "status expired: %s", { 'id' })
+  on(bus, 'OnDotApplied', "dot %s on %s", { 'dot', 'target' })
+  on(bus, 'OnDotExpired', "dot expired on %s", { 'entity' })
+  on(bus, 'OnDeath', "%s died (killer=%s)", { 'entity', 'killer' })
+  on(bus, 'OnExperienceGained', "XP +%.1f (levels+%d)", { 'amount', 'levels' })
+  on(bus, 'OnLevelUp', "Level up: %s", { 'entity' })
 
   -- Items: conversions, procs, mutators, granted spells, ability mods
   local Flamebrand = {
-    id='flamebrand', slot='sword1',
-    requires = { attribute='cunning', value=12, mode='sole' },
+    id = 'flamebrand',
+    slot = 'sword1',
+    requires = { attribute = 'cunning', value = 12, mode = 'sole' },
     mods = {
-      { stat='weapon_min', base=6 },
-      { stat='weapon_max', base=10 },
-      { stat='fire_modifier_pct', add_pct=15 },
+      { stat = 'weapon_min',      base = 6 },
+      { stat = 'weapon_max',      base = 10 },
+      { stat = 'fire_modifier_pct', add_pct = 15 },
     },
-    conversions = { { from='physical', to='fire', pct=25 } },
+    conversions = { { from = 'physical', to = 'fire', pct = 25 } },
     procs = {
-      { trigger='OnBasicAttack', chance=70,
-        effects = Effects.deal_damage{
-          components = { { type='fire', amount=40 } }, tags = { ability = true }
+      {
+        trigger = 'OnBasicAttack',
+        chance = 70,
+        effects = Effects.deal_damage {
+          components = { { type = 'fire', amount = 40 } }, tags = { ability = true }
         },
       },
     },
@@ -3506,22 +3725,26 @@ function Demo.run_full()
   }
 
   local FlamebandPlus = {
-    id='flameband_plus', slot='sword1',
-    requires = { attribute='cunning', value=12, mode='sole' },
-    mods = { { stat='weapon_min', base=4 }, { stat='weapon_max', base=8 } },
+    id = 'flameband_plus',
+    slot = 'sword1',
+    requires = { attribute = 'cunning', value = 12, mode = 'sole' },
+    mods = { { stat = 'weapon_min', base = 4 }, { stat = 'weapon_max', base = 8 } },
     ability_mods = { Fireball = { dmg_pct = 20, cd_add = -0.5, cost_pct = -10 }, },
   }
 
   local ThunderSeal = {
-    id='thunder_seal', slot='amulet',
+    id = 'thunder_seal',
+    slot = 'amulet',
     spell_mutators = {
       Fireball = {
-        { pr = 0, wrap = function(orig)
+        {
+          pr = 0,
+          wrap = function(orig)
             return function(ctx, src, tgt)
               if orig then orig(ctx, src, tgt) end
               Effects.deal_damage {
                 weapon = true, scale_pct = 200,
-                skill_conversions = { { from='physical', to='lightning', pct=100 } }
+                skill_conversions = { { from = 'physical', to = 'lightning', pct = 100 } }
               } (ctx, src, tgt)
             end
           end
@@ -3531,13 +3754,13 @@ function Demo.run_full()
   }
 
   print("\n== Equip sequence ==")
-  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+  util.dump_stats(hero, ctx, { conv = true, timers = true, spells = true })
   assert(ItemSystem.equip(ctx, hero, Flamebrand))
-  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+  util.dump_stats(hero, ctx, { conv = true, timers = true, spells = true })
   assert(ItemSystem.equip(ctx, hero, FlamebandPlus)) -- replaces sword
-  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+  util.dump_stats(hero, ctx, { conv = true, timers = true, spells = true })
   assert(ItemSystem.equip(ctx, hero, ThunderSeal))
-  util.dump_stats(hero, ctx, { conv=true, timers=true, spells=true })
+  util.dump_stats(hero, ctx, { conv = true, timers = true, spells = true })
 
   -- Ability level & mods
   set_ability_level(hero, 'Fireball', 3)
@@ -3547,27 +3770,27 @@ function Demo.run_full()
   ctx.bus:emit('OnBasicAttack', { source = hero, target = ogre }) -- proc check
 
   -- RR tier tests (rr1, rr2, rr3)
-  Content.Spells.ViperSigil.effects(ctx, hero, ogre)      -- rr2
-  Content.Spells.ElementalStorm.effects(ctx, hero, ogre)  -- rr3
-  util.dump_stats(ogre, ctx, { rr=true, timers=true })
+  Content.Spells.ViperSigil.effects(ctx, hero, ogre)     -- rr2
+  Content.Spells.ElementalStorm.effects(ctx, hero, ogre) -- rr3
+  util.dump_stats(ogre, ctx, { rr = true, timers = true })
 
   print("\n== Fireball cast (with mutator, level, and item mods) ==")
   local ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
   if not ok then print("Cast failed:", why) end
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, timers=true })
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, timers = true })
 
   print("\n== Poison DoT + tick ==")
   Cast.cast(ctx, hero, 'PoisonDart', ogre)
-  for i=1,5 do World.update(ctx, 1.0) end
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, timers=true })
+  for i = 1, 5 do World.update(ctx, 1.0) end
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, timers = true })
 
   print("\n== Barrier & Heal ==")
   Effects.grant_barrier { amount = 50, duration = 3 } (ctx, hero, hero)
   Effects.heal { percent_of_max = 15 } (ctx, hero, hero)
-  util.dump_stats(hero, ctx, { statuses=true, timers=true })
+  util.dump_stats(hero, ctx, { statuses = true, timers = true })
 
   print("\n== Provoke & counter chain ==")
-  bus:emit('OnProvoke', { source = hero, target = ogre })  -- your handler forces counter
+  bus:emit('OnProvoke', { source = hero, target = ogre }) -- your handler forces counter
 
   print("\n== Cooldowns & costs ==")
   -- Make Fireball have a cost/cd for demonstration:
@@ -3583,7 +3806,7 @@ function Demo.run_full()
   World.update(ctx, 2.0)
   ok, why = Cast.cast(ctx, hero, 'Fireball', ogre)
   print("Fireball #4 at t=3.6:", ok, why or "")
-  util.dump_stats(hero, ctx, { timers=true })
+  util.dump_stats(hero, ctx, { timers = true })
 
   print("\n== Leveling & granted spell at level 3 ==")
   bus:on('OnLevelUp', function(ev)
@@ -3600,53 +3823,56 @@ function Demo.run_full()
   end)
   Leveling.grant_exp(ctx, hero, 1500)
   Leveling.grant_exp(ctx, hero, 1500)
-  util.dump_stats(hero, ctx, { spells=true })
-  
-  
-  
+  util.dump_stats(hero, ctx, { spells = true })
+
+
+
   print("\n== Status stacking modes ==")
-  Effects.modify_stat{ id='buffA', name='fire_modifier_pct', add_pct_add=10, duration=2 }(ctx, hero, hero) -- replace default
-  Effects.modify_stat{ id='buffA', name='fire_modifier_pct', add_pct_add=5, duration=4, stack={mode='time_extend'} }(ctx, hero, hero)
-  Effects.modify_stat{ id='buffB', name='cunning', base_add=1, duration=3, stack={mode='count', max=3} }(ctx, hero, hero)
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
-  for i=1,5 do 
-    World.update(ctx, 1.0) 
-    util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  Effects.modify_stat { id = 'buffA', name = 'fire_modifier_pct', add_pct_add = 10, duration = 2 } (ctx, hero, hero) -- replace default
+  Effects.modify_stat { id = 'buffA', name = 'fire_modifier_pct', add_pct_add = 5, duration = 4, stack = { mode = 'time_extend' } } (
+  ctx, hero, hero)
+  Effects.modify_stat { id = 'buffB', name = 'cunning', base_add = 1, duration = 3, stack = { mode = 'count', max = 3 } } (
+  ctx, hero, hero)
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  for i = 1, 5 do
+    World.update(ctx, 1.0)
+    util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
   end
 
   print("\n== Cleanse by id/predicate ==")
-  Effects.modify_stat{ id='burning', name='percent_absorb_pct', add_pct_add=5, duration=10 }(ctx, hero, hero)
+  Effects.modify_stat { id = 'burning', name = 'percent_absorb_pct', add_pct_add = 5, duration = 10 } (ctx, hero, hero)
 
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
-  Effects.cleanse{ ids={ burning=true }, predicate=function(id,entry) return false end }(ctx, hero, hero)
-  
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  Effects.cleanse { ids = { burning = true }, predicate = function(id, entry) return false end } (ctx, hero, hero)
+
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
   print("\n== par / seq / chance / scale_by_stat ==")
-  local burst = Effects.seq{
-    Effects.par{
-      Effects.deal_damage{ components={ {type='fire', amount=30} } },
-      Effects.chance(50, Effects.apply_rr{ kind='rr1', damage='fire', amount=10, duration=2 })
+  local burst = Effects.seq {
+    Effects.par {
+      Effects.deal_damage { components = { { type = 'fire', amount = 30 } } },
+      Effects.chance(50, Effects.apply_rr { kind = 'rr1', damage = 'fire', amount = 10, duration = 2 })
     },
     Effects.scale_by_stat('cunning', 0.5, function(x)
-      return function(ctx, src, tgt) Effects.deal_damage{ components={ {type='pierce', amount=x} } }(ctx, src, tgt) end
+      return function(ctx, src, tgt) Effects.deal_damage { components = { { type = 'pierce', amount = x } } } (ctx, src,
+          tgt) end
     end)
   }
   burst(ctx, hero, ogre)
-  
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
   print("\n== Conversions ordering (skill before gear) ==")
-  hero.gear_conversions = { {from='physical', to='fire', pct=50} }
-  Effects.deal_damage{
-    components = { {type='physical', amount=100} },
-    skill_conversions = { {from='physical', to='cold', pct=50} }
-  }(ctx, hero, ogre)
+  hero.gear_conversions = { { from = 'physical', to = 'fire', pct = 50 } }
+  Effects.deal_damage {
+    components = { { type = 'physical', amount = 100 } },
+    skill_conversions = { { from = 'physical', to = 'cold', pct = 50 } }
+  } (ctx, hero, ogre)
 
   print("\n== Exclusive aura toggle & reservation ==")
   Skills.SkillTree.set_rank(hero, 'PossessionLike', 5)
   Skills.SkillTree.toggle_exclusive(hero, 'PossessionLike')
   Auras.toggle_exclusive(ctx, hero, Skills, 'PossessionLike')
-  util.dump_stats(hero, ctx, { rr=true, dots=true, statuses=true, conv=true, spells=true, tags=true, timers=true })
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
   print("\n== Modifier & Transmuter application ==")
   Skills.SkillTree.set_rank(hero, 'FireStrike', 8)
@@ -3655,30 +3881,42 @@ function Demo.run_full()
   WPS.handle_default_attack(ctx, hero, ogre, Skills)
 
   print("\n== Devotion trigger w/ ICD ==")
-  local devo = { id='HotHead', trigger='OnHitResolved', chance=100, icd=1.5,
-    effects=function(ctx, src, tgt) Effects.heal{ flat=10 }(ctx, src, src) end }
+  local devo = {
+    id = 'HotHead',
+    trigger = 'OnHitResolved',
+    chance = 100,
+    icd = 1.5,
+    effects = function(ctx, src, tgt) Effects.heal { flat = 10 } (ctx, src, src) end
+  }
   Devotion.attach(hero, devo)
   bus:on('OnHitResolved', function(ev) Devotion.handle_event(ctx, 'OnHitResolved', ev) end)
-  Effects.deal_damage{ weapon=true, scale_pct=100 }(ctx, hero, ogre)
-  World.update(ctx, 0.5); Effects.deal_damage{ weapon=true, scale_pct=100 }(ctx, hero, ogre) -- should be on ICD
-  World.update(ctx, 1.5); Effects.deal_damage{ weapon=true, scale_pct=100 }(ctx, hero, ogre) -- off ICD
+  Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre)
+  World.update(ctx, 0.5); Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre) -- should be on ICD
+  World.update(ctx, 1.5); Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre) -- off ICD
 
   print("\n== Charges & Channel ==")
-  Systems.Charges.add_track(hero, 'Heat', 10, 2, function(e, stacks)
-    e.stats:recompute() -- in real code: add/remove marks then recompute
-  end)
+  -- Systems.Charges.add_track(hero, 'Heat', 10, 2, function(e, stacks)
+  --   e.stats:recompute() -- in real code: add/remove marks then recompute
+  -- end)
+  local chargeRemoveHandle = Systems.Charges.add_track(hero, Skills.DB.OverheatWithRank)
   Systems.Charges.on_hit(hero, 'Heat', 5)
-  Systems.Channel.start(ctx, hero, 'Beam', 8, function(ctx,e) Effects.deal_damage{ components={ {type='aether', amount=15} } }(ctx, e, ogre) end, 0.5)
-  for i=1,5 do World.update(ctx, 0.5) end
+  Systems.Channel.start(ctx, hero, 'Beam', 8,
+    function(ctx, e) Effects.deal_damage { components = { { type = 'aether', amount = 15 } } } (ctx, e, ogre) end, 0.5)
+  for i = 1, 5 do World.update(ctx, 0.5) end
   Systems.Channel.stop(hero, 'Beam')
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  chargeRemoveHandle.remove() -- remove the charge track
 
   print("\n== Pets & Sets (apply/unapply) ==")
-  local pet = PetsAndSets.spawn_pet(ctx, hero, { name='Imp', inherit_damage_mult=0.6 })
+  local pet = PetsAndSets.spawn_pet(ctx, hero, { name = 'Imp', inherit_damage_mult = 0.6 })
   Content.Sets = {
     EmberSet = {
       bonuses = {
-        { pieces=2, mutators={ Fireball=function(orig) return function(ctx,src,tgt) if orig then orig(ctx,src,tgt) end end end } },
-        { pieces=3, effects=function(ctx,e)
+        { pieces = 2, mutators = { Fireball = function(orig) return function(ctx, src, tgt) if orig then orig(ctx, src,
+                tgt) end end end } },
+        {
+          pieces = 3,
+          effects = function(ctx, e)
             e.stats:add_add_pct('fire_modifier_pct', 10)
             return function(ent) ent.stats:add_add_pct('fire_modifier_pct', -10) end
           end
@@ -3686,39 +3924,56 @@ function Demo.run_full()
       }
     }
   }
-  local item2 = { id='E1', slot='ring', set_id='EmberSet' }
-  local item3 = { id='E2', slot='amulet', set_id='EmberSet' }
+  local item2 = { id = 'E1', slot = 'ring', set_id = 'EmberSet' }
+  local item3 = { id = 'E2', slot = 'amulet', set_id = 'EmberSet' }
   ItemSystem.equip(ctx, hero, item2); PetsAndSets.recompute_sets(ctx, hero)
   ItemSystem.equip(ctx, hero, item3); PetsAndSets.recompute_sets(ctx, hero)
   ItemSystem.unequip(ctx, hero, 'amulet'); PetsAndSets.recompute_sets(ctx, hero)
 
   print("\n== Equip rules failure paths ==")
-  local bad = { id='HeavyAxe', slot='axe2', requires={ attribute='physique', value=999, mode='sole' } }
-  local ok,why = ItemSystem.equip(ctx, hero, bad); print("Equip heavy axe:", ok, why or "")
+  local bad = { id = 'HeavyAxe', slot = 'axe2', requires = { attribute = 'physique', value = 999, mode = 'sole' } }
+  local ok, why = ItemSystem.equip(ctx, hero, bad); print("Equip heavy axe:", ok, why or "")
 
   print("\n== CDR exclusion: item-granted vs native ==")
   Content.Spells.Fireball.cooldown = 3.0
-  hero.granted_spells = { Fireball=true }      -- item-granted: CDR should NOT apply
+  hero.granted_spells = { Fireball = true } -- item-granted: CDR should NOT apply
   hero.stats:add_add_pct('cooldown_reduction', 50)
   Cast.cast(ctx, hero, 'Fireball', ogre)
-  local ok2,why2 = Cast.cast(ctx, hero, 'Fireball', ogre)
+  local ok2, why2 = Cast.cast(ctx, hero, 'Fireball', ogre)
   print("Immediate recast (should be on CD, ignoring CDR):", ok2, why2 or "")
 
   print("\n== Ability level + item ability_mods (build path) ==")
   set_ability_level(hero, 'Fireball', 4)
-  hero.equipped = { ring={ ability_mods = { Fireball = { dmg_pct=30, cd_add=-0.5, cost_pct=-10 } } } }
+  hero.equipped = { ring = { ability_mods = { Fireball = { dmg_pct = 30, cd_add = -0.5, cost_pct = -10 } } } }
   Cast.cast(ctx, hero, 'Fireball', ogre)
 
 
   print("\n== Cleanup ticks ==")
-  for i=1,5 do World.update(ctx, 1.0) end
-  util.dump_stats(ogre, ctx, { rr=true, dots=true, statuses=true, timers=true })
+  for i = 1, 5 do World.update(ctx, 1.0) end
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, timers = true })
 end
-
 
 local _core = dofile and package and package.loaded and package.loaded['part1_core'] or nil
 if not _core then _core = (function() return Core end)() end
-local _game = (function() return { Effects = Effects, Combat = Combat, Items = Items, Leveling = Leveling, Content =
-  Content, StatusEngine = StatusEngine, World = World, ItemSystem = ItemSystem, Cast = Cast, WPS = WPS, Skills = Skills, Auras = Auras, Systems = Systems, PetsAndSets = PetsAndSets, Demo = Demo } end)()
+local _game = (function()
+  return {
+    Effects = Effects,
+    Combat = Combat,
+    Items = Items,
+    Leveling = Leveling,
+    Content =
+        Content,
+    StatusEngine = StatusEngine,
+    World = World,
+    ItemSystem = ItemSystem,
+    Cast = Cast,
+    WPS = WPS,
+    Skills = Skills,
+    Auras = Auras,
+    Systems = Systems,
+    PetsAndSets = PetsAndSets,
+    Demo = Demo
+  }
+end)()
 
 return { Core = _core, Game = _game }

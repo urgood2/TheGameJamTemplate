@@ -3062,23 +3062,26 @@ Systems.Channel = Channel
 -- PETS_AND_SETS.lua
 local PetsAndSets = {}
 
+local function add_to_side(ctx, ent, side)
+  local roster = (side == 1) and ctx.side1 or ctx.side2
+  roster[#roster+1] = ent
+end
+
 -- Simple pet spawner: you plug your entity factory here
 function PetsAndSets.spawn_pet(ctx, owner, spec)
   spec = spec or {}
-
   local ctor   = owner._make_actor or ctx._make_actor or make_actor
   local defs   = owner._defs       or ctx._defs
   local attach = owner._attach     or ctx._attach     or Content.attach_attribute_derivations
 
   assert(type(ctor)   == "function", "spawn_pet: missing actor constructor")
-  assert(type(defs)   == "table",    "spawn_pet: missing stat defs (owner._defs/ctx._defs)")
-  assert(type(attach) == "function", "spawn_pet: missing attach function (owner._attach/ctx._attach)")
+  assert(type(defs)   == "table",    "spawn_pet: missing stat defs")
+  assert(type(attach) == "function", "spawn_pet: missing attach function")
 
   local pet = ctor(spec.name or "Pet", defs, attach)
-  pet.side  = owner.side
-  pet.owner = owner
+  pet.side, pet.owner = owner.side, owner
 
-  -- inherit a portion of owner's all_damage_pct
+  -- inherit portion of owner's all_damage_pct
   local owner_all = (owner.stats and owner.stats:get("all_damage_pct")) or 0
   local mult = (spec.inherit_damage_mult ~= nil) and spec.inherit_damage_mult or 0.6
   if owner_all ~= 0 and mult ~= 0 then
@@ -3086,10 +3089,10 @@ function PetsAndSets.spawn_pet(ctx, owner, spec)
   end
   pet.stats:recompute()
 
-  local allies = ctx.get_allies_of(owner)
-  allies[#allies + 1] = pet
+  add_to_side(ctx, pet, owner.side)  -- <-- explicit, no ambiguity
   return pet
 end
+
 
 
 -- Item sets
@@ -3975,8 +3978,8 @@ function Demo.run_full()
 
   print("\n== Ability level + item ability_mods (build path) ==")
   set_ability_level(hero, 'Fireball', 4)
-  hero.equipped = { ring = { ability_mods = { Fireball = { dmg_pct = 30, cd_add = -0.5, cost_pct = -10 } } } }
-  Cast.cast(ctx, hero, 'Fireball', ogre)
+  hero.equipped.ring = { ability_mods = { Fireball = { dmg_pct = 30, cd_add = -0.5, cost_pct = -10 } } } 
+  Cast.cast(ctx, hero, 'Fireball', ogre) -- on cooldown
 
 
   print("\n== Cleanup ticks ==")

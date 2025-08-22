@@ -2502,15 +2502,16 @@ Skills.DB = {
       on_remove = function(e)
         -- cleanup if you added any out-of-band marks
       end
-    },
-    -- alternate version which changes the charge spec based on rank of the spell
+    }
+    
+  },
+  -- alternate version which changes the charge spec based on rank of the spell
     OverheatWithRank = { id = 'Overheat', kind = 'passive', 
       charges = function(rank) 
       rank = tonumber(rank) or 0            -- default if caller forgot
       return { id = 'Heat', max = 8 +
       math.floor(rank / 2), decay = 2, derived = function(S, e, s) S:derived_add_add_pct('fire_modifier_pct', 1.5 * s) end, on_change = function(
           e) e.stats:recompute() end } end }
-  }
 
 }
 

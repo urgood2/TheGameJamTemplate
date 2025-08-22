@@ -76,6 +76,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- finish updates based on https://chatgpt.com/share/68a88471-8f44-800a-b692-63f52924f6ac
 - test BloodMender
 - do full pass to add as many descriptive comments/ docs as possible to the codebase
 - the dump stats thing should show current charges, channeling, etc. if any. also, is it printing reason properly?

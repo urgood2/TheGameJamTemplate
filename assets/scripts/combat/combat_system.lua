@@ -516,6 +516,36 @@ function util.dump_stats(e, ctx, opts)
       add("Aura   | " .. join(parts, "  "))
     end
   end
+  
+   -- Charges
+  do
+    local cs = {}
+    if e._charges then
+      for id, c in pairs(e._charges) do
+        local stacks = (c.stacks or 0)
+        local maxs   = (c.max or 0)
+        local dec    = (c.decay or 0)
+        cs[#cs+1] = string.format("%s=%0.2f/%d%s",
+          tostring(id), stacks, maxs, dec > 0 and (" (decay="..tostring(dec).."/s)") or "")
+      end
+    end
+    if #cs > 0 then add("Charge | " .. join(cs, "  ")) end
+  end
+
+  -- Channeling
+  do
+    local ch = {}
+    if e._channel then
+      local now = (ctx and ctx.time and ctx.time.now) or nil
+      for id, rec in pairs(e._channel) do
+        local nexts = (now and rec.next) and math.max(0, rec.next - now) or nil
+        ch[#ch+1] = string.format("%s drain=%0.2f/s period=%0.2fs%s",
+          tostring(id), rec.drain or 0, rec.period or 0.5,
+          nexts and string.format(" next=%.2fs", nexts) or "")
+      end
+    end
+    if #ch > 0 then add("Chan   | " .. join(ch, "  ")) end
+  end
 
   add(("============"):rep(2))
   print(table.concat(lines, "\n"))
@@ -1579,17 +1609,15 @@ Effects.deal_damage = function(p)
     end
 
     ctx.bus:emit('OnHitResolved', {
-      source = src, target = tgt, damage = dealt, crit = (crit_mult > 1.0), pth = PTH
-    })
-    ctx.bus:emit('OnHitResolved', {
-      source = src,
-      target = tgt,
-      damage = dealt,
+      source     = src,
+      target     = tgt,
+      damage     = dealt,
+      did_damage = (dealt or 0) > 0,
       crit       = (crit_mult > 1.0) or false,
       pth        = PTH or nil,
-      reason     = reason, -- <— hit reason (for logging)
-      tags       = tags, -- <— just additional information for logging
-      components = sums, -- optional: type breakdown
+      reason     = reason,
+      tags       = tags,
+      components = sums,
     })
   end
 end
@@ -2852,10 +2880,11 @@ local function _try_fire(ctx, e, ev, rec)
   if now < (rec.next_ok or 0) then return end
   local spec = rec.spec
   if spec.filter and not spec.filter(ev) then return end
+  if spec.condition and not spec.condition(ctx, ev, e) then return end
   if math.random() * 100 > (spec.chance or 100) then return end
   local src = ev.source or e
   local tgt = ev.target or e
-  spec.effects(ctx, src, tgt)
+  spec.effects(ctx, src, tgt, ev)      -- pass ev
   rec.next_ok = now + (spec.icd or 0)
 end
 
@@ -3916,11 +3945,18 @@ function Demo.run_full()
 
   print("\n== Devotion trigger w/ ICD ==")
   local devo = {
-    id = 'HotHead',
-    trigger = 'OnHitResolved',
-    chance = 100,
-    icd = 1.5,
-    effects = function(ctx, src, tgt) Effects.heal { flat = 10 } (ctx, src, src) end
+    -- heal for 20% of dealt damage, only if damage > 0
+    id       = 'BloodMender',
+    trigger  = 'OnHitResolved',
+    chance   = 100,
+    icd      = 0.0,
+    condition = function(ctx, ev)
+      return ev and (ev.did_damage == true) and (ev.damage or 0) > 0
+    end,
+    effects  = function(ctx, src, tgt, ev)
+      local heal = (ev.damage or 0) * 0.20
+      Effects.heal { flat = heal } (ctx, src, src)
+    end
   }
   Devotion.attach(hero, devo)
   bus:on('OnHitResolved', function(ev) Devotion.handle_event(ctx, 'OnHitResolved', ev) end)

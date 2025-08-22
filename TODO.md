@@ -76,39 +76,16 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- pet side thing needs checking, where are allies stored?
+- test BloodMender
 - do full pass to add as many descriptive comments/ docs as possible to the codebase
 - the dump stats thing should show current charges, channeling, etc. if any. also, is it printing reason properly?
 - what if I wanted to add specific conditions to a devotion for instance, so heal triggers on hit resolve only when the hit actually did damage, as a percentage of the done damage, etc? basically i have to be able to have access to the information which is relevant.
 - siralim data is here: [folder](<assets/siralim_data>)
-- fix errors based on this: https://chatgpt.com/share/68a5ca7b-b75c-800a-ad1f-f98e7b7fd1ff
 - [ ] extract what I can from siralim: tack on this rule system, then test with actual siralim rules: https://chatgpt.com/share/68a46896-78bc-800a-a14f-73605890a8a3
-- [ ] improvement to stat system
-How would i do set items giving bonuses and potentially altering stats of other items or skills when equipped?
-How to handle buffs that are timed, and items which are removed/put on? How to permanently upgrade items?
-Also, how do I create my own status effects and hook them up?
-how would I do arbitrary effects for certain item effects, etc?
+- [ ] chronicon data https://github.com/gabriel-dehan/chronicondb-client/tree/main/src/engine/data
 - [ ] add in triggers from various games like siralim, path of exile, grim dawn.
 - [ ] how to spell mutators mesh with the skill build system-based on skill lelve?
-- [ ] test ThunderSeal -> the wrong attack activates here?
-```lua
-  -- Execute effects
-  for _, t in ipairs(tgt_list or {}) do
-    eff(ctx, caster, t)
-  end
-```
-- [ ] does fireball apply RR every time it runs? is there a way to make it optionally stack? 
-- [ ] what is the lifetime of the context? how is the timers updated?
 - [ ] current system does not have binary crits, only scaling, constantly applied crits based on OA and DA.
-- [ ] ability to hook custom lamndas for triggers, item procs, etc. to the combat system? how far to take it?
-- [ ] explore full item definition feature and make demo of each feature
-- [ ] how to handle level ups?
-- [ ] if there is overlap between existing spell and item granted abilities, how to handle that?
-- [ ] what about ability levels? stat mods to apply to items or abilities?
-- [ ] what about things that fundamentally change a spell?
-- [ ] how to do effects that depend on the result of the previous sequence, like if an attack hits, then apply a stun, or if the attack crits, do someething else?
-- [ ] comprehensive demo of all features of the combat system, including item procs, triggers, etc.
-- [ ] stat & trigger & skill syste in progress https://chatgpt.com/share/689f6c1d-4540-800a-beb4-5ea0d59a746e / https://chatgpt.com/share/68a1db5c-5794-800a-bcf8-6ab001ec77c3
 - [ ] use handleTextInput()
 - [ ] examine current state of input system, does re-binding inputs work, for both keyboard and controller? input rebinding: https://chatgpt.com/share/689718e0-d830-800a-bfdb-446125c87ecd
 - [ ] now make scrolling work for scroll panes, also handle scroll pane focus (knowing which scroll pane should move when scrolling), show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, also handle scroll pane sizing (initial size must be passed in, must be different from the full content size), exclude scroll pane background in the scissoring process, cull rendering so only visible items in the scroll pane are rendered, disable input for culled entities

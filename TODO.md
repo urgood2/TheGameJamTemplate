@@ -76,8 +76,57 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- resistance penetration (overpower), resistance overcap, damage reduction, as well as other stats from chronicon that are missing 
 - finish updates based on https://chatgpt.com/share/68a88471-8f44-800a-b692-63f52924f6ac
-- test BloodMender
+- test BloodMender, RingOfWard
+- test:
+```lua
+Items.upgrade(ctx, hero, Flamebrand, {
+  level_up = 1,
+  add_mods = { { stat='fire_modifier_pct', add_pct=5 } }
+})
+
+```
+- test:
+```lua
+local Scorched = Effects.status{
+  id = 'scorched', duration = 5, stack = { mode='time_extend' },
+  apply = function(e) e.stats:add_add_pct('fire_resist_pct', -10) end,
+  remove= function(e) e.stats:add_add_pct('fire_resist_pct', +10) end,
+}
+-- Use it in any effect chain:
+-- Effects.seq { Effects.deal_damage{...}, Scorched }
+```
+- test: single unified hook API for ad-hoc gameplay code:
+```lua
+    local un = Core.hook(ctx, 'OnHitResolved', {
+        icd = 0.5,
+        filter = function(ev) return ev and ev.did_damage and ev.source == hero end,
+        run = function(ctx, ev) Effects.heal{flat=(ev.damage or 0)*0.05}(ctx, ev.source, ev.source) end
+})
+-- call `un()` to remove
+```
+- test: (Example proc that keys off reason and damage:)
+    > Arbitrary item effects (full freedom) + pass ev into item procs
+```lua
+local ReactiveBalm = {
+  id='reactive_balm', slot='medal',
+  procs = {
+    {
+      trigger = 'OnHitResolved',
+      chance  = 100,
+      filter  = function(ev) return ev and ev.target and ev.did_damage end,
+      effects = function(ctx, wearer, _, ev)
+        if ev.reason == 'weapon' and (ev.damage or 0) > 50 then
+          -- big hits apply an instant heal for 10% of the damage received
+          Effects.heal { flat = (ev.damage or 0) * 0.10 } (ctx, wearer, wearer)
+        end
+      end
+    }
+  }
+}
+
+```
 - do full pass to add as many descriptive comments/ docs as possible to the codebase
 - the dump stats thing should show current charges, channeling, etc. if any. also, is it printing reason properly?
 - what if I wanted to add specific conditions to a devotion for instance, so heal triggers on hit resolve only when the hit actually did damage, as a percentage of the done damage, etc? basically i have to be able to have access to the information which is relevant.

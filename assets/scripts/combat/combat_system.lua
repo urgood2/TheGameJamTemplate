@@ -32,6 +32,7 @@ local util = {}
 -- These are placeholders for organization; you can attach functions later.
 -- ============================================================================
 local Effects, Combat, Items, Leveling, Content, StatusEngine, World = {}, {}, {}, {}, {}, {}, {}
+local ItemSystem = {}
 
 --- Deep copy a Lua table (recursively copies nested tables).
 --  Non-table values are copied by value; functions and metatables are not
@@ -571,6 +572,26 @@ function Core.on(ctx, ev, fn, pr)
         table.remove(b, i)
         break
       end end
+  end
+end
+
+-- One-liner utility
+function Core.hook(ctx, evname, opts)
+  local pr = opts.pr or 0
+  local fn = function(ev)
+    if opts.filter and not opts.filter(ev) then return end
+    if opts.condition and not opts.condition(ctx, ev) then return end
+    if opts.icd then
+      opts._next = opts._next or 0
+      if ctx.time.now < opts._next then return end
+      opts._next = ctx.time.now + opts.icd
+    end
+    return opts.run(ctx, ev)
+  end
+  ctx.bus:on(evname, fn, pr)
+  return function()
+    local b = ctx.bus.listeners[evname]; if not b then return end
+    for i=#b,1,-1 do if b[i].fn == fn then table.remove(b,i); break end end
   end
 end
 
@@ -1238,6 +1259,25 @@ Effects.cleanse = function(p)
   end
 end
 
+Effects.status = function(def)
+  -- def: { id, duration, stack, apply = function(e,ctx,src,tgt), remove=function(e,ctx) }
+  return function(ctx, src, tgt)
+    local entry = {
+      id         = assert(def.id, "status needs id"),
+      until_time = def.duration and (ctx.time.now + def.duration) or nil,
+      stack      = def.stack,
+      extend_by  = def.duration or 0,
+      apply      = function(e) if def.apply then def.apply(e, ctx, src, tgt) end end,
+      remove     = function(e) if def.remove then def.remove(e, ctx) end end,
+    }
+    apply_status(tgt, entry)
+    if ctx and ctx.bus then
+      ctx.bus:emit('OnStatusApplied', { source = src, target = tgt, id = def.id })
+    end
+  end
+end
+
+
 
 -- Extras Siralim-like (engine-backed) – safe stubs you can wire later:
 Effects.resurrect = function(p)
@@ -1771,6 +1811,22 @@ function Items.can_equip(e, item)
   return true
 end
 
+function Items.upgrade(ctx, e, item, spec)
+  -- mutate the item itself
+  item.level = (item.level or 0) + (spec.level_up or 0)
+  for _, m in ipairs(spec.add_mods or {}) do
+    item.mods = item.mods or {}
+    table.insert(item.mods, m)
+  end
+  -- if currently equipped on this entity, re-apply by re-equipping
+  if e and e.equipped and e.equipped[item.slot] == item then
+    ItemSystem.unequip(ctx, e, item.slot)
+    ItemSystem.equip(ctx, e, item)
+  end
+  return item
+end
+
+
 -- === Leveling curve registry ================================================
 Leveling.curves = Leveling.curves or {}
 
@@ -2022,7 +2078,7 @@ Content.Traits = {
 ---------------------------
 -- Items & Actives: ItemSystem (equip/unequip, procs, granted actives)
 ---------------------------
-local ItemSystem = {}
+
 
 -- Internal helper: subscribe to an EventBus event and return an unsubscribe fn.
 --  Usage:
@@ -2099,6 +2155,13 @@ function ItemSystem.equip(ctx, e, item)
       end
     end
   end
+  
+  -- on_equip hook
+  if type(item.on_equip) == "function" then
+    -- allow the hook to return a cleanup function
+    item._cleanup = item.on_equip(ctx, e) or item._cleanup
+  end
+
 
   -- Gear-wide conversions (append to entity’s list and remember the range)
   if item.conversions then
@@ -2129,7 +2192,9 @@ function ItemSystem.equip(ctx, e, item)
         if ctx.debug then
           print(string.format("[DEBUG][ItemSystem] Proc triggered on '%s': %s", item.id or "?", p.trigger or "?"))
         end
-        p.effects(ctx, e, tgt)
+        
+        -- pass ev through:
+        p.effects(ctx, e, tgt, ev)
       elseif ctx.debug then
         print(string.format("[DEBUG][ItemSystem] Proc check failed for '%s' (%s)", item.id or "?", p.trigger or "?"))
       end
@@ -2260,6 +2325,15 @@ function ItemSystem.unequip(ctx, e, slot)
       e.granted_spells[id] = nil
     end
   end
+  
+  -- on_unequip cleanup
+  if type(item._cleanup) == "function" then
+    pcall(item._cleanup, e); item._cleanup = nil
+  end
+  if type(item.on_unequip) == "function" then
+    pcall(item.on_unequip, ctx, e)
+  end
+
 
   -- Clear equip slot and recompute
   e.equipped[slot] = nil
@@ -3814,6 +3888,23 @@ function Demo.run_full()
         }
       }
     }
+  }
+  
+  local RingOfWard = {
+    id='ring_of_ward', slot='ring',
+    on_equip = function(ctx, e)
+      local entry = Effects._entry_of[Effects.grant_barrier { amount = 30, duration = 999999 }](ctx, {exclusive=false})
+      entry.id = "ring_of_ward_barrier"
+      entry.until_time = nil  -- persistent while worn
+      apply_status(e, entry)
+      return function(ent)
+        -- remove when unequipped
+        if ent.statuses and ent.statuses[entry.id] then
+          for i,en in ipairs(ent.statuses[entry.id].entries) do if en.remove then en.remove(ent) end end
+          ent.statuses[entry.id] = nil
+        end
+      end
+    end
   }
 
   print("\n== Equip sequence ==")

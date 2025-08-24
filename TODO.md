@@ -85,6 +85,26 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] system for extracting item effects as runes
 - [ ] how to do skill trees, some skills have a parent they modify, have ranks, class requirements, etc.
 - resistance penetration (overpower), resistance overcap, damage reduction, as well as other stats from chronicon that are missing: https://chatgpt.com/share/68a88471-8f44-800a-b692-63f52924f6ac
+- test:
+```lua
+-- Quick usage examples
+
+-- Item granting fire pen + global DR:
+local CinderCharm = {
+  id='cinder_charm', slot='amulet',
+  mods = {
+    { stat='penetration_fire_pct', add_pct = 20 },
+    { stat='damage_taken_reduction_pct', add_pct = 8 },
+  }
+}
+
+-- Status that raises max cold cap by 15% for 6s:
+Effects.modify_stat { id='ice_skin', name='max_cold_resist_cap_pct', add_pct_add=15, duration=6 }
+
+-- Boss aura with per-type DR:
+Effects.modify_stat { id='boss_hide', name='damage_taken_physical_reduction_pct', add_pct_add=30, duration=10 }
+
+```
 - test BloodMender, RingOfWard
 - test:
 ```lua

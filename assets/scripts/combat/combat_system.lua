@@ -362,6 +362,63 @@ function util.dump_stats(e, ctx, opts)
     end
     if #res > 0 then add("Resist | " .. join(res, "  ")) end
   end
+  
+  -- Penetration (attacker-side)
+  do
+    local ps = {}
+    local allp = G('penetration_all_pct')
+    if nonzero(allp) then ps[#ps+1] = string.format("all=%d%%", math.floor(allp + 0.5)) end
+    for _, t in ipairs(Core.DAMAGE_TYPES) do
+      local v = G('penetration_' .. t .. '_pct')
+      if nonzero(v) then ps[#ps+1] = string.format("%s=%d%%", t, math.floor(v + 0.5)) end
+    end
+    if #ps > 0 then add("Pen    | " .. join(ps, "  ")) end
+  end
+  
+  -- Pierce
+  do
+    local bc = G('block_chance_pierce_pct')
+    local ba = G('block_amount_pierce_pct')
+    local ap = G('armor_penetration_pct')
+    local parts = {}
+    if nonzero(bc) then parts[#parts+1] = ("blk_ch_pierce=%d%%"):format(math.floor(bc+0.5)) end
+    if nonzero(ba) then parts[#parts+1] = ("blk_amt_pierce=%d%%"):format(math.floor(ba+0.5)) end
+    if nonzero(ap) then parts[#parts+1] = ("armor_pen=%d%%"):format(math.floor(ap+0.5)) end
+    if #parts > 0 then add("Pierce | " .. join(parts, "  ")) end
+  end
+
+  -- Resist caps / overcap (defender-side)
+  do
+    local gmax = 100 + (G('max_resist_cap_pct') or 0)
+    local gmin = -100 + (G('min_resist_cap_pct') or 0)
+    local per = {}
+    for _, t in ipairs(Core.DAMAGE_TYPES) do
+      local mx = G('max_' .. t .. '_resist_cap_pct')
+      local mn = G('min_' .. t .. '_resist_cap_pct')
+      if nonzero(mx) then per[#per+1] = string.format("%s+max=%d%%", t, math.floor(mx + 0.5)) end
+      if nonzero(mn) then per[#per+1] = string.format("%s+min=%d%%", t, math.floor(mn + 0.5)) end
+    end
+    if (math.floor(gmax+0.5) ~= 100) or (math.floor(gmin+0.5) ~= -100) or #per > 0 then
+      local head = string.format("gmax=%d%% gmin=%d%%", math.floor(gmax + 0.5), math.floor(gmin + 0.5))
+      if #per > 0 then
+        add("ResCap | " .. head .. "  " .. join(per, "  "))
+      else
+        add("ResCap | " .. head)
+      end
+    end
+  end
+
+  -- Damage reduction (defender-side)
+  do
+    local drs = {}
+    local g = G('damage_taken_reduction_pct')
+    if nonzero(g) then drs[#drs+1] = string.format("all=%d%%", math.floor(g + 0.5)) end
+    for _, t in ipairs(Core.DAMAGE_TYPES) do
+      local v = G('damage_taken_' .. t .. '_reduction_pct')
+      if nonzero(v) then drs[#drs+1] = string.format("%s=%d%%", t, math.floor(v + 0.5)) end
+    end
+    if #drs > 0 then add("DR     | " .. join(drs, "  ")) end
+  end
 
   -- Optional: Active RR (per damage type), compact
   if opts.rr then
@@ -792,6 +849,31 @@ function StatDef.make()
   -- cooldowns and energy costs
   add_basic(defs, 'cooldown_reduction')          -- % reduces cooldowns (non-item-granted)
   add_basic(defs, 'skill_energy_cost_reduction') -- % cheaper
+  
+  -- === Resistance Penetration (attacker) ===
+  add_basic(defs, 'penetration_all_pct')
+  for _, dt in ipairs(DAMAGE_TYPES) do
+    add_basic(defs, 'penetration_' .. dt .. '_pct')
+  end
+
+  -- === Resist Caps / Overcap (defender) ===
+  -- Effective caps resolve to: max = 100 + max_resist_cap_pct + max_<t>_resist_cap_pct
+  --                            min = -100 + min_resist_cap_pct + min_<t>_resist_cap_pct
+  add_basic(defs, 'max_resist_cap_pct')  -- default 0 -> effective 100
+  add_basic(defs, 'min_resist_cap_pct')  -- default 0 -> effective -100
+  for _, dt in ipairs(DAMAGE_TYPES) do
+    add_basic(defs, 'max_' .. dt .. '_resist_cap_pct')
+    add_basic(defs, 'min_' .. dt .. '_resist_cap_pct')
+  end
+
+  -- === Damage Reduction (defender; multiplicative, after resist) ===
+  add_basic(defs, 'damage_taken_reduction_pct') -- global
+  for _, dt in ipairs(DAMAGE_TYPES) do
+    add_basic(defs, 'damage_taken_' .. dt .. '_reduction_pct')
+  end
+
+  -- === OPTIONAL: Armor/Block Pierce (attacker) ===
+  add_basic(defs, 'armor_penetration_pct')
 
 
   return defs, DAMAGE_TYPES
@@ -1530,16 +1612,27 @@ Effects.deal_damage = function(p)
     tgt.timers      = tgt.timers or {}
     local blocked   = false
     local block_amt = 0
+    -- (with pierce):
+    local blk_chance = (tgt.stats:get('block_chance_pct') or 0)
+                       - (src.stats:get('block_chance_pierce_pct') or 0)
+    blk_chance = math.max(0, blk_chance)
 
     if ctx.time:is_ready(tgt.timers, 'block')
-        and math.random() * 100 < tgt.stats:get('block_chance_pct') then
+        and math.random() * 100 < blk_chance then
       blocked    = true
       block_amt  = tgt.stats:get('block_amount')
+
+      -- reduce block amount if the hit is blocked
+      local blk_amt_pierce = (src.stats:get('block_amount_pierce_pct') or 0)
+      if blk_amt_pierce ~= 0 then
+        block_amt = block_amt * math.max(0, 1 - blk_amt_pierce / 100)
+      end
 
       local base = 1.0
       local rec  = base * (1 - tgt.stats:get('block_recovery_reduction_pct') / 100)
       ctx.time:set_cooldown(tgt.timers, 'block', math.max(0.1, rec))
-      dbg("Block triggered: amt=%.1f next_ready=%.2f", block_amt, tgt.timers['block'] or -1)
+      dbg("Block triggered: chance=%.1f%% amt=%.1f next_ready=%.2f",
+        blk_chance, block_amt, tgt.timers['block'] or -1)
     end
 
     -- Aggregate per-type and apply crit --------------------------------------
@@ -1563,33 +1656,58 @@ Effects.deal_damage = function(p)
     local dealt = 0
 
     for t, amt in pairs(sums) do
+      -- Base (defender) resistance and active RR
       local base_res = tgt.stats:get(t .. '_resist_pct')
-
-      -- Collect alive RR entries for this type
       local alive_rr = {}
       if tgt.active_rr and tgt.active_rr[t] then
-        for _, e in ipairs(tgt.active_rr[t]) do
-          if (not e.until_time) or e.until_time > ctx.time.now then
-            alive_rr[#alive_rr + 1] = e
+        for _, e2 in ipairs(tgt.active_rr[t]) do
+          if (not e2.until_time) or e2.until_time > ctx.time.now then
+            alive_rr[#alive_rr + 1] = e2
           end
         end
       end
+      local res_after_rr = RR.apply_all(base_res, alive_rr)
 
-      local res = RR.apply_all(base_res, alive_rr)
-      dbg("Type %s: start=%.1f base_res=%.1f final_res=%.1f | RR: %s",
-        t, amt, base_res, res, _rr_bucket_to_string(alive_rr))
-
-      -- Armor mitigation (physical only)
+      -- Physical armor (before resist); supports attacker armor penetration
       if t == 'physical' then
         local armor = tgt.stats:get('armor')
+        local apen  = (src.stats:get('armor_penetration_pct') or 0)
+        local armor_eff = armor * math.max(0, 1 - apen / 100)
         local abs   = 0.70 * (1 + tgt.stats:get('armor_absorption_bonus_pct') / 100)
-        local mit   = math.min(amt, armor) * abs
+        local mit   = math.min(amt, armor_eff) * abs
         amt         = amt - mit
-        dbg("  Armor: armor=%.1f abs=%.2f mit=%.1f remain=%.1f", armor, abs, mit, amt)
+        dbg("  Armor: armor=%.1f apen=%.1f%% eff=%.1f abs=%.2f mit=%.1f remain=%.1f",
+            armor, apen, armor_eff, abs, mit, amt)
       end
 
-      local after_res   = amt * (1 - res / 100)
-      local after_pct   = after_res * (1 - tgt.stats:get('percent_absorb_pct') / 100)
+      -- Penetration (attacker)
+      local pen_all = (src.stats:get('penetration_all_pct') or 0)
+      local pen_t   = (src.stats:get('penetration_' .. t .. '_pct') or 0)
+      local pen     = pen_all + pen_t
+
+      -- Caps (defender)
+      local max_cap = 100 + (tgt.stats:get('max_resist_cap_pct') or 0)
+                           + (tgt.stats:get('max_' .. t .. '_resist_cap_pct') or 0)
+      local min_cap = -100 + (tgt.stats:get('min_resist_cap_pct') or 0)
+                            + (tgt.stats:get('min_' .. t .. '_resist_cap_pct') or 0)
+
+      local res_after_pen = res_after_rr - pen
+      local res_final     = util.clamp(res_after_pen, min_cap, max_cap)
+
+      dbg("Type %s: start=%.1f base_res=%.1f after_rr=%.1f pen=%.1f caps=[%d,%d] -> final_res=%.1f | RR: %s",
+          t, amt, base_res, res_after_rr, pen, math.floor(max_cap+0.5), math.floor(min_cap+0.5),
+          res_final, _rr_bucket_to_string(alive_rr))
+
+      -- Apply resistance
+      local after_resisted = amt * (1 - res_final / 100)
+
+      -- Per-type & global damage reduction (defender)
+      local dr_t = (tgt.stats:get('damage_taken_' .. t .. '_reduction_pct') or 0)
+      local dr_g = (tgt.stats:get('damage_taken_reduction_pct') or 0)
+      local after_dr = after_resisted * (1 - dr_t / 100) * (1 - dr_g / 100)
+
+      -- Percent absorb -> Block -> Flat absorb
+      local after_pct   = after_dr * (1 - tgt.stats:get('percent_absorb_pct') / 100)
       local after_block = after_pct
 
       if blocked then
@@ -1600,8 +1718,7 @@ Effects.deal_damage = function(p)
       end
 
       local after_flat = math.max(0, after_block - tgt.stats:get('flat_absorb'))
-      dbg("  After absorbs (flat=%0.1f): %s=%0.1f",
-        tgt.stats:get('flat_absorb') or 0, t, after_flat)
+      dbg("  Final after absorbs (flat=%0.1f): %s=%0.1f", tgt.stats:get('flat_absorb') or 0, t, after_flat)
       dealt = dealt + after_flat
     end
 
@@ -1767,6 +1884,19 @@ end
 Combat.new = function(rr, dts)
   return { RR = rr, DAMAGE_TYPES = dts }
 end
+
+function Combat.get_penetration(src, t)
+  return ((src.stats:get('penetration_all_pct') or 0) + (src.stats:get('penetration_'..t..'_pct') or 0))
+end
+
+function Combat.get_caps(def, t)
+  local max_cap = 100 + (def.stats:get('max_resist_cap_pct') or 0)
+                       + (def.stats:get('max_'..t..'_resist_cap_pct') or 0)
+  local min_cap = -100 + (def.stats:get('min_resist_cap_pct') or 0)
+                        + (def.stats:get('min_'..t..'_resist_cap_pct') or 0)
+  return min_cap, max_cap
+end
+
 
 -- ============================================================================
 -- Items (equip gates, minimal)

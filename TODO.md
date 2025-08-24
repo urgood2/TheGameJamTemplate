@@ -84,7 +84,6 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] how to store the necessary charater data in the script component?
 - [ ] system for extracting item effects as runes
 - [ ] how to do skill trees, some skills have a parent they modify, have ranks, class requirements, etc.
-- resistance penetration (overpower), resistance overcap, damage reduction, as well as other stats from chronicon that are missing: https://chatgpt.com/share/68a88471-8f44-800a-b692-63f52924f6ac
 - test:
 ```lua
 -- Quick usage examples

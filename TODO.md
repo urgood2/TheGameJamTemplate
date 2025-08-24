@@ -76,6 +76,14 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
+- [ ] add grim dawn skill deets on items, skill recharge, skill duration, chance of activating, skill radius, percent weapon damage, 
+- [ ] flat damage vs percent damage-reflectede in my engine?
+- [ ] Damage absorb - flat and percent
+- [ ]  plan out how to build a mastery tree and design item tiers
+- [ ] add missing stats from grim dawn, additional EXP, +all skills, movement speed (also how to add and link up new stats), 
+- [ ] how to store the necessary charater data in the script component?
+- [ ] system for extracting item effects as runes
+- [ ] how to do skill trees, some skills have a parent they modify, have ranks, class requirements, etc.
 - resistance penetration (overpower), resistance overcap, damage reduction, as well as other stats from chronicon that are missing: https://chatgpt.com/share/68a88471-8f44-800a-b692-63f52924f6ac
 - test BloodMender, RingOfWard
 - test:
@@ -127,14 +135,9 @@ local ReactiveBalm = {
 
 ```
 - do full pass to add as many descriptive comments/ docs as possible to the codebase
-- the dump stats thing should show current charges, channeling, etc. if any. also, is it printing reason properly?
-- what if I wanted to add specific conditions to a devotion for instance, so heal triggers on hit resolve only when the hit actually did damage, as a percentage of the done damage, etc? basically i have to be able to have access to the information which is relevant.
 - siralim data is here: [folder](<assets/siralim_data>)
 - [ ] extract what I can from siralim: tack on this rule system, then test with actual siralim rules: https://chatgpt.com/share/68a46896-78bc-800a-a14f-73605890a8a3
 - [ ] chronicon data https://github.com/gabriel-dehan/chronicondb-client/tree/main/src/engine/data
-- [ ] add in triggers from various games like siralim, path of exile, grim dawn.
-- [ ] how to spell mutators mesh with the skill build system-based on skill lelve?
-- [ ] current system does not have binary crits, only scaling, constantly applied crits based on OA and DA.
 - [ ] use handleTextInput()
 - [ ] examine current state of input system, does re-binding inputs work, for both keyboard and controller? input rebinding: https://chatgpt.com/share/689718e0-d830-800a-bfdb-446125c87ecd
 - [ ] now make scrolling work for scroll panes, also handle scroll pane focus (knowing which scroll pane should move when scrolling), show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, also handle scroll pane sizing (initial size must be passed in, must be different from the full content size), exclude scroll pane background in the scissoring process, cull rendering so only visible items in the scroll pane are rendered, disable input for culled entities

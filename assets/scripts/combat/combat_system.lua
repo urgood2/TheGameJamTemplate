@@ -3886,6 +3886,7 @@ function Demo.run_full()
   ogre.stats:add_base('block_chance_pct', 30)
   ogre.stats:add_base('block_amount', 60)
   ogre.stats:add_base('block_recovery_reduction_pct', 25)
+  ogre.stats:add_base('damage_taken_reduction_pct', 100)
   ogre.stats:recompute()
 
   ctx.side1 = { hero }

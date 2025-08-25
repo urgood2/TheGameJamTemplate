@@ -76,14 +76,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- [ ] add grim dawn skill deets on items, skill recharge, skill duration, chance of activating, skill radius, percent weapon damage, 
-- [ ] flat damage vs percent damage-reflectede in my engine?
-- [ ] Damage absorb - flat and percent
-- [ ]  plan out how to build a mastery tree and design item tiers
-- [ ] add missing stats from grim dawn, additional EXP, +all skills, movement speed (also how to add and link up new stats), 
-- [ ] how to store the necessary charater data in the script component?
-- [ ] system for extracting item effects as runes
-- [ ] how to do skill trees, some skills have a parent they modify, have ranks, class requirements, etc.
+- [ ] start commenting: https://chatgpt.com/share/68ac4f66-3060-800a-8729-6a7eecda887c
 - test:
 ```lua
 -- Quick usage examples

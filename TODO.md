@@ -76,7 +76,6 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 - [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
 
 ## Things to fix/implement
-- [ ] start commenting: https://chatgpt.com/share/68ac4f66-3060-800a-8729-6a7eecda887c
 - test:
 ```lua
 -- Quick usage examples

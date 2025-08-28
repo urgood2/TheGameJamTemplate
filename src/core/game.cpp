@@ -779,6 +779,10 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
         
+        // try using ldtk
+        
+        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("test_features.ldtk"));
+        
         
 
         // some things I can do:

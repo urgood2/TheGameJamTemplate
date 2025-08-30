@@ -6,7 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## lua exposure & integration
-
+- convert ldtk rendering to layers
 - [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
 - [ ] expose current camera manager & camera custom class to lua
 

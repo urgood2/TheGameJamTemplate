@@ -1675,122 +1675,106 @@ namespace ui
                 state->object_focus_timer.reset();
             }
         }
-        
-        
         // draw input text (IMMEDIATE MODE)
-        if (config->uiType == UITypeEnum::INPUT_TEXT)
-        {
-            // Text source: ui::TextInput on the same entity
-            auto &textInput   = globals::registry.get<ui::TextInput>(entity);
-            const std::string &displayText = textInput.text;  // (optionally mask if you add that feature)
+if (config->uiType == UITypeEnum::INPUT_TEXT) {
+    // Source
+    auto& ti             = globals::registry.get<ui::TextInput>(entity);
+    const std::string& s = ti.text;
 
-            // Reuse same font + knobs you used for TEXT
-            auto &fontData    = localization::getFontData();
-            float scale       = config->scale.value_or(1.0f) * fontData.fontScale * globals::globalUIScaleFactor;
-            float spacing     = config->textSpacing.value_or(fontData.spacing);
-            Color renderColor = BLACK; // FIXME: should be config->color, but black looks better for input boxes
-            bool buttonActive = true; // same convention as above TEXT block
+    // Font & knobs (match TEXT path)
+    auto& fd        = localization::getFontData();
+    const float uiScale   = config->scale.value_or(1.0f) * fd.fontScale * globals::globalUIScaleFactor;
+    const float spacing   = config->textSpacing.value_or(fd.spacing);
+    Color renderColor     = BLACK;
 
-            if (!buttonActive)
-                renderColor = globals::uiTextInactive;
+    // Parallax (match TEXT path)
+    const float rawScale    = config->scale.value_or(1.0f) * fd.fontScale;
+    const float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
+    const float textParallaxSX = node->shadowDisplacement->x * fd.fontLoadedSize * 0.04f * scaleFactor;
+    const float textParallaxSY = node->shadowDisplacement->y * fd.fontLoadedSize * -0.03f * scaleFactor;
 
-            // Shadow logic identical to TEXT (with parallax derived from the node's shadow)
-            float rawScale    = config->scale.value_or(1.0f) * fontData.fontScale;
-            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
-            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
-            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
+    const bool drawShadow = (config->button_UIE && true) ||
+                            (!config->button_UIE && config->shadow && globals::settings.shadowsOn);
 
-            bool drawShadow = globals::settings.shadowsOn;
+    // ---- Vertical centering (unscaled space) --------------------------------
+    // We center the glyph box (cap + descent) inside the element height.
+    // Heuristic metrics; adjust to taste for your font:
+    constexpr float kCap  = 0.72f;  // ~cap height relative to fontSize
+    constexpr float kDesc = 0.22f;  // ~descent relative to fontSize
 
-            // Common translate (like TEXT): position at element origin + layer displacement
-            Vector2 layerDisplacement = { node->layerDisplacement->x, node->layerDisplacement->y };
+    const float fontSize = fd.fontLoadedSize;
+    const float invScale = (uiScale != 0.0f) ? 1.0f / uiScale : 1.0f;
+    const float innerH   = transform->getActualH() * invScale;  // unscaled element height
 
-            // 1) Optional shadow pass
-            if (drawShadow) {
-                layer::PushMatrix();
-                layer::Translate(actualX + textParallaxSX + layerDisplacement.x,
-                                actualY + textParallaxSY + layerDisplacement.y);
+    const float textX = fd.fontRenderOffset.x;
 
-                if (config->verticalText) {
-                    layer::Translate(0, actualH);
-                    layer::Rotate(-PI / 2);
-                }
+    // Center the glyph box: top = baseY - kCap*fontSize, bottom = baseY + kDesc*fontSize
+    // Its vertical center is baseY + (kDesc - kCap)*fontSize/2. We want that at innerH/2.
+    const float baseY = fd.fontRenderOffset.y
+                      + innerH * 0.5f;
+                    //   + (kCap - kDesc) * 0.5f * fontSize;
 
-                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
-                float textX  = fontData.fontRenderOffset.x;
-                float textY  = fontData.fontRenderOffset.y;
+    Vector2 layerDisp = { node->layerDisplacement->x, node->layerDisplacement->y };
 
-                layer::Scale(scale, scale);
-                layer::TextPro(
-                    displayText.c_str(),
-                    fontData.font,
-                    textX, textY,
-                    {0, 0},
-                    0,
-                    fontData.fontLoadedSize,
-                    spacing,
-                    shadowColor
-                );
-                layer::PopMatrix();
-            }
+    // --- 1) Shadow pass (identical style to TEXT)
+    if (drawShadow) {
+        layer::PushMatrix();
+        layer::Translate(transform->getActualX() + textParallaxSX + layerDisp.x,
+                         transform->getActualY() + textParallaxSY + layerDisp.y);
 
-            // 2) Main text pass
-            layer::PushMatrix();
-            layer::Translate(actualX + layerDisplacement.x,
-                            actualY + layerDisplacement.y);
-
-            if (config->verticalText) {
-                layer::Translate(0, actualH);
-                layer::Rotate(-PI / 2);
-            }
-
-            float textX = fontData.fontRenderOffset.x;
-            float textY = fontData.fontRenderOffset.y;
-
-            layer::Scale(scale, scale);
-            layer::TextPro(
-                displayText.c_str(),
-                fontData.font,
-                textX, textY,
-                {0, 0},
-                0,
-                fontData.fontLoadedSize,
-                spacing,
-                renderColor
-            );
-
-            // 3) Blinking caret (only when active/focused)
-            if (textInput.isActive) {
-                // Blink at 1Hz (on 0.5s, off 0.5s)
-                bool blinkOn = fmodf(main_loop::mainLoop.realtimeTimer, 1.0f) < 0.5f;
-                if (blinkOn) {
-                    // Measure the text up to cursorPos at the *unscaled* font size,
-                    // then add the unscaled render offset; we are already under the same scaling.
-                    std::string left = displayText.substr(0, std::min<size_t>(displayText.size(), textInput.cursorPos));
-                    float fontSize   = fontData.fontLoadedSize;
-                    Vector2 lhsSize  = MeasureTextEx(fontData.font, left.c_str(), fontSize, spacing);
-
-                    float caretX      = textX + lhsSize.x;
-                    float caretY      = textY;                 // same baseline as text
-                    float caretWidth  = 2.0f;                  // 2px before scaling
-                    float caretHeight = fontSize * 1.1f;       // little taller than glyphs
-
-                    Color caretColor  = BLACK; // FIXME: should be config->color, but black looks better for input boxes
-                    caretColor.a      = std::max<unsigned char>(caretColor.a, 220);
-
-                    // Draw a thin vertical rectangle as caret (inside current Push/Scale)
-                    layer::RectangleDraw(
-                        caretX,
-                        caretY - fontSize * 0.85f, // shift up to cap height
-                        caretWidth,
-                        caretHeight,
-                        caretColor
-                    );
-                }
-            }
-
-            layer::PopMatrix();
+        if (config->verticalText) {
+            layer::Translate(0, transform->getActualH());
+            layer::Rotate(-PI / 2);
         }
+
+        // In your TEXT path, shadow textX/Y add a parallax term in unscaled coords:
+        const float shadowTextX = textX + (config->verticalText ? textParallaxSY : textParallaxSX)
+                                            * config->scale.value_or(1.0f) * fd.fontScale;
+        const float shadowBaseY = baseY + (config->verticalText ? textParallaxSX : textParallaxSY)
+                                            * config->scale.value_or(1.0f) * fd.fontScale;
+
+        Color shadow = { 0, 0, 0,
+            static_cast<unsigned char>(std::max(20.0f, config->color->a * 0.30f)) };
+
+        layer::Scale(uiScale, uiScale);
+        layer::TextPro(s.c_str(), fd.font, shadowTextX, shadowBaseY, {0,fontSize / 2}, 0, fontSize, spacing, shadow);
+        layer::PopMatrix();
+    }
+
+    // --- 2) Main text pass
+    layer::PushMatrix();
+    layer::Translate(transform->getActualX() + layerDisp.x,
+                     transform->getActualY() + layerDisp.y);
+
+    if (config->verticalText) {
+        layer::Translate(0, transform->getActualH());
+        layer::Rotate(-PI / 2);
+    }
+
+    layer::Scale(uiScale, uiScale);
+    layer::TextPro(s.c_str(), fd.font, textX, baseY, {0,fontSize / 2}, 0, fontSize, spacing, renderColor);
+    layer::RectangleDraw(textX, baseY, 10, 10, WHITE);
+
+    // --- 3) Blinking caret exactly on the same baseline
+    if (ti.isActive) {
+        const bool blinkOn = fmodf(main_loop::mainLoop.realtimeTimer, 1.0f) < 0.5f;
+        if (blinkOn) {
+            const size_t caretPos   = std::min<size_t>(s.size(), ti.cursorPos);
+            const std::string left  = s.substr(0, caretPos);
+            const Vector2 lhsSize   = MeasureTextEx(fd.font, left.c_str(), fontSize, spacing);
+
+            const float caretX      = textX + lhsSize.x;             // same X baseline
+            const float caretTop    = baseY;       // align to cap top
+            const float caretHeight = (kCap + kDesc) * fontSize;     // cover cap..descent
+            const float caretWidth  = 2.0f;                           // unscaled; scales with matrix
+
+            Color caretColor = BLACK;
+            layer::RectangleDraw(caretX, caretTop, caretWidth, caretHeight, caretColor);
+        }
+    }
+
+    layer::PopMatrix();
+}
 
 
         // outline

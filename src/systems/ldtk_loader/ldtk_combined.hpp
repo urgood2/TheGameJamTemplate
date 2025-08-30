@@ -174,75 +174,38 @@ inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccrop
 
 
 
-
 inline void DrawLayer(const std::string& levelName, const std::string& layerName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
     const auto& layer = level.getLayer(layerName);
 
-    const int w = level.size.x;
-    const int h = level.size.y;
+    if (!layer.hasTileset()) return;
 
-    // InitRenderTexture(w, h);
-    // BeginTextureMode(internal_loader::renderTexture);
-    // ClearBackground(BLANK); // transparent, not BLACK
+    const std::string rel  = layer.getTileset().path;
+    const std::string full = internal_loader::assetDirectory.empty() ? rel
+                         : internal_loader::assetDirectory + "/" + rel;
+    auto& cache = internal_loader::tilesetCache;
+    if (!cache.count(full)) cache[full].texture = LoadTexture(full.c_str());
+    const Texture2D& tex = cache[full].texture;
 
-    const auto type = layer.getType();
+    for (const auto& tile : layer.allTiles()) {
+        const auto p  = tile.getPosition();        // includes layer offset
+        const auto tr = tile.getTextureRect();     // tileset rect (positive size)
 
-    // if (type == ldtk::LayerType::IntGrid) {
-        if (layer.hasTileset()) {
-            const std::string rel = layer.getTileset().path;
-            const std::string full = internal_loader::assetDirectory.empty() ? rel
-                                      : internal_loader::assetDirectory + "/" + rel;
-            auto& cache = internal_loader::tilesetCache;
-            if (!cache.count(full)) cache[full].texture = LoadTexture(full.c_str());
-            const Texture2D& tex = cache[full].texture;
+        Vector2 pos = { (float)p.x, (float)p.y };
+        Rectangle src = { (float)tr.x, (float)tr.y, (float)tr.width, (float)tr.height };
 
-            for (const auto& tile : layer.allTiles()) { // ordered for display already
-                const auto p = tile.getPosition();       // already includes layer offset
-                const auto tr = tile.getTextureRect();
+        // Flip by negating source dims ONLY; do NOT move pos.
+        if (tile.flipX) src.width  = -src.width;
+        if (tile.flipY) src.height = -src.height;
 
-                Vector2 pos = { (float)p.x, (float)p.y }; // unscaled to RT
-                Rectangle src = { (float)tr.x, (float)tr.y, (float)tr.width, (float)tr.height };
+        unsigned char a = (unsigned char)std::round(255.f * tile.alpha * layer.getOpacity());
+        Color tint = {255, 255, 255, a};
 
-                // flip handling: negative src dims need positional compensation
-                if (tile.flipX) { src.width = -src.width; pos.x += (float)tr.width; }
-                if (tile.flipY) { src.height = -src.height; pos.y += (float)tr.height; }
-
-                unsigned char a = (unsigned char)std::round(255.f * tile.alpha * layer.getOpacity());
-                Color tint = {255, 255, 255, a};
-
-                DrawTextureRec(tex, src, pos, tint);
-            }
-        }
-    // }
-    // else if (type == ldtk::LayerType::IntGrid) {
-    //     // Simple visualizer: draw colored cells (handy for collisions/flags)
-    //     const int cell = layer.getCellSize();
-    //     const auto gridSize = layer.getGridSize();
-    //     unsigned char la = (unsigned char)std::round(255.f * layer.getOpacity());
-
-    //     for (int y = 0; y < gridSize.y; ++y) {
-    //         for (int x = 0; x < gridSize.x; ++x) {
-    //             const auto& v = layer.getIntGridVal(x, y);
-    //             if (&v == &ldtk::IntGridValue::None) continue;  
-    //             Color c{ v.color.r, v.color.g, v.color.b, la };
-    //             DrawRectangle(x * cell, y * cell, cell, cell, c);
-    //         }
-    //     }
-    // }
-
-    // EndTextureMode();
-
-    // // always present once, scaled
-    // const Rectangle srcRec = { 0, 0,
-    //     (float)internal_loader::renderTexture.texture.width,
-    //     -(float)internal_loader::renderTexture.texture.height };
-    // const Rectangle dstRec = { 0, 0,
-    //     internal_loader::renderTexture.texture.width * scale,
-    //     internal_loader::renderTexture.texture.height * scale };
-    // DrawTexturePro(internal_loader::renderTexture.texture, srcRec, dstRec, {0,0}, 0.0f, WHITE);
+        DrawTextureRec(tex, src, pos, tint);
+    }
 }
+
 inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);

@@ -5,6 +5,7 @@
 
 #include "entt/fwd.hpp"
 
+#include <optional>
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -98,10 +99,25 @@ namespace layer
         Triangle,
         RenderUISliceFromDrawList, // for ui
         RenderUISelfImmediate, // for ui
+        ClearStencilBuffer,
+        BeginStencilMode,
+        BeginStencilMask,
+        EndStencilMode,
+        EndStencilMask,
+        DrawCenteredEllipse,
+        DrawRoundedLine,
+        DrawPolyline,
+        DrawArc,
+        DrawTriangleEquilateral,
+        DrawCenteredFilledRoundedRect,
+        DrawSpriteCentered,
+        DrawSpriteTopLeft,
+        DrawDashedCircle,
+        DrawDashedRoundedRect,
+        DrawDashedLine,
         
         Count // <--- always last
     };
-
 
     // ===========================
     // Draw Command Structs
@@ -201,13 +217,6 @@ namespace layer
 
     struct CmdDrawLine {
         float x1, y1, x2, y2;
-        Color color;
-        float lineWidth = 1.0f;
-    };
-
-    struct CmdDrawDashedLine {
-        float x1, y1, x2, y2;
-        float dashSize, gapSize;
         Color color;
         float lineWidth = 1.0f;
     };
@@ -386,7 +395,114 @@ namespace layer
         Vector2 p1, p2, p3;
         Color color;
     };
-
+    
+    struct CmdBeginStencilMode {
+        bool dummy = false; // Placeholder
+    };
+    
+    struct CmdEndStencilMode {
+        bool dummy = false; // Placeholder
+    };
+    
+    struct CmdClearStencilBuffer {
+        bool dummy = false; // Placeholder
+    };
+    
+    struct CmdBeginStencilMask {
+        bool dummy = false; // Placeholder
+    };
+    
+    struct CmdEndStencilMask {
+        bool dummy = false; // Placeholder
+    };
+    
+    struct CmdDrawCenteredEllipse {
+        float x, y, rx, ry;
+        Color color = WHITE;
+        std::optional<float> lineWidth = std::nullopt; // If set, draw outline with this width; else filled
+    };
+    
+    struct CmdDrawRoundedLine {
+        float x1, y1, x2, y2;
+        Color color = WHITE;
+        float lineWidth = 1.0f;
+    };
+    
+    struct CmdDrawPolyline {
+        std::vector<Vector2> points;
+        Color color = WHITE;
+        float lineWidth = 1.0f;
+    };
+    
+    struct CmdDrawArc {
+        std::string type;
+        float x, y, r, r1, r2;
+        Color color = WHITE;
+        float lineWidth = 1.0f;
+        int segments = 0;
+    };
+    
+    struct CmdDrawTriangleEquilateral {
+        float x, y, w;
+        Color color = WHITE;
+        std::optional<float> lineWidth = std::nullopt; // If set, draw outline with this width; else filled
+    };
+    
+    struct CmdDrawCenteredFilledRoundedRect {
+        float x, y, w, h;
+        std::optional<float> rx = {};
+        std::optional<float> ry = {};
+        Color color = WHITE;
+        std::optional<float> lineWidth = {};
+    };
+    
+    struct CmdDrawSpriteCentered {
+        std::string spriteName;
+        float x, y;
+        std::optional<float> dstW = std::nullopt;
+        std::optional<float> dstH = std::nullopt;
+        Color tint = WHITE;
+    };
+     
+    struct CmdDrawSpriteTopLeft {
+        std::string spriteName;
+        float x, y;
+        std::optional<float> dstW = std::nullopt;
+        std::optional<float> dstH = std::nullopt;
+        Color tint = WHITE;
+    };
+    
+    struct CmdDrawDashedCircle {
+        Vector2 center;
+        float radius;
+        float dashLength;
+        float gapLength;
+        float phase;
+        int segments;
+        float thickness;
+        Color color;
+    };
+    
+    struct CmdDrawDashedRoundedRect {
+        Rectangle rec;
+        float dashLen;
+        float gapLen;
+        float phase;
+        float radius;
+        int arcSteps;
+        float thickness;
+        Color color;
+    };
+    
+    struct CmdDrawDashedLine {
+        Vector2 start;
+        Vector2 end;
+        float dashLength;
+        float gapLength;
+        float phase;
+        float thickness;
+        Color color;
+    };
 
     // ===========================
     // Draw Command Buffer
@@ -472,6 +588,23 @@ namespace layer
     extern void ExecutePolygon(std::shared_ptr<layer::Layer> layer, CmdDrawPolygon* c);
     extern void ExecuteRenderNPatchRect(std::shared_ptr<layer::Layer> layer, CmdRenderNPatchRect* c);
     extern void ExecuteTriangle(std::shared_ptr<layer::Layer> layer, CmdDrawTriangle* c);
+    
+    extern void ExecuteClearStencilBuffer(std::shared_ptr<layer::Layer> layer, CmdClearStencilBuffer* c);
+    extern void ExecuteBeginStencilMode(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMode* c);
+    extern void ExecuteEndStencilMode(std::shared_ptr<layer::Layer> layer, CmdEndStencilMode* c);
+    extern void ExecuteBeginStencilMask(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMask* c);
+    extern void ExecuteEndStencilMask(std::shared_ptr<layer::Layer> layer, CmdEndStencilMask* c);
+    extern void ExecuteDrawCenteredEllipse(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredEllipse* c);
+    extern void ExecuteDrawRoundedLine(std::shared_ptr<layer::Layer> layer, CmdDrawRoundedLine* c);
+    extern void ExecuteDrawPolyline(std::shared_ptr<layer::Layer> layer, CmdDrawPolyline* c);
+    extern void ExecuteDrawArc(std::shared_ptr<layer::Layer> layer, CmdDrawArc* c);
+    extern void ExecuteDrawTriangleEquilateral(std::shared_ptr<layer::Layer> layer, CmdDrawTriangleEquilateral* c);
+    extern void ExecuteDrawCenteredFilledRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredFilledRoundedRect* c);
+    extern void ExecuteDrawSpriteCentered(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteCentered* c);
+    extern void ExecuteDrawSpriteTopLeft(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteTopLeft* c);
+    extern void ExecuteDrawDashedCircle(std::shared_ptr<layer::Layer> layer, CmdDrawDashedCircle* c);
+    extern void ExecuteDrawDashedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawDashedRoundedRect* c);
+    extern void ExecuteDrawDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c);
 
 
     // ===========================

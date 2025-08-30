@@ -7,6 +7,7 @@
 
 #include "systems/ui/ui_data.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
+#include "systems/layer/layer.hpp"
 
 namespace layer
 {
@@ -76,7 +77,7 @@ namespace layer
     }
     
     void ExecuteDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c) {
-        DashedLine(c->x1, c->y1, c->x2, c->y2, c->dashSize, c->gapSize, c->color, c->lineWidth);
+        layer::DrawDashedLine(c->start, c->end, c->dashLength, c->gapLength, c->phase, c->thickness, c->color);
     }
     
     void ExecuteText(std::shared_ptr<layer::Layer> layer, CmdDrawText* c) {
@@ -199,6 +200,56 @@ namespace layer
         Triangle(c->p1, c->p2, c->p3, c->color);
     }
     
+    
+    void ExecuteClearStencilBuffer(std::shared_ptr<layer::Layer> layer, CmdClearStencilBuffer* c) {
+        layer::clearStencilBuffer();
+    }
+    void ExecuteBeginStencilMode(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMode* c) {
+        layer::beginStencil();
+    }
+    void ExecuteEndStencilMode(std::shared_ptr<layer::Layer> layer, CmdEndStencilMode* c) {
+        layer::endStencil();
+    }
+    void ExecuteBeginStencilMask(std::shared_ptr<layer::Layer> layer, CmdBeginStencilMask* c) {
+        layer::beginStencilMask();
+    }
+    void ExecuteEndStencilMask(std::shared_ptr<layer::Layer> layer, CmdEndStencilMask* c) {
+        layer::endStencilMask();
+    }
+    void ExecuteDrawCenteredEllipse(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredEllipse* c) {
+        layer::ellipse(c->x, c->y, c->rx, c->ry, c->color, c->lineWidth);
+    }
+    void ExecuteDrawRoundedLine(std::shared_ptr<layer::Layer> layer, CmdDrawRoundedLine* c) {
+        layer::rounded_line(c->x1, c->y1, c->x2, c->y2, c->color, c->lineWidth);
+    }
+    void ExecuteDrawPolyline(std::shared_ptr<layer::Layer> layer, CmdDrawPolyline* c) {
+        layer::polyline(c->points, c->color, c->lineWidth);
+    }
+    void ExecuteDrawArc(std::shared_ptr<layer::Layer> layer, CmdDrawArc* c) {
+        layer::arc(c->type.c_str(), c->x, c->y, c->r, c->r1, c->r2, c->color, c->lineWidth, c->segments);
+    }
+    void ExecuteDrawTriangleEquilateral(std::shared_ptr<layer::Layer> layer, CmdDrawTriangleEquilateral* c) {
+        layer::triangle_equilateral(c->x, c->y, c->w, c->color, c->lineWidth);
+    }
+    void ExecuteDrawCenteredFilledRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredFilledRoundedRect* c) {
+        layer::rectangle(c->x - c->w / 2, c->y - c->h / 2, c->w, c->h, c->rx, c->ry, c->color, c->lineWidth);
+    }
+    void ExecuteDrawSpriteCentered(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteCentered* c) {
+        layer::DrawSpriteCentered(c->spriteName, c->x, c->y, c->dstW, c->dstH, c->tint);
+    }
+    void ExecuteDrawSpriteTopLeft(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteTopLeft* c) {
+        layer::DrawSpriteTopLeft(c->spriteName, c->x, c->y, c->dstW, c->dstH, c->tint);
+    }
+    void ExecuteDrawDashedCircle(std::shared_ptr<layer::Layer> layer, CmdDrawDashedCircle* c) {
+        layer::DrawDashedCircle({c->center.x, c->center.y}, c->radius, c->dashLength, c->gapLength, c->phase, c->segments, c->thickness, c->color);
+    }
+    void ExecuteDrawDashedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawDashedRoundedRect* c) {
+        layer::DrawDashedRoundedRect(c->rec, c->dashLen, c->gapLen, c->phase, c->radius, c->arcSteps, c->thickness, c->color);
+    }
+    void ExecuteDrawDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c) {
+        layer::DashedLine(c->start.x, c->start.y, c->end.x, c->end.y, c->dashLength, c->gapLength, c->color, c->thickness);
+    }
+    
     // -------------------------------------------------------------------------------------
     // Command Registration Functions
     // -------------------------------------------------------------------------------------
@@ -270,6 +321,23 @@ namespace layer
         RegisterRenderer<CmdRenderRectVerticesOutlineLayer>(DrawCommandType::RenderRectVerticlesOutlineLayer, ExecuteRenderRectVerticesOutlineLayer);
         RegisterRenderer<CmdDrawPolygon>(DrawCommandType::Polygon, ExecutePolygon);
         RegisterRenderer<CmdRenderNPatchRect>(DrawCommandType::RenderNPatchRect, ExecuteRenderNPatchRect);
-        RegisterRenderer<CmdDrawTriangle>(DrawCommandType::Triangle, ExecuteTriangle);
+        RegisterRenderer<CmdDrawTriangle>(DrawCommandType::Triangle, ExecuteTriangle);        
+        RegisterRenderer<CmdClearStencilBuffer>(DrawCommandType::ClearStencilBuffer, ExecuteClearStencilBuffer);
+        RegisterRenderer<CmdBeginStencilMode>(DrawCommandType::BeginStencilMode, ExecuteBeginStencilMode);
+        RegisterRenderer<CmdEndStencilMode>(DrawCommandType::EndStencilMode, ExecuteEndStencilMode);
+        RegisterRenderer<CmdBeginStencilMask>(DrawCommandType::BeginStencilMask, ExecuteBeginStencilMask);
+        RegisterRenderer<CmdEndStencilMask>(DrawCommandType::EndStencilMask, ExecuteEndStencilMask);
+        RegisterRenderer<CmdDrawCenteredEllipse>(DrawCommandType::DrawCenteredEllipse, ExecuteDrawCenteredEllipse);
+        RegisterRenderer<CmdDrawRoundedLine>(DrawCommandType::DrawRoundedLine, ExecuteDrawRoundedLine);
+        RegisterRenderer<CmdDrawPolyline>(DrawCommandType::DrawPolyline, ExecuteDrawPolyline);
+        RegisterRenderer<CmdDrawArc>(DrawCommandType::DrawArc, ExecuteDrawArc);
+        RegisterRenderer<CmdDrawTriangleEquilateral>(DrawCommandType::DrawTriangleEquilateral, ExecuteDrawTriangleEquilateral);
+        RegisterRenderer<CmdDrawCenteredFilledRoundedRect>(DrawCommandType::DrawCenteredFilledRoundedRect, ExecuteDrawCenteredFilledRoundedRect);
+        RegisterRenderer<CmdDrawSpriteCentered>(DrawCommandType::DrawSpriteCentered, ExecuteDrawSpriteCentered);
+        RegisterRenderer<CmdDrawSpriteTopLeft>(DrawCommandType::DrawSpriteTopLeft, ExecuteDrawSpriteTopLeft);
+        RegisterRenderer<CmdDrawDashedCircle>(DrawCommandType::DrawDashedCircle, ExecuteDrawDashedCircle);
+        RegisterRenderer<CmdDrawDashedRoundedRect>(DrawCommandType::DrawDashedRoundedRect, ExecuteDrawDashedRoundedRect);
+        RegisterRenderer<CmdDrawDashedLine>(DrawCommandType::DrawDashedLine, ExecuteDrawDashedLine);
+
     }
 }

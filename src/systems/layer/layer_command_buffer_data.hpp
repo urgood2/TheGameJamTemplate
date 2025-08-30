@@ -2,6 +2,8 @@
 
 #include "util/common_headers.hpp"
 
+
+enum class ArcType { Pie, Open, Closed };
 namespace ui
 {
     // used for ordering ui elements in the draw list

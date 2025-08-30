@@ -1002,676 +1002,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
     
     }
     
-    // Draws an animated dashed line between 'start' and 'end'.
-// 'dashLength' and 'gapLength' define the pattern in world units.
-// 'phase' shifts the pattern along the line (advance it by phase units).
-// 'thickness' is the line width.
-// 'color' is the line color.
-auto DrawDashedLine(const Vector2 &start,
-                    const Vector2 &end,
-                    float dashLength,
-                    float gapLength,
-                    float phase,
-                    float thickness,
-                    Color color) -> void
-{
-    const float dx = end.x - start.x;
-    const float dy = end.y - start.y;
-    const float length = std::sqrt(dx*dx + dy*dy);
-    if (length <= 0.0f) return;
-
-    // Normalize direction
-    const float dirX = dx / length;
-    const float dirY = dy / length;
-
-    const float pattern = dashLength + gapLength;
-    phase = std::fmod(phase, pattern);
-
-    // Start at -phase so we shift the dashes forward
-    float pos = -phase;
-    while (pos < length)
-    {
-        float segStart = (pos < 0) ? 0 : pos;
-        float segEnd   = (pos + dashLength > length) ? length : pos + dashLength;
-
-        if (segEnd > 0.0f)
-        {
-            Vector2 p1 = { start.x + dirX * segStart,
-                           start.y + dirY * segStart };
-            Vector2 p2 = { start.x + dirX * segEnd,
-                           start.y + dirY * segEnd };
-            DrawLineEx(p1, p2, thickness, color);
-        }
-        pos += pattern;
-    }
-}
-
-static constexpr float EPSILON_SEAM = 1e-4f;   
-// Draw a dashed rectangle (optionally rounded).
-// rec        : The rectangle area.
-// dashLength : Length of each dash (in pixels).
-// gapLength  : Length of each gap between dashes.
-// phase      : Shift along the perimeter (in pixels).
-// radius     : Corner radius. If <= 0, corners are sharp.
-// segments   : Resolution for approximating curved dashes (full-circle subdivision).
-// thickness  : Line thickness.
-// color      : Line color.
-
-void DrawDashedPolylineLoop(const std::vector<Vector2>& pts,
-                            const std::vector<float>& cum,
-                            float dashLen,
-                            float gapLen,
-                            float phase,
-                            float thickness,
-                            Color color)
-{
-    float total = cum.back();
-    float pattern = dashLen + gapLen;
-
-    // normalize phase into [0,pattern)
-    phase = std::fmod(phase, pattern);
-    if (phase < 0) phase += pattern;
-
-    auto EvalPos = [&](float dist) {
-        // wrap into [0,total)
-        dist = std::fmod(dist, total);
-        if (dist < 0) dist += total;
-        // binary-search segment
-        auto it = std::upper_bound(cum.begin(), cum.end(), dist);
-        int idx = std::clamp(int(it - cum.begin()) - 1, 0, (int)pts.size()-1);
-        float local = (dist - cum[idx]) / (cum[idx+1] - cum[idx]);
-        Vector2 A = pts[idx];
-        Vector2 B = pts[ (idx+1) % pts.size() ];
-        return Vector2{ A.x + (B.x-A.x)*local,
-                        A.y + (B.y-A.y)*local };
-    };
-
-    // step the dash window
-    for (float t = -phase; t < total; t += pattern) {
-        float start = t;
-        float end   = t + dashLen;
-
-        if (end <= total) {
-            Vector2 P0 = EvalPos(start), P1 = EvalPos(end);
-            DrawLineEx(P0, P1, thickness, color);
-        } else {
-            // two-part dash: tail + head
-            Vector2 P0 = EvalPos(start);
-            Vector2 Pmid = EvalPos(total);
-            DrawLineEx(P0, Pmid, thickness, color);
-            Vector2 P1 = EvalPos(end);
-            Vector2 PheadStart = EvalPos(0.0f);
-            DrawLineEx(PheadStart, P1, thickness, color);
-        }
-    }
-}
-
-static std::vector<Vector2> BuildPerimeter(const Rectangle& rec, float radius, int arcSteps) {
-    std::vector<Vector2> pts;
-    pts.reserve(4*arcSteps + 8);
-
-    float x = rec.x, y = rec.y, w = rec.width, h = rec.height;
-    float R = std::clamp(radius, 0.0f, std::min(w,h)*0.5f);
-
-    // 1. Top edge
-    pts.push_back({ x+R,       y });
-    pts.push_back({ x+w-R,     y });
-
-    // 2. Top-right quarter-arc (270°→360°), EXCLUDE both end-points
-    for (int i = 1; i < arcSteps; ++i) {
-        float a = 1.5f*PI + (PI/2)*(i/(float)arcSteps);
-        pts.push_back({
-            x + w - R + std::cos(a)*R,
-            y +     R + std::sin(a)*R
-        });
-    }
-
-    // 3. Right edge
-    pts.push_back({ x+w,       y+R });
-    pts.push_back({ x+w,       y+h-R });
-
-    // 4. Bottom-right quarter-arc (0°→90°)
-    for (int i = 1; i < arcSteps; ++i) {
-        float a = 0.0f     + (PI/2)*(i/(float)arcSteps);
-        pts.push_back({
-            x + w - R + std::cos(a)*R,
-            y + h - R + std::sin(a)*R
-        });
-    }
-
-    // 5. Bottom edge
-    pts.push_back({ x+w-R,     y+h });
-    pts.push_back({ x+R,       y+h });
-
-    // 6. Bottom-left quarter-arc (90°→180°)
-    for (int i = 1; i < arcSteps; ++i) {
-        float a = 0.5f*PI + (PI/2)*(i/(float)arcSteps);
-        pts.push_back({
-            x +     R + std::cos(a)*R,
-            y + h - R + std::sin(a)*R
-        });
-    }
-
-    // 7. Left edge
-    pts.push_back({ x,         y+h-R });
-    pts.push_back({ x,         y+R });
-
-    // 8. Top-left quarter-arc (180°→270°)
-    for (int i = 1; i < arcSteps; ++i) {
-        float a = PI      + (PI/2)*(i/(float)arcSteps);
-        pts.push_back({
-            x +     R + std::cos(a)*R,
-            y +     R + std::sin(a)*R
-        });
-    }
-
-    return pts;
-}
-
-static std::vector<float> BuildCumLengths(const std::vector<Vector2>& pts) {
-    int m = (int)pts.size();
-    std::vector<float> cum(m+1, 0.0f);
-    for (int i = 0; i < m; ++i) {
-        float dx = pts[i+1 == m ? 0 : i+1].x - pts[i].x;
-        float dy = pts[i+1 == m ? 0 : i+1].y - pts[i].y;
-        cum[i+1] = cum[i] + std::hypot(dx, dy);
-    }
-    return cum;
-}
-
-void DrawDashedRoundedRect(const Rectangle& rec,
-                           float dashLen,
-                           float gapLen,
-                           float phase,
-                           float radius,
-                           int arcSteps,
-                           float thickness,
-                           Color color)
-{
-    static std::vector<Vector2> perimeter;
-    static std::vector<float> cumLen;
-
-    // Rebuild only if your rec/radius/arcSteps change:
-    perimeter = BuildPerimeter(rec, radius, arcSteps);
-    cumLen    = BuildCumLengths(perimeter);
-
-    DrawDashedPolylineLoop(perimeter, cumLen,
-                           dashLen, gapLen, phase,
-                           thickness, color);
-}
-
-
-// Draws an animated dashed circle centered at 'center' with radius 'radius'.
-// 'dashLength' and 'gapLength' define the pattern along the circumference.
-// 'phase' shifts the pattern around the circle (advance by phase units).
-// 'segments' is the resolution for approximating each dash arc.
-// 'thickness' is the line width, 'color' is the circle color.
-auto DrawDashedCircle(const Vector2 &center,
-                      float radius,
-                      float dashLength,
-                      float gapLength,
-                      float phase,
-                      int segments,
-                      float thickness,
-                      Color color) -> void
-{
-    // circumference-based pattern
-    const float pattern      = dashLength + gapLength;
-    // clamp phase to [0, pattern)
-    phase = std::fmod(phase, pattern);
-    if (phase < 0) phase += pattern;
-
-    // angles in radians
-    const float dashAng  = dashLength / radius;
-    const float gapAng   = gapLength  / radius;
-    const float phaseAng = phase      / radius;
-
-    // we'll do two sweeps: main, then wrapped
-    auto drawSweep = [&](float startTheta, float endTheta)
-    {
-        float theta = startTheta;
-        while (theta < endTheta)
-        {
-            float segStart = std::max(theta, startTheta);
-            float segEnd   = std::min(theta + dashAng, endTheta);
-            if (segEnd > segStart)
-            {
-                // approximate arc by subdividing proportional to full-circle segments
-                int arcSegs = std::max(1,
-                    (int)std::ceil((segEnd - segStart) / (2.0f * PI) * segments));
-                for (int i = 0; i < arcSegs; ++i)
-                {
-                    float t1 = segStart + (segEnd - segStart) * i / (float)arcSegs;
-                    float t2 = segStart + (segEnd - segStart) * (i + 1) / (float)arcSegs;
-                    Vector2 p1 = { center.x + std::cos(t1) * radius,
-                                   center.y + std::sin(t1) * radius };
-                    Vector2 p2 = { center.x + std::cos(t2) * radius,
-                                   center.y + std::sin(t2) * radius };
-                    DrawLineEx(p1, p2, thickness, color);
-                }
-            }
-            theta += dashAng + gapAng;
-        }
-    };
-
-    // Primary arc from -phaseAng to (2π - phaseAng)
-    drawSweep(-phaseAng, 2 * PI - phaseAng);
-
-    // Wrapped arc: shift by +2π so any dash spilling over the top is drawn
-    drawSweep(2 * PI - phaseAng, 2 * (2 * PI) - phaseAng);
-}
-
-// -- new shape calls
-inline float rad2deg(float r) { return r * 180.0f / PI; }
-
-// Pick a reasonable default tessellation for arcs/rings based on radius.
-// Raylib wants an explicit segment count for DrawRing/DrawCircleSector.
-inline int autoSegments(float radius) {
-    // ~ 1 segment per 6 px of circumference, clamped.
-    int seg = std::max(12, (int)std::round((2.0f * PI * radius) / 6.0f));
-    return std::min(seg, 256);
-}
-
-// Convenience: default color when user doesn't supply one (mirrors LÖVE "state")
-// We just pick WHITE; Raylib doesn't track a global draw color.
-inline Color defaultColor() { return WHITE; }
-
-// -----------------------------------------------------------------------------
-// Arc types (LÖVE has "pie", "open", "closed")
-// -----------------------------------------------------------------------------
-enum class ArcType { Pie, Open, Closed };
-
-inline ArcType ArcTypeFromString(const char* s) {
-    if (!s) return ArcType::Open;
-    if (std::strcmp(s, "pie") == 0)    return ArcType::Pie;
-    if (std::strcmp(s, "closed") == 0) return ArcType::Closed;
-    // LÖVE also uses "open"
-    return ArcType::Open;
-}
-
-// -----------------------------------------------------------------------------
-// Rectangle centered at (x,y). Optional rounded corners.
-// rx, ry are pixel radii in LÖVE; Raylib only supports a single roundness.
-// We map to roundness = min(rx,ry)/min(w,h). Different rx/ry are approximated.
-// -----------------------------------------------------------------------------
-inline void rectangle(float x, float y, float w, float h,
-                      std::optional<float> rx = {},
-                      std::optional<float> ry = {},
-                      std::optional<Color> color = {},
-                      std::optional<float> lineWidth = {}) {
-    Rectangle rec{ x - w*0.5f, y - h*0.5f, w, h };
-
-    const bool doStroke = lineWidth.has_value();
-    const bool doFill   = color.has_value() && !doStroke;
-    Color C = color.value_or(defaultColor());
-
-    if (rx.has_value() || ry.has_value()) {
-        // Raylib uses [0..1] roundness proportion of min(width,height).
-        float px = rx.value_or(0.0f);
-        float py = ry.value_or(px);
-        float pxMin = std::max(0.0f, std::min(px, py));
-        float roundness = (std::min(w, h) <= 0) ? 0.0f : std::clamp(pxMin / std::min(w, h), 0.0f, 1.0f);
-        int segments = 12 + (int)std::round(8.0f * roundness);
-
-        if (doStroke) {
-            DrawRectangleRoundedLinesEx(rec, roundness, segments, std::max(1.0f, lineWidth.value()), C);
-        } else {
-            DrawRectangleRounded(rec, roundness, segments, C);
-        }
-        return;
-    }
-
-    if (doStroke) {
-        DrawRectangleLinesEx(rec, std::max(1.0f, lineWidth.value()), C);
-    } else if (doFill) {
-        DrawRectangleRec(rec, C);
-    } else {
-        DrawRectangleLines((int)rec.x, (int)rec.y, (int)rec.width, (int)rec.height, C);
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Isosceles triangle pointing right (angle 0), centered at (x,y), size w (height across) and h (length).
-// -----------------------------------------------------------------------------
-inline void triangle(float x, float y, float w, float h,
-                     std::optional<Color> color = {},
-                     std::optional<float> lineWidth = {}) {
-    Vector2 p1{ x + h*0.5f, y };
-    Vector2 p2{ x - h*0.5f, y - w*0.5f };
-    Vector2 p3{ x - h*0.5f, y + w*0.5f };
-
-    Color C = color.value_or(defaultColor());
-    if (lineWidth.has_value()) {
-        float t = std::max(1.0f, lineWidth.value());
-        DrawLineEx(p1, p2, t, C);
-        DrawLineEx(p2, p3, t, C);
-        DrawLineEx(p3, p1, t, C);
-    } else if (color.has_value()) {
-        DrawTriangle(p1, p2, p3, C);
-    } else {
-        DrawTriangleLines(p1, p2, p3, C);
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Equilateral triangle of width w, centered at (x,y), pointing right.
-// -----------------------------------------------------------------------------
-inline void triangle_equilateral(float x, float y, float w,
-                                 std::optional<Color> color = {},
-                                 std::optional<float> lineWidth = {}) {
-    float h = std::sqrt(w*w - (w*0.5f)*(w*0.5f)); // = w*sqrt(3)/2
-    triangle(x, y, w, h, color, lineWidth);
-}
-
-// -----------------------------------------------------------------------------
-// Circle at (x,y) radius r
-// - fill: DrawCircleV
-// - 1px:  DrawCircleLines
-// - thick stroke: DrawRing with inner/outer radii
-// -----------------------------------------------------------------------------
-inline void circle(float x, float y, float r,
-                   std::optional<Color> color = {},
-                   std::optional<float> lineWidth = {}) {
-    Color C = color.value_or(defaultColor());
-    Vector2 c{ x, y };
-
-    if (lineWidth.has_value()) {
-        float t = std::max(1.0f, lineWidth.value());
-        float inner = std::max(0.0f, r - t*0.5f);
-        float outer = r + t*0.5f;
-        DrawRing(c, inner, outer, 0.0f, 360.0f, autoSegments(r), C);
-    } else if (color.has_value()) {
-        DrawCircleV(c, r, C);
-    } else {
-        DrawCircleLines((int)x, (int)y, r, C);
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Arc: angles r1..r2 in RADIANS.
-//  - Pie (filled wedge): DrawCircleSector
-//  - Open (stroked arc only): DrawRing with small thickness or provided lineWidth
-//  - Closed (stroked arc + chord): emulate with lines on ends + arc ring
-// -----------------------------------------------------------------------------
-inline void arc(ArcType type, float x, float y, float r, float r1, float r2,
-                std::optional<Color> color = {},
-                std::optional<float> lineWidth = {},
-                int segments = 0) {
-    Color C = color.value_or(defaultColor());
-    Vector2 c{ x, y };
-    float a1 = rad2deg(r1);
-    float a2 = rad2deg(r2);
-    if (a2 < a1) std::swap(a1, a2);
-
-    int seg = (segments > 0) ? segments : autoSegments(r);
-
-    if (!lineWidth.has_value() && color.has_value() && type == ArcType::Pie) {
-        DrawCircleSector(c, r, a1, a2, seg, C);
-        return;
-    }
-
-    // Stroke / open arc is best with a ring band
-    float t = std::max(1.0f, lineWidth.value_or(1.0f));
-    float inner = std::max(0.0f, r - t*0.5f);
-    float outer = r + t*0.5f;
-    DrawRing(c, inner, outer, a1, a2, seg, C);
-
-    if (type == ArcType::Closed && !lineWidth.has_value()) {
-        // If someone asked for "fill+closed" (rare in LÖVE), emulate a chord fill:
-        // simple approach: draw two skinny triangles to the center; keep it simple.
-        // (Keeping this minimal per your "use built-ins" request.)
-        DrawLineEx(c, Vector2{ x + r*std::cos(r1), y + r*std::sin(r1) }, 1.0f, C);
-        DrawLineEx(c, Vector2{ x + r*std::cos(r2), y + r*std::sin(r2) }, 1.0f, C);
-    }
-}
-
-// Convenience overload matching your LÖVE signature where arctype is a string.
-inline void arc(const char* arctype, float x, float y, float r, float r1, float r2,
-                std::optional<Color> color = {},
-                std::optional<float> lineWidth = {},
-                int segments = 0) {
-    arc(ArcTypeFromString(arctype), x, y, r, r1, r2, color, lineWidth, segments);
-}
-
-// -----------------------------------------------------------------------------
-// Polygon: vertices in order. For fill, assumes convex (or star-shaped) for DrawTriangleFan.
-// Stroke uses DrawLineEx per edge; closed polygon.
-// -----------------------------------------------------------------------------
-inline void polygon(const std::vector<Vector2>& vertices,
-                    std::optional<Color> color = {},
-                    std::optional<float> lineWidth = {}) {
-    if (vertices.size() < 2) return;
-    Color C = color.value_or(defaultColor());
-
-    if (lineWidth.has_value()) {
-        float t = std::max(1.0f, lineWidth.value());
-        for (size_t i = 0; i < vertices.size(); ++i) {
-            const Vector2& a = vertices[i];
-            const Vector2& b = vertices[(i + 1) % vertices.size()];
-            DrawLineEx(a, b, t, C);
-        }
-    } else if (color.has_value()) {
-        // Simple convex fill path: triangle fan from v0
-        rlBegin(RL_TRIANGLES);
-        rlColor4ub(C.r, C.g, C.b, C.a);
-        const Vector2& v0 = vertices[0];
-        for (size_t i = 1; i + 1 < vertices.size(); ++i) {
-            const Vector2& v1 = vertices[i];
-            const Vector2& v2 = vertices[i + 1];
-            rlVertex2f(v0.x, v0.y);
-            rlVertex2f(v1.x, v1.y);
-            rlVertex2f(v2.x, v2.y);
-        }
-        rlEnd();
-    } else {
-        for (size_t i = 0; i < vertices.size(); ++i) {
-            const Vector2& a = vertices[i];
-            const Vector2& b = vertices[(i + 1) % vertices.size()];
-            DrawLineV(a, b, C);
-        }
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Line: (x1,y1)-(x2,y2)
-// -----------------------------------------------------------------------------
-inline void line(float x1, float y1, float x2, float y2,
-                 std::optional<Color> color = {},
-                 std::optional<float> lineWidth = {}) {
-    Color C = color.value_or(defaultColor());
-    if (lineWidth.has_value()) {
-        DrawLineEx(Vector2{ x1,y1 }, Vector2{ x2,y2 }, std::max(1.0f, lineWidth.value()), C);
-    } else {
-        DrawLine((int)x1, (int)y1, (int)x2, (int)y2, C);
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Polyline: draw connected segments (open path).
-// -----------------------------------------------------------------------------
-inline void polyline(const std::vector<Vector2>& points,
-                     std::optional<Color> color = {},
-                     std::optional<float> lineWidth = {}) {
-    if (points.size() < 2) return;
-    Color C = color.value_or(defaultColor());
-    float t = std::max(1.0f, lineWidth.value_or(1.0f));
-    for (size_t i = 0; i + 1 < points.size(); ++i) {
-        DrawLineEx(points[i], points[i + 1], t, C);
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Rounded line caps: DrawLineEx + two endpoint circles for perfect round caps.
-// -----------------------------------------------------------------------------
-inline void rounded_line(float x1, float y1, float x2, float y2,
-                         std::optional<Color> color = {},
-                         std::optional<float> lineWidth = {}) {
-    Color C = color.value_or(defaultColor());
-    float t = std::max(1.0f, lineWidth.value_or(1.0f));
-    Vector2 a{ x1,y1 }, b{ x2,y2 };
-    DrawLineEx(a, b, t, C);
-    DrawCircleV(a, t*0.5f, C);
-    DrawCircleV(b, t*0.5f, C);
-}
-
-// -----------------------------------------------------------------------------
-// Ellipse centered at (x,y) with radii rx, ry.
-// - fill: DrawEllipse
-// - 1px stroke: DrawEllipseLines
-// - thick stroke: emulate with scaled ring (rlScale), keeping it simple.
-// -----------------------------------------------------------------------------
-inline void ellipse(float x, float y, float rx, float ry,
-                    std::optional<Color> color = {},
-                    std::optional<float> lineWidth = {}) {
-    Color C = color.value_or(defaultColor());
-    if (lineWidth.has_value()) {
-        float t = std::max(1.0f, lineWidth.value());
-        // Draw a unit circle ring at origin, scale to rx/ry, then translate.
-        // This keeps to built-ins (DrawRing) and avoids manual tessellation.
-        rlPushMatrix();
-        rlTranslatef(x, y, 0.0f);
-        rlScalef(1.0f, ry / rx, 1.0f); // scale Y so a circle of radius rx becomes ellipse rx,ry
-        float inner = std::max(0.0f, rx - t*0.5f);
-        float outer = rx + t*0.5f;
-        DrawRing(Vector2{0,0}, inner, outer, 0.0f, 360.0f, autoSegments(rx), C);
-        rlPopMatrix();
-    } else if (color.has_value()) {
-        DrawEllipse((int)x, (int)y, (int)rx, (int)ry, C);
-    } else {
-        DrawEllipseLines((int)x, (int)y, (int)rx, (int)ry, C);
-    }
-}
-
-
-// -- immediate sprite render
-auto DrawSpriteTopLeft(const std::string& spriteName,
-                       float x, float y,
-                       std::optional<float> dstW = std::nullopt,
-                       std::optional<float> dstH = std::nullopt,
-                       Color tint = WHITE) -> void
-{
-    // Resolve atlas frame + texture
-    const auto spriteId = uuid::add(spriteName);
-    const auto& sfd = init::getSpriteFrame(spriteId); // expects .frame and .atlasUUID
-
-    auto it = globals::textureAtlasMap.find(sfd.atlasUUID);
-    if (it == globals::textureAtlasMap.end()) {
-        // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'", spriteName.c_str());
-        return;
-    }
-
-    Texture2D* tex = &it->second;
-    const Rectangle src = sfd.frame;
-
-    // Destination size (native if not provided). Keep aspect if only one is set.
-    float w = dstW.value_or(src.width);
-    float h = dstH.value_or(src.height);
-    if (dstW && !dstH) {
-        h = w * (src.height / src.width);
-    } else if (dstH && !dstW) {
-        w = h * (src.width / src.height);
-    }
-
-    // Top-left anchored destination rect
-    const Rectangle dst = { x, y, w, h };
-    const Vector2   origin = { 0.0f, 0.0f };
-
-    DrawTexturePro(*tex, src, dst, origin, 0.0f, tint);
-}
-
-// Draw the sprite named `spriteName` centered at (x,y).
-// - If both dstW and dstH are unset, draws at native (frame) size.
-// - If only one is set, preserves aspect ratio to compute the other.
-// - `tint` tints the sprite (WHITE = unchanged).
-auto DrawSpriteCentered(const std::string& spriteName,
-                        float x, float y,
-                        std::optional<float> dstW = std::nullopt,
-                        std::optional<float> dstH = std::nullopt,
-                        Color tint = WHITE) -> void
-{
-    // Resolve atlas frame + texture
-    const auto spriteId = uuid::add(spriteName);
-    const auto &sfd = init::getSpriteFrame(spriteId); // expect: has .frame (Rectangle) and .atlasUUID
-
-    auto it = globals::textureAtlasMap.find(sfd.atlasUUID);
-    if (it == globals::textureAtlasMap.end()) {
-        // TODO: replace with your logging/error path
-        // TraceLog(LOG_WARNING, "Atlas texture not found for sprite '%s'", spriteName.c_str());
-        return;
-    }
-
-    Texture2D *tex = &it->second;
-    const Rectangle src = sfd.frame; // sub-rect in the atlas
-
-    // Determine destination size
-    float w = dstW.value_or(src.width);
-    float h = dstH.value_or(src.height);
-    if (dstW && !dstH) {                 // width forced, keep aspect
-        h = w * (src.height / src.width);
-    } else if (dstH && !dstW) {          // height forced, keep aspect
-        w = h * (src.width / src.height);
-    }
-
-    // Centered destination rect
-    const Rectangle dst = { x - 0.5f * w, y - 0.5f * h, w, h };
-
-    // No rotation; origin is top-left of dst
-    const Vector2 origin = { 0.0f, 0.0f };
-    DrawTexturePro(*tex, src, dst, origin, 0.0f, tint);
-}
-
-
-
-#include "rlgl.h"
-#include "external/glad.h"
-
-// Stencil masks
-
-void clearStencilBuffer()
-{
-    rlDrawRenderBatchActive();
-    glStencilMask(0xFF);      // make sure all bits can be cleared
-    glClearStencil(0);        // the value they’ll be cleared to
-    glClear(GL_STENCIL_BUFFER_BIT);
-}
-
-void beginStencil()
-{
-    rlDrawRenderBatchActive();
-    glEnable(GL_STENCIL_TEST);
-
-    // Clear all existing stencil bits to zero, and allow writing to all bits:
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glStencilMask(0xFF);
-}
-
-void beginStencilMask()
-{
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glStencilFunc(GL_ALWAYS, 1, 0xFF);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-}
-
-void endStencilMask()
-{
-    rlDrawRenderBatchActive();
-    // Now only draw where stencil == 1, and never change the stencil buffer:
-    glStencilFunc(GL_EQUAL, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-    // Stop writing to stencil bits
-    glStencilMask(0x00);
-
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-}
-
-void endStencil()
-{
-	rlDrawRenderBatchActive();
-	glDisable(GL_STENCIL_TEST);
-}
-
-
 
     auto draw(float dt) -> void
     {
@@ -1903,6 +1233,199 @@ void endStencil()
             ldtk_loader::DrawAllLayers(sprites, "Your_typical_2D_platformer");
             // ldtk_loader::DrawAllLayers("Your_typical_2D_platformer");
         }
+        
+        {
+            // ZoneScopedN("testing various draws");
+            
+            
+            // --testing stencil 
+            // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = visualX + visualW * 0.5 - shadowDisplacementX, y = visualY + visualH * 0.5 + shadowDisplacementY](auto *cmd) {
+            //         cmd->x = x;
+            //         cmd->y = y;
+            //     }, 0, drawCommandSpace);
+            // clearStencilBuffer(); // clear the stencil buffer
+            layer::QueueCommand<layer::CmdClearStencilBuffer>(sprites, [](auto* cmd) {
+            }, 0, layer::DrawCommandSpace::World); // clear the stencil buffer
+            // beginStencil();
+            layer::QueueCommand<layer::CmdBeginStencilMode>(sprites, [](auto* cmd) {
+            }, 0, layer::DrawCommandSpace::World); // begin stencil mode
+            // beginStencilMask();
+            layer::QueueCommand<layer::CmdBeginStencilMask>(sprites, [](auto* cmd) {
+            }, 0, layer::DrawCommandSpace::World); // begin stencil mask
+
+            
+            // endStencilMask();
+            layer::QueueCommand<layer::CmdEndStencilMask>(sprites, [](auto* cmd) {
+            }, 0, layer::DrawCommandSpace::World); // end stencil mask
+            
+            
+            // endStencil();
+            layer::QueueCommand<layer::CmdEndStencilMode>(sprites, [](auto* cmd) {
+            }, 0, layer::DrawCommandSpace::World); // end stencil mode
+            
+            
+            
+            
+            static float phase = 0;
+            phase += dt * 10.0f; // advance phase for dashes
+            // -- testing --
+            // DrawDashedCircle({ 100, 100 }, 50, 10, 5, phase, 32, 2, GREEN);
+            layer::QueueCommand<layer::CmdDrawDashedCircle>(sprites, [](auto* cmd) {
+                cmd->center = { 100, 100 };
+                cmd->radius = 50;
+                cmd->dashLength = 10;
+                cmd->gapLength = 5;
+                cmd->phase = phase;
+                cmd->segments = 32;
+                cmd->thickness = 2;
+                cmd->color = GREEN;
+            }, 0, layer::DrawCommandSpace::World);
+            // DrawDashedLine({ 200, 200 }, { 300, 300 }, 10, 5, phase, 2, GREEN);
+            layer::QueueCommand<layer::CmdDrawDashedLine>(sprites, [](auto* cmd) {
+                cmd->start = { 200, 200 };
+                cmd->end = { 300, 300 };
+                cmd->dashLength = 10;
+                cmd->gapLength = 5;
+                cmd->phase = phase;
+                cmd->thickness = 2;
+                cmd->color = GREEN;
+            }, 0, layer::DrawCommandSpace::World);
+            // DrawDashedRoundedRect(
+            //     { 400, 400, 200, 100 }, // rectangle
+            //     10,                   // dash length
+            //     5,                    // gap length
+            //     phase,                // phase
+            //     20,                   // radius
+            //     16,                   // arc steps
+            //     2,                    // thickness
+            //     BLUE                 // color
+            // );
+            layer::QueueCommand<layer::CmdDrawDashedRoundedRect>(sprites, [](auto* cmd) {
+                cmd->rect = { 400, 400, 200, 100 };
+                cmd->dashLength = 10;
+                cmd->gapLength = 5;
+                cmd->phase = phase;
+                cmd->radius = 20;
+                cmd->arcSteps = 16;
+                cmd->thickness = 2;
+                cmd->color = BLUE;
+            }, 0, layer::DrawCommandSpace::World);
+            // ellipse(
+            //     600, 600, 100, 50, // center x, y, radius x, radius y
+            //     std::nullopt,      // no color (default to WHITE)
+            //     std::nullopt       // no line width (default to 1px)
+            // );
+            layer::QueueCommand<layer::CmdDrawCenteredEllipse>(sprites, [](auto* cmd) {
+                cmd->center = { 600, 600 };
+                cmd->radiusX = 100;
+                cmd->radiusY = 50;
+                cmd->color = WHITE;
+                cmd->thickness = 1;
+            }, 0, layer::DrawCommandSpace::World);
+            // rounded_line(
+            //     700, 700, 800, 800, // start x, y, end x, y
+            //     std::nullopt,       // no color (default to WHITE)
+            //     30        // no line width (default to 1px)
+            // );
+            layer::QueueCommand<layer::CmdDrawRoundedLine>(sprites, [](auto* cmd) {
+                cmd->start = { 700, 700 };
+                cmd->end = { 800, 800 };
+                cmd->color = WHITE;
+                cmd->thickness = 30;
+            }, 0, layer::DrawCommandSpace::World);
+            // polyline(
+            //     { { 900, 900 }, { 950, 850 }, { 1000, 700 }, { 950, 300 } }, // points
+            //     YELLOW, // no color (default to WHITE)
+            //     20  // no line width (default to 1px)
+            // );
+            layer::QueueCommand<layer::CmdDrawPolyline>(sprites, [](auto* cmd) {
+                cmd->points = { { 900, 900 }, { 950, 850 }, { 1000, 700 }, { 950, 300 } };
+                cmd->color = YELLOW;
+                cmd->thickness = 20;
+            }, 0, layer::DrawCommandSpace::World);
+            // polygon(
+            //     { { 1100, 850 }, { 1150, 400 }, { 1200, 500 }, { 1150, 800 } }, // vertices
+            //     GREEN, // no color (default to WHITE)
+            //     5  // no line width (default to 1px)
+            // );
+            layer::QueueCommand<layer::CmdDrawPolygon>(sprites, [](auto* cmd) {
+                cmd->points = { { 1100, 850 }, { 1150, 400 }, { 1200, 500 }, { 1150, 800 } };
+                cmd->color = GREEN;
+                cmd->thickness = 5;
+            }, 0, layer::DrawCommandSpace::World);
+            // arc(
+            //     ArcType::Pie, // type
+            //     600, 200, 100, // center x, y, radius
+            //     0, PI / 2, // start angle, end angle
+            //     std::nullopt, // no color (default to WHITE)
+            //     std::nullopt, // no line width (default to 1px)
+            //     32 // segments
+            // );
+            layer::QueueCommand<layer::CmdDrawArc>(sprites, [](auto* cmd) {
+                cmd->type = ArcType::Pie;
+                cmd->center = { 600, 200 };
+                cmd->radius = 100;
+                cmd->startAngle = 0;
+                cmd->endAngle = PI / 2;
+                cmd->color = WHITE;
+                cmd->thickness = 1;
+                cmd->segments = 32;
+            }, 0, layer::DrawCommandSpace::World);
+            // triangle_equilateral(
+            //     1400, 700, 100, // center x, y, width
+            //     std::nullopt, // no color (default to WHITE)
+            //     std::nullopt  // no line width (default to 1px)
+            // );
+            layer::QueueCommand<layer::CmdDrawTriangleEquilateral>(sprites, [](auto* cmd) {
+                cmd->center = { 1400, 700 };
+                cmd->width = 100;
+                cmd->color = WHITE;
+                cmd->thickness = 1;
+            }, 0, layer::DrawCommandSpace::World);
+            // rectangle(
+            //     1500, 300, 200, 100, // center x, y, width, height
+            //     10, 
+            //     10, 
+            //     std::nullopt, // no color (default to WHITE)
+            //     std::nullopt  // no line width (default to 1px)
+            // );
+            layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(sprites, [](auto* cmd) {
+                cmd->center = { 1500, 300 };
+                cmd->width = 200;
+                cmd->height = 100;
+                cmd->radius = 10;
+                cmd->arcSteps = 10;
+                cmd->color = WHITE;
+                cmd->thickness = 1;
+            }, 0, layer::DrawCommandSpace::World);
+            
+            // DrawSpriteCentered("star_09.png", 500, 500, 
+            //                    std::nullopt, std::nullopt, GREEN); // draw centered sprite
+            layer::QueueCommand<layer::CmdDrawSpriteCentered>(sprites, [](auto* cmd) {
+                cmd->imageName = "star_09.png";
+                cmd->center = {500, 500};
+                cmd->rotation = 0;
+                cmd->scaleX = 1.0f;
+                cmd->scaleY = 1.0f;
+                cmd->tint = GREEN;
+            }, 0, layer::DrawCommandSpace::World);
+            // DrawCircle(500, 500, 10, YELLOW); // draw circle
+            
+            // DrawSpriteTopLeft("keyboard_w_outline.png", 500, 500, 
+            //                   std::nullopt, std::nullopt, WHITE); // draw top-left sprite
+            layer::QueueCommand<layer::CmdDrawSpriteTopLeft>(sprites, [](auto* cmd) {
+                cmd->imageName = "keyboard_w_outline.png";
+                cmd->position = {500, 500};
+                cmd->rotation = 0;
+                cmd->scaleX = 1.0f;
+                cmd->scaleY = 1.0f;
+                cmd->tint = WHITE;
+            }, 0, layer::DrawCommandSpace::World);
+                              
+            // fill screen with white
+            // DrawRectangleRec({0, 0, (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2}, {255, 255, 255, 255});
+            
+        }
 
         {
             // ZoneScopedN("LayerCommandsToCanvas Draw");
@@ -2053,18 +1576,9 @@ void endStencil()
             
             camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
             
-            // --testing stencil 
-            clearStencilBuffer(); // clear the stencil buffer
-            beginStencil();
-            beginStencilMask();
-
-            
-            endStencilMask();
             
             
             physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
-            
-            endStencil();
             
             
 
@@ -2079,73 +1593,6 @@ void endStencil()
             );
             
             fade_system::draw();
-            
-            static float phase = 0;
-            phase += dt * 10.0f; // advance phase for dashes
-            // -- testing --
-            // DrawDashedCircle({ 100, 100 }, 50, 10, 5, phase, 32, 2, GREEN);
-            // DrawDashedLine({ 200, 200 }, { 300, 300 }, 10, 5, phase, 2, GREEN);
-            // DrawDashedRoundedRect(
-            //     { 400, 400, 200, 100 }, // rectangle
-            //     10,                   // dash length
-            //     5,                    // gap length
-            //     phase,                // phase
-            //     20,                   // radius
-            //     16,                   // arc steps
-            //     2,                    // thickness
-            //     BLUE                 // color
-            // );
-            ellipse(
-                600, 600, 100, 50, // center x, y, radius x, radius y
-                std::nullopt,      // no color (default to WHITE)
-                std::nullopt       // no line width (default to 1px)
-            );
-            rounded_line(
-                700, 700, 800, 800, // start x, y, end x, y
-                std::nullopt,       // no color (default to WHITE)
-                30        // no line width (default to 1px)
-            );
-            polyline(
-                { { 900, 900 }, { 950, 850 }, { 1000, 700 }, { 950, 300 } }, // points
-                YELLOW, // no color (default to WHITE)
-                20  // no line width (default to 1px)
-            );
-            polygon(
-                { { 1100, 850 }, { 1150, 400 }, { 1200, 500 }, { 1150, 800 } }, // vertices
-                GREEN, // no color (default to WHITE)
-                5  // no line width (default to 1px)
-            );
-            arc(
-                ArcType::Pie, // type
-                600, 200, 100, // center x, y, radius
-                0, PI / 2, // start angle, end angle
-                std::nullopt, // no color (default to WHITE)
-                std::nullopt, // no line width (default to 1px)
-                32 // segments
-            );
-            triangle_equilateral(
-                1400, 700, 100, // center x, y, width
-                std::nullopt, // no color (default to WHITE)
-                std::nullopt  // no line width (default to 1px)
-            );
-            rectangle(
-                1500, 300, 200, 100, // center x, y, width, height
-                10, 
-                10, 
-                std::nullopt, // no color (default to WHITE)
-                std::nullopt  // no line width (default to 1px)
-            );
-            
-            DrawSpriteCentered("star_09.png", 500, 500, 
-                               std::nullopt, std::nullopt, GREEN); // draw centered sprite
-            DrawCircle(500, 500, 10, YELLOW); // draw circle
-            
-            DrawSpriteTopLeft("keyboard_w_outline.png", 500, 500, 
-                              std::nullopt, std::nullopt, WHITE); // draw top-left sprite
-                              
-            // fill screen with white
-            // DrawRectangleRec({0, 0, (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2}, {255, 255, 255, 255});
-            
             
 
             {

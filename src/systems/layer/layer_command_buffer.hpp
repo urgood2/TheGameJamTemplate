@@ -97,6 +97,39 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdRenderNPatchRect>() { return DrawCommandType::RenderNPatchRect; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawTriangle>() { return DrawCommandType::Triangle; }
         
+        // CmdClearStencilBuffer
+        // CmdBeginStencilMode
+        // CmdBeginStencilMask
+        // CmdEndStencilMode
+        // CmdEndStencilMask
+        // CmdDrawCenteredEllipse
+        // CmdDrawRoundedLine
+        // CmdDrawPolyline
+        // CmdDrawArc
+        // CmdDrawTriangleEquilateral
+        // CmdDrawCenteredFilledRoundedRect
+        // CmdDrawSpriteCentered
+        // CmdDrawSpriteTopLeft
+        // CmdDrawDashedLine
+        // CmdDrawDashedCircle
+        // DrawDashedRoundedRect
+        
+        template<> inline DrawCommandType GetDrawCommandType<CmdClearStencilBuffer>() { return DrawCommandType::ClearStencilBuffer; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdBeginStencilMode>() { return DrawCommandType::BeginStencilMode; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdEndStencilMode>() { return DrawCommandType::EndStencilMode; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdBeginStencilMask>() { return DrawCommandType::BeginStencilMask; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdEndStencilMask>() { return DrawCommandType::EndStencilMask; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawCenteredEllipse>() { return DrawCommandType::DrawCenteredEllipse; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawRoundedLine>() { return DrawCommandType::DrawRoundedLine; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawPolyline>() { return DrawCommandType::DrawPolyline; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawArc>() { return DrawCommandType::DrawArc; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawTriangleEquilateral>() { return DrawCommandType::DrawTriangleEquilateral; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawCenteredFilledRoundedRect>() { return DrawCommandType::DrawCenteredFilledRoundedRect; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawSpriteCentered>() { return DrawCommandType::DrawSpriteCentered; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawSpriteTopLeft>() { return DrawCommandType::DrawSpriteTopLeft; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawDashedCircle>() { return DrawCommandType::DrawDashedCircle; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawDashedRoundedRect>() { return DrawCommandType::DrawDashedRoundedRect; }
+        
         template <typename T>
         struct PoolBlockSize {
             static constexpr ::detail::index_t value = 128;
@@ -265,7 +298,6 @@ namespace layer
             CmdDrawRectanglePro,
             CmdDrawRectangleLinesPro,
             CmdDrawLine,
-            CmdDrawDashedLine,
             CmdDrawText,
             CmdDrawTextCentered,
             CmdTextPro,
@@ -295,7 +327,25 @@ namespace layer
             CmdRenderRectVerticesOutlineLayer,
             CmdDrawPolygon,
             CmdRenderNPatchRect,
-            CmdDrawTriangle
+            CmdDrawTriangle,
+            CmdClearStencilBuffer,
+            CmdBeginStencilMode,
+            CmdEndStencilMode,
+            CmdBeginStencilMask,
+            CmdEndStencilMask,
+            CmdDrawCenteredEllipse,
+            CmdDrawRoundedLine,
+            CmdDrawPolyline,
+            CmdDrawArc,
+            CmdDrawTriangleEquilateral,
+            CmdDrawCenteredFilledRoundedRect,
+            CmdDrawSpriteCentered,
+            CmdDrawSpriteTopLeft,
+            CmdDrawDashedCircle,
+            CmdDrawDashedRoundedRect,
+            CmdDrawDashedLine
+
+
         >;
 
         // Unpack and log for each

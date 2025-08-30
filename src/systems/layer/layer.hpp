@@ -315,6 +315,78 @@ namespace layer
         size_t endIndex,
         std::shared_ptr<layer::Layer> layerPtr,
         float pad = 0.0f);
+        
+
+auto DrawDashedLine(const Vector2 &start,
+                    const Vector2 &end,
+                    float dashLength,
+                    float gapLength,
+                    float phase,
+                    float thickness,
+                    Color color) -> void;
+void DrawDashedRoundedRect(const Rectangle& rec,
+                           float dashLen,
+                           float gapLen,
+                           float phase,
+                           float radius,
+                           int arcSteps,
+                           float thickness,
+                           Color color);
+auto DrawDashedCircle(const Vector2 &center,
+                      float radius,
+                      float dashLength,
+                      float gapLength,
+                      float phase,
+                      int segments,
+                      float thickness,
+                      Color color) -> void;
+ArcType ArcTypeFromString(const char* s);
+void rectangle(float x, float y, float w, float h,
+                      std::optional<float> rx = {},
+                      std::optional<float> ry = {},
+                      std::optional<Color> color = {},
+                      std::optional<float> lineWidth = {});
+void triangle_equilateral(float x, float y, float w,
+                                 std::optional<Color> color = {},
+                                 std::optional<float> lineWidth = {});
+void circle(float x, float y, float r,
+                   std::optional<Color> color = {},
+                   std::optional<float> lineWidth = {});
+void arc(const char* arctype, float x, float y, float r, float r1, float r2,
+                std::optional<Color> color = {},
+                std::optional<float> lineWidth = {},
+                int segments = 0);
+void polygon(const std::vector<Vector2>& vertices,
+                    std::optional<Color> color = {},
+                    std::optional<float> lineWidth = {});
+void line(float x1, float y1, float x2, float y2,
+                 std::optional<Color> color = {},
+                 std::optional<float> lineWidth = {});
+void polyline(const std::vector<Vector2>& points,
+                     std::optional<Color> color = {},
+                     std::optional<float> lineWidth = {});
+void rounded_line(float x1, float y1, float x2, float y2,
+                         std::optional<Color> color = {},
+                         std::optional<float> lineWidth = {});
+void ellipse(float x, float y, float rx, float ry,
+                    std::optional<Color> color = {},
+                    std::optional<float> lineWidth = {});
+auto DrawSpriteTopLeft(const std::string& spriteName,
+                       float x, float y,
+                       std::optional<float> dstW = std::nullopt,
+                       std::optional<float> dstH = std::nullopt,
+                       Color tint = WHITE) -> void;
+auto DrawSpriteCentered(const std::string& spriteName,
+                        float x, float y,
+                        std::optional<float> dstW = std::nullopt,
+                        std::optional<float> dstH = std::nullopt,
+                        Color tint = WHITE) -> void;
+void clearStencilBuffer();
+void beginStencil();
+void beginStencilMask();
+void endStencilMask();
+
+void endStencil();
 
     // NOTE that you should set shader uniforms directly when rendering at the layer level-- that is, rendering entire layers.
     void AddUniformFloat(std::shared_ptr<Layer> layer, Shader shader, const std::string &uniform, float value);

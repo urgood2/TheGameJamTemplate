@@ -11316,6 +11316,12 @@
     "2_snow": [
         "SNOW 2"
     ],
+    "2d_asset_example_platformer_typical": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/Typical_2D_platformer_example.ldtk"
+    ],
+    "2d_example_platformer_typical": [
+        "Typical_2D_platformer_example.ldtk"
+    ],
     "3_acid_difficulty_rain": [
         "Difficulty 3 Acid Rain.wav"
     ],

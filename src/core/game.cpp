@@ -781,8 +781,9 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // try using ldtk
         
-        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("test_features.ldtk"));
-        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_TopDown_example.ldtk"));
+        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("test_features.ldtk"));
+        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_TopDown_example.ldtk"));
+        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_2D_platformer_example.ldtk"));
         
 
         // some things I can do:
@@ -2125,15 +2126,19 @@ void endStencil()
             DrawSpriteTopLeft("keyboard_w_outline.png", 500, 500, 
                               std::nullopt, std::nullopt, WHITE); // draw top-left sprite
                               
+            // fill screen with white
+            DrawRectangleRec({0, 0, (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2}, {255, 255, 255, 255});
+            
+            
             // ldtk_loader::DrawAllLayers("Everything");
             // ldtk_loader::DrawAllLayers("Background_image");
             // ldtk_loader::DrawAllLayers("Tiles_and_intgrid");
             // ldtk_loader::DrawAllLayers("Autolayer");
             
-            // fill screen with white
-            DrawRectangleRec({0, 0, (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2}, {255, 255, 255, 255});
             
-            ldtk_loader::DrawAllLayers("World_Level_1");
+            // ldtk_loader::DrawAllLayers("World_Level_1");
+            
+            ldtk_loader::DrawAllLayers("Your_typical_2D_platformer");
 
             {
                 // ZoneScopedN("EndDrawing call");

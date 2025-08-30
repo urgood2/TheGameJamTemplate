@@ -227,7 +227,7 @@ inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
         
         // if (it->getName() == "Default_floor")
         // if (it->getName() == "Custom_floor")
-        if (it->getName() == "Collisions")
+        // if (it->getName() == "Collisions")
         
         // if (it->getName() == "Wall_tops")
             DrawLayer(levelName, it->getName(), scale);

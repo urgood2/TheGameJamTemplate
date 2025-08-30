@@ -1725,6 +1725,219 @@ layer.CmdTranslate = {
 ---
 --- 
 ---
+---@class layer.CmdBeginStencilMode
+layer.CmdBeginStencilMode = {
+    dummy = nil, -- false Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdEndStencilMode
+layer.CmdEndStencilMode = {
+    dummy = nil, -- false Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdClearStencilBuffer
+layer.CmdClearStencilBuffer = {
+    dummy = nil, -- false Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdBeginStencilMask
+layer.CmdBeginStencilMask = {
+    dummy = nil, -- false Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdEndStencilMask
+layer.CmdEndStencilMask = {
+    dummy = nil, -- false Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawCenteredEllipse
+layer.CmdDrawCenteredEllipse = {
+    x = nil, -- number Center X
+    y = nil, -- number Center Y
+    rx = nil, -- number Radius X
+    ry = nil, -- number Radius Y
+    color = nil, -- Color Ellipse color
+    lineWidth = nil, -- number|nil Line width for outline; nil for filled
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawRoundedLine
+layer.CmdDrawRoundedLine = {
+    x1 = nil, -- number Start X
+    y1 = nil, -- number Start Y
+    x2 = nil, -- number End X
+    y2 = nil, -- number End Y
+    color = nil, -- Color Line color
+    lineWidth = nil, -- number Line width
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawPolyline
+layer.CmdDrawPolyline = {
+    points = nil, -- Vector2[] List of points
+    color = nil, -- Color Line color
+    lineWidth = nil, -- number Line width
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawArc
+layer.CmdDrawArc = {
+    type = nil, -- string Arc type (e.g., 'OPEN', 'CHORD', 'PIE')
+    x = nil, -- number Center X
+    y = nil, -- number Center Y
+    r = nil, -- number Radius
+    r1 = nil, -- number Inner radius (for ring arcs)
+    r2 = nil, -- number Outer radius (for ring arcs)
+    color = nil, -- Color Arc color
+    lineWidth = nil, -- number Line width
+    segments = nil, -- number Number of segments
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawTriangleEquilateral
+layer.CmdDrawTriangleEquilateral = {
+    x = nil, -- number Center X
+    y = nil, -- number Center Y
+    w = nil, -- number Width of the triangle
+    color = nil, -- Color Triangle color
+    lineWidth = nil, -- number|nil Line width for outline; nil for filled
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawCenteredFilledRoundedRect
+layer.CmdDrawCenteredFilledRoundedRect = {
+    x = nil, -- number Center X
+    y = nil, -- number Center Y
+    w = nil, -- number Width
+    h = nil, -- number Height
+    rx = nil, -- number|nil Corner radius X; nil for default
+    ry = nil, -- number|nil Corner radius Y; nil for default
+    color = nil, -- Color Fill color
+    lineWidth = nil, -- number|nil Line width for outline; nil for filled
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawSpriteCentered
+layer.CmdDrawSpriteCentered = {
+    spriteName = nil, -- string Name of the sprite
+    x = nil, -- number Center X
+    y = nil, -- number Center Y
+    dstW = nil, -- number|nil Destination width; nil for original width
+    dstH = nil, -- number|nil Destination height; nil for original height
+    tint = nil, -- Color Tint color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawSpriteTopLeft
+layer.CmdDrawSpriteTopLeft = {
+    spriteName = nil, -- string Name of the sprite
+    x = nil, -- number Top-left X
+    y = nil, -- number Top-left Y
+    dstW = nil, -- number|nil Destination width; nil for original width
+    dstH = nil, -- number|nil Destination height; nil for original height
+    tint = nil, -- Color Tint color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawDashedCircle
+layer.CmdDrawDashedCircle = {
+    center = nil, -- Vector2 Center position
+    radius = nil, -- number Radius
+    dashLength = nil, -- number Length of each dash
+    gapLength = nil, -- number Length of gap between dashes
+    phase = nil, -- number Phase offset for dashes
+    segments = nil, -- number Number of segments to approximate the circle
+    thickness = nil, -- number Thickness of the dashes
+    color = nil, -- Color Color of the dashes
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawDashedRoundedRect
+layer.CmdDrawDashedRoundedRect = {
+    rec = nil, -- Rectangle Rectangle area
+    dashLen = nil, -- number Length of each dash
+    gapLen = nil, -- number Length of gap between dashes
+    phase = nil, -- number Phase offset for dashes
+    radius = nil, -- number Corner radius
+    arcSteps = nil, -- number Number of segments for corner arcs
+    thickness = nil, -- number Thickness of the dashes
+    color = nil, -- Color Color of the dashes
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawDashedLine
+layer.CmdDrawDashedLine = {
+    start = nil, -- Vector2 Start position
+    end = nil, -- Vector2 End position
+    dashLength = nil, -- number Length of each dash
+    gapLength = nil, -- number Length of gap between dashes
+    phase = nil, -- number Phase offset for dashes
+    thickness = nil, -- number Thickness of the dashes
+    color = nil, -- Color Color of the dashes
+    x1 = nil, -- number Start X
+    y1 = nil, -- number Start Y
+    x2 = nil, -- number End X
+    y2 = nil, -- number End Y
+    dashSize = nil, -- number Dash size
+    gapSize = nil, -- number Gap size
+    color = nil, -- Color Color
+    lineWidth = nil, -- number Line width
+}
+
+
+---
+--- 
+---
 ---@class layer.CmdScale
 layer.CmdScale = {
     scaleX = nil, -- number Scale in X
@@ -1865,14 +2078,6 @@ layer.CmdDrawLine = {
 ---
 ---@class layer.CmdDrawDashedLine
 layer.CmdDrawDashedLine = {
-    x1 = nil, -- number Start X
-    y1 = nil, -- number Start Y
-    x2 = nil, -- number End X
-    y2 = nil, -- number End Y
-    dashSize = nil, -- number Dash size
-    gapSize = nil, -- number Gap size
-    color = nil, -- Color Color
-    lineWidth = nil, -- number Line width
 }
 
 
@@ -4903,6 +5108,166 @@ function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueBeginDrawing(...) end
+
+---
+--- Queues a CmdClearStencilBuffer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdClearStencilBuffer) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueClearStencilBuffer(...) end
+
+---
+--- Queues a CmdBeginStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginStencilMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueBeginStencilMode(...) end
+
+---
+--- Queues a CmdEndStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndStencilMode) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueEndStencilMode(...) end
+
+---
+--- Queues a CmdBeginStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdBeginStencilMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueBeginStencilMask(...) end
+
+---
+--- Queues a CmdEndStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdEndStencilMask) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueEndStencilMask(...) end
+
+---
+--- Queues a CmdDrawCenteredEllipse into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawCenteredEllipse) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawCenteredEllipse(...) end
+
+---
+--- Queues a CmdDrawRoundedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawRoundedLine) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawRoundedLine(...) end
+
+---
+--- Queues a CmdDrawPolyline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawPolyline) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawPolyline(...) end
+
+---
+--- Queues a CmdDrawArc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawArc) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawArc(...) end
+
+---
+--- Queues a CmdDrawTriangleEquilateral into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawTriangleEquilateral) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawTriangleEquilateral(...) end
+
+---
+--- Queues a CmdDrawCenteredFilledRoundedRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawCenteredFilledRoundedRect) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawCenteredFilledRoundedRect(...) end
+
+---
+--- Queues a CmdDrawSpriteCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawSpriteCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawSpriteCentered(...) end
+
+---
+--- Queues a CmdDrawSpriteTopLeft into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawSpriteTopLeft) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawSpriteTopLeft(...) end
+
+---
+--- Queues a CmdDrawDashedCircle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawDashedCircle) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawDashedCircle(...) end
+
+---
+--- Queues a CmdDrawDashedRoundedRect into the layer draw list. Executes init    _fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawDashedRoundedRect) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawDashedRoundedRect(...) end
+
+---
+--- Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawDashedLine) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawDashedLine(...) end
 
 ---
 --- Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.

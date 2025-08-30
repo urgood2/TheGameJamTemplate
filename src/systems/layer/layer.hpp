@@ -317,13 +317,13 @@ namespace layer
         float pad = 0.0f);
         
 
-auto DrawDashedLine(const Vector2 &start,
+void DrawDashedLine(const Vector2 &start,
                     const Vector2 &end,
                     float dashLength,
                     float gapLength,
                     float phase,
                     float thickness,
-                    Color color) -> void;
+                    Color color);
 void DrawDashedRoundedRect(const Rectangle& rec,
                            float dashLen,
                            float gapLen,
@@ -332,14 +332,14 @@ void DrawDashedRoundedRect(const Rectangle& rec,
                            int arcSteps,
                            float thickness,
                            Color color);
-auto DrawDashedCircle(const Vector2 &center,
+void DrawDashedCircle(const Vector2 &center,
                       float radius,
                       float dashLength,
                       float gapLength,
                       float phase,
                       int segments,
                       float thickness,
-                      Color color) -> void;
+                      Color color);
 ArcType ArcTypeFromString(const char* s);
 void rectangle(float x, float y, float w, float h,
                       std::optional<float> rx = {},
@@ -371,16 +371,16 @@ void rounded_line(float x1, float y1, float x2, float y2,
 void ellipse(float x, float y, float rx, float ry,
                     std::optional<Color> color = {},
                     std::optional<float> lineWidth = {});
-auto DrawSpriteTopLeft(const std::string& spriteName,
+void DrawSpriteTopLeft(const std::string& spriteName,
                        float x, float y,
                        std::optional<float> dstW = std::nullopt,
                        std::optional<float> dstH = std::nullopt,
-                       Color tint = WHITE) -> void;
-auto DrawSpriteCentered(const std::string& spriteName,
+                       Color tint = WHITE);
+void DrawSpriteCentered(const std::string& spriteName,
                         float x, float y,
                         std::optional<float> dstW = std::nullopt,
                         std::optional<float> dstH = std::nullopt,
-                        Color tint = WHITE) -> void;
+                        Color tint = WHITE);
 void clearStencilBuffer();
 void beginStencil();
 void beginStencilMask();

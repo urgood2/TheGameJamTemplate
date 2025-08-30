@@ -1765,7 +1765,7 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
             const float caretX      = textX + lhsSize.x;             // same X baseline
             const float caretTop    = baseY;       // align to cap top
-            const float caretHeight = (kCap + kDesc) * fontSize;     // cover cap..descent
+            const float caretHeight = fontSize;     // cover cap..descent
             const float caretWidth  = 2.0f;                           // unscaled; scales with matrix
 
             Color caretColor = BLACK;

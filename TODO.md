@@ -20,6 +20,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ## TODOS fast
+- [ ] blinking cursor doesn't always show.
 - [ ] scroll pane needs scroll bar.
 - [ ] how to do layer-localized shader effects?
 - [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize / dedicated Alignment callback for windows on resize

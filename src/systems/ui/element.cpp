@@ -1753,7 +1753,6 @@ if (config->uiType == UITypeEnum::INPUT_TEXT) {
 
     layer::Scale(uiScale, uiScale);
     layer::TextPro(s.c_str(), fd.font, textX, baseY, {0,fontSize / 2}, 0, fontSize, spacing, renderColor);
-    layer::RectangleDraw(textX, baseY, 10, 10, WHITE);
 
     // --- 3) Blinking caret exactly on the same baseline
     if (ti.isActive) {

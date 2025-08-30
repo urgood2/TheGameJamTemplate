@@ -54,13 +54,13 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
     const int w = level.size.x;
     const int h = level.size.y;
 
-    InitRenderTexture(w, h);
-    BeginTextureMode(internal_loader::renderTexture);
-    ClearBackground(BLANK); // transparent, not BLACK
+    // InitRenderTexture(w, h);
+    // BeginTextureMode(internal_loader::renderTexture);
+    // ClearBackground(BLANK); // transparent, not BLACK
 
     const auto type = layer.getType();
 
-    if (type == ldtk::LayerType::Tiles || type == ldtk::LayerType::AutoLayer) {
+    // if (type == ldtk::LayerType::IntGrid) {
         if (layer.hasTileset()) {
             const std::string rel = layer.getTileset().path;
             const std::string full = internal_loader::assetDirectory.empty() ? rel
@@ -81,38 +81,38 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
                 if (tile.flipY) { src.height = -src.height; pos.y += (float)tr.height; }
 
                 unsigned char a = (unsigned char)std::round(255.f * tile.alpha * layer.getOpacity());
-                Color tint = {255, 255, 255, a};
+                Color tint = {255, 255, 255, 255};
 
                 DrawTextureRec(tex, src, pos, tint);
             }
         }
-    }
-    else if (type == ldtk::LayerType::IntGrid) {
-        // Simple visualizer: draw colored cells (handy for collisions/flags)
-        const int cell = layer.getCellSize();
-        const auto gridSize = layer.getGridSize();
-        unsigned char la = (unsigned char)std::round(255.f * layer.getOpacity());
+    // }
+    // else if (type == ldtk::LayerType::IntGrid) {
+    //     // Simple visualizer: draw colored cells (handy for collisions/flags)
+    //     const int cell = layer.getCellSize();
+    //     const auto gridSize = layer.getGridSize();
+    //     unsigned char la = (unsigned char)std::round(255.f * layer.getOpacity());
 
-        for (int y = 0; y < gridSize.y; ++y) {
-            for (int x = 0; x < gridSize.x; ++x) {
-                const auto& v = layer.getIntGridVal(x, y);
-                if (&v == &ldtk::IntGridValue::None) continue;  
-                Color c{ v.color.r, v.color.g, v.color.b, la };
-                DrawRectangle(x * cell, y * cell, cell, cell, c);
-            }
-        }
-    }
+    //     for (int y = 0; y < gridSize.y; ++y) {
+    //         for (int x = 0; x < gridSize.x; ++x) {
+    //             const auto& v = layer.getIntGridVal(x, y);
+    //             if (&v == &ldtk::IntGridValue::None) continue;  
+    //             Color c{ v.color.r, v.color.g, v.color.b, la };
+    //             DrawRectangle(x * cell, y * cell, cell, cell, c);
+    //         }
+    //     }
+    // }
 
-    EndTextureMode();
+    // EndTextureMode();
 
-    // always present once, scaled
-    const Rectangle srcRec = { 0, 0,
-        (float)internal_loader::renderTexture.texture.width,
-        -(float)internal_loader::renderTexture.texture.height };
-    const Rectangle dstRec = { 0, 0,
-        internal_loader::renderTexture.texture.width * scale,
-        internal_loader::renderTexture.texture.height * scale };
-    DrawTexturePro(internal_loader::renderTexture.texture, srcRec, dstRec, {0,0}, 0.0f, WHITE);
+    // // always present once, scaled
+    // const Rectangle srcRec = { 0, 0,
+    //     (float)internal_loader::renderTexture.texture.width,
+    //     -(float)internal_loader::renderTexture.texture.height };
+    // const Rectangle dstRec = { 0, 0,
+    //     internal_loader::renderTexture.texture.width * scale,
+    //     internal_loader::renderTexture.texture.height * scale };
+    // DrawTexturePro(internal_loader::renderTexture.texture, srcRec, dstRec, {0,0}, 0.0f, WHITE);
 }
 inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();

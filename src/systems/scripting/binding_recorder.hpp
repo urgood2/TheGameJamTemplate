@@ -106,7 +106,10 @@ public:
 
     inline std::string join_path(const std::vector<std::string>& path, const std::string& name) {
         std::string out;
-        for (auto& s : path) { if (!out.empty()) out += "."; out += s; }
+        for (auto& s : path) { 
+            if (s.empty()) continue;  // <-- skip empty strings
+            if (!out.empty()) out += "."; out += s; 
+        }
         if (!out.empty()) out += ".";
         return out + name;
     }
@@ -142,6 +145,18 @@ public:
         ut.set_function(name, std::forward<Func>(f));
         record_method(type, MethodDef{ name, signature, doc, is_static, is_overload });
     }
+    
+    
+    static void write_doc_block(std::ostream& out, const std::string& doc) {
+        out << "---\n";
+        std::istringstream ss(doc);
+        std::string line;
+        while (std::getline(ss, line)) {
+            out << "--- " << line << "\n";
+        }
+        out << "---\n";
+    }
+
 
     void dump_lua_defs(const std::string& path) const {
         std::lock_guard<std::mutex> lock(mtx_);
@@ -156,7 +171,7 @@ public:
         out << "---@class " << module_name_ << "\n\n";
 
         for (auto& m : free_functions_) {
-            out << "---\n--- " << m.doc << "\n---\n";
+            write_doc_block(out, m.doc);
             out << m.signature << "\n";
             out << "function " << m.name << "(...) end\n\n";
         }
@@ -195,9 +210,10 @@ public:
             }
 
             for (auto& m : t.methods) {
-                out << "---\n--- " << m.doc << "\n---\n";
+                write_doc_block(out, m.doc);
                 if (m.is_overload) out << "---@overload fun" << m.signature << "\n";
                 else out << m.signature << "\n";
+
                 out << "function " << t.name
                     << (m.is_static ? "." : ":") << m.name << "(...) end\n\n";
             }
@@ -247,10 +263,14 @@ private:
                      std::vector<std::string> path,
                      const ModuleNode& node) const
     {
-        std::string full = path[0];
-        for (size_t i = 1; i < path.size(); ++i) full += "." + path[i];
+        std::string full;
+        for (size_t i = 1; i < path.size(); ++i) {
+            if (path[i].empty()) continue; // <-- skip empty strings
+            if (!full.empty()) full += ".";
+            full += "." + path[i];
+        }
         for (auto& m : node.functions) {
-            out << "---\n--- " << m.doc << "\n---\n";
+            write_doc_block(out, m.doc);
             out << m.signature << "\n";
             out << "function " << full << "." << m.name << "(...) end\n\n";
         }

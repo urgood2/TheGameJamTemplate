@@ -69,6 +69,7 @@ namespace ui
         size_t maxLength = 50; // Max allowed characters
         bool allCaps = false;  // Force capitalization
         std::function<void()> callback; // Optional callback when pressing Enter
+        bool isActive = false; // Whether this text input is currently active (focused for input)
     };
     
     struct TextInputHook {

@@ -37,6 +37,47 @@ using namespace snowhouse; // assert
 namespace input
 {
 
+    void HandleTextInput(ui::TextInput &input) {
+        // Process all characters pressed this frame
+        int key = GetCharPressed();
+        SPDLOG_DEBUG("Handling text input, char pressed: {}", key);
+        while (key > 0) {
+            // Optionally, filter which characters you allow
+            // Here we limit to printable ASCII 32..126
+            if ((key >= 32) && (key <= 126) && input.text.length() < input.maxLength) {
+                char c = static_cast<char>(key);
+
+                if (input.allCaps) {
+                    c = toupper(c);
+                }
+
+                // Insert at cursor position
+                input.text.insert(input.cursorPos, 1, c);
+                input.cursorPos++;
+            }
+
+            key = GetCharPressed(); // Get next character in queue
+        }
+
+        // Handle Backspace
+        if (IsKeyPressed(KEY_BACKSPACE) && input.cursorPos > 0) {
+            input.text.erase(input.cursorPos - 1, 1);
+            input.cursorPos--;
+        }
+
+        // Move cursor left/right
+        if (IsKeyPressed(KEY_LEFT) && input.cursorPos > 0) {
+            input.cursorPos--;
+        }
+        if (IsKeyPressed(KEY_RIGHT) && input.cursorPos < input.text.length()) {
+            input.cursorPos++;
+        }
+
+        // Handle Enter
+        if (IsKeyPressed(KEY_ENTER) && input.callback) {
+            input.callback();
+        }
+    }
     
 
     // Initializes the controller
@@ -258,6 +299,11 @@ namespace input
 
         // handle clicks in the registry
         ProcessInputRegistry(inputState, registry);
+    
+        if (registry.valid(inputState.activeTextInput) && inputState.activeTextInput != entt::null) {
+            auto &textInputNode = registry.get<ui::TextInput>(inputState.activeTextInput);
+            HandleTextInput(textInputNode);
+        }
         
         // action bindings
         input::TickActionHolds(inputState, dt);
@@ -496,46 +542,7 @@ namespace input
         }
     }
 
-    void HandleTextInput(ui::TextInput &input) {
-        // Process all characters pressed this frame
-        int key = GetCharPressed();
-        while (key > 0) {
-            // Optionally, filter which characters you allow
-            // Here we limit to printable ASCII 32..126
-            if ((key >= 32) && (key <= 126) && input.text.length() < input.maxLength) {
-                char c = static_cast<char>(key);
-
-                if (input.allCaps) {
-                    c = toupper(c);
-                }
-
-                // Insert at cursor position
-                input.text.insert(input.cursorPos, 1, c);
-                input.cursorPos++;
-            }
-
-            key = GetCharPressed(); // Get next character in queue
-        }
-
-        // Handle Backspace
-        if (IsKeyPressed(KEY_BACKSPACE) && input.cursorPos > 0) {
-            input.text.erase(input.cursorPos - 1, 1);
-            input.cursorPos--;
-        }
-
-        // Move cursor left/right
-        if (IsKeyPressed(KEY_LEFT) && input.cursorPos > 0) {
-            input.cursorPos--;
-        }
-        if (IsKeyPressed(KEY_RIGHT) && input.cursorPos < input.text.length()) {
-            input.cursorPos++;
-        }
-
-        // Handle Enter
-        if (IsKeyPressed(KEY_ENTER) && input.callback) {
-            input.callback();
-        }
-    }
+    
 
     void handleCursorReleasedEvent(input::InputState &inputState, entt::registry &registry)
     {
@@ -640,33 +647,49 @@ namespace input
 
     void processRaylibLeftClick(input::InputState &inputState, entt::registry &registry)
     {
-        if (inputState.L_cursor_queue)
-        { // cursor click has been queued by raylib
-            // TODO: this should probably take cursor collision entities into account instead of relying on hover.
-            ProcessLeftMouseButtonPress(registry, inputState, inputState.L_cursor_queue.value().x, inputState.L_cursor_queue.value().y);
-            inputState.L_cursor_queue.reset();
-            
-            // also, if cursor collision entities do not include the input text element, then make it inactive 
-            if (
-                registry.valid(inputState.activeTextInput) &&
-                inputState.activeTextInput != entt::null &&
-                std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeTextInput) == inputState.nodes_at_cursor.end())
-            {
-                // clear active text input
-                SPDLOG_DEBUG("Marking active text input {} as inactive", static_cast<int>(inputState.activeTextInput));
-                inputState.activeTextInput = entt::null;
-                // SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-            }
-            else if (
-                registry.valid(inputState.activeTextInput) &&
-                inputState.activeTextInput != entt::null &&
-                std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeTextInput) != inputState.nodes_at_cursor.end())
-            {
-                // active text input is still under cursor, so do not clear it
-                // SetMouseCursor(MOUSE_CURSOR_IBEAM);
-            }
+        if (!inputState.L_cursor_queue) return;
+
+        // Cursor click has been queued by raylib
+        const auto click = *inputState.L_cursor_queue;
+        ProcessLeftMouseButtonPress(registry, inputState, click.x, click.y);
+        inputState.L_cursor_queue.reset();
+
+        // After processing the click, reconcile active TextInput w/ current cursor hits.
+        const entt::entity active = inputState.activeTextInput;
+
+        // Nothing active: nothing to toggle
+        if (active == entt::null) {
+            // SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+            return;
+        }
+
+        // If entity is gone or no longer has TextInput, clear it
+        if (!registry.valid(active) || !registry.any_of<ui::TextInput>(active)) {
+            SPDLOG_DEBUG("Active text input {} invalid or missing component; clearing",
+                        static_cast<int>(active));
+            inputState.activeTextInput = entt::null;
+            // SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+            return;
+        }
+
+        // Still valid: check if cursor is over it
+        const bool under_cursor =
+            std::find(inputState.nodes_at_cursor.begin(),
+                    inputState.nodes_at_cursor.end(),
+                    active) != inputState.nodes_at_cursor.end();
+
+        auto &textInputNode = registry.get<ui::TextInput>(active);
+        textInputNode.isActive = under_cursor;
+
+        if (!under_cursor) {
+            SPDLOG_DEBUG("Marking active text input {} as inactive", static_cast<int>(active));
+            inputState.activeTextInput = entt::null;
+            // SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+        } else {
+            // SetMouseCursor(MOUSE_CURSOR_IBEAM);
         }
     }
+
 
     void resetInputStateForProcessing(input::InputState &inputState)
     {
@@ -3470,21 +3493,72 @@ namespace input
 
 
         // Optional BindingRecorder docs
-        rec.record_method("input", {"bind",
+        
+        // input.bind
+        rec.record_free_function(inputPath, MethodDef{
+            "bind",
             "---@param action string\n"
             "---@param cfg {device:string, key?:integer, mouse?:integer, button?:integer, axis?:integer, trigger?:string, threshold?:number, modifiers?:integer[], context?:string}\n"
             "---@return nil",
-            "Bind an action to a device code with a trigger.\n"
+            "Bind an action to a device code with a trigger.",
+            /*is_static=*/true,
+            /*is_overload=*/false
         });
-        rec.record_method("input", {"clear", "---@param action string\n---@return nil", "Clear all bindings for an action."});
-        rec.record_method("input", {"action_pressed", "---@param action string\n---@return boolean", "True on the frame the action is pressed."});
-        rec.record_method("input", {"action_released","---@param action string\n---@return boolean","True on the frame the action is released."});
-        rec.record_method("input", {"action_down", "---@param action string\n---@return boolean", "True while the action is held."});
-        rec.record_method("input", {"action_value","---@param action string\n---@return number","Analog value for axis-type actions."});
-        rec.record_method("input", {"set_context", "---@param ctx string\n---@return nil", "Set the active input context."});
-        rec.record_method("input", {"start_rebind",
+
+        // input.clear
+        rec.record_free_function(inputPath, MethodDef{
+            "clear",
+            "---@param action string\n---@return nil",
+            "Clear all bindings for an action.",
+            true, false
+        });
+
+        // input.action_pressed
+        rec.record_free_function(inputPath, MethodDef{
+            "action_pressed",
+            "---@param action string\n---@return boolean",
+            "True on the frame the action is pressed.",
+            true, false
+        });
+
+        // input.action_released
+        rec.record_free_function(inputPath, MethodDef{
+            "action_released",
+            "---@param action string\n---@return boolean",
+            "True on the frame the action is released.",
+            true, false
+        });
+
+        // input.action_down
+        rec.record_free_function(inputPath, MethodDef{
+            "action_down",
+            "---@param action string\n---@return boolean",
+            "True while the action is held.",
+            true, false
+        });
+
+        // input.action_value
+        rec.record_free_function(inputPath, MethodDef{
+            "action_value",
+            "---@param action string\n---@return number",
+            "Analog value for axis-type actions.",
+            true, false
+        });
+
+        // input.set_context
+        rec.record_free_function(inputPath, MethodDef{
+            "set_context",
+            "---@param ctx string\n---@return nil",
+            "Set the active input context.",
+            true, false
+        });
+
+        // input.start_rebind
+        rec.record_free_function(inputPath, MethodDef{
+            "start_rebind",
             "---@param action string\n---@param cb fun(ok:boolean,binding:table)\n---@return nil",
-            "Capture the next input event and pass it to callback as a binding table."
+            "Capture the next input event and pass it to callback as a binding table.",
+            true, false
         });
 
     }

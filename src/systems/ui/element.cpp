@@ -1675,6 +1675,123 @@ namespace ui
                 state->object_focus_timer.reset();
             }
         }
+        
+        
+        // draw input text (IMMEDIATE MODE)
+        if (config->uiType == UITypeEnum::INPUT_TEXT)
+        {
+            // Text source: ui::TextInput on the same entity
+            auto &textInput   = globals::registry.get<ui::TextInput>(entity);
+            const std::string &displayText = textInput.text;  // (optionally mask if you add that feature)
+
+            // Reuse same font + knobs you used for TEXT
+            auto &fontData    = localization::getFontData();
+            float scale       = config->scale.value_or(1.0f) * fontData.fontScale * globals::globalUIScaleFactor;
+            float spacing     = config->textSpacing.value_or(fontData.spacing);
+            Color renderColor = BLACK; // FIXME: should be config->color, but black looks better for input boxes
+            bool buttonActive = true; // same convention as above TEXT block
+
+            if (!buttonActive)
+                renderColor = globals::uiTextInactive;
+
+            // Shadow logic identical to TEXT (with parallax derived from the node's shadow)
+            float rawScale    = config->scale.value_or(1.0f) * fontData.fontScale;
+            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
+            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
+
+            bool drawShadow = globals::settings.shadowsOn;
+
+            // Common translate (like TEXT): position at element origin + layer displacement
+            Vector2 layerDisplacement = { node->layerDisplacement->x, node->layerDisplacement->y };
+
+            // 1) Optional shadow pass
+            if (drawShadow) {
+                layer::PushMatrix();
+                layer::Translate(actualX + textParallaxSX + layerDisplacement.x,
+                                actualY + textParallaxSY + layerDisplacement.y);
+
+                if (config->verticalText) {
+                    layer::Translate(0, actualH);
+                    layer::Rotate(-PI / 2);
+                }
+
+                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+                float textX  = fontData.fontRenderOffset.x;
+                float textY  = fontData.fontRenderOffset.y;
+
+                layer::Scale(scale, scale);
+                layer::TextPro(
+                    displayText.c_str(),
+                    fontData.font,
+                    textX, textY,
+                    {0, 0},
+                    0,
+                    fontData.fontLoadedSize,
+                    spacing,
+                    shadowColor
+                );
+                layer::PopMatrix();
+            }
+
+            // 2) Main text pass
+            layer::PushMatrix();
+            layer::Translate(actualX + layerDisplacement.x,
+                            actualY + layerDisplacement.y);
+
+            if (config->verticalText) {
+                layer::Translate(0, actualH);
+                layer::Rotate(-PI / 2);
+            }
+
+            float textX = fontData.fontRenderOffset.x;
+            float textY = fontData.fontRenderOffset.y;
+
+            layer::Scale(scale, scale);
+            layer::TextPro(
+                displayText.c_str(),
+                fontData.font,
+                textX, textY,
+                {0, 0},
+                0,
+                fontData.fontLoadedSize,
+                spacing,
+                renderColor
+            );
+
+            // 3) Blinking caret (only when active/focused)
+            if (textInput.isActive) {
+                // Blink at 1Hz (on 0.5s, off 0.5s)
+                bool blinkOn = fmodf(main_loop::mainLoop.realtimeTimer, 1.0f) < 0.5f;
+                if (blinkOn) {
+                    // Measure the text up to cursorPos at the *unscaled* font size,
+                    // then add the unscaled render offset; we are already under the same scaling.
+                    std::string left = displayText.substr(0, std::min<size_t>(displayText.size(), textInput.cursorPos));
+                    float fontSize   = fontData.fontLoadedSize;
+                    Vector2 lhsSize  = MeasureTextEx(fontData.font, left.c_str(), fontSize, spacing);
+
+                    float caretX      = textX + lhsSize.x;
+                    float caretY      = textY;                 // same baseline as text
+                    float caretWidth  = 2.0f;                  // 2px before scaling
+                    float caretHeight = fontSize * 1.1f;       // little taller than glyphs
+
+                    Color caretColor  = BLACK; // FIXME: should be config->color, but black looks better for input boxes
+                    caretColor.a      = std::max<unsigned char>(caretColor.a, 220);
+
+                    // Draw a thin vertical rectangle as caret (inside current Push/Scale)
+                    layer::RectangleDraw(
+                        caretX,
+                        caretY - fontSize * 0.85f, // shift up to cap height
+                        caretWidth,
+                        caretHeight,
+                        caretColor
+                    );
+                }
+            }
+
+            layer::PopMatrix();
+        }
+
 
         // outline
         if (config->outlineColor && config->outlineColor->a > 0.01f)
@@ -2241,6 +2358,137 @@ namespace ui
                 state->object_focus_timer.reset();
             }
         }
+        
+        // draw input text
+        if (config->uiType == UITypeEnum::INPUT_TEXT)
+        {
+            // Text source: ui::TextInput on the same entity
+            auto &textInput = globals::registry.get<ui::TextInput>(entity);
+            const std::string &displayText = textInput.text;  // (optionally mask if you add that feature)
+
+            // Reuse same font + knobs you used for TEXT
+            auto &fontData   = localization::getFontData();
+            float scale      = config->scale.value_or(1.0f) * fontData.fontScale * globals::globalUIScaleFactor;
+            float spacing    = config->textSpacing.value_or(fontData.spacing);
+            Color renderColor = config->color.value();
+            bool buttonActive = true; // same convention as above TEXT block
+
+            if (!buttonActive)
+                renderColor = globals::uiTextInactive;
+
+            // Shadow logic identical to TEXT (with parallax derived from the node's shadow)
+            bool drawShadow = ((config->button_UIE && buttonActive) || (!config->button_UIE && config->shadow && globals::settings.shadowsOn));
+            float rawScale = config->scale.value_or(1.0f) * fontData.fontScale;
+            float scaleFactor = std::clamp(1.0f / (rawScale * rawScale), 0.01f, 1.0f);
+            float textParallaxSX = node->shadowDisplacement->x * fontData.fontLoadedSize * 0.04f * scaleFactor;
+            float textParallaxSY = node->shadowDisplacement->y * fontData.fontLoadedSize * -0.03f * scaleFactor;
+
+            // Common translate (like TEXT): position at element origin + layer displacement
+            Vector2 layerDisplacement = { node->layerDisplacement->x, node->layerDisplacement->y };
+
+            // 1) Optional shadow pass
+            if (drawShadow) {
+                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](auto*){}, zIndex);
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + textParallaxSX + layerDisplacement.x,
+                                                                    y = actualY + textParallaxSY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+                    cmd->x = x; cmd->y = y;
+                }, zIndex);
+
+                if (config->verticalText) {
+                    layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = actualH](layer::CmdTranslate *cmd) { cmd->x = 0; cmd->y = h; }, zIndex);
+                    layer::QueueCommand<layer::CmdRotate>(layerPtr, [](layer::CmdRotate *cmd) { cmd->angle = -PI / 2; }, zIndex);
+                }
+
+                Color shadowColor = Color{0, 0, 0, static_cast<unsigned char>(config->color->a * 0.3f)};
+                float textX  = fontData.fontRenderOffset.x;
+                float textY  = fontData.fontRenderOffset.y;
+                float s      = scale;
+
+                layer::QueueCommand<layer::CmdScale>(layerPtr, [s](layer::CmdScale *cmd){ cmd->scaleX = s; cmd->scaleY = s; }, zIndex);
+                layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
+                                                                font = fontData.font,
+                                                                textX, textY, spacing, shadowColor](layer::CmdTextPro *cmd) {
+                    cmd->text     = t.c_str();
+                    cmd->font     = font;
+                    cmd->x        = textX;
+                    cmd->y        = textY;
+                    cmd->origin   = {0, 0};
+                    cmd->rotation = 0;
+                    cmd->fontSize = localization::getFontData().fontLoadedSize;
+                    cmd->spacing  = spacing;
+                    cmd->color    = shadowColor;
+                }, zIndex);
+
+                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](auto*){}, zIndex);
+            }
+
+            // 2) Main text pass
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](auto*){}, zIndex);
+            layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX + layerDisplacement.x,
+                                                                y = actualY + layerDisplacement.y](layer::CmdTranslate *cmd) {
+                cmd->x = x; cmd->y = y;
+            }, zIndex);
+
+            if (config->verticalText) {
+                layer::QueueCommand<layer::CmdTranslate>(layerPtr, [h = actualH](layer::CmdTranslate *cmd) { cmd->x = 0; cmd->y = h; }, zIndex);
+                layer::QueueCommand<layer::CmdRotate>(layerPtr, [](layer::CmdRotate *cmd) { cmd->angle = -PI / 2; }, zIndex);
+            }
+
+            float textX = fontData.fontRenderOffset.x;
+            float textY = fontData.fontRenderOffset.y;
+
+            layer::QueueCommand<layer::CmdScale>(layerPtr, [s = scale](layer::CmdScale *cmd){
+                cmd->scaleX = s; cmd->scaleY = s;
+            }, zIndex);
+
+            layer::QueueCommand<layer::CmdTextPro>(layerPtr, [t = displayText,
+                                                            font = fontData.font,
+                                                            textX, textY, spacing, renderColor](layer::CmdTextPro *cmd) {
+                cmd->text     = t.c_str();
+                cmd->font     = font;
+                cmd->x        = textX;
+                cmd->y        = textY;
+                cmd->origin   = {0, 0};
+                cmd->rotation = 0;
+                cmd->fontSize = localization::getFontData().fontLoadedSize;
+                cmd->spacing  = spacing;
+                cmd->color    = renderColor;
+            }, zIndex);
+
+            // 3) Blinking caret (only when focused)
+            if (textInput.isActive) {
+                // Blink at 1Hz (on 0.5s, off 0.5s)
+                bool blinkOn = fmodf(main_loop::mainLoop.realtimeTimer, 1.0f) < 0.5f;
+                if (blinkOn) {
+                    // Measure the text up to cursorPos at the *unscaled* font size,
+                    // then add the unscaled render offset; finally we draw under the current scaling.
+                    std::string left = displayText.substr(0, std::min<size_t>(displayText.size(), textInput.cursorPos));
+                    float fontSize   = fontData.fontLoadedSize;
+                    // NOTE: MeasureTextEx returns *unscaled* pixel width for given fontSize and spacing.
+                    Vector2 lhsSize  = MeasureTextEx(fontData.font, left.c_str(), fontSize, spacing);
+
+                    float caretX      = textX + lhsSize.x;
+                    float caretY      = textY;                 // same baseline as text
+                    float caretWidth  = 2.0f;                  // 2px before scaling
+                    float caretHeight = fontSize * 1.1f;       // little taller than glyphs
+
+                    Color caretColor  = renderColor; caretColor.a = std::max<unsigned char>(caretColor.a, 220);
+
+                    // Draw a thin vertical rectangle as caret (inside current Push/Scale)
+                    layer::QueueCommand<layer::CmdDrawRectangle>(layerPtr, [cx = caretX, cy = caretY - fontSize * 0.85f, // shift up to cap height
+                                                                            w = caretWidth, h = caretHeight, caretColor](layer::CmdDrawRectangle *cmd) {
+                        cmd->x = cx;
+                        cmd->y = cy;
+                        cmd->width  = w;
+                        cmd->height = h;
+                        cmd->color  = caretColor;
+                    }, zIndex);
+                }
+            }
+
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](auto*){}, zIndex);
+        }
+
 
         // outline
         if (config->outlineColor && config->outlineColor->a > 0.01f)

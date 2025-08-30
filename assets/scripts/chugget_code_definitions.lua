@@ -4589,7 +4589,7 @@ function .remove_fullscreen_shader(...) end
 ---@param queue? string # Optional: The name of the queue to add to (defaults to 'base').
 ---@param front? boolean # Optional: If true, adds the event to the front of the queue.
 ---@return nil
-function EventQueueSystem.add_event(...) end
+function .add_event(...) end
 
 ---
 --- Finds an active event by its tag.
@@ -4597,40 +4597,40 @@ function EventQueueSystem.add_event(...) end
 ---@param tag string # The tag of the event to find.
 ---@param queue? string # Optional: The specific queue to search in. Searches all if omitted.
 ---@return EventQueueSystem.Event|nil
-function EventQueueSystem.get_event_by_tag(...) end
+function .get_event_by_tag(...) end
 
 ---
 --- Removes all events from one or all queues.
 ---
 ---@param queue? string # Optional: The queue to clear. Clears all if omitted.
 ---@return nil
-function EventQueueSystem.clear_queue(...) end
+function .clear_queue(...) end
 
 ---
 --- Updates the event queue, processing active events.
 ---
 ---@param forced? boolean # Optional: If true, forces an update step.
 ---@return nil
-function EventQueueSystem.update(...) end
+function .update(...) end
 
 ---
 --- Adjusts text alignment based on calculated line widths.
 ---
 ---@param textEntity Entity # The text entity to adjust.
 ---@return nil
-function TextSystem.Functions.adjustAlignment(...) end
+function .Functions.adjustAlignment(...) end
 
 ---
 --- Splits a combined effect string into segments.
 ---
 ---@param effects string # The combined effect string (e.g., '{shake}{color=red}').
 ---@return table # A structured table of parsed effect arguments.
-function TextSystem.Functions.splitEffects(...) end
+function .Functions.splitEffects(...) end
 
 ---
 --- Creates a new text entity in the world.  If you pass a table of callbacks—
-each value must be a function that returns true when its wait condition is met—
-they will be stored in the Text component under txt.luaWaiters[alias].
+--- each value must be a function that returns true when its wait condition is met—
+--- they will be stored in the Text component under txt.luaWaiters[alias].
 ---
 ---@param text TextSystem.Text                # The text configuration object.
 ---@param x number                            # The initial x-position.
@@ -4638,28 +4638,28 @@ they will be stored in the Text component under txt.luaWaiters[alias].
 ---@param[opt] waiters table<string,function> # Optional map of wait-callbacks by alias.
 ---@return Entity                             # The newly created text entity.
 
-function TextSystem.Functions.createTextEntity(...) end
+function .Functions.createTextEntity(...) end
 
 ---
 --- Calculates the text's bounding box.
 ---
 ---@param textEntity Entity # The text entity to measure.
 ---@return Vector2 # The calculated bounding box (width, height).
-function TextSystem.Functions.calculateBoundingBox(...) end
+function .Functions.calculateBoundingBox(...) end
 
 ---
 --- Converts a codepoint to a UTF-8 string.
 ---
 ---@param codepoint integer # The Unicode codepoint.
 ---@return string
-function TextSystem.Functions.CodepointToString(...) end
+function .Functions.CodepointToString(...) end
 
 ---
 --- Parses the raw string of a text entity into characters and applies effects.
 ---
 ---@param textEntity Entity # The entity whose text component should be parsed.
 ---@return nil
-function TextSystem.Functions.parseText(...) end
+function .Functions.parseText(...) end
 
 ---
 --- Handles a single effect segment during parsing.
@@ -4669,7 +4669,7 @@ function TextSystem.Functions.parseText(...) end
 ---@param cx? any
 ---@param cy? any
 ---@return nil
-function TextSystem.Functions.handleEffectSegment(...) end
+function .Functions.handleEffectSegment(...) end
 
 ---
 --- Updates text state (e.g., for animated effects).
@@ -4677,7 +4677,7 @@ function TextSystem.Functions.handleEffectSegment(...) end
 ---@param textEntity Entity
 ---@param dt number # Delta time.
 ---@return nil
-function TextSystem.Functions.updateText(...) end
+function .Functions.updateText(...) end
 
 ---
 --- Renders text to the screen.
@@ -4686,14 +4686,14 @@ function TextSystem.Functions.updateText(...) end
 ---@param layerPtr Layer # The rendering layer.
 ---@param debug? boolean # Optionally draw debug info.
 ---@return nil
-function TextSystem.Functions.renderText(...) end
+function .Functions.renderText(...) end
 
 ---
 --- Clears all effects on a text entity.
 ---
 ---@param textEntity Entity
 ---@return nil
-function TextSystem.Functions.clearAllEffects(...) end
+function .Functions.clearAllEffects(...) end
 
 ---
 --- Applies global effects to text.
@@ -4701,14 +4701,14 @@ function TextSystem.Functions.clearAllEffects(...) end
 ---@param textEntity Entity
 ---@param effectString string # The effect string to apply to all characters.
 ---@return nil
-function TextSystem.Functions.applyGlobalEffects(...) end
+function .Functions.applyGlobalEffects(...) end
 
 ---
 --- Prints internal debug info for a text entity.
 ---
 ---@param textEntity Entity
 ---@return nil
-function TextSystem.Functions.debugPrintText(...) end
+function .Functions.debugPrintText(...) end
 
 ---
 --- Resizes text to fit its container.
@@ -4719,7 +4719,7 @@ function TextSystem.Functions.debugPrintText(...) end
 ---@param centerLaterally? boolean
 ---@param centerVertically? boolean
 ---@return nil
-function TextSystem.Functions.resizeTextToFit(...) end
+function .Functions.resizeTextToFit(...) end
 
 ---
 --- Sets text scale and recenters its origin.
@@ -4731,14 +4731,14 @@ function TextSystem.Functions.resizeTextToFit(...) end
 ---@param centerLaterally boolean
 ---@param centerVertically boolean
 ---@return nil
-function TextSystem.Functions.setTextScaleAndRecenter(...) end
+function .Functions.setTextScaleAndRecenter(...) end
 
 ---
 --- Resets text scale and layout to its original parsed state.
 ---
 ---@param textEntity Entity
 ---@return nil
-function TextSystem.Functions.resetTextScaleAndLayout(...) end
+function .Functions.resetTextScaleAndLayout(...) end
 
 ---
 --- Updates the raw text string and reparses the entity.
@@ -4746,14 +4746,14 @@ function TextSystem.Functions.resetTextScaleAndLayout(...) end
 ---@param textEntity Entity # The entity to modify.
 ---@param newText string # The new raw text string.
 ---@return nil
-function TextSystem.Functions.setText(...) end
+function .Functions.setText(...) end
 
 ---
 --- Advances all animations by dt
 ---
 ---@param dt number # Delta time in seconds
 ---@return nil
-function animation_system.update(...) end
+function .update(...) end
 
 ---
 --- Returns nine-patch border info and texture
@@ -4761,7 +4761,7 @@ function animation_system.update(...) end
 ---@param uuid_or_raw_identifier string # N-patch identifier or raw key
 ---@return NPatchInfo info # Border slicing information
 ---@return Texture2D texture # Associated texture
-function animation_system.getNinepatchUIBorderInfo(...) end
+function .getNinepatchUIBorderInfo(...) end
 
 ---
 --- Sets the foreground color for all animation objects in an entity
@@ -4769,7 +4769,7 @@ function animation_system.getNinepatchUIBorderInfo(...) end
 ---@param e entt.entity # Target entity
 ---@param fgColor Color # Foreground color to set
 Sets the foreground color for all animation objects in an entity
-function animation_system.setFGColorForAllAnimationObjects(...) end
+function .setFGColorForAllAnimationObjects(...) end
 
 ---
 --- Creates an animated object with a transform
@@ -4781,7 +4781,7 @@ function animation_system.setFGColorForAllAnimationObjects(...) end
 ---@param shaderPassConfigFunc fun(entt_entity: entt.entity)? # Optional shader setup callback
 ---@param shadowEnabled boolean? # Enable shadow? Default true
 ---@return entt.entity entity # Created animation entity
-function animation_system.createAnimatedObjectWithTransform(...) end
+function .createAnimatedObjectWithTransform(...) end
 
 ---
 --- Replaces the animated object on an entity, optionally regenerating it from a sprite UUID and applying shader‐pass & shadow settings
@@ -4792,7 +4792,7 @@ function animation_system.createAnimatedObjectWithTransform(...) end
 ---@param shaderPassConfigFunc fun(entt_entity: entt.entity)?        # Optional shader pass configuration callback
 ---@param shadowEnabled boolean?                                    # Enable shadow? Default true
 ---@return entt.entity                                             # Entity whose animated object was replaced
-function animation_system.replaceAnimatedObjectOnEntity(...) end
+function .replaceAnimatedObjectOnEntity(...) end
 
 ---
 --- Configures an existing entity with Transform, AnimationQueueComponent, and optional shader‐pass + shadow settings
@@ -4805,7 +4805,7 @@ function animation_system.replaceAnimatedObjectOnEntity(...) end
         ---@param shadowEnabled boolean?                # Enable shadow? Default true
         ---@return nil
         
-function animation_system.setupAnimatedObjectOnEntity(...) end
+function .setupAnimatedObjectOnEntity(...) end
 
 ---
 --- Creates a still animation from a sprite UUID
@@ -4814,7 +4814,7 @@ function animation_system.setupAnimatedObjectOnEntity(...) end
 ---@param fg Color? # Optional foreground tint
 ---@param bg Color? # Optional background tint
 ---@return AnimationObject animObj # New still animation object
-function animation_system.createStillAnimationFromSpriteUUID(...) end
+function .createStillAnimationFromSpriteUUID(...) end
 
 ---
 --- Resizes all animation objects in an entity to fit
@@ -4823,7 +4823,7 @@ function animation_system.createStillAnimationFromSpriteUUID(...) end
 ---@param targetWidth number # Desired width
 ---@param targetHeight number # Desired height
 ---@return nil
-function animation_system.resizeAnimationObjectsInEntityToFit(...) end
+function .resizeAnimationObjectsInEntityToFit(...) end
 
 ---
 --- Resizes and centers all animation objects in an entity
@@ -4834,14 +4834,14 @@ function animation_system.resizeAnimationObjectsInEntityToFit(...) end
 ---@param centerLaterally boolean? # Center horizontally? Default true
 ---@param centerVertically boolean? # Center vertically? Default true
 ---@return nil
-function animation_system.resizeAnimationObjectsInEntityToFitAndCenterUI(...) end
+function .resizeAnimationObjectsInEntityToFitAndCenterUI(...) end
 
 ---
 --- Resets UI render scale for an entity’s animations
 ---
 ---@param e entt.entity # Target entity
 ---@return nil
-function animation_system.resetAnimationUIRenderScale(...) end
+function .resetAnimationUIRenderScale(...) end
 
 ---
 --- Resizes a single animation object to fit
@@ -4850,12 +4850,12 @@ function animation_system.resetAnimationUIRenderScale(...) end
 ---@param targetWidth number # Desired width
 ---@param targetHeight number # Desired height
 ---@return nil
-function animation_system.resizeAnimationObjectToFit(...) end
+function .resizeAnimationObjectToFit(...) end
 
 ---
 --- Creates a child entity under `master` with a Transform, GameObject (collision enabled),
-and a ColliderComponent of the given `type`, applying all provided offsets, sizes, rotation,
-scale and alignment flags.
+--- and a ColliderComponent of the given `type`, applying all provided offsets, sizes, rotation,
+--- scale and alignment flags.
 ---
 ---@param master entt.entity               # Parent entity to attach collider to
 ---@param type collision.ColliderType       # Shape of the new collider
@@ -4863,48 +4863,103 @@ scale and alignment flags.
                                           #   offsetX?, offsetY?, width?, height?, rotation?, scale?
                                           #   alignment? (bitmask), alignOffset { x?, y? }
 ---@return entt.entity                      # Newly created collider entity
-function collision.create_collider_for_entity(...) end
+function .create_collider_for_entity(...) end
 
 ---
 --- Runs a Separating Axis Theorem (SAT) test—or AABB test if both are unrotated—
-on entities `a` and `b`, returning whether they intersect based on their ColliderComponents
-and Transforms.
+--- on entities `a` and `b`, returning whether they intersect based on their ColliderComponents
+--- and Transforms.
 ---
 ---@param registry entt.registry*           # Pointer to your entity registry
 ---@param a entt.entity                      # First entity to test
 ---@param b entt.entity                      # Second entity to test
 ---@return boolean                           # True if their collider OBBs/AABBs overlap
-function collision.CheckCollisionBetweenTransforms(...) end
+function .CheckCollisionBetweenTransforms(...) end
 
 ---
---- 
 ---
 ---@param e entt.entity               # Entity whose filter to modify
 ---@param tag string                   # Name of the tag to add
 ---| Adds the given tag bit to this entity’s filter.category, so it *is* also that tag.
-function collision.setCollisionCategory(...) end
+function .setCollisionCategory(...) end
 
 ---
---- 
 ---
 ---@param e entt.entity               # Entity whose filter to modify
 ---@param ... string                   # One or more tag names
 ---| Replaces the entity’s filter.mask with the OR of all specified tags.
-function collision.setCollisionMask(...) end
+function .setCollisionMask(...) end
 
 ---
---- 
 ---
 ---@param e entt.entity               # Entity whose filter to reset
 ---@param tag string                   # The sole tag name
 ---| Clears all category bits, then sets only this one.
-function collision.resetCollisionCategory(...) end
+function .resetCollisionCategory(...) end
+
+---
+--- Bind an action to a device code with a trigger.
+---
+---@param action string
+---@param cfg {device:string, key?:integer, mouse?:integer, button?:integer, axis?:integer, trigger?:string, threshold?:number, modifiers?:integer[], context?:string}
+---@return nil
+function .bind(...) end
+
+---
+--- Clear all bindings for an action.
+---
+---@param action string
+---@return nil
+function .clear(...) end
+
+---
+--- True on the frame the action is pressed.
+---
+---@param action string
+---@return boolean
+function .action_pressed(...) end
+
+---
+--- True on the frame the action is released.
+---
+---@param action string
+---@return boolean
+function .action_released(...) end
+
+---
+--- True while the action is held.
+---
+---@param action string
+---@return boolean
+function .action_down(...) end
+
+---
+--- Analog value for axis-type actions.
+---
+---@param action string
+---@return number
+function .action_value(...) end
+
+---
+--- Set the active input context.
+---
+---@param ctx string
+---@return nil
+function .set_context(...) end
+
+---
+--- Capture the next input event and pass it to callback as a binding table.
+---
+---@param action string
+---@param cb fun(ok:boolean,binding:table)
+---@return nil
+function .start_rebind(...) end
 
 ---
 --- Sorts all layers by their Z-index.
 ---
 ---@return nil
-function layer.SortLayers(...) end
+function .SortLayers(...) end
 
 ---
 --- Updates the Z-index of a layer and resorts the layer list.
@@ -4912,13 +4967,13 @@ function layer.SortLayers(...) end
 ---@param layer layer.Layer
 ---@param newZIndex integer
 ---@return nil
-function layer.UpdateLayerZIndex(...) end
+function .UpdateLayerZIndex(...) end
 
 ---
 --- Creates a new layer with a default-sized main canvas and returns it.
 ---
 ---@return layer.Layer
-function layer.CreateLayer(...) end
+function .CreateLayer(...) end
 
 ---
 --- Creates a layer with a main canvas of a specified size.
@@ -4926,14 +4981,14 @@ function layer.CreateLayer(...) end
 ---@param width integer
 ---@param height integer
 ---@return layer.Layer
-function layer.CreateLayerWithSize(...) end
+function .CreateLayerWithSize(...) end
 
 ---
 --- Removes a layer and unloads its canvases.
 ---
 ---@param layer layer.Layer
 ---@return nil
-function layer.RemoveLayerFromCanvas(...) end
+function .RemoveLayerFromCanvas(...) end
 
 ---
 --- Resizes a specific canvas within a layer.
@@ -4943,7 +4998,7 @@ function layer.RemoveLayerFromCanvas(...) end
 ---@param newWidth integer
 ---@param newHeight integer
 ---@return nil
-function layer.ResizeCanvasInLayer(...) end
+function .ResizeCanvasInLayer(...) end
 
 ---
 --- Adds a canvas to the layer, matching the layer's default size.
@@ -4951,13 +5006,13 @@ function layer.ResizeCanvasInLayer(...) end
 ---@param layer layer.Layer
 ---@param canvasName string
 ---@return nil
-function layer.AddCanvasToLayer(...) end
+function .AddCanvasToLayer(...) end
 
 ---
 --- Adds a canvas of a specific size to the layer.
 ---
 ---@overload fun(layer: layer.Layer, canvasName: string, width: integer, height: integer):nil
-function layer.AddCanvasToLayer(...) end
+function .AddCanvasToLayer(...) end
 
 ---
 --- Removes a canvas by name from a specific layer.
@@ -4965,45 +5020,45 @@ function layer.AddCanvasToLayer(...) end
 ---@param layer layer.Layer
 ---@param canvasName string
 ---@return nil
-function layer.RemoveCanvas(...) end
+function .RemoveCanvas(...) end
 
 ---
 --- Destroys all layers and their contents.
 ---
 ---@return nil
-function layer.UnloadAllLayers(...) end
+function .UnloadAllLayers(...) end
 
 ---
 --- Clears draw commands for a specific layer.
 ---
 ---@param layer layer.Layer
 ---@return nil
-function layer.ClearDrawCommands(...) end
+function .ClearDrawCommands(...) end
 
 ---
 --- Clears all draw commands from all layers.
 ---
 ---@return nil
-function layer.ClearAllDrawCommands(...) end
+function .ClearAllDrawCommands(...) end
 
 ---
 --- Begins drawing to all canvases. (Calls BeginTextureMode on all).
 ---
 ---@return nil
-function layer.Begin(...) end
+function .Begin(...) end
 
 ---
 --- Ends drawing to all canvases. (Calls EndTextureMode on all).
 ---
 ---@return nil
-function layer.End(...) end
+function .End(...) end
 
 ---
 --- Renders all layers to the current render target.
 ---
 ---@param camera? Camera2D # Optional camera for rendering.
 ---@return nil
-function layer.RenderAllLayersToCurrentRenderTarget(...) end
+function .RenderAllLayersToCurrentRenderTarget(...) end
 
 ---
 --- Draws a layer's queued commands to a specific canvas within that layer.
@@ -5012,7 +5067,7 @@ function layer.RenderAllLayersToCurrentRenderTarget(...) end
 ---@param canvasName string
 ---@param camera Camera2D # The camera to use for rendering.
 ---@return nil
-function layer.DrawLayerCommandsToSpecificCanvas(...) end
+function .DrawLayerCommandsToSpecificCanvas(...) end
 
 ---
 --- Draws a canvas to the current render target with transform, color, and an optional shader.
@@ -5028,7 +5083,7 @@ function layer.DrawLayerCommandsToSpecificCanvas(...) end
 ---@param shader? Shader
 ---@param flat? boolean
 ---@return nil
-function layer.DrawCanvasToCurrentRenderTargetWithTransform(...) end
+function .DrawCanvasToCurrentRenderTargetWithTransform(...) end
 
 ---
 --- Draws a canvas from one layer onto a canvas in another layer.
@@ -5044,7 +5099,7 @@ function layer.DrawCanvasToCurrentRenderTargetWithTransform(...) end
 ---@param scaleY number
 ---@param tint Color
 ---@return nil
-function layer.DrawCanvasOntoOtherLayer(...) end
+function .DrawCanvasOntoOtherLayer(...) end
 
 ---
 --- Draws a canvas from one layer onto another with a shader.
@@ -5061,7 +5116,7 @@ function layer.DrawCanvasOntoOtherLayer(...) end
 ---@param tint Color
 ---@param shader Shader
 ---@return nil
-function layer.DrawCanvasOntoOtherLayerWithShader(...) end
+function .DrawCanvasOntoOtherLayerWithShader(...) end
 
 ---
 --- Draws a canvas to the current render target, fitting it to a destination rectangle.
@@ -5072,7 +5127,7 @@ function layer.DrawCanvasOntoOtherLayerWithShader(...) end
 ---@param color Color
 ---@param shader Shader
 ---@return nil
-function layer.DrawCanvasToCurrentRenderTargetWithDestRect(...) end
+function .DrawCanvasToCurrentRenderTargetWithDestRect(...) end
 
 ---
 --- Executes a custom drawing function that renders to a specific canvas.
@@ -5081,7 +5136,7 @@ function layer.DrawCanvasToCurrentRenderTargetWithDestRect(...) end
 ---@param canvasName? string
 ---@param drawActions fun():void
 ---@return nil
-function layer.DrawCustomLamdaToSpecificCanvas(...) end
+function .DrawCustomLamdaToSpecificCanvas(...) end
 
 ---
 --- Draws an entity with a Transform and Animation component directly.
@@ -5089,7 +5144,7 @@ function layer.DrawCustomLamdaToSpecificCanvas(...) end
 ---@param registry Registry
 ---@param entity Entity
 ---@return nil
-function layer.DrawTransformEntityWithAnimation(...) end
+function .DrawTransformEntityWithAnimation(...) end
 
 ---
 --- Draws an entity with a Transform and Animation component using the rendering pipeline.
@@ -5097,7 +5152,7 @@ function layer.DrawTransformEntityWithAnimation(...) end
 ---@param registry Registry
 ---@param entity Entity
 ---@return nil
-function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
+function .DrawTransformEntityWithAnimationWithPipeline(...) end
 
 ---
 --- Queues a CmdBeginDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5107,7 +5162,7 @@ function layer.DrawTransformEntityWithAnimationWithPipeline(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueBeginDrawing(...) end
+function .queueBeginDrawing(...) end
 
 ---
 --- Queues a CmdClearStencilBuffer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5117,7 +5172,7 @@ function layer.queueBeginDrawing(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueClearStencilBuffer(...) end
+function .queueClearStencilBuffer(...) end
 
 ---
 --- Queues a CmdBeginStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5127,7 +5182,7 @@ function layer.queueClearStencilBuffer(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueBeginStencilMode(...) end
+function .queueBeginStencilMode(...) end
 
 ---
 --- Queues a CmdEndStencilMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5137,7 +5192,7 @@ function layer.queueBeginStencilMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueEndStencilMode(...) end
+function .queueEndStencilMode(...) end
 
 ---
 --- Queues a CmdBeginStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5147,7 +5202,7 @@ function layer.queueEndStencilMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueBeginStencilMask(...) end
+function .queueBeginStencilMask(...) end
 
 ---
 --- Queues a CmdEndStencilMask into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5157,7 +5212,7 @@ function layer.queueBeginStencilMask(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueEndStencilMask(...) end
+function .queueEndStencilMask(...) end
 
 ---
 --- Queues a CmdDrawCenteredEllipse into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5167,7 +5222,7 @@ function layer.queueEndStencilMask(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawCenteredEllipse(...) end
+function .queueDrawCenteredEllipse(...) end
 
 ---
 --- Queues a CmdDrawRoundedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5177,7 +5232,7 @@ function layer.queueDrawCenteredEllipse(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawRoundedLine(...) end
+function .queueDrawRoundedLine(...) end
 
 ---
 --- Queues a CmdDrawPolyline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5187,7 +5242,7 @@ function layer.queueDrawRoundedLine(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawPolyline(...) end
+function .queueDrawPolyline(...) end
 
 ---
 --- Queues a CmdDrawArc into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5197,7 +5252,7 @@ function layer.queueDrawPolyline(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawArc(...) end
+function .queueDrawArc(...) end
 
 ---
 --- Queues a CmdDrawTriangleEquilateral into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5207,7 +5262,7 @@ function layer.queueDrawArc(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawTriangleEquilateral(...) end
+function .queueDrawTriangleEquilateral(...) end
 
 ---
 --- Queues a CmdDrawCenteredFilledRoundedRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5217,7 +5272,7 @@ function layer.queueDrawTriangleEquilateral(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawCenteredFilledRoundedRect(...) end
+function .queueDrawCenteredFilledRoundedRect(...) end
 
 ---
 --- Queues a CmdDrawSpriteCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5227,7 +5282,7 @@ function layer.queueDrawCenteredFilledRoundedRect(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawSpriteCentered(...) end
+function .queueDrawSpriteCentered(...) end
 
 ---
 --- Queues a CmdDrawSpriteTopLeft into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5237,7 +5292,7 @@ function layer.queueDrawSpriteCentered(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawSpriteTopLeft(...) end
+function .queueDrawSpriteTopLeft(...) end
 
 ---
 --- Queues a CmdDrawDashedCircle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5247,7 +5302,7 @@ function layer.queueDrawSpriteTopLeft(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawDashedCircle(...) end
+function .queueDrawDashedCircle(...) end
 
 ---
 --- Queues a CmdDrawDashedRoundedRect into the layer draw list. Executes init    _fn with a command instance and inserts it at the specified z-order.
@@ -5257,7 +5312,7 @@ function layer.queueDrawDashedCircle(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawDashedRoundedRect(...) end
+function .queueDrawDashedRoundedRect(...) end
 
 ---
 --- Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5267,7 +5322,7 @@ function layer.queueDrawDashedRoundedRect(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawDashedLine(...) end
+function .queueDrawDashedLine(...) end
 
 ---
 --- Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5277,7 +5332,7 @@ function layer.queueDrawDashedLine(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueEndDrawing(...) end
+function .queueEndDrawing(...) end
 
 ---
 --- Queues a CmdClearBackground into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5287,7 +5342,7 @@ function layer.queueEndDrawing(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueClearBackground(...) end
+function .queueClearBackground(...) end
 
 ---
 --- Queues a CmdBeginScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5297,7 +5352,7 @@ function layer.queueClearBackground(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueBeginScissorMode(...) end
+function .queueBeginScissorMode(...) end
 
 ---
 --- Queues a CmdEndScissorMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5307,7 +5362,7 @@ function layer.queueBeginScissorMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueEndScissorMode(...) end
+function .queueEndScissorMode(...) end
 
 ---
 --- Queues a CmdTranslate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5317,7 +5372,7 @@ function layer.queueEndScissorMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueTranslate(...) end
+function .queueTranslate(...) end
 
 ---
 --- Queues a CmdScale into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5327,7 +5382,7 @@ function layer.queueTranslate(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueScale(...) end
+function .queueScale(...) end
 
 ---
 --- Queues a CmdRotate into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5337,7 +5392,7 @@ function layer.queueScale(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueRotate(...) end
+function .queueRotate(...) end
 
 ---
 --- Queues a CmdAddPush into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5347,7 +5402,7 @@ function layer.queueRotate(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueAddPush(...) end
+function .queueAddPush(...) end
 
 ---
 --- Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5357,7 +5412,7 @@ function layer.queueAddPush(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueAddPop(...) end
+function .queueAddPop(...) end
 
 ---
 --- Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5367,7 +5422,7 @@ function layer.queueAddPop(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queuePushMatrix(...) end
+function .queuePushMatrix(...) end
 
 ---
 --- Queues a CmdPopMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5377,7 +5432,7 @@ function layer.queuePushMatrix(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queuePopMatrix(...) end
+function .queuePopMatrix(...) end
 
 ---
 --- Queues a CmdDrawCircleFilled into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5387,7 +5442,7 @@ function layer.queuePopMatrix(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawCircle(...) end
+function .queueDrawCircle(...) end
 
 ---
 --- Queues a CmdDrawRectangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5397,7 +5452,7 @@ function layer.queueDrawCircle(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawRectangle(...) end
+function .queueDrawRectangle(...) end
 
 ---
 --- Queues a CmdDrawRectanglePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5407,7 +5462,7 @@ function layer.queueDrawRectangle(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawRectanglePro(...) end
+function .queueDrawRectanglePro(...) end
 
 ---
 --- Queues a CmdDrawRectangleLinesPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5417,7 +5472,7 @@ function layer.queueDrawRectanglePro(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawRectangleLinesPro(...) end
+function .queueDrawRectangleLinesPro(...) end
 
 ---
 --- Queues a CmdDrawLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5427,7 +5482,7 @@ function layer.queueDrawRectangleLinesPro(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawLine(...) end
+function .queueDrawLine(...) end
 
 ---
 --- Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5437,7 +5492,7 @@ function layer.queueDrawLine(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawDashedLine(...) end
+function .queueDrawDashedLine(...) end
 
 ---
 --- Queues a CmdDrawText into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5447,7 +5502,7 @@ function layer.queueDrawDashedLine(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawText(...) end
+function .queueDrawText(...) end
 
 ---
 --- Queues a CmdDrawTextCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5457,7 +5512,7 @@ function layer.queueDrawText(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawTextCentered(...) end
+function .queueDrawTextCentered(...) end
 
 ---
 --- Queues a CmdTextPro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5467,7 +5522,7 @@ function layer.queueDrawTextCentered(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueTextPro(...) end
+function .queueTextPro(...) end
 
 ---
 --- Queues a CmdDrawImage into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5477,7 +5532,7 @@ function layer.queueTextPro(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawImage(...) end
+function .queueDrawImage(...) end
 
 ---
 --- Queues a CmdTexturePro into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5487,7 +5542,7 @@ function layer.queueDrawImage(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueTexturePro(...) end
+function .queueTexturePro(...) end
 
 ---
 --- Queues a CmdDrawEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5497,7 +5552,7 @@ function layer.queueTexturePro(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawEntityAnimation(...) end
+function .queueDrawEntityAnimation(...) end
 
 ---
 --- Queues a CmdDrawTransformEntityAnimation into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5507,7 +5562,7 @@ function layer.queueDrawEntityAnimation(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawTransformEntityAnimation(...) end
+function .queueDrawTransformEntityAnimation(...) end
 
 ---
 --- Queues a CmdDrawTransformEntityAnimationPipeline into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5517,7 +5572,7 @@ function layer.queueDrawTransformEntityAnimation(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawTransformEntityAnimationPipeline(...) end
+function .queueDrawTransformEntityAnimationPipeline(...) end
 
 ---
 --- Queues a CmdSetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5527,7 +5582,7 @@ function layer.queueDrawTransformEntityAnimationPipeline(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSetShader(...) end
+function .queueSetShader(...) end
 
 ---
 --- Queues a CmdResetShader into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5537,7 +5592,7 @@ function layer.queueSetShader(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueResetShader(...) end
+function .queueResetShader(...) end
 
 ---
 --- Queues a CmdSetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5547,7 +5602,7 @@ function layer.queueResetShader(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSetBlendMode(...) end
+function .queueSetBlendMode(...) end
 
 ---
 --- Queues a CmdUnsetBlendMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5557,7 +5612,7 @@ function layer.queueSetBlendMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueUnsetBlendMode(...) end
+function .queueUnsetBlendMode(...) end
 
 ---
 --- Queues a CmdSendUniformFloat into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5567,7 +5622,7 @@ function layer.queueUnsetBlendMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSendUniformFloat(...) end
+function .queueSendUniformFloat(...) end
 
 ---
 --- Queues a CmdSendUniformInt into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5577,7 +5632,7 @@ function layer.queueSendUniformFloat(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSendUniformInt(...) end
+function .queueSendUniformInt(...) end
 
 ---
 --- Queues a CmdSendUniformVec2 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5587,7 +5642,7 @@ function layer.queueSendUniformInt(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSendUniformVec2(...) end
+function .queueSendUniformVec2(...) end
 
 ---
 --- Queues a CmdSendUniformVec3 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5597,7 +5652,7 @@ function layer.queueSendUniformVec2(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSendUniformVec3(...) end
+function .queueSendUniformVec3(...) end
 
 ---
 --- Queues a CmdSendUniformVec4 into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5607,7 +5662,7 @@ function layer.queueSendUniformVec3(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSendUniformVec4(...) end
+function .queueSendUniformVec4(...) end
 
 ---
 --- Queues a CmdSendUniformFloatArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5617,7 +5672,7 @@ function layer.queueSendUniformVec4(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSendUniformFloatArray(...) end
+function .queueSendUniformFloatArray(...) end
 
 ---
 --- Queues a CmdSendUniformIntArray into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5627,7 +5682,7 @@ function layer.queueSendUniformFloatArray(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSendUniformIntArray(...) end
+function .queueSendUniformIntArray(...) end
 
 ---
 --- Queues a CmdVertex into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5637,7 +5692,7 @@ function layer.queueSendUniformIntArray(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueVertex(...) end
+function .queueVertex(...) end
 
 ---
 --- Queues a CmdBeginOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5647,7 +5702,7 @@ function layer.queueVertex(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueBeginOpenGLMode(...) end
+function .queueBeginOpenGLMode(...) end
 
 ---
 --- Queues a CmdEndOpenGLMode into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5657,7 +5712,7 @@ function layer.queueBeginOpenGLMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueEndOpenGLMode(...) end
+function .queueEndOpenGLMode(...) end
 
 ---
 --- Queues a CmdSetColor into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5667,7 +5722,7 @@ function layer.queueEndOpenGLMode(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSetColor(...) end
+function .queueSetColor(...) end
 
 ---
 --- Queues a CmdSetLineWidth into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5677,7 +5732,7 @@ function layer.queueSetColor(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSetLineWidth(...) end
+function .queueSetLineWidth(...) end
 
 ---
 --- Queues a CmdSetTexture into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5687,7 +5742,7 @@ function layer.queueSetLineWidth(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueSetTexture(...) end
+function .queueSetTexture(...) end
 
 ---
 --- Queues a CmdRenderRectVerticesFilledLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5697,7 +5752,7 @@ function layer.queueSetTexture(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueRenderRectVerticesFilledLayer(...) end
+function .queueRenderRectVerticesFilledLayer(...) end
 
 ---
 --- Queues a CmdRenderRectVerticesOutlineLayer into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5707,7 +5762,7 @@ function layer.queueRenderRectVerticesFilledLayer(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueRenderRectVerticesOutlineLayer(...) end
+function .queueRenderRectVerticesOutlineLayer(...) end
 
 ---
 --- Queues a CmdDrawPolygon into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5717,7 +5772,7 @@ function layer.queueRenderRectVerticesOutlineLayer(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawPolygon(...) end
+function .queueDrawPolygon(...) end
 
 ---
 --- Queues a CmdRenderNPatchRect into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5727,7 +5782,7 @@ function layer.queueDrawPolygon(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueRenderNPatchRect(...) end
+function .queueRenderNPatchRect(...) end
 
 ---
 --- Queues a CmdDrawTriangle into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -5737,7 +5792,7 @@ function layer.queueRenderNPatchRect(...) end
         ---@param z number # Z-order depth to queue at
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
-function layer.queueDrawTriangle(...) end
+function .queueDrawTriangle(...) end
 
 ---
 --- Removes a post-process shader from the layer by name.
@@ -5745,7 +5800,7 @@ function layer.queueDrawTriangle(...) end
 ---@param layer Layer # Target layer
         ---@param shader_name string # Name of the shader to remove
         ---@return void
-function layer.Layer.removePostProcessShader(...) end
+function .removePostProcessShader(...) end
 
 ---
 --- Adds a post-process shader to the layer.
@@ -5754,14 +5809,14 @@ function layer.Layer.removePostProcessShader(...) end
         ---@param shader_name string # Name of the shader to add
         ---@param shader Shader # Shader instance to add
         ---@return void
-function layer.Layer.addPostProcessShader(...) end
+function .addPostProcessShader(...) end
 
 ---
 --- Removes all post-process shaders from the layer.
 ---
 ---@param layer Layer # Target layer
         ---@return void
-function layer.Layer.clearPostProcessShaders(...) end
+function .clearPostProcessShaders(...) end
 
 ---
 --- Assigns the given entity the current top Z-index and increments the counter.
@@ -5770,7 +5825,7 @@ function layer.Layer.clearPostProcessShaders(...) end
 ---@param e Entity
 ---@param incrementIndexAfterwards boolean Defaults to true
 ---@return nil
-function layer_order_system.setToTopZIndex(...) end
+function .setToTopZIndex(...) end
 
 ---
 --- Ensures entity a’s zIndex is at least one above b’s.
@@ -5779,20 +5834,20 @@ function layer_order_system.setToTopZIndex(...) end
 ---@param a Entity The entity to move above b
 ---@param b Entity The reference entity
 ---@return nil
-function layer_order_system.putAOverB(...) end
+function .putAOverB(...) end
 
 ---
 --- Walks all UIBoxComponents without a LayerOrderComponent and pushes them to the top Z-stack.
 ---
 ---@param registry registry
 ---@return nil
-function layer_order_system.updateLayerZIndexesAsNecessary(...) end
+function .updateLayerZIndexesAsNecessary(...) end
 
 ---
 --- Resets the global Z-index counter back to zero.
 ---
 ---@return nil
-function layer_order_system.resetRunningZIndex(...) end
+function .resetRunningZIndex(...) end
 
 ---
 --- Force-sets an entity’s zIndex to the given value.
@@ -5801,7 +5856,7 @@ function layer_order_system.resetRunningZIndex(...) end
 ---@param e Entity
 ---@param zIndex number The exact zIndex to assign
 ---@return nil
-function layer_order_system.assignZIndexToEntity(...) end
+function .assignZIndexToEntity(...) end
 
 ---
 --- Loads a language file for the given language code from a specific path.
@@ -5809,21 +5864,21 @@ function layer_order_system.assignZIndexToEntity(...) end
 ---@param languageCode string # The language to load (e.g., 'en_US').
 ---@param path string # The filepath to the language JSON file.
 ---@return nil
-function localization.loadLanguage(...) end
+function .loadLanguage(...) end
 
 ---
 --- Sets a fallback language if a key isn't found in the current one.
 ---
 ---@param languageCode string # The language code to use as a fallback (e.g., 'en_US').
 ---@return nil
-function localization.setFallbackLanguage(...) end
+function .setFallbackLanguage(...) end
 
 ---
 --- Returns the currently active language code.
 ---
 ---@return string # The currently active language code.
 Gets the currently active language code. This is useful for checking which language is currently set.
-function localization.getCurrentLanguage(...) end
+function .getCurrentLanguage(...) end
 
 ---
 --- Retrieves a localized string by key, formatting it with an optional Lua table of named parameters.
@@ -5832,41 +5887,41 @@ function localization.getCurrentLanguage(...) end
 ---@param args table<string,any>?    # Optional named formatting args
 ---@return string                    # Localized & formatted text
 
-function localization.get(...) end
+function .get(...) end
 
 ---
 --- Gets the raw string from the language file, using fallbacks if necessary.
 ---
 ---@param key string # The localization key.
 ---@return string # The raw, untransformed string or a '[MISSING: key]' message.
-function localization.getRaw(...) end
+function .getRaw(...) end
 
 ---
 --- Retrieves font data associated with the current language.
 ---
 ---@return FontData # A handle to the font data for the current language.
-function localization.getFontData(...) end
+function .getFontData(...) end
 
 ---
 --- Loads font data from the specified path.
 ---
 ---@param path string # The file path to the font data JSON.
 ---@return nil
-function localization.loadFontData(...) end
+function .loadFontData(...) end
 
 ---
 --- Registers a callback that executes after the current language changes.
 ---
 ---@param callback fun(newLanguageCode: string) # A function to call when the language changes.
 ---@return nil
-function localization.onLanguageChanged(...) end
+function .onLanguageChanged(...) end
 
 ---
 --- Sets the current language and notifies all listeners.
 ---
 ---@param languageCode string # The language code to make active.
 ---@return boolean # True if the language was set successfully, false otherwise.
-function localization.setCurrentLanguage(...) end
+function .setCurrentLanguage(...) end
 
 ---
 --- Emits a burst of particles from the specified emitter entity.
@@ -5874,20 +5929,20 @@ function localization.setCurrentLanguage(...) end
 ---@param emitterEntity Entity # The entity that has the particle emitter component.
 ---@param count integer # The number of particles to emit in a single burst.
 ---@return nil
-function particle.EmitParticles(...) end
+function .EmitParticles(...) end
 
 ---
 --- Attaches an existing emitter to another entity, with optional offset.
 ---
 ---@param emitter entt::entity---@param target entt::entity---@param opts table? # { offset = Vector2 }
-function particle.AttachEmitter(...) end
+function .AttachEmitter(...) end
 
 ---
 --- Destroys all live particles.
 ---
 ---@return void
 ---Destroys every live particle in the registry.
-function particle.WipeAll(...) end
+function .WipeAll(...) end
 
 ---
 --- Destroys all particles with the given string tag.
@@ -5895,7 +5950,7 @@ function particle.WipeAll(...) end
 ---@param tag string # The tag to match
 ---@return void
 ---Destroys only those particles whose ParticleTag.name == tag.
-function particle.WipeTagged(...) end
+function .WipeTagged(...) end
 
 ---
 --- Creates a ParticleEmitter; pass a table to override any defaults.
@@ -5906,7 +5961,7 @@ function particle.WipeTagged(...) end
 ---@field opts.emissionRate number
 ---@field opts.colors Color[]
 ---@return ParticleEmitter
-function particle.CreateParticleEmitter(...) end
+function .CreateParticleEmitter(...) end
 
 ---
 --- Creates a Particle from Lua, applies optional animation & tag.
@@ -5933,21 +5988,21 @@ function particle.CreateParticleEmitter(...) end
  -- animationName     string                    # which animation to play
 ---@param tag      string?                        # optional string tag to attach to this particle
 ---@return entt::entity                            # the newly created particle entity
-function particle.CreateParticle(...) end
+function .CreateParticle(...) end
 
 ---
 --- Sets the seed for deterministic random behavior.
 ---
 ---@param seed integer # The seed for the random number generator.
 ---@return nil
-function random_utils.set_seed(...) end
+function .set_seed(...) end
 
 ---
 --- Returns a random boolean value, with an optional probability.
 ---
 ---@param chance? number # Optional: A percentage chance (0-100) for the result to be true. Defaults to 50.
 ---@return boolean
-function random_utils.random_bool(...) end
+function .random_bool(...) end
 
 ---
 --- Returns a random float between min and max.
@@ -5955,7 +6010,7 @@ function random_utils.random_bool(...) end
 ---@param min? number # The minimum value (inclusive). Defaults to 0.0.
 ---@param max? number # The maximum value (inclusive). Defaults to 1.0.
 ---@return number
-function random_utils.random_float(...) end
+function .random_float(...) end
 
 ---
 --- Returns a random integer within a range.
@@ -5963,7 +6018,7 @@ function random_utils.random_float(...) end
 ---@param min? integer # The minimum value (inclusive). Defaults to 0.
 ---@param max? integer # The maximum value (inclusive). Defaults to 1.
 ---@return integer
-function random_utils.random_int(...) end
+function .random_int(...) end
 
 ---
 --- Returns a float sampled from a normal (Gaussian) distribution.
@@ -5971,33 +6026,33 @@ function random_utils.random_int(...) end
 ---@param mean number # The mean of the distribution.
 ---@param stdev number # The standard deviation of the distribution.
 ---@return number
-function random_utils.random_normal(...) end
+function .random_normal(...) end
 
 ---
 --- Returns +1 or -1 randomly, with an optional probability.
 ---
 ---@param chance? number # Optional: A percentage chance (0-100) for the result to be +1. Defaults to 50.
 ---@return integer # Either +1 or -1.
-function random_utils.random_sign(...) end
+function .random_sign(...) end
 
 ---
 --- Generates a random unique integer ID.
 ---
 ---@return integer # A random unique integer ID.
-function random_utils.random_uid(...) end
+function .random_uid(...) end
 
 ---
 --- Returns a random angle in radians.
 ---
 ---@return number # A random angle in radians (0 to 2*pi).
-function random_utils.random_angle(...) end
+function .random_angle(...) end
 
 ---
 --- Returns a biased random float between 0 and 1.
 ---
 ---@param biasFactor number # A factor to skew the result. <1.0 favors higher values, >1.0 favors lower values.
 ---@return number
-function random_utils.random_biased(...) end
+function .random_biased(...) end
 
 ---
 --- Returns a random delay in milliseconds.
@@ -6005,116 +6060,116 @@ function random_utils.random_biased(...) end
 ---@param minMs integer # The minimum delay in milliseconds.
 ---@param maxMs integer # The maximum delay in milliseconds.
 ---@return number
-function random_utils.random_delay(...) end
+function .random_delay(...) end
 
 ---
 --- Returns a random, normalized 2D vector.
 ---
 ---@return Vector2
-function random_utils.random_unit_vector_2D(...) end
+function .random_unit_vector_2D(...) end
 
 ---
 --- Returns a random, normalized 3D vector.
 ---
 ---@return Vector3
-function random_utils.random_unit_vector_3D(...) end
+function .random_unit_vector_3D(...) end
 
 ---
 --- Returns a randomly generated color.
 ---
 ---@return Color
-function random_utils.random_color(...) end
+function .random_color(...) end
 
 ---
 --- Selects a random element from a table of integers.
 ---
 ---@param items integer[] # A table of integers.
 ---@return integer
-function random_utils.random_element_int(...) end
+function .random_element_int(...) end
 
 ---
 --- Selects a random element from a table of numbers.
 ---
 ---@param items number[] # A table of numbers.
 ---@return number
-function random_utils.random_element_double(...) end
+function .random_element_double(...) end
 
 ---
 --- Selects a random element from a table of strings.
 ---
 ---@param items string[] # A Lua table (array) of strings.
 ---@return string       # One random element from the list.
-function random_utils.random_element_string(...) end
+function .random_element_string(...) end
 
 ---
 --- Selects a random element from a table of Colors.
 ---
 ---@param items Color[] # A table of Colors.
 ---@return Color
-function random_utils.random_element_color(...) end
+function .random_element_color(...) end
 
 ---
 --- Selects a random element from a table of Vector2s.
 ---
 ---@param items Vector2[] # A table of Vector2s.
 ---@return Vector2
-function random_utils.random_element_vec2(...) end
+function .random_element_vec2(...) end
 
 ---
 --- Selects a random element from a table of Entities.
 ---
 ---@param items Entity[] # A table of Entities.
 ---@return Entity
-function random_utils.random_element_entity(...) end
+function .random_element_entity(...) end
 
 ---
 --- Selects, removes, and returns a random element from a table of integers.
 ---
 ---@param items integer[] # The table to modify.
 ---@return integer
-function random_utils.random_element_remove_int(...) end
+function .random_element_remove_int(...) end
 
 ---
 --- Selects, removes, and returns a random element from a table of numbers.
 ---
 ---@param items number[] # The table to modify.
 ---@return number
-function random_utils.random_element_remove_double(...) end
+function .random_element_remove_double(...) end
 
 ---
 --- Selects, removes, and returns a random element from a table of strings.
 ---
 ---@param items string[] # The table to modify.
 ---@return string
-function random_utils.random_element_remove_string(...) end
+function .random_element_remove_string(...) end
 
 ---
 --- Selects, removes, and returns a random element from a table of Colors.
 ---
 ---@param items Color[] # The table to modify.
 ---@return Color
-function random_utils.random_element_remove_color(...) end
+function .random_element_remove_color(...) end
 
 ---
 --- Selects, removes, and returns a random element from a table of Vector2s.
 ---
 ---@param items Vector2[] # The table to modify.
 ---@return Vector2
-function random_utils.random_element_remove_vec2(...) end
+function .random_element_remove_vec2(...) end
 
 ---
 --- Selects, removes, and returns a random element from a table of Entities.
 ---
 ---@param items Entity[] # The table to modify.
 ---@return Entity
-function random_utils.random_element_remove_entity(...) end
+function .random_element_remove_entity(...) end
 
 ---
 --- Performs a weighted random pick and returns the chosen index.
 ---
 ---@param weights number[] # A table of weights.
 ---@return integer # A 1-based index corresponding to the chosen weight.
-function random_utils.random_weighted_pick_int(...) end
+function .random_weighted_pick_int(...) end
 
 ---
 --- Performs a weighted random pick from a table of strings.
@@ -6122,7 +6177,7 @@ function random_utils.random_weighted_pick_int(...) end
 ---@param values string[] # A table of string values.
 ---@param weights number[] # A table of corresponding weights.
 ---@return string
-function random_utils.random_weighted_pick_string(...) end
+function .random_weighted_pick_string(...) end
 
 ---
 --- Performs a weighted random pick from a table of Colors.
@@ -6130,7 +6185,7 @@ function random_utils.random_weighted_pick_string(...) end
 ---@param values Color[] # A table of Color values.
 ---@param weights number[] # A table of corresponding weights.
 ---@return Color
-function random_utils.random_weighted_pick_color(...) end
+function .random_weighted_pick_color(...) end
 
 ---
 --- Performs a weighted random pick from a table of Vector2s.
@@ -6138,7 +6193,7 @@ function random_utils.random_weighted_pick_color(...) end
 ---@param values Vector2[] # A table of Vector2 values.
 ---@param weights number[] # A table of corresponding weights.
 ---@return Vector2
-function random_utils.random_weighted_pick_vec2(...) end
+function .random_weighted_pick_vec2(...) end
 
 ---
 --- Performs a weighted random pick from a table of Entities.
@@ -6146,13 +6201,13 @@ function random_utils.random_weighted_pick_vec2(...) end
 ---@param values Entity[] # A table of Entity values.
 ---@param weights number[] # A table of corresponding weights.
 ---@return Entity
-function random_utils.random_weighted_pick_entity(...) end
+function .random_weighted_pick_entity(...) end
 
 ---
 --- Unloads the pipeline's internal render textures.
 ---
 ---@return nil
-function shader_pipeline.ShaderPipelineUnload(...) end
+function .ShaderPipelineUnload(...) end
 
 ---
 --- Initializes or re-initializes the pipeline's render textures to a new size.
@@ -6160,7 +6215,7 @@ function shader_pipeline.ShaderPipelineUnload(...) end
 ---@param width integer
 ---@param height integer
 ---@return nil
-function shader_pipeline.ShaderPipelineInit(...) end
+function .ShaderPipelineInit(...) end
 
 ---
 --- Resizes the pipeline's render textures if the new dimensions are different.
@@ -6168,14 +6223,14 @@ function shader_pipeline.ShaderPipelineInit(...) end
 ---@param newWidth integer
 ---@param newHeight integer
 ---@return nil
-function shader_pipeline.Resize(...) end
+function .Resize(...) end
 
 ---
 --- Clears the pipeline's internal textures to a specific color (defaults to transparent).
 ---
 ---@param color? Color
 ---@return nil
-function shader_pipeline.ClearTextures(...) end
+function .ClearTextures(...) end
 
 ---
 --- Draws the current 'front' render texture for debugging purposes.
@@ -6183,70 +6238,69 @@ function shader_pipeline.ClearTextures(...) end
 ---@param x? integer
 ---@param y? integer
 ---@return nil
-function shader_pipeline.DebugDrawFront(...) end
+function .DebugDrawFront(...) end
 
 ---
 --- Swaps the internal 'ping' and 'pong' render textures.
 ---
 ---@return nil
-function shader_pipeline.Swap(...) end
+function .Swap(...) end
 
 ---
 --- Internal helper to track the last used render target.
 ---
 ---@param texture RenderTexture2D
 ---@return nil
-function shader_pipeline.SetLastRenderTarget(...) end
+function .SetLastRenderTarget(...) end
 
 ---
 --- Internal helper to retrieve the last used render target.
 ---
 ---@return RenderTexture2D|nil
-function shader_pipeline.GetLastRenderTarget(...) end
+function .GetLastRenderTarget(...) end
 
 ---
 --- Internal helper to track the last rendered rectangle area.
 ---
 ---@param rect Rectangle
 ---@return nil
-function shader_pipeline.SetLastRenderRect(...) end
+function .SetLastRenderRect(...) end
 
 ---
 --- Internal helper to retrieve the last rendered rectangle area.
 ---
 ---@return Rectangle
-function shader_pipeline.GetLastRenderRect(...) end
+function .GetLastRenderRect(...) end
 
 ---
---- 
 ---
 ---@param src ShaderOverlayInputSource    # where the overlay samples from
 ---@param name string                      # your overlay’s name
 ---@param blend BlendMode?                 # optional blend mode (default BLEND_ALPHA)
 ---@return ShaderOverlayDraw               # the newly-added overlay draw
 
-function shader_pipeline.ShaderPipelineComponent.addOverlay(...) end
+function .ShaderPipelineComponent.addOverlay(...) end
 
 ---
 --- Add a new pass at the end
 ---
 ---@param name string
 ---@return nil
-function shader_pipeline.ShaderPipelineComponent.addPass(...) end
+function .addPass(...) end
 
 ---
 --- Remove a pass by name
 ---
 ---@param name string
 ---@return boolean
-function shader_pipeline.ShaderPipelineComponent.removePass(...) end
+function .removePass(...) end
 
 ---
 --- Toggle a pass enabled/disabled
 ---
 ---@param name string
 ---@return boolean
-function shader_pipeline.ShaderPipelineComponent.togglePass(...) end
+function .togglePass(...) end
 
 ---
 --- Add a new overlay; blend mode is optional
@@ -6255,27 +6309,27 @@ function shader_pipeline.ShaderPipelineComponent.togglePass(...) end
 ---@param name string
 ---@param blend? BlendMode
 ---@return nil
-function shader_pipeline.ShaderPipelineComponent.addOverlay(...) end
+function .addOverlay(...) end
 
 ---
 --- Remove an overlay by name
 ---
 ---@param name string
 ---@return boolean
-function shader_pipeline.ShaderPipelineComponent.removeOverlay(...) end
+function .removeOverlay(...) end
 
 ---
 --- Toggle an overlay on/off
 ---
 ---@param name string
 ---@return boolean
-function shader_pipeline.ShaderPipelineComponent.toggleOverlay(...) end
+function .toggleOverlay(...) end
 
 ---
 --- Clear both passes and overlays
 ---
 ---@return nil
-function shader_pipeline.ShaderPipelineComponent.clearAll(...) end
+function .clearAll(...) end
 
 ---
 --- Applies a set of uniforms to a specific shader instance.
@@ -6283,53 +6337,53 @@ function shader_pipeline.ShaderPipelineComponent.clearAll(...) end
 ---@param shader Shader
 ---@param uniforms shaders.ShaderUniformSet # A table of uniform names to values.
 ---@return nil
-function shaders.ApplyUniformsToShader(...) end
+function .ApplyUniformsToShader(...) end
 
 ---
 --- Loads and compiles shaders from a JSON file.
 ---
 ---@param path string # Filepath to the JSON definition file.
 ---@return nil
-function shaders.loadShadersFromJSON(...) end
+function .loadShadersFromJSON(...) end
 
 ---
 --- Unloads all shaders, freeing their GPU resources.
 ---
 ---@return nil
-function shaders.unloadShaders(...) end
+function .unloadShaders(...) end
 
 ---
 --- Globally forces all shader effects off or on, overriding individual settings.
 ---
 ---@param disabled boolean # True to disable all shaders, false to re-enable them.
 ---@return nil
-function shaders.disableAllShadersViaOverride(...) end
+function .disableAllShadersViaOverride(...) end
 
 ---
 --- Checks all loaded shaders for changes on disk and reloads them if necessary.
 ---
 ---@return nil
-function shaders.hotReloadShaders(...) end
+function .hotReloadShaders(...) end
 
 ---
 --- Begins a full-screen shader mode, e.g., for post-processing effects.
 ---
 ---@param shaderName string # The name of the shader to begin as a full-screen effect.
 ---@return nil
-function shaders.setShaderMode(...) end
+function .setShaderMode(...) end
 
 ---
 --- Ends the current full-screen shader mode.
 ---
 ---@return nil
-function shaders.unsetShaderMode(...) end
+function .unsetShaderMode(...) end
 
 ---
 --- Retrieves a loaded shader by its unique name.
 ---
 ---@param name string # The unique name of the shader.
 ---@return Shader|nil # The shader object, or nil if not found.
-function shaders.getShader(...) end
+function .getShader(...) end
 
 ---
 --- Registers a global callback to update a specific uniform's value across all shaders that use it.
@@ -6337,26 +6391,26 @@ function shaders.getShader(...) end
 ---@param uniformName string # The uniform to target (e.g., 'time').
 ---@param callback fun():any # A function that returns the latest value for the uniform.
 ---@return nil
-function shaders.registerUniformUpdate(...) end
+function .registerUniformUpdate(...) end
 
 ---
 --- Invokes all registered global uniform update callbacks immediately.
 ---
 ---@return nil
-function shaders.updateAllShaderUniforms(...) end
+function .updateAllShaderUniforms(...) end
 
 ---
 --- Updates internal shader state, such as timers for built-in 'time' uniforms.
 ---
 ---@param dt number # Delta time since the last frame.
 ---@return nil
-function shaders.updateShaders(...) end
+function .updateShaders(...) end
 
 ---
 --- Displays the ImGui-based shader editor window for real-time debugging and uniform tweaking.
 ---
 ---@return nil
-function shaders.ShowShaderEditorUI(...) end
+function .ShowShaderEditorUI(...) end
 
 ---
 --- If the component has a uniform set registered under shaderName, applies those uniforms to shader
@@ -6367,69 +6421,69 @@ function shaders.ShowShaderEditorUI(...) end
         ---@param shaderName string                 # Key of the uniform set to apply
         ---@return nil
         
-function shaders.TryApplyUniforms(...) end
+function .TryApplyUniforms(...) end
 
 ---
 --- Cancels and destroys an active timer.
 ---
 ---@param timerHandle integer # The handle of the timer to cancel.
 ---@return nil
-function timer.cancel(...) end
+function .cancel(...) end
 
 ---
 --- Gets the current invocation count for an 'every' timer.
 ---
 ---@param timerHandle integer # The handle of an 'every' timer.
 ---@return integer|nil # The current invocation count, or nil if not found.
-function timer.get_every_index(...) end
+function .get_every_index(...) end
 
 ---
 --- Resets a timer's elapsed time, such as for a 'cooldown'.
 ---
 ---@param timerHandle integer # The handle of the timer to reset.
 ---@return nil
-function timer.reset(...) end
+function .reset(...) end
 
 ---
 --- Gets the configured delay time for a timer.
 ---
 ---@param timerHandle integer # The handle of the timer.
 ---@return number|nil # The timer's current delay, or nil if not found.
-function timer.get_delay(...) end
+function .get_delay(...) end
 
 ---
 --- Sets the global speed multiplier for all timers.
 ---
 ---@param multiplier number # The new global speed multiplier.
 ---@return nil
-function timer.set_multiplier(...) end
+function .set_multiplier(...) end
 
 ---
 --- Gets the global timer speed multiplier.
 ---
 ---@return number
-function timer.get_multiplier(...) end
+function .get_multiplier(...) end
 
 ---
 --- Gets the elapsed time for a 'for' timer.
 ---
 ---@param timerHandle integer # The handle of a 'for' timer.
 ---@return number|nil # The normalized elapsed time (0.0 to 1.0), or nil if not found.
-function timer.get_for_elapsed(...) end
+function .get_for_elapsed(...) end
 
 ---
 --- Returns the timer object's elapsed time and its configured delay.
 ---
 ---@param timerHandle integer # The handle of the timer.
 ---@return number, number # Returns two values: the elapsed time and the total delay. Returns a single nil if not found.
-function timer.get_timer_and_delay(...) end
+function .get_timer_and_delay(...) end
 
 ---
 --- Updates all active timers, should be called once per frame.
 ---
 ---@param dt number # Delta time.
 ---@return nil
-function timer.update(...) end
+function .update(...) end
 
 ---
 --- Creates a timer that runs an action once immediately.
@@ -6439,7 +6493,7 @@ function timer.update(...) end
 ---@param tag? string
 ---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
-function timer.run(...) end
+function .run(...) end
 
 ---
 --- Creates a timer that runs an action once after a delay.
@@ -6449,7 +6503,7 @@ function timer.run(...) end
 ---@param tag? string
 ---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
-function timer.after(...) end
+function .after(...) end
 
 ---
 --- Creates a resettable timer that fires an action when a condition is met after a cooldown.
@@ -6462,7 +6516,7 @@ function timer.after(...) end
 ---@param tag? string
 ---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
-function timer.cooldown(...) end
+function .cooldown(...) end
 
 ---
 --- Creates a timer that runs an action repeatedly at a given interval.
@@ -6475,7 +6529,7 @@ function timer.cooldown(...) end
 ---@param tag? string
 ---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
-function timer.every(...) end
+function .every(...) end
 
 ---
 --- Creates a timer that runs for a set number of steps, interpolating the delay between a start and end value.
@@ -6490,7 +6544,7 @@ function timer.every(...) end
 ---@param tag? string
 ---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
-function timer.every_step(...) end
+function .every_step(...) end
 
 ---
 --- Creates a timer that runs an action every frame for a set duration, passing delta time to the action.
@@ -6501,7 +6555,7 @@ function timer.every_step(...) end
 ---@param tag? string
 ---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
-function timer.for_time(...) end
+function .for_time(...) end
 
 ---
 --- Creates a timer that interpolates a value towards a target over a duration.
@@ -6515,7 +6569,7 @@ function timer.for_time(...) end
 ---@param tag? string
 ---@param group? string # Optional group to assign this timer to.
 ---@return integer # timerHandle
-function timer.tween(...) end
+function .tween(...) end
 
 ---
 --- Tween multiple numeric fields on a Lua table with a single timer (progress 0→1). Captures start values at creation; one tag/after for the whole batch. Default easing: linear.
@@ -6528,7 +6582,7 @@ function timer.tween(...) end
 ---@param tag? string # Cancels existing tweens with the same tag.
 ---@param group? string # Optional group bucket for management.
 ---@return integer # timerHandle
-function timer.tween(...) end
+function .tween(...) end
 
 ---
 --- Tween multiple engine-backed values (get/set pairs) with a single timer. Each track defines get(), set(v), to, and optional from. Captures starts at creation; one tag/after for the whole batch. Default easing: linear.
@@ -6540,97 +6594,97 @@ function timer.tween(...) end
 ---@param tag? string # Cancels existing tweens with the same tag.
 ---@param group? string # Optional group bucket for management.
 ---@return integer # timerHandle
-function timer.tween(...) end
+function .tween(...) end
 
 ---
 --- Pauses the timer with the given tag.
 ---
 ---@param tag string # The tag/handle of the timer to pause.
 ---@return nil
-function timer.pause(...) end
+function .pause(...) end
 
 ---
 --- Resumes a previously paused timer.
 ---
 ---@param tag string # The tag/handle of the timer to resume.
 ---@return nil
-function timer.resume(...) end
+function .resume(...) end
 
 ---
 --- Cancels (removes) all timers in the specified group.
 ---
 ---@param group string # The name of the timer group to cancel.
 ---@return nil
-function timer.kill_group(...) end
+function .kill_group(...) end
 
 ---
 --- Pauses all timers in the specified group.
 ---
 ---@param group string # The name of the timer group to pause.
 ---@return nil
-function timer.pause_group(...) end
+function .pause_group(...) end
 
 ---
 --- Resumes all timers in the specified group.
 ---
 ---@param group string # The name of the timer group to resume.
 ---@return nil
-function timer.resume_group(...) end
+function .resume_group(...) end
 
 ---
 --- Cancels and destroys an active timer.
 ---
 ---@param timerHandle integer # The handle of the timer to cancel.
 ---@return nil
-function timer.cancel(...) end
+function .cancel(...) end
 
 ---
 --- Gets the current invocation count for an 'every' timer.
 ---
 ---@param timerHandle integer # The handle of an 'every' timer.
 ---@return integer|nil # The current invocation count, or nil if not found.
-function timer.get_every_index(...) end
+function .get_every_index(...) end
 
 ---
 --- Resets a timer's elapsed time, such as for a 'cooldown'.
 ---
 ---@param timerHandle integer # The handle of the timer to reset.
 ---@return nil
-function timer.reset(...) end
+function .reset(...) end
 
 ---
 --- Gets the configured delay time for a timer.
 ---
 ---@param timerHandle integer # The handle of the timer.
 ---@return number|nil # The timer's current delay, or nil if not found.
-function timer.get_delay(...) end
+function .get_delay(...) end
 
 ---
 --- Sets the global speed multiplier for all timers.
 ---
 ---@param multiplier number # The new global speed multiplier.
 ---@return nil
-function timer.set_multiplier(...) end
+function .set_multiplier(...) end
 
 ---
 --- Gets the global timer speed multiplier.
 ---
 ---@return number
-function timer.get_multiplier(...) end
+function .get_multiplier(...) end
 
 ---
 --- Gets the elapsed time for a 'for' timer.
 ---
 ---@param timerHandle integer # The handle of a 'for' timer.
 ---@return number|nil # The normalized elapsed time (0.0 to 1.0), or nil if not found.
-function timer.get_for_elapsed(...) end
+function .get_for_elapsed(...) end
 
 ---
 --- Returns the timer object's elapsed time and its configured delay.
 ---
 ---@param timerHandle integer # The handle of the timer.
 ---@return number, number # Returns two values: the elapsed time and the total delay. Returns a single nil if not found.
-function timer.get_timer_and_delay(...) end
+function .get_timer_and_delay(...) end
 
 ---
 --- Re-maps a number from one range to another.
@@ -6641,7 +6695,7 @@ function timer.get_timer_and_delay(...) end
 ---@param from2 number
 ---@param to2 number
 ---@return number
-function timer.math.remap(...) end
+function .math.remap(...) end
 
 ---
 --- Linearly interpolates between two points.
@@ -6650,13 +6704,13 @@ function timer.math.remap(...) end
 ---@param b number
 ---@param t number
 ---@return number
-function timer.math.lerp(...) end
+function .math.lerp(...) end
 
 ---
 --- Initializes the transform system.
 ---
 ---@return nil
-function transform.InitializeSystem(...) end
+function .InitializeSystem(...) end
 
 ---
 --- Updates all transforms in the registry.
@@ -6664,7 +6718,7 @@ function transform.InitializeSystem(...) end
 ---@param registry registry
 ---@param dt number
 ---@return nil
-function transform.UpdateAllTransforms(...) end
+function .UpdateAllTransforms(...) end
 
 ---
 --- Creates or emplaces an entity with core components.
@@ -6677,7 +6731,7 @@ function transform.UpdateAllTransforms(...) end
 ---@param h number
 ---@param entityToEmplaceTo? Entity
 ---@return Entity
-function transform.CreateOrEmplace(...) end
+function .CreateOrEmplace(...) end
 
 ---
 --- Creates a root container entity for the game world.
@@ -6688,7 +6742,7 @@ function transform.CreateOrEmplace(...) end
 ---@param w number
 ---@param h number
 ---@return Entity
-function transform.CreateGameWorldContainerEntity(...) end
+function .CreateGameWorldContainerEntity(...) end
 
 ---
 --- Updates spring smoothing factors for a transform.
@@ -6697,7 +6751,7 @@ function transform.CreateGameWorldContainerEntity(...) end
 ---@param e Entity
 ---@param dt number
 ---@return nil
-function transform.UpdateTransformSmoothingFactors(...) end
+function .UpdateTransformSmoothingFactors(...) end
 
 ---
 --- Injects dynamic motion into a transform's springs.
@@ -6706,14 +6760,14 @@ function transform.UpdateTransformSmoothingFactors(...) end
 ---@param amount number
 ---@param rotationAmount number
 ---@return nil
-function transform.InjectDynamicMotion(...) end
+function .InjectDynamicMotion(...) end
 
 ---
 --- Injects default dynamic motion into a transform's springs.
 ---
 ---@param e Entity
 ---@return nil
-function transform.InjectDynamicMotionDefault(...) end
+function .InjectDynamicMotionDefault(...) end
 
 ---
 --- Aligns an entity to its master.
@@ -6722,7 +6776,7 @@ function transform.InjectDynamicMotionDefault(...) end
 ---@param e Entity
 ---@param force? boolean
 ---@return nil
-function transform.AlignToMaster(...) end
+function .AlignToMaster(...) end
 
 ---
 --- Assigns an inherited properties role to an entity.
@@ -6737,7 +6791,7 @@ function transform.AlignToMaster(...) end
 ---@param scale? InheritedPropertiesSync
 ---@param offset? Vector2
 ---@return nil
-function transform.AssignRole(...) end
+function .AssignRole(...) end
 
 ---
 --- Updates an entity's position based on its master's movement.
@@ -6748,7 +6802,7 @@ function transform.AssignRole(...) end
 ---@param selfRole InheritedProperties
 ---@param selfNode GameObject
 ---@return nil
-function transform.MoveWithMaster(...) end
+function .MoveWithMaster(...) end
 
 ---
 --- Gets the master components for a given entity.
@@ -6758,7 +6812,7 @@ function transform.MoveWithMaster(...) end
 ---@param selfR InheritedProperties
 ---@param selfN GameObject
 ---@return MasterCache, Transform|nil, InheritedProperties|nil
-function transform.GetMaster(...) end
+function .GetMaster(...) end
 
 ---
 --- Instantly snaps an entity's transform to its master's.
@@ -6770,7 +6824,7 @@ function transform.GetMaster(...) end
 ---@param parentT Transform
 ---@param parentR InheritedProperties
 ---@return nil
-function transform.SyncPerfectlyToMaster(...) end
+function .SyncPerfectlyToMaster(...) end
 
 ---
 --- Configures all alignment and bonding properties for an entity.
@@ -6786,7 +6840,7 @@ function transform.SyncPerfectlyToMaster(...) end
 ---@param alignment? AlignmentFlag
 ---@param offset? Vector2
 ---@return nil
-function transform.ConfigureAlignment(...) end
+function .ConfigureAlignment(...) end
 
 ---
 --- Draws debug visuals for a transform.
@@ -6795,21 +6849,21 @@ function transform.ConfigureAlignment(...) end
 ---@param e Entity
 ---@param layer Layer
 ---@return nil
-function transform.DrawBoundingBoxAndDebugInfo(...) end
+function .DrawBoundingBoxAndDebugInfo(...) end
 
 ---
 --- Finds the top-most interactable entity at a screen point.
 ---
 ---@param point Vector2
 ---@return Entity|nil
-function transform.FindTopEntityAtPoint(...) end
+function .FindTopEntityAtPoint(...) end
 
 ---
 --- Finds all interactable entities at a screen point.
 ---
 ---@param point Vector2
 ---@return Entity[]
-function transform.FindAllEntitiesAtPoint(...) end
+function .FindAllEntitiesAtPoint(...) end
 
 ---
 --- Removes an entity and its children from the game.
@@ -6817,7 +6871,7 @@ function transform.FindAllEntitiesAtPoint(...) end
 ---@param registry registry
 ---@param e Entity
 ---@return nil
-function transform.RemoveEntity(...) end
+function .RemoveEntity(...) end
 
 ---
 --- Configures a jiggle animation on hover.
@@ -6826,7 +6880,7 @@ function transform.RemoveEntity(...) end
 ---@param e Entity
 ---@param jiggleAmount number
 ---@return nil
-function transform.setJiggleOnHover(...) end
+function .setJiggleOnHover(...) end
 
 ---
 --- Handles alignment for an entire UI tree.
@@ -6834,7 +6888,7 @@ function transform.setJiggleOnHover(...) end
 ---@param registry registry
 ---@param root Entity
 ---@return nil
-function ui.box.handleAlignment(...) end
+function .box.handleAlignment(...) end
 
 ---
 --- Builds a UI tree from a template definition.
@@ -6844,7 +6898,7 @@ function ui.box.handleAlignment(...) end
 ---@param uiElementDef UIElementTemplateNode
 ---@param uiElementParent Entity
 ---@return nil
-function ui.box.BuildUIElementTree(...) end
+function .box.BuildUIElementTree(...) end
 
 ---
 --- Initializes a new UI box from a definition.
@@ -6854,7 +6908,7 @@ function ui.box.BuildUIElementTree(...) end
 ---@param definition UIElementTemplateNode
 ---@param config? UIConfig
 ---@return Entity
-function ui.box.Initialize(...) end
+function .box.Initialize(...) end
 
 ---
 --- Recursively places UI elements within a layout.
@@ -6865,7 +6919,7 @@ function ui.box.Initialize(...) end
 ---@param parentType UITypeEnum
 ---@param parent Entity
 ---@return nil
-function ui.box.placeUIElementsRecursively(...) end
+function .box.placeUIElementsRecursively(...) end
 
 ---
 --- Places a single non-container element within its parent.
@@ -6877,7 +6931,7 @@ function ui.box.placeUIElementsRecursively(...) end
 ---@param uiState UIState
 ---@param uiConfig UIConfig
 ---@return nil
-function ui.box.placeNonContainerUIE(...) end
+function .box.placeNonContainerUIE(...) end
 
 ---
 --- Clamps the calculated transform dimensions to the configured minimums.
@@ -6885,7 +6939,7 @@ function ui.box.placeNonContainerUIE(...) end
 ---@param uiConfig UIConfig
 ---@param calcTransform table
 ---@return nil
-function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
+function .box.ClampDimensionsToMinimumsIfPresent(...) end
 
 ---
 --- Calculates the sizes for an entire UI tree.
@@ -6896,7 +6950,7 @@ function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
 ---@param forceRecalculateLayout? boolean
 ---@param scale? number
 ---@return number, number
-function ui.box.CalcTreeSizes(...) end
+function .box.CalcTreeSizes(...) end
 
 ---
 --- Calculates the size for a non-container sub-element.
@@ -6908,7 +6962,7 @@ function ui.box.CalcTreeSizes(...) end
 ---@param scale? number
 ---@param calcCurrentNodeTransform table
 ---@return Vector2
-function ui.box.TreeCalcSubNonContainer(...) end
+function .box.TreeCalcSubNonContainer(...) end
 
 ---
 --- Renews the alignment for an entity.
@@ -6916,7 +6970,7 @@ function ui.box.TreeCalcSubNonContainer(...) end
 ---@param registry registry
 ---@param self Entity
 ---@return nil
-function ui.box.RenewAlignment(...) end
+function .box.RenewAlignment(...) end
 
 ---
 --- Adds a template definition to a UI box.
@@ -6926,7 +6980,7 @@ function ui.box.RenewAlignment(...) end
 ---@param templateDef UIElementTemplateNode
 ---@param maybeParent Entity|nil
 ---@return nil
-function ui.box.AddTemplateToUIBox(...) end
+function .box.AddTemplateToUIBox(...) end
 
 ---
 --- Calculates the size for a container sub-element.
@@ -6939,7 +6993,7 @@ function ui.box.AddTemplateToUIBox(...) end
 ---@param calcCurrentNodeTransform table
 ---@param contentSizes table
 ---@return Vector2
-function ui.box.TreeCalcSubContainer(...) end
+function .box.TreeCalcSubContainer(...) end
 
 ---
 --- Sub-routine for calculating a container's size based on its children.
@@ -6954,7 +7008,7 @@ function ui.box.TreeCalcSubContainer(...) end
 ---@param factor number
 ---@param contentSizes table
 ---@return nil
-function ui.box.SubCalculateContainerSize(...) end
+function .box.SubCalculateContainerSize(...) end
 
 ---
 --- Gets a UI element by its ID, searching from a specific node.
@@ -6963,7 +7017,7 @@ function ui.box.SubCalculateContainerSize(...) end
 ---@param node Entity
 ---@param id string
 ---@return Entity|nil
-function ui.box.GetUIEByID(...) end
+function .box.GetUIEByID(...) end
 
 ---
 --- Gets a UI element by its ID, searching globally.
@@ -6973,7 +7027,7 @@ function ui.box.GetUIEByID(...) end
         ---@param id string
         ---@return Entity|nil
         
-function ui.box.GetUIEByID(...) end
+function .box.GetUIEByID(...) end
 
 ---
 --- Removes all UI elements belonging to a specific group.
@@ -6982,7 +7036,7 @@ function ui.box.GetUIEByID(...) end
 ---@param entity Entity
 ---@param group string
 ---@return boolean
-function ui.box.RemoveGroup(...) end
+function .box.RemoveGroup(...) end
 
 ---
 --- Gets all UI elements belonging to a specific group.
@@ -6991,7 +7045,7 @@ function ui.box.RemoveGroup(...) end
 ---@param entity Entity
 ---@param group string
 ---@return Entity[]
-function ui.box.GetGroup(...) end
+function .box.GetGroup(...) end
 
 ---
 --- Removes a UI box and all its elements.
@@ -6999,7 +7053,7 @@ function ui.box.GetGroup(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return nil
-function ui.box.Remove(...) end
+function .box.Remove(...) end
 
 ---
 --- Forces a full recalculation of a UI box's layout.
@@ -7007,7 +7061,7 @@ function ui.box.Remove(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return nil
-function ui.box.Recalculate(...) end
+function .box.Recalculate(...) end
 
 ---
 --- Assigns tree order components for collision and input processing.
@@ -7015,7 +7069,7 @@ function ui.box.Recalculate(...) end
 ---@param registry registry
 ---@param rootUIElement Entity
 ---@return nil
-function ui.box.AssignTreeOrderComponents(...) end
+function .box.AssignTreeOrderComponents(...) end
 
 ---
 --- Assigns layer order components for drawing.
@@ -7023,7 +7077,7 @@ function ui.box.AssignTreeOrderComponents(...) end
 ---@param registry registry
 ---@param uiBox Entity
 ---@return nil
-function ui.box.AssignLayerOrderComponents(...) end
+function .box.AssignLayerOrderComponents(...) end
 
 ---
 --- Updates the movement and spring physics for a UI box.
@@ -7032,7 +7086,7 @@ function ui.box.AssignLayerOrderComponents(...) end
 ---@param self Entity
 ---@param dt number
 ---@return nil
-function ui.box.Move(...) end
+function .box.Move(...) end
 
 ---
 --- Handles dragging logic for a UI box.
@@ -7042,7 +7096,7 @@ function ui.box.Move(...) end
 ---@param offset Vector2
 ---@param dt number
 ---@return nil
-function ui.box.Drag(...) end
+function .box.Drag(...) end
 
 ---
 --- Adds a new child element to a UI box or container.
@@ -7052,7 +7106,7 @@ function ui.box.Drag(...) end
 ---@param uiElementDef UIElementTemplateNode
 ---@param parent Entity
 ---@return nil
-function ui.box.AddChild(...) end
+function .box.AddChild(...) end
 
 ---
 --- Sets the container for a UI box.
@@ -7061,7 +7115,7 @@ function ui.box.AddChild(...) end
 ---@param self Entity
 ---@param container Entity
 ---@return nil
-function ui.box.SetContainer(...) end
+function .box.SetContainer(...) end
 
 ---
 --- Returns a string representation of the UI box tree for debugging.
@@ -7070,7 +7124,7 @@ function ui.box.SetContainer(...) end
 ---@param self Entity
 ---@param indent? integer
 ---@return string
-function ui.box.DebugPrint(...) end
+function .box.DebugPrint(...) end
 
 ---
 --- Traverses the UI tree from the leaves up to the root, calling the visitor function on each element.
@@ -7079,7 +7133,7 @@ function ui.box.DebugPrint(...) end
 ---@param rootUIElement Entity
 ---@param visitor fun(entity: Entity)
 ---@return nil
-function ui.box.TraverseUITreeBottomUp(...) end
+function .box.TraverseUITreeBottomUp(...) end
 
 ---
 --- Draws all UI boxes in the registry.
@@ -7087,7 +7141,7 @@ function ui.box.TraverseUITreeBottomUp(...) end
 ---@param registry registry
 ---@param layerPtr Layer
 ---@return nil
-function ui.box.drawAllBoxes(...) end
+function .box.drawAllBoxes(...) end
 
 ---
 --- Builds a sorted list of all drawable elements within a UI box.
@@ -7096,7 +7150,7 @@ function ui.box.drawAllBoxes(...) end
 ---@param boxEntity Entity
 ---@param out_list table
 ---@return nil
-function ui.box.buildUIBoxDrawList(...) end
+function .box.buildUIBoxDrawList(...) end
 
 ---
 --- Clamps the calculated transform dimensions to the configured minimums.
@@ -7104,7 +7158,7 @@ function ui.box.buildUIBoxDrawList(...) end
 ---@param uiConfig UIConfig
 ---@param calcTransform table
 ---@return nil
-function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
+function .box.ClampDimensionsToMinimumsIfPresent(...) end
 
 ---
 --- Create a static text‐entry node, with optional entity/component/value refs.
@@ -7119,7 +7173,7 @@ function ui.box.ClampDimensionsToMinimumsIfPresent(...) end
         ---@param refValue? string
         ---@return UIElementTemplateNode
         
-function ui.definitions.getNewTextEntry(...) end
+function .definitions.getNewTextEntry(...) end
 
 ---
 --- Create a text‐entry node with dynamic effects (wrapping, pulse, etc.) and optional refs.
@@ -7135,14 +7189,14 @@ function ui.definitions.getNewTextEntry(...) end
         ---@param refValue? string
         ---@return UIElementTemplateNode
         
-function ui.definitions.getNewDynamicTextEntry(...) end
+function .definitions.getNewDynamicTextEntry(...) end
 
 ---
 --- Wrap a raw string into a UI text node.
 ---
 ---@param text string
 ---@return UIElementTemplateNode
-function ui.definitions.getTextFromString(...) end
+function .definitions.getTextFromString(...) end
 
 ---
 --- Embed text between divider markers (for code‐style blocks).
@@ -7150,14 +7204,14 @@ function ui.definitions.getTextFromString(...) end
 ---@param text string
 ---@param divider string
 ---@return UIElementTemplateNode
-function ui.definitions.putCodedTextBetweenDividers(...) end
+function .definitions.putCodedTextBetweenDividers(...) end
 
 ---
 --- Turn an existing entity into a UI object‐element node.
 ---
 ---@param entity Entity
 ---@return UIElementTemplateNode
-function ui.definitions.wrapEntityInsideObjectElement(...) end
+function .definitions.wrapEntityInsideObjectElement(...) end
 
 ---
 --- Initializes a new UI element.
@@ -7168,7 +7222,7 @@ function ui.definitions.wrapEntityInsideObjectElement(...) end
 ---@param type UITypeEnum
 ---@param config? UIConfig
 ---@return Entity
-function ui.element.Initialize(...) end
+function .element.Initialize(...) end
 
 ---
 --- Applies a scaling factor to all elements in a UI subtree.
@@ -7177,7 +7231,7 @@ function ui.element.Initialize(...) end
 ---@param rootEntity Entity
 ---@param scaling number
 ---@return nil
-function ui.element.ApplyScalingToSubtree(...) end
+function .element.ApplyScalingToSubtree(...) end
 
 ---
 --- Updates the scaling of a UI object and recenters it.
@@ -7186,7 +7240,7 @@ function ui.element.ApplyScalingToSubtree(...) end
 ---@param newScale number
 ---@param transform Transform
 ---@return nil
-function ui.element.UpdateUIObjectScalingAndRecenter(...) end
+function .element.UpdateUIObjectScalingAndRecenter(...) end
 
 ---
 --- Sets local transform values for a UI element.
@@ -7196,7 +7250,7 @@ function ui.element.UpdateUIObjectScalingAndRecenter(...) end
 ---@param _T table
 ---@param recalculate boolean
 ---@return nil
-function ui.element.SetValues(...) end
+function .element.SetValues(...) end
 
 ---
 --- Returns a string representation of the UI tree for debugging.
@@ -7205,7 +7259,7 @@ function ui.element.SetValues(...) end
 ---@param entity Entity
 ---@param indent integer
 ---@return string
-function ui.element.DebugPrintTree(...) end
+function .element.DebugPrintTree(...) end
 
 ---
 --- Initializes the visual transform properties (e.g., springs) for an element.
@@ -7213,7 +7267,7 @@ function ui.element.DebugPrintTree(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return nil
-function ui.element.InitializeVisualTransform(...) end
+function .element.InitializeVisualTransform(...) end
 
 ---
 --- Applies a 'juice' animation (dynamic motion) to an element.
@@ -7223,7 +7277,7 @@ function ui.element.InitializeVisualTransform(...) end
 ---@param amount number
 ---@param rot_amt number
 ---@return nil
-function ui.element.JuiceUp(...) end
+function .element.JuiceUp(...) end
 
 ---
 --- Checks if the element can be dragged and returns the draggable entity if so.
@@ -7231,7 +7285,7 @@ function ui.element.JuiceUp(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return Entity|nil
-function ui.element.CanBeDragged(...) end
+function .element.CanBeDragged(...) end
 
 ---
 --- Sets the width and height of an element based on its content and configuration.
@@ -7239,7 +7293,7 @@ function ui.element.CanBeDragged(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return number, number
-function ui.element.SetWH(...) end
+function .element.SetWH(...) end
 
 ---
 --- Applies alignment logic to position an element.
@@ -7249,7 +7303,7 @@ function ui.element.SetWH(...) end
 ---@param x number
 ---@param y number
 ---@return nil
-function ui.element.ApplyAlignment(...) end
+function .element.ApplyAlignment(...) end
 
 ---
 --- Sets all alignments for an element within its UI box.
@@ -7259,7 +7313,7 @@ function ui.element.ApplyAlignment(...) end
 ---@param uiBoxOffset? Vector2
 ---@param rootEntity? boolean
 ---@return nil
-function ui.element.SetAlignments(...) end
+function .element.SetAlignments(...) end
 
 ---
 --- Updates the text content and drawable for a text element.
@@ -7269,7 +7323,7 @@ function ui.element.SetAlignments(...) end
 ---@param config UIConfig
 ---@param state UIState
 ---@return nil
-function ui.element.UpdateText(...) end
+function .element.UpdateText(...) end
 
 ---
 --- Updates a UI element that represents a game object.
@@ -7283,7 +7337,7 @@ function ui.element.UpdateText(...) end
 ---@param objectRole InheritedProperties
 ---@param objectNode GameObject
 ---@return nil
-function ui.element.UpdateObject(...) end
+function .element.UpdateObject(...) end
 
 ---
 --- Draws a single UI element.
@@ -7297,7 +7351,7 @@ function ui.element.UpdateObject(...) end
 ---@param transformComp Transform
 ---@param zIndex? integer
 ---@return nil
-function ui.element.DrawSelf(...) end
+function .element.DrawSelf(...) end
 
 ---
 --- Performs a full update cycle for a UI element.
@@ -7310,7 +7364,7 @@ function ui.element.DrawSelf(...) end
 ---@param uiElement UIElementComponent
 ---@param node GameObject
 ---@return nil
-function ui.element.Update(...) end
+function .element.Update(...) end
 
 ---
 --- Checks if a UI element collides with a given point.
@@ -7319,7 +7373,7 @@ function ui.element.Update(...) end
 ---@param entity Entity
 ---@param cursorPosition Vector2
 ---@return boolean
-function ui.element.CollidesWithPoint(...) end
+function .element.CollidesWithPoint(...) end
 
 ---
 --- Gets the ideal position for a cursor when focusing this element.
@@ -7327,7 +7381,7 @@ function ui.element.CollidesWithPoint(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return Vector2
-function ui.element.PutFocusedCursor(...) end
+function .element.PutFocusedCursor(...) end
 
 ---
 --- Removes a UI element and its children.
@@ -7335,7 +7389,7 @@ function ui.element.PutFocusedCursor(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return nil
-function ui.element.Remove(...) end
+function .element.Remove(...) end
 
 ---
 --- Triggers a click event on a UI element.
@@ -7343,7 +7397,7 @@ function ui.element.Remove(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return nil
-function ui.element.Click(...) end
+function .element.Click(...) end
 
 ---
 --- Triggers a release event on a UI element.
@@ -7352,7 +7406,7 @@ function ui.element.Click(...) end
 ---@param entity Entity
 ---@param objectBeingDragged Entity
 ---@return nil
-function ui.element.Release(...) end
+function .element.Release(...) end
 
 ---
 --- Applies hover state and effects to a UI element.
@@ -7360,7 +7414,7 @@ function ui.element.Release(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return nil
-function ui.element.ApplyHover(...) end
+function .element.ApplyHover(...) end
 
 ---
 --- Removes hover state and effects from a UI element.
@@ -7368,7 +7422,7 @@ function ui.element.ApplyHover(...) end
 ---@param registry registry
 ---@param entity Entity
 ---@return nil
-function ui.element.StopHover(...) end
+function .element.StopHover(...) end
 
 ---
 --- Populates a table with a sorted list of UI entities to be drawn.
@@ -7377,47 +7431,47 @@ function ui.element.StopHover(...) end
 ---@param root Entity
 ---@param out_list table
 ---@return nil
-function ui.element.BuildUIDrawList(...) end
+function .element.BuildUIDrawList(...) end
 
 ---
 --- Constructs a raw asset path without a UUID.
 ---
 ---@param assetName string # The name of the asset.
 ---@return string
-function util.getRawAssetPathNoUUID(...) end
+function .getRawAssetPathNoUUID(...) end
 
 ---
 --- Retrieves a pre-defined Color object by its name.
 ---
 ---@param colorName string # The name of the color (e.g., "red").
 ---@return Color
-function util.getColor(...) end
+function .getColor(...) end
 
 ---
 --- Gets the UUID version of an asset path.
 ---
 ---@param path_uuid_or_raw_identifier string # The asset identifier.
 ---@return string
-function util.getAssetPathUUIDVersion(...) end
+function .getAssetPathUUIDVersion(...) end
 
 ---
 --- Converts a Raylib Color to an ImGui ImVec4.
 ---
 ---@param c Color # The Raylib Color object.
 ---@return ImVec4
-function util.raylibColorToImVec(...) end
+function .raylibColorToImVec(...) end
 
 ---
 --- Returns a random synonym for the given word.
 ---
 ---@param word string # The word to find a synonym for.
 ---@return string
-function util.getRandomSynonymFor(...) end
+function .getRandomSynonymFor(...) end
 
 ---
 --- Converts a string to its unsigned char representation.
 ---
 ---@param value string # The string to convert.
 ---@return integer
-function util.toUnsignedChar(...) end
+function .toUnsignedChar(...) end
 

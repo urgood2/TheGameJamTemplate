@@ -7,6 +7,7 @@
 #include "spdlog/spdlog.h"
 #include "third_party/ldtkimport/include/ldtkimport/LdtkDefFile.hpp"
 #include "third_party/ldtkimport/include/ldtkimport/Level.h"
+#include "util/utilities.hpp"
 #include <raylib.h>
 #include <string>
 #include <unordered_map>
@@ -47,6 +48,133 @@ inline void PreloadTileset(const std::string& relPath) {
         cache[full].texture = LoadTexture(full.c_str());
     }
 }
+
+static inline const Texture2D& LoadTextureCached(const std::string& fullPath) {
+    auto& cache = internal_loader::tilesetCache; // reuse your cache map<string, {Texture2D texture;}>
+    auto it = cache.find(fullPath);
+    if (it == cache.end()) {
+        Texture2D tex = LoadTexture(fullPath.c_str());
+        if (tex.id > 0) SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+        cache[fullPath].texture = tex;
+        return cache[fullPath].texture;
+    }
+    return it->second.texture;
+}
+static inline float CoverScale(int dstW, int dstH, int srcW, int srcH) {
+    const float sx = (float)dstW / (float)srcW;
+    const float sy = (float)dstH / (float)srcH;
+    return sx > sy ? sx : sy;
+}
+static inline float ContainScale(int dstW, int dstH, int srcW, int srcH) {
+    const float sx = (float)dstW / (float)srcW;
+    const float sy = (float)dstH / (float)srcH;
+    return sx < sy ? sx : sy;
+}
+
+inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccropOpt = nullptr) {
+    const int w = level.size.x, h = level.size.y;
+    const Rectangle CLIP = ccropOpt ? *ccropOpt : Rectangle{0, 0, (float)w, (float)h};
+
+    // Optional solid fill (outside scissor so the whole level gets the color)
+    // ::Color bg{ level.bg_color.r, level.bg_color.g, level.bg_color.b, level.bg_color.a };
+    // if (bg.a) DrawRectangle(0, 0, w, h, bg);
+
+    if (!level.hasBgImage()) return;
+    const auto& bgimg = level.getBgImage();
+
+    // Resolve/load texture
+    const std::string rel  = std::string(bgimg.path.c_str());
+    const std::string full = internal_loader::assetDirectory.empty()
+                           ? rel
+                           : (internal_loader::assetDirectory + "/" + rel);
+    const Texture2D& tex = LoadTextureCached(util::getRawAssetPathNoUUID(full));
+    if (tex.id <= 0) return;
+
+    // Source rect: crop if present
+    const bool hasCrop = (bgimg.crop.width > 0 && bgimg.crop.height > 0);
+    Rectangle src{
+        (float)(hasCrop ? bgimg.crop.x      : 0),
+        (float)(hasCrop ? bgimg.crop.y      : 0),
+        (float)(hasCrop ? bgimg.crop.width  : tex.width),
+        (float)(hasCrop ? bgimg.crop.height : tex.height)
+    };
+
+    auto pmod = [](float a, float m) { float r = fmodf(a, m); return (r < 0) ? (r + m) : r; };
+    auto coverScale   = [](int dw, int dh, float sw, float sh){ float sx=(float)dw/sw, sy=(float)dh/sh; return sx>sy?sx:sy; };
+    auto containScale = [](int dw, int dh, float sw, float sh){ float sx=(float)dw/sw, sy=(float)dh/sh; return sx<sy?sx:sy; };
+
+    // Prefer real mode/pivot if you’ve added getters
+    std::string mode = "Cover";
+    Vector2 pivot{0.5f, 0.5f};
+    if (true) { mode = level.getBgPosMode(); auto pv = level.getBgPivot(); pivot = {pv.x, pv.y}; }
+
+    // Heuristic for precomputed placement (__bgPos). If you have a getter, use that instead.
+    const bool hasComputed =
+        (!((bgimg.scale.x == 1.f && bgimg.scale.y == 1.f) && (bgimg.pos.x == 0 && bgimg.pos.y == 0))) || hasCrop;
+
+    // --- begin scissor just for the image draw ---
+    const int scx = (int)std::floor(CLIP.x);
+    const int scy = (int)std::floor(CLIP.y);
+    const int scw = (int)std::ceil (CLIP.width);
+    const int sch = (int)std::ceil (CLIP.height);
+    BeginScissorMode(scx, scy, scw, sch);
+
+    if (hasComputed) {
+        if (mode == "Repeat") {
+            const float sx = (bgimg.scale.x == 0.f) ? 1.f : bgimg.scale.x;
+            const float sy = (bgimg.scale.y == 0.f) ? 1.f : bgimg.scale.y;
+            const float tileW = src.width  * sx;
+            const float tileH = src.height * sy;
+
+            const float firstX = CLIP.x - pmod(CLIP.x - (float)bgimg.pos.x, tileW);
+            const float firstY = CLIP.y - pmod(CLIP.y - (float)bgimg.pos.y, tileH);
+
+            for (float y = firstY; y < CLIP.y + CLIP.height; y += tileH) {
+                for (float x = firstX; x < CLIP.x + CLIP.width;  x += tileW) {
+                    DrawTexturePro(tex, src, Rectangle{ x, y, tileW, tileH }, Vector2{0,0}, 0.0f, WHITE);
+                }
+            }
+        } else {
+            const float sx = (bgimg.scale.x == 0.f) ? 1.f : bgimg.scale.x;
+            const float sy = (bgimg.scale.y == 0.f) ? 1.f : bgimg.scale.y;
+            Rectangle dst{ (float)bgimg.pos.x, (float)bgimg.pos.y, src.width * sx, src.height * sy };
+            DrawTexturePro(tex, src, dst, Vector2{0,0}, 0.0f, WHITE);
+        }
+        EndScissorMode();
+        return;
+    }
+
+    // No __bgPos → compute placement
+    if (mode == "Repeat") {
+        const float sx = 1.f, sy = 1.f;
+        const float tileW = src.width  * sx;
+        const float tileH = src.height * sy;
+
+        for (float y = CLIP.y; y < CLIP.y + CLIP.height; y += tileH) {
+            for (float x = CLIP.x; x < CLIP.x + CLIP.width;  x += tileW) {
+                DrawTexturePro(tex, src, Rectangle{ x, y, tileW, tileH }, Vector2{0,0}, 0.0f, WHITE);
+            }
+        }
+        EndScissorMode();
+        return;
+    }
+
+    float sw = src.width, sh = src.height;
+    if (mode == "Cover")   { float s = coverScale(w, h, src.width, src.height);   sw = src.width * s; sh = src.height * s; }
+    else if (mode == "Contain") { float s = containScale(w, h, src.width, src.height); sw = src.width * s; sh = src.height * s; }
+    else if (mode == "Stretch") { sw = (float)w; sh = (float)h; } // Unscaled: leave as-is
+
+    const float levelPX = (float)w * pivot.x, levelPY = (float)h * pivot.y;
+    const float imgPX   = sw * pivot.x,       imgPY   = sh * pivot.y;
+    Rectangle dst{ levelPX - imgPX, levelPY - imgPY, sw, sh };
+    DrawTexturePro(tex, src, dst, Vector2{0,0}, 0.0f, WHITE);
+
+    EndScissorMode();
+}
+
+
+
+
 inline void DrawLayer(const std::string& levelName, const std::string& layerName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
@@ -61,7 +189,7 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
 
     const auto type = layer.getType();
 
-    if (type == ldtk::LayerType::IntGrid) {
+    // if (type == ldtk::LayerType::IntGrid) {
         if (layer.hasTileset()) {
             const std::string rel = layer.getTileset().path;
             const std::string full = internal_loader::assetDirectory.empty() ? rel
@@ -82,12 +210,12 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
                 if (tile.flipY) { src.height = -src.height; pos.y += (float)tr.height; }
 
                 unsigned char a = (unsigned char)std::round(255.f * tile.alpha * layer.getOpacity());
-                Color tint = {255, 255, 255, 255};
+                Color tint = {255, 255, 255, a};
 
                 DrawTextureRec(tex, src, pos, tint);
             }
         }
-    }
+    // }
     // else if (type == ldtk::LayerType::IntGrid) {
     //     // Simple visualizer: draw colored cells (handy for collisions/flags)
     //     const int cell = layer.getCellSize();
@@ -118,6 +246,10 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
 inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
+
+    // background first
+    DrawLevelBackground(level);
+
     for (auto& layer : level.allLayers()) {
         DrawLayer(levelName, layer.getName(), scale);
     }

@@ -15,17 +15,26 @@
 	"identifierStyle": "Capitalize",
 	"toc": [{
 		"identifier": "EntityFieldsTest",
-		"instances": [ {
-			"worldIid": "c9b00130-c640-11ed-ad34-57d0f1a6d3a2",
-			"levelIid": "a3030e70-66b0-11ec-9cd7-3fe74f53b9c3",
-			"layerIid": "a3030e77-66b0-11ec-9cd7-0b0cf743a68c",
-			"entityIid": "a3030e7b-66b0-11ec-9cd7-81a9b1cce297"
-		}, {
-			"worldIid": "c9b00130-c640-11ed-ad34-57d0f1a6d3a2",
-			"levelIid": "a30383a0-66b0-11ec-9cd7-432bb3e3339c",
-			"layerIid": "a303aab0-66b0-11ec-9cd7-a98ef20f25a5",
-			"entityIid": "a303aab1-66b0-11ec-9cd7-d560fe21e017"
-		} ],
+		"instances": [
+			{
+				"worldIid": "c9b00130-c640-11ed-ad34-57d0f1a6d3a2",
+				"levelIid": "a3030e70-66b0-11ec-9cd7-3fe74f53b9c3",
+				"layerIid": "a3030e77-66b0-11ec-9cd7-0b0cf743a68c",
+				"entityIid": "a3030e7b-66b0-11ec-9cd7-81a9b1cce297"
+			},
+			{
+				"worldIid": "c9b00130-c640-11ed-ad34-57d0f1a6d3a2",
+				"levelIid": "a30383a0-66b0-11ec-9cd7-432bb3e3339c",
+				"layerIid": "a303aab0-66b0-11ec-9cd7-a98ef20f25a5",
+				"entityIid": "a303aab1-66b0-11ec-9cd7-d560fe21e017"
+			},
+			{
+				"worldIid": "c9b00130-c640-11ed-ad34-57d0f1a6d3a2",
+				"levelIid": "a30383a0-66b0-11ec-9cd7-432bb3e3339c",
+				"layerIid": "a303aab0-66b0-11ec-9cd7-a98ef20f25a5",
+				"entityIid": "91ed92c0-5e50-11f0-9c42-5765b9987da5"
+			}
+		],
 		"instancesData": [
 			{ "iids": {
 				"worldIid": "c9b00130-c640-11ed-ad34-57d0f1a6d3a2",
@@ -38,7 +47,13 @@
 				"levelIid": "a30383a0-66b0-11ec-9cd7-432bb3e3339c",
 				"layerIid": "a303aab0-66b0-11ec-9cd7-a98ef20f25a5",
 				"entityIid": "a303aab1-66b0-11ec-9cd7-d560fe21e017"
-			}, "worldX": 120, "worldY": 704, "widPx": 32, "heiPx": 32, "fields" : {} }
+			}, "worldX": 120, "worldY": 704, "widPx": 32, "heiPx": 32, "fields" : {} },
+			{ "iids": {
+				"worldIid": "c9b00130-c640-11ed-ad34-57d0f1a6d3a2",
+				"levelIid": "a30383a0-66b0-11ec-9cd7-432bb3e3339c",
+				"layerIid": "a303aab0-66b0-11ec-9cd7-a98ef20f25a5",
+				"entityIid": "91ed92c0-5e50-11f0-9c42-5765b9987da5"
+			}, "worldX": 136, "worldY": 800, "widPx": 32, "heiPx": 32, "fields" : {} }
 		]
 	}],
 	"worldLayout": "LinearVertical",
@@ -1486,7 +1501,10 @@
 				{ "ids": [46,66,47,67], "mode": "Stamp" },
 				{ "ids": [88,89], "mode": "Stamp" }
 			],
-			"cachedPixelData": null
+			"cachedPixelData": {
+				"opaqueTiles": "1111111111111101111111111111111111011111111111111111111111111111111111111111111111111111110011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+				"averageColors": "f965f964fa65f965f854f854fa65f964fa64f964fa64fa64fa64f9640965f954f954f964f954f088f854f854f854f854f954f854f854f844f954f854f954fa64fa64f9540523f954f088f088f088f088f965f964f965f964f965f954f965f954fa65f965fa54fa64fa64f954fa64f844f088f088f088f088f744f744f854f844f854f854f634f533f644f633f954f954f954f854f088f088f088f088f088f088f954f954f964f854f964f954f964f854f964f85430001000f088f088f088f088f088f088f088f088f854f754f964f964f954f854f954f854f854f854f088f088f088f088f088f088f088f088f088f088f855f854f965f964f965f964f965f964f965f964f088f088f088f088f088f088f088f088f088f088f854f854f744f854f954f954f854f965f964f954f088f088f088f088f088f088f088f088f088f088f854f854f854f854f954f964f954f965f854f954f088f088f088f088f088f088f088f088f088f088f854f854f964f855f854f854f954f854f854f964f088f088f088f088f088f088f088f088f088f088f965f854f744f854f643f088f088f088f088f088f088f088f088f088f088f088f088f088f088f088f854f643f643f754f754f088f088f088f088f088f088f088f088f088f088f088f088f088f088f088fa65f965f954f744f566f088f088f088f088f088f088f088f088f088f088f088f088f088f088f088f965f965f954f744f088f088f088f088f088f088f088f088f088f088f088f088f088f088f088f088"
+			}
 		},
 		{
 			"__cWid": 32,
@@ -2460,6 +2478,35 @@
 								{ "__identifier": "Array_points", "__type": "Array<Point>", "__value": [], "__tile": null, "defUid": 30, "realEditorValues": [] },
 								{ "__identifier": "Array_multilines", "__type": "Array<Multilines>", "__value": [], "__tile": null, "defUid": 37, "realEditorValues": [] }
 							]
+						},
+						{
+							"__identifier": "EntityFieldsTest",
+							"__grid": [8,11],
+							"__pivot": [0.5,0.5],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#00A5FF",
+							"iid": "91ed92c0-5e50-11f0-9c42-5765b9987da5",
+							"width": 32,
+							"height": 32,
+							"defUid": 15,
+							"px": [136,184],
+							"fieldInstances": [
+								{ "__identifier": "Integer", "__type": "Int", "__value": 0, "__tile": null, "defUid": 16, "realEditorValues": [] },
+								{ "__identifier": "Float", "__type": "Float", "__value": 0, "__tile": null, "defUid": 17, "realEditorValues": [] },
+								{ "__identifier": "Boolean", "__type": "Bool", "__value": false, "__tile": null, "defUid": 18, "realEditorValues": [] },
+								{ "__identifier": "String_singleLine", "__type": "String", "__value": "", "__tile": null, "defUid": 19, "realEditorValues": [] },
+								{ "__identifier": "String_multiLines", "__type": "Multilines", "__value": "", "__tile": null, "defUid": 20, "realEditorValues": [] },
+								{ "__identifier": "Enum", "__type": "LocalEnum.SomeEnum", "__value": null, "__tile": null, "defUid": 22, "realEditorValues": [] },
+								{ "__identifier": "ExternEnum", "__type": "ExternEnum.AnExternEnum", "__value": null, "__tile": null, "defUid": 49, "realEditorValues": [] },
+								{ "__identifier": "Color", "__type": "Color", "__value": "#000000", "__tile": null, "defUid": 23, "realEditorValues": [] },
+								{ "__identifier": "Point", "__type": "Point", "__value": null, "__tile": null, "defUid": 24, "realEditorValues": [] },
+								{ "__identifier": "FilePath", "__type": "FilePath", "__value": null, "__tile": null, "defUid": 35, "realEditorValues": [] },
+								{ "__identifier": "Array_Integer", "__type": "Array<Int>", "__value": [], "__tile": null, "defUid": 25, "realEditorValues": [] },
+								{ "__identifier": "Array_Enum", "__type": "Array<LocalEnum.SomeEnum>", "__value": [], "__tile": null, "defUid": 29, "realEditorValues": [] },
+								{ "__identifier": "Array_points", "__type": "Array<Point>", "__value": [], "__tile": null, "defUid": 30, "realEditorValues": [] },
+								{ "__identifier": "Array_multilines", "__type": "Array<Multilines>", "__value": [], "__tile": null, "defUid": 37, "realEditorValues": [] }
+							]
 						}
 					]
 				},
@@ -3117,12 +3164,12 @@
 			"__bgColor": "#6E6F8B",
 			"bgColor": null,
 			"useAutoIdentifier": false,
-			"bgRelPath": "atlas/Beach by deepnight.png",
+			"bgRelPath": "atlas/Inca_back2_by_Kronbits.png",
 			"bgPos": "Cover",
 			"bgPivotX": 0.5,
 			"bgPivotY": 0.5,
 			"__smartColor": "#AFB0BF",
-			"__bgPos": null,
+			"__bgPos": { "topLeftPx": [0,0], "scale": [1.7,1.7], "cropRect": [0,55.529411764705884,160,112.94117647058823] },
 			"externalRelPath": null,
 			"fieldInstances": [],
 			"layerInstances": [

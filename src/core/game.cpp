@@ -2126,8 +2126,8 @@ void endStencil()
             DrawSpriteTopLeft("keyboard_w_outline.png", 500, 500, 
                               std::nullopt, std::nullopt, WHITE); // draw top-left sprite
                               
-            // ldtk_loader::DrawAllLayers("Everything");
-            ldtk_loader::DrawAllLayers("Background_image");
+            ldtk_loader::DrawAllLayers("Everything");
+            // ldtk_loader::DrawAllLayers("Background_image");
             // ldtk_loader::DrawAllLayers("Tiles_and_intgrid");
             // ldtk_loader::DrawAllLayers("Autolayer");
 

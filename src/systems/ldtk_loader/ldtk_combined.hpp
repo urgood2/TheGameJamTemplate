@@ -4,6 +4,7 @@
 
 // --- Dependencies ---
 #include <LDtkLoader/Project.hpp>
+#include "spdlog/spdlog.h"
 #include "third_party/ldtkimport/include/ldtkimport/LdtkDefFile.hpp"
 #include "third_party/ldtkimport/include/ldtkimport/Level.h"
 #include <raylib.h>
@@ -60,7 +61,7 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
 
     const auto type = layer.getType();
 
-    // if (type == ldtk::LayerType::IntGrid) {
+    if (type == ldtk::LayerType::IntGrid) {
         if (layer.hasTileset()) {
             const std::string rel = layer.getTileset().path;
             const std::string full = internal_loader::assetDirectory.empty() ? rel
@@ -86,7 +87,7 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
                 DrawTextureRec(tex, src, pos, tint);
             }
         }
-    // }
+    }
     // else if (type == ldtk::LayerType::IntGrid) {
     //     // Simple visualizer: draw colored cells (handy for collisions/flags)
     //     const int cell = layer.getCellSize();

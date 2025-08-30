@@ -2130,6 +2130,9 @@ void endStencil()
             // ldtk_loader::DrawAllLayers("Tiles_and_intgrid");
             // ldtk_loader::DrawAllLayers("Autolayer");
             
+            // fill screen with white
+            DrawRectangleRec({0, 0, (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2}, {255, 255, 255, 255});
+            
             ldtk_loader::DrawAllLayers("World_Level_1");
 
             {

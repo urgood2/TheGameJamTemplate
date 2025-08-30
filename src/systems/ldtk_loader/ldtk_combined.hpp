@@ -172,8 +172,6 @@ inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccrop
     EndScissorMode();
 }
 
-
-
 inline void DrawLayer(const std::string& levelName, const std::string& layerName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
@@ -182,17 +180,25 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
     if (!layer.hasTileset()) return;
 
     const std::string rel  = layer.getTileset().path;
-    const std::string full = internal_loader::assetDirectory.empty() ? rel
-                         : internal_loader::assetDirectory + "/" + rel;
+    const std::string full = internal_loader::assetDirectory.empty()
+                           ? rel
+                           : internal_loader::assetDirectory + "/" + rel;
+
     auto& cache = internal_loader::tilesetCache;
-    if (!cache.count(full)) cache[full].texture = LoadTexture(util::getAssetPathUUIDVersion(full).c_str());
+    if (!cache.count(full)) {
+        cache[full].texture = LoadTexture(util::getAssetPathUUIDVersion(full).c_str());
+        // Optional (prevents bleeding): SetTextureFilter(cache[full].texture, TEXTURE_FILTER_POINT);
+    }
     const Texture2D& tex = cache[full].texture;
+
+    // Make sure alpha blending is on (it is by default, but explicit is fine)
+    // BeginBlendMode(BLEND_ALPHA);
 
     for (const auto& tile : layer.allTiles()) {
         const auto p  = tile.getPosition();        // includes layer offset
-        const auto tr = tile.getTextureRect();     // tileset rect (positive size)
+        const auto tr = tile.getTextureRect();     // positive size
 
-        Vector2 pos = { (float)p.x, (float)p.y };
+        Vector2   pos = { (float)p.x, (float)p.y };
         Rectangle src = { (float)tr.x, (float)tr.y, (float)tr.width, (float)tr.height };
 
         // Flip by negating source dims ONLY; do NOT move pos.
@@ -200,11 +206,15 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
         if (tile.flipY) src.height = -src.height;
 
         unsigned char a = (unsigned char)std::round(255.f * tile.alpha * layer.getOpacity());
-        Color tint = {255, 255, 255, a};
+        Color tint = { 255, 255, 255, a };
 
         DrawTextureRec(tex, src, pos, tint);
     }
+
+    // EndBlendMode();
 }
+
+
 
 inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
@@ -213,8 +223,14 @@ inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
     // background first
     DrawLevelBackground(level);
 
-    for (auto& layer : level.allLayers()) {
-        DrawLayer(levelName, layer.getName(), scale);
+    for (auto it = level.allLayers().rbegin(); it != level.allLayers().rend(); ++it) {
+        
+        // if (it->getName() == "Default_floor")
+        // if (it->getName() == "Custom_floor")
+        if (it->getName() == "Collisions")
+        
+        // if (it->getName() == "Wall_tops")
+            DrawLayer(levelName, it->getName(), scale);
     }
 }
 inline void Unload() {

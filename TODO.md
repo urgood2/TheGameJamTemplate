@@ -19,15 +19,16 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ## lua exposure & integration
-- convert ldtk rendering to layers
+- [ ] how to do layer-localized shader effects?
+
 - fold stencil & dashed line and circle into the queue system
-- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
 - fold all shape primitives  & sprite rendering in game.cpp into the queue system
+
+- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
 - [ ] use handleTextInput()
 - [ ] examine current state of input system, does re-binding inputs work, for both keyboard and controller? input rebinding: https://chatgpt.com/share/689718e0-d830-800a-bfdb-446125c87ecd
 - [ ] now make scrolling work for scroll panes, also handle scroll pane focus (knowing which scroll pane should move when scrolling), show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, also handle scroll pane sizing (initial size must be passed in, must be different from the full content size), exclude scroll pane background in the scissoring process, cull rendering so only visible items in the scroll pane are rendered, disable input for culled entities
 - dedicated Alignment callback for windows on resize
-- make get/set blackboard methods return lua nil if invalid instead of throwing error
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
@@ -201,8 +202,8 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 
 
 
-## Things to fix/implement
-
+## Things to fix/implement later
+- [ ] make get/set blackboard methods return lua nil if invalid instead of throwing error
 - [ ] understand & implement working copies of files in the todo_from_snkrx folder
 
 

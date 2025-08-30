@@ -981,6 +981,8 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             //     ui::element::Update(globals::registry, e, delta);
             // }
         }
+        
+        
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
         
@@ -1886,6 +1888,21 @@ void endStencil()
             // ZoneScopedN("Particle Draw");
             particle::DrawParticles(globals::registry, sprites);
         }
+        
+        {
+            // ZoneScopedN("Tilemap draw");
+            
+            // ldtk_loader::DrawAllLayers("Everything");
+            // ldtk_loader::DrawAllLayers("Background_image");
+            // ldtk_loader::DrawAllLayers("Tiles_and_intgrid");
+            // ldtk_loader::DrawAllLayers("Autolayer");
+            
+            
+            // ldtk_loader::DrawAllLayers("World_Level_1");
+            
+            ldtk_loader::DrawAllLayers(sprites, "Your_typical_2D_platformer");
+            // ldtk_loader::DrawAllLayers("Your_typical_2D_platformer");
+        }
 
         {
             // ZoneScopedN("LayerCommandsToCanvas Draw");
@@ -2127,18 +2144,9 @@ void endStencil()
                               std::nullopt, std::nullopt, WHITE); // draw top-left sprite
                               
             // fill screen with white
-            DrawRectangleRec({0, 0, (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2}, {255, 255, 255, 255});
+            // DrawRectangleRec({0, 0, (float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2}, {255, 255, 255, 255});
             
             
-            // ldtk_loader::DrawAllLayers("Everything");
-            // ldtk_loader::DrawAllLayers("Background_image");
-            // ldtk_loader::DrawAllLayers("Tiles_and_intgrid");
-            // ldtk_loader::DrawAllLayers("Autolayer");
-            
-            
-            // ldtk_loader::DrawAllLayers("World_Level_1");
-            
-            ldtk_loader::DrawAllLayers("Your_typical_2D_platformer");
 
             {
                 // ZoneScopedN("EndDrawing call");

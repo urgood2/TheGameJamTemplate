@@ -14,6 +14,9 @@
 #include <memory>
 #include <queue>
 #include <ostream>
+#include "systems/layer/layer_command_buffer.hpp"
+#include "systems/layer/layer_order_system.hpp"
+#include "systems/layer/layer_optimized.hpp"
 
 // ---------------------------------------------
 // Namespace: ldtk_loader (LDtkLoader + raylib)
@@ -71,13 +74,30 @@ static inline float ContainScale(int dstW, int dstH, int srcW, int srcH) {
     return sx < sy ? sx : sy;
 }
 
-inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccropOpt = nullptr) {
+inline void DrawLevelBackground(std::shared_ptr<layer::Layer> layerPtr,
+    const ldtk::Level& level, const Rectangle* ccropOpt = nullptr, const int renderZLevel = 0) {
     const int w = level.size.x, h = level.size.y;
     const Rectangle CLIP = ccropOpt ? *ccropOpt : Rectangle{0, 0, (float)w, (float)h};
 
     // Optional solid fill (outside scissor so the whole level gets the color)
-    // ::Color bg{ level.bg_color.r, level.bg_color.g, level.bg_color.b, level.bg_color.a };
-    // if (bg.a) DrawRectangle(0, 0, w, h, bg);
+    ::Color bg{ level.bg_color.r, level.bg_color.g, level.bg_color.b, level.bg_color.a };
+    if (bg.a) {
+        // layer::QueueCommand<layer::CmdDrawRectanglePro>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectanglePro *cmd)
+        // {
+        //     cmd->offsetX      = 0;
+        //     cmd->offsetY      = 0;
+        //     cmd->size.x  = width;
+        //     cmd->size.y = height;
+        //     cmd->color  = color; }, 
+        //     0, drawCommandSpace);
+        layer::QueueCommand<layer::CmdDrawRectanglePro>(layerPtr, [x = 0, y = 0, w = (float)w, h = (float)h, bg](layer::CmdDrawRectanglePro *cmd) {
+            cmd->offsetX = x;
+            cmd->offsetY = y;
+            cmd->size.x = w;
+            cmd->size.y = h;
+            cmd->color = bg;
+        }, renderZLevel, layer::DrawCommandSpace::World);
+    }
 
     if (!level.hasBgImage()) return;
     const auto& bgimg = level.getBgImage();
@@ -117,7 +137,10 @@ inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccrop
     const int scy = (int)std::floor(CLIP.y);
     const int scw = (int)std::ceil (CLIP.width);
     const int sch = (int)std::ceil (CLIP.height);
-    BeginScissorMode(scx, scy, scw, sch);
+    // BeginScissorMode(scx, scy, scw, sch);
+    layer::QueueCommand<layer::CmdBeginScissorMode>(
+        layerPtr, [](layer::CmdBeginScissorMode*){}, renderZLevel, layer::DrawCommandSpace::World
+    );
 
     if (hasComputed) {
         if (mode == "Repeat") {
@@ -131,16 +154,40 @@ inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccrop
 
             for (float y = firstY; y < CLIP.y + CLIP.height; y += tileH) {
                 for (float x = firstX; x < CLIP.x + CLIP.width;  x += tileW) {
-                    DrawTexturePro(tex, src, Rectangle{ x, y, tileW, tileH }, Vector2{0,0}, 0.0f, WHITE);
+                    // DrawTexturePro(tex, src, Rectangle{ x, y, tileW, tileH }, Vector2{0,0}, 0.0f, WHITE);
+                    
+                    layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, src, dest = Rectangle{ x, y, tileW, tileH }](layer::CmdTexturePro *cmd) {
+                            cmd->texture = tex;
+                            cmd->source = src;
+                            cmd->offsetX = 0;
+                            cmd->offsetY = 0;
+                            cmd->size = {dest.width, dest.height};
+                            cmd->rotationCenter = {0, 0};
+                            cmd->rotation = 0;
+                            cmd->color = WHITE;
+                        }, renderZLevel, layer::DrawCommandSpace::World);
                 }
             }
         } else {
             const float sx = (bgimg.scale.x == 0.f) ? 1.f : bgimg.scale.x;
             const float sy = (bgimg.scale.y == 0.f) ? 1.f : bgimg.scale.y;
             Rectangle dst{ (float)bgimg.pos.x, (float)bgimg.pos.y, src.width * sx, src.height * sy };
-            DrawTexturePro(tex, src, dst, Vector2{0,0}, 0.0f, WHITE);
+            // DrawTexturePro(tex, src, dst, Vector2{0,0}, 0.0f, WHITE);
+            layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, src, dst](layer::CmdTexturePro *cmd) {
+                cmd->texture = tex;
+                cmd->source = src;
+                cmd->offsetX = 0;
+                cmd->offsetY = 0;
+                cmd->size = {dst.width, dst.height};
+                cmd->rotationCenter = {0, 0};
+                cmd->rotation = 0;
+                cmd->color = WHITE;
+            }, renderZLevel, layer::DrawCommandSpace::World);
         }
-        EndScissorMode();
+        // EndScissorMode();
+        layer::QueueCommand<layer::CmdEndScissorMode>(
+        layerPtr, [](layer::CmdEndScissorMode*){}, renderZLevel, layer::DrawCommandSpace::World
+    );
         return;
     }
 
@@ -155,7 +202,10 @@ inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccrop
                 DrawTexturePro(tex, src, Rectangle{ x, y, tileW, tileH }, Vector2{0,0}, 0.0f, WHITE);
             }
         }
-        EndScissorMode();
+        // EndScissorMode();
+        layer::QueueCommand<layer::CmdEndScissorMode>(
+        layerPtr, [](layer::CmdEndScissorMode*){}, renderZLevel, layer::DrawCommandSpace::World
+    );
         return;
     }
 
@@ -169,10 +219,14 @@ inline void DrawLevelBackground(const ldtk::Level& level, const Rectangle* ccrop
     Rectangle dst{ levelPX - imgPX, levelPY - imgPY, sw, sh };
     DrawTexturePro(tex, src, dst, Vector2{0,0}, 0.0f, WHITE);
 
-    EndScissorMode();
+    // EndScissorMode();
+    
+    layer::QueueCommand<layer::CmdEndScissorMode>(
+        layerPtr, [](layer::CmdEndScissorMode*){}, renderZLevel, layer::DrawCommandSpace::World
+    );
 }
 
-inline void DrawLayer(const std::string& levelName, const std::string& layerName, float scale = 1.0f) {
+inline void DrawLayer(std::shared_ptr<layer::Layer> layerPtr, const std::string& levelName, const std::string& layerName, float scale = 1.0f, const int renderZLevel = 0) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
     const auto& layer = level.getLayer(layerName);
@@ -208,7 +262,29 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
         unsigned char a = (unsigned char)std::round(255.f * tile.alpha * layer.getOpacity());
         Color tint = { 255, 255, 255, a };
 
-        DrawTextureRec(tex, src, pos, tint);
+        // DrawTextureRec(tex, src, pos, tint);
+        
+        layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, src, pos, tint](layer::CmdTexturePro *cmd) {
+            cmd->texture = tex;
+            cmd->source = src;
+            cmd->offsetX = pos.x;
+            cmd->offsetY = pos.y;
+            cmd->size = {src.width, src.height};
+            cmd->rotationCenter = {0, 0};
+            cmd->rotation = 0;
+            cmd->color = tint;
+        }, renderZLevel, layer::DrawCommandSpace::World);
+        
+        // layer::QueueCommand<layer::CmdTexturePro>(layerPtr, [tex, src, dst](layer::CmdTexturePro *cmd) {
+        //         cmd->texture = tex;
+        //         cmd->source = src;
+        //         cmd->offsetX = 0;
+        //         cmd->offsetY = 0;
+        //         cmd->size = {dst.width, dst.height};
+        //         cmd->rotationCenter = {0, 0};
+        //         cmd->rotation = 0;
+        //         cmd->color = WHITE;
+        //     }, renderZLevel);
     }
 
     // EndBlendMode();
@@ -216,12 +292,12 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
 
 
 
-inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
+inline void DrawAllLayers(std::shared_ptr<layer::Layer> layerPtr, const std::string& levelName, float scale = 1.0f, const int renderZLevel = 0) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
 
     // background first
-    DrawLevelBackground(level);
+    DrawLevelBackground(layerPtr, level, nullptr, renderZLevel);
 
     for (auto it = level.allLayers().rbegin(); it != level.allLayers().rend(); ++it) {
         
@@ -230,7 +306,7 @@ inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
         // if (it->getName() == "Collisions")
         
         // if (it->getName() == "Wall_tops")
-            DrawLayer(levelName, it->getName(), scale);
+        DrawLayer(layerPtr, levelName, it->getName(), scale, renderZLevel);
     }
 }
 inline void Unload() {

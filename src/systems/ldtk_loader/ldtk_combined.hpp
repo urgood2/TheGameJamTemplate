@@ -46,51 +46,73 @@ inline void PreloadTileset(const std::string& relPath) {
         cache[full].texture = LoadTexture(full.c_str());
     }
 }
-inline void DrawLayer(const std::string& levelName,
-                      const std::string& layerName,
-                      float scale = 1.0f) {
+inline void DrawLayer(const std::string& levelName, const std::string& layerName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
     const auto& level = world.getLevel(levelName);
     const auto& layer = level.getLayer(layerName);
-    const auto& tiles = layer.allTiles();
-    int w = level.size.x;
-    int h = level.size.y;
+
+    const int w = level.size.x;
+    const int h = level.size.y;
 
     InitRenderTexture(w, h);
     BeginTextureMode(internal_loader::renderTexture);
-    ClearBackground(BLACK);
+    ClearBackground(BLANK); // transparent, not BLACK
 
-    for (auto& tile : tiles) {
-        Vector2 pos = { tile.getPosition().x * scale,
-                        tile.getPosition().y * scale };
-        auto rectInterim = tile.getTextureRect();
-        Rectangle r = { (float)rectInterim.x, (float)rectInterim.y,
-                           (float)rectInterim.width, (float)rectInterim.height };
-        Rectangle src = { r.x, r.y,
-                          r.width  * (tile.flipX ? -1.0f : 1.0f),
-                          r.height * (tile.flipY ? -1.0f : 1.0f) };
-        std::string tp = layer.getTileset().path;
-        std::string full = internal_loader::assetDirectory.empty()
-            ? tp
-            : internal_loader::assetDirectory + "/" + tp;
-        auto& cache = internal_loader::tilesetCache;
-        if (!cache.count(full)) {
-            cache[full].texture = LoadTexture(full.c_str());
+    const auto type = layer.getType();
+
+    if (type == ldtk::LayerType::Tiles || type == ldtk::LayerType::AutoLayer) {
+        if (layer.hasTileset()) {
+            const std::string rel = layer.getTileset().path;
+            const std::string full = internal_loader::assetDirectory.empty() ? rel
+                                      : internal_loader::assetDirectory + "/" + rel;
+            auto& cache = internal_loader::tilesetCache;
+            if (!cache.count(full)) cache[full].texture = LoadTexture(full.c_str());
+            const Texture2D& tex = cache[full].texture;
+
+            for (const auto& tile : layer.allTiles()) { // ordered for display already
+                const auto p = tile.getPosition();       // already includes layer offset
+                const auto tr = tile.getTextureRect();
+
+                Vector2 pos = { (float)p.x, (float)p.y }; // unscaled to RT
+                Rectangle src = { (float)tr.x, (float)tr.y, (float)tr.width, (float)tr.height };
+
+                // flip handling: negative src dims need positional compensation
+                if (tile.flipX) { src.width = -src.width; pos.x += (float)tr.width; }
+                if (tile.flipY) { src.height = -src.height; pos.y += (float)tr.height; }
+
+                unsigned char a = (unsigned char)std::round(255.f * tile.alpha * layer.getOpacity());
+                Color tint = {255, 255, 255, a};
+
+                DrawTextureRec(tex, src, pos, tint);
+            }
         }
-        DrawTextureRec(cache[full].texture, src, pos, WHITE);
     }
+    else if (type == ldtk::LayerType::IntGrid) {
+        // Simple visualizer: draw colored cells (handy for collisions/flags)
+        const int cell = layer.getCellSize();
+        const auto gridSize = layer.getGridSize();
+        unsigned char la = (unsigned char)std::round(255.f * layer.getOpacity());
+
+        for (int y = 0; y < gridSize.y; ++y) {
+            for (int x = 0; x < gridSize.x; ++x) {
+                const auto& v = layer.getIntGridVal(x, y);
+                if (&v == &ldtk::IntGridValue::None) continue;  
+                Color c{ v.color.r, v.color.g, v.color.b, la };
+                DrawRectangle(x * cell, y * cell, cell, cell, c);
+            }
+        }
+    }
+
     EndTextureMode();
 
-    Rectangle srcRec = { 0, 0,
-        static_cast<float>(internal_loader::renderTexture.texture.width),
-        -static_cast<float>(internal_loader::renderTexture.texture.height)
-    };
-    Rectangle dstRec = { 0, 0,
-        internal_loader::renderTexture.texture.width  * scale,
-        internal_loader::renderTexture.texture.height * scale
-    };
-    DrawTexturePro(internal_loader::renderTexture.texture,
-                   srcRec, dstRec, {0, 0}, 0.0f, WHITE);
+    // always present once, scaled
+    const Rectangle srcRec = { 0, 0,
+        (float)internal_loader::renderTexture.texture.width,
+        -(float)internal_loader::renderTexture.texture.height };
+    const Rectangle dstRec = { 0, 0,
+        internal_loader::renderTexture.texture.width * scale,
+        internal_loader::renderTexture.texture.height * scale };
+    DrawTexturePro(internal_loader::renderTexture.texture, srcRec, dstRec, {0,0}, 0.0f, WHITE);
 }
 inline void DrawAllLayers(const std::string& levelName, float scale = 1.0f) {
     const auto& world = internal_loader::project.getWorld();
@@ -164,49 +186,53 @@ inline void RunRules(uint8_t runSettings = 0) {
 inline void DrawGridLayer(int layerIdx, float scale = 1.0f) {
     auto ptr = internal_rule::levelPtr;
     if (!ptr) throw std::runtime_error("Level pointer not set");
-    auto& grid = ptr->getTileGridByIdx(layerIdx);
-    int w = grid.getWidth(), h = grid.getHeight();
-    auto& rt = internal_rule::renderer;
-    if (rt.texture.id) UnloadRenderTexture(rt);
-    rt = LoadRenderTexture(int(w * scale), int(h * scale));
 
-    BeginTextureMode(rt);
-    ClearBackground(BLACK);
+    auto& grid = ptr->getTileGridByIdx(layerIdx);
+    int gw = grid.getWidth(), gh = grid.getHeight();
 
     const auto& layerDef = internal_rule::defFile.getLayers()[layerIdx];
     auto tileset = internal_rule::defFile.getTileset(layerDef.tilesetDefUid);
-    std::string path = internal_rule::assetDirectory.empty()
-        ? tileset->imagePath
-        : internal_rule::assetDirectory + "/" + tileset->imagePath;
-    Texture2D& tex = internal_rule::textureCache.count(path)
-        ? internal_rule::textureCache[path]
-        : internal_rule::textureCache[path] = LoadTexture(path.c_str());
+    const int tileSize = tileset->tileSize;
 
-    int tileSize = tileset->tileSize;
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
+    // allocate correct pixel dimensions
+    auto& rt = internal_rule::renderer;
+    if (rt.texture.id) UnloadRenderTexture(rt);
+    rt = LoadRenderTexture(gw * tileSize, gh * tileSize);
+
+    // fetch tileset texture
+    std::string path = internal_rule::assetDirectory.empty() ? tileset->imagePath
+                       : internal_rule::assetDirectory + "/" + tileset->imagePath;
+    Texture2D& tex = internal_rule::textureCache.count(path) ? internal_rule::textureCache[path]
+                         : internal_rule::textureCache[path] = LoadTexture(path.c_str());
+
+    BeginTextureMode(rt);
+    ClearBackground(BLANK); // ★ transparent
+
+    for (int y = 0; y < gh; ++y) {
+        for (int x = 0; x < gw; ++x) {
             auto& cellTiles = grid(x, y);
             if (cellTiles.empty()) continue;
-            auto& tile = cellTiles.front();
-            int16_t px, py;
-            tileset->getCoordinates(tile.tileId, px, py);
-            Rectangle src { (float)px * tileSize, (float)py * tileSize,
-                             float(tileSize), float(tileSize) };
-            Rectangle dst { x * tileSize * scale + tile.posXOffset,
-                             y * tileSize * scale + tile.posYOffset,
-                             tileSize * scale, tileSize * scale };
-            DrawTexturePro(tex, src, dst, {0, 0}, 0.0f, WHITE);
+
+            // draw ALL stacked tiles in display order
+            for (const auto& t : cellTiles) {
+                int16_t px, py;
+                tileset->getCoordinates(t.tileId, px, py);
+                Rectangle src { (float)px * tileSize, (float)py * tileSize,
+                                (float)tileSize, (float)tileSize };
+                Rectangle dst { (float)(x * tileSize + t.posXOffset),
+                                (float)(y * tileSize + t.posYOffset),
+                                (float)tileSize, (float)tileSize };
+                DrawTexturePro(tex, src, dst, {0,0}, 0.0f, WHITE);
+            }
         }
     }
+
     EndTextureMode();
 
-    Rectangle srcRec { 0, 0,
-        float(rt.texture.width), -float(rt.texture.height)
-    };
-    Rectangle dstRec { 0, 0,
-        float(rt.texture.width), float(rt.texture.height)
-    };
-    DrawTexturePro(rt.texture, srcRec, dstRec, {0, 0}, 0.0f, WHITE);
+    // present once, scaled
+    Rectangle srcRec { 0, 0, (float)rt.texture.width, -(float)rt.texture.height };
+    Rectangle dstRec { 0, 0, rt.texture.width * scale, rt.texture.height * scale };
+    DrawTexturePro(rt.texture, srcRec, dstRec, {0,0}, 0.0f, WHITE);
 }
 inline void Unload() {
     for (auto& kv : internal_rule::textureCache) UnloadTexture(kv.second);

@@ -3,79 +3,31 @@
 ## game design
 
 - [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula
-- [ ] add some kind of screen which shares the amount of points scored
+- [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## lua exposure & integration
 - [ ] expose current camera manager & camera custom class to lua
 
-## physics
-- [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
-- [ ] physics - set physics layer method for object layers so they only collide with specific objects
-- [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?
-- [ ] Predictive flight path rendering via angrychipmunks demo.
-- [ ] Final updates to physics world for ease of use https://chatgpt.com/share/688a4653-d110-800a-90e1-8506e26f3653
-= [ ] how to color in only the ground? shader?
-= [ ] how to know which part is in the ground, and which isnt?
-- [ ] apply autogeometry manipulation methods: (also debug)
-```cpp
+- [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
 
-void DeformableDemo::leftMouse(const cpVect& pos) {
-    // carve only where density is high enough
-    if(_sampler->sample(pos) < 0.25f) return;
-    cpBB dirty = _pointCloud.addPoint(pos, 32.0f, 0.5f);
-    _tiles.markDirtyRect(dirty);
-}
+- fold stencil & dashed line and circle into the queue system
+- fold all shape primitives  & sprite rendering in game.cpp into the queue system
+- color coding (in part of strings only) for dynamic text as well
+- maybe a text log of sorts, with scroll?
+- renew alignment needs to cache so it can be called every frame
+- dedicated Alignment callback for windows on resize
+- text updating wrong. not easy to configure updates with on update method for some reason.
+- make get/set blackboard methods return lua nil if invalid instead of throwing error
+-  need streamlined way to access quadtree features, like collision checking specific areas 
+- how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
+- [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
+- [] way to make sure certain texts & images should be worldspace, or not
+- [] particle z values how?
+    - need way to specify particle screen/world space & particle z values
+        
 
-void DeformableDemo::rightMouse(const cpVect& pos) {
-    // spawn a ball only where density is low (i.e. empty space)
-    if(_sampler->sample(pos) > 0.5f) return;
-    
-    cpFloat mass   = 1.0f;
-    cpFloat radius = 10.0f;
-    cpFloat moment = cpMomentForCircle(mass, 0.0f, radius, cpvzero);
-    
-    // create body + shape via your C++ wrappers
-    auto *body = ChipmunkBody::BodyWithMassAndMoment(mass, moment);
-    _space->add(body);
-    body->setPosition(pos);
-    
-    auto *shape = ChipmunkCircleShape::CircleWithBody(body, radius, cpvzero);
-    _space->add(shape);
-    shape->setFriction(0.7f);
-}
+- [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
 
-```
-- [ ] tweak pointcloudsampler so it's feature complete: https://chatgpt.com/share/68865127-f880-800a-a33b-745a7bc5a793
-- [ ] compare all objective c files except image sampler (won't be using it) against originals for missing features
-- [ ] do a pass through of objective c port of chipmunk so that I can use shared ptr instead of new() operator.
-- [ ] steering: https://chatgpt.com/canvas/shared/6885095fef408191a7a78d4805d80a5c this needs more work based on sterring.lua, lots not added in yet, needs timer use, etc.
-- [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
-- [ ] make sample map with ldtk that has colliders i can base chipmunk on.
-- Deformable Chipmunk2D demo from http://chipmunk-physics.net/documentation.php#examples is what I want to copy (second demo in the app) if I want deformable terrain.
-- add steering stuff in from snkrx
-- add navmesh so it can work with chipmunk auto tile colliders + a ldtk loader implementatino
-- [ ] more chipmunk2d (mostly terrain stuff) examples to extract modules from: http://chipmunk-physics.net/documentation.php#examples
-- [ ] render sprites based on physics object location / transform (configurable)
-- [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives
-- [ ] keep render pipeline (also configuraable) but instead of an animatino or a sprite, draw whatever shapes I want through a function  (or by some supplied enum), also customize draw dimensions if necessary (if drawing goes beyond bounds of transform or collision body)
-- [ ] note that chipmunk2d uses center of gravity as the location for an ojbect's coordinates.
-- [ ] how to do rounded rectangles for collision shapes?
-- [ ] how to do arbitrary deformable maps like in bouncy hexagons demo?
-- [ ] how to do orbiting like in planet demo?
-- [ ] curshing detection & weight measrement in contact graph demo
-- [ ] sticky surfaces demo for sticky collisions
-- [ ] simple sensor based fluids demo for simple 2d objects floating in a fluid.
-- [ ] slice demo for 2d slicing.
-- [ ] convex demo for changing the shape of an object on the fly (convex polygon)
-- [ ] pump demo for engine-like pump machinery simulation
-- [ ] breakable chains demo for chains which break when force is applied
-- [ ] crane demo for wall world type resource clustering 
-- [ ] fabric-like springs (maybe use for gui at some point?) in the springies demo
-- [ ] one-way pass thorugh platforms - one way platforms demo
-- [ ] how are joints moved in tank demo? how does it steer? 
-- [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
-
-## Things to fix/implement
 - test entity field loading with ldtk.
 - test:
 ```lua
@@ -146,17 +98,12 @@ local ReactiveBalm = {
 }
 
 ```
-- do full pass to add as many descriptive comments/ docs as possible to the codebase
-- siralim data is here: [folder](<assets/siralim_data>)
-- [ ] extract what I can from siralim: tack on this rule system, then test with actual siralim rules: https://chatgpt.com/share/68a46896-78bc-800a-a14f-73605890a8a3
-- [ ] chronicon data https://github.com/gabriel-dehan/chronicondb-client/tree/main/src/engine/data
+
 - [ ] use handleTextInput()
 - [ ] examine current state of input system, does re-binding inputs work, for both keyboard and controller? input rebinding: https://chatgpt.com/share/689718e0-d830-800a-bfdb-446125c87ecd
 - [ ] now make scrolling work for scroll panes, also handle scroll pane focus (knowing which scroll pane should move when scrolling), show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, also handle scroll pane sizing (initial size must be passed in, must be different from the full content size), exclude scroll pane background in the scissoring process, cull rendering so only visible items in the scroll pane are rendered, disable input for culled entities
-- [ ] mash in raylib text input box with the text input box in the ui system somehow. text input ui element: https://chatgpt.com/share/68971732-be5c-800a-889d-5874068d7d58
 
-- [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
-
+- [ ] hit circle - make my own structure for attaching to entities.
 - [ ] changing color of a hit circle using chaining:
 ```lua
 function HitCircle:change_color(delay_multiplier, target_color)
@@ -166,45 +113,97 @@ function HitCircle:change_color(delay_multiplier, target_color)
   return self
 end
 ```
+
+
+## physics
+- [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
+- [ ] physics - set physics layer method for object layers so they only collide with specific objects
+- [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?
+- [ ] Predictive flight path rendering via angrychipmunks demo.
+- [ ] Final updates to physics world for ease of use https://chatgpt.com/share/688a4653-d110-800a-90e1-8506e26f3653
+= [ ] how to color in only the ground? shader?
+= [ ] how to know which part is in the ground, and which isnt?
+- [ ] apply autogeometry manipulation methods: (also debug)
+```cpp
+
+void DeformableDemo::leftMouse(const cpVect& pos) {
+    // carve only where density is high enough
+    if(_sampler->sample(pos) < 0.25f) return;
+    cpBB dirty = _pointCloud.addPoint(pos, 32.0f, 0.5f);
+    _tiles.markDirtyRect(dirty);
+}
+
+void DeformableDemo::rightMouse(const cpVect& pos) {
+    // spawn a ball only where density is low (i.e. empty space)
+    if(_sampler->sample(pos) > 0.5f) return;
+    
+    cpFloat mass   = 1.0f;
+    cpFloat radius = 10.0f;
+    cpFloat moment = cpMomentForCircle(mass, 0.0f, radius, cpvzero);
+    
+    // create body + shape via your C++ wrappers
+    auto *body = ChipmunkBody::BodyWithMassAndMoment(mass, moment);
+    _space->add(body);
+    body->setPosition(pos);
+    
+    auto *shape = ChipmunkCircleShape::CircleWithBody(body, radius, cpvzero);
+    _space->add(shape);
+    shape->setFriction(0.7f);
+}
+
+```
+- [ ] tweak pointcloudsampler so it's feature complete: https://chatgpt.com/share/68865127-f880-800a-a33b-745a7bc5a793
+- [ ] compare all objective c files except image sampler (won't be using it) against originals for missing features
+- [ ] do a pass through of objective c port of chipmunk so that I can use shared ptr instead of new() operator.
+- [ ] steering: https://chatgpt.com/canvas/shared/6885095fef408191a7a78d4805d80a5c this needs more work based on sterring.lua, lots not added in yet, needs timer use, etc.
+- [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
+- [ ] make sample map with ldtk that has colliders i can base chipmunk on.
+- Deformable Chipmunk2D demo from http://chipmunk-physics.net/documentation.php#examples is what I want to copy (second demo in the app) if I want deformable terrain.
+- add steering stuff in from snkrx
+- add navmesh so it can work with chipmunk auto tile colliders + a ldtk loader implementatino
+- [ ] more chipmunk2d (mostly terrain stuff) examples to extract modules from: http://chipmunk-physics.net/documentation.php#examples
+- [ ] render sprites based on physics object location / transform (configurable)
+- [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives
+- [ ] keep render pipeline (also configuraable) but instead of an animatino or a sprite, draw whatever shapes I want through a function  (or by some supplied enum), also customize draw dimensions if necessary (if drawing goes beyond bounds of transform or collision body)
+- [ ] note that chipmunk2d uses center of gravity as the location for an ojbect's coordinates.
+- [ ] how to do rounded rectangles for collision shapes?
+- [ ] how to do arbitrary deformable maps like in bouncy hexagons demo?
+- [ ] how to do orbiting like in planet demo?
+- [ ] curshing detection & weight measrement in contact graph demo
+- [ ] sticky surfaces demo for sticky collisions
+- [ ] simple sensor based fluids demo for simple 2d objects floating in a fluid.
+- [ ] slice demo for 2d slicing.
+- [ ] convex demo for changing the shape of an object on the fly (convex polygon)
+- [ ] pump demo for engine-like pump machinery simulation
+- [ ] breakable chains demo for chains which break when force is applied
+- [ ] crane demo for wall world type resource clustering 
+- [ ] fabric-like springs (maybe use for gui at some point?) in the springies demo
+- [ ] one-way pass thorugh platforms - one way platforms demo
+- [ ] how are joints moved in tank demo? how does it steer? 
+- [ ] diffent types of joints, springs, constraints, etc, like pinball flappers, vehicle wheels, turbines, balls connected in various ways, etc. in Joints and Constraints demo
+
+
+
+## physics laters
+
+## apply next time, when I do a game jam.
+
 - [ ] smooth particle movement:
 ```lua
 self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, function() self.dead = true end)
 ```
-- [ ] understand & implement working copies of files in the todo_from_snkrx folder
+
 - [ ] copy SNKRX's dead-simple transition thing. Circle with text. 
 - [ ] do what SNKRX does and add a sort of dark overlay behind everything else when showing gui -> probably render a rect
-- [ ] add simple crash reporting to web builds 
-- [ ] How to mesh my transforms with chipmunk 2d to do lesast amount of work and be performant?
-- [ ] Gotta add scroll pane
-- scrool pane for ui: https://chatgpt.com/share/6881dd9f-27ac-800a-af9f-935b61355da7
 - [ ] change image color on hover
 - [ ] color-coded tooltips which can be updated on the fly to reflect info-how?
 - [ ] dynamic text notifications which can fade, and also contain images.
-- [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
 
-## New features
-- fold stencil & dashed line and circle into the queue system
-- fold all shape primitives  & sprite rendering in game.cpp into the queue system
-- color coding (in part of strings only) for dynamic text as well
-- maybe a text log of sorts, with scroll?
-- renew alignment needs to cache so it can be called every frame
-- dedicated Alignment callback for windows on resize
-- text updating wrong. not easy to configure updates with on update method for some reason.
 
-- make get/set blackboard methods return lua nil if invalid instead of throwing error
--  need streamlined way to access quadtree features, like collision checking specific areas 
-- how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 
-- [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
+## Things to fix/implement
 
-- [] way to make sure certain texts & images should be worldspace, or not
-- [] particle z values how?
-    - need way to specify particle screen/world space & particle z values
-
-- [ ] localize rendering of ui animations & text to the ui draw tree itself
-    - [ ] ninepatch not tested
-        
-- [ ] take some shaders (esp. glow) from here https://github.com/vrld/moonshine?tab=readme-ov-file#effect-pixelate -
+- [ ] understand & implement working copies of files in the todo_from_snkrx folder
 
 
 ## Bug fixes
@@ -290,6 +289,11 @@ globalShaderUniforms.set("edge_shader", "iResolution",
 - [ ] Participate in game jam or do a little test game jam on my own to make everything ready
 
 ---
+
+## Game data extraction
+- siralim data is here: [folder](<assets/siralim_data>)
+- [ ] extract what I can from siralim: tack on this rule system, then test with actual siralim rules: https://chatgpt.com/share/68a46896-78bc-800a-a14f-73605890a8a3
+- [ ] chronicon data https://github.com/gabriel-dehan/chronicondb-client/tree/main/src/engine/data
 
 ## Immediate laters
 - [ ] use posthog for analytics? learn how randy does it.

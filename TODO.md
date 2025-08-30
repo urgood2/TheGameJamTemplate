@@ -6,6 +6,8 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## lua exposure & integration
+
+- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
 - [ ] expose current camera manager & camera custom class to lua
 
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
@@ -208,7 +210,6 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 ## Bug fixes
 
-- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize
 - [ ] text update not applying for text that is in the middle of typing? reset typing when text is set (including coroutine state?), as well as effects?
 - [ ] test edge_effect shader
 

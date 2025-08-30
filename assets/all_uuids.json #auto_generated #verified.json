@@ -12858,6 +12858,9 @@
     "asset_data_siralim": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/siralim_data"
     ],
+    "asset_example_topdown_typical": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/Typical_TopDown_example.ldtk"
+    ],
     "asset_feature_test": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/test_features.ldtk"
     ],
@@ -17250,6 +17253,9 @@
     "example_prepas_shader": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\shaders\\prepass_example.lua",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/shaders/prepass_example.lua"
+    ],
+    "example_topdown_typical": [
+        "Typical_TopDown_example.ldtk"
     ],
     "exclamation": [
         "exclamation.png"

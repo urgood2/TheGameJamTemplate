@@ -185,7 +185,7 @@ inline void DrawLayer(const std::string& levelName, const std::string& layerName
     const std::string full = internal_loader::assetDirectory.empty() ? rel
                          : internal_loader::assetDirectory + "/" + rel;
     auto& cache = internal_loader::tilesetCache;
-    if (!cache.count(full)) cache[full].texture = LoadTexture(full.c_str());
+    if (!cache.count(full)) cache[full].texture = LoadTexture(util::getAssetPathUUIDVersion(full).c_str());
     const Texture2D& tex = cache[full].texture;
 
     for (const auto& tile : layer.allTiles()) {

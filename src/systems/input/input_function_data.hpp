@@ -30,8 +30,47 @@ namespace input
         GAMEPAD_AXIS, // gamepad axis movement in general
         GAMEPAD_BUTTON, // buttons on a gamepad (abxy, dpad, etc.)
         MOUSE, // mouse buttons and movement
-        TOUCH // touch input (not configured yet)
+        TOUCH, // touch input (not configured yet)
+        KEYBOARD // NEW
     };
+    
+    enum class ActionTrigger : uint8_t { Pressed, Released, Held, Repeat, AxisPos, AxisNeg };
+
+    struct ActionBinding {
+        InputDeviceInputCategory device = InputDeviceInputCategory::NONE;
+        int   code = 0;                      // KeyboardKey / MouseButton / GamepadButton / GamepadAxis encoded as int
+        ActionTrigger trigger = ActionTrigger::Pressed;
+        float threshold = 0.5f;              // for axis triggers
+        std::vector<KeyboardKey> modifiers;  // only used for KEYBOARD
+        std::string chord_group;             // optional
+        std::string context = "global";
+    };
+
+    struct ActionFrameState {
+        bool  pressed = false;
+        bool  released = false;
+        bool  down = false;
+        float held = 0.f;    // seconds
+        float value = 0.f;   // for axis aggregation
+    };
+
+    // Reverse lookup key
+    struct ActionKey {
+        InputDeviceInputCategory dev;
+        int code;
+    };
+
+    struct ActionKeyHash {
+        auto operator()(const ActionKey &k) const -> size_t {
+            return (static_cast<size_t>(k.dev) * 1315423911u) ^ static_cast<size_t>(k.code);
+        }
+    };
+    struct ActionKeyEq {
+        auto operator()(const ActionKey &a, const ActionKey &b) const -> bool {
+            return a.dev == b.dev && a.code == b.code;
+        }
+    };
+
 
     struct AxisButtonState
     {
@@ -236,6 +275,25 @@ namespace input
         std::optional<float> overlay_menu_active_timer; // Timer for overlay menu active duration
         bool overlay_menu_active = false;            // Whether an overlay menu is active
         std::optional<entt::entity> screen_keyboard; // represents the on-screen keyboard entity
+        
+        // -------------------------------
+        // Action Bindings and States
+        // -------------------------------
+        // Context
+        std::string active_context = "gameplay";
+
+        // Bindings & states
+        std::unordered_map<std::string, std::vector<ActionBinding>> action_bindings; // name -> bindings
+        std::unordered_map<std::string, ActionFrameState> actions;
+
+        // Fast reverse index
+        std::unordered_multimap<ActionKey, std::pair<std::string, size_t>, ActionKeyHash, ActionKeyEq> code_to_actions;
+
+        // Rebind capture
+        bool rebind_listen = false;
+        std::string rebind_action;
+        std::function<void(bool, ActionBinding)> on_rebind_done;
+
     };
 
     // Special mapping for symbols when Shift is held

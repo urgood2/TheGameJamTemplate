@@ -114,5 +114,20 @@ namespace input
     bool CaptureFocusedInput(entt::registry &registry, InputState &state, const std::string inputType, GamepadButton button, float dt);
     void NavigateFocus(entt::registry &registry, InputState &state, std::optional<std::string> dir = std::nullopt);
 
-    
+    auto RebuildActionIndex(InputState &s) -> void;
+    // per-frame cleanup; call at end of Update
+    auto DecayActions(InputState &s) -> void;
+    // O(1) dispatch for raw events/axes
+    auto DispatchRaw(InputState &s, InputDeviceInputCategory dev, int code, bool down, float value = 0.f) -> void;
+    // Tick held timers; call once per frame before DecayActions
+    auto TickActionHolds(InputState &s, float dt) -> void;
+    auto bind_action(InputState &s, const std::string &action, const ActionBinding &b) -> void;
+    auto clear_action(InputState &s, const std::string &action) -> void;
+    auto set_context(InputState &s, const std::string &ctx) -> void;
+    auto action_pressed (InputState &s, const std::string &a) -> bool ;
+    auto action_released(InputState &s, const std::string &a) -> bool ;
+    auto action_down    (InputState &s, const std::string &a) -> bool ;
+    auto action_value   (InputState &s, const std::string &a) -> float ;
+
+    auto start_rebind(InputState &s, const std::string &action, std::function<void(bool, ActionBinding)> cb) -> void ;
 }

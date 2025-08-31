@@ -24,14 +24,14 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] scroll pane needs scroll bar.
 - [ ] how to do layer-localized shader effects?
 - [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize / dedicated Alignment callback for windows on resize
-- [ ] use handleTextInput()
-- [ ] now make scrolling work for scroll panes, also handle scroll pane focus (knowing which scroll pane should move when scrolling), show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, also handle scroll pane sizing (initial size must be passed in, must be different from the full content size), exclude scroll pane background in the scissoring process, cull rendering so only visible items in the scroll pane are rendered, disable input for culled entities
+- [ ]  show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, disable input for culled entities
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
 
 
 
+- [ ] make lua bindings for physics steering functions, and test them.
 - [ ] lua access to input component, acccessing text & setting callback
 - [ ] test input bindings
 ```lua
@@ -48,7 +48,6 @@ local ax = input.action_value("AimX")
 ```
 - [ ] expose current camera manager & camera custom class to lua
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
-- [ ] https://chatgpt.com/share/686a5804-30e0-800a-8149-4b2a61ec44bc expose raycast system to lua
 - [] way to make sure certain texts & images should be worldspace, or not
 - test:
 ```lua

@@ -31,6 +31,19 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 
+- [ ] test physics world layers
+```cpp
+world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});
+SetObjectLayerPhysicsTag(registry, *world, "Walls", "WORLD");
+
+// Example collision matrix:
+SetObjectLayerCollidesWith(registry, *world, "WORLD",      {"PLAYER","ENEMY","PROJECTILE"});
+SetObjectLayerCollidesWith(registry, *world, "PLAYER",     {"WORLD","ENEMY","TRIGGER"});
+SetObjectLayerCollidesWith(registry, *world, "ENEMY",      {"WORLD","PLAYER","TRIGGER"});
+SetObjectLayerCollidesWith(registry, *world, "PROJECTILE", {"WORLD","ENEMY","TRIGGER"});
+SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PROJECTILE"});
+
+```
 - [ ] make lua bindings for physics steering functions, and test them.
 - [ ] lua access to input component, acccessing text & setting callback
 - [ ] test input bindings
@@ -140,9 +153,9 @@ end
 
 
 ## physics
+- [ ] continue applying from here: https://chatgpt.com/share/68b408d1-5dc0-800a-aeda-c3c88ef5fe13
 - [ ] physics - set physics layer method for object layers so they only collide with specific objects
 - [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?
-- [ ] steering: https://chatgpt.com/canvas/shared/6885095fef408191a7a78d4805d80a5c this needs more work based on sterring.lua, lots not added in yet, needs timer use, etc.
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on.
 - [ ] render sprites based on physics object location / transform (configurable)
 - [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives

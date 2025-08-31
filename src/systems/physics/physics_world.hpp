@@ -8,6 +8,7 @@
 #include "entt/entt.hpp"
 #include "raylib.h"
 #include "systems/layer/layer.hpp"
+#include "physics_components.hpp"
 
 namespace physics
 {
@@ -172,6 +173,49 @@ namespace physics
 
         cpSpaceDebugDraw(space, &drawOptions);
     }
+    
+    /* ---------------------------- Collision layers ---------------------------- */
+    // Set all entities in an object layer to use a given physics tag and re-apply cpShapeFilter.
+    inline void SetObjectLayerPhysicsTag(entt::registry& R,
+                                        physics::PhysicsWorld& W,
+                                        const std::string& objectLayerName,
+                                        const std::string& physicsTag)
+    {
+        const auto targetHash = std::hash<std::string>{}(objectLayerName);
+
+        auto view = R.view<physics::ColliderComponent, ObjectLayerTag>();
+        for (auto e : view) {
+            const auto& ol = view.get<ObjectLayerTag>(e);
+            if (ol.hash != targetHash) continue;
+
+            // (1) record the layer tag on the entity
+            R.emplace_or_replace<PhysicsLayer>(e, physicsTag);
+
+            // (2) apply the filter on the shape now
+            auto& cc = view.get<physics::ColliderComponent>(e);
+            W.ApplyCollisionFilter(cc.shape.get(), physicsTag);
+        }
+    }
+
+    // Update the mask list for a tag, then re-apply it to all shapes that use that tag.
+    inline void SetObjectLayerCollidesWith(entt::registry& R,
+                                        physics::PhysicsWorld& W,
+                                        const std::string& physicsTag,
+                                        const std::vector<std::string>& collidesWith)
+    {
+        W.UpdateCollisionMasks(physicsTag, collidesWith);
+
+        auto view = R.view<physics::ColliderComponent, PhysicsLayer>();
+        const auto tagHash = std::hash<std::string>{}(physicsTag);
+        for (auto e : view) {
+            const auto& L = view.get<PhysicsLayer>(e);
+            if (L.tag_hash != tagHash) continue;
+
+            auto& cc = view.get<physics::ColliderComponent>(e);
+            W.ApplyCollisionFilter(cc.shape.get(), physicsTag);
+        }
+    }
+
 
     // ----------------------------------------------------------------------------
     // Utility functions

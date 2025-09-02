@@ -276,6 +276,11 @@ namespace ui
 
         AssignLayerOrderComponents(registry, self);
         AssignTreeOrderComponents(registry, uiRoot);
+        
+        // call resize func
+        if (uiBox.onBoxResize) {
+            uiBox.onBoxResize(self);
+        }
     }
 
     entt::entity box::Initialize(entt::registry &registry, const TransformConfig &transformData,
@@ -295,7 +300,7 @@ namespace ui
         if (config)
             registry.emplace<UIConfig>(self, config.value());
         registry.emplace<UIState>(self);
-        registry.emplace<UIBoxComponent>(self);
+        auto &selfBoxComp = registry.emplace<UIBoxComponent>(self);
 
         // Setup Role component (alignment & hierarchy) for the box
         if (config)
@@ -395,6 +400,11 @@ namespace ui
         else
         {
             util::AddInstanceToRegistry(registry, self, "UIBOX");
+        }
+        
+        // call resize func
+        if (selfBoxComp.onBoxResize) {
+            selfBoxComp.onBoxResize(self);
         }
 
         return self;

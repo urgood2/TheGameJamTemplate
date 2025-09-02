@@ -21,16 +21,19 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 ## TODOS fast
 - [ ] blinking cursor doesn't always show.
-- [ ] scroll pane needs scroll bar.
 - [ ] how to do layer-localized shader effects?
-- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize / dedicated Alignment callback for windows on resize
-- [ ]  show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, disable input for culled entities
+- [ ]  show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, disable input for culled entities: https://chatgpt.com/share/68b5aaee-7e38-800a-97b6-f8df9c15252a
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
 
 
 
+
+- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize / dedicated Alignment callback for windows on resize -> doucment this and add lua binding
+```cpp
+std::function<void(entt::entity)> onBoxResize = nullptr; // callback when the box is resized
+```
 - [ ] test physics world layers
 ```cpp
 world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});

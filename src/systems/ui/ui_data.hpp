@@ -83,6 +83,7 @@ namespace ui
     {
         std::optional<entt::entity> uiRoot;     // Root entity right below uibox (every ui box has a root entity, which is the first entity in the hierarchy)
         std::map<int, entt::entity> drawLayers; // used to explicitly assign additional elements to be drawn in a specific layer after the root ui and children are drawn (children with config.drawLayer aren't drawn in drawchildren())
+        std::function<void(entt::entity)> onBoxResize = nullptr; // callback when the box is resized
     };
 
     // TODO: test with each variable in config and other structs to document behavior

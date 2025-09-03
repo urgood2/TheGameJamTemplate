@@ -35,14 +35,3 @@ struct WorldStateBinding {
     explicit WorldStateBinding(const std::string& s)
     : state_name(s), state_hash(std::hash<std::string>{}(s)) {}
 };
-
-enum class PhysicsSyncMode {
-    AuthoritativePhysics,   // default: physics drives Transform
-    AuthoritativeTransform, // Transform drives physics (teleports body to Transform)
-    FrozenWhileDesynced     // when states don’t line up, pause physics body
-};
-
-struct PhysicsSyncConfig {
-    PhysicsSyncMode mode = PhysicsSyncMode::AuthoritativePhysics;
-    bool teleportOnResync = true; // snap body to Transform when resyncing
-};

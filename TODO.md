@@ -158,6 +158,30 @@ end
 ## physics
 - [ ] continue applying from here: https://chatgpt.com/share/68b7d28a-45d4-800a-9ed9-cad7e5725420
 - [ ] test SyncPhysicsToTransform after fleshing it out.
+- [ ] hook physics, use this order
+```cpp
+// Pseudocode main loop order:
+
+// 1) Input & transform interactions (hover, click, StartDrag/OnDrag, etc.)
+UpdateInput(registry, inputState);
+UpdateTransformInteractions(registry, dt);
+
+// 2) PRE-STEP: push only (covers AuthoritativeTransform from dragging/teleporting)
+physics::ApplySyncPolicy(registry, PM, dt);  // will do Transform->Body when mode == AuthoritativeTransform
+
+// 3) Physics step (only active worlds)
+PM.stepAll(dt);
+
+// 4) POST-STEP: pull only (covers AuthoritativePhysics as default)
+physics::ApplySyncPolicy(registry, PM, dt);  // will do Body->Transform when mode == AuthoritativePhysics
+
+// 5) Advance springs / dynamic motion (your existing Transform spring step)
+AdvanceTransformSprings(registry, dt);
+
+// 6) Render (your existing DrawTransformEntityWithAnimationWithPipeline; you already gate ShouldRender)
+physics::RenderAll(registry, PM);
+
+```
 - [ ] also test:
 ```cpp
 // Construct worlds
@@ -210,9 +234,70 @@ PM.enableDebugDraw("dungeon", true);
 - [ ] render sprites based on physics object location / transform (configurable)
 - [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives
 - [ ] keep render pipeline (also configuraable) but instead of an animatino or a sprite, draw whatever shapes I want through a function  (or by some supplied enum), also customize draw dimensions if necessary (if drawing goes beyond bounds of transform or collision body)
+- [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
+```cpp
+int main() {
+    using namespace NavMesh;
+
+    // 1) Define obstacles (two simple quads)
+    Polygon boxA;
+    boxA.AddPoint(200, 200);
+    boxA.AddPoint(320, 200);
+    boxA.AddPoint(320, 320);
+    boxA.AddPoint(200, 320);
+
+    Polygon boxB;
+    boxB.AddPoint(500, 120);
+    boxB.AddPoint(620, 120);
+    boxB.AddPoint(620, 260);
+    boxB.AddPoint(500, 260);
+
+    std::vector<Polygon> obstacles{ boxA, boxB };
+
+    // 2) Define source/destination
+    Point src(100, 250);
+    Point dst(700, 250);
+
+    // 3) Create the path finder and feed geometry
+    PathFinder pf;
+
+    // Optional: inflate obstacles outward by N pixels to add a safety margin
+    // Set to 0 if you want raw geometry.
+    const int inflate_pixels = 10;
+    pf.AddPolygons(obstacles, inflate_pixels);
+
+    // 4) Add the “external” points you’ll query between
+    pf.AddExternalPoints({ src, dst });
+
+    // 5) Ask for a path
+    auto path = pf.GetPath(src, dst);
+
+    // 6) Print it (or assert non-empty)
+    if (path.empty()) {
+        std::cout << "No path found.\n";
+        return 0;
+    }
+
+    std::cout << "Path (" << path.size() << " points):\n";
+    for (auto& p : path) {
+        std::cout << p.x << ", " << p.y << "\n";
+    }
+
+    // (Optional) Field-of-view / visibility fan from src
+    ConeOfVision cov;
+    cov.AddPolygons(obstacles);
+    auto vision = cov.GetVision(src, /*radius*/ 200.0f);
+
+    std::cout << "\nVision polyline (" << vision.size() << " points)\n";
+    for (auto& q : vision) {
+        std::cout << q.x << ", " << q.y << "\n";
+    }
+
+    return 0;
+}
+```
 
 ## physics LATERS
-- [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
 - [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
 - [ ] Predictive flight path rendering via angrychipmunks demo.
 - [ ] Final updates to physics world for ease of use https://chatgpt.com/share/688a4653-d110-800a-90e1-8506e26f3653

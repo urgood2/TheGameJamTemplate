@@ -16,6 +16,7 @@
 #include "systems/ui/box.hpp"
 #include "systems/ui/inventory_ui.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
+#include "systems/physics/transform_physics_hook.hpp"
 
 #include "systems/scripting/binding_recorder.hpp"
 
@@ -2105,6 +2106,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         {
             handleDefaultTransformDrag(registry, e);
         }
+        
+        // 🔴 ADD: tell physics this entity is now being dragged.
+        physics::OnStartDrag(*registry, e);
         
         if (registry->any_of<ui::UIConfig>(e) == false) return;
         

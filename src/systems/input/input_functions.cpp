@@ -21,6 +21,7 @@
 #include "systems/ui/element.hpp"
 #include "systems/scripting/binding_recorder.hpp"
 #include "systems/timer/timer.hpp"
+#include "systems/physics/transform_physics_hook.hpp"
 
 #include "raylib.h"
 #include "raymath.h"
@@ -590,6 +591,10 @@ namespace input
             if (registry.valid(inputState.cursor_dragging_target))
             {
                 SPDLOG_DEBUG("Stop dragging");
+                
+                // 🔴 ADD: tell physics to restore body type and switch back to AuthoritativePhysics
+                physics::OnDrop(registry, inputState.cursor_dragging_target);
+                
                 transform::StopDragging(&registry, inputState.cursor_dragging_target);
 
                 auto &downTargetNode = registry.get<transform::GameObject>(inputState.cursor_down_target);

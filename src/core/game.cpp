@@ -20,6 +20,8 @@
 #include "../third_party/rlImGui/extras/IconsFontAwesome6.h"
 #include "../third_party/rlImGui/imgui_internal.h"
 
+#include "../third_party/navmesh//source/navmesh_include.hpp"
+
 #include "../systems/shaders/shader_system.hpp"
 #include "../systems/shaders/shader_pipeline.hpp"
 #include "../systems/event/event_system.hpp"

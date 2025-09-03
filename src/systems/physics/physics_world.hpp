@@ -39,7 +39,7 @@ namespace physics
     }
 
     /**
-    * @brief Convert a Chipmunk physics‐space point (units, Y‐up) back to Raylib world‐space (pixels, Y‐down).
+    * @brief Convert a Chipmunk physics‐space point (units, Y‐down) back to Raylib world‐space (pixels, Y‐down).
     *
     * @param p
     *   A position in Chipmunk physics‐space (in units).
@@ -51,7 +51,7 @@ namespace physics
     inline Vector2 chipmunkToRaylibCoords(const cpVect &p) {
         return {
             (float)p.x * PIXELS_PER_PIXEL_UNIT,
-            (float)-p.y * PIXELS_PER_PIXEL_UNIT   // flip Y back
+            (float)p.y * PIXELS_PER_PIXEL_UNIT   // flip Y back
         };
     }
 
@@ -174,47 +174,6 @@ namespace physics
         cpSpaceDebugDraw(space, &drawOptions);
     }
     
-    /* ---------------------------- Collision layers ---------------------------- */
-    // Set all entities in an object layer to use a given physics tag and re-apply cpShapeFilter.
-    inline void SetObjectLayerPhysicsTag(entt::registry& R,
-                                        physics::PhysicsWorld& W,
-                                        const std::string& objectLayerName,
-                                        const std::string& physicsTag)
-    {
-        const auto targetHash = std::hash<std::string>{}(objectLayerName);
-
-        auto view = R.view<physics::ColliderComponent, ObjectLayerTag>();
-        for (auto e : view) {
-            const auto& ol = view.get<ObjectLayerTag>(e);
-            if (ol.hash != targetHash) continue;
-
-            // (1) record the layer tag on the entity
-            R.emplace_or_replace<PhysicsLayer>(e, physicsTag);
-
-            // (2) apply the filter on the shape now
-            auto& cc = view.get<physics::ColliderComponent>(e);
-            W.ApplyCollisionFilter(cc.shape.get(), physicsTag);
-        }
-    }
-
-    // Update the mask list for a tag, then re-apply it to all shapes that use that tag.
-    inline void SetObjectLayerCollidesWith(entt::registry& R,
-                                        physics::PhysicsWorld& W,
-                                        const std::string& physicsTag,
-                                        const std::vector<std::string>& collidesWith)
-    {
-        W.UpdateCollisionMasks(physicsTag, collidesWith);
-
-        auto view = R.view<physics::ColliderComponent, PhysicsLayer>();
-        const auto tagHash = std::hash<std::string>{}(physicsTag);
-        for (auto e : view) {
-            const auto& L = view.get<PhysicsLayer>(e);
-            if (L.tag_hash != tagHash) continue;
-
-            auto& cc = view.get<physics::ColliderComponent>(e);
-            W.ApplyCollisionFilter(cc.shape.get(), physicsTag);
-        }
-    }
 
 
     // ----------------------------------------------------------------------------
@@ -520,4 +479,47 @@ namespace physics
         return std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY);
     }
     
+    
+    
+    /* ---------------------------- Collision layers ---------------------------- */
+    // Set all entities in an object layer to use a given physics tag and re-apply cpShapeFilter.
+    inline void SetObjectLayerPhysicsTag(entt::registry& R,
+                                        physics::PhysicsWorld& W,
+                                        const std::string& objectLayerName,
+                                        const std::string& physicsTag)
+    {
+        const auto targetHash = std::hash<std::string>{}(objectLayerName);
+
+        auto view = R.view<ColliderComponent, ObjectLayerTag>();
+        for (auto e : view) {
+            const auto& ol = view.get<ObjectLayerTag>(e);
+            if (ol.hash != targetHash) continue;
+
+            // (1) record the layer tag on the entity
+            R.emplace_or_replace<PhysicsLayer>(e, physicsTag);
+
+            // (2) apply the filter on the shape now
+            auto& cc = view.get<ColliderComponent>(e);
+            W.ApplyCollisionFilter(cc.shape.get(), physicsTag);
+        }
+    }
+
+    // Update the mask list for a tag, then re-apply it to all shapes that use that tag.
+    inline void SetObjectLayerCollidesWith(entt::registry& R,
+                                        physics::PhysicsWorld& W,
+                                        const std::string& physicsTag,
+                                        const std::vector<std::string>& collidesWith)
+    {
+        W.UpdateCollisionMasks(physicsTag, collidesWith);
+
+        auto view = R.view<ColliderComponent, PhysicsLayer>();
+        const auto tagHash = std::hash<std::string>{}(physicsTag);
+        for (auto e : view) {
+            const auto& L = view.get<PhysicsLayer>(e);
+            if (L.tag_hash != tagHash) continue;
+
+            auto& cc = view.get<ColliderComponent>(e);
+            W.ApplyCollisionFilter(cc.shape.get(), physicsTag);
+        }
+    }
 }

@@ -156,9 +156,56 @@ end
 
 
 ## physics
-- [ ] continue applying from here: https://chatgpt.com/share/68b408d1-5dc0-800a-aeda-c3c88ef5fe13
-- [ ] physics - set physics layer method for object layers so they only collide with specific objects
-- [ ] Way to manage multiple physics worlds, activate or deactivate by name, draw or not draw based on name as well - how to link this with transforms? Use already active transform state system?
+- [ ] continue applying from here: https://chatgpt.com/share/68b7d28a-45d4-800a-9ed9-cad7e5725420
+- [ ] test SyncPhysicsToTransform after fleshing it out.
+- [ ] also test:
+```cpp
+// Construct worlds
+auto overworld = physics::InitPhysicsWorld(&registry, 64.f, 0.f, 0.f);
+auto dungeon   = physics::InitPhysicsWorld(&registry, 64.f, 0.f, 0.f);
+
+PhysicsManager PM{registry};
+PM.add("overworld", overworld, "state:overworld");
+PM.add("dungeon",   dungeon,   "state:dungeon");
+
+// Activate only overworld right now
+entity_gamestate_management::active_states_instance().activate("state:overworld");
+PM.enableStep("overworld", true);
+PM.enableDebugDraw("overworld", true);
+
+PM.enableStep("dungeon", false); // hard off for now
+PM.enableDebugDraw("dungeon", false);
+
+// When you spawn things:
+auto e = registry.create();
+registry.emplace<PhysicsWorldRef>(e, "overworld");
+registry.emplace<entity_gamestate_management::StateTag>(e, "state:overworld");
+// also add ColliderComponent, etc.
+
+// Object layer setup:
+SetObjectLayerPhysicsTag(registry, *overworld, "Walls", "WORLD");
+SetObjectLayerCollidesWith(registry, *overworld, "WORLD", {"PLAYER","ENEMY","PROJECTILE"});
+
+// In your main loop:
+PM.stepAll(dt);
+PM.drawAll();        // draws only worlds that are active + draw_debug==true
+SyncPhysicsToTransform(registry, PM);
+
+``
+
+- [ ] test scene switch / multi-world toggling
+```cpp
+auto& AS = entity_gamestate_management::active_states_instance();
+AS.deactivate("state:overworld");
+AS.activate  ("state:dungeon");
+
+// Optional hard toggles (e.g., pause physics even if state is active)
+PM.enableStep("overworld", false);
+PM.enableStep("dungeon",   true);
+PM.enableDebugDraw("dungeon", true);
+```
+
+
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on.
 - [ ] render sprites based on physics object location / transform (configurable)
 - [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives

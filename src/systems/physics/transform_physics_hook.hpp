@@ -95,7 +95,7 @@ namespace physics {
         return true;
     }
     
-    void RenderAll(entt::registry& R, PhysicsManager& PM) {
+    inline void RenderAll(entt::registry& R, PhysicsManager& PM) {
         // Choose your ordering: by TreeOrderComponent, layer order, etc.
         auto view = R.view<transform::Transform, transform::GameObject>();
         // Example: sort by a TreeOrderComponent if present

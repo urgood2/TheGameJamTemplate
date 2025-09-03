@@ -15,7 +15,7 @@ namespace layer {
 
     // forward‐declare the pool wrapper template
     template<typename T>
-    class DynamicObjectPoolWrapper;
+    struct DynamicObjectPoolWrapper;
 }
 
 

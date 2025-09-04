@@ -263,7 +263,7 @@ namespace input
             {
                 auto &scr = registry.get<ui::UIScrollComponent>(inputState.activeScrollPane);
 
-                if (mouseWheelMove != 0.f && scr.vertical) {
+                if (mouseWheelMove != 0.f && scr.vertical && scr.maxOffset > 0.f) {
                     // wheel up -> content moves down -> offset decreases
                     // keep your sign convention the same as before:
                     scr.offset -= mouseWheelMove * scrollSpeed; // invert if needed

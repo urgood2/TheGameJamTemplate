@@ -324,7 +324,30 @@ namespace game
                 if (entity_gamestate_management::active_states_instance().is_active(stateTag) == false) return; // skip collision on inactive entities
                 if (!go.state.collisionEnabled) return;
                 auto box = globals::getBoxWorld(e);
-                if (expandedBounds.contains(box)) {
+                
+                
+                // if this is a scroll pane item, cull against the viewport
+                // If it belongs under a pane, test visibility against pane viewport,
+                // accounting for scroll offset
+                bool include = true;
+                auto paneRef = globals::registry.try_get<ui::UIPaneParentRef>(e);
+                bool isInScrollPane = paneRef != nullptr;
+                if (paneRef) {
+                    if (paneRef->pane != entt::null && globals::registry.valid(paneRef->pane)) {
+                        const auto &scr = globals::registry.get<ui::UIScrollComponent>(paneRef->pane);
+                        Rectangle paneR = paneViewport(globals::registry, paneRef->pane);
+
+                        // shift the element by negative scroll to match render position
+                        Rectangle eltR{ box.left,
+                                        box.top  - scr.offset,
+                                        box.width, box.height };
+
+                        include = rectsOverlap(eltR, paneR);
+                    }
+                }
+                if (isInScrollPane && include) 
+                    globals::quadtreeUI.add(e);
+                else if (!isInScrollPane && expandedBounds.contains(box)) {
                     // Add the entity to the quadtree if it is within the expanded bounds
                     globals::quadtreeUI.add(e);
                 } ;

@@ -1,6 +1,7 @@
 #include "box.hpp"
 
 #include "entt/entity/fwd.hpp"
+#include "spdlog/spdlog.h"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -1306,16 +1307,23 @@ namespace ui
         }
     }
     
-    static void MarkSubtreeWithPane(entt::registry& R, entt::entity pane) {
-        if (!R.valid(pane)) return;
-        auto &paneNode = R.get<transform::GameObject>(pane);
-        for (auto child : paneNode.orderedChildren) {
-            R.emplace_or_replace<ui::UIPaneParentRef>(child, ui::UIPaneParentRef{pane});
-            if (R.valid(child) && R.any_of<transform::GameObject>(child)) {
-                MarkSubtreeWithPane(R, child);
+    
+    // Internal DFS that stamps the same 'rootPane' everywhere in the subtree.
+    static void markSubtreeWithRootPane(entt::registry& R, entt::entity node, entt::entity rootPane) {
+        if (!R.valid(node)) return;
+
+        // Stamp every node (including nested panes) with the *root* pane.
+        R.emplace_or_replace<ui::UIPaneParentRef>(node, ui::UIPaneParentRef{rootPane});
+
+        if (auto go = R.try_get<transform::GameObject>(node)) {
+            for (auto child : go->orderedChildren) {
+                if (R.valid(child)) {
+                    markSubtreeWithRootPane(R, child, rootPane);
+                }
             }
         }
     }
+
 
     auto box::TreeCalcSubContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                                    bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform, std::unordered_map<entt::entity, Vector2> &contentSizes) -> Vector2
@@ -1337,8 +1345,39 @@ namespace ui
 
         SubCalculateContainerSize(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
         
+        
+
+        // final content size for this container
+        calcCurrentNodeTransform.x = parentUINodeRect.x;
+        ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
+        ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
+        
         if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
             auto &scr = registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
+            
+            const float contentW = calcChildTransform.w;
+            const float contentH = calcChildTransform.h;
+            
+            SPDLOG_DEBUG("Setting up scroll pane on entity {}", static_cast<int>(uiElement));
+            
+            // Decide the viewport from UIConfig:
+            // 1) If explicit width/height given -> use them.
+            // 2) Else if only maxWidth/maxHeight -> clamp content to those -> that is the viewport.
+            // 3) Else -> viewport == content (no scroll yet).
+            auto pick = [](float content, std::optional<float> fixed, std::optional<float> maxv) {
+                if (fixed) return *fixed;
+                if (maxv)  return std::min(content, *maxv);
+                return content;
+            };
+            const float vpW_cfg = pick(contentW, uiConfig.width,  uiConfig.maxWidth);
+            const float vpH_cfg = pick(contentH, uiConfig.height, uiConfig.maxHeight);
+
+            // Apply viewport to the node’s transform before SetValues
+            calcCurrentNodeTransform.x = parentUINodeRect.x;
+            calcCurrentNodeTransform.w = vpW_cfg;
+            calcCurrentNodeTransform.h = vpH_cfg;
+            ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform); // keep if you need min constraints
+            ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
             
             // add onHover method that sets the active scroll pane
             // node.methods.onHover = [uiElement](entt::registry &registry, entt::entity /*e*/) {
@@ -1347,15 +1386,11 @@ namespace ui
             node.state.collisionEnabled = true; // enable collision for scroll pane
             // node.state.hoverEnabled = true; // enable hover for scroll pane
             
-            // Content = what children demanded; viewport = the pane’s actual rectangle.
-            // NOTE: calcChildTransform.* is your post-layout dims for this container’s content.
-            scr.contentSize = { calcChildTransform.w, calcChildTransform.h };
+            // Content: what children demanded (pre-viewport)
+            scr.contentSize  = { contentW, contentH };
 
-            // Viewport is the rect you actually draw/clip to for the pane.
-            // Prefer Transform’s actual W/H if available; otherwise fall back:
-            const float vpW = registry.get<transform::Transform>(uiElement).getActualW();
-            const float vpH = registry.get<transform::Transform>(uiElement).getActualH();
-            scr.viewportSize = { vpW, vpH };
+            // Viewport: from config decision (post-viewport)
+            scr.viewportSize = { vpW_cfg, vpH_cfg };
 
             // Vertical scroll range
             scr.minOffset = 0.f;
@@ -1367,49 +1402,11 @@ namespace ui
 
             // (Optional) tag all descendants so collision can cheaply test against parent pane
             // This helper must DFS children of `uiElement` and set UIPaneParentRef{uiElement} on each.
-            MarkSubtreeWithPane(registry, uiElement);
+            markSubtreeWithRootPane(registry, uiElement, uiElement);
 
         }
 
-        if (!(uiConfig.maxWidth && uiConfig.maxWidth.value() < calcChildTransform.w) && !(uiConfig.maxHeight && uiConfig.maxHeight.value() < calcChildTransform.h))
-        {
-            // stop execution flow here, max dims not exceeded.
-            calcCurrentNodeTransform.x = parentUINodeRect.x;
-            ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
-            ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
-            return {calcChildTransform.w, calcChildTransform.h}; // final content size for this container
-        }
-        // max dimensions have been exceeded.
-        // We'll have to scale down the entire subtree to fit within the max dimensions.
-        // else {
-        //     calcCurrentNodeTransform.x = parentUINodeRect.x;
-        //     ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
-        //     ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
-
-        //     auto currentDims = Vector2{calcChildTransform.w, calcChildTransform.h};
-
-        //     // first, calculate the necessary scale factor to fit within the max dimensions.
-        //     auto scaleW = uiConfig.maxWidth ? uiConfig.maxWidth.value() / currentDims.x : 1.0f;
-        //     auto scaleH = uiConfig.maxHeight ? uiConfig.maxHeight.value() / currentDims.y : 1.0f;
-        //     auto scaling = std::min(scaleW, scaleH);
-
-        //     // then apply the scale factor to all sub element sizes. The alignment functions will take care of the rest.
-        //     element::ApplyScalingFactorToSizesInSubtree(registry, uiElement, scaling);
-        //     // TODO: ensure all padding references (and emboss) are multiplied by the uiConfig scale
-        // }
-
-        // FIXME: add this feature later
-        //  // if this runs, max width/height constraints are exceeded, adjust scale, run calculations again.
-        //  float restriction = uiConfig.maxWidth.value_or(uiConfig.maxHeight.value());
-        //  factor *= restriction / (uiConfig.maxWidth ? calcChildTransform.w : calcChildTransform.h);
-
-        // // do-over with scale factor to fit everything in.
-        // SubCalculateContainerLayouts(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
-
-        // final content size for this container
-        calcCurrentNodeTransform.x = parentUINodeRect.x;
-        ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
-        ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
+        
         return {calcChildTransform.w, calcChildTransform.h};
     }
 
@@ -2222,22 +2219,35 @@ namespace ui
                         const float barLen  = std::max(scr.barMinLen, visFrac * h);
                         const float travel  = h - barLen;
                         const float t       = (scr.maxOffset <= 0.f) ? 0.f : (scr.offset / scr.maxOffset);
-                        const float barY    = y + t * travel;
+                        const float barY    = y + h * 0.5f + t * travel;
                         const float barX    = x + w - scr.barThickness;
 
                         Color c = WHITE;
                         c.a = static_cast<unsigned char>(std::round(160.f * alphaFrac));
 
                         Rectangle br{ barX, barY, scr.barThickness, barLen };
-                        layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(
+                        
+                        
+                        // convert to centered rect for CmdDrawCenteredFilledRoundedRect
+                        const float cx = barX + scr.barThickness * 0.5f;
+                        const float cy = barY + barLen * 0.5f;
+                        
+                        // choose a radius (wire this to your component if you have one)
+                        const float r = std::min(6.0f, 0.5f * std::min(scr.barThickness, barLen)) / 2;
+
+                        layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(
                             layerPtr,
-                            [br, c](auto* cmd){
-                                cmd->outerRec = br;
-                                cmd->progressOrFullBackground = true;
+                            [cx, cy, scr, barLen, c, r](auto* cmd){
+                                cmd->x = cx;
+                                cmd->y = cy;
+                                cmd->w = scr.barThickness;
+                                cmd->h = barLen;
+                                cmd->rx = r;          // rounded corners
+                                cmd->ry = r;
                                 cmd->color = c;
-                                cmd->cache = entt::null;
+                                cmd->lineWidth.reset(); // filled, no stroke
                             },
-                            scope.z + 1 // draw over contents in same UI box
+                            scope.z + 1
                         );
                     }
 

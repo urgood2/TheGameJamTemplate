@@ -136,7 +136,7 @@ local ReactiveBalm = {
 ```
 
 
-- constraining scroll pane hieght doesn't change scroll pane size rn.
+- something wrong with scroll pane displacement rn.
 - [ ] collision fixes continued https://chatgpt.com/share/68b908c2-43d8-800a-8dc3-38360b9d8b7b
 - color coding (in part of strings only) for dynamic text as well
 - text updating wrong. not easy to configure updates with on update method for some reason.

@@ -2282,19 +2282,22 @@ namespace ui
                         const float visFrac = std::clamp(h / std::max(1.f, scr.contentSize.y), 0.f, 1.f);
                         const float barLen  = std::max(scr.barMinLen, visFrac * h);
                         const float travel  = h - barLen;
-                        const float t       = (scr.maxOffset <= 0.f) ? 0.f : (scr.offset / scr.maxOffset);
-                        const float barY    = y + barLen * 0.5f + t * travel;
+                        // ✅ normalize with min/max
+                        const float denom = std::max(1e-6f, scr.maxOffset - scr.minOffset);
+                        float t = (scr.offset - scr.minOffset) / denom;
+                        t = std::clamp(t, 0.f, 1.f);
+                        // const float barY    = y + barLen * 0.5f + t * travel;
                         const float barX    = x + w - scr.barThickness;
 
                         Color c = WHITE;
                         c.a = static_cast<unsigned char>(std::round(160.f * alphaFrac));
 
-                        Rectangle br{ barX, barY, scr.barThickness, barLen };
+                        // Rectangle br{ barX, barY, scr.barThickness, barLen };
                         
                         
                         // convert to centered rect for CmdDrawCenteredFilledRoundedRect
                         const float cx = barX + scr.barThickness * 0.5f;
-                        const float cy = barY + barLen * 0.5f;
+                        const float cy = y + barLen * 0.5f + t * travel;
                         
                         // choose a radius (wire this to your component if you have one)
                         const float r = 6.0f;
@@ -2305,7 +2308,7 @@ namespace ui
                                 cmd->x = cx;
                                 cmd->y = cy;
                                 cmd->w = scr.barThickness;
-                                cmd->h = barLen * 0.9;
+                                cmd->h = barLen * 0.95;
                                 cmd->rx = r;          // rounded corners
                                 cmd->ry = r;
                                 cmd->color = c;

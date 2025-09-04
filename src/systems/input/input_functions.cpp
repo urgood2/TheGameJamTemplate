@@ -252,31 +252,44 @@ namespace input
         static const float scrollSpeed = 10.0f;
         // apply scrollpane movement
         {
-            float mouseWheelMove = GetMouseWheelMove();
-            if (registry.valid(inputState.activeScrollPane) && inputState.activeScrollPane != entt::null && registry.any_of<ui::UIScrollComponent>(inputState.activeScrollPane) && std::find(inputState.nodes_at_cursor.begin(), inputState.nodes_at_cursor.end(), inputState.activeScrollPane) != inputState.nodes_at_cursor.end())
+            const float mouseWheelMove = GetMouseWheelMove();
+
+            if (registry.valid(inputState.activeScrollPane)
+                && inputState.activeScrollPane != entt::null
+                && registry.any_of<ui::UIScrollComponent>(inputState.activeScrollPane)
+                && std::find(inputState.nodes_at_cursor.begin(),
+                            inputState.nodes_at_cursor.end(),
+                            inputState.activeScrollPane) != inputState.nodes_at_cursor.end())
             {
-                // active scroll pane is under cursor, apply scroll
-                // SPDLOG_DEBUG("Applying scroll to active scroll pane: {}, amt = {}", static_cast<int>(inputState.activeScrollPane), mouseWheelMove * scrollSpeed);
-                
-                auto &scrollComponent = registry.get<ui::UIScrollComponent>(inputState.activeScrollPane);
-                scrollComponent.offset += mouseWheelMove * scrollSpeed;
-                scrollComponent.offset  = Clamp(scrollComponent.offset, scrollComponent.minOffset, scrollComponent.maxOffset);
-                
-                // if offset has changed, get all children of scroll pane and update their scroll displacement
-                if (scrollComponent.offset != scrollComponent.prevOffset) {
-                    ui::box::TraverseUITreeBottomUp(registry, inputState.activeScrollPane, [&](entt::entity child) {
-                        
-                        auto &gameObject = registry.get<transform::GameObject>(child);
-                        gameObject.scrollPaneDisplacement = Vector2{0, scrollComponent.offset};
-                    }, true);
+                auto &scr = registry.get<ui::UIScrollComponent>(inputState.activeScrollPane);
+
+                if (mouseWheelMove != 0.f && scr.vertical) {
+                    // wheel up -> content moves down -> offset decreases
+                    // keep your sign convention the same as before:
+                    scr.offset -= mouseWheelMove * scrollSpeed; // invert if needed
+                    scr.offset  = std::clamp(scr.offset, scr.minOffset, scr.maxOffset);
+
+                    if (scr.offset != scr.prevOffset) {
+                        // make bars visible for a bit
+                        scr.showUntilT = GetTime() + scr.showSeconds;
+
+                        // push displacement to children (your existing pattern)
+                        ui::box::TraverseUITreeBottomUp(
+                            registry, inputState.activeScrollPane,
+                            [&](entt::entity child) {
+                                auto &go = registry.get<transform::GameObject>(child);
+                                // vertical-only displacement
+                                go.scrollPaneDisplacement = Vector2{0.f, -scr.offset};
+                                // NOTE: negative here because you’re conceptually translating content up
+                                // If your renderer expects +offset down, flip sign accordingly.
+                            },
+                            /*includeRoot*/ true
+                        );
+
+                        scr.prevOffset = scr.offset;
+                    }
                 }
-                
-                
-                scrollComponent.prevOffset = scrollComponent.offset;
-                // SPDLOG_DEBUG("New scroll offset: {}", scrollComponent.offset);
-            }
-            else {
-                // no scroll pane under cursor, reset
+            } else {
                 inputState.activeScrollPane = entt::null;
             }
         }

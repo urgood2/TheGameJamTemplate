@@ -30,7 +30,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 
-- [ ] on language change - some kind of alignmnet function that aligns woth respect to screen on text update & uibox resize / dedicated Alignment callback for windows on resize -> doucment this and add lua binding
+- [ ] doucment this and add lua binding
 ```cpp
 std::function<void(entt::entity)> onBoxResize = nullptr; // callback when the box is resized
 ```
@@ -136,7 +136,7 @@ local ReactiveBalm = {
 ```
 
 
-
+- [ ] collision fixes https://chatgpt.com/share/68b908c2-43d8-800a-8dc3-38360b9d8b7b
 - color coding (in part of strings only) for dynamic text as well
 - text updating wrong. not easy to configure updates with on update method for some reason.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters

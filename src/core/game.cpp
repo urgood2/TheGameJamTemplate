@@ -210,6 +210,17 @@ namespace game
         out.erase(std::unique(out.begin(), out.end()), out.end());
         return out;
     };
+    
+/* ---------------- helpers for culling scroll pane elements ---------------- */
+    static inline bool rectsOverlap(const Rectangle& a, const Rectangle& b) {
+        return !(a.x > b.x + b.width  || a.x + a.width  < b.x ||
+                a.y > b.y + b.height || a.y + a.height < b.y);
+    }
+
+    static inline Rectangle paneViewport(entt::registry& R, entt::entity pane) {
+        auto &xf = R.get<transform::Transform>(pane);
+        return Rectangle{ xf.getActualX(), xf.getActualY(), xf.getActualW(), xf.getActualH() };
+    }
 
     auto initAndResolveCollisionEveryFrame() -> void
     {
@@ -306,6 +317,7 @@ namespace game
             expandedBounds,
             globals::getBoxWorld
         );
+        
                 
         globals::registry.view<transform::Transform, transform::GameObject, collision::ScreenSpaceCollisionMarker, entity_gamestate_management::StateTag>()
             .each([&](entt::entity e, auto &transform, auto &go, auto &stateTag){
@@ -319,7 +331,7 @@ namespace game
             });
             
         // broad phase collision detection
-        auto rawUI = globals::quadtreeWorld.findAllIntersections();
+        auto rawUI = globals::quadtreeUI.findAllIntersections();
         
         // Deduplicate & normalize the pairs
         auto pairsUI = dedupePairs(rawUI);

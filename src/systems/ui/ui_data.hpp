@@ -52,12 +52,34 @@ namespace ui
         std::unordered_map<std::string, std::string> config; // Configuration properties specific to this element
     };
     
-    struct UIScrollComponent {
-        float   offset    = 0.f;       // current scroll in px
-        float   minOffset = 0.f;         // minimum offset (usually 0)
-        float   maxOffset = 100.f;       // contentSize − viewportSize
-        float   prevOffset = 0.f;    // previous offset, used for smooth scrolling
+    // marker component for ui elements in a scroll pane
+    struct UIPaneParentRef {
+        entt::entity pane{entt::null}; // nearest scroll pane ancestor
     };
+    
+    struct UIScrollComponent {
+        // Your existing single-axis vertical offset
+        float offset{0.f};
+        float prevOffset{0.f};
+
+        float minOffset{0.f};
+        float maxOffset{0.f};
+
+        // content/viewport (computed during layout)
+        Vector2 contentSize{0.f, 0.f};
+        Vector2 viewportSize{0.f, 0.f};
+
+        // behavior
+        bool vertical{true};
+        bool horizontal{false}; // keep false if you don't support X yet
+
+        // transient bar visibility
+        float  showSeconds{1.25f};   // how long bars stay visible after input
+        double showUntilT{0.0};      // absolute time (seconds) to hide
+        float  barThickness{8.f};
+        float  barMinLen  {24.f};
+    };
+
 
 
     /**

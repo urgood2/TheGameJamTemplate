@@ -1305,6 +1305,17 @@ namespace ui
             // SPDLOG_DEBUG("Incrementing x by {} for entity {}", uiState.contentDimensions->x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, static_cast<int>(uiElement));
         }
     }
+    
+    static void MarkSubtreeWithPane(entt::registry& R, entt::entity pane) {
+        if (!R.valid(pane)) return;
+        auto &paneNode = R.get<transform::GameObject>(pane);
+        for (auto child : paneNode.orderedChildren) {
+            R.emplace_or_replace<ui::UIPaneParentRef>(child, ui::UIPaneParentRef{pane});
+            if (R.valid(child) && R.any_of<transform::GameObject>(child)) {
+                MarkSubtreeWithPane(R, child);
+            }
+        }
+    }
 
     auto box::TreeCalcSubContainer(entt::registry &registry, entt::entity uiElement, ui::LocalTransform parentUINodeRect,
                                    bool forceRecalculateLayout, std::optional<float> scale, LocalTransform &calcCurrentNodeTransform, std::unordered_map<entt::entity, Vector2> &contentSizes) -> Vector2
@@ -1322,8 +1333,12 @@ namespace ui
         float padding = uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value();
         float factor = scale.value_or(1.0f);
         
+        
+
+        SubCalculateContainerSize(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
+        
         if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
-            registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
+            auto &scr = registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
             
             // add onHover method that sets the active scroll pane
             // node.methods.onHover = [uiElement](entt::registry &registry, entt::entity /*e*/) {
@@ -1331,9 +1346,30 @@ namespace ui
             // };
             node.state.collisionEnabled = true; // enable collision for scroll pane
             // node.state.hoverEnabled = true; // enable hover for scroll pane
-        }
+            
+            // Content = what children demanded; viewport = the pane’s actual rectangle.
+            // NOTE: calcChildTransform.* is your post-layout dims for this container’s content.
+            scr.contentSize = { calcChildTransform.w, calcChildTransform.h };
 
-        SubCalculateContainerSize(calcCurrentNodeTransform, parentUINodeRect, uiConfig, calcChildTransform, padding, node, registry, factor, contentSizes);
+            // Viewport is the rect you actually draw/clip to for the pane.
+            // Prefer Transform’s actual W/H if available; otherwise fall back:
+            const float vpW = registry.get<transform::Transform>(uiElement).getActualW();
+            const float vpH = registry.get<transform::Transform>(uiElement).getActualH();
+            scr.viewportSize = { vpW, vpH };
+
+            // Vertical scroll range
+            scr.minOffset = 0.f;
+            scr.maxOffset = std::max(0.f, scr.contentSize.y - scr.viewportSize.y);
+
+            // Clamp any existing offset
+            scr.offset = std::clamp(scr.offset, scr.minOffset, scr.maxOffset);
+            scr.prevOffset = scr.offset;
+
+            // (Optional) tag all descendants so collision can cheaply test against parent pane
+            // This helper must DFS children of `uiElement` and set UIPaneParentRef{uiElement} on each.
+            MarkSubtreeWithPane(registry, uiElement);
+
+        }
 
         if (!(uiConfig.maxWidth && uiConfig.maxWidth.value() < calcChildTransform.w) && !(uiConfig.maxHeight && uiConfig.maxHeight.value() < calcChildTransform.h))
         {
@@ -1949,6 +1985,7 @@ namespace ui
     struct ActiveScissor {
         size_t endExclusive; // first index after the subtree
         int    z;
+        entt::entity pane{entt::null}; // NEW: which pane this scope represents
     };
 
     void box::drawAllBoxesShaderEnabled(entt::registry &registry,
@@ -2050,7 +2087,7 @@ namespace ui
                 );
 
                 // keep the scope open until we reach 'end'
-                scissorStack.push_back({ end, drawOrderZIndex });
+                scissorStack.push_back({ end, drawOrderZIndex, ent });
 
                 // Optional (if you want to offset children visually by scroll):
                 // layer::QueueCommand<layer::CmdPushMatrix>(
@@ -2151,13 +2188,66 @@ namespace ui
         
         // if anything remains open (e.g., if the last element ended a scope), close it
         while (!scissorStack.empty()) {
-            // layer::QueueCommand<layer::CmdPopMatrix>(
-            //     layerPtr, [](layer::CmdPopMatrix*){}, scissorStack.back().z
-            // );
-            layer::QueueCommand<layer::CmdEndScissorMode>(
-                layerPtr, [](layer::CmdEndScissorMode*){}, scissorStack.back().z
-            );
+            auto scope = scissorStack.back();
             scissorStack.pop_back();
+            
+            
+            // Draw transient scrollbars (inside scissor, so they clip)
+            if (registry.valid(scope.pane)
+                && registry.any_of<ui::UIScrollComponent, transform::Transform>(scope.pane)) {
+
+                const auto &scr = registry.get<ui::UIScrollComponent>(scope.pane);
+                auto &pxf = registry.get<transform::Transform>(scope.pane);
+
+                // visibility window
+                float alphaFrac = 0.f;
+                if (scr.showUntilT > 0.0) {
+                    const double now = GetTime();
+                    const double remain = scr.showUntilT - now;
+                    if (remain > 0.0) {
+                        const double tail = std::min<double>(0.25, scr.showSeconds);
+                        alphaFrac = (remain >= tail) ? 1.f : float(remain / tail);
+                    }
+                }
+
+                if (alphaFrac > 0.f) {
+                    const float x = pxf.getActualX();
+                    const float y = pxf.getActualY();
+                    const float w = pxf.getActualW();
+                    const float h = pxf.getActualH();
+
+                    // V bar (single-axis)
+                    if (scr.maxOffset > 0.f) {
+                        const float visFrac = std::clamp(h / std::max(1.f, scr.contentSize.y), 0.f, 1.f);
+                        const float barLen  = std::max(scr.barMinLen, visFrac * h);
+                        const float travel  = h - barLen;
+                        const float t       = (scr.maxOffset <= 0.f) ? 0.f : (scr.offset / scr.maxOffset);
+                        const float barY    = y + t * travel;
+                        const float barX    = x + w - scr.barThickness;
+
+                        Color c = WHITE;
+                        c.a = static_cast<unsigned char>(std::round(160.f * alphaFrac));
+
+                        Rectangle br{ barX, barY, scr.barThickness, barLen };
+                        layer::QueueCommand<layer::CmdRenderRectVerticesFilledLayer>(
+                            layerPtr,
+                            [br, c](auto* cmd){
+                                cmd->outerRec = br;
+                                cmd->progressOrFullBackground = true;
+                                cmd->color = c;
+                                cmd->cache = entt::null;
+                            },
+                            scope.z + 1 // draw over contents in same UI box
+                        );
+                    }
+
+                    // (Optional) Horizontal bar if you add X scrolling later…
+                }
+            }
+    
+            layer::QueueCommand<layer::CmdEndScissorMode>(
+                layerPtr, [](layer::CmdEndScissorMode*){}, scope.z
+            );
         }
     }
 

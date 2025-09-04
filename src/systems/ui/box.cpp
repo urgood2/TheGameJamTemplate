@@ -919,15 +919,34 @@ namespace ui
             auto &uiState = registry.get<UIState>(uiElement);
             auto &transform = registry.get<transform::Transform>(uiElement);
             uiState.contentDimensions = contentSize;
-            transform.setActualW(contentSize.x);
-            transform.setActualH(contentSize.y);
-            transform.setVisualW(contentSize.x);
-            transform.setVisualH(contentSize.y);
+            // transform.setActualW(contentSize.x);
+            // transform.setActualH(contentSize.y);
+            // transform.setVisualW(contentSize.x);
+            // transform.setVisualH(contentSize.y);
+            auto finalContentSize = contentSize;
+            
+            // if scroll pane, use viewport size instead of content size
+            if (auto scr = registry.try_get<ui::UIScrollComponent>(uiElement)) {
+                // use viewport for the actual/visual rect
+                transform.setActualW(scr->viewportSize.x);
+                transform.setActualH(scr->viewportSize.y);
+                transform.setVisualW(scr->viewportSize.x);
+                transform.setVisualH(scr->viewportSize.y);
+                
+                finalContentSize = Vector2{scr->viewportSize.x, contentSize.y};
+            } else {
+                // non-scroll nodes keep using their content size
+                transform.setActualW(contentSize.x);
+                transform.setActualH(contentSize.y);
+                transform.setVisualW(contentSize.x);
+                transform.setVisualH(contentSize.y);
+            }
 
-            if (contentSize.x > biggestSize.x)
-                biggestSize.x = contentSize.x;
-            if (contentSize.y > biggestSize.y)
-                biggestSize.y = contentSize.y;
+
+            if (finalContentSize.x > biggestSize.x)
+                biggestSize.x = finalContentSize.x;
+            if (finalContentSize.y > biggestSize.y)
+                biggestSize.y = finalContentSize.y;
         }
         // get last element, set uiroot size to this, uibox is invisible
 
@@ -936,8 +955,8 @@ namespace ui
         // rootTransform.setActualH(biggestSize.y - padding);
         rootTransform.setActualH(biggestSize.y);
 
-        // is the first child a horizontal container? if so, add padding to the height
-        if (node.children.size() > 0)
+        // is the first child a horizontal container that is not a scrollpane?? if so, add padding to the height
+        if (node.children.size() > 0 && uiConfig.uiType != UITypeEnum::SCROLL_PANE)
         {
             rootTransform.setActualH(padding);
 

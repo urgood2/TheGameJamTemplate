@@ -283,7 +283,7 @@ namespace input
                                 // NOTE: negative here because you’re conceptually translating content up
                                 // If your renderer expects +offset down, flip sign accordingly.
                             },
-                            /*includeRoot*/ true
+                            true
                         );
 
                         scr.prevOffset = scr.offset;

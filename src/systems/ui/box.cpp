@@ -1352,6 +1352,13 @@ namespace ui
         ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
         ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
         
+        
+        // 2) If not a scroll pane, commit content size as before.
+        if (uiConfig.uiType != UITypeEnum::SCROLL_PANE) {;
+            return {calcChildTransform.w, calcChildTransform.h};
+        }
+        
+        
         if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
             auto &scr = registry.emplace_or_replace<ui::UIScrollComponent>(uiElement);
             
@@ -1372,13 +1379,17 @@ namespace ui
             const float vpW_cfg = pick(contentW, uiConfig.width,  uiConfig.maxWidth);
             const float vpH_cfg = pick(contentH, uiConfig.height, uiConfig.maxHeight);
 
-            // Apply viewport to the node’s transform before SetValues
+            // Set pane (current node) to viewport size
             calcCurrentNodeTransform.x = parentUINodeRect.x;
             calcCurrentNodeTransform.w = vpW_cfg;
             calcCurrentNodeTransform.h = vpH_cfg;
-            ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform); // keep if you need min constraints
-            ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
-            
+
+            // Clamp the pane itself (if you have mins)
+            ClampDimensionsToMinimumsIfPresent(uiConfig, /* <-- use current node */ calcCurrentNodeTransform);
+
+            // 4) Now commit ONCE
+            ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, /*force*/ true /* or pass through */);
+
             // add onHover method that sets the active scroll pane
             // node.methods.onHover = [uiElement](entt::registry &registry, entt::entity /*e*/) {
             //     globals::inputState.activeScrollPane = uiElement;
@@ -1403,6 +1414,8 @@ namespace ui
             // (Optional) tag all descendants so collision can cheaply test against parent pane
             // This helper must DFS children of `uiElement` and set UIPaneParentRef{uiElement} on each.
             markSubtreeWithRootPane(registry, uiElement, uiElement);
+            
+            return {vpW_cfg, vpH_cfg};
 
         }
 

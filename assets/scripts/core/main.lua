@@ -215,6 +215,7 @@ function initMainMenu()
         UIConfigBuilder.create()
             :addColor(util.getColor("mauve_shadow"))
             :addShadow(true)
+            :addHeight(200)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)
                 -- something init-related here

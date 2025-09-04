@@ -37,6 +37,12 @@ namespace ui
     // TODO: update function registry for methods that replace transform-provided methods
 
     // TODO: make sure all methods take into account that children can be uiboxes as well
+    
+    inline float effectivePadding(const UIConfig& c) {
+        return c.padding.value_or(globals::settings.uiPadding)
+            * c.scale.value()
+            * globals::globalUIScaleFactor;
+    }
 
     void LogChildrenOrder(entt::registry &registry, entt::entity parent)
     {
@@ -377,9 +383,17 @@ namespace ui
         ui::LocalTransform runningTransform{uiBoxRole->offset->x, uiBoxRole->offset->y, 0.f, 0.f};
 
         placeUIElementsRecursively(registry, uiRoot, runningTransform, UITypeEnum::VERTICAL_CONTAINER, uiRoot);
+        
+        // check offset value for entity 70
+        auto &debugConfig = registry.get<UIConfig>(entt::entity(70));
+        auto &debugRole = registry.get<transform::InheritedProperties>(entt::entity(70));
+        SPDLOG_DEBUG("Entity 70 offset: ({}, {}), role offset: ({}, {})", debugConfig.offset->x, debugConfig.offset->y, debugRole.offset->x, debugRole.offset->y);
+        
 
         handleAlignment(registry, uiRoot);
         // ui::element::SetAlignments(registry, uiRoot, uiBoxRole->offset, true);
+        
+        SPDLOG_DEBUG("Entity 70 offset after handleAlignment: ({}, {}), role offset: ({}, {})", debugConfig.offset->x, debugConfig.offset->y, debugRole.offset->x, debugRole.offset->y);
 
         // auto final_WH = ui::element::SetWH(registry, uiRoot);
 
@@ -407,6 +421,8 @@ namespace ui
         if (selfBoxComp.onBoxResize) {
             selfBoxComp.onBoxResize(self);
         }
+        
+        SPDLOG_DEBUG(DebugPrint(registry, self));
 
         return self;
     }
@@ -539,7 +555,7 @@ namespace ui
 
             // no children & no alignment, skip
 
-            if (node.children.size() == 0)
+            if (node.orderedChildren.size() == 0)
             {
                 // SPDLOG_DEBUG("Skipping alignment adjustment entity {} (parent {}) - no children", static_cast<int>(entity), static_cast<int>(node.parent.value_or(entt::null)));
                 continue;
@@ -571,9 +587,6 @@ namespace ui
 
             auto selfDimensions = Vector2{transform.getActualW(), transform.getActualH()};
             auto selfOffset = role.offset.value_or(Vector2{0, 0});
-
-            auto selfDimensionsPaddingShavedOff = Vector2{selfDimensions.x - 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, selfDimensions.y - 2 * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor};
-            auto selfOffsetWithPadding = Vector2{selfOffset.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor, selfOffset.y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor};
 
             // row + horizontal center should center all children within it
             // column + vertical center should center all children within it
@@ -652,14 +665,17 @@ namespace ui
                         auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (childDimensions.y / 2);
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
                     }
-                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
+                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
                     {
                         // self's padded context area / 2 - (sum of all child heights + (child count - 1) * padding) / 2
                         // -> y starting location
                         // increment y starting location by child's width + padding each time
-                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (sumOfAllChildHeights + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) / 2 + runningYOffset;
+                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y / 2) - (sumOfAllChildHeights + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) / 2 + runningYOffset;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
                         runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
+                    }
+                    else if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
+                        // do nothing
                     }
                 }
 
@@ -670,7 +686,7 @@ namespace ui
                         // self's padded context area / 2 - (sum of all child widths + (child count - 1) * padding) / 2
                         // -> x starting location
                         // increment x starting location by child's width + padding each time
-                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x / 2) - (sumOfAllChildWidths + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) / 2 + runningXOffset;
+                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x / 2) - (sumOfAllChildWidths + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) / 2 + runningXOffset;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
                         runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
@@ -683,20 +699,25 @@ namespace ui
                         // -> x starting location
                         // place child at x starting location, and do nothing else
                     }
+                    
                 }
 
                 if (alignmentFlags & transform::InheritedProperties::Alignment::HORIZONTAL_RIGHT)
                 {
                     if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER)
                     {
-                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x) - (sumOfAllChildWidths + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) + runningXOffset;
+                        auto xLoc = selfContentOffset.x + (selfContentDimensions.x) - (sumOfAllChildWidths + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) + runningXOffset;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
                         runningXOffset += childDimensions.x + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
                     }
-                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
+                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
                     {
                         auto xLoc = selfContentOffset.x + selfContentDimensions.x - childDimensions.x;
                         element::ApplyAlignment(registry, child, xLoc - childRole.offset->x, 0);
+                    }
+                    
+                    else if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
+                        // do nothing
                     }
                 }
 
@@ -708,14 +729,18 @@ namespace ui
                         auto yLoc = selfContentOffset.y + selfContentDimensions.y - childDimensions.y;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
                     }
-                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT || uiConfig.uiType == UITypeEnum::SCROLL_PANE)
+                    else if (uiConfig.uiType == UITypeEnum::VERTICAL_CONTAINER || uiConfig.uiType == UITypeEnum::ROOT)
                     {
                         // self's padded context offset + self's padded content height - child's height
                         // -> y starting location
                         // increment y starting location by child's height + padding + emboss (if present) each time
-                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y) - (sumOfAllChildHeights + (node.children.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) + runningYOffset;
+                        auto yLoc = selfContentOffset.y + (selfContentDimensions.y) - (sumOfAllChildHeights + (node.orderedChildren.size() - 1) * uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor) + runningYOffset;
                         element::ApplyAlignment(registry, child, 0, yLoc - childRole.offset->y);
                         runningYOffset += childDimensions.y + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
+                    }
+                    
+                    else if (uiConfig.uiType == UITypeEnum::SCROLL_PANE) {
+                        // do nothing
                     }
                 }
 
@@ -956,7 +981,7 @@ namespace ui
         rootTransform.setActualH(biggestSize.y);
 
         // is the first child a horizontal container that is not a scrollpane?? if so, add padding to the height
-        if (node.children.size() > 0 && uiConfig.uiType != UITypeEnum::SCROLL_PANE)
+        if (node.orderedChildren.size() > 0 && uiConfig.uiType != UITypeEnum::SCROLL_PANE)
         {
             rootTransform.setActualH(padding);
 
@@ -1232,6 +1257,12 @@ namespace ui
         }
         // restore cache
         runningTransform = transformCache;
+        
+        // debug
+        if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && parentType == UITypeEnum::SCROLL_PANE) 
+        {
+            SPDLOG_DEBUG("Placed horizontal container entity {} at ({}, {}) with content size ({}, {})", static_cast<int>(uiElement), runningTransform.x, runningTransform.y, uiState.contentDimensions->x, uiState.contentDimensions->y);
+        }
 
         // increment by height + emboss if it is a row, or by width if it is a column.
         if (uiConfig.uiType == UITypeEnum::HORIZONTAL_CONTAINER && parentType != UITypeEnum::HORIZONTAL_CONTAINER)
@@ -1368,6 +1399,7 @@ namespace ui
 
         // final content size for this container
         calcCurrentNodeTransform.x = parentUINodeRect.x;
+        calcCurrentNodeTransform.y = parentUINodeRect.y;
         ClampDimensionsToMinimumsIfPresent(uiConfig, calcChildTransform);
         ui::element::SetValues(registry, uiElement, calcCurrentNodeTransform, forceRecalculateLayout);
         
@@ -1424,7 +1456,7 @@ namespace ui
 
             // Vertical scroll range
             scr.minOffset = 0.f;
-            scr.maxOffset = std::max(0.f, scr.contentSize.y - scr.viewportSize.y);
+            scr.maxOffset = std::max(0.f, scr.contentSize.y - scr.viewportSize.y) + uiConfig.padding.value_or(globals::settings.uiPadding) * uiConfig.scale.value() * globals::globalUIScaleFactor;
 
             // Clamp any existing offset
             scr.offset = std::clamp(scr.offset, scr.minOffset, scr.maxOffset);
@@ -2243,7 +2275,7 @@ namespace ui
                     const float x = pxf.getActualX();
                     const float y = pxf.getActualY();
                     const float w = pxf.getActualW();
-                    const float h = pxf.getActualH();
+                    const float h = pxf.getActualH() + globals::uiPadding;
 
                     // V bar (single-axis)
                     if (scr.maxOffset > 0.f) {
@@ -2251,7 +2283,7 @@ namespace ui
                         const float barLen  = std::max(scr.barMinLen, visFrac * h);
                         const float travel  = h - barLen;
                         const float t       = (scr.maxOffset <= 0.f) ? 0.f : (scr.offset / scr.maxOffset);
-                        const float barY    = y + h * 0.5f + t * travel;
+                        const float barY    = y + barLen * 0.5f + t * travel;
                         const float barX    = x + w - scr.barThickness;
 
                         Color c = WHITE;
@@ -2265,7 +2297,7 @@ namespace ui
                         const float cy = barY + barLen * 0.5f;
                         
                         // choose a radius (wire this to your component if you have one)
-                        const float r = std::min(6.0f, 0.5f * std::min(scr.barThickness, barLen)) / 2;
+                        const float r = 6.0f;
 
                         layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(
                             layerPtr,
@@ -2273,7 +2305,7 @@ namespace ui
                                 cmd->x = cx;
                                 cmd->y = cy;
                                 cmd->w = scr.barThickness;
-                                cmd->h = barLen;
+                                cmd->h = barLen * 0.9;
                                 cmd->rx = r;          // rounded corners
                                 cmd->ry = r;
                                 cmd->color = c;

@@ -20,6 +20,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ## TODOS fast
+- [ ] test task system in lua
 - [ ] blinking cursor doesn't always show.
 - [ ] how to do layer-localized shader effects?
 - [ ]  show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, disable input for culled entities: https://chatgpt.com/share/68b5aaee-7e38-800a-97b6-f8df9c15252a

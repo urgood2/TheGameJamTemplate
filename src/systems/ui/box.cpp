@@ -2275,7 +2275,7 @@ namespace ui
                     const float x = pxf.getActualX();
                     const float y = pxf.getActualY();
                     const float w = pxf.getActualW();
-                    const float h = pxf.getActualH() + globals::uiPadding;
+                    const float h = pxf.getActualH();
 
                     // V bar (single-axis)
                     if (scr.maxOffset > 0.f) {
@@ -2302,20 +2302,7 @@ namespace ui
                         // choose a radius (wire this to your component if you have one)
                         const float r = 6.0f;
                         
-                        layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(
-                            layerPtr,
-                            [x, y, w, h, cx, cy, scr, barLen, c, r](auto* cmd){
-                                cmd->x = x ;
-                                cmd->y = y;
-                                cmd->w = w;
-                                cmd->h = h;
-                                cmd->rx = r;          // rounded corners
-                                cmd->ry = r;
-                                cmd->color = GRAY;
-                                cmd->lineWidth.reset(); // filled, no stroke
-                            },
-                            scope.z + 1
-                        );
+                        
 
                         layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(
                             layerPtr,
@@ -2323,7 +2310,7 @@ namespace ui
                                 cmd->x = cx;
                                 cmd->y = cy;
                                 cmd->w = scr.barThickness;
-                                cmd->h = barLen * 0.95;
+                                cmd->h = barLen * 0.9;
                                 cmd->rx = r;          // rounded corners
                                 cmd->ry = r;
                                 cmd->color = c;

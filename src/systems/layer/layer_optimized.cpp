@@ -231,7 +231,7 @@ namespace layer
         triangle_equilateral(c->x, c->y, c->w, c->color, c->lineWidth);
     }
     void ExecuteDrawCenteredFilledRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawCenteredFilledRoundedRect* c) {
-        rectangle(c->x - c->w / 2, c->y - c->h / 2, c->w, c->h, c->rx, c->ry, c->color, c->lineWidth);
+        rectangle(c->x, c->y, c->w, c->h, c->rx, c->ry, c->color, c->lineWidth);
     }
     void ExecuteDrawSpriteCentered(std::shared_ptr<layer::Layer> layer, CmdDrawSpriteCentered* c) {
         DrawSpriteCentered(c->spriteName, c->x, c->y, c->dstW, c->dstH, c->tint);

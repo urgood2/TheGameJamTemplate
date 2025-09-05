@@ -2301,6 +2301,21 @@ namespace ui
                         
                         // choose a radius (wire this to your component if you have one)
                         const float r = 6.0f;
+                        
+                        layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(
+                            layerPtr,
+                            [x, y, w, h, cx, cy, scr, barLen, c, r](auto* cmd){
+                                cmd->x = x ;
+                                cmd->y = y;
+                                cmd->w = w;
+                                cmd->h = h;
+                                cmd->rx = r;          // rounded corners
+                                cmd->ry = r;
+                                cmd->color = GRAY;
+                                cmd->lineWidth.reset(); // filled, no stroke
+                            },
+                            scope.z + 1
+                        );
 
                         layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(
                             layerPtr,

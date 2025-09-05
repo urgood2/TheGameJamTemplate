@@ -1434,10 +1434,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             //     std::nullopt  // no line width (default to 1px)
             // );
             layer::QueueCommand<layer::CmdDrawCenteredFilledRoundedRect>(sprites, [](auto* cmd) {
-                cmd->x = 1500;
-                cmd->y = 300;
+                cmd->x = 0;
+                cmd->y = 0;
                 cmd->w = 200;
-                cmd->h = 100;
+                cmd->h = 200;
                 cmd->rx = 10;
                 cmd->ry = 10;
                 cmd->color = WHITE;

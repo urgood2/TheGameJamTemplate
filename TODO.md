@@ -137,7 +137,6 @@ local ReactiveBalm = {
 ```
 
 
-- scrollbar exceeds pane bounds vertically and is misaligned.
 - [ ] collision fixes continued https://chatgpt.com/share/68b908c2-43d8-800a-8dc3-38360b9d8b7b
 - color coding (in part of strings only) for dynamic text as well
 - text updating wrong. not easy to configure updates with on update method for some reason.
@@ -162,28 +161,23 @@ end
 - [ ] test SyncPhysicsToTransform after fleshing it out.
 - [ ] hook physics, use this order
 ```cpp
-// Pseudocode main loop order:
+// frame start
+HandleUIAndTransformInteractions(registry); // hover/drag update Transform + states
 
-// 1) Input & transform interactions (hover, click, StartDrag/OnDrag, etc.)
-UpdateInput(registry, inputState);
-UpdateTransformInteractions(registry, dt);
+ApplyAuthoritativeTransform(registry, PM);  // Transform(actual) -> Chipmunk (only when driving)
 
-// 2) PRE-STEP: push only (covers AuthoritativeTransform from dragging/teleporting)
-physics::ApplySyncPolicy(registry, PM, dt);  // will do Transform->Body when mode == AuthoritativeTransform
+PM.stepAll(dt);                             // Physics worlds step (active ones)
 
-// 3) Physics step (only active worlds)
-PM.stepAll(dt);
+ApplyAuthoritativePhysics(registry, PM);    // Chipmunk -> Transform(actual) (when physics is boss)
 
-// 4) POST-STEP: pull only (covers AuthoritativePhysics as default)
-physics::ApplySyncPolicy(registry, PM, dt);  // will do Body->Transform when mode == AuthoritativePhysics
+AdvanceSpringsAndDynamicMotion(registry);   // your existing spring updates
 
-// 5) Advance springs / dynamic motion (your existing Transform spring step)
-AdvanceTransformSprings(registry, dt);
-
-// 6) Render (your existing DrawTransformEntityWithAnimationWithPipeline; you already gate ShouldRender)
-physics::RenderAll(registry, PM);
+// your established DrawTransformEntityWithAnimationWithPipeline(...) uses visual values
+RenderAll(registry, PM);
 
 ```
+
+
 - [ ] also test:
 ```cpp
 // Construct worlds

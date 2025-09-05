@@ -157,7 +157,8 @@ end
 
 
 ## physics
-- [ ] continue applying from here: https://chatgpt.com/share/68b7d28a-45d4-800a-9ed9-cad7e5725420
+- [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
+
 - [ ] test SyncPhysicsToTransform after fleshing it out.
 - [ ] hook physics, use this order
 ```cpp
@@ -226,7 +227,6 @@ PM.enableDebugDraw("dungeon", true);
 ```
 
 
-- [ ] make sample map with ldtk that has colliders i can base chipmunk on.
 - [ ] render sprites based on physics object location / transform (configurable)
 - [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives
 - [ ] keep render pipeline (also configuraable) but instead of an animatino or a sprite, draw whatever shapes I want through a function  (or by some supplied enum), also customize draw dimensions if necessary (if drawing goes beyond bounds of transform or collision body)

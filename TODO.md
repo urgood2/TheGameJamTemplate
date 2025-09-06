@@ -138,6 +138,7 @@ local ReactiveBalm = {
 ```
 
 
+- [ ] got to finish adding the one-bit tiles to texturepacker (and put them into folders)
 - [ ] optimizing text ui generation from coded strings: https://chatgpt.com/share/68bbd9c8-a674-800a-80cb-fb68bdf30316 
 - [ ] collision fixes continued https://chatgpt.com/share/68b908c2-43d8-800a-8dc3-38360b9d8b7b
 - color coding (in part of strings only) for dynamic text as well

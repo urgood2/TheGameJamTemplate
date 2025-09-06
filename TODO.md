@@ -6,6 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
+- [ ] 1 bit tilemap - use ascii_sprites.tps for a tileset for a gamejam game, using ldtk
 - [ ] smooth particle movement:
 ```lua
 self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, function() self.dead = true end)

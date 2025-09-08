@@ -3,7 +3,7 @@
 #pragma once
 
 // --- Dependencies ---
-#include <LDtkLoader/Project.hpp>
+#include "third_party/ldtk_loader/src/Project.hpp"
 #include "spdlog/spdlog.h"
 #include "third_party/ldtkimport/include/ldtkimport/LdtkDefFile.hpp"
 #include "third_party/ldtkimport/include/ldtkimport/Level.h"

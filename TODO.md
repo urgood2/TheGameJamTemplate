@@ -24,7 +24,6 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] test task system in lua
 - [ ] blinking cursor doesn't always show.
 - [ ] how to do layer-localized shader effects?
-- [ ]  show scroll bar when scrolling (for X seconds after scroll), set limits for scroll offsets, disable input for culled entities: https://chatgpt.com/share/68b5aaee-7e38-800a-97b6-f8df9c15252a
 -  need streamlined way to access quadtree features, like collision checking specific areas 
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
@@ -138,7 +137,6 @@ local ReactiveBalm = {
 ```
 
 
-- [ ] got to finish adding the one-bit tiles to texturepacker (and put them into folders)
 - [ ] optimizing text ui generation from coded strings: https://chatgpt.com/share/68bbd9c8-a674-800a-80cb-fb68bdf30316 
 - [ ] collision fixes continued https://chatgpt.com/share/68b908c2-43d8-800a-8dc3-38360b9d8b7b
 - color coding (in part of strings only) for dynamic text as well

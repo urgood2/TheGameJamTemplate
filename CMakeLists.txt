@@ -261,7 +261,6 @@ if(NOT EMSCRIPTEN)
     add_subdirectory("src/third_party/tracy-master")
 endif()
 add_subdirectory("src/third_party/objectpool-master")
-add_subdirectory("src/third_party/ldtk_loader")
 
 ##########################################################################################
 # Project executable setup

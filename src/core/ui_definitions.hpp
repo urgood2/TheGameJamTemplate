@@ -545,7 +545,7 @@ namespace ui_defs
                 "roguelike_ui13.png",  "roguelike_ui2.png", "roguelike_ui15.png",
                 "roguelike_ui19.png", "roguelike_ui20.png", "roguelike_ui21.png"
             },
-            /*scale=*/1.0f
+            /*scale=*/3.0f
         );
         
         // Choose what to tile at *draw-time*:
@@ -557,7 +557,7 @@ namespace ui_defs
         til.left    = true;         // repeat left strip vertically
         til.right   = true;         // repeat right strip vertically
         // til.background = { 24, 24, 24, 255 };   // optional solid bg
-        til.pixelScale = 1.0f;      // usually your UI pixel scale (1/2/3...), keep integer for crisp pixels
+        til.pixelScale = 3.0f;      // usually your UI pixel scale (1/2/3...), keep integer for crisp pixels
 
         
         auto progressBar9Patch = ui::UIElementTemplateNode::Builder::create()
@@ -573,7 +573,7 @@ namespace ui_defs
                     .addNPatchTiling(til)
                     .addNPatchSourceTexture(exampleNine->texture)
                     .addProgressBar(true)
-                    .addProgressBarEmptyColor(YELLOW)
+                    .addProgressBarEmptyColor(GREEN)
                     .addProgressBarFullColor(PINK)
                     .addProgressBarFetchValueLamnda([](entt::entity e)
                                     { 

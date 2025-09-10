@@ -831,7 +831,15 @@ namespace ui
             //     cmd->rotation = 0.f;
             //     cmd->tint = colorToUse;
             // }, zIndex);
-            layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, newW, newH}, Vector2{0, 0}, 0.f, colorToUse);
+            // layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, newW, newH}, Vector2{0, 0}, 0.f, colorToUse);
+            
+            if (uiConfig->nPatchTiling.has_value()) {
+                auto til = *uiConfig->nPatchTiling;
+                til.background = {0,0,0,0};
+                nine_patch::DrawTextureNPatchTiledSafe(nPatchAtlas, nPatchInfo, Rectangle{0, 0, newW, newH}, {0,0}, 0.f, colorToUse, til);
+            } else {
+                layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, newW, newH}, Vector2{0, 0}, 0.f, colorToUse);
+            }
             
             // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
             layer::PopMatrix();

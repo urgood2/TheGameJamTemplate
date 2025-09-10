@@ -1586,7 +1586,7 @@ namespace ui
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
                         util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, std::nullopt);
 
-                    // progress bar                        
+                    // progress bar for button delay                  
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"fill", color}}, config->buttonDelayProgress, std::nullopt);
                     else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
@@ -1619,8 +1619,13 @@ namespace ui
                     
                     if (config->stylingType == ui::UIStylingType::ROUNDED_RECTANGLE)
                         util::DrawSteppedRoundedRectangleImmediate(layerPtr, globals::registry, entity, *transform, config, *node, rectCache, visualX, visualY, visualW, visualH, visualScaleWithHoverAndMotion, visualR, rotationOffset, ui::RoundedRectangleVerticesCache_TYPE_FILL, parallaxDist, {{"progress", colorToUse}}, progress, std::nullopt);
-                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS)
-                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, color, parallaxDist, progress);
+                    else if (config->stylingType == ui::UIStylingType::NINEPATCH_BORDERS){
+                        
+                        
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, config->progressBarEmptyColor.value_or(GRAY), parallaxDist, std::nullopt);
+                        
+                        util::DrawNPatchUIElementImmediate(layerPtr, globals::registry, entity, config->progressBarEmptyColor.value_or(GRAY), parallaxDist, progress);
+                    }
                     
                 }
                 else

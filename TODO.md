@@ -18,11 +18,8 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] dynamic text notifications which can fade, and also contain images.
 
 
-## major bug
-- [ ] nine patch tiling broken for progress bar background.
-
-
 ## TODOS fast
+- [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] test task system in lua
 - [ ] how to do layer-localized shader effects?
 -  need streamlined way to access quadtree features, like collision checking specific areas -> https://chatgpt.com/share/68c01a7a-c2ec-800a-9882-d8bb4e34ba0e

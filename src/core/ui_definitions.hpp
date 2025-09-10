@@ -541,11 +541,11 @@ namespace ui_defs
         
         auto exampleNine = nine_patch::BakeNinePatchFromSprites(
             nine_patch::NineSliceNames{
-                "roguelike_ui7.png", "roguelike_ui8.png", "roguelike_ui9.png",
-                "roguelike_ui13.png",  "roguelike_ui2.png", "roguelike_ui15.png",
-                "roguelike_ui19.png", "roguelike_ui20.png", "roguelike_ui21.png"
+                "roguelike_ui7.png", "roguelike_ui10.png", "roguelike_ui9.png",
+                "roguelike_ui10.png",  "roguelike_ui2.png", "roguelike_ui10.png",
+                "roguelike_ui19.png", "roguelike_ui10.png", "roguelike_ui21.png"
             },
-            /*scale=*/3.0f
+            /*scale=*/2.0f
         );
         
         // Choose what to tile at *draw-time*:
@@ -557,7 +557,7 @@ namespace ui_defs
         til.left    = true;         // repeat left strip vertically
         til.right   = true;         // repeat right strip vertically
         // til.background = { 24, 24, 24, 255 };   // optional solid bg
-        til.pixelScale = 3.0f;      // usually your UI pixel scale (1/2/3...), keep integer for crisp pixels
+        til.pixelScale = 1.0f;      // usually your UI pixel scale (1/2/3...), keep integer for crisp pixels
 
         
         auto progressBar9Patch = ui::UIElementTemplateNode::Builder::create()
@@ -566,7 +566,7 @@ namespace ui_defs
                 ui::UIConfig::Builder::create()
                     .addColor(GRAY)
                     // .addEmboss(2.f)
-                    .addMinHeight(50.f)
+                    .addMinHeight(200.f)
                     .addMinWidth(500.f)
                     .addStylingType(ui::UIStylingType::NINEPATCH_BORDERS)
                     .addNPatchInfo(exampleNine->info)

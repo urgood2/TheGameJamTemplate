@@ -322,10 +322,11 @@ namespace nine_patch {
         rlSetTexture(tex.id);
 
         // Corners (identical to Raylib: single quads)
-        Quad(Ax, By, Bx, Ay, uA, vA, uB, vB); // TL
-        Quad(Cx, By, Dx, Ay, uC, vA, uD, vB); // TR
-        Quad(Ax, Dy, Bx, Cy, uA, vC, uB, vD); // BL
-        Quad(Cx, Dy, Dx, Cy, uC, vC, uD, vD); // BR
+        Quad(Ax, Ay, Bx, By, uA, vA, uB, vB); // TL
+        Quad(Cx, Ay, Dx, By, uC, vA, uD, vB); // TR
+        Quad(Ax, Cy, Bx, Dy, uA, vC, uB, vD); // BL
+        Quad(Cx, Cy, Dx, Dy, uC, vC, uD, vD); // BR
+
 
         // Top edge: repeat horizontally if tilesTop, else stretch once
         auto DrawTop = [&]{

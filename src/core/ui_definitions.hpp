@@ -541,9 +541,9 @@ namespace ui_defs
         
         auto exampleNine = nine_patch::BakeNinePatchFromSprites(
             nine_patch::NineSliceNames{
-                "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png",
-                "3368-TheRoguelike_1_10_alpha_161.png",  "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png",
-                "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png"
+                "roguelike_ui7.png", "roguelike_ui8.png", "roguelike_ui9.png",
+                "roguelike_ui13.png",  "roguelike_ui15.png", "roguelike_ui15.png",
+                "roguelike_ui19.png", "roguelike_ui20.png", "roguelike_ui21.png"
             },
             /*scale=*/1.0f
         );

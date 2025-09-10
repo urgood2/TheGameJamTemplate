@@ -1,5 +1,6 @@
 // NinePatchBaker.hpp
 #pragma once
+#include "rlgl.h"
 #include <array>
 #include <string>
 #include <optional>
@@ -188,6 +189,228 @@ namespace nine_patch {
         // but ensure it remains valid as long as you draw with it.
 
         return BakedNinePatch{ info, bakedTex };
+    }
+    
+    
+    // DrawTextureNPatchTiled: true-tiling version (no stretch distortion).
+    // - tilesTop/tilesBottom: repeat top/bottom horizontally
+    // - tilesLeft/tilesRight: repeat sides vertically
+    // - tilesCenterX/Y: repeat center
+    // - bg: optional solid background (transparent by default)
+    // - pixelScale: uniform scale to apply to *tiles* (choose the same scale you used for corners)
+    //   Typically: pixelScale = 1.0f for pixel-perfect; or topBorder/dstTopBorderSrcPixels for consistency.
+    void DrawTextureNPatchTiled(Texture2D tex, NPatchInfo info, Rectangle dest, Vector2 origin,
+                                float rotation, Color tint,
+                                bool tilesTop, bool tilesBottom, bool tilesLeft, bool tilesRight,
+                                bool tilesCenterX, bool tilesCenterY,
+                                Color bg = {0,0,0,0},
+                                float pixelScale = 1.0f)
+    {
+        if (tex.id <= 0) return;
+
+        // Ensure integer-aligned to avoid subpixel sampling (optional but recommended for pixel art)
+        dest.x = std::round(dest.x);
+        dest.y = std::round(dest.y);
+        dest.width  = std::round(dest.width);
+        dest.height = std::round(dest.height);
+
+        // Source sizes in pixels
+        const float srcW = std::fabs(info.source.width);
+        const float srcH = std::fabs(info.source.height);
+
+        // Border in *source* pixels
+        float L = (float)info.left;
+        float T = (float)info.top;
+        float R = (float)info.right;
+        float B = (float)info.bottom;
+
+        // Compute the visible borders (Raylib clamps when dest is too small)
+        float patchW = (dest.width  <= 0) ? 0.f : dest.width;
+        float patchH = (dest.height <= 0) ? 0.f : dest.height;
+
+        bool drawCenter = true;
+        bool drawMiddle = true;
+
+        if (patchW <= (L + R) && info.layout != NPATCH_THREE_PATCH_VERTICAL) {
+            drawCenter = false;
+            const float k = (patchW <= 0.f) ? 0.f : (patchW / (L + R));
+            R = patchW - (L * k);
+            L = patchW - R;
+        }
+        if (patchH <= (T + B) && info.layout != NPATCH_THREE_PATCH_HORIZONTAL) {
+            drawMiddle = false;
+            const float k = (patchH <= 0.f) ? 0.f : (patchH / (T + B));
+            B = patchH - (T * k);
+            T = patchH - B;
+        }
+
+        // Vertex rect (local space, like Raylib)
+        const float Ax = 0.f,        Ay = 0.f;
+        const float Bx = L,          By = T;
+        const float Cx = patchW - R, Cy = patchH - B;
+        const float Dx = patchW,     Dy = patchH;
+
+        // Source UVs (same derivation as Raylib)
+        const float uA = info.source.x / tex.width;
+        const float vA = info.source.y / tex.height;
+        const float uB = (info.source.x + L) / tex.width;
+        const float vB = (info.source.y + T) / tex.height;
+        const float uC = (info.source.x + info.source.width  - R) / tex.width;
+        const float vC = (info.source.y + info.source.height - B) / tex.height;
+        const float uD = (info.source.x + info.source.width) / tex.width;
+        const float vD = (info.source.y + info.source.height)/ tex.height;
+
+        // Helper to draw a solid background quad in local space
+        auto DrawLocalSolid = [&](float x, float y, float w, float h, Color c){
+            rlSetTexture(0);
+            rlBegin(RL_QUADS);
+                rlColor4ub(c.r, c.g, c.b, c.a);
+                rlVertex2f(x,   y+h);
+                rlVertex2f(x+w, y+h);
+                rlVertex2f(x+w, y  );
+                rlVertex2f(x,   y  );
+            rlEnd();
+        };
+
+        // Helper to draw one textured quad (UV rect -> local rect)
+        auto Quad = [&](float x0,float y0,float x1,float y1, float u0,float v0,float u1,float v1){
+            rlBegin(RL_QUADS);
+                rlColor4ub(tint.r, tint.g, tint.b, tint.a);
+                rlNormal3f(0,0,1);
+                rlTexCoord2f(u0, v1); rlVertex2f(x0, y1);
+                rlTexCoord2f(u1, v1); rlVertex2f(x1, y1);
+                rlTexCoord2f(u1, v0); rlVertex2f(x1, y0);
+                rlTexCoord2f(u0, v0); rlVertex2f(x0, y0);
+            rlEnd();
+        };
+
+        // Source pixel sizes for each band (in source image)
+        const float srcTopH    = T;
+        const float srcBottomH = B;
+        const float srcLeftW   = L;
+        const float srcRightW  = R;
+        const float srcCenterW = (srcW - L - R);
+        const float srcCenterH = (srcH - T - B);
+
+        // Tile pitch (in *destination* pixels) chosen to preserve texel scale = pixelScale
+        // Edges: scale to match border thickness for the short axis; repeat along the long axis.
+        const float pitchTopW    = std::max(1.f, srcCenterW * pixelScale);
+        const float pitchBottomW = pitchTopW;
+        const float pitchLeftH   = std::max(1.f, srcCenterH * pixelScale);
+        const float pitchRightH  = pitchLeftH;
+        const float pitchCenterW = std::max(1.f, srcCenterW * pixelScale);
+        const float pitchCenterH = std::max(1.f, srcCenterH * pixelScale);
+
+        rlPushMatrix();
+        rlTranslatef(dest.x, dest.y, 0.f);
+        rlRotatef(rotation, 0.f, 0.f, 1.f);
+        rlTranslatef(-origin.x, -origin.y, 0.f);
+
+        // Background fill first (covers the whole patch area in local space)
+        if (bg.a != 0) DrawLocalSolid(0, 0, patchW, patchH, bg);
+
+        rlSetTexture(tex.id);
+
+        // Corners (identical to Raylib: single quads)
+        Quad(Ax, By, Bx, Ay, uA, vA, uB, vB); // TL
+        Quad(Cx, By, Dx, Ay, uC, vA, uD, vB); // TR
+        Quad(Ax, Dy, Bx, Cy, uA, vC, uB, vD); // BL
+        Quad(Cx, Dy, Dx, Cy, uC, vC, uD, vD); // BR
+
+        // Top edge: repeat horizontally if tilesTop, else stretch once
+        auto DrawTop = [&]{
+            const float y0 = Ay, y1 = By;
+            const float u0 = uB, u1 = uC, v0 = vA, v1 = vB; // top strip UV
+            if (!drawCenter) return; // nothing between corners if center suppressed horizontally
+            if (!tilesTop) {
+                Quad(Bx, y0, Cx, y1, u0, v0, u1, v1);
+                return;
+            }
+            for (float x = Bx; x < Cx; x += pitchTopW) {
+                const float x1 = std::min(x + pitchTopW, Cx);
+                const float frac = (x1 - x) / pitchTopW;
+                const float u1f = u0 + (u1 - u0)*frac;
+                Quad(x, y0, x1, y1, u0, v0, u1f, v1);
+            }
+        };
+
+        // Bottom edge
+        auto DrawBottom = [&]{
+            const float y0 = Cy, y1 = Dy;
+            const float u0 = uB, u1 = uC, v0 = vC, v1 = vD;
+            if (!drawCenter) return;
+            if (!tilesBottom) {
+                Quad(Bx, y0, Cx, y1, u0, v0, u1, v1);
+                return;
+            }
+            for (float x = Bx; x < Cx; x += pitchBottomW) {
+                const float x1 = std::min(x + pitchBottomW, Cx);
+                const float frac = (x1 - x) / pitchBottomW;
+                const float u1f = u0 + (u1 - u0)*frac;
+                Quad(x, y0, x1, y1, u0, v0, u1f, v1);
+            }
+        };
+
+        // Left edge
+        auto DrawLeft = [&]{
+            const float x0 = Ax, x1 = Bx;
+            const float u0 = uA, u1 = uB, v0 = vB, v1 = vC;
+            if (!drawMiddle) return;
+            if (!tilesLeft) {
+                Quad(x0, By, x1, Cy, u0, v0, u1, v1);
+                return;
+            }
+            for (float y = By; y < Cy; y += pitchLeftH) {
+                const float y1f = std::min(y + pitchLeftH, Cy);
+                const float frac = (y1f - y) / pitchLeftH;
+                const float v1f = v0 + (v1 - v0)*frac;
+                Quad(x0, y, x1, y1f, u0, v0, u1, v1f);
+            }
+        };
+
+        // Right edge
+        auto DrawRight = [&]{
+            const float x0 = Cx, x1 = Dx;
+            const float u0 = uC, u1 = uD, v0 = vB, v1 = vC;
+            if (!drawMiddle) return;
+            if (!tilesRight) {
+                Quad(x0, By, x1, Cy, u0, v0, u1, v1);
+                return;
+            }
+            for (float y = By; y < Cy; y += pitchRightH) {
+                const float y1f = std::min(y + pitchRightH, Cy);
+                const float frac = (y1f - y) / pitchRightH;
+                const float v1f = v0 + (v1 - v0)*frac;
+                Quad(x0, y, x1, y1f, u0, v0, u1, v1f);
+            }
+        };
+
+        // Center region (repeat X/Y independently if requested)
+        auto DrawCenter = [&]{
+            if (!drawCenter || !drawMiddle) return;
+            const float u0 = uB, u1 = uC, v0 = vB, v1 = vC;
+            if (!tilesCenterX && !tilesCenterY) {
+                Quad(Bx, By, Cx, Cy, u0, v0, u1, v1);
+                return;
+            }
+            for (float y = By; y < Cy; y += pitchCenterH) {
+                const float y1f  = std::min(y + pitchCenterH, Cy);
+                const float fy   = (y1f - y) / pitchCenterH;
+                const float v1f  = v0 + (v1 - v0)*fy;
+                for (float x = Bx; x < Cx; x += pitchCenterW) {
+                    const float x1f = std::min(x + pitchCenterW, Cx);
+                    const float fx  = (x1f - x) / pitchCenterW;
+                    const float u1f = u0 + (u1 - u0)*fx;
+                    Quad(x, y, x1f, y1f, u0, v0, u1f, v1f);
+                }
+            }
+        };
+
+        // Draw order = top/bottom/left/right/center
+        DrawTop(); DrawBottom(); DrawLeft(); DrawRight(); DrawCenter();
+
+        rlPopMatrix();
+        rlSetTexture(0);
     }
 
 }

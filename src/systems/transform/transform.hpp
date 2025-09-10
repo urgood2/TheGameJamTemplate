@@ -33,6 +33,30 @@ namespace transform
         int order = -1;
     };
     
+    // If you’re using Lua: store a std::function wrapper that calls a sol::function internally.
+    // use this if you have a transform that should be drawn with your own custom function--for shape primitives, etc.
+    struct RenderLocalCallback {
+        // Draw at (0,0) == top-left of the content area (padding already handled).
+        // width,height are the drawable content size (baseWidth/baseHeight).
+        std::function<void(float width, float height)> fn;
+
+        // If true, call after the pipeline in world space (skips passes/overlays).
+        bool afterPipeline = false;
+    };
+    
+    static void install_local_callback(entt::registry& R, entt::entity e, sol::protected_function f, bool after) {
+        // Wrap lua_fn in a std::function so the draw loop is engine-agnostic
+        RenderLocalCallback cb;
+        cb.afterPipeline = after;
+        cb.fn = [lf = std::move(f)](float w, float h) {
+            auto res = lf(w, h);
+            if (!res.valid()) {
+            sol::error err = res;
+            spdlog::error("Lua render callback error: {}", err.what());
+            }
+        };
+        R.emplace_or_replace<RenderLocalCallback>(e, std::move(cb));
+    }
 
     enum class TransformMethod
     {

@@ -163,11 +163,12 @@ local ReactiveBalm = {
 }
 
 ```
+- document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.
 
 
 
-- [ ] extend transform rendering to use shape primitives like rounded rect. how? -> attach a nosprite component that is not rendered at all, other than debug, then have the custom draw functions do their stuff.
-- [ ] collision fixes continued https://chatgpt.com/share/68b908c2-43d8-800a-8dc3-38360b9d8b7b
+
+
 - [ ] make a conveninece method that takes four corners and sides for ninepatch, each as sprite names, and generates the ninepatch config for me. should also be able to set a scale.
 - color coding (in part of strings only) for dynamic text as well
 - text updating wrong. not easy to configure updates with on update method for some reason.

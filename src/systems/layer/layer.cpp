@@ -3399,41 +3399,49 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // 2. Draw base sprite to front() (no transforms) = id 6
   render_stack_switch_internal::Push(shader_pipeline::front());
   ClearBackground({0, 0, 0, 0});
-  Vector2 drawOffset = {pad, pad};
 
-  if (drawBackground) {
-    layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight},
-                        {0, 0}, 0, bgColor);
-  }
+  // local content area origin (0,0) should be inside padding
+  Vector2 drawOffset = { pad, pad };
 
-  if (drawForeground) {
-    if (animationFrame) {
-      // layer::TexturePro(*spriteAtlas, *animationFrame, drawOffset.x,
-      // drawOffset.y, {baseWidth, baseHeight}, {0, 0}, 0, fgColor);
-      // layer::TexturePro(*spriteAtlas, srcRec, drawOffset.x, drawOffset.y,
-      // {baseWidth * xFlipModifier , -baseHeight * yFlipModifier }, {0, 0}, 0,
-      // {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
-
-      layer::TexturePro(*spriteAtlas,
-                        {animationFrame->x, animationFrame->y,
-                         animationFrame->width * xFlipModifier,
-                         animationFrame->height * -yFlipModifier},
-                        drawOffset.x, drawOffset.y,
-                        {baseWidth * xFlipModifier, baseHeight * yFlipModifier},
-                        {0, 0}, 0, fgColor);
-
-      shader_pipeline::SetLastRenderRect({drawOffset.x, drawOffset.y,
-                                          baseWidth * xFlipModifier,
-                                          baseHeight * yFlipModifier});
-      shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
-
-    } else {
-      layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight},
-                          {0, 0}, 0, fgColor);
+  bool usedLocalCallback = false;
+  if (registry.any_of<transform::RenderLocalCallback>(e)) {
+    const auto &cb = registry.get<transform::RenderLocalCallback>(e);
+    if (cb.fn && !cb.afterPipeline) {
+      // Shift origin so callback sees (0,0) == top-left of *content* (inside pad)
+      Translate(drawOffset.x, drawOffset.y);
+      cb.fn(baseWidth, baseHeight);           // user draws shapes/sprites at local coords
+      Translate(-drawOffset.x, -drawOffset.y);
+      usedLocalCallback = true;
     }
   }
 
-  render_stack_switch_internal::Pop(); // turn off id 6
+  if (!usedLocalCallback) {
+    // Your original path (background/foreground sprite):
+    if (drawBackground) {
+      layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0,0}, 0, bgColor);
+    }
+
+    if (drawForeground) {
+      if (animationFrame) {
+        layer::TexturePro(*spriteAtlas,
+                          {animationFrame->x, animationFrame->y,
+                          animationFrame->width * xFlipModifier,
+                          animationFrame->height * -yFlipModifier},
+                          drawOffset.x, drawOffset.y,
+                          {baseWidth * xFlipModifier, baseHeight * yFlipModifier},
+                          {0, 0}, 0, fgColor);
+
+        shader_pipeline::SetLastRenderRect({drawOffset.x, drawOffset.y,
+                                            baseWidth * xFlipModifier,
+                                            baseHeight * yFlipModifier});
+        shader_pipeline::RecordDebugRect(shader_pipeline::GetLastRenderRect());
+      } else {
+        layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0,0}, 0, fgColor);
+      }
+    }
+  }
+
+  render_stack_switch_internal::Pop(); // done with id 6
 
   // 🟡 Save base sprite result
   // RenderTexture2D baseSpriteRender =
@@ -3761,6 +3769,19 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     // (int)shader_pipeline::height, RED); DrawText(fmt::format("SHADER
     // PASSEntity ID: {}", static_cast<int>(e)).c_str(), 10, 10, 15, WHITE);
   }
+  
+  // add local callback rendering which should go after the pipeline ends. (hud, or something that should bypass the ususal shader pipeline)
+  if (registry.any_of<transform::RenderLocalCallback>(e)) {
+    const auto &cb = registry.get<transform::RenderLocalCallback>(e);
+    if (cb.fn && cb.afterPipeline) {
+      // Here, world transform is already applied, and (0,0) is the top-left of the *padded* quad.
+      // If you want (0,0) == top-left of content (inside pad), offset once:
+      Translate(pad, pad);
+      cb.fn(baseWidth, baseHeight);
+      Translate(-pad, -pad);
+    }
+  }
+
 
   PopMatrix();
 

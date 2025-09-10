@@ -345,7 +345,7 @@ namespace game
                         include = rectsOverlap(eltR, paneR);
                     }
                 }
-                if (isInScrollPane && include) 
+                if (isInScrollPane && include && expandedBounds.contains(box)) 
                     globals::quadtreeUI.add(e);
                 else if (!isInScrollPane && expandedBounds.contains(box)) {
                     // Add the entity to the quadtree if it is within the expanded bounds

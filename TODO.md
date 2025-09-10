@@ -22,9 +22,8 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 ## TODOS fast
 - [ ] test task system in lua
-- [ ] blinking cursor doesn't always show.
 - [ ] how to do layer-localized shader effects?
--  need streamlined way to access quadtree features, like collision checking specific areas 
+-  need streamlined way to access quadtree features, like collision checking specific areas -> https://chatgpt.com/share/68c01a7a-c2ec-800a-9882-d8bb4e34ba0e
 - [] particle z values how?
     - need way to specify particle screen/world space & particle z values
 
@@ -167,7 +166,7 @@ local ReactiveBalm = {
 
 
 
-- [ ] extend transform rendering to use shape primitives like rounded rect. how?
+- [ ] extend transform rendering to use shape primitives like rounded rect. how? -> attach a nosprite component that is not rendered at all, other than debug, then have the custom draw functions do their stuff.
 - [ ] collision fixes continued https://chatgpt.com/share/68b908c2-43d8-800a-8dc3-38360b9d8b7b
 - [ ] make a conveninece method that takes four corners and sides for ninepatch, each as sprite names, and generates the ninepatch config for me. should also be able to set a scale.
 - color coding (in part of strings only) for dynamic text as well
@@ -191,7 +190,6 @@ end
 ## physics
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
 
-- [ ] test SyncPhysicsToTransform after fleshing it out.
 - [ ] hook physics, use this order
 ```cpp
 // frame start
@@ -324,6 +322,30 @@ int main() {
     return 0;
 }
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## physics LATERS
 - [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
@@ -483,6 +505,7 @@ globalShaderUniforms.set("edge_shader", "iResolution",
 - [ ] chronicon data https://github.com/gabriel-dehan/chronicondb-client/tree/main/src/engine/data
 
 ## Immediate laters
+- [ ] blinking cursor doesn't always show for text input component
 - [ ] use posthog for analytics? learn how randy does it.
 - auto sprite order sorting so what's behind somehting can properly go behind, etc.
 - use hump.gamestate. How to hook with raylib?

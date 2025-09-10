@@ -170,12 +170,9 @@ local ReactiveBalm = {
 
 
 - [ ] make a conveninece method that takes four corners and sides for ninepatch, each as sprite names, and generates the ninepatch config for me. should also be able to set a scale.
-- color coding (in part of strings only) for dynamic text as well
 - text updating wrong. not easy to configure updates with on update method for some reason.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
-- test entity field loading with ldtk.
-- renew alignment needs to cache so it can be called every frame
 - [ ] hit circle - make my own structure for attaching to entities.
 - [ ] changing color of a hit circle using chaining:
 ```lua

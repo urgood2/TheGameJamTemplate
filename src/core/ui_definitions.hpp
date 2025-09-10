@@ -13,6 +13,7 @@
 #include "systems/timer/timer.hpp"
 #include "systems/scripting/binding_recorder.hpp"
 #include "systems/ai/ai_system.hpp"
+#include "systems/nine_patch/nine_patch_baker.hpp"
 
 #include "systems/ui/ui.hpp"
 #include "core/misc_fuctions.hpp"
@@ -537,6 +538,16 @@ namespace ui_defs
         NPatchInfo nPatchinfo;
         Texture2D npatchTexture;
         std::tie(nPatchinfo, npatchTexture) = animation_system::getNinepatchUIBorderInfo("rounded_rect_very_small.png");
+        
+        auto exampleNine = nine_patch::BakeNinePatchFromSprites(
+            nine_patch::NineSliceNames{
+                "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png",
+                "3368-TheRoguelike_1_10_alpha_161.png",  "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png",
+                "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png", "3368-TheRoguelike_1_10_alpha_161.png"
+            },
+            /*scale=*/1.0f
+        );
+        
         auto progressBar9Patch = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
             .addConfig(
@@ -546,8 +557,8 @@ namespace ui_defs
                     .addMinHeight(50.f)
                     .addMinWidth(500.f)
                     .addStylingType(ui::UIStylingType::NINEPATCH_BORDERS)
-                    .addNPatchInfo(nPatchinfo)
-                    .addNPatchSourceTexture(npatchTexture)
+                    .addNPatchInfo(exampleNine->info)
+                    .addNPatchSourceTexture(exampleNine->texture)
                     .addProgressBar(true)
                     .addProgressBarEmptyColor(YELLOW)
                     .addProgressBarFullColor(PINK)
@@ -662,123 +673,123 @@ namespace ui_defs
         // ======================================
         // ======================================
         
-        auto sliderTextMoving = getNewDynamicTextEntry(localization::get("ui.slider_text"), 20.f, std::nullopt, "pulse=0.9,1.1");
-        sliderTextMoving.config.initFunc = [](entt::registry* registry, entt::entity e) {
-            localization::onLanguageChanged([&](auto newLang){
-                TextSystem::Functions::setText(e, localization::get("ui.slider_text"));
-            });
-        }; 
+        // auto sliderTextMoving = getNewDynamicTextEntry(localization::get("ui.slider_text"), 20.f, std::nullopt, "pulse=0.9,1.1");
+        // sliderTextMoving.config.initFunc = [](entt::registry* registry, entt::entity e) {
+        //     localization::onLanguageChanged([&](auto newLang){
+        //         TextSystem::Functions::setText(e, localization::get("ui.slider_text"));
+        //     });
+        // }; 
         
-        auto slider = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GRAY)
-                    .addProgressBarMaxValue(100.f)
-                    // .addEmboss(2.f)
-                    .addMinHeight(50.f)
-                    .addNoMovementWhenDragged(true)
-                    .addMinWidth(500.f)
-                    .addProgressBar(true)
-                    .addProgressBarEmptyColor(WHITE)
-                    .addProgressBarFullColor(BLUE)
-                    .addInitFunc([](entt::registry* registry, entt::entity e)
-                    { 
-                        SPDLOG_DEBUG("Slider init called for entity {}", (int)e);
-                        auto &gameObject = globals::registry.get<transform::GameObject>(e);
-                        gameObject.state.dragEnabled = true;
-                        gameObject.state.collisionEnabled = true;
-                        gameObject.state.clickEnabled = true;
-                        gameObject.state.enlargeOnHover = false;
-                        gameObject.state.enlargeOnDrag = false;
-                        gameObject.methods.onHover = nullptr; // no jiggle
+        // auto slider = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(GRAY)
+        //             .addProgressBarMaxValue(100.f)
+        //             // .addEmboss(2.f)
+        //             .addMinHeight(50.f)
+        //             .addNoMovementWhenDragged(true)
+        //             .addMinWidth(500.f)
+        //             .addProgressBar(true)
+        //             .addProgressBarEmptyColor(WHITE)
+        //             .addProgressBarFullColor(BLUE)
+        //             .addInitFunc([](entt::registry* registry, entt::entity e)
+        //             { 
+        //                 SPDLOG_DEBUG("Slider init called for entity {}", (int)e);
+        //                 auto &gameObject = globals::registry.get<transform::GameObject>(e);
+        //                 gameObject.state.dragEnabled = true;
+        //                 gameObject.state.collisionEnabled = true;
+        //                 gameObject.state.clickEnabled = true;
+        //                 gameObject.state.enlargeOnHover = false;
+        //                 gameObject.state.enlargeOnDrag = false;
+        //                 gameObject.methods.onHover = nullptr; // no jiggle
                         
-                        // gameObject.state.hoverEnabled = true;
-                    })
-                    .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
-                    { 
-                        // is mouse down? is the dragging darget the slider?
-                        if (globals::inputState.cursor_dragging_target != e) return;
+        //                 // gameObject.state.hoverEnabled = true;
+        //             })
+        //             .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
+        //             { 
+        //                 // is mouse down? is the dragging darget the slider?
+        //                 if (globals::inputState.cursor_dragging_target != e) return;
                         
-                        // get mouse cursor position, compare to slider position
-                        auto &sliderTransform = globals::registry.get<transform::Transform>(e);
-                        auto &cursorTransform = globals::registry.get<transform::Transform>(globals::cursor);
+        //                 // get mouse cursor position, compare to slider position
+        //                 auto &sliderTransform = globals::registry.get<transform::Transform>(e);
+        //                 auto &cursorTransform = globals::registry.get<transform::Transform>(globals::cursor);
                         
-                        // clamp x value between 0 and slider width
-                        auto sliderWidth = sliderTransform.getActualW();
-                        auto sliderX = sliderTransform.getActualX();
+        //                 // clamp x value between 0 and slider width
+        //                 auto sliderWidth = sliderTransform.getActualW();
+        //                 auto sliderX = sliderTransform.getActualX();
                         
-                        auto cursorX = cursorTransform.getActualX();
-                        auto cursorY = cursorTransform.getActualY();
+        //                 auto cursorX = cursorTransform.getActualX();
+        //                 auto cursorY = cursorTransform.getActualY();
                         
-                        auto clampedCursorX = std::clamp(cursorX, sliderX, sliderX + sliderWidth);
+        //                 auto clampedCursorX = std::clamp(cursorX, sliderX, sliderX + sliderWidth);
                         
-                        // progress value is between 0 and 1
-                        auto progressValue = (clampedCursorX - sliderX) / sliderWidth;
+        //                 // progress value is between 0 and 1
+        //                 auto progressValue = (clampedCursorX - sliderX) / sliderWidth;
                         
-                        // should be over 0.01
-                        if (progressValue < 0.01f) progressValue = 0.01f;
+        //                 // should be over 0.01
+        //                 if (progressValue < 0.01f) progressValue = 0.01f;
                         
-                        // set the progress value
-                        auto &uiConfig = globals::registry.get<ui::UIConfig>(e);
+        //                 // set the progress value
+        //                 auto &uiConfig = globals::registry.get<ui::UIConfig>(e);
                         
-                        // SPDLOG_DEBUG("Slider value: {}", progressValue);
+        //                 // SPDLOG_DEBUG("Slider value: {}", progressValue);
                         
-                        uiConfig.progressBarFetchValueLambda = [progressValue](entt::entity e)
-                        { 
-                            return progressValue;
-                        };
-                    })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(sliderTextMoving)
-            .build();
+        //                 uiConfig.progressBarFetchValueLambda = [progressValue](entt::entity e)
+        //                 { 
+        //                     return progressValue;
+        //                 };
+        //             })
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(sliderTextMoving)
+        //     .build();
         // ======================================
         // ======================================
         // TODO: text input field
         // ======================================
         // ======================================
         
-        auto textInputTextMoving = getNewDynamicTextEntry(localization::get("ui.text_input"), 20.f, std::nullopt, "pulse=0.9,1.1");
-        textInputTextMoving.config.initFunc = [](entt::registry* registry, entt::entity e) {
-            localization::onLanguageChanged([&](auto newLang){
-                TextSystem::Functions::setText(e, localization::get("ui.text_input"));
-            });
-        }; 
-        auto textInput = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(WHITE)
-                    // .addEmboss(2.f)
-                    .addMinHeight(50.f)
-                    .addMinWidth(300.f)
-                    .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
-                                    { 
-                                        // SPDLOG_DEBUG("Textinput update called");
-                                        // allo this thing to be dragged, update based on mouse position
-                                    })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .build();
-        auto textInputRow = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GRAY)
-                    // .addEmboss(2.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(textInputTextMoving)
-            .addChild(textInput)
-            .build();
+        // auto textInputTextMoving = getNewDynamicTextEntry(localization::get("ui.text_input"), 20.f, std::nullopt, "pulse=0.9,1.1");
+        // textInputTextMoving.config.initFunc = [](entt::registry* registry, entt::entity e) {
+        //     localization::onLanguageChanged([&](auto newLang){
+        //         TextSystem::Functions::setText(e, localization::get("ui.text_input"));
+        //     });
+        // }; 
+        // auto textInput = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(WHITE)
+        //             // .addEmboss(2.f)
+        //             .addMinHeight(50.f)
+        //             .addMinWidth(300.f)
+        //             .addUpdateFunc([](entt::registry* registry, entt::entity e, float value)
+        //                             { 
+        //                                 // SPDLOG_DEBUG("Textinput update called");
+        //                                 // allo this thing to be dragged, update based on mouse position
+        //                             })
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .build();
+        // auto textInputRow = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(GRAY)
+        //             // .addEmboss(2.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(textInputTextMoving)
+        //     .addChild(textInput)
+        //     .build();
         
         // ======================================
         // ======================================
         // checkbox
         // ======================================
         // ======================================
-        auto checkbox = getCheckboxExample();
+        // auto checkbox = getCheckboxExample();
         
         // ======================================
         // ======================================
@@ -786,118 +797,118 @@ namespace ui_defs
         // ======================================
         // ======================================
         
-        auto buttonDisabled = getButtonDisabledExample();
+        // auto buttonDisabled = getButtonDisabledExample();
         
         // ======================================
         // ======================================
         //button group
         // ======================================
         // ======================================
-        auto buttonGroupRow = getButtonGroupRowDef();
+        // auto buttonGroupRow = getButtonGroupRowDef();
         
         // ======================================
         // ======================================
         // TODO: cycle (how to do pips?)
         // ======================================
         // ======================================
-        auto cycleText = getNewTextEntry(localization::get("ui.cycle_text"));
-        cycleText.config.initFunc = [](entt::registry* registry, entt::entity e) {
-            localization::onLanguageChanged([&](auto newLang){
-                TextSystem::Functions::setText(e, localization::get("ui.cycle_text"));
-            });
-        }; 
-        auto cycleImageLeft = animation_system::createAnimatedObjectWithTransform("left.png", true, 0, 0, nullptr, false); // no shadow
-        auto cycleImageRight = animation_system::createAnimatedObjectWithTransform("right.png", true, 0, 0, nullptr, false); // no shadow
-        animation_system::resizeAnimationObjectsInEntityToFit(cycleImageLeft, 40.f, 40.f);
-        animation_system::resizeAnimationObjectsInEntityToFit(cycleImageRight, 40.f, 40.f);
-        auto cycleImageLeftUI = wrapEntityInsideObjectElement(cycleImageLeft);
-        auto cycleImageRightUI = wrapEntityInsideObjectElement(cycleImageRight);
-        auto leftButton = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(RED)
-                    .addEmboss(2.f)
-                    .addMaxHeight(50.f)
-                    .addMaxWidth(50.f)
-                    .addHover(true)
-                    .addButtonCallback([]()
-                                    { SPDLOG_DEBUG("Left button callback triggered"); })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(cycleImageLeftUI)
-            .build();
-        auto rightButton = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(RED)
-                    .addEmboss(2.f)
-                    .addMaxHeight(50.f)
-                    .addMaxWidth(50.f)
-                    .addHover(true)
-                    .addButtonCallback([]()
-                                    { SPDLOG_DEBUG("Right button callback triggered"); })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(cycleImageRightUI)
-            .build();
-        auto centerText = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(PINK)
-                    .addEmboss(2.f)
-                    .addMaxHeight(50.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(cycleText)
-            .build();
-        auto cycleContainer = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GRAY)
-                    .addEmboss(2.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(leftButton)
-            .addChild(centerText)
-            .addChild(rightButton)
-            .build();
+        // auto cycleText = getNewTextEntry(localization::get("ui.cycle_text"));
+        // cycleText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+        //     localization::onLanguageChanged([&](auto newLang){
+        //         TextSystem::Functions::setText(e, localization::get("ui.cycle_text"));
+        //     });
+        // }; 
+        // auto cycleImageLeft = animation_system::createAnimatedObjectWithTransform("left.png", true, 0, 0, nullptr, false); // no shadow
+        // auto cycleImageRight = animation_system::createAnimatedObjectWithTransform("right.png", true, 0, 0, nullptr, false); // no shadow
+        // animation_system::resizeAnimationObjectsInEntityToFit(cycleImageLeft, 40.f, 40.f);
+        // animation_system::resizeAnimationObjectsInEntityToFit(cycleImageRight, 40.f, 40.f);
+        // auto cycleImageLeftUI = wrapEntityInsideObjectElement(cycleImageLeft);
+        // auto cycleImageRightUI = wrapEntityInsideObjectElement(cycleImageRight);
+        // auto leftButton = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(RED)
+        //             .addEmboss(2.f)
+        //             .addMaxHeight(50.f)
+        //             .addMaxWidth(50.f)
+        //             .addHover(true)
+        //             .addButtonCallback([]()
+        //                             { SPDLOG_DEBUG("Left button callback triggered"); })
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(cycleImageLeftUI)
+        //     .build();
+        // auto rightButton = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(RED)
+        //             .addEmboss(2.f)
+        //             .addMaxHeight(50.f)
+        //             .addMaxWidth(50.f)
+        //             .addHover(true)
+        //             .addButtonCallback([]()
+        //                             { SPDLOG_DEBUG("Right button callback triggered"); })
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(cycleImageRightUI)
+        //     .build();
+        // auto centerText = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(PINK)
+        //             .addEmboss(2.f)
+        //             .addMaxHeight(50.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(cycleText)
+        //     .build();
+        // auto cycleContainer = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(GRAY)
+        //             .addEmboss(2.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(leftButton)
+        //     .addChild(centerText)
+        //     .addChild(rightButton)
+        //     .build();
             
         // ======================================
         // ======================================
         // TODO: alert 
         // ======================================
         // ======================================
-        static entt::entity alertBox{entt::null};
-        auto alertText = getNewDynamicTextEntry("!", 20.f, std::nullopt, "wiggle");
-        // auto alertText = getNewTextEntry("Alert");
+        // static entt::entity alertBox{entt::null};
+        // auto alertText = getNewDynamicTextEntry("!", 20.f, std::nullopt, "wiggle");
+        // // auto alertText = getNewTextEntry("Alert");
         
-        auto alertRow = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    // .addPadding(2.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(alertText)
-            .build();
+        // auto alertRow = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             // .addPadding(2.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_LEFT | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(alertText)
+        //     .build();
         
-        auto alertRoot = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::ROOT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addPadding(0.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(alertRow)
-            .build();
+        // auto alertRoot = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::ROOT)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addPadding(0.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(alertRow)
+        //     .build();
             
-        alertBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
+        // alertBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
         
-        SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, alertBox, 0));
+        // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, alertBox, 0));
         
         // ======================================
         // ======================================
@@ -905,153 +916,153 @@ namespace ui_defs
         // ======================================
         // ======================================
         
-        entt::entity keyboardUIBox{entt::null};
+        // entt::entity keyboardUIBox{entt::null};
         
-        auto numbers = std::vector<std::string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
-        auto letterRow1 = std::vector<std::string>{"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
-        auto letterRow2 = std::vector<std::string>{"A", "S", "D", "F", "G", "H", "J", "K", "L"};
-        auto letterRow3 = std::vector<std::string>{"Z", "X", "C", "V", "B", "N", "M"};
-        auto essentialKeys = std::vector<std::string>{"Enter", "Clear"};
+        // auto numbers = std::vector<std::string>{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
+        // auto letterRow1 = std::vector<std::string>{"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
+        // auto letterRow2 = std::vector<std::string>{"A", "S", "D", "F", "G", "H", "J", "K", "L"};
+        // auto letterRow3 = std::vector<std::string>{"Z", "X", "C", "V", "B", "N", "M"};
+        // auto essentialKeys = std::vector<std::string>{"Enter", "Clear"};
         
-        std::vector<ui::UIElementTemplateNode> keyboardRows;
+        // std::vector<ui::UIElementTemplateNode> keyboardRows;
         
-        auto makeKeyboardKey = [](const std::string &keyText, const std::function<void()>& callback) -> ui::UIElementTemplateNode {
-            auto keyTextEntry = getNewDynamicTextEntry(keyText, 15.f, std::nullopt, "pulse=0.9,1.1");
-            return ui::UIElementTemplateNode::Builder::create()
-                .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-                .addConfig(
-                    ui::UIConfig::Builder::create()
-                        .addColor(GRAY)
-                        .addEmboss(2.f)
-                        .addMinHeight(30.f)
-                        .addMinWidth(30.f)
-                        .addHover(true)
-                        .addButtonCallback(callback)
-                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                        .build())
-                .addChild(keyTextEntry)
-                .build();
-        };
+        // auto makeKeyboardKey = [](const std::string &keyText, const std::function<void()>& callback) -> ui::UIElementTemplateNode {
+        //     auto keyTextEntry = getNewDynamicTextEntry(keyText, 15.f, std::nullopt, "pulse=0.9,1.1");
+        //     return ui::UIElementTemplateNode::Builder::create()
+        //         .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //         .addConfig(
+        //             ui::UIConfig::Builder::create()
+        //                 .addColor(GRAY)
+        //                 .addEmboss(2.f)
+        //                 .addMinHeight(30.f)
+        //                 .addMinWidth(30.f)
+        //                 .addHover(true)
+        //                 .addButtonCallback(callback)
+        //                 .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                 .build())
+        //         .addChild(keyTextEntry)
+        //         .build();
+        // };
         
-        // Create number row
-        auto numberRow = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(BLANK)
-                    .addEmboss(2.f)
-                    .addPadding(1.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build());
+        // // Create number row
+        // auto numberRow = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(BLANK)
+        //             .addEmboss(2.f)
+        //             .addPadding(1.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build());
                     
-        for (const auto &num : numbers) {
-            numberRow.addChild(makeKeyboardKey(num, [num]()
-                                    { 
-                                        SPDLOG_DEBUG("Number key {} pressed", num);
-                                    }));
-        }
-        keyboardRows.push_back(numberRow.build());
+        // for (const auto &num : numbers) {
+        //     numberRow.addChild(makeKeyboardKey(num, [num]()
+        //                             { 
+        //                                 SPDLOG_DEBUG("Number key {} pressed", num);
+        //                             }));
+        // }
+        // keyboardRows.push_back(numberRow.build());
         
-        // Create letter rows
+        // // Create letter rows
         
-        auto makeLetterRow = [&](const std::vector<std::string> &letters) -> ui::UIElementTemplateNode {
-            auto letterRow = ui::UIElementTemplateNode::Builder::create()
-                .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-                .addConfig(
-                    ui::UIConfig::Builder::create()
-                        .addColor(BLANK)
-                        .addPadding(1.f)
-                        .addEmboss(2.f)
-                        .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                        .build());
+        // auto makeLetterRow = [&](const std::vector<std::string> &letters) -> ui::UIElementTemplateNode {
+        //     auto letterRow = ui::UIElementTemplateNode::Builder::create()
+        //         .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //         .addConfig(
+        //             ui::UIConfig::Builder::create()
+        //                 .addColor(BLANK)
+        //                 .addPadding(1.f)
+        //                 .addEmboss(2.f)
+        //                 .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //                 .build());
                         
-            for (const auto &letter : letters) {
-                letterRow.addChild(makeKeyboardKey(letter, [letter]()
-                                    { 
-                                        SPDLOG_DEBUG("Letter key {} pressed", letter);
-                                    }));
-            }
-            return letterRow.build();
-        };
-        keyboardRows.push_back(makeLetterRow(letterRow1));
-        keyboardRows.push_back(makeLetterRow(letterRow2));
-        keyboardRows.push_back(makeLetterRow(letterRow3));
+        //     for (const auto &letter : letters) {
+        //         letterRow.addChild(makeKeyboardKey(letter, [letter]()
+        //                             { 
+        //                                 SPDLOG_DEBUG("Letter key {} pressed", letter);
+        //                             }));
+        //     }
+        //     return letterRow.build();
+        // };
+        // keyboardRows.push_back(makeLetterRow(letterRow1));
+        // keyboardRows.push_back(makeLetterRow(letterRow2));
+        // keyboardRows.push_back(makeLetterRow(letterRow3));
         
-        // Create essential keys row
-        auto essentialRow = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(BLANK)
-                    .addEmboss(2.f)
-                    .addPadding(1.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build());
-        for (const auto &key : essentialKeys) {
-            essentialRow.addChild(makeKeyboardKey(key, [key]()
-                                    { 
-                                        SPDLOG_DEBUG("Essential key {} pressed", key);
-                                    }));
-        }
-        keyboardRows.push_back(essentialRow.build());
-        // Create the keyboard container
-        auto keyboardContainer = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(WHITE)
-                    .addEmboss(2.f)
-                    .addPadding(0.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build());
-        for (const auto &row : keyboardRows) {
-            keyboardContainer.addChild(row);
-        }
+        // // Create essential keys row
+        // auto essentialRow = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(BLANK)
+        //             .addEmboss(2.f)
+        //             .addPadding(1.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build());
+        // for (const auto &key : essentialKeys) {
+        //     essentialRow.addChild(makeKeyboardKey(key, [key]()
+        //                             { 
+        //                                 SPDLOG_DEBUG("Essential key {} pressed", key);
+        //                             }));
+        // }
+        // keyboardRows.push_back(essentialRow.build());
+        // // Create the keyboard container
+        // auto keyboardContainer = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(WHITE)
+        //             .addEmboss(2.f)
+        //             .addPadding(0.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build());
+        // for (const auto &row : keyboardRows) {
+        //     keyboardContainer.addChild(row);
+        // }
         
-        auto keyboardRoot = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::ROOT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(keyboardContainer.build())
-            .build();
+        // auto keyboardRoot = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::ROOT)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(keyboardContainer.build())
+        //     .build();
             
-        keyboardUIBox = ui::box::Initialize(globals::registry, {.x = 100, .y = 200}, keyboardRoot, ui::UIConfig{});
+        // keyboardUIBox = ui::box::Initialize(globals::registry, {.x = 100, .y = 200}, keyboardRoot, ui::UIConfig{});
 
         // ======================================
         // ======================================
         // TODO: new row with an alert on the top right corner
         // ======================================
         // ======================================
-        auto buttonAlertText = getNewDynamicTextEntry(localization::get("ui.alert_button_text"), 20.f, std::nullopt, "wave");
-        buttonAlertText.config.initFunc = [](entt::registry* registry, entt::entity e) {
-            localization::onLanguageChanged([&](auto newLang){
-                TextSystem::Functions::setText(e, localization::get("ui.alert_button_text"));
-            });
-        };
-        auto buttonAlert = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(WHITE)
-                    .addEmboss(2.f)
-                    .addMinHeight(50.f)
-                    .addMinWidth(300.f)
-                    .addHover(true)
-                    .addButtonCallback([]()
-                                    { SPDLOG_DEBUG("Button callback triggered"); })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(buttonAlertText)
-            .build();
+        // auto buttonAlertText = getNewDynamicTextEntry(localization::get("ui.alert_button_text"), 20.f, std::nullopt, "wave");
+        // buttonAlertText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+        //     localization::onLanguageChanged([&](auto newLang){
+        //         TextSystem::Functions::setText(e, localization::get("ui.alert_button_text"));
+        //     });
+        // };
+        // auto buttonAlert = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(WHITE)
+        //             .addEmboss(2.f)
+        //             .addMinHeight(50.f)
+        //             .addMinWidth(300.f)
+        //             .addHover(true)
+        //             .addButtonCallback([]()
+        //                             { SPDLOG_DEBUG("Button callback triggered"); })
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(buttonAlertText)
+        //     .build();
         
         // ======================================
         // ======================================
         // controller button pip
         // ======================================
         // ======================================
-        auto controllerPipContainer = ui_defs::controllerPipContainer();
+        // auto controllerPipContainer = ui_defs::controllerPipContainer();
         
         // ======================================
         // ======================================
@@ -1059,98 +1070,98 @@ namespace ui_defs
         // ======================================
         // ======================================
         
-        static entt::entity tooltipBox{entt::null};
+        // static entt::entity tooltipBox{entt::null};
         
-        //TODO: use backgrounds & images for the tooltip text
-        auto tooltipTitle = getNewDynamicTextEntry(localization::get("ui.tooltip_title"), 20.f, std::nullopt, "pulse=0.9,1.1");
-        tooltipTitle.config.initFunc = [](entt::registry* registry, entt::entity e) {
-            localization::onLanguageChanged([&](auto newLang){
-                TextSystem::Functions::setText(e, localization::get("ui.tooltip_title"));
-            });
-        };
+        // //TODO: use backgrounds & images for the tooltip text
+        // auto tooltipTitle = getNewDynamicTextEntry(localization::get("ui.tooltip_title"), 20.f, std::nullopt, "pulse=0.9,1.1");
+        // tooltipTitle.config.initFunc = [](entt::registry* registry, entt::entity e) {
+        //     localization::onLanguageChanged([&](auto newLang){
+        //         TextSystem::Functions::setText(e, localization::get("ui.tooltip_title"));
+        //     });
+        // };
         
-        auto tooltipText = getNewDynamicTextEntry(localization::get("ui.tooltip_text", fmt::arg("text_type", "dynamic")), 10.f, std::nullopt, "pulse=0.9,1.1");
-        tooltipText.config.initFunc = [](entt::registry* registry, entt::entity e) {
-            localization::onLanguageChanged([&](auto newLang){
-                TextSystem::Functions::setText(e, localization::get("ui.tooltip_text", fmt::arg("text_type", "dynamic")));
-            });
-        };
+        // auto tooltipText = getNewDynamicTextEntry(localization::get("ui.tooltip_text", fmt::arg("text_type", "dynamic")), 10.f, std::nullopt, "pulse=0.9,1.1");
+        // tooltipText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+        //     localization::onLanguageChanged([&](auto newLang){
+        //         TextSystem::Functions::setText(e, localization::get("ui.tooltip_text", fmt::arg("text_type", "dynamic")));
+        //     });
+        // };
         
-        auto tooltipRow = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addOutlineColor(RED)
-                    .addOutlineThickness(4.f)
-                    .addEmboss(2.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(tooltipTitle)
-            .addChild(tooltipText)
-            .build();
+        // auto tooltipRow = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addOutlineColor(RED)
+        //             .addOutlineThickness(4.f)
+        //             .addEmboss(2.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(tooltipTitle)
+        //     .addChild(tooltipText)
+        //     .build();
             
-        auto tooltipRoot = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::ROOT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(tooltipRow)
-            .build();
+        // auto tooltipRoot = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::ROOT)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(tooltipRow)
+        //     .build();
             
-        tooltipBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, tooltipRoot);
+        // tooltipBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, tooltipRoot);
 
         // ======================================
         // ======================================
         // TODO: a button with a tooltip
         // ======================================
         // ======================================
-        auto tooltipButtonText = getNewDynamicTextEntry(localization::get("ui.tooltip_text_hover"), 20.f, std::nullopt, "rainbow");
-        tooltipButtonText.config.initFunc = [](entt::registry* registry, entt::entity e) {
-            localization::onLanguageChanged([&](auto newLang){
-                TextSystem::Functions::setText(e, localization::get("ui.tooltip_text_hover"));
-            });
-        };
-        auto buttonForTooltip = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GRAY)
-                    .addEmboss(2.f)
-                    .addMinHeight(50.f)
-                    .addMinWidth(300.f)
-                    .addHover(true)
-                    .addButtonCallback([]()
-                                    { SPDLOG_DEBUG("Button callback triggered"); 
+        // auto tooltipButtonText = getNewDynamicTextEntry(localization::get("ui.tooltip_text_hover"), 20.f, std::nullopt, "rainbow");
+        // tooltipButtonText.config.initFunc = [](entt::registry* registry, entt::entity e) {
+        //     localization::onLanguageChanged([&](auto newLang){
+        //         TextSystem::Functions::setText(e, localization::get("ui.tooltip_text_hover"));
+        //     });
+        // };
+        // auto buttonForTooltip = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(GRAY)
+        //             .addEmboss(2.f)
+        //             .addMinHeight(50.f)
+        //             .addMinWidth(300.f)
+        //             .addHover(true)
+        //             .addButtonCallback([]()
+        //                             { SPDLOG_DEBUG("Button callback triggered"); 
                                         
-                                    })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(tooltipButtonText)
-            .build();
+        //                             })
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(tooltipButtonText)
+        //     .build();
             
         // ======================================
         // ======================================
         // TODO: Highlight ui box / doesn't need to be used rn, since we aren't doing controller at the moment
         // ======================================
         // ======================================
-        static entt::entity highlightBox{entt::null};
+        // static entt::entity highlightBox{entt::null};
         
-        auto highlightRoot = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::ROOT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(BLANK)
-                    .addOutlineColor(RED)
-                    .addOutlineThickness(4.f)
-                    .addEmboss(2.f)
-                    .addLineEmboss(true)
-                    .addMinHeight(60.f)
-                    .addMinWidth(60.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .build();
-        // highlightBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, highlightRoot);
+        // auto highlightRoot = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::ROOT)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(BLANK)
+        //             .addOutlineColor(RED)
+        //             .addOutlineThickness(4.f)
+        //             .addEmboss(2.f)
+        //             .addLineEmboss(true)
+        //             .addMinHeight(60.f)
+        //             .addMinWidth(60.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .build();
+        // // highlightBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 500}, highlightRoot);
         
         // ======================================
         // ======================================
@@ -1158,150 +1169,150 @@ namespace ui_defs
         // ======================================
         // ======================================
 
-        int gridWidth = 5;
-        int gridHeight = 3;
+        // int gridWidth = 5;
+        // int gridHeight = 3;
     
-        auto gridRect = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::RECT_SHAPE)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(WHITE)
-                    .addEmboss(2.f)
-                    .addMinWidth(60.f)
-                    .addMinHeight(60.f)
-                    .addOnUIScalingResetToOne(
-                        [](entt::registry* registry, entt::entity e)
-                        {
-                            // set the size of the grid rect to be 60 x 60
+        // auto gridRect = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::RECT_SHAPE)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(WHITE)
+        //             .addEmboss(2.f)
+        //             .addMinWidth(60.f)
+        //             .addMinHeight(60.f)
+        //             .addOnUIScalingResetToOne(
+        //                 [](entt::registry* registry, entt::entity e)
+        //                 {
+        //                     // set the size of the grid rect to be 60 x 60
                             
-                            auto &transform = globals::registry.get<transform::Transform>(e);
-                            transform.setActualW(60.f);
-                            transform.setActualH(60.f);
+        //                     auto &transform = globals::registry.get<transform::Transform>(e);
+        //                     transform.setActualW(60.f);
+        //                     transform.setActualH(60.f);
                             
-                            auto &role = globals::registry.get<transform::InheritedProperties>(e);
-                            role.offset->x = 0;
-                            role.offset->y = 0;
+        //                     auto &role = globals::registry.get<transform::InheritedProperties>(e);
+        //                     role.offset->x = 0;
+        //                     role.offset->y = 0;
                             
-                        })
-                    .addOnUIResizeFunc([](entt::registry* registry, entt::entity e)
-                    {
-                        // renew centering 
-                        auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
+        //                 })
+        //             .addOnUIResizeFunc([](entt::registry* registry, entt::entity e)
+        //             {
+        //                 // renew centering 
+        //                 auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
                         
-                        if (!inventoryTile.item) return;
+        //                 if (!inventoryTile.item) return;
                         
-                        SPDLOG_DEBUG("Grid rect resize called for entity: {} with item: {}", (int)e, (int)inventoryTile.item.value());
+        //                 SPDLOG_DEBUG("Grid rect resize called for entity: {} with item: {}", (int)e, (int)inventoryTile.item.value());
                         
-                        game::centerInventoryItemOnTargetUI(inventoryTile.item.value(), e);
-                    })
-                    .addInitFunc([](entt::registry* registry, entt::entity e)
-                    { 
-                        if (!globals::registry.any_of<ui::InventoryGridTileComponent>(e)) {
-                            globals::registry.emplace<ui::InventoryGridTileComponent>(e);   
-                        }
+        //                 game::centerInventoryItemOnTargetUI(inventoryTile.item.value(), e);
+        //             })
+        //             .addInitFunc([](entt::registry* registry, entt::entity e)
+        //             { 
+        //                 if (!globals::registry.any_of<ui::InventoryGridTileComponent>(e)) {
+        //                     globals::registry.emplace<ui::InventoryGridTileComponent>(e);   
+        //                 }
                         
-                        auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
+        //                 auto &inventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(e);
                         
-                        auto &gameObjectComp = globals::registry.get<transform::GameObject>(e);
-                        gameObjectComp.state.triggerOnReleaseEnabled = true;
-                        gameObjectComp.state.collisionEnabled = true;
-                        // gameObjectComp.state.hoverEnabled = true;
-                        SPDLOG_DEBUG("Grid rect init called for entity: {}", (int)e);
+        //                 auto &gameObjectComp = globals::registry.get<transform::GameObject>(e);
+        //                 gameObjectComp.state.triggerOnReleaseEnabled = true;
+        //                 gameObjectComp.state.collisionEnabled = true;
+        //                 // gameObjectComp.state.hoverEnabled = true;
+        //                 SPDLOG_DEBUG("Grid rect init called for entity: {}", (int)e);
                         
                         
-                        gameObjectComp.methods.onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
-                        {
-                            SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
+        //                 gameObjectComp.methods.onRelease = [](entt::registry &registry, entt::entity releasedOn, entt::entity released)
+        //                 {
+        //                     SPDLOG_DEBUG("Grid rect onRelease called for entity {} released on top of entity {}", (int)released, (int)releasedOn);
                             
-                            auto &inventoryTileReleasedOn = registry.get<ui::InventoryGridTileComponent>(releasedOn);
-                            
-                            
-                            
-                            // set master role for the released entity
-                            auto &uiConfigOnReleased = registry.get<ui::UIConfig>(releasedOn);
-                            auto &roleReleased = registry.get<transform::InheritedProperties>(released);
-                            
-                            // get previous parent (if any)
-                            auto prevParent = roleReleased.master;
+        //                     auto &inventoryTileReleasedOn = registry.get<ui::InventoryGridTileComponent>(releasedOn);
                             
                             
-                            if (globals::registry.valid(prevParent))
-                            {
-                                auto &uiConfig = globals::registry.get<ui::UIConfig>(prevParent);
-                                uiConfig.color = globals::uiInventoryEmpty;
+                            
+        //                     // set master role for the released entity
+        //                     auto &uiConfigOnReleased = registry.get<ui::UIConfig>(releasedOn);
+        //                     auto &roleReleased = registry.get<transform::InheritedProperties>(released);
+                            
+        //                     // get previous parent (if any)
+        //                     auto prevParent = roleReleased.master;
+                            
+                            
+        //                     if (globals::registry.valid(prevParent))
+        //                     {
+        //                         auto &uiConfig = globals::registry.get<ui::UIConfig>(prevParent);
+        //                         uiConfig.color = globals::uiInventoryEmpty;
                                 
-                                auto &prevInventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(prevParent);
+        //                         auto &prevInventoryTile = globals::registry.get<ui::InventoryGridTileComponent>(prevParent);
                                 
-                                // if current tile is occupied, then switch the items
-                                //TODO: handle cases where something already exists in the inventory tile
-                                if (inventoryTileReleasedOn.item)
-                                {
-                                    SPDLOG_DEBUG("Inventory tile already occupied, switching");
+        //                         // if current tile is occupied, then switch the items
+        //                         //TODO: handle cases where something already exists in the inventory tile
+        //                         if (inventoryTileReleasedOn.item)
+        //                         {
+        //                             SPDLOG_DEBUG("Inventory tile already occupied, switching");
                                     
-                                    auto temp = inventoryTileReleasedOn.item.value();
-                                    inventoryTileReleasedOn.item = released;
-                                    prevInventoryTile.item = temp;
+        //                             auto temp = inventoryTileReleasedOn.item.value();
+        //                             inventoryTileReleasedOn.item = released;
+        //                             prevInventoryTile.item = temp;
                                     
-                                    //TODO: apply the centering & master role switching
-                                    moveInventoryItemToNewTile(released, releasedOn);
-                                    moveInventoryItemToNewTile(temp, prevParent);
-                                    return;
-                                }
-                                else {
-                                    inventoryTileReleasedOn.item = released;
-                                    prevInventoryTile.item.reset();
-                                }
+        //                             //TODO: apply the centering & master role switching
+        //                             moveInventoryItemToNewTile(released, releasedOn);
+        //                             moveInventoryItemToNewTile(temp, prevParent);
+        //                             return;
+        //                         }
+        //                         else {
+        //                             inventoryTileReleasedOn.item = released;
+        //                             prevInventoryTile.item.reset();
+        //                         }
                                 
-                            }
+        //                     }
 
-                            moveInventoryItemToNewTile(released, releasedOn);
+        //                     moveInventoryItemToNewTile(released, releasedOn);
                             
                             
-                        };
+        //                 };
                         
-                    })
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .build();
-        auto gridRow = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .build();
-        for (int i = 0; i < gridWidth; i++) {
-            gridRow.children.push_back(gridRect);
-        }
-        auto gridContainer = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addColor(GRAY)
-                    .addPadding(2.f)
-                    .addEmboss(2.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .build();
-        for (int i = 0; i < gridHeight; i++) {
-            gridContainer.children.push_back(gridRow);
-        }
+        //             })
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .build();
+        // auto gridRow = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .build();
+        // for (int i = 0; i < gridWidth; i++) {
+        //     gridRow.children.push_back(gridRect);
+        // }
+        // auto gridContainer = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::VERTICAL_CONTAINER)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addColor(GRAY)
+        //             .addPadding(2.f)
+        //             .addEmboss(2.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .build();
+        // for (int i = 0; i < gridHeight; i++) {
+        //     gridContainer.children.push_back(gridRow);
+        // }
         
         
         // add everything to the master vertical container
         masterVerticalContainer.children.push_back(titleDividers);
         // masterVerticalContainer.children.push_back(checkbox);
         // masterVerticalContainer.children.push_back(progressBar);
-        // masterVerticalContainer.children.push_back(progressBar9Patch);
+        masterVerticalContainer.children.push_back(progressBar9Patch);
         // masterVerticalContainer.children.push_back(buttonDisabled);
         // masterVerticalContainer.children.push_back(controllerPipContainer);
-        masterVerticalContainer.children.push_back(slider);
-        masterVerticalContainer.children.push_back(textInputRow);
+        // masterVerticalContainer.children.push_back(slider);
+        // masterVerticalContainer.children.push_back(textInputRow);
         // masterVerticalContainer.children.push_back(buttonGroupRow);
-        masterVerticalContainer.children.push_back(cycleContainer);
-        masterVerticalContainer.children.push_back(gridContainer);
-        masterVerticalContainer.children.push_back(buttonForTooltip);
-        masterVerticalContainer.children.push_back(buttonAlert);
+        // masterVerticalContainer.children.push_back(cycleContainer);
+        // masterVerticalContainer.children.push_back(gridContainer);
+        // masterVerticalContainer.children.push_back(buttonForTooltip);
+        // masterVerticalContainer.children.push_back(buttonAlert);
 
         
         return masterVerticalContainer;

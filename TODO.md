@@ -18,6 +18,8 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] dynamic text notifications which can fade, and also contain images.
 
 
+## major bug
+- [ ] nine patch tiling broken for progress bar background.
 
 
 ## TODOS fast
@@ -164,7 +166,7 @@ local ReactiveBalm = {
 
 ```
 - document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.
-
+- [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
 
 
 

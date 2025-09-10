@@ -8,6 +8,7 @@
 #include <variant>
 #include <functional>
 
+#include "systems/nine_patch/nine_patch_baker.hpp"
 #include "systems/transform/transform_functions.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/reflection/reflection.hpp"
@@ -293,6 +294,8 @@ namespace ui
         std::shared_ptr<UIConfig> dPopupConfig; // Separate configuration for popups?
 
         // Miscellaneous
+        
+        std::optional<nine_patch::NPatchTiling> nPatchTiling; // absent => legacy stretch path -> for containing tiling information if this ui element uses 9-patch borders
         std::optional<float> extend_up;      // Extra space added upwards for resizing UI elements
         std::optional<float> resolution;     // Used for pixelated rectangle rendering
         std::optional<float> emboss;         // Emboss effect height for UI elements
@@ -351,6 +354,9 @@ namespace ui
             uiConfig.location_bond = locationBond;
             return *this;
         }
+        
+        // UIConfig::Builder
+        auto addNPatchTiling(nine_patch::NPatchTiling t) -> Builder& { uiConfig.nPatchTiling = t; return *this; }
 
         Builder& addRotationBond(const transform::InheritedProperties::Sync& rotationBond) {
             uiConfig.rotation_bond = rotationBond;

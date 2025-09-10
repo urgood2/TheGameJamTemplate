@@ -4,6 +4,7 @@
 #include "raymath.h"
 #include "systems/layer/layer.hpp"
 #include "systems/layer/layer_optimized.hpp"
+#include "systems/nine_patch/nine_patch_baker.hpp"
 #include "util/utilities.hpp"
 #include "systems/layer/layer_command_buffer.hpp"
 
@@ -747,15 +748,14 @@ namespace ui
             colorToUse = (uiConfig->shadowColor.value_or(Fade(BLACK, 0.4f)));
 
             // filled shadow
-            // layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, visualW, visualH, progressVal, colorToUse](layer::CmdRenderNPatchRect *cmd) {
-            //     cmd->info = nPatchInfo;
-            //     cmd->sourceTexture = nPatchAtlas;
-            //     cmd->dest = Rectangle{0, 0, visualW * progressVal, visualH};
-            //     cmd->origin = {0, 0};
-            //     cmd->rotation = 0.f;
-            //     cmd->tint = colorToUse;
-            // }, zIndex);
-            layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, Vector2{0, 0}, 0.f, colorToUse);
+            // Prefer same tiling as the main element, but with transparent bg so shadow stays soft
+            if (uiConfig->nPatchTiling.has_value()) {
+                auto til = *uiConfig->nPatchTiling;
+                til.background = {0,0,0,0};
+                nine_patch::DrawTextureNPatchTiledSafe(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, {0,0}, 0.f, colorToUse, til);
+            } else {
+                DrawTextureNPatch(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW * progressVal, visualH}, {0,0}, 0.f, colorToUse);
+            }
             
             //TODO: resize the shadow to match the progress value?
             //TODO: how to do rotation later?
@@ -781,15 +781,11 @@ namespace ui
         colorToUse = colorOverride;
 
         // filled
-        // layer::QueueCommand<layer::CmdRenderNPatchRect>(layerPtr, [nPatchAtlas, nPatchInfo, visualW, visualH, colorToUse](layer::CmdRenderNPatchRect *cmd) {
-        //     cmd->info = nPatchInfo;
-        //     cmd->sourceTexture = nPatchAtlas;
-        //     cmd->dest = Rectangle{0, 0, visualW, visualH};
-        //     cmd->origin = {0, 0};
-        //     cmd->rotation = 0.f;
-        //     cmd->tint = colorToUse;
-        // }, zIndex);
-        layer::RenderNPatchRect(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW, visualH}, Vector2{0, 0}, 0.f, colorToUse);
+        if (uiConfig->nPatchTiling.has_value()) {
+            nine_patch::DrawTextureNPatchTiledSafe(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW, visualH}, {0,0}, 0.f, colorToUse, *uiConfig->nPatchTiling);
+        } else {
+            DrawTextureNPatch(nPatchAtlas, nPatchInfo, Rectangle{0, 0, visualW, visualH}, {0,0}, 0.f, colorToUse);
+        }
         // layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, zIndex);
         layer::PopMatrix();
 

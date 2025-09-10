@@ -542,11 +542,23 @@ namespace ui_defs
         auto exampleNine = nine_patch::BakeNinePatchFromSprites(
             nine_patch::NineSliceNames{
                 "roguelike_ui7.png", "roguelike_ui8.png", "roguelike_ui9.png",
-                "roguelike_ui13.png",  "roguelike_ui15.png", "roguelike_ui15.png",
+                "roguelike_ui13.png",  "roguelike_ui2.png", "roguelike_ui15.png",
                 "roguelike_ui19.png", "roguelike_ui20.png", "roguelike_ui21.png"
             },
             /*scale=*/1.0f
         );
+        
+        // Choose what to tile at *draw-time*:
+        nine_patch::NPatchTiling til{};
+        til.centerX = true;         // repeat center horizontally
+        til.centerY = true;         // and vertically
+        til.top     = true;         // repeat top strip horizontally
+        til.bottom  = true;         // repeat bottom strip horizontally
+        til.left    = true;         // repeat left strip vertically
+        til.right   = true;         // repeat right strip vertically
+        // til.background = { 24, 24, 24, 255 };   // optional solid bg
+        til.pixelScale = 1.0f;      // usually your UI pixel scale (1/2/3...), keep integer for crisp pixels
+
         
         auto progressBar9Patch = ui::UIElementTemplateNode::Builder::create()
             .addType(ui::UITypeEnum::HORIZONTAL_CONTAINER)
@@ -558,6 +570,7 @@ namespace ui_defs
                     .addMinWidth(500.f)
                     .addStylingType(ui::UIStylingType::NINEPATCH_BORDERS)
                     .addNPatchInfo(exampleNine->info)
+                    .addNPatchTiling(til)
                     .addNPatchSourceTexture(exampleNine->texture)
                     .addProgressBar(true)
                     .addProgressBarEmptyColor(YELLOW)

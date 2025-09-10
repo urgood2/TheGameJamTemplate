@@ -25,6 +25,16 @@ namespace nine_patch {
         NPatchInfo info;     // use as-is
         Texture2D  texture;  // use as source texture
     };
+    
+    
+    // used in uiconfig
+    struct NPatchTiling {
+        bool top=false, bottom=false, left=false, right=false;
+        bool centerX=false, centerY=false;
+        Color background = {0,0,0,0};   // transparent by default
+        float pixelScale = 1.0f;        // repeated-tile pitch multiplier
+    };
+
 
     // Helper: safe int cast from float size (prevents negative/NaN)
     static inline int iround_pos(float f) {
@@ -199,7 +209,7 @@ namespace nine_patch {
     // - bg: optional solid background (transparent by default)
     // - pixelScale: uniform scale to apply to *tiles* (choose the same scale you used for corners)
     //   Typically: pixelScale = 1.0f for pixel-perfect; or topBorder/dstTopBorderSrcPixels for consistency.
-    void DrawTextureNPatchTiled(Texture2D tex, NPatchInfo info, Rectangle dest, Vector2 origin,
+    inline void DrawTextureNPatchTiled(Texture2D tex, NPatchInfo info, Rectangle dest, Vector2 origin,
                                 float rotation, Color tint,
                                 bool tilesTop, bool tilesBottom, bool tilesLeft, bool tilesRight,
                                 bool tilesCenterX, bool tilesCenterY,
@@ -411,6 +421,53 @@ namespace nine_patch {
 
         rlPopMatrix();
         rlSetTexture(0);
+    }
+    
+    inline void DrawTextureNPatchTiledSafe(Texture2D tex, NPatchInfo info, Rectangle dest, Vector2 origin,
+                                       float rotation, Color tint,
+                                       const NPatchTiling& til)
+    {
+        // Normalize negative source (raylib behavior)
+        Rectangle src = info.source;
+        if (src.width  < 0) { src.x += src.width;  src.width  = -src.width; }
+        if (src.height < 0) { src.y += src.height; src.height = -src.height; }
+        info.source = src;
+
+        const float srcW = src.width;
+        const float srcH = src.height;
+        const float L = (float)info.left,  R = (float)info.right;
+        const float T = (float)info.top,   B = (float)info.bottom;
+
+        const bool canTileX = (srcW - L - R) > 0.0f;   // center span exists
+        const bool canTileY = (srcH - T - B) > 0.0f;
+
+        // Edges must still render even if they can't tile.
+        const bool tileTop    = til.top;    // tile if true, else stretch
+        const bool tileBottom = til.bottom;
+        const bool tileLeft   = til.left;
+        const bool tileRight  = til.right;
+
+        // Center tiling only if there is a center span.
+        const bool tileCX     = til.centerX && canTileX;
+        const bool tileCY     = til.centerY && canTileY;
+
+        // If no tiling at all and no background, use vanilla path.
+        const bool wantsTilingOrBG =
+            tileTop || tileBottom || tileLeft || tileRight || tileCX || tileCY || (til.background.a != 0);
+
+        if (info.layout != NPATCH_NINE_PATCH || !wantsTilingOrBG) {
+            DrawTextureNPatch(tex, info, dest, origin, rotation, tint);
+            return;
+        }
+
+        // Optional: warn once if center asked to tile but can't.
+        // (doesn't affect drawing—still draws with stretch)
+        // if (til.centerX && !canTileX) SPDLOG_WARN("NPatch centerX requested but no center span ({} - {} - {} <= 0)", srcW, L, R);
+        // if (til.centerY && !canTileY) SPDLOG_WARN("NPatch centerY requested but no center span ({} - {} - {} <= 0)", srcH, T, B);
+
+        DrawTextureNPatchTiled(tex, info, dest, origin, rotation, tint,
+                            tileTop, tileBottom, tileLeft, tileRight, tileCX, tileCY,
+                            til.background, til.pixelScale);
     }
 
 }

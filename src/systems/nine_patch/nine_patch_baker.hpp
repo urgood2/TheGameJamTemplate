@@ -209,6 +209,7 @@ namespace nine_patch {
     // - bg: optional solid background (transparent by default)
     // - pixelScale: uniform scale to apply to *tiles* (choose the same scale you used for corners)
     //   Typically: pixelScale = 1.0f for pixel-perfect; or topBorder/dstTopBorderSrcPixels for consistency.
+    // pixelScale tells the tiler “scale each repeated tile this much when stamping it out.” Use 1.0f for pixel-perfect; use the same scale you applied to the borders if you’re scaling the patch up/down.
     inline void DrawTextureNPatchTiled(Texture2D tex, NPatchInfo info, Rectangle dest, Vector2 origin,
                                 float rotation, Color tint,
                                 bool tilesTop, bool tilesBottom, bool tilesLeft, bool tilesRight,

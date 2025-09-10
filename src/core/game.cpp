@@ -1249,6 +1249,33 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             }
         }
         
+        {
+            // Entities that DO NOT have AnimationQueueComponent, but DO have the local render callback
+            auto cbView = globals::registry.view<transform::RenderLocalCallback, entity_gamestate_management::StateTag>(
+                entt::exclude<ui::ObjectAttachedToUITag, AnimationQueueComponent>);
+
+            for (auto e : cbView) {
+                if (!entity_gamestate_management::active_states_instance()
+                        .is_active(cbView.get<entity_gamestate_management::StateTag>(e)))
+                    continue;
+
+                auto *layerOrder = globals::registry.try_get<layer::LayerOrderComponent>(e);
+                const int zIndex = layerOrder ? layerOrder->zIndex : 0;
+                const bool isScreenSpace = globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+
+                if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e)) {
+                    layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(
+                        sprites, [e](auto* cmd){ cmd->e = e; cmd->registry = &globals::registry; },
+                        zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                } else {
+                    layer::QueueCommand<layer::CmdDrawTransformEntityAnimation>(
+                        sprites, [e](auto* cmd){ cmd->e = e; cmd->registry = &globals::registry; },
+                        zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                }
+            }
+        }
+
+        
         // uiProfiler.Stop();
         
         {

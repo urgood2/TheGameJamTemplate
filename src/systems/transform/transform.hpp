@@ -35,24 +35,31 @@ namespace transform
     
     // If you’re using Lua: store a std::function wrapper that calls a sol::function internally.
     // use this if you have a transform that should be drawn with your own custom function--for shape primitives, etc.
-    struct RenderLocalCallback {
-        // Draw at (0,0) == top-left of the content area (padding already handled).
-        // width,height are the drawable content size (baseWidth/baseHeight).
-        std::function<void(float width, float height)> fn;
+    struct RenderLocalCallback { 
+        // Draw inside local space at (0,0) == top-left of content. // width/height = content size used by the non-AQC path. 
+        std::function<void(float width, float height, bool isShadow)> fn; 
+        float contentWidth = 64.f; 
+        float contentHeight = 64.f; 
+        bool afterPipeline = false; // if true, draw after the shader pipeline (if any)
 
-        // If true, call after the pipeline in world space (skips passes/overlays).
-        bool afterPipeline = false;
     };
     
-    static void install_local_callback(entt::registry& R, entt::entity e, sol::protected_function f, bool after) {
-        // Wrap lua_fn in a std::function so the draw loop is engine-agnostic
+    static void install_local_callback(entt::registry& R, entt::entity e,
+                                   sol::protected_function f,
+                                   bool after,
+                                   float w, float h)
+    {
         RenderLocalCallback cb;
+        cb.contentWidth  = w;
+        cb.contentHeight = h;
+        // if you keep this flag:
         cb.afterPipeline = after;
-        cb.fn = [lf = std::move(f)](float w, float h) {
-            auto res = lf(w, h);
+
+        cb.fn = [lf = std::move(f)](float W, float H, bool isShadow) {
+            auto res = lf(W, H, isShadow);
             if (!res.valid()) {
-            sol::error err = res;
-            spdlog::error("Lua render callback error: {}", err.what());
+                sol::error err = res;
+                spdlog::error("Lua render callback error: {}", err.what());
             }
         };
         R.emplace_or_replace<RenderLocalCallback>(e, std::move(cb));

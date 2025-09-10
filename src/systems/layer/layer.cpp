@@ -3409,7 +3409,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
     if (cb.fn && !cb.afterPipeline) {
       // Shift origin so callback sees (0,0) == top-left of *content* (inside pad)
       Translate(drawOffset.x, drawOffset.y);
-      cb.fn(baseWidth, baseHeight);           // user draws shapes/sprites at local coords
+      cb.fn(baseWidth, baseHeight, /*isShadow=*/false);           // user draws shapes/sprites at local coords
       Translate(-drawOffset.x, -drawOffset.y);
       usedLocalCallback = true;
     }
@@ -3773,11 +3773,32 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   // add local callback rendering which should go after the pipeline ends. (hud, or something that should bypass the ususal shader pipeline)
   if (registry.any_of<transform::RenderLocalCallback>(e)) {
     const auto &cb = registry.get<transform::RenderLocalCallback>(e);
+    // if you keep afterPipeline, gate it here:
     if (cb.fn && cb.afterPipeline) {
-      // Here, world transform is already applied, and (0,0) is the top-left of the *padded* quad.
-      // If you want (0,0) == top-left of content (inside pad), offset once:
+      // choose size (sprite-backed or callback-defined)
+      const float cw = (animationFrame ? baseWidth  : cb.contentWidth);
+      const float ch = (animationFrame ? baseHeight : cb.contentHeight);
+
+      // Optional shadow call (mirrors your texture shadow)
+      if (registry.any_of<transform::GameObject>(e)) {
+        auto &node = registry.get<transform::GameObject>(e);
+        if (node.shadowDisplacement) {
+          const float baseEx = globals::BASE_SHADOW_EXAGGERATION;
+          const float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
+          const float shX = node.shadowDisplacement->x * baseEx * hFact;
+          const float shY = node.shadowDisplacement->y * baseEx * hFact;
+
+          Translate(-shX, shY);
+          Translate(pad, pad);
+          cb.fn(cw, ch, /*isShadow=*/true);    // first pass: shadow
+          Translate(-pad, -pad);
+          Translate(shX, -shY);
+        }
+      }
+
+      // Main (non-shadow) pass
       Translate(pad, pad);
-      cb.fn(baseWidth, baseHeight);
+      cb.fn(cw, ch, /*isShadow=*/false);
       Translate(-pad, -pad);
     }
   }
@@ -4054,188 +4075,176 @@ auto AddDrawTransformEntityWithAnimation(std::shared_ptr<Layer> layer,
   AddDrawCommand(layer, "draw_transform_entity_animation", {e, registry}, z);
 }
 
-auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e)
-    -> void {
-
+auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void
+{
+  // AQC gate (unchanged)
   if (registry.any_of<AnimationQueueComponent>(e)) {
     auto &aqc = registry.get<AnimationQueueComponent>(e);
-    if (aqc.noDraw) {
-      return;
-    }
+    if (aqc.noDraw) return;
   }
 
-  // this renderscale is from the animation object itself.
+  // -------- Gather state --------
+  const bool hasAQC = registry.any_of<AnimationQueueComponent>(e);
+  const bool hasCB  = registry.any_of<transform::RenderLocalCallback>(e);
+
   float renderScale = 1.0f;
 
-  // Fetch the animation frame if the entity has an animation queue
   Rectangle *animationFrame = nullptr;
   SpriteComponentASCII *currentSprite = nullptr;
-
   bool flipX{false}, flipY{false};
 
-  if (registry.any_of<AnimationQueueComponent>(e)) {
+  if (hasAQC) {
     auto &aqc = registry.get<AnimationQueueComponent>(e);
-
-    // Use the current animation frame or the default frame
     if (aqc.animationQueue.empty()) {
       if (!aqc.defaultAnimation.animationList.empty()) {
-        animationFrame =
-            &aqc.defaultAnimation
-                 .animationList[aqc.defaultAnimation.currentAnimIndex]
-                 .first.spriteData.frame;
-        currentSprite =
-            &aqc.defaultAnimation
-                 .animationList[aqc.defaultAnimation.currentAnimIndex]
-                 .first;
+        animationFrame = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first.spriteData.frame;
+        currentSprite  = &aqc.defaultAnimation.animationList[aqc.defaultAnimation.currentAnimIndex].first;
         flipX = aqc.defaultAnimation.flippedHorizontally;
         flipY = aqc.defaultAnimation.flippedVertically;
-        renderScale =
-            aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f) *
-            aqc.defaultAnimation.uiRenderScale.value_or(1.0f);
+        renderScale = aqc.defaultAnimation.intrinsincRenderScale.value_or(1.0f)
+                    * aqc.defaultAnimation.uiRenderScale.value_or(1.0f);
       }
     } else {
-      auto &currentAnimObject = aqc.animationQueue[aqc.currentAnimationIndex];
-      animationFrame =
-          &currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
-               .first.spriteData.frame;
-      currentSprite =
-          &currentAnimObject.animationList[currentAnimObject.currentAnimIndex]
-               .first;
-      flipX = currentAnimObject.flippedHorizontally;
-      flipY = currentAnimObject.flippedVertically;
-      renderScale = currentAnimObject.intrinsincRenderScale.value_or(1.0f) *
-                    currentAnimObject.uiRenderScale.value_or(1.0f);
+      auto &cur = aqc.animationQueue[aqc.currentAnimationIndex];
+      animationFrame = &cur.animationList[cur.currentAnimIndex].first.spriteData.frame;
+      currentSprite  = &cur.animationList[cur.currentAnimIndex].first;
+      flipX = cur.flippedHorizontally;
+      flipY = cur.flippedVertically;
+      renderScale = cur.intrinsincRenderScale.value_or(1.0f)
+                  * cur.uiRenderScale.value_or(1.0f);
     }
   }
 
   using namespace snowhouse;
+  // If there is NO AQC, we allow callback to supply the visuals.
+  if (!hasCB) {
+    // Original asserts stay for the sprite path
+    AssertThat(animationFrame, Is().Not().Null());
+    AssertThat(currentSprite, Is().Not().Null());
+  }
 
-  AssertThat(animationFrame, Is().Not().Null());
-  AssertThat(currentSprite, Is().Not().Null());
+  Texture2D* spriteAtlas = currentSprite ? currentSprite->spriteData.texture : nullptr;
 
-  auto spriteAtlas = currentSprite->spriteData.texture;
+  // Content size:
+  float renderWidth  = 0.f;
+  float renderHeight = 0.f;
 
-  // float renderWidth = animationFrame->width * uiScale;
-  // float renderHeight = animationFrame->height * uiScale;
-  float renderWidth = animationFrame->width;
-  float renderHeight = animationFrame->height;
-  AssertThat(renderWidth, IsGreaterThan(0.0f));
+  if (animationFrame) {
+    renderWidth  = animationFrame->width;
+    renderHeight = animationFrame->height;
+  } else if (hasCB) {
+    const auto &cb = registry.get<transform::RenderLocalCallback>(e);
+    renderWidth  = cb.contentWidth;
+    renderHeight = cb.contentHeight;
+  }
+
+  AssertThat(renderWidth,  IsGreaterThan(0.0f));
   AssertThat(renderHeight, IsGreaterThan(0.0f));
 
   float flipXModifier = flipX ? -1.0f : 1.0f;
   float flipYModifier = flipY ? -1.0f : 1.0f;
 
-  // Check if the entity has colors (fg/bg)
-  Color bgColor = Color{0, 0, 0, 0}; // Default to fully transparent
-  Color fgColor = WHITE;             // Default foreground color
+  // Colors (kept for background rectangle + sprite tint)
+  Color bgColor = {0,0,0,0};
+  Color fgColor = WHITE;
   bool drawBackground = false;
   bool drawForeground = true;
 
   if (currentSprite) {
     bgColor = currentSprite->bgColor;
     fgColor = currentSprite->fgColor;
-    // FIXME: debug
-    if (fgColor.a <= 0)
-      fgColor = WHITE;
+    if (fgColor.a <= 0) fgColor = WHITE; // safety
     drawBackground = !currentSprite->noBackgroundColor;
     drawForeground = !currentSprite->noForegroundColor;
-    // FIXME: debug
+    // (Your forced debug)
     drawForeground = true;
   }
 
-  // fetch transform
   auto &transform = registry.get<transform::Transform>(e);
 
-  if (static_cast<int>(e) == 235) {
-    SPDLOG_DEBUG(
-        "DrawTransformEntityWithAnimationWithPipeline > Entity ID: {}, "
-        "getVisualY: {}, getVisualX: {}, getVisualW: {}, getVisualH: {}",
-        static_cast<int>(e), transform.getVisualY(), transform.getVisualX(),
-        transform.getVisualW(), transform.getVisualH());
-  }
-
+  // -------- World transform (unchanged) --------
   PushMatrix();
-
-  Translate(transform.getVisualX() + transform.getVisualW() * 0.5,
-            transform.getVisualY() + transform.getVisualH() * 0.5);
-
+  Translate(transform.getVisualX() + transform.getVisualW() * 0.5f,
+            transform.getVisualY() + transform.getVisualH() * 0.5f);
   Scale(transform.getVisualScaleWithHoverAndDynamicMotionReflected(),
         transform.getVisualScaleWithHoverAndDynamicMotionReflected());
-
   Rotate(transform.getVisualRWithDynamicMotionAndXLeaning());
+  Translate(-transform.getVisualW() * 0.5f, -transform.getVisualH() * 0.5f);
 
-  Translate(-transform.getVisualW() * 0.5, -transform.getVisualH() * 0.5);
-
-  // Draw background rectangle if enabled
+  // Background rectangle if desired (applies to both sprite and callback content)
   if (drawBackground) {
-    layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0,
-                        {bgColor.r, bgColor.g, bgColor.b, bgColor.a});
+    layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0, bgColor);
   }
 
-  // Draw the animation frame or a default rectangle if no animation is present
+  // -------- Foreground draw --------
   if (drawForeground) {
-    if (animationFrame) {
-      auto &node = registry.get<transform::GameObject>(e);
+    // If we have a callback, it takes precedence over sprite drawing
+    if (hasCB) {
+      const auto &cb = registry.get<transform::RenderLocalCallback>(e);
 
-      if (node.shadowDisplacement) {
-        float baseExaggeration = globals::BASE_SHADOW_EXAGGERATION;
-        float heightFactor = 1.0f + node.shadowHeight.value_or(
-                                        0.f); // Increase effect based on height
+      // Optional shadow pass (mirrors your sprite shadow behavior)
+      if (registry.any_of<transform::GameObject>(e)) {
+        auto &node = registry.get<transform::GameObject>(e);
+        if (node.shadowDisplacement) {
+          float baseEx = globals::BASE_SHADOW_EXAGGERATION;
+          float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
+          float shX = node.shadowDisplacement->x * baseEx * hFact;
+          float shY = node.shadowDisplacement->y * baseEx * hFact;
 
-        // Adjust displacement using shadow height
-        float shadowOffsetX =
-            node.shadowDisplacement->x * baseExaggeration * heightFactor;
-        float shadowOffsetY =
-            node.shadowDisplacement->y * baseExaggeration * heightFactor;
+          Color shadowColor = Fade(BLACK, 0.8f);
+          // We can't force-tint arbitrary callback draw; we just position the shadow version.
+          // Let the callback optionally branch on isShadow.
+          Translate(-shX, shY);
+          Scale(renderScale, renderScale);
+          cb.fn(renderWidth, renderHeight, /*isShadow=*/true);
+          Scale(1.0f / renderScale, 1.0f / renderScale);
+          Translate(shX, -shY);
+        }
+      }
 
-        float shadowAlpha = 0.8f; // 0.0f to 1.0f
-        Color shadowColor = Fade(BLACK, shadowAlpha);
+      // Main callback draw at local (0,0)
+      Scale(renderScale, renderScale);
+      cb.fn(renderWidth, renderHeight, /*isShadow=*/false);
+      Scale(1.0f / renderScale, 1.0f / renderScale);
 
-        // Translate to shadow position
-        Translate(-shadowOffsetX, shadowOffsetY);
+    } else if (animationFrame && spriteAtlas) {
+      // Original sprite path (unchanged)
+      if (registry.any_of<transform::GameObject>(e)) {
+        auto &node = registry.get<transform::GameObject>(e);
+        if (node.shadowDisplacement) {
+          float baseEx = globals::BASE_SHADOW_EXAGGERATION;
+          float hFact  = 1.0f + node.shadowHeight.value_or(0.f);
+          float shX = node.shadowDisplacement->x * baseEx * hFact;
+          float shY = node.shadowDisplacement->y * baseEx * hFact;
+          Color shadowColor = Fade(BLACK, 0.8f);
 
-        Scale(renderScale, renderScale);
-
-        // Draw shadow by rendering the same frame with a black tint and offset
-        layer::TexturePro(
-            *spriteAtlas,
-            {animationFrame->x, animationFrame->y,
-             animationFrame->width * flipXModifier,
-             animationFrame->height * flipYModifier},
-            0, 0, {renderWidth * flipXModifier, renderHeight * flipYModifier},
-            {0, 0}, 0, shadowColor);
-
-        // undo scale
-        Scale(1.0f / renderScale, 1.0f / renderScale);
-
-        // Reset translation to original position
-        Translate(shadowOffsetX, -shadowOffsetY);
+          Translate(-shX, shY);
+          Scale(renderScale, renderScale);
+          layer::TexturePro(*spriteAtlas,
+                            {animationFrame->x, animationFrame->y,
+                             animationFrame->width * flipXModifier,
+                             animationFrame->height * flipYModifier},
+                            0, 0,
+                            {renderWidth * flipXModifier, renderHeight * flipYModifier},
+                            {0,0}, 0, shadowColor);
+          Scale(1.0f / renderScale, 1.0f / renderScale);
+          Translate(shX, -shY);
+        }
       }
 
       Scale(renderScale, renderScale);
-
-      // FIXME: commenting out for debugging
       layer::TexturePro(*spriteAtlas,
                         {animationFrame->x, animationFrame->y,
                          animationFrame->width * flipXModifier,
                          animationFrame->height * flipYModifier},
-                        0, 0, {renderWidth, renderHeight}, {0, 0}, 0,
-                        {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+                        0, 0,
+                        {renderWidth, renderHeight},
+                        {0, 0}, 0, fgColor);
+      Scale(1.0f / renderScale, 1.0f / renderScale);
 
-      // Vector2 origin = {renderWidth * 0.5f, renderHeight * 0.5f};
-      // Vector2 destPos = {renderWidth * 0.5f, renderHeight * 0.5f};
-
-      // layer::TexturePro(
-      //     *spriteAtlas,
-      //     {animationFrame->x, animationFrame->y, animationFrame->width,
-      //     animationFrame->height}, destPos.x, destPos.y, // Destination
-      //     position (centered) {renderWidth * flipXModifier, renderHeight *
-      //     flipYModifier}, // Size with flip origin, // Origin is center 0,
-      //     fgColor
-      // );
     } else {
-      layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0,
-                          {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
+      // Fallback rect if neither sprite nor callback (unlikely due to asserts)
+      layer::RectanglePro(0, 0, {renderWidth, renderHeight}, {0, 0}, 0, fgColor);
     }
   }
 

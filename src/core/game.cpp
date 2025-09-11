@@ -211,6 +211,104 @@ namespace game
         return out;
     };
     
+    // Typedef so sol2 can bind it easily
+    using WorldQT = quadtree::Quadtree<
+        entt::entity,
+        decltype(globals::getBoxWorld),
+        std::equal_to<entt::entity>,
+        float
+    >;
+    
+    
+    namespace luaqt {
+        
+        using namespace quadtree;
+
+        inline Box<float> box_from_table(const sol::table& t) {
+            return Box<float>(
+                { t.get<float>("left"), t.get<float>("top") },
+                { t.get<float>("width"), t.get<float>("height") }
+            );
+        }
+
+        inline sol::table box_to_table(sol::this_state ts, const Box<float>& b) {
+            sol::state_view L(ts);
+            sol::table t = L.create_table();
+            t["left"]   = b.left;
+            t["top"]    = b.top;
+            t["width"]  = b.width;
+            t["height"] = b.height;
+            return t;
+        }
+
+        void bind_world_quadtree(sol::state& L, WorldQT& world, WorldQT& ui)
+        {
+            // If you want, you can also bind Box, but not required if you use tables only.
+            // L.new_usertype<quadtree::Box<float>>("Box", sol::no_constructor,
+            //     "left",   &quadtree::Box<float>::left,
+            //     "top",    &quadtree::Box<float>::top,
+            //     "width",  &quadtree::Box<float>::width,
+            //     "height", &quadtree::Box<float>::height
+            // );
+
+            // Disambiguate overloaded member names with sol::resolve
+            auto add_fn    = sol::resolve<void(const entt::entity&)>(&WorldQT::add);
+            auto remove_fn = sol::resolve<void(const entt::entity&)>(&WorldQT::remove);
+            auto clear_fn  = &WorldQT::clear;
+
+            L.new_usertype<WorldQT>("WorldQuadtree",
+                sol::no_constructor,                            // <-- correct token
+
+                "clear",  clear_fn,
+                "add",    add_fn,
+                "remove", remove_fn,
+
+                // query({left,top,width,height}) -> array of entities
+                "query", [](WorldQT& self, sol::this_state ts, sol::table qtbl) {
+                    auto results = self.query(box_from_table(qtbl));
+                    sol::state_view S(ts);
+                    sol::table arr = S.create_table(static_cast<int>(results.size()), 0);
+                    int i = 1;
+                    for (auto& e : results) arr[i++] = e;       // assumes entt::entity is Lua-convertible in your project
+                    return arr;
+                },
+
+                // find_all_intersections() -> { {a,b}, ... }
+                "find_all_intersections", [](WorldQT& self, sol::this_state ts) {
+                    auto pairs = self.findAllIntersections();
+                    sol::state_view S(ts);
+                    sol::table out = S.create_table(static_cast<int>(pairs.size()), 0);
+                    int i = 1;
+                    for (auto& p : pairs) {
+                        sol::table pr = S.create_table(2, 0);
+                        pr[1] = p.first;
+                        pr[2] = p.second;
+                        out[i++] = pr;
+                    }
+                    return out;
+                },
+
+                // get_bounds() -> {left,top,width,height}
+                "get_bounds", [](WorldQT& self, sol::this_state ts) {
+                    return box_to_table(ts, self.getBox());
+                }
+            );
+
+            // Inject references to your existing instances (no Lua-side construction)
+            L["quadtreeWorld"] = std::ref(world);
+            L["quadtreeUI"]    = std::ref(ui);
+
+            // Optional helper to make boxes from Lua quickly
+            sol::table qmod = L["quadtree"].get_or_create<sol::table>();
+            qmod.set_function("box", sol::overload(
+                [](float l, float t, float w, float h) { return quadtree::Box<float>({l,t},{w,h}); },
+                [](sol::table tbl) { return box_from_table(tbl); }
+            ));
+        }
+
+    } // namespace luaqt
+
+    
 /* ---------------- helpers for culling scroll pane elements ---------------- */
     static inline bool rectsOverlap(const Rectangle& a, const Rectangle& b) {
         return !(a.x > b.x + b.width  || a.x + a.width  < b.x ||

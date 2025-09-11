@@ -19,18 +19,22 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 - [ ] dynamic text notifications which can fade, and also contain images.
 
 
+### Need to implement
+- [ ] hook navmesh pathfinding into physics world switching: https://chatgpt.com/share/68c2527b-c84c-800a-9a85-58383e92e001
+- [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
+- [ ] need way to specify particle screen/world space & particle z values -> https://chatgpt.com/share/68c25453-7250-800a-b337-535e2bd57029
+
+
 ## TODOS fast
 - [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] test task system in lua
-- [ ] how to do layer-localized shader effects?
--  need streamlined way to access quadtree features, like collision checking specific areas -> https://chatgpt.com/share/68c01a7a-c2ec-800a-9882-d8bb4e34ba0e
-- [] particle z values how?
-    - need way to specify particle screen/world space & particle z values
+- [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
+-  streamlined way to access quadtree features, like collision checking specific areas -> use bind_world_quadtree and document.
 
 
 
 
-- [ ] optimizing text ui generation from coded strings: https://chatgpt.com/share/68bbd9c8-a674-800a-80cb-fb68bdf30316 -> all done, just need to test:
+- [ ] optimizing text ui generation from coded strings -> all done, just need to test:
 ```cpp
 TextUIHandle handle;
 
@@ -166,11 +170,6 @@ local ReactiveBalm = {
 - document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.
 - [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
 
-
-
-
-- [ ] make a conveninece method that takes four corners and sides for ninepatch, each as sprite names, and generates the ninepatch config for me. should also be able to set a scale.
-- text updating wrong. not easy to configure updates with on update method for some reason.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
 - [ ] hit circle - make my own structure for attaching to entities.
@@ -186,7 +185,6 @@ end
 
 
 ## physics
-- [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
 
 - [ ] hook physics, use this order
 ```cpp
@@ -243,6 +241,7 @@ SyncPhysicsToTransform(registry, PM);
 ``
 
 - [ ] test scene switch / multi-world toggling
+
 ```cpp
 auto& AS = entity_gamestate_management::active_states_instance();
 AS.deactivate("state:overworld");
@@ -254,11 +253,7 @@ PM.enableStep("dungeon",   true);
 PM.enableDebugDraw("dungeon", true);
 ```
 
-
-- [ ] render sprites based on physics object location / transform (configurable)
-- [ ] render nothing at all (also configuarble) so we can extract cpbody from lua and render from lua instead using shape primitives
-- [ ] keep render pipeline (also configuraable) but instead of an animatino or a sprite, draw whatever shapes I want through a function  (or by some supplied enum), also customize draw dimensions if necessary (if drawing goes beyond bounds of transform or collision body)
-- [ ] navmeshh from here: https://github.com/ilyanikolaevsky/navmesh
+- [ ] lua bindings for navmesh in [this file](src/third_party/navmesh/source/navmesh_lua_binding.hpp), document and test.
 ```cpp
 int main() {
     using namespace NavMesh;
@@ -503,6 +498,8 @@ globalShaderUniforms.set("edge_shader", "iResolution",
 - [ ] chronicon data https://github.com/gabriel-dehan/chronicondb-client/tree/main/src/engine/data
 
 ## Immediate laters
+
+- text updating wrong. not easy to configure updates with on update method for some reason?
 - [ ] blinking cursor doesn't always show for text input component
 - [ ] use posthog for analytics? learn how randy does it.
 - auto sprite order sorting so what's behind somehting can properly go behind, etc.

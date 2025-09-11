@@ -53547,6 +53547,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\sprite_atlas_uv_remapping_snippet.md",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/sprite_atlas_uv_remapping_snippet.md"
     ],
+    "automata": [
+        "automata.lua"
+    ],
+    "automata_forma": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/automata.lua"
+    ],
     "autumn_orange_palette_resurrect": [
         "RESURRECT_PALETTE_AUTUMN_ORANGE"
     ],
@@ -56416,6 +56422,12 @@
     "brown_sandy": [
         "SANDY BROWN"
     ],
+    "bsp": [
+        "bsp.lua"
+    ],
+    "bsp_util": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/utils/bsp.lua"
+    ],
     "bubbling_deep_magic_sound_spell_stereo_subtle_tone_zap": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MAGIC_SPELL_Deep_Tone_Bubbling_Zaps_Subtle_stereo.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MAGIC_SPELL_Deep_Tone_Bubbling_Zaps_Subtle_stereo.wav"
@@ -58921,6 +58933,12 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/spine/celestial-circus-pro.atlas",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/spine\\celestial-circus-pro.png"
     ],
+    "cell": [
+        "cell.lua"
+    ],
+    "cell_forma": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/cell.lua"
+    ],
     "center_double_transparent": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/fantasy_ui_border/Double/Transparent center",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/graphics\\pre-packing-files_globbed\\fantasy_ui_border\\Double\\Transparent center"
@@ -59352,6 +59370,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/scripts\\scripting_config.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/scripting_config.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\scripting_config.json"
+    ],
+    "convex_hull": [
+        "convex_hull.lua"
+    ],
+    "convex_hull_util": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/utils/convex_hull.lua"
     ],
     "copper_glow_palette_resurrect": [
         "RESURRECT_PALETTE_COPPER_GLOW"
@@ -64640,6 +64664,9 @@
     "extended_goblin": [
         "goblins_extended.png"
     ],
+    "external_forma": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma"
+    ],
     "external_graph": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/graph.lua"
     ],
@@ -65406,6 +65433,33 @@
     ],
     "forest_slate": [
         "Forest Slate"
+    ],
+    "forma_init": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/init.lua"
+    ],
+    "forma_license": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/LICENSE"
+    ],
+    "forma_multipattern": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/multipattern.lua"
+    ],
+    "forma_neighbourhood": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/neighbourhood.lua"
+    ],
+    "forma_pattern": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/pattern.lua"
+    ],
+    "forma_primitive": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/primitives.lua"
+    ],
+    "forma_raycasting": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/raycasting.lua"
+    ],
+    "forma_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/README.md"
+    ],
+    "forma_util": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/utils"
     ],
     "formatting_string": [
         "string_formatting.md"
@@ -72063,6 +72117,9 @@
     "left_r_stick_xbox": [
         "xbox_stick_r_left.png"
     ],
+    "license": [
+        "LICENSE"
+    ],
     "light_pink": [
         "LIGHT PINK"
     ],
@@ -75056,6 +75113,9 @@
     "mulberry": [
         "Mulberry"
     ],
+    "multipattern": [
+        "multipattern.lua"
+    ],
     "musicnote1": [
         "musicnote1.png"
     ],
@@ -75105,6 +75165,9 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\negative_vertex.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/negative_vertex.vs"
     ],
+    "neighbourhood": [
+        "neighbourhood.lua"
+    ],
     "newautoclicker5_sound": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/sounds/NewAutoclicker5.wav",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\NewAutoclicker5.wav",
@@ -75113,6 +75176,12 @@
     ],
     "nineteen_ninety_six": [
         "Nineteen Ninety Six.otf"
+    ],
+    "noise": [
+        "noise.lua"
+    ],
+    "noise_util": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/utils/noise.lua"
     ],
     "none": [
         "NONE"
@@ -75238,6 +75307,9 @@
     "pastel_pink": [
         "Pastel Pink"
     ],
+    "pattern": [
+        "pattern.lua"
+    ],
     "peach": [
         "Peach"
     ],
@@ -75293,6 +75365,9 @@
     ],
     "pres_r_stick_xbox": [
         "xbox_stick_r_press.png"
+    ],
+    "primitive": [
+        "primitives.lua"
     ],
     "pro_snowglobe": [
         "snowglobe-pro.atlas",
@@ -75378,6 +75453,12 @@
     "rainman2": [
         "Rainman2.png"
     ],
+    "random": [
+        "random.lua"
+    ],
+    "random_util": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/forma/utils/random.lua"
+    ],
     "raspberry": [
         "Raspberry"
     ],
@@ -75386,6 +75467,9 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\.DS_Store",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/.DS_Store",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\.DS_Store"
+    ],
+    "raycasting": [
+        "raycasting.lua"
     ],
     "rb_vector_xbox": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/Xbox Series/Vector/xbox_rb.svg",

@@ -259,22 +259,31 @@ private:
         return *cur;
     }
 
+    static std::string join_elems_dot(const std::vector<std::string>& v) {
+        std::string s;
+        for (const auto& p : v) {
+            if (p.empty()) continue;
+            if (!s.empty()) s += ".";
+            s += p;
+        }
+        return s;
+    }
+
     void dump_module(std::ofstream& out,
                      std::vector<std::string> path,
                      const ModuleNode& node) const
     {
-        std::string full;
-        for (size_t i = 1; i < path.size(); ++i) {
-            if (path[i].empty()) continue; // <-- skip empty strings
-            if (!full.empty()) full += ".";
-            full += "." + path[i];
-        }
-        for (auto& m : node.functions) {
+        const std::string full = join_elems_dot(path);
+
+        for (const auto& m : node.functions) {
             write_doc_block(out, m.doc);
-            out << m.signature << "\n";
-            out << "function " << full << "." << m.name << "(...) end\n\n";
+            if (!m.signature.empty()) out << m.signature << "\n";
+            out << "function " << (full.empty() ? "" : full + ".")
+                << m.name << "(...) end\n\n";
         }
-        for (auto& [nm, child] : node.children) {
+
+        for (const auto& [nm, child] : node.children) {
+            if (nm.empty()) continue;                // guard bad inputs
             auto sub = path;
             sub.push_back(nm);
             dump_module(out, sub, child);

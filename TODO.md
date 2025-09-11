@@ -22,10 +22,36 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 ### Need to implement
 - [ ] hook navmesh pathfinding into physics world switching: https://chatgpt.com/share/68c2527b-c84c-800a-9a85-58383e92e001
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
-- [ ] need way to specify particle screen/world space & particle z values -> https://chatgpt.com/share/68c25453-7250-800a-b337-535e2bd57029
 
 
 ## TODOS fast
+- [ ] test particle z level and space
+```lua
+local e = particle.CreateParticle(
+  Vec2(100, 80),
+  Vec2(10, 10),
+  {
+    color = Col(255, 180, 64, 255),
+    z = 120,                 -- draw above most stuff
+    space = "screen",        -- also accepts: particle.RenderSpace.SCREEN
+  }
+)
+
+local emitter = particle.CreateParticleEmitter(
+  Vec2(300, 220),
+  {
+    size = Vec2(64, 64),
+    particleSpeed = 80,
+    defaultZ = -50,                  -- whole cloud draws behind
+    defaultSpace = "world",          -- or particle.RenderSpace.WORLD
+    useGlobalCoords = true           -- still honored; defaultSpace wins if set
+  }
+)
+
+-- you can still override per particle:
+particle.CreateParticle(Vec2(0,0), Vec2(6,6), { z = 999, space = "screen" })
+
+```
 - [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] test task system in lua
 - [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders

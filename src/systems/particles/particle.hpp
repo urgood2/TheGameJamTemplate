@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entt/entity/fwd.hpp"
+#include "types.hpp"
 #include "util/common_headers.hpp"
 #include "util/utilities.hpp"
 
@@ -36,8 +37,11 @@ namespace particle
     const float defaultParticleSpeed = 10.0f;
     const bool defaultFillArea = false;
     const std::vector<Color> defaultColors = {WHITE, GRAY, LIGHTGRAY};
+    
+    
+    // New: explicit space selection for rendering
+    enum class RenderSpace { World, Screen };
 
-    // TODO: expose to lua
     enum class ParticleRenderType
     {
         TEXTURE,
@@ -68,6 +72,12 @@ namespace particle
         std::optional<Color> startColor;
         std::optional<Color> endColor;
         
+        // New: per-particle draw order (higher draws later)
+        std::optional<int>     z;
+
+        // New: per-particle space override
+        std::optional<RenderSpace> space;
+        
         std::function<void(Particle &, float)> onUpdateCallback;
     };
 
@@ -93,6 +103,11 @@ namespace particle
         float acceleration = 0.0f;
         BlendMode blendMode = BLEND_ALPHA;
         std::vector<Color> colors = {WHITE, GRAY, LIGHTGRAY};
+        
+        
+        // New: defaults for particles spawned by this emitter
+        std::optional<int>            defaultZ;     // if set, each particle gets this z
+        std::optional<RenderSpace>    defaultSpace; // if set, overrides useGlobalCoords
     };
 
     struct ParticleAnimationConfig
@@ -226,6 +241,16 @@ namespace particle
         p.startColor = emitter.colors[GetRandomValue(0, emitter.colors.size() - 1)];
         p.endColor = emitter.colors[GetRandomValue(0, emitter.colors.size() - 1)];
         p.color = p.startColor;
+        // Default space + z from emitter
+        if (emitter.defaultSpace.has_value()) {
+            p.space = emitter.defaultSpace.value();
+        } else {
+            // Backwards compatible: useGlobalCoords==true => World, else Screen
+            p.space = emitter.useGlobalCoords ? RenderSpace::World : RenderSpace::Screen;
+        }
+        if (emitter.defaultZ.has_value()) {
+            p.z = emitter.defaultZ.value();
+        }
 
         CreateParticle(registry, spawnPosition, Vector2{10, 10}, p);
     }
@@ -327,9 +352,25 @@ namespace particle
             auto &particle = view.get<Particle>(entity);
             auto &transform = registry.get<transform::Transform>(entity);
             auto &gameObject = registry.get<transform::GameObject>(entity);
-            auto drawCommandSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(entity)
-                                        ? layer::DrawCommandSpace::Screen
-                                        : layer::DrawCommandSpace::World;
+            
+            // Decide render space (particle override > marker > default world)
+            layer::DrawCommandSpace drawCommandSpace = layer::DrawCommandSpace::World;
+            if (particle.space.has_value()) {
+                drawCommandSpace = (particle.space.value() == RenderSpace::Screen)
+                            ? layer::DrawCommandSpace::Screen
+                            : layer::DrawCommandSpace::World;
+            } else if (registry.any_of<collision::ScreenSpaceCollisionMarker>(entity)) {
+                drawCommandSpace = layer::DrawCommandSpace::Screen;
+            }
+
+            // Per-particle draw order; default 0
+            const int order = particle.z.value_or(0);
+            // Put shadow *under* main pass if present
+            const int shadowOrder = order - 1;
+            
+            // auto drawCommandSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(entity)
+            //                             ? layer::DrawCommandSpace::Screen
+            //                             : layer::DrawCommandSpace::World;
             bool shadowEnabled = false;
             float shadowDisplacementX{}, shadowDisplacementY{};
             // half-alpha black
@@ -370,28 +411,28 @@ namespace particle
                 Color shadowColor = {0, 0, 0, 128}; // Half-alpha black
 
                 // Set up the entire transform for the shadow
-                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](auto *cmd) {}, 0, drawCommandSpace);
+                layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
 
                 // Move to the SHADOW's position FIRST
                 layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = visualX + visualW * 0.5 - shadowDisplacementX, y = visualY + visualH * 0.5 + shadowDisplacementY](auto *cmd) {
                     cmd->x = x;
                     cmd->y = y;
-                }, 0, drawCommandSpace);
+                }, shadowOrder, drawCommandSpace);
                 
                 // Then rotate and scale around the shadow's pivot
                 layer::QueueCommand<layer::CmdScale>(layerPtr, [visualScale](auto *cmd) {
                     cmd->scaleX = visualScale;
                     cmd->scaleY = visualScale;
-                }, 0, drawCommandSpace);
+                }, shadowOrder, drawCommandSpace);
                 layer::QueueCommand<layer::CmdRotate>(layerPtr, [visualR](auto *cmd) {
                     cmd->angle = visualR;
-                }, 0, drawCommandSpace);
+                }, shadowOrder, drawCommandSpace);
                 
                 // Offset by pivot for drawing
                 layer::QueueCommand<layer::CmdTranslate>(layerPtr, [w = -visualW * 0.5, h = -visualH * 0.5](auto *cmd) {
                     cmd->x = w;
                     cmd->y = h;
-                }, 0, drawCommandSpace);
+                }, shadowOrder, drawCommandSpace);
                 
                 switch (particle.renderType)
                 {
@@ -403,7 +444,7 @@ namespace particle
                             cmd->size.x  = width;
                             cmd->size.y = height;
                             cmd->color  = shadowColor; 
-                        }, 0, drawCommandSpace);
+                        }, shadowOrder, drawCommandSpace);
                     break;
                     
                 case ParticleRenderType::RECTANGLE_LINE:
@@ -415,7 +456,7 @@ namespace particle
                             cmd->size.y = height;
                             cmd->color  = shadowColor; 
                             cmd->lineThickness = CIRCLE_LINE_WIDTH;  // Set line thickness for rectangle line shadow
-                        }, 0, drawCommandSpace);
+                        }, shadowOrder, drawCommandSpace);
                     break;
                 case ParticleRenderType::CIRCLE_FILLED:
                     layer::QueueCommand<layer::CmdDrawCircleFilled>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()), shadowColor](auto *cmd)
@@ -425,7 +466,7 @@ namespace particle
                             cmd->radius = radius;
                             cmd->color  = shadowColor; 
                                                                 
-                        }, 0, drawCommandSpace);
+                        }, shadowOrder, drawCommandSpace);
                     break;
                 case ParticleRenderType::CIRCLE_LINE:
                     layer::QueueCommand<layer::CmdDrawCircleLine>(layerPtr, [shadowDisplacementX, shadowDisplacementY, radius = std::max(transform.getVisualW(), transform.getVisualH()), shadowColor](auto *cmd)
@@ -437,37 +478,37 @@ namespace particle
                             cmd->startAngle = 0.0f; // Start angle in radians
                             cmd->endAngle = 360; // Full circle
                             cmd->segments = 32; // Number of segments for the circle line
-                            cmd->color = shadowColor; }, 0, drawCommandSpace);
+                            cmd->color = shadowColor; }, shadowOrder, drawCommandSpace);
                     break;
                 default:
                     break; // no shadow for TEXTURE or unknown
                 }
 
-                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](auto *cmd) {}, 0, drawCommandSpace);
+                layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](auto *cmd) {}, shadowOrder, drawCommandSpace);
             }
             
             // precompute once per-particle:
             
-            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, 0, drawCommandSpace);
+            layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, order, drawCommandSpace);
             
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = transform.getVisualX() + transform.getVisualW() * 0.5, y = transform.getVisualY() + transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
                 cmd->x = x;
                 cmd->y = y;
-            }, 0, drawCommandSpace);
+            }, order, drawCommandSpace);
 
             layer::QueueCommand<layer::CmdScale>(layerPtr, [scaleX = transform.getVisualScaleWithHoverAndDynamicMotionReflected(), scaleY = transform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
                 cmd->scaleX = scaleX;
                 cmd->scaleY = scaleY;
-            }, 0, drawCommandSpace);
+            }, order, drawCommandSpace);
 
             layer::QueueCommand<layer::CmdRotate>(layerPtr, [rotation = transform.getVisualR()](layer::CmdRotate *cmd) {
                 cmd->angle = rotation;
-            }, 0, drawCommandSpace);
+            }, order, drawCommandSpace);
 
             layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -transform.getVisualW() * 0.5, y = -transform.getVisualH() * 0.5](layer::CmdTranslate *cmd) {
                 cmd->x = x;
                 cmd->y = y;
-            }, 0, drawCommandSpace);
+            }, order, drawCommandSpace);
 
                 
             // static const float CIRCLE_LINE_WIDTH = 3.0f; // Width of the circle line
@@ -550,7 +591,7 @@ namespace particle
                             cmd->e = entity;
                             cmd->registry = &globals::registry;
                             cmd->x = 0;
-                            cmd->y = 0; }, 0, drawCommandSpace);
+                            cmd->y = 0; }, order, drawCommandSpace);
                 }
                 else
                 {
@@ -561,12 +602,12 @@ namespace particle
             case ParticleRenderType::RECTANGLE_FILLED:
             {
                 layer::QueueCommand<layer::CmdDrawRectanglePro>(layerPtr, [width = transform.getVisualW(), height = transform.getVisualH(), color = drawColor](layer::CmdDrawRectanglePro *cmd)
-                                                             {
-                                                                cmd->offsetX      = 0;
-                                                                cmd->offsetY      = 0;
-                                                                cmd->size.x  = width;
-                                                                cmd->size.y = height;
-                                                                cmd->color  = color; }, 0, drawCommandSpace);
+                    {
+                    cmd->offsetX      = 0;
+                    cmd->offsetY      = 0;
+                    cmd->size.x  = width;
+                    cmd->size.y = height;
+                    cmd->color  = color; }, order, drawCommandSpace);
                 break;
             }
             case ParticleRenderType::RECTANGLE_LINE:
@@ -578,7 +619,7 @@ namespace particle
                         cmd->offsetY = 0;
                         cmd->size.x = width;
                         cmd->size.y = height;
-                        cmd->color = color; }, 0, drawCommandSpace);
+                        cmd->color = color; }, order, drawCommandSpace);
                 break;
             }
             case ParticleRenderType::CIRCLE_FILLED:
@@ -588,7 +629,7 @@ namespace particle
                         cmd->x = radius/2;
                         cmd->y = radius/2;
                         cmd->radius = radius;
-                        cmd->color = color; }, 0, drawCommandSpace);
+                        cmd->color = color; }, order, drawCommandSpace);
                 break;
             }
             case ParticleRenderType::CIRCLE_LINE:
@@ -602,7 +643,7 @@ namespace particle
                         cmd->startAngle = 0.0f; // Start angle in radians
                         cmd->endAngle = 360; // Full circle
                         cmd->segments = 32; // Number of segments for the circle line
-                        cmd->color = color; }, 0, drawCommandSpace);
+                        cmd->color = color; }, order, drawCommandSpace);
                 break;
             }
             default:
@@ -610,7 +651,7 @@ namespace particle
                 break;
             }
 
-            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, 0, drawCommandSpace);
+            layer::QueueCommand<layer::CmdPopMatrix>(layerPtr, [](layer::CmdPopMatrix *cmd) {}, order, drawCommandSpace);
         }
     }
     
@@ -662,6 +703,16 @@ namespace particle
         rec.record_property("particle.ParticleRenderType", {"CIRCLE_LINE", std::to_string(static_cast<int>(particle::ParticleRenderType::CIRCLE_LINE)), "Draw a circle outline"});
 
         rec.record_property("particle.ParticleRenderType", {"CIRCLE_FILLED", std::to_string(static_cast<int>(particle::ParticleRenderType::CIRCLE_FILLED)), "Draw a filled circle"});
+        
+        p["RenderSpace"] = lua.create_table_with(
+            "WORLD",  particle::RenderSpace::World,
+            "SCREEN", particle::RenderSpace::Screen
+        );
+
+        auto &spaceDef = rec.add_type("particle.RenderSpace");
+        spaceDef.doc = "Where to draw particles";
+        rec.record_property("particle.RenderSpace", {"WORLD",  "0", "Render in world space"});
+        rec.record_property("particle.RenderSpace", {"SCREEN", "1", "Render in screen/UI space"});
 
         lua.new_usertype<particle::Particle>("Particle",
             sol::constructors<particle::Particle()>(),
@@ -677,6 +728,9 @@ namespace particle
             "acceleration", &particle::Particle::acceleration,
             "startColor", &particle::Particle::startColor,
             "endColor", &particle::Particle::endColor,
+            
+            "z",     &particle::Particle::z,       // NEW
+            "space", &particle::Particle::space,   // NEW (enum)
             sol::meta_function::to_string, [](particle::Particle const &p){
                 std::ostringstream ss;
                 ss 
@@ -699,34 +753,38 @@ namespace particle
         rec.record_property("Particle", {"acceleration", "nil", "number?: Acceleration applied over the particle's lifetime."});
         rec.record_property("Particle", {"startColor", "nil", "Color?: The color the particle starts with."});
         rec.record_property("Particle", {"endColor", "nil", "Color?: The color the particle fades to over its life."});
+        rec.record_property("Particle", {"z", "nil", "integer?: Draw order (higher draws later)."});
+        rec.record_property("Particle", {"space", "nil", "particle.RenderSpace?: SCREEN or WORLD."});
         rec.record_property("Particle", {"onUpdateCallback",
             "function(self: Particle, dt: number)",
             "Optional callback, called every frame with (particle, deltaTime)."});
 
         p.new_usertype<particle::ParticleEmitter>("ParticleEmitter",
-                                                  sol::constructors<>(),
-                                                  "size", &particle::ParticleEmitter::size,
-                                                  "emissionRate", &particle::ParticleEmitter::emissionRate,
-                                                  "lastEmitTime", &particle::ParticleEmitter::lastEmitTime,
-                                                  "particleLifespan", &particle::ParticleEmitter::particleLifespan,
-                                                  "particleSpeed", &particle::ParticleEmitter::particleSpeed,
-                                                  "fillArea", &particle::ParticleEmitter::fillArea,
-                                                  "oneShot", &particle::ParticleEmitter::oneShot,
-                                                  "oneShotParticleCount", &particle::ParticleEmitter::oneShotParticleCount,
-                                                  "prewarm", &particle::ParticleEmitter::prewarm,
-                                                  "prewarmParticleCount", &particle::ParticleEmitter::prewarmParticleCount,
-                                                  "useGlobalCoords", &particle::ParticleEmitter::useGlobalCoords,
-                                                  "speedScale", &particle::ParticleEmitter::speedScale,
-                                                  "explosiveness", &particle::ParticleEmitter::explosiveness,
-                                                  "randomness", &particle::ParticleEmitter::randomness,
-                                                  "emissionSpread", &particle::ParticleEmitter::emissionSpread,
-                                                  "gravityStrength", &particle::ParticleEmitter::gravityStrength,
-                                                  "emissionDirection", &particle::ParticleEmitter::emissionDirection,
-                                                  "acceleration", &particle::ParticleEmitter::acceleration,
-                                                  "blendMode", &particle::ParticleEmitter::blendMode,
-                                                  "colors", &particle::ParticleEmitter::colors,
-                                                  "type_id", []()
-                                                  { return entt::type_hash<particle::ParticleEmitter>::value(); });
+            sol::constructors<>(),
+            "size", &particle::ParticleEmitter::size,
+            "emissionRate", &particle::ParticleEmitter::emissionRate,
+            "lastEmitTime", &particle::ParticleEmitter::lastEmitTime,
+            "particleLifespan", &particle::ParticleEmitter::particleLifespan,
+            "particleSpeed", &particle::ParticleEmitter::particleSpeed,
+            "fillArea", &particle::ParticleEmitter::fillArea,
+            "oneShot", &particle::ParticleEmitter::oneShot,
+            "oneShotParticleCount", &particle::ParticleEmitter::oneShotParticleCount,
+            "prewarm", &particle::ParticleEmitter::prewarm,
+            "prewarmParticleCount", &particle::ParticleEmitter::prewarmParticleCount,
+            "useGlobalCoords", &particle::ParticleEmitter::useGlobalCoords,
+            "speedScale", &particle::ParticleEmitter::speedScale,
+            "explosiveness", &particle::ParticleEmitter::explosiveness,
+            "randomness", &particle::ParticleEmitter::randomness,
+            "emissionSpread", &particle::ParticleEmitter::emissionSpread,
+            "gravityStrength", &particle::ParticleEmitter::gravityStrength,
+            "emissionDirection", &particle::ParticleEmitter::emissionDirection,
+            "acceleration", &particle::ParticleEmitter::acceleration,
+            "blendMode", &particle::ParticleEmitter::blendMode,
+            "colors", &particle::ParticleEmitter::colors,
+            "defaultZ",     &particle::ParticleEmitter::defaultZ,
+            "defaultSpace", &particle::ParticleEmitter::defaultSpace,
+            "type_id", []()
+            { return entt::type_hash<particle::ParticleEmitter>::value(); });
         rec.bind_usertype<particle::ParticleEmitter>(lua, "particle.ParticleEmitter", "0.1", "Defines how particles are emitted");
         rec.record_property("particle.ParticleEmitter", {"size", "nil", "Vector2: The size of the emission area."});
         rec.record_property("particle.ParticleEmitter", {"emissionRate", "nil", "number: Time in seconds between emissions."});
@@ -743,6 +801,9 @@ namespace particle
         rec.record_property("particle.ParticleEmitter", {"emissionDirection", "nil", "Vector2: Base direction for particle emission."});
         rec.record_property("particle.ParticleEmitter", {"acceleration", "nil", "number: Acceleration applied to particles."});
         rec.record_property("particle.ParticleEmitter", {"blendMode", "nil", "BlendMode: The blend mode for rendering particles."});
+        rec.record_property("particle.ParticleEmitter", {"defaultZ", "nil", "integer?: Default z for emitted particles."});
+        rec.record_property("particle.ParticleEmitter", {"defaultSpace", "nil", "particle.RenderSpace?: Default space for emitted particles."});
+
         rec.record_property("particle.ParticleEmitter", {"colors", "nil", "Color[]: A table of possible colors for particles."});
 
         p.new_usertype<particle::ParticleAnimationConfig>("ParticleAnimationConfig",
@@ -789,6 +850,21 @@ namespace particle
             e.acceleration = opts.get_or("acceleration", e.acceleration);
             e.blendMode = opts.get_or("blendMode", e.blendMode);
             e.colors = opts.get_or("colors", e.colors);
+            // NEW: defaults
+            if (auto zopt = opts["defaultZ"]; zopt.valid() && !zopt.is<sol::lua_nil_t>()) {
+                e.defaultZ = zopt.get<int>();
+            }
+            if (auto sopt = opts["defaultSpace"]; sopt.valid()) {
+                // string or enum
+                if (sopt.is<particle::RenderSpace>()) {
+                    e.defaultSpace = sopt.get<particle::RenderSpace>();
+                } else if (sopt.is<std::string>()) {
+                    std::string s = sopt.get<std::string>();
+                    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+                    if (s == "world")  e.defaultSpace = particle::RenderSpace::World;
+                    if (s == "screen") e.defaultSpace = particle::RenderSpace::Screen;
+                }
+            }
             return CreateParticleEmitter(globals::registry, location, e);
         };
         
@@ -886,6 +962,18 @@ namespace particle
                           "Creates a ParticleEmitter; pass a table to override any defaults.");
 
         // 2) Table→Particle converter (unchanged)
+        static auto parse_space = [](sol::object v) -> std::optional<particle::RenderSpace> {
+            if (!v.valid() || v.is<sol::lua_nil_t>()) return std::nullopt;
+            if (v.is<particle::RenderSpace>()) return v.as<particle::RenderSpace>();
+            if (v.is<std::string>()) {
+                std::string s = v.as<std::string>();
+                std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+                if (s == "world")  return particle::RenderSpace::World;
+                if (s == "screen") return particle::RenderSpace::Screen;
+            }
+            return std::nullopt;
+        };
+
         static auto tableDrivenParticleMaker = [clone_to_main](sol::table opts) -> particle::Particle {
             particle::Particle p;
             p.renderType    = opts.get_or("renderType",    p.renderType);
@@ -900,13 +988,21 @@ namespace particle
             p.acceleration  = opts.get_or("acceleration",  p.acceleration);
             p.startColor    = opts.get_or("startColor",    p.startColor);
             p.endColor      = opts.get_or("endColor",      p.endColor);
-            sol::object obj = opts["onUpdateCallback"];
-            if (obj.valid()) {
-                // key exists and isn’t nil
-                p.onUpdateCallback = clone_to_main(obj.as<sol::function>());
+
+            // NEW: z + space (allow string or enum)
+            if (auto zopt = opts["z"]; zopt.valid() && !zopt.is<sol::lua_nil_t>()) {
+                p.z = zopt.get<int>();
             }
+            if (auto sobj = opts["space"]; sobj.valid()) {
+                auto sp = parse_space(sobj);
+                if (sp) p.space = *sp;
+            }
+
+            sol::object obj = opts["onUpdateCallback"];
+            if (obj.valid()) p.onUpdateCallback = clone_to_main(obj.as<sol::function>());
             return p;
         };
+
 
         // 3) New Lua-facing maker that calls CreateParticle with optional animation
         static auto luaCreateParticle = [](

@@ -6,6 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
+- [ ] use this https://github.com/nhartland/forma for random generation in tiled settings, refer to chat gpt for practical use advice
 - [ ] 1 bit tilemap - use ascii_sprites.tps for a tileset for a gamejam game, using ldtk
 - [ ] smooth particle movement:
 ```lua

@@ -7,7 +7,7 @@ static inline NavMesh::Point toPt(const sol::object& o) {
     sol::table t = o.as<sol::table>();
     float x = t["x"].valid() ? float(t["x"].get<double>()) : float(t.get<double>(1));
     float y = t["y"].valid() ? float(t["y"].get<double>()) : float(t.get<double>(2));
-    return {x,y};
+    return {(int)x,(int)y};
 }
 
 void inline register_world_navmesh(sol::state& L, PhysicsManager& PM) {

@@ -5,6 +5,7 @@
 #include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "path_finder.h"
 #include "systems/physics/physics_components.hpp"
+#include "systems/physics/physics_world.hpp"
 #include "navmesh_components.hpp"
 
 namespace navmesh_build {
@@ -27,8 +28,8 @@ inline Poly rect_from_box(cpBody* body, float hw, float hh) {
     const cpFloat a = cpBodyGetAngle(body);
     const cpFloat ca = std::cos(a), sa = std::sin(a);
 
-    auto X = [&](float x, float y){ return c.x + x*ca - y*sa; };
-    auto Y = [&](float x, float y){ return c.y + x*sa + y*ca; };
+    auto X = [&](float x, float y){ return static_cast<int>(c.x + x*ca - y*sa); };
+    auto Y = [&](float x, float y){ return static_cast<int>(c.y + x*sa + y*ca); };
 
     Poly poly;
     poly.pts.reserve(4);
@@ -50,89 +51,111 @@ inline Poly poly_from_circle(cpBody* body, float r, const NavmeshWorldConfig& cf
     poly.pts.reserve(segs);
     for (int i=0;i<segs;i++) {
         float t = (float(i)/segs) * 2.0f*3.14159265f;
-        poly.pts.push_back({ c.x + r*std::cos(t), c.y + r*std::sin(t) });
+        poly.pts.push_back({ static_cast<int>(c.x + r*std::cos(t)), static_cast<int>(c.y + r*std::sin(t)) });
     }
     return poly;
 }
 
-// Expand a thin segment into a capsule-ish quad with radius r.
-inline Poly quad_from_segment(cpBody* body, cpVect a, cpVect b, float r) {
-    // Transform into world
-    const cpTransform T = cpBodyGetTransform(body);
-    a = cpTransformPoint(T, a);
-    b = cpTransformPoint(T, b);
 
-    // perp unit
-    cpVect d = cpvsub(b, a);
-    float len = cpvlength(d);
+// Expand a thin segment into a quad in *world* space (already transformed)
+inline Poly quad_from_segment_world(cpVect aW, cpVect bW, float r) {
+    cpVect d   = cpvsub(bW, aW);
+    float len  = cpvlength(d);
     if (len <= 1e-5f) len = 1.0f;
-    cpVect n = { -d.y/len, d.x/len };
+    cpVect n   = { -d.y/len, d.x/len };
 
     Poly poly;
     poly.pts.reserve(4);
-    poly.pts.push_back({ a.x + n.x*r, a.y + n.y*r });
-    poly.pts.push_back({ b.x + n.x*r, b.y + n.y*r });
-    poly.pts.push_back({ b.x - n.x*r, b.y - n.y*r });
-    poly.pts.push_back({ a.x - n.x*r, a.y - n.y*r });
+    poly.pts.push_back({ static_cast<int>( aW.x + n.x*r), static_cast<int>(aW.y + n.y*r) });
+    poly.pts.push_back({ static_cast<int>(bW.x + n.x*r), static_cast<int>(bW.y + n.y*r) });
+    poly.pts.push_back({ static_cast<int>(bW.x - n.x*r), static_cast<int>(bW.y - n.y*r) });
+    poly.pts.push_back({ static_cast<int>(aW.x - n.x*r), static_cast<int>(aW.y - n.y*r) });
     return poly;
 }
 
-inline Poly poly_from_cp_polyshape(cpBody* body, const cpPolyShape* ps) {
+// cpPolyShape → polygon (verts are body-local; transform via cpBodyLocalToWorld)
+inline Poly poly_from_cp_polyshape(cpBody* body, const cpShape* ps) {
     Poly poly;
-    const int count = cpPolyShapeGetCount(ps);
+    const int count = cpPolyShapeGetCount(ps);               // (const cpShape*)
     poly.pts.reserve(count);
-    const cpTransform T = cpBodyGetTransform(body);
-    for (int i=0;i<count;i++){
-        cpVect v = cpPolyShapeGetVert(ps, i);
-        v = cpTransformPoint(T, v);
-        poly.pts.push_back({v.x, v.y});
+    for (int i = 0; i < count; ++i) {
+        cpVect vL = cpPolyShapeGetVert(ps, i);              // local
+        cpVect vW = cpBodyLocalToWorld(body, vL);           // world
+        poly.pts.push_back({ static_cast<int>(vW.x), static_cast<int>(vW.y) });
     }
     return poly;
 }
 
-// Convert a ColliderComponent* to one or more polygon obstacles.
+// Circle (center offset is body-local; transform via cpBodyLocalToWorld)
+inline Poly poly_from_circle(cpBody* body, const cpShape* s, float tol, int minSeg, int maxSeg) {
+    const float r = (float)cpCircleShapeGetRadius(s);        // (const cpShape*)
+    cpVect  offL  = cpCircleShapeGetOffset(s);               // local center
+    cpVect  cW    = cpBodyLocalToWorld(body, offL);          // world center
+
+    // segments from circumference/tolerance
+    const float circ = 2.0f * 3.14159265358979323846f * r;
+    int segs = std::max(minSeg, std::min(maxSeg, (int)std::ceil(circ / std::max(tol, 1e-3f))));
+
+    Poly poly;
+    poly.pts.reserve(segs);
+    for (int i = 0; i < segs; ++i) {
+        float t = (float(i) / segs) * (2.0f * 3.14159265358979323846f);
+        poly.pts.push_back({ static_cast<int>(cW.x + r * std::cos(t)), static_cast<int>(cW.y + r * std::sin(t)) });
+    }
+    return poly;
+}
+
+// ---- main converter ----------------------------------------------------------
+
 inline void collider_to_polys(const physics::ColliderComponent& C,
                               std::vector<NavMesh::Polygon>& out,
                               const NavmeshWorldConfig& cfg)
 {
     if (!C.shape) return;
 
-    cpShape* s = C.shape.get();
-    cpBody*  b = cpShapeGetBody(s);
+    const cpShape* s = C.shape.get();
+    cpBody*        b = cpShapeGetBody(s);
 
     switch (C.shapeType) {
+
         case physics::ColliderShapeType::Rectangle: {
-            // Expect width/height in your component, else derive from poly shape BB
-            // If you only have a poly shape: branch to poly path.
-            if (cpShapeGetClass(s) == cpPolyShapeGetClass()) {
-                add_poly(out, poly_from_cp_polyshape(b, reinterpret_cast<cpPolyShape*>(s)));
+            // Prefer poly-shape rectangles if that’s how you build them.
+            // We can’t detect a “class”, so just try poly API; if it’s not a poly,
+            // fall back to BB (axis-aligned in world).
+            if (cpPolyShapeGetCount(s) > 0) {
+                add_poly(out, poly_from_cp_polyshape(b, s));
             } else {
-                // Fallback: use BB (axis-aligned in world). Better to store half-extents on your side.
+                // Fallback: AABB in world (loses rotation, but safe fallback)
                 cpBB bb = cpShapeGetBB(s);
-                float hw = (bb.r - bb.l)*0.5f;
-                float hh = (bb.t - bb.b)*0.5f;
-                add_poly(out, rect_from_box(b, hw, hh));
+                Poly poly;
+                poly.pts.reserve(4);
+                poly.pts.push_back({ static_cast<int>((float)bb.l), static_cast<int>((float)bb.b) });
+                poly.pts.push_back({ static_cast<int>((float)bb.r), static_cast<int>((float)bb.b) });
+                poly.pts.push_back({ static_cast<int>((float)bb.r), static_cast<int>((float)bb.t) });
+                poly.pts.push_back({ static_cast<int>((float)bb.l), static_cast<int>((float)bb.t) });
+                add_poly(out, poly);
             }
         } break;
 
         case physics::ColliderShapeType::Circle: {
-            const cpCircleShape* cs = reinterpret_cast<const cpCircleShape*>(s);
-            float r = (float)cpCircleShapeGetRadius(cs);
-            add_poly(out, poly_from_circle(b, r, cfg));
+            add_poly(out, poly_from_circle(b, s, cfg.circle_tol, cfg.circle_min_segments, cfg.circle_max_segments));
         } break;
 
         case physics::ColliderShapeType::Segment: {
-            const cpSegmentShape* sg = reinterpret_cast<const cpSegmentShape*>(s);
-            cpVect a = cpSegmentShapeGetA(sg);
-            cpVect b = cpSegmentShapeGetB(sg);
-            float r  = (float)cpSegmentShapeGetRadius(sg);
-            add_poly(out, quad_from_segment(b, a, b, std::max(r, 1.0f))); // widen at least 1px
+            // A/B are local; transform to world then inflate
+            cpVect aL = cpSegmentShapeGetA(s);
+            cpVect bL = cpSegmentShapeGetB(s);
+            float  r  = (float)cpSegmentShapeGetRadius(s);
+            cpVect aW = cpBodyLocalToWorld(b, aL);
+            cpVect bW = cpBodyLocalToWorld(b, bL);
+            add_poly(out, quad_from_segment_world(aW, bW, std::max(r, 1.0f)));
         } break;
 
         case physics::ColliderShapeType::Polygon:
         case physics::ColliderShapeType::Chain: {
-            if (cpShapeGetClass(s) == cpPolyShapeGetClass()) {
-                add_poly(out, poly_from_cp_polyshape(b, reinterpret_cast<const cpPolyShape*>(s)));
+            // If it’s actually a poly shape, this works; otherwise ignore.
+            if (cpPolyShapeGetCount(s) > 0) {
+                add_poly(out, poly_from_cp_polyshape(b, s));
             }
         } break;
     }

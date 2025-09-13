@@ -1462,6 +1462,16 @@ particle.ParticleRenderType = {
 
 
 ---
+--- Where to draw particles
+---
+---@class particle.RenderSpace
+particle.RenderSpace = {
+    WORLD = 0,  -- Render in world space
+    SCREEN = 1  -- Render in screen/UI space
+}
+
+
+---
 --- Defines how particles are emitted
 ---
 ---@class particle.ParticleEmitter
@@ -1481,6 +1491,8 @@ particle.ParticleEmitter = {
     emissionDirection = nil,  -- Vector2: Base direction for particle emission.
     acceleration = nil,  -- number: Acceleration applied to particles.
     blendMode = nil,  -- BlendMode: The blend mode for rendering particles.
+    defaultZ = nil,  -- integer?: Default z for emitted particles.
+    defaultSpace = nil,  -- particle.RenderSpace?: Default space for emitted particles.
     colors = nil  -- Color[]: A table of possible colors for particles.
 }
 

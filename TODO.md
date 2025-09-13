@@ -20,7 +20,6 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ### Need to implement
-- [ ] hook navmesh pathfinding into physics world switching: https://chatgpt.com/share/68c2527b-c84c-800a-9a85-58383e92e001
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
 
 

@@ -6,6 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
+- [ ] use [new monobehavior file](assets/scripts/monobehavior/behavior_script_v2.lua) with game entities, also use this for transitions, etc, temporary rendered things, etc. also direct access to self table is possible now with script component.
 - [ ] use this https://github.com/nhartland/forma for random generation in tiled settings, refer to chat gpt for practical use advice
 - [ ] 1 bit tilemap - use ascii_sprites.tps for a tileset for a gamejam game, using ldtk
 - [ ] smooth particle movement:

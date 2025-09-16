@@ -52233,9 +52233,18 @@
     "add_need_to_to_tp_urizen": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/ascii_tilesets/need_to_add_to_tps/urizen"
     ],
+    "ai_ai_caveat": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/AI_CAVEATS.md"
+    ],
+    "ai_ai_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/AI_README.md"
+    ],
     "ai_blackboard_init": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/blackboard_init",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\blackboard_init"
+    ],
+    "ai_caveat": [
+        "AI_CAVEATS.md"
     ],
     "ai_content_example_script_table": [
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\AI_TABLE_CONTENT_EXAMPLE.lua",
@@ -52243,6 +52252,9 @@
     ],
     "ai_content_example_table": [
         "AI_TABLE_CONTENT_EXAMPLE.lua"
+    ],
+    "ai_engine_goal_selector": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/goal_selector_engine.lua"
     ],
     "ai_entity_type": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/entity_types",
@@ -52267,6 +52279,9 @@
     "ai_init": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai/init.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\ai\\init.lua"
+    ],
+    "ai_readme": [
+        "AI_README.md"
     ],
     "ai_script": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/ai",
@@ -62093,6 +62108,9 @@
     ],
     "eng_synonym": [
         "eng_synonyms.json"
+    ],
+    "engine_goal_selector": [
+        "goal_selector_engine.lua"
     ],
     "enter_keyboard": [
         "keyboard_enter.png"

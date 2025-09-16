@@ -1,0 +1,1 @@
+Looks like when a status bit changes during an action, the action isn't continued the next tick - rather, the action is interrupted and the AI re-evaluates what to do next in update_goap.

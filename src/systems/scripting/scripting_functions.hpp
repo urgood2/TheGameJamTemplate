@@ -67,15 +67,15 @@ namespace scripting {
      * ------------------------------------------------------
      */
     extern auto setBlackBoardVector2(entt::entity entity, std::string key, Vector2 valueToSet) -> void;
-    extern auto getBlackBoardVector2(entt::entity entity, std::string key) -> Vector2;
+    extern auto getBlackBoardVector2(entt::entity entity, std::string key) -> std::optional<Vector2>;
     extern auto setBlackboardFloat(entt::entity entity, std::string key, float valueToSet) -> void;
-    extern auto getBlackboardFloat(entt::entity entity, std::string key) -> float;
+    extern auto getBlackboardFloat(entt::entity entity, std::string key) -> std::optional<float>;
     extern auto setBlackboardBool(entt::entity entity, std::string key, bool valueToSet) -> void;
-    extern auto getBlackboardBool(entt::entity entity, std::string key) -> bool;
+    extern auto getBlackboardBool(entt::entity entity, std::string key) -> std::optional<bool>;
     extern auto setBlackboardInt(entt::entity entity, std::string key, int valueToSet) -> void;
-    extern auto getBlackboardInt(entt::entity entity, std::string key) -> int;
+    extern auto getBlackboardInt(entt::entity entity, std::string key) -> std::optional<int>;
     extern auto setBlackboardString(entt::entity entity, std::string key, std::string valueToSet) -> void;
-    extern auto getBlackboardString(entt::entity entity, std::string key) -> std::string;
+    extern auto getBlackboardString(entt::entity entity, std::string key) -> std::optional<std::string>;
 
     /**
      * ------------------------------------------------------

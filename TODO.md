@@ -37,6 +37,9 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ## TODOS fast
+- continue implementing interruption dealing : https://chatgpt.com/share/68c9009b-d084-800a-aad6-d23fb6f28efc -> i like the mask diff, but need to find a way to mak this as hassle free as possible, since if I add more actions, I have to update all the masks. also, need to add an abort hook to each action.
+
+
 - [ ] test particle z level and space
 ```lua
 local e = particle.CreateParticle(

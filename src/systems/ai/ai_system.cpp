@@ -697,7 +697,7 @@ namespace ai_system
 
         // Example 1: Set a fallback goal (e.g., wandering)
         goap_worldstate_clear(&goapStruct.goal);
-        goap_worldstate_set(&goapStruct.ap, &goapStruct.goal, "wandering", true);
+        // goap_worldstate_set(&goapStruct.ap, &goapStruct.goal, "wander", true);
         // SPDLOG_DEBUG("No valid plan found, setting goal to wander.");
         // replan(entity);
 
@@ -1358,7 +1358,7 @@ namespace ai_system
         {
             SPDLOG_INFO("PLAN FOUND: {} steps", goapStruct.planSize);
         }
-        SPDLOG_DEBUG("Current world state:");
+        SPDLOG_DEBUG("Current world state for entity {}:", static_cast<int>(entity));
         goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
         SPDLOG_INFO("{:<23}{}", "", desc);
         

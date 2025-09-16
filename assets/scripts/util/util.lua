@@ -7,6 +7,50 @@ function wrap(v, size, limit)
   return v
 end
 
+-- simulates a hit for an entity with a shader flash effect + size wobble by 'magnitude' for 'duration' seconds
+function hitFX(entity, magnitude, duration) 
+  
+  if not registry:valid(entity) then
+    log_debug("hitFX: entity is not valid, returning")
+    return
+  end
+  
+  -- if magnitude is nil, set to 1
+  if not magnitude then magnitude = 1 end
+  -- if duration is nil, set to 0.1
+  if not duration then duration = 0.1 end
+  
+  -- apply a size wobble by magnitude
+  if registry.has(entity, Transform) then
+    local transformComp = registry:get(entity, Transform)
+    local originalW = transformComp.actualW
+    local originalH = transformComp.actualH
+    
+    -- increase size temporarily by magnitude
+    transformComp.visualW = transformComp.actualW * magnitude
+    transformComp.visualH = transformComp.actualH * magnitude
+  end
+  
+  if registry.has(entity, shader_pipeline.ShaderPipelineComponent) == false then
+    return
+  end
+  
+  shaderPipelineComp = registry:get(entity, shader_pipeline.ShaderPipelineComponent)
+  
+  shaderPipelineComp:addPass("flash")
+  
+  -- remove after duration, or 0.1s if not specified
+  timer.after(
+    duration or 0.1,
+    function()
+      if registry:valid(entity) then
+        local shaderPipelineComp = registry:get(entity, shader_pipeline.ShaderPipelineComponent)
+        shaderPipelineComp:removePass("flash")
+      end
+    end
+  )
+end
+
 -- Recursively prints any table (with cycle detection)
 function print_table(tbl, indent, seen)
   indent = indent or "" -- current indentation

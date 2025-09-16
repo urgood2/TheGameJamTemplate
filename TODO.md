@@ -6,6 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
+- [ ] use hitFX() from [here](assets/scripts/util/util.lua) to simulate hits to entities with transforms and shader pass component.
 - [ ] use [headless springs](src/systems/spring/spring_lua.md) to animate custom rendered objects, scores, etc.
 - [ ] easier color palette management and color ramping and snapping to nearest color in palette. see [this file](assets/scripts/color/palette.lua). Still have to add to colors.json first.
 - [ ] use [headless nodemap](assets/scripts/nodemap/nodemap_headless.lua) to implement tech trees. iterate the nodes to instantiate transform objects for each node, then iterate every frame for updates to the nodes, configure on hover and click from the node data, render only the edges separately using a timer, maybe.

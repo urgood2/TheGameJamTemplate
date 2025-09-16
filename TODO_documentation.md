@@ -1,4 +1,5 @@
 # Documentation
+- [ ] use optional watch field and abort hook to make goap actions interruptible/reactive to specific worldstate changes, refer to [this file](assets/scripts/ai/actions/dig_for_gold.lua)
 - [ ] document using shaders with ui elements (just use pipeline comp)
 - [ ] document exposeGlobalsToLua with lua doc bindings
 - [ ] prob add docs for entity_gamestate_management

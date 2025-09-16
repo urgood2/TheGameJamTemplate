@@ -109,65 +109,48 @@ namespace ai_system
     {
         auto &cmp = globals::registry.get<GOAPComponent>(e);
 
-        // 1) Clear any previously enqueued actions so we start fresh
         while (!cmp.actionQueue.empty())
-        {
             cmp.actionQueue.pop();
-        }
 
-        // 2) For each action name in the GOAP plan…
-        for (int i = 0; i < planSize; i++)
-        {
+        for (int i = 0; i < planSize; i++) {
             std::string actionName = plan[i];
 
-            // 3) Look up the Lua table for this action (must have start/update/finish)
-            // look up the Lua table for this action
             sol::table actionsT = cmp.def["actions"];
             sol::optional<sol::table> maybe = actionsT.get<sol::table>(actionName);
-            if (!maybe)
-            {
+            if (!maybe) {
                 SPDLOG_ERROR("Unknown action '{}' in ai.actions", actionName);
                 continue;
             }
             sol::table tbl = *maybe;
 
-            // 1) pull out the raw Lua function
+            // -- coroutine setup (unchanged) --
             sol::function fn_update = tbl["update"];
-
-            // 1) spin up a fresh Lua thread
             sol::thread thr = sol::thread::create(masterStateLua);
-
-            // 2) bind our raw_update on that thread
             sol::state_view thread_view = thr.state();
             thread_view["__update_fn"] = fn_update;
-
-            // 3) grab it back as a function in that thread
             sol::function thread_fn = thread_view["__update_fn"];
-
-            // 4) make a coroutine out of it
             sol::coroutine co = sol::coroutine{thread_fn};
 
-            // 4) stash everything into your Action
             Action a;
-            a.start = tbl["start"];    // still on master, if you like
-            a.thread = std::move(thr); // keep the thread alive
-            a.update = std::move(co);  // THIS co now lives in its own thread
-            a.finish = tbl["finish"];
+            a.name      = actionName;
+            a.start     = tbl["start"];
+            a.thread    = std::move(thr);
+            a.update    = std::move(co);
+            a.finish    = tbl["finish"];
+            a.abort     = tbl["abort"];                 // optional
+            a.watchMask = build_watch_mask(cmp.ap, tbl);// NEW
             a.is_running = false;
 
             cmp.actionQueue.push(std::move(a));
-
-            // Debug log the action being added
-            SPDLOG_DEBUG("Adding action '{}' to queue for entity {}", actionName, static_cast<int>(e));
+            SPDLOG_DEBUG("Adding action '{}' to queue for entity {}", actionName, (int)e);
         }
 
-        // 6) Immediately invoke the first action’s start() so execution begins next frame
-        if (!cmp.actionQueue.empty())
-        {
+        if (!cmp.actionQueue.empty()) {
             cmp.actionQueue.front().start(e);
             cmp.actionQueue.front().is_running = true;
         }
     }
+
 
     /*
      * @brief Clears the action planner by resetting atom and action counts and data.
@@ -915,20 +898,22 @@ namespace ai_system
     {
         auto &goapComponent = globals::registry.get<GOAPComponent>(entity);
 
-        // clear the action queue
-        while (!goapComponent.actionQueue.empty())
-        {
-            goapComponent.actionQueue.pop();
+        if (!goapComponent.actionQueue.empty()) {
+            Action& cur = goapComponent.actionQueue.front();
+            if (cur.abort.valid()) {
+                sol::protected_function_result ar = cur.abort(entity, "interrupt");
+                if (!ar.valid()) {
+                    SPDLOG_ERROR("abort() error during interrupt: {}", ar.get<sol::error>().what());
+                }
+            }
         }
 
-        // clear the blackboard
-        runBlackboardInitFunction(entity, goapComponent.type); // FIXME: placeholder value, these should come from the entity type (file)
+        while (!goapComponent.actionQueue.empty()) goapComponent.actionQueue.pop();
 
-        // LATER: take whatever interruption it was into account - how?
-
-        // select new goal
+        runBlackboardInitFunction(entity, goapComponent.type);
         select_goal(entity);
     }
+
 
     // TODO: some method ideas: showTutorialMessageBox(), showTutorialHighlightCircle()
 
@@ -1197,20 +1182,48 @@ namespace ai_system
         // if plan is running, but the world state has changed since the plan was made, then replan
         else if ((plan_is_running_valid && goapStruct.current_action < goapStruct.planSize))
         {
-            if (!goap_worldstate_match(&goapStruct.ap, goapStruct.current_state, goapStruct.cached_current_state))
-            {
-                SPDLOG_DEBUG("World state has changed, re-planning required...");
-                // print current state
-                char desc[4096];
-                goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
-                SPDLOG_DEBUG("Current world state: {}", desc);
-                // compare to next state
-                goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
-                SPDLOG_DEBUG("Cached current state: {}", desc);
-                select_goal(entity);
-                // replan(entity);
+            // Compute changed bits since last tick (ignore dontcare bits on both sides)
+            bfield_t relevant = ~(goapStruct.current_state.dontcare | goapStruct.cached_current_state.dontcare);
+            bfield_t changed  = (goapStruct.current_state.values ^ goapStruct.cached_current_state.values) & relevant;
+
+            bool should_replan = false;
+
+            if (!goapStruct.actionQueue.empty()) {
+                Action& cur = goapStruct.actionQueue.front();
+
+                // Only react if this action actually cares about the changed atoms
+                if ((changed & cur.watchMask) != 0) {
+                    should_replan = true;
+
+                    // your existing debug dump of states
+                    SPDLOG_DEBUG("World state has changed, re-planning required...");
+                    char desc[4096];
+                    goap_worldstate_description(&goapStruct.ap, &goapStruct.current_state, desc, sizeof(desc));
+                    SPDLOG_DEBUG("Current world state: {}", desc);
+                    goap_worldstate_description(&goapStruct.ap, &goapStruct.cached_current_state, desc, sizeof(desc));
+                    SPDLOG_DEBUG("Cached current state: {}", desc);
+
+                    // Optional: call the per-action abort hook BEFORE dropping the plan
+                    if (cur.abort.valid()) {
+                        SPDLOG_DEBUG("Invoking abort() for action '{}' on entity {}", cur.name, (int)entity);
+                        sol::protected_function_result ar = cur.abort(entity, "worldstate_changed");
+                        if (!ar.valid()) {
+                            SPDLOG_ERROR("abort() error: {}", ar.get<sol::error>().what());
+                        }
+                    }
+                }
+            } else {
+                // No action running → up to you; commonly, don’t knee-jerk replan,
+                // but if you want full reactivity here, use:
+                // should_replan = (changed != 0);
+            }
+
+            if (should_replan) {
+                SPDLOG_DEBUG("Reactive replan (masked): worldstate changed on watched bits.");
+                select_goal(entity); // queues fresh plan
             }
         }
+
         // the plan is no longer valid (running actions encountered an error)
         else if (plan_is_running_valid == false)
         {

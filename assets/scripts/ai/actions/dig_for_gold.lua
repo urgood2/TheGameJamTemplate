@@ -8,6 +8,13 @@ return {
     cost = 1,
     pre = { candigforgold = true },
     post = { candigforgold = false },
+    
+    
+    -- Optional: if you want to overrule default behavior:
+    -- watch = "*",                      -- react to any world-change
+    -- OR: watch = { "candigforgold" },  -- react only to these atoms
+    watch = { "hungry", "duplicator_available", "underAttack" },
+
 
     start = function(e)
         log_debug("Entity", e, "is digging for gold.")
@@ -141,7 +148,16 @@ return {
 
     finish = function(e)
         log_debug("Done digging: entity", e)
-    end
+    end,
+    
+    -- Called when the planner aborts this action mid-run (e.g. watched worldstate changed)
+    -- reason is a string like "worldstate_changed"
+    abort = function(e, reason)
+      -- stop timers, clear particles, unlock resources, etc.
+      -- Example (pseudo):
+      -- if bb_timer then timer.cancel(bb_timer) end
+      log_debug("digforgold abort on", e, "reason:", tostring(reason))
+    end,
 }
 
 

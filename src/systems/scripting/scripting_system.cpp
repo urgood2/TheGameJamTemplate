@@ -5,6 +5,7 @@
 
 #include "registry_bond.hpp"
 
+#include "systems/spring/spring.hpp"
 #include "systems/ui/ui.hpp"
 #include "systems/particles/particle.hpp"
 #include "components/graphics.hpp"
@@ -367,6 +368,7 @@ namespace scripting
             register_meta_component<ui::UIElementTemplateNode>();
             register_meta_component<particle::ParticleEmitter>();
             register_meta_component<particle::Particle>();
+            register_meta_component<spring::Spring>();
             register_meta_component<shaders::ShaderUniformSet>();
             register_meta_component<shaders::ShaderUniformComponent>();
             register_meta_component<shader_pipeline::ShaderPass>();

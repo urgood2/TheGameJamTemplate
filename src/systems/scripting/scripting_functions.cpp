@@ -29,6 +29,7 @@
 
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
+#include "systems/spring/spring_lua_bindings.hpp"
 #include "util/utilities.hpp"
 
 #include "meta_helper.hpp"
@@ -224,6 +225,11 @@ namespace scripting {
         ui::exposeToLua(stateToInit);
 
         ui_defs::exposeToLua(stateToInit);
+        
+        //---------------------------------------------------------
+        // spring
+        //---------------------------------------------------------
+        bind::bind_spring(stateToInit);
         
 
         // ------------------------------------------------------

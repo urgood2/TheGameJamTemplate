@@ -6,6 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
+- [ ] use [headless springs](src/systems/spring/spring_lua.md) to animate custom rendered objects, scores, etc.
 - [ ] easier color palette management and color ramping and snapping to nearest color in palette. see [this file](assets/scripts/color/palette.lua). Still have to add to colors.json first.
 - [ ] use [headless nodemap](assets/scripts/nodemap/nodemap_headless.lua) to implement tech trees. iterate the nodes to instantiate transform objects for each node, then iterate every frame for updates to the nodes, configure on hover and click from the node data, render only the edges separately using a timer, maybe.
 - [ ] use [new monobehavior file](assets/scripts/monobehavior/behavior_script_v2.lua) with game entities, also use this for transitions, etc, temporary rendered things, etc. also direct access to self table is possible now with script component. You can use table initializer to chain method calls:
@@ -28,6 +29,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ### Need to implement
+- [ ] how useful would it be to make HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color = self.color } automatically create entt handle, attach script component, with this one line? how would it affect chainng? HOw would I fetch the handle later if I needed to?
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
 
 

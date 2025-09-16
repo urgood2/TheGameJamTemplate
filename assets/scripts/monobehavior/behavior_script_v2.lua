@@ -105,5 +105,101 @@ function node:attach_ecs(opts)
   return self
 end
 
+-- Queue deletion when a condition is met.
+-- Usage:
+--   obj:destroy_when(function(self, eid) return ... end, {
+--     interval = 0,      -- seconds between checks (0 => every frame). default 0
+--     grace    = 0,      -- delay before actual destroy once condition is true. default 0
+--     tag      = nil,    -- optional timer tag
+--     group    = nil,    -- optional timer group
+--     timeout  = nil,    -- optional seconds; cancels watcher if exceeded (no destroy)
+--   })
+--
+-- Notes:
+--  • Chainable: returns self
+--  • Safe if called before attach: it defers until attach_ecs runs
+--  • Cancels its timer automatically if the entity is destroyed some other way
+function node:destroy_when(condition, opts)
+  assert(type(condition) == "function", "destroy_when: condition must be a function(self, eid)->bool")
+  opts = opts or {}
+
+  local interval = opts.interval or 0           -- 0 = per-frame
+  local grace    = opts.grace or 0
+  local tag      = opts.tag
+  local group    = opts.group
+  local timeout  = opts.timeout  -- nil or number
+
+  local watcher_handle = nil
+  local timeout_handle = nil
+
+  local function do_destroy()
+    if self._eid and (registry.valid and registry:valid(self._eid) or true) then
+      -- If your binding lacks registry:valid, the 'or true' makes this unconditional.
+      -- Remove that 'or true' if you have a working :valid.
+      registry:destroy(self._eid)
+      self._eid = nil
+    end
+  end
+
+  local function start_watcher()
+    if not self._eid then return end
+
+    -- Optional timeout: cancel the watcher without destroying
+    if timeout and timeout > 0 then
+      timeout_handle = timer.after(timeout, function()
+        if watcher_handle then timer.cancel(watcher_handle) end
+      end, tag, group)
+    end
+
+    -- Poll condition
+    watcher_handle = timer.every(interval, function()
+      -- If entity already gone, stop polling
+      if not self._eid or (registry.valid and not registry:valid(self._eid)) then
+        if watcher_handle then timer.cancel(watcher_handle) watcher_handle = nil end
+        if timeout_handle then timer.cancel(timeout_handle) timeout_handle = nil end
+        return
+      end
+
+      local ok = condition(self, self._eid) == true
+      if ok then
+        -- Stop polling
+        if watcher_handle then timer.cancel(watcher_handle) watcher_handle = nil end
+        if timeout_handle then timer.cancel(timeout_handle) timeout_handle = nil end
+
+        if grace > 0 then
+          timer.after(grace, function()
+            -- double-check still valid before final destroy
+            if self._eid and (not registry.valid or registry:valid(self._eid)) then
+              do_destroy()
+            end
+          end, tag, group)
+        else
+          do_destroy()
+        end
+      end
+    end, 0, true, nil, tag, group)  -- times=0 (infinite), immediate=true
+  end
+
+  -- Ensure the watcher timer is canceled if someone destroys us elsewhere
+  local base_destroy = self.destroy
+  self.destroy = function(s, ...)
+    if watcher_handle then timer.cancel(watcher_handle) watcher_handle = nil end
+    if timeout_handle then timer.cancel(timeout_handle) timeout_handle = nil end
+    if base_destroy then return base_destroy(s, ...) end
+  end
+
+  -- Start now if attached, else defer until attach
+  if self._eid then
+    start_watcher()
+  else
+    self:run_custom_func(function()
+      start_watcher()
+    end)
+  end
+
+  return self
+end
+
+
 
 return node

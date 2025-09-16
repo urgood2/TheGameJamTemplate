@@ -14,6 +14,9 @@
 HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color = self.color }
     :scale_down(0.3)           -- instant shrink
     :change_color(0.5, self.color)  -- tween to self.color over 0.5s
+    :attach_ecs()
+    :run_custom_function(function(self, eid) self.dead = false end)  -- mark dead when done
+    :destroy_when(function(self, eid) return self.dead end) -- destroy when dead
 ```
 - [ ] use this https://github.com/nhartland/forma for random generation in tiled settings, refer to chat gpt for practical use advice
 - [ ] 1 bit tilemap - use ascii_sprites.tps for a tileset for a gamejam game, using ldtk
@@ -29,7 +32,6 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ### Need to implement
-- [ ] how useful would it be to make HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color = self.color } automatically create entt handle, attach script component, with this one line? how would it affect chainng? HOw would I fetch the handle later if I needed to?
 - [ ] make sample map with ldtk that has colliders i can base chipmunk on. https://chatgpt.com/share/68bade2c-0d0c-800a-8a5c-25cb6196d612
 
 

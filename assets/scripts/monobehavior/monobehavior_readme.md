@@ -328,6 +328,28 @@ Ensure your scheduler ticks these tasks each frame (either via C++ or a Lua upda
 
 ---
 
+## Conditional Destruction (`:destroy_when`)
+
+You can queue automatic deletion of an entity by chaining `:destroy_when`.  
+It sets up a timer that checks a **predicate function** until it returns true, then destroys the entity via `registry:destroy`.
+
+### Usage
+
+```lua
+obj:destroy_when(function(self, eid)
+  -- Return true when the entity should be destroyed
+  return self.hp <= 0
+end, {
+  interval = 0,   -- seconds between checks (0 = every frame)
+  grace    = 0,   -- delay before destroy after condition met
+  timeout  = nil, -- optional max seconds before giving up
+  tag      = nil, -- optional timer tag
+  group    = nil, -- optional timer group
+})
+```
+
+---
+
 ## Troubleshooting Checklist
 
 * **`self.id()` is nil or errors:** confirm the instance was attached via `registry:add_script(eid, inst)` or `inst:attach_ecs{}` **before** the first frame update.

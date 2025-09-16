@@ -4,11 +4,11 @@ require("ai.init") -- Read in ai scripts and populate the ai table
 require("util.util")
 require("ui.ui_defs")
 require("core.entity_factory")
+require("monobehavior.behavior_script_v2") -- the new monobehavior script
 local palette = require("color.palette")
 local combat_core = require("combat.combat_system")
 
 local shader_prepass = require("shaders.prepass_example")
-require("core.entity_factory")
 local Chain = require("external.knife.chain")
 lume = require("external.lume")
 local camera, methods = require("external.hump.camera")

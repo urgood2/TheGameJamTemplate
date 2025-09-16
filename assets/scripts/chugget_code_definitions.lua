@@ -4244,6 +4244,99 @@ ui.definitions = {
 
 
 ---
+--- Spring module: component, factories, and update helpers.
+---
+---@class spring
+spring = {
+}
+
+---
+--- Create entity, attach Spring, return both.
+---
+(entity, Spring) make(Registry, number value, number k, number d, table? opts)
+function spring:make(...) end
+
+---
+--- Attach or replace Spring on an existing entity.
+---
+Spring attach(Registry, entity, number value, number k, number d, table? opts)
+function spring:attach(...) end
+
+---
+--- Update all Spring components in the registry.
+---
+void(Registry, number dt)
+function spring:update_all(...) end
+
+---
+--- Update a single Spring.
+---
+void(Spring, number dt)
+function spring:update(...) end
+
+---
+--- Set target without touching k/d.
+---
+void(Spring, number target)
+function spring:set_target(...) end
+
+
+---
+--- Critically damped transform-friendly spring component. Use fields for direct control; call methods for pulls/animations.
+---
+---@class Spring
+Spring = {
+    value = number,  -- Current value.
+    targetValue = number,  -- Current target value.
+    velocity = number,  -- Current velocity.
+    stiffness = number,  -- Hooke coefficient (k).
+    damping = number,  -- Damping factor (c).
+    enabled = boolean,  -- If false, update() is skipped.
+    usingForTransforms = boolean,  -- Use transform-safe update path.
+    preventOvershoot = boolean,  -- Clamp crossing to avoid overshoot.
+    maxVelocity = number|nil,  -- Optional velocity clamp.
+    smoothingFactor = number|nil,  -- 0..1, scales integration step.
+    timeToTarget = number|nil  -- If set, animate_to_time controls k/d over time.
+}
+
+---
+--- Impulse-like tug on current value.
+---
+void(number force, number? k, number? d)
+function Spring:pull(...) end
+
+---
+--- Move anchor with spring params.
+---
+void(number target, number k, number d)
+function Spring:animate_to(...) end
+
+---
+--- Time-based targeting with easing.
+---
+void(number target, number T, function? easing, number? k0, number? d0)
+function Spring:animate_to_time(...) end
+
+---
+--- Enable updates.
+---
+void()
+function Spring:enable(...) end
+
+---
+--- Disable updates.
+---
+void()
+function Spring:disable(...) end
+
+---
+--- Snap value to target; zero velocity.
+---
+void()
+function Spring:snap_to_target(...) end
+
+
+---
 --- 
 ---
 ---@class InputState

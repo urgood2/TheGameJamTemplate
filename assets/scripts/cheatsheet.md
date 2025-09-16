@@ -2,6 +2,10 @@
 
 *An extensive reference to your current Lua-based game scripting, AI setup, and coroutine/task utilities.*
 
+Notes: 
+- all directory paths in scripts are added to Lua's `package.path` in C++ automatically, as well as any subdirectories and .lua files within them. 
+- The lua context comes preloaded with `sol::state` bindings for your ECS registry, `Transform`, `Sprite`, `ScriptComponent`, `Timer`, `Scheduler`, `InputState`, and other core types, which can be found in [this file](chugget_code_definitions.lua).
+
 ---
 
 ## 1. Required Modules & Globals

@@ -40,4 +40,70 @@ function node:__call(args)
   return obj
 end
 
+-- ===== ECS attach helpers (ADD-ONLY) =====
+-- Requires a global `registry` (entt::registry) with:
+--   registry:create(), registry:destroy(eid), registry:add_script(eid, lua_table)
+--   (and your meta-based :emplace/:get if you use them elsewhere)
+
+-- Fetch stored entity id (if any)
+function node:handle()
+  return self._eid
+end
+
+-- Queue or immediately run a custom function.
+-- Signature: fn(eid, self)
+function node:run_custom_func(fn)
+  if type(fn) ~= "function" then return self end
+  if self._eid then
+    -- already attached → run immediately
+    fn(self._eid, self)
+  else
+    -- not attached yet → queue
+    if not self._queued_funcs then self._queued_funcs = {} end
+    table.insert(self._queued_funcs, fn)
+  end
+  return self
+end
+
+-- Attach policy:
+-- opts = {
+--   create_new      = true,     -- default true
+--   existing_entity = <eid>,    -- if set, attach to this entity (no creation)
+-- }
+function node:attach_ecs(opts)
+  opts = opts or {}
+  local create_new = (opts.create_new ~= false) and (opts.existing_entity == nil)
+  assert(type(registry) == "userdata" or type(registry) == "table",
+         "global 'registry' must be bound to an entt::registry instance")
+
+  -- Pure Lua object case: explicitly disable both
+  if not create_new and not opts.existing_entity then
+    return self
+  end
+
+  -- Create or use existing
+  local eid = opts.existing_entity
+  if not eid then
+    eid = registry:create()
+  end
+
+  -- Always attach ScriptComponent
+  registry:add_script(eid, self)
+
+  -- Stash handle
+  self._eid = eid
+
+  -- Flush queued run_custom_func callbacks (if any)
+  if self._queued_funcs then
+    for i = 1, #self._queued_funcs do
+      local fn = self._queued_funcs[i]
+      if type(fn) == "function" then fn(eid, self) end
+    end
+    self._queued_funcs = nil
+  end
+
+  return self
+end
+
+
 return node

@@ -6,7 +6,14 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
-- [ ] use [new monobehavior file](assets/scripts/monobehavior/behavior_script_v2.lua) with game entities, also use this for transitions, etc, temporary rendered things, etc. also direct access to self table is possible now with script component.
+- [ ] easier color palette management and color ramping and snapping to nearest color in palette. see [this file](assets/scripts/color/palette.lua). Still have to add to colors.json first.
+- [ ] use [headless nodemap](assets/scripts/nodemap/nodemap_headless.lua) to implement tech trees. iterate the nodes to instantiate transform objects for each node, then iterate every frame for updates to the nodes, configure on hover and click from the node data, render only the edges separately using a timer, maybe.
+- [ ] use [new monobehavior file](assets/scripts/monobehavior/behavior_script_v2.lua) with game entities, also use this for transitions, etc, temporary rendered things, etc. also direct access to self table is possible now with script component. You can use table initializer to chain method calls:
+```lua
+HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color = self.color }
+    :scale_down(0.3)           -- instant shrink
+    :change_color(0.5, self.color)  -- tween to self.color over 0.5s
+```
 - [ ] use this https://github.com/nhartland/forma for random generation in tiled settings, refer to chat gpt for practical use advice
 - [ ] 1 bit tilemap - use ascii_sprites.tps for a tileset for a gamejam game, using ldtk
 - [ ] smooth particle movement:
@@ -431,6 +438,7 @@ void DeformableDemo::rightMouse(const cpVect& pos) {
 
 
 ## Things to fix/implement later
+- [ ] right now, cameras are bound to specific layers, and you can't freely attach speicific cameras to specific rendering calls. is this a problem?
 - [ ] make get/set blackboard methods return lua nil if invalid instead of throwing error
 - [ ] understand & implement working copies of files in the todo_from_snkrx folder
 

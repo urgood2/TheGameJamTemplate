@@ -30,7 +30,7 @@ function node:destroy()
 end
 function node:on_collision(other) end
 
--- Merge args into self before init so init can read them
+-- Merge args into self before init so init can read them, also return self from __call for chaining
 function node:__call(args)
   local obj = setmetatable({}, self)
   if type(args) == "table" then

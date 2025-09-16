@@ -52479,6 +52479,12 @@
         "D:/Documents/GitHub/TheGameJamTemplate/assets/shaders\\web\\card_tilt_ambient_dynamic.vs",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/shaders/web/card_tilt_ambient_dynamic.fs"
     ],
+    "and_asset_code_snippet_snkrx_technique": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/SNKRX_code_snippets_and_techniques.md"
+    ],
+    "and_code_snippet_snkrx_technique": [
+        "SNKRX_code_snippets_and_techniques.md"
+    ],
     "and_environment_file_flora_globbed_packing_pre_urizen": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/graphics/pre-packing-files_globbed/urizen-environments-and-flora"
     ],
@@ -53888,8 +53894,14 @@
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\monobehavior\\behavior_script.lua"
     ],
+    "behavior_monobehavior_script_v2": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/behavior_script_v2.lua"
+    ],
     "behavior_script": [
         "behavior_script.lua"
+    ],
+    "behavior_script_v2": [
+        "behavior_script_v2.lua"
     ],
     "beige": [
         "BEIGE"
@@ -59255,11 +59267,20 @@
     "color": [
         "colors.json"
     ],
+    "color_palette": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/color/palette.lua"
+    ],
     "color_raw": [
         "/Users/joshuashin/Projects/ChristmasJameGam2024/assets/raws/colors.json",
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/raws\\colors.json",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/raws/colors.json",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/raws\\colors.json"
+    ],
+    "color_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/color/README.md"
+    ],
+    "color_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/color"
     ],
     "combat_combat_system": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/combat/combat_system.lua"
@@ -64684,6 +64705,9 @@
     "external_lume": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/lume.lua",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/scripts\\external\\lume.lua"
+    ],
+    "external_object": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external/object.md"
     ],
     "external_script": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/external",
@@ -70722,6 +70746,12 @@
     "harp_magic_morphing_scale_spell_stereo_subtle_synth": [
         "MAGIC_SPELL_Morphing_Synth_Harp_Scales_Subtle_stereo.wav"
     ],
+    "headles_nodemap": [
+        "nodemap_headless.lua"
+    ],
+    "headles_nodemap_nodemap": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/nodemap/nodemap_headless.lua"
+    ],
     "heal_other": [
         "heal_other.lua"
     ],
@@ -72438,6 +72468,12 @@
         "D:/Documents/GitHub/ChristmasJameGam/ChristmasJameGam2024/assets/sounds\\MomentumGain.wav",
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/MomentumGain.wav",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\MomentumGain.wav"
+    ],
+    "monobehavior_monobehavior_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior/monobehavior_readme.md"
+    ],
+    "monobehavior_readme": [
+        "monobehavior_readme.md"
     ],
     "monobehavior_script": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/monobehavior",
@@ -75177,6 +75213,12 @@
     "nineteen_ninety_six": [
         "Nineteen Ninety Six.otf"
     ],
+    "nodemap_readme": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/nodemap/README.md"
+    ],
+    "nodemap_script": [
+        "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/scripts/nodemap"
+    ],
     "noise": [
         "noise.lua"
     ],
@@ -75201,6 +75243,9 @@
     "nyctophobia_sound": [
         "/Users/joshuashin/Projects/TheGameJamTemplate/TheGameJamTemplate/assets/sounds/NyctoPhobia.ogg",
         "D:/Documents/GitHub/TheGameJamTemplate/assets/sounds\\NyctoPhobia.ogg"
+    ],
+    "object": [
+        "object.md"
     ],
     "orange": [
         "ORANGE"
@@ -75261,6 +75306,9 @@
     ],
     "pale_turquoise": [
         "PALE TURQUOISE"
+    ],
+    "palette": [
+        "palette.lua"
     ],
     "palette_pure_resurrect_white": [
         "RESURRECT_PALETTE_PURE_WHITE"

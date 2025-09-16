@@ -4,6 +4,7 @@ require("ai.init") -- Read in ai scripts and populate the ai table
 require("util.util")
 require("ui.ui_defs")
 require("core.entity_factory")
+local palette = require("color.palette")
 local combat_core = require("combat.combat_system")
 
 local shader_prepass = require("shaders.prepass_example")
@@ -776,6 +777,11 @@ end
   
 -- Main function to initialize the game. Called at the start of the game.
 function main.init()
+    -- register color palette "RESURRECT-64"
+    palette.register{
+        names   = {"Blackberry", "Dark Lavender", "Muted Plum", "Dusty Rose", "Warm Taupe", "Shadow Mauve", "Slate Purple", "Soft Steel", "Pale Mint", "White", "Dark Crimson", "Fiery Red", "Tomato Red", "Apricot", "Burgundy", "Coral Red", "Tangerine", "Goldenrod", "Sunflower", "Mulberry", "Chestnut", "Rust", "Amber", "Marigold", "Espresso", "Olive Drab", "Moss Green", "Chartreuse", "Lemon Chiffon", "Deep Teal", "Jade Green", "Seafoam Green", "Mint Green", "Lime", "Charcoal", "Forest Slate", "Verdigris", "Sage", "Olive Mist", "Teal Blue", "Cyan Green", "Turquoise", "Aqua", "Pale Aqua", "Midnight Blue", "Indigo", "Royal Blue", "Sky Blue", "Baby Blue", "Plum", "Violet", "Purple Orchid", "Lavender", "Pink Blush", "Wine", "Rosewood", "Blush Pink", "Coral Pink", "Deep Magenta", "Raspberry", "Fuchsia", "Pastel Pink", "Peach", "Apricot Cream" }
+    }
+    
     
     -- enable debug mode if the environment variable is set
     if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then

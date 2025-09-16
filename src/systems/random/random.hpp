@@ -186,15 +186,15 @@ namespace random_utils {
         rec.record_property("random_utils.Vector3", { "z", "0", "Z coordinate" });
 
         // 4) Color
-        ru.new_usertype<Color>("Color",
-            sol::constructors<Color(), Color(char, char, char)>(),
-            "r", &Color::r,
-            "g", &Color::g,
-            "b", &Color::b
-        );
-        rec.record_property("random_utils.Color", { "r", "0", "Red channel" });
-        rec.record_property("random_utils.Color", { "g", "0", "Green channel" });
-        rec.record_property("random_utils.Color", { "b", "0", "Blue channel" });
+        // ru.new_usertype<Color>("Color",
+        //     sol::constructors<Color(), Color(char, char, char)>(),
+        //     "r", &Color::r,
+        //     "g", &Color::g,
+        //     "b", &Color::b
+        // );
+        // rec.record_property("random_utils.Color", { "r", "0", "Red channel" });
+        // rec.record_property("random_utils.Color", { "g", "0", "Green channel" });
+        // rec.record_property("random_utils.Color", { "b", "0", "Blue channel" });
 
 
         // 5) Core functions

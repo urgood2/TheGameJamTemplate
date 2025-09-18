@@ -37,7 +37,20 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ## TODOS fast
+- [ ] need to figure out input bindings in more detail. the specified triggers whenI bind an action - what do they have to do with the polling functions like action_pressed, action_released, action_down, action_value?
+- [ ] test input bindings
+```lua
+-- gameplay bindings
+input.bind("Jump", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
+input.bind("Jump", { device="gamepad_button", button=GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN, trigger="Pressed", context="gameplay" })
+input.bind("AimX", { device="gamepad_axis", axis=GamepadAxis.GAMEPAD_AXIS_RIGHT_X, trigger="AxisPos", threshold=0.2, context="gameplay" })
+input.bind("AimX", { device="gamepad_axis", axis=GamepadAxis.GAMEPAD_AXIS_RIGHT_X, trigger="AxisNeg", threshold=0.2, context="gameplay" })
 
+-- in update:
+if input.action_pressed("Jump") then do_jump() end
+local ax = input.action_value("AimX")
+
+```
 - [ ] test particle z level and space
 ```lua
 local e = particle.CreateParticle(
@@ -69,10 +82,6 @@ particle.CreateParticle(Vec2(0,0), Vec2(6,6), { z = 999, space = "screen" })
 - [ ] test task system in lua
 - [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
 -  streamlined way to access quadtree features, like collision checking specific areas -> use bind_world_quadtree and document.
-
-
-
-
 - [ ] optimizing text ui generation from coded strings -> all done, just need to test:
 ```cpp
 TextUIHandle handle;
@@ -96,12 +105,10 @@ if (auto e = getTextNode(handle, "good"); e != entt::null) {
 }
 ```
 also:
-
 ```cpp
 auto parsed = static_ui_text_system::parseText(rawText);
 debugDumpIds(parsed);
 ```
-
 - [ ] doucment this and add lua binding
 ```cpp
 std::function<void(entt::entity)> onBoxResize = nullptr; // callback when the box is resized
@@ -121,19 +128,6 @@ SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PR
 ```
 - [ ] make lua bindings for physics steering functions, and test them.
 - [ ] lua access to input component, acccessing text & setting callback
-- [ ] test input bindings
-```lua
--- gameplay bindings
-input.bind("Jump", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
-input.bind("Jump", { device="gamepad_button", button=GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN, trigger="Pressed", context="gameplay" })
-input.bind("AimX", { device="gamepad_axis", axis=GamepadAxis.GAMEPAD_AXIS_RIGHT_X, trigger="AxisPos", threshold=0.2, context="gameplay" })
-input.bind("AimX", { device="gamepad_axis", axis=GamepadAxis.GAMEPAD_AXIS_RIGHT_X, trigger="AxisNeg", threshold=0.2, context="gameplay" })
-
--- in update:
-if input.action_pressed("Jump") then do_jump() end
-local ax = input.action_value("AimX")
-
-```
 - [ ] expose current camera manager & camera custom class to lua
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
 - [] way to make sure certain texts & images should be worldspace, or not
@@ -208,7 +202,6 @@ local ReactiveBalm = {
 ```
 - document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.
 - [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
-
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
 - [ ] hit circle - make my own structure for attaching to entities.
@@ -221,10 +214,6 @@ function HitCircle:change_color(delay_multiplier, target_color)
   return self
 end
 ```
-
-
-## physics
-
 - [ ] hook physics, use this order
 ```cpp
 // frame start
@@ -242,8 +231,6 @@ AdvanceSpringsAndDynamicMotion(registry);   // your existing spring updates
 RenderAll(registry, PM);
 
 ```
-
-
 - [ ] also test:
 ```cpp
 // Construct worlds
@@ -291,7 +278,6 @@ PM.enableStep("overworld", false);
 PM.enableStep("dungeon",   true);
 PM.enableDebugDraw("dungeon", true);
 ```
-
 - [ ] lua bindings for navmesh in [this file](src/third_party/navmesh/source/navmesh_lua_binding.hpp), document and test.
 ```cpp
 int main() {

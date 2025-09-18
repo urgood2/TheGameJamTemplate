@@ -725,10 +725,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
     // specific to a game project
     auto init() -> void
     {
-            // always make container entity by default
-        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
-        auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
-        gameMapNode.debug.debugText = "Map Container";
+        
         
         // set camera to fill the screen
         // globals::camera = {0};

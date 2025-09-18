@@ -782,6 +782,23 @@ function main.init()
         names   = {"Blackberry", "Dark Lavender", "Muted Plum", "Dusty Rose", "Warm Taupe", "Shadow Mauve", "Slate Purple", "Soft Steel", "Pale Mint", "White", "Dark Crimson", "Fiery Red", "Tomato Red", "Apricot", "Burgundy", "Coral Red", "Tangerine", "Goldenrod", "Sunflower", "Mulberry", "Chestnut", "Rust", "Amber", "Marigold", "Espresso", "Olive Drab", "Moss Green", "Chartreuse", "Lemon Chiffon", "Deep Teal", "Jade Green", "Seafoam Green", "Mint Green", "Lime", "Charcoal", "Forest Slate", "Verdigris", "Sage", "Olive Mist", "Teal Blue", "Cyan Green", "Turquoise", "Aqua", "Pale Aqua", "Midnight Blue", "Indigo", "Royal Blue", "Sky Blue", "Baby Blue", "Plum", "Violet", "Purple Orchid", "Lavender", "Pink Blush", "Wine", "Rosewood", "Blush Pink", "Coral Pink", "Deep Magenta", "Raspberry", "Fuchsia", "Pastel Pink", "Peach", "Apricot Cream" }
     }
     
+    -- input binding test
+    input.bind("do_something", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
+    input.bind("do_something_else", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Released", context="gameplay" })
+    -- input.set_context("gameplay") -- set the input context to gameplay
+    input.bind("mouse_click", { device="mouse", key=MouseButton.BUTTON_LEFT, trigger="Pressed", context="ui" })
+    
+    timer.every(0.1, function()
+        if input.action_down("do_something") then
+            log_debug("Space key down!") -- Debug message to indicate the space key was pressed
+        elseif input.action_released("do_something_else") then
+            log_debug("Space key released!") -- Debug message to indicate the space key was released
+        elseif input.action_down("mouse_click") then
+            log_debug("Mouse left button clicked!") -- Debug message to indicate the mouse left button was clicked
+        end
+        
+    end)
+    
     
     -- enable debug mode if the environment variable is set
     if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then

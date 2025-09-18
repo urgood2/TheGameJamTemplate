@@ -1,3 +1,4 @@
+#include "systems/input/input_functions.hpp"
 #define RAYGUI_IMPLEMENTATION // needed to use raygui
 
 #define _WIN32_WINNT 0x0600
@@ -148,7 +149,8 @@ void MainLoopFixedUpdateAbstraction(float dt)
         break;
     }
     
-
+    // finalize input state at end of frame
+    input::finalizeUpdateAtEndOfFrame(globals::inputState, dt);
 }
 
 
@@ -323,10 +325,10 @@ int main(void)
     main_loop::initMainLoopData(std::nullopt, 60); // match monitor refresh rate for fps, 60 ups
     
 
+    input::Init(globals::inputState);
 
     game::init();
     
-    input::Init(globals::inputState);
     
     //gamepad connected? just connect gamepad 0
     if (IsGamepadAvailable(0)) {

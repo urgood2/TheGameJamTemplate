@@ -114,6 +114,7 @@ namespace input
     bool CaptureFocusedInput(entt::registry &registry, InputState &state, const std::string inputType, GamepadButton button, float dt);
     void NavigateFocus(entt::registry &registry, InputState &state, std::optional<std::string> dir = std::nullopt);
 
+    void finalizeUpdateAtEndOfFrame(InputState &inputState, float dt);
     auto RebuildActionIndex(InputState &s) -> void;
     // per-frame cleanup; call at end of Update
     auto DecayActions(InputState &s) -> void;

@@ -93,6 +93,11 @@ namespace input
         // create locks
         inputState.activeInputLocks["frame"] = false;
         inputState.activeInputLocks["frame_lock_reset_next_frame"] = false;
+        
+        // always make container entity by default
+        globals::gameWorldContainerEntity = transform::CreateGameWorldContainerEntity(&globals::registry, 0, 0, GetScreenWidth(), GetScreenHeight());
+        auto &gameMapNode = globals::registry.get<transform::GameObject>(globals::gameWorldContainerEntity);
+        gameMapNode.debug.debugText = "Map Container";
 
         // create cursor
         globals::cursor = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 0, 0, 10, 10);
@@ -107,7 +112,7 @@ namespace input
 
         // keyboard input polling
         // ---------------- Keyboard Input ----------------
-        for (int key = KEY_APOSTROPHE; key <= KEY_KP_EQUAL; key++)
+        for (int key = 0; key <= KEY_KP_EQUAL; key++)
         {
             if (IsKeyDown(key))
             {
@@ -319,6 +324,10 @@ namespace input
             HandleTextInput(textInputNode);
         }
         
+    }
+    
+    // call at the end of frame for cleanup & action ticking
+    void finalizeUpdateAtEndOfFrame(InputState &inputState, float dt) {
         // action bindings
         input::TickActionHolds(inputState, dt);
         input::DecayActions(inputState);
@@ -1723,7 +1732,6 @@ namespace input
     // Key Press: Marks the key as pressed and held
     void ProcessKeyboardKeyDown(InputState &state, KeyboardKey key)
     {
-        SPDLOG_DEBUG("Key pressed: {}", magic_enum::enum_name(key));
         state.keysPressedThisFrame[key] = true;
         state.keysHeldThisFrame[key] = true;
         
@@ -2654,6 +2662,7 @@ namespace input
             auto &st = kv.second;
             st.pressed = false;
             st.released = false;
+            st.down = false;
             st.value = 0.f; // axis value is recomputed each frame
         }
     }
@@ -2683,6 +2692,10 @@ namespace input
             // trigger matching (if-chains per your style)
             if (bind.trigger == ActionTrigger::Pressed) {
                 if (down) { st.pressed = true; st.down = true; }
+                else {
+                    // reset held time if button is released
+                    st.held = 0.f;
+                }
             }
             else if (bind.trigger == ActionTrigger::Released) {
                 if (!down) { st.released = true; st.down = false; st.held = 0.f; }

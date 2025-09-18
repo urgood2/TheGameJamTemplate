@@ -6,8 +6,6 @@
 #include <vector>
 #include <memory>
 
-#define M_PI 3.14159265358979323846
-
 // Forward decl to avoid heavy includes
 namespace physics {
     struct ColliderComponent;          // has std::shared_ptr<cpBody> body;

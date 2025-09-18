@@ -4,10 +4,7 @@ project(raylib-cpp-cmake-template CXX C)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
-endif()
+set(CMAKE_BUILD_TYPE Debug)
 
 # enable tracy (disable for web)
 option( TRACY_ENABLE "" OFF)
@@ -28,7 +25,6 @@ endif()
 #set gzip for window
 if (WIN32)
     set(GZIP_EXE "E:/gzip-1.3.12-1-bin/bin/gzip.exe")  # Adjust to where gzip.exe lives
-    
 endif()
 
 #stack size adjustment for web
@@ -38,7 +34,6 @@ endif()
 
 if (WIN32) 
     add_compile_options("-Wa,-mbig-obj")
-
 endif()
 
 
@@ -160,17 +155,12 @@ add_git_dependency(
 )
 
 # Add {Catch2} library
-option(BUILD_TESTING "Enable CTest/Catch2 scaffolding" OFF)
-option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
-if(BUILD_TESTING)
-  set(BUILD_TESTING ON CACHE BOOL "" FORCE)
-  add_git_dependency(
+set(BUILD_TESTING ON CACHE BOOL "" FORCE)
+add_git_dependency(
     Catch2
     https://github.com/catchorg/Catch2.git
     v3.6.0
-  )
-endif()
-
+)
 
 #add ldtk loader
 # add_git_dependency(
@@ -244,30 +234,20 @@ add_git_dependency(
 )
 
 if (WIN32 OR EMSCRIPTEN)
-
-    # use lld linker on windows to avoid long link times
-    add_link_options(-fuse-ld=lld)
-
-    # Compile: fast I/O + small debug info
-    add_compile_options(
-    $<$<CONFIG:Debug>:-O0>
-    $<$<CONFIG:Debug>:-g1>
-    -pipe
-    -fdiagnostics-color=always
-    -ffunction-sections -fdata-sections
-    )
-
-    # Link: drop unused sections + better ICF
-    add_link_options(-Wl,--gc-sections -Wl,--icf=all)
-
-    # Split DWARF (even faster links in Debug)
-    add_compile_options($<$<CONFIG:Debug>:-gsplit-dwarf>)
+set(Boost_INCLUDE_DIR "D:/boost_1_81_0")
+set(Boost_LIBRARY_DIR "D:/boost_1_81_0/lib")
+find_package(Boost)
 # find_package(Boost REQUIRED regex) # header only libraries must not be added here
 elseif (APPLE)
     # Adjust the paths if you have installed Boost in a different location
     set(Boost_INCLUDE_DIR "/opt/homebrew/Cellar/boost/1.83.0/include")
     set(Boost_LIBRARY_DIR "/opt/homebrew/Cellar/boost/1.83.0/lib")
     find_package(Boost)
+else ()
+    # Adjust the paths if you have installed Boost in a different location
+    set(Boost_DEBUG 1)
+    find_package(Boost REQUIRED)
+    message(STATUS "BOOST DIR AND LIBS FOUND?:${Boost_FOUND}")
 endif()
 
 
@@ -280,7 +260,7 @@ add_subdirectory("src/third_party/chipmunk")
 if(NOT EMSCRIPTEN)
     add_subdirectory("src/third_party/tracy-master")
 endif()
-# add_subdirectory("src/third_party/objectpool-master")
+add_subdirectory("src/third_party/objectpool-master")
 # add_subdirectory("src/third_party/ldtk_loader")
 
 ##########################################################################################
@@ -306,12 +286,12 @@ set(PROJECT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/src/")
 
 # Common target settings
 add_library(CommonSettings INTERFACE)
-target_include_directories(CommonSettings SYSTEM INTERFACE
+target_include_directories(CommonSettings INTERFACE
     ${PROJECT_INCLUDE}
     ${PROJECT_SOURCE_DIR}
     "${PROJECT_INCLUDE}/fudge_pathfinding"
     "${PROJECT_INCLUDE}/fudge_pathfinding/util"
-    "${PROJECT_INCLUDE}/GPGOAP"
+    "${PROJECT_INCLUDE}/GPGOAP",
     "${random_SOURCE_DIR}/include"
     "${entt_SOURCE_DIR}/single_include"
     "${magic_enum_SOURCE_DIR}/include"
@@ -359,10 +339,8 @@ endif()
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_INCLUDE})
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
-
-target_precompile_headers(${PROJECT_NAME} PRIVATE "${PROJECT_INCLUDE}/precompiled_headers.hpp")
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR})
 # target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_INCLUDE}/spine") #removed for now - not sure if needed
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/fudge_pathfinding")
 # target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_INCLUDE}/fudge_pathfinding/util")
@@ -543,33 +521,17 @@ add_custom_target(clean_all
 # now link the included prebuilt libraries
 # target_link_libraries(CommonSettings INTERFACE goap)
 # target_link_libraries(CommonSettings INTERFACE gpgoap)
-# target_include_directories(CommonSettings INTERFACE ${Boost_INCLUDE_DIRS})
-# target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
+target_include_directories(CommonSettings INTERFACE ${Boost_INCLUDE_DIRS})
+target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CommonSettings)
-
-if (WIN32 OR EMSCRIPTEN)
-    # vcpkg provides CMake config packages for Boost
-    find_package(Boost CONFIG REQUIRED COMPONENTS system)
-    find_package(Boost CONFIG REQUIRED COMPONENTS system algorithm)
-    find_package(Boost CONFIG REQUIRED COMPONENTS system tokenizer)
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE 
-        Boost::system 
-        Boost::algorithm
-        Boost::tokenizer
-    )
-
-    find_package(Boost CONFIG REQUIRED)        # from vcpkg toolchain
-    target_link_libraries(${PROJECT_NAME} PRIVATE Boost::headers)
-endif()
 
 # TODO: what about enscripten?
 # Platform-specific settings for prebuilt libraries included with project
 
 # boost
-# target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
-# target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+target_link_directories(${PROJECT_NAME} PUBLIC ${Boost_LIBRARY_DIRS})
 
 
 ##########################################################################################
@@ -612,65 +574,7 @@ endif()
 
 add_definitions( -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} )
 
-# Keep all FetchContent sources out of our unity batches
-set_target_properties(${PROJECT_NAME} PROPERTIES
-  UNITY_BUILD ON
-  UNITY_BUILD_EXCLUDED_SOURCE_REGEX ".*[/\\\\]_deps/.*;.*[/\\\\]third_party[/\\\\]rlImGui[/\\\\].*;.*[/\\\\]third_party[/\\\\]ldtk_loader[/\\\\].*"
-)
-# Exclude third-party that causes collisions from Unity & PCH
-file(GLOB_RECURSE LDTK_SRCS
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/ldtk_loader/src/*.cpp"
-)
-set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD_BATCH_SIZE 16)
-
-set_source_files_properties(
-
-  ${LDTK_SRCS}
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/rlImGui/imgui.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/rlImGui/imgui_draw.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/rlImGui/imgui_widgets.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/rlImGui/imgui_tables.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/rlImGui/imgui_demo.cpp"
-  # add any file that includes <windows.h> or defines symbols that clash with Win32,
-  # e.g. ldtk_loader sources that define ldtk::IID, etc.
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/ldtk_loader/src/Project.cpp"
-
-  
-  # ldtk_loader
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/ldtk_loader/src/Project.cpp"
-
-  # chipmunk
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/chipmunk/src/cpHastySpace.c"
-
-  # objectpool (Catch test)
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/objectpool-master/thirdparty/Catch/catch.hpp"
-
-  # tracy
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/capture/src/capture.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/profiler/src/IsElevated.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/profiler/src/main.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/profiler/src/winmain.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/client/tracy_rpmalloc.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/client/TracyProfiler.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/client/TracySysTime.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/common/TracySystem.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/public/libbacktrace/fileline.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/server/TracySysUtil.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/update/src/OfflineSymbolResolverDbgHelper.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/src/third_party/tracy-master/update/src/update.cpp"
-  PROPERTIES
-    SKIP_UNITY_BUILD_INCLUSION ON
-    SKIP_PRECOMPILE_HEADERS    ON
-)
-
-
 target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_STD_OPTIONAL) # Enable std::optional support in sol2 to prevent errors
-
-target_compile_definitions(CommonSettings INTERFACE
-  WIN32_LEAN_AND_MEAN
-  NOMINMAX
-  SOL_STD_OPTIONAL
-)
 
 # at the top of CMakeLists.txt
 if(${PLATFORM} STREQUAL "Web")

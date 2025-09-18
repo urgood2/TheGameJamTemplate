@@ -49,15 +49,16 @@
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
 #include "systems/uuid/uuid.hpp"
-
+#include "systems/composable_mechanics/bootstrap.hpp"
+#include "systems/composable_mechanics/ability.hpp"
 
 using std::pair;
 
-// #define SPINE_USE_STD_FUNCTION
-// #include "spine/spine.h"
-// #include "third_party/spine_impl/spine_raylib.hpp"
-// #include "spine/AnimationState.h"
-// #include "spine/Bone.h"
+#define SPINE_USE_STD_FUNCTION
+#include "spine/spine.h"
+#include "third_party/spine_impl/spine_raylib.hpp"
+#include "spine/AnimationState.h"
+#include "spine/Bone.h"
 
 #include <map>
 #include <string>

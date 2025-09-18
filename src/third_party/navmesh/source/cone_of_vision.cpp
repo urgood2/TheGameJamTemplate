@@ -16,8 +16,8 @@ namespace NavMesh
     for (int angle = start_angle; angle < start_angle + max_angle; angle += angle_step)
     {
       PointF vision_point(
-        center.x + radius * (float)cos(angle * PI / 180),
-        center.y + radius * (float)sin(angle * PI / 180));
+        center.x + radius * (float)cos(angle * M_PI / 180),
+        center.y + radius * (float)sin(angle * M_PI / 180));
 
       for (auto& polygon : polygons_)
       {

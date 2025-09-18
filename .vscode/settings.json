@@ -1,14 +1,4 @@
 {
-    "cmake.generator": "Ninja",
-    "cmake.buildDirectory": "${workspaceFolder}/build-ninja",
-    "cmake.configureArgs": [
-        "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
-        "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
-        "-DCMAKE_TOOLCHAIN_FILE=${env:USERPROFILE}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic",
-        "-DVCPKG_HOST_TRIPLET=x64-mingw-dynamic"
-    ],
-    "cmake.parallelJobs": 0,
     "files.associations": {
         "ios": "cpp",
         "any": "cpp",

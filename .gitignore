@@ -67,6 +67,7 @@ compile_commands.json
 
 # Build folder
 [Bb]uild
+[Bb]uild-ninja/
 
 # Android
 *apk*

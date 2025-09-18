@@ -2024,7 +2024,7 @@ namespace input
             state.cursor_down_target = globals::gameWorldContainerEntity;
         }
         
-        input::DispatchRaw(s, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/true, /*value*/0.f);
+        input::DispatchRaw(state, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/true, /*value*/0.f);
     }
 
     // called by update() function
@@ -2070,7 +2070,7 @@ namespace input
             SPDLOG_DEBUG("No valid target found, falling back to ROOM");
         }
         
-        input::DispatchRaw(s, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/false, /*value*/0.f);
+        input::DispatchRaw(state, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/false, /*value*/0.f);
     }
 
     bool IsNodeFocusable(entt::registry &registry, InputState &state, entt::entity entity)

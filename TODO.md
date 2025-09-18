@@ -37,7 +37,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ## TODOS fast
-- [ ] need to figure out input bindings in more detail. the specified triggers whenI bind an action - what do they have to do with the polling functions like action_pressed, action_released, action_down, action_value?
+- [ ] need to figure out input bindings in more detail. the specified triggers whenI bind an action - what do they have to do with the polling functions like action_pressed, action_released, action_down, action_value? how does the action system handle mouse wheel movement, joystick axes, etc.? does it use dispatch raw? mouse input does not currently work. what happens when I bind to a different context? are all contexts enabled by default? how to switch contexts? -> input.set_context("gameplay") for example. does this disable other contexts? or do I have to manually disable them? clarify what triggers to in the binding phase & in the polling phase (gameplay)
 - [ ] test input bindings
 ```lua
 -- gameplay bindings

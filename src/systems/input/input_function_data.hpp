@@ -22,6 +22,8 @@ namespace input
     
     const float TOUCH_INPUT_MINIMUM_HOVER_TIME = 0.1f; // Minimum time cursor must hover over an entity to register as a hover event while using touch input
     
+    constexpr int AXIS_MOUSE_WHEEL_Y = 1001;
+    
     //axis_cursor, axis, button, mouse, touch
     enum class InputDeviceInputCategory
     {

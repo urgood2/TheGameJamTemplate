@@ -116,12 +116,12 @@ namespace input
         {
             if (IsKeyDown(key))
             {
-                ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+                ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::KEYBOARD);
                 ProcessKeyboardKeyDown(inputState, (KeyboardKey)key);
             }
             if (IsKeyReleased(key))
             {
-                ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+                ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::KEYBOARD);
                 ProcessKeyboardKeyRelease(inputState, (KeyboardKey)key);
             }
         }
@@ -173,6 +173,17 @@ namespace input
         if (GetMouseDelta().x != 0 || GetMouseDelta().y != 0)
         {
             ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+        }
+        
+        // poll mouse wheel
+        if (GetMouseWheelMove() != 0)
+        {
+            ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::MOUSE);
+            input::DispatchRaw(inputState,
+            InputDeviceInputCategory::GAMEPAD_AXIS, // intentionally using gamepad axis category here to represent mouse wheel as an axis
+            AXIS_MOUSE_WHEEL_Y,
+            /*down*/ true,
+            /*value*/ GetMouseWheelMove());
         }
 
         // poll gamepad
@@ -255,7 +266,7 @@ namespace input
         
         // static entt::entity activeScrollPane = entt::null;
         static const float scrollSpeed = 10.0f;
-        // apply scrollpane movement
+        // apply scrollpane movement & mousewheel input action polling
         {
             const float mouseWheelMove = GetMouseWheelMove();
 
@@ -2012,6 +2023,8 @@ namespace input
             SPDLOG_DEBUG("No valid target found, falling back to ROOM");
             state.cursor_down_target = globals::gameWorldContainerEntity;
         }
+        
+        input::DispatchRaw(s, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/true, /*value*/0.f);
     }
 
     // called by update() function
@@ -2056,6 +2069,8 @@ namespace input
             state.cursor_up_target = globals::gameWorldContainerEntity;
             SPDLOG_DEBUG("No valid target found, falling back to ROOM");
         }
+        
+        input::DispatchRaw(s, InputDeviceInputCategory::MOUSE, MOUSE_LEFT_BUTTON, /*down*/false, /*value*/0.f);
     }
 
     bool IsNodeFocusable(entt::registry &registry, InputState &state, entt::entity entity)

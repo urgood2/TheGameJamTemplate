@@ -1,4 +1,6 @@
 
+local Easing = require("util.easing")  -- the file above
+
 -- meant to be called within a coroutine.
 -- returns false if entity should stop.
 function moveEntityTowardGoalOneIncrement(e, goalLoc, dt) 
@@ -621,36 +623,55 @@ function spawnNewColonist(x, y)
     
 end
 
-function spawnCircularBurstParticles(x, y, count, seconds, startColorParam, endColorParam)
-    local initialSize   = 10             -- starting diameter of each circle
-    local burstSpeed    = 200           -- pixels per second
-    local growRate      = 20            -- how fast scale increases (same as your other function)
-    local rotationSpeed = 460           -- same rotation speed
+
+-- Choose which easing family to use when spawning
+function spawnCircularBurstParticles(x, y, count, seconds, startColorParam, endColorParam, easingName, screenSpaceOrWorldSpace)
+    local easing = Easing[easingName] or Easing.cubic  -- fallback if invalid name
+
+    local initialSize   = 10
+    local burstSpeed    = 200
+    local growRate      = 20
+    local rotationSpeed = 460
+
+    local space = screenSpaceOrWorldSpace or "screen"
 
     for i = 1, count do
-        -- random angle in [0,2π)
         local angle = math.random() * (2 * math.pi)
-        local vx    = math.cos(angle) * burstSpeed
-        local vy    = math.sin(angle) * burstSpeed
+        local dir   = Vec2(math.cos(angle), math.sin(angle))
 
         particle.CreateParticle(
-            Vec2(x, y),                 -- start at the center
+            Vec2(x, y),
             Vec2(initialSize, initialSize),
             {
-                renderType     = particle.ParticleRenderType.RECTANGLE_FILLED,
-                velocity       = Vec2(vx, vy),
-                acceleration   = 0,      -- no gravity
-                lifespan       = seconds,
-                startColor     = startColorParam or util.getColor("WHITE"),
-                endColor       = endColorParam or util.getColor("WHITE"),
-                rotationSpeed  = rotationSpeed,
+                renderType    = particle.ParticleRenderType.RECTANGLE_FILLED,
+                velocity      = Vec2(0, 0),
+                acceleration  = 0,
+                lifespan      = seconds,
+                startColor    = startColorParam or util.getColor("WHITE"),
+                endColor      = endColorParam   or util.getColor("WHITE"),
+                rotationSpeed = rotationSpeed,
+                space         = space,
+                z             = 0,
+
                 onUpdateCallback = function(comp, dt)
+                    local age      = comp.age or 0.0
+                    local life     = comp.lifespan or seconds or 0.000001
+                    local progress = math.min(math.max(age / life, 0), 1)
+
+                    -- Velocity from derivative
+                    local speed = burstSpeed * easing.d(progress)
+                    comp.velocity = Vec2(dir.x * speed, dir.y * speed)
+
+                    -- Growth from base ease
+                    -- local eased = easing.f(progress)
+                    -- comp.scale  = initialSize + growRate * (eased * life)
                 end,
             },
-            nil -- animation config
+            nil
         )
     end
 end
+
 
 function spawnCurrencyAutoCollect(x, y, currencyName)
     local e = animation_system.createAnimatedObjectWithTransform(
@@ -845,6 +866,22 @@ function spawnCurrency(x, y, currencyName)
 end
 
 
+-- A small library of easing functions + derivatives
+local Easing = {
+    cubic = {
+        f = function(t) return 1 - (1 - t)^3 end,         -- E(t)
+        d = function(t) local a = 1 - t; return 3*a*a end -- E'(t)
+    },
+    quadratic = {
+        f = function(t) return 1 - (1 - t)^2 end,
+        d = function(t) return 2 * (1 - t) end
+    },
+    linear = {
+        f = function(t) return t end,
+        d = function(t) return 1 end
+    },
+    -- you can add more: quintic, sine, expo, etc.
+}
 function spawnGrowingCircleParticle(centerX, centerY, w, h, seconds)
     -- Compute top-left so that the internal DrawCircle(x + w*0.5, y + h*0.5, ...)
     -- will end up at (centerX, centerY)

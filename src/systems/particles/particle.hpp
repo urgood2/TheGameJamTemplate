@@ -353,7 +353,7 @@ namespace particle
 
     inline void DrawParticles(entt::registry &registry, std::shared_ptr<layer::Layer> layerPtr)
     {
-        auto view = registry.view<Particle, Transform>();
+        auto view = registry.view<Particle>();
 
         for (auto entity : view)
         {

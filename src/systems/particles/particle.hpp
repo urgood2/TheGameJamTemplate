@@ -78,6 +78,7 @@ namespace particle
         // New: per-particle space override
         std::optional<RenderSpace> space;
         
+        std::function<void(entt::entity e, Particle &)> onInitCallback;
         std::function<void(Particle &, float)> onUpdateCallback;
     };
 
@@ -129,7 +130,7 @@ namespace particle
         transform.setVisualW(size.x);
         transform.setVisualH(size.y);
 
-        auto &particleComp = registry.emplace<Particle>(particle, particleData);
+        auto &particleComp = registry.emplace_or_replace<Particle>(particle, particleData);
         if (particleData.velocity && particleData.velocity->x == 0) {
             SPDLOG_DEBUG("Particle velocity is zero");
         }
@@ -171,6 +172,11 @@ namespace particle
         // if the user provided a non-empty tag, attach the tag component
         if (!tag.empty()) {
             registry.emplace<ParticleTag>(particle, tag);
+        }
+        
+        if (particleComp.onInitCallback)
+        {
+            particleComp.onInitCallback(particle, particleComp);
         }
 
         return particle;
@@ -316,8 +322,10 @@ namespace particle
             transform.setActualRotation(transform.getActualRotation() + particle.rotationSpeed.value() * deltaTime);
             transform.setVisualRotation(transform.getActualRotation());
             
-            transform.setActualScale(particle.scale.value());
-            transform.setVisualScale(particle.scale.value());
+            if (particle.scale) {
+                transform.setActualScale(particle.scale.value());
+                transform.setVisualScale(particle.scale.value());
+            }
             
             float lifespan = particle.lifespan.value_or(std::numeric_limits<float>::max());
 
@@ -345,7 +353,7 @@ namespace particle
 
     inline void DrawParticles(entt::registry &registry, std::shared_ptr<layer::Layer> layerPtr)
     {
-        auto view = registry.view<Particle>();
+        auto view = registry.view<Particle, Transform>();
 
         for (auto entity : view)
         {
@@ -715,32 +723,151 @@ namespace particle
         rec.record_property("particle.RenderSpace", {"SCREEN", "1", "Render in screen/UI space"});
 
         lua.new_usertype<particle::Particle>("Particle",
-            sol::constructors<particle::Particle()>(),
-            "renderType", &particle::Particle::renderType,
-            "velocity", &particle::Particle::velocity,
-            "rotation", &particle::Particle::rotation,
-            "rotationSpeed", &particle::Particle::rotationSpeed,
-            "scale", &particle::Particle::scale,
-            "lifespan", &particle::Particle::lifespan,
-            "age", &particle::Particle::age,
-            "color", &particle::Particle::color,
-            "gravity", &particle::Particle::gravity,
-            "acceleration", &particle::Particle::acceleration,
-            "startColor", &particle::Particle::startColor,
-            "endColor", &particle::Particle::endColor,
-            
-            "z",     &particle::Particle::z,       // NEW
-            "space", &particle::Particle::space,   // NEW (enum)
-            sol::meta_function::to_string, [](particle::Particle const &p){
-                std::ostringstream ss;
-                ss 
-                  << "Particle{vel=(" << p.velocity->x << "," << p.velocity->y << ") ";
-                return ss.str();
-            },
-            "onUpdateCallback", &particle::Particle::onUpdateCallback,   // <-- Add this
-            "type_id", []()
-            { return entt::type_hash<particle::Particle>::value(); });
-        // rec.bind_usertype<particle::Particle>(lua, "Particle", "0.1", "Single particle instance");
+    sol::constructors<particle::Particle()>(),
+
+    // Non-optional fields can stay as-is
+    "renderType", &particle::Particle::renderType,
+    "space",      &particle::Particle::space,
+    "z",          &particle::Particle::z,
+
+    // OPTIONAL<Vector2> velocity
+    "velocity", sol::property(
+        [](particle::Particle& p) -> sol::optional<Vector2> {
+            if (p.velocity) return *p.velocity;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<Vector2> v) {
+            if (v) p.velocity = v.value();
+            else   p.velocity.reset();
+        }
+    ),
+
+    // OPTIONAL<Vector2> scale
+    "scale", sol::property(
+        [](particle::Particle& p) -> sol::optional<float> {
+            if (p.scale) return *p.scale;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<float> v) {
+            if (v) p.scale = v.value();
+            else   p.scale.reset();
+        }
+    ),
+
+    // OPTIONAL<float> rotation
+    "rotation", sol::property(
+        [](particle::Particle& p) -> sol::optional<float> {
+            if (p.rotation) return *p.rotation;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<float> v) {
+            if (v) p.rotation = *v;
+            else   p.rotation.reset();
+        }
+    ),
+
+    "rotationSpeed", sol::property(
+        [](particle::Particle& p) -> sol::optional<float> {
+            if (p.rotationSpeed) return *p.rotationSpeed;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<float> v) {
+            if (v) p.rotationSpeed = *v;
+            else   p.rotationSpeed.reset();
+        }
+    ),
+
+    // OPTIONAL<float> lifespan
+    "lifespan", sol::property(
+        [](particle::Particle& p) -> sol::optional<float> {
+            if (p.lifespan) return *p.lifespan;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<float> v) {
+            if (v) p.lifespan = *v;
+            else   p.lifespan.reset();
+        }
+    ),
+
+    // OPTIONAL<float> age
+    "age", sol::property(
+        [](particle::Particle& p) -> sol::optional<float> {
+            if (p.age) return *p.age;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<float> v) {
+            if (v) p.age = *v;
+            else   p.age.reset();
+        }
+    ),
+
+    // OPTIONAL<float> gravity / acceleration
+    "gravity", sol::property(
+        [](particle::Particle& p) -> sol::optional<float> {
+            if (p.gravity) return *p.gravity;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<float> v) {
+            if (v) p.gravity = *v;
+            else   p.gravity.reset();
+        }
+    ),
+    "acceleration", sol::property(
+        [](particle::Particle& p) -> sol::optional<float> {
+            if (p.acceleration) return *p.acceleration;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<float> v) {
+            if (v) p.acceleration = *v;
+            else   p.acceleration.reset();
+        }
+    ),
+
+    // OPTIONAL<Color> color/startColor/endColor
+    "color", sol::property(
+        [](particle::Particle& p) -> sol::optional<Color> {
+            if (p.color) return *p.color;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<Color> v) {
+            if (v) p.color = *v;
+            else   p.color.reset();
+        }
+    ),
+    "startColor", sol::property(
+        [](particle::Particle& p) -> sol::optional<Color> {
+            if (p.startColor) return *p.startColor;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<Color> v) {
+            if (v) p.startColor = *v;
+            else   p.startColor.reset();
+        }
+    ),
+    "endColor", sol::property(
+        [](particle::Particle& p) -> sol::optional<Color> {
+            if (p.endColor) return *p.endColor;
+            return sol::nullopt;
+        },
+        [](particle::Particle& p, sol::optional<Color> v) {
+            if (v) p.endColor = *v;
+            else   p.endColor.reset();
+        }
+    ),
+
+    sol::meta_function::to_string, [](particle::Particle const &p){
+        std::ostringstream ss;
+        ss << "Particle{";
+        if (p.velocity) ss << "vel=(" << p.velocity->x << "," << p.velocity->y << ") ";
+        if (p.lifespan) ss << "life=" << *p.lifespan << " ";
+        ss << "}";
+        return ss.str();
+    },
+
+    "onUpdateCallback", &particle::Particle::onUpdateCallback,
+    "onInitCallback",   &particle::Particle::onInitCallback,
+    "type_id", [](){ return entt::type_hash<particle::Particle>::value(); }
+);
         rec.record_property("Particle", {"renderType", "nil", "particle.ParticleRenderType: How the particle is drawn."});
         rec.record_property("Particle", {"velocity", "nil", "Vector2?: The particle's current velocity."});
         rec.record_property("Particle", {"rotation", "nil", "number?: The particle's current rotation in degrees."});
@@ -758,6 +885,9 @@ namespace particle
         rec.record_property("Particle", {"onUpdateCallback",
             "function(self: Particle, dt: number)",
             "Optional callback, called every frame with (particle, deltaTime)."});
+        rec.record_property("Particle", {"onInitCallback",
+            "function(entt::entity, Particle)",
+            "Optional callback, called once on creation with (entity, particle)."});
 
         p.new_usertype<particle::ParticleEmitter>("ParticleEmitter",
             sol::constructors<>(),
@@ -1000,6 +1130,9 @@ namespace particle
 
             sol::object obj = opts["onUpdateCallback"];
             if (obj.valid()) p.onUpdateCallback = clone_to_main(obj.as<sol::function>());
+            
+            sol::object initObj = opts["onInitCallback"];
+            if (initObj.valid()) p.onInitCallback = clone_to_main(initObj.as<sol::function>());
             return p;
         };
 

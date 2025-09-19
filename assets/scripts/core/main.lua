@@ -788,6 +788,84 @@ function main.init()
     -- input.set_context("gameplay") -- set the input context to gameplay
     input.bind("mouse_click", { device="mouse", key=MouseButton.BUTTON_LEFT, trigger="Pressed", context="gameplay" })
     
+    local function spawnCircularBurstParticlesTest(x, y, count, seconds, startColorParam, endColorParam, screenSpaceOrWorldSpace)
+        local initialSize   = 10
+        local burstSpeed    = 200
+        local growRate      = 20
+        local rotationSpeed = 460
+
+        -- derivative of easeOutCubic: E'(t) = 3(1 - t)^2
+        local function easeOutCubic_deriv(t)
+            local a = (1 - t)
+            return 3 * a * a
+        end
+
+        -- optional size easing (use the base E(t) if you want)
+        local function easeOutCubic(t)
+            return 1 - (1 - t)^3
+        end
+
+        local space = screenSpaceOrWorldSpace or "screen" -- or particle.RenderSpace.SCREEN
+
+        for i = 1, count do
+            local angle = math.random() * (2 * math.pi)
+            local dir   = Vec2(math.cos(angle), math.sin(angle))  -- captured by closure
+
+            particle.CreateParticle(
+                Vec2(x, y),
+                Vec2(initialSize, initialSize),
+                {
+                    renderType      = particle.ParticleRenderType.RECTANGLE_FILLED,
+                    velocity        = Vec2(0, 0),         -- let tween own motion
+                    acceleration    = 0,                  -- no gravity
+                    lifespan        = seconds,
+                    startColor      = startColorParam or util.getColor("WHITE"),
+                    endColor        = endColorParam   or util.getColor("WHITE"),
+                    rotationSpeed   = rotationSpeed,
+                    space           = space,
+                    z               = 0,
+
+                    -- No stashing on comp/p.particle; use locals captured by closure
+                    onInitCallback = function(entity, comp)
+                        
+                        local p = registry:get(entity, Particle)
+
+                        -- local upvalues, unique per particle instance:
+                        local progress = 0.0  -- 0..1
+
+                        -- tween normalized progress over the particle lifespan
+                        timer.tween(
+                            p.lifespan,                      -- duration (== seconds)
+                            function() return progress end,  -- getter
+                            function(v)                      -- setter
+                            
+                                local p = registry:get(entity, Particle)
+                                progress = v
+                                -- Velocity = burstSpeed * E'(t) * dir
+                                local speed = burstSpeed * easeOutCubic_deriv(progress)
+                                p.velocity = Vec2(dir.x * speed, dir.y * speed)
+
+                                -- Optional: scale growth using E(t) (nice “ease out” growth)
+                                local eased = easeOutCubic(progress)
+                                local s = (initialSize + growRate * (eased * p.lifespan))
+                                p.scale = Vec2(s, s)
+
+                                -- optional: fade color over progress if you want:
+                                -- p.color = lerpColor(p.startColor, p.endColor, eased)
+                            end,
+                            1.0                               -- target progress
+                        )
+                    end,
+
+                    onUpdateCallback = function(comp, dt)
+                        -- No-op. Motion is fully driven by tweened velocity.
+                    end,
+                },
+                nil
+            )
+        end
+    end
+    
     timer.every(0.16, function()
         
         if input.action_pressed("do_something") then
@@ -798,6 +876,18 @@ function main.init()
         end
         if input.action_down("do_something") then
             log_debug("Space key down!") -- Debug message to indicate the space key is being held down
+            
+            local mouseT           = registry:get(globals.cursor(), Transform)
+            
+            spawnCircularBurstParticlesTest(
+                mouseT.visualX, 
+                mouseT.visualY, 
+                5, -- count
+                0.5, -- seconds
+                util.getColor("apricot_cream"), -- start color
+                util.getColor("coral_pink"), -- end color
+                "screen" -- screen space
+            )
         end
         
     end)

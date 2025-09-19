@@ -708,7 +708,7 @@ void exposeToLua(sol::state &lua) {
            &layer::CmdDrawDashedRoundedRect::arcSteps, "thickness",
            &layer::CmdDrawDashedRoundedRect::thickness, "color",
            &layer::CmdDrawDashedRoundedRect::color)
-  BIND_CMD(DrawDashedLine, "start", &layer::CmdDrawDashedLine::start, "end",
+  BIND_CMD(DrawDashedLine, "start", &layer::CmdDrawDashedLine::start, "endPoint",
            &layer::CmdDrawDashedLine::end, "dashLength",
            &layer::CmdDrawDashedLine::dashLength, "gapLength",
            &layer::CmdDrawDashedLine::gapLength, "phase",
@@ -901,7 +901,7 @@ void exposeToLua(sol::state &lua) {
   rec.record_property("layer.CmdDrawDashedLine",
                       {"start", "Vector2", "Start position"});
   rec.record_property("layer.CmdDrawDashedLine",
-                      {"end", "Vector2", "End position"});
+                      {"endPoint", "Vector2", "End position"});
   rec.record_property("layer.CmdDrawDashedLine",
                       {"dashLength", "number", "Length of each dash"});
   rec.record_property("layer.CmdDrawDashedLine",

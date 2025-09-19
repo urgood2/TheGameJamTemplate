@@ -120,26 +120,26 @@ inline void bind_spring(sol::state& lua) {
     rec.record_property("Spring", {"maxVelocity", "number|nil", "Optional velocity clamp."});
     rec.record_property("Spring", {"smoothingFactor", "number|nil", "0..1, scales integration step."});
     rec.record_property("Spring", {"timeToTarget", "number|nil", "If set, animate_to_time controls k/d over time."});
-    rec.record_method("Spring", {"pull", "void(number force, number? k, number? d)", "Impulse-like tug on current value."});
-    rec.record_method("Spring", {"animate_to", "void(number target, number k, number d)", "Move anchor with spring params."});
+    rec.record_method("Spring", {"pull", "---void(number force, number? k, number? d)", "Impulse-like tug on current value."});
+    rec.record_method("Spring", {"animate_to", "---void(number target, number k, number d)", "Move anchor with spring params."});
     rec.record_method("Spring", {"animate_to_time", "void(number target, number T, function? easing, number? k0, number? d0)", "Time-based targeting with easing."});
-    rec.record_method("Spring", {"enable", "void()", "Enable updates."});
-    rec.record_method("Spring", {"disable", "void()", "Disable updates."});
-    rec.record_method("Spring", {"snap_to_target", "void()", "Snap value to target; zero velocity."});
+    rec.record_method("Spring", {"enable", "---void()", "Enable updates."});
+    rec.record_method("Spring", {"disable", "---void()", "Disable updates."});
+    rec.record_method("Spring", {"snap_to_target", "---void()", "Snap value to target; zero velocity."});
 
     // Factories (one-liners)
     lua["spring"]["make"] = +[](entt::registry& reg, float value, float k, float d, sol::optional<sol::table> opts) {
         auto [e, sp] = make_and_attach(reg, value, k, d, opts);
         return std::make_tuple(e, std::ref(sp)); // returns (entity, Spring)
     };
-    rec.record_method("spring", {"make", "(entity, Spring) make(Registry, number value, number k, number d, table? opts)", 
+    rec.record_method("spring", {"make", "---(entity, Spring) make(Registry, number value, number k, number d, table? opts)", 
         "Create entity, attach Spring, return both."});
 
     lua["spring"]["attach"] = +[](entt::registry& reg, entt::entity e, float value, float k, float d, sol::optional<sol::table> opts) {
         Spring& sp = attach_to(reg, e, value, k, d, opts);
         return std::ref(sp);
     };
-    rec.record_method("spring", {"attach", "Spring attach(Registry, entity, number value, number k, number d, table? opts)",
+    rec.record_method("spring", {"attach", "---Spring attach(Registry, entity, number value, number k, number d, table? opts)",
         "Attach or replace Spring on an existing entity."});
 
     // Updates
@@ -149,12 +149,12 @@ inline void bind_spring(sol::state& lua) {
     lua["spring"]["update"] = +[](Spring& s, float dt){
         spring::update(s, dt);
     };
-    rec.record_method("spring", {"update_all", "void(Registry, number dt)", "Update all Spring components in the registry."});
-    rec.record_method("spring", {"update", "void(Spring, number dt)", "Update a single Spring."});
+    rec.record_method("spring", {"update_all", "---void(Registry, number dt)", "Update all Spring components in the registry."});
+    rec.record_method("spring", {"update", "---void(Spring, number dt)", "Update a single Spring."});
 
     // Nice sugar: set target only
     lua["spring"]["set_target"] = +[](Spring& s, float target){ s.targetValue = target; };
-    rec.record_method("spring", {"set_target", "void(Spring, number target)", "Set target without touching k/d."});
+    rec.record_method("spring", {"set_target", "---void(Spring, number target)", "Set target without touching k/d."});
 }
 
 } // namespace bind

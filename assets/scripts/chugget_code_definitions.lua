@@ -4415,6 +4415,26 @@ function quadtree:box(...) end
 ---
 --- 
 ---
+---@class ui.text
+ui.text = {
+}
+
+
+---
+--- 
+---
+---@class TextUIHandle
+TextUIHandle = { --[[
+ddd]]--
+    size = integer,  -- Number of ids in the handle.
+    has = fun(id:string):boolean,  -- Check if id exists in the handle.
+    get = fun(id:string):Entity|nil  -- Fetch entity by id, or nil if not found.
+}
+
+
+---
+--- 
+---
 ---@class InputState
 InputState = {
     cursor_clicked_target = Entity,  -- Entity clicked this frame
@@ -7613,6 +7633,55 @@ function ui.element.StopHover(...) end
 ---@param out_list table
 ---@return nil
 function ui.element.BuildUIDrawList(...) end
+
+---
+--- Build an id→entity map starting at root, using transform::GameObject.orderedChildren by default.
+---
+
+        ---@param root Entity
+        ---@return TextUIHandle
+        
+function ui.text.buildIdMapDefault(...) end
+
+---
+--- Fetch an entity by id (O(1)).
+---
+---@param handle TextUIHandle
+---@param id string
+---@return Entity|nil
+function ui.text.getNode(...) end
+
+---
+--- Return all ids in the handle.
+---
+---@param handle TextUIHandle
+---@return string[]
+function ui.text.keys(...) end
+
+---
+--- Number of ids.
+---
+---@param handle TextUIHandle
+---@return integer
+function ui.text.size(...) end
+
+---
+--- Convenience: set UIConfig.color by id.
+---
+
+    ---@param handle TextUIHandle
+    ---@param id string
+    ---@param colorName string
+    ---@return boolean  -- false if id/entity not found
+    
+function ui.text.setColor(...) end
+
+---
+--- Parse and log segment/wrapper ids for a raw text string.
+---
+---@param text string
+---@return nil
+function ui.text.debugDumpIdsFromString(...) end
 
 ---
 --- Constructs a raw asset path without a UUID.

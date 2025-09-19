@@ -317,9 +317,9 @@ namespace collision {
         auto& cf = rec.add_type("CollisionFilter");
         cf.doc = 
             "Component holding two 32-bit bitmasks:\n"
-            "- category = which tag-bits this collider *is*\n"
-            "- mask     = which category-bits this collider *collides with*\n"
-            "Default ctor sets both to 0xFFFFFFFF (collide with everything).";
+            "-- category = which tag-bits this collider *is*\n"
+            "--- mask     = which category-bits this collider *collides with*\n"
+            "--Default ctor sets both to 0xFFFFFFFF (collide with everything).";
         rec.record_property("CollisionFilter",
             { "category", "uint32", "Bitmask: what this entity *is* (e.g. Player, Enemy, Projectile)." }
         );

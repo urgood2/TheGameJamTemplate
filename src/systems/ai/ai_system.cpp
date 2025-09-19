@@ -947,7 +947,7 @@ namespace ai_system
             
         rec.record_method("ai", {
             "pause_ai_system",
-            "Pauses the AI system, preventing any updates or actions from being processed.",
+            "---Pauses the AI system, preventing any updates or actions from being processed.",
             "This is useful for debugging or when you want to temporarily halt AI processing."
         });
         ai.set_function(
@@ -958,7 +958,7 @@ namespace ai_system
             });
         rec.record_method("ai", {
             "resume_ai_system",
-            "Resumes the AI system after it has been paused.",
+            "---Resumes the AI system after it has been paused.",
             "This allows the AI system to continue processing updates and actions."
         });
         // 2) Move each binding into ai:

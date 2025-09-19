@@ -732,13 +732,13 @@ ai = {
 ---
 --- This is useful for debugging or when you want to temporarily halt AI processing.
 ---
-Pauses the AI system, preventing any updates or actions from being processed.
+---Pauses the AI system, preventing any updates or actions from being processed.
 function ai:pause_ai_system(...) end
 
 ---
 --- This allows the AI system to continue processing updates and actions.
 ---
-Resumes the AI system after it has been paused.
+---Resumes the AI system after it has been paused.
 function ai:resume_ai_system(...) end
 
 ---
@@ -1429,9 +1429,9 @@ ColliderType = {
 
 ---
 --- Component holding two 32-bit bitmasks:
-- category = which tag-bits this collider *is*
-- mask     = which category-bits this collider *collides with*
-Default ctor sets both to 0xFFFFFFFF (collide with everything).
+-- category = which tag-bits this collider *is*
+--- mask     = which category-bits this collider *collides with*
+--Default ctor sets both to 0xFFFFFFFF (collide with everything).
 ---
 ---@class CollisionFilter
 CollisionFilter = {
@@ -1930,7 +1930,7 @@ layer.CmdDrawDashedRoundedRect = {
 ---@class layer.CmdDrawDashedLine
 layer.CmdDrawDashedLine = {
     start = nil, -- Vector2 Start position
-    end = nil, -- Vector2 End position
+    endPoint = nil, -- Vector2 End position
     dashLength = nil, -- number Length of each dash
     gapLength = nil, -- number Length of gap between dashes
     phase = nil, -- number Phase offset for dashes
@@ -4254,31 +4254,31 @@ spring = {
 ---
 --- Create entity, attach Spring, return both.
 ---
-(entity, Spring) make(Registry, number value, number k, number d, table? opts)
+---(entity, Spring) make(Registry, number value, number k, number d, table? opts)
 function spring:make(...) end
 
 ---
 --- Attach or replace Spring on an existing entity.
 ---
-Spring attach(Registry, entity, number value, number k, number d, table? opts)
+---Spring attach(Registry, entity, number value, number k, number d, table? opts)
 function spring:attach(...) end
 
 ---
 --- Update all Spring components in the registry.
 ---
-void(Registry, number dt)
+---void(Registry, number dt)
 function spring:update_all(...) end
 
 ---
 --- Update a single Spring.
 ---
-void(Spring, number dt)
+---void(Spring, number dt)
 function spring:update(...) end
 
 ---
 --- Set target without touching k/d.
 ---
-void(Spring, number target)
+---void(Spring, number target)
 function spring:set_target(...) end
 
 
@@ -4303,13 +4303,13 @@ Spring = {
 ---
 --- Impulse-like tug on current value.
 ---
-void(number force, number? k, number? d)
+---void(number force, number? k, number? d)
 function Spring:pull(...) end
 
 ---
 --- Move anchor with spring params.
 ---
-void(number target, number k, number d)
+---void(number target, number k, number d)
 function Spring:animate_to(...) end
 
 ---
@@ -4321,19 +4321,19 @@ function Spring:animate_to_time(...) end
 ---
 --- Enable updates.
 ---
-void()
+---void()
 function Spring:enable(...) end
 
 ---
 --- Disable updates.
 ---
-void()
+---void()
 function Spring:disable(...) end
 
 ---
 --- Snap value to target; zero velocity.
 ---
-void()
+---void()
 function Spring:snap_to_target(...) end
 
 
@@ -4424,11 +4424,10 @@ ui.text = {
 --- 
 ---
 ---@class TextUIHandle
-TextUIHandle = { --[[
-ddd]]--
+TextUIHandle = {
     size = integer,  -- Number of ids in the handle.
-    has = fun(id:string):boolean,  -- Check if id exists in the handle.
-    get = fun(id:string):Entity|nil  -- Fetch entity by id, or nil if not found.
+    has = nil --[fun(id:string):boolean]--,  -- Check if id exists in the handle.
+    get = nil --[fun(id:string):Entity|nil]--  -- Fetch entity by id, or nil if not found.
 }
 
 

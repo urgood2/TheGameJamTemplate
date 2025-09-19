@@ -142,8 +142,8 @@ namespace input
         bool mouseDetectDownFirstFrameLeft = mosueLeftDownCurrentFrame && !mouseLeftDownLastFrame;
         bool mouseDetectDownFirstFrameRight = mouseRightDownCurrentFrame && !mouseRightDownLastFrame;
 
-        SPDLOG_DEBUG("Current frame - Mouse left down: {} right down: {}", mosueLeftDownCurrentFrame, mouseRightDownCurrentFrame);
-        SPDLOG_DEBUG("Last frame - Mouse left down: {} right down: {}", mouseLeftDownLastFrame, mouseRightDownLastFrame);
+        // SPDLOG_DEBUG("Current frame - Mouse left down: {} right down: {}", mosueLeftDownCurrentFrame, mouseRightDownCurrentFrame);
+        // SPDLOG_DEBUG("Last frame - Mouse left down: {} right down: {}", mouseLeftDownLastFrame, mouseRightDownLastFrame);
 
         if (mouseDetectDownFirstFrameLeft)
         { // this should only register first time the button is held down
@@ -2706,9 +2706,10 @@ namespace input
 
             // trigger matching (if-chains per your style)
             if (bind.trigger == ActionTrigger::Pressed) {
-                if (down) { st.pressed = true; st.down = true; }
-                else {
-                    // reset held time if button is released
+                if (down) {
+                    if (!st.down) st.pressed = true;  // only on rising edge
+                    st.down = true;
+                } else {
                     st.held = 0.f;
                 }
             }

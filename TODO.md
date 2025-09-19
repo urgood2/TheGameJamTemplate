@@ -37,20 +37,7 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 
 ## TODOS fast
-- [ ] expose AXIS_MOUSE_WHEEL_Y to lua, do final test with pressed() feature so that we know it works with single press detection, finish testing input bindings
-- [ ] test input bindings
-```lua
--- gameplay bindings
-input.bind("Jump", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
-input.bind("Jump", { device="gamepad_button", button=GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN, trigger="Pressed", context="gameplay" })
-input.bind("AimX", { device="gamepad_axis", axis=GamepadAxis.GAMEPAD_AXIS_RIGHT_X, trigger="AxisPos", threshold=0.2, context="gameplay" })
-input.bind("AimX", { device="gamepad_axis", axis=GamepadAxis.GAMEPAD_AXIS_RIGHT_X, trigger="AxisNeg", threshold=0.2, context="gameplay" })
 
--- in update:
-if input.action_pressed("Jump") then do_jump() end
-local ax = input.action_value("AimX")
-
-```
 - [ ] test particle z level and space
 ```lua
 local e = particle.CreateParticle(

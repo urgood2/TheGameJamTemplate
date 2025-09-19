@@ -788,13 +788,16 @@ function main.init()
     -- input.set_context("gameplay") -- set the input context to gameplay
     input.bind("mouse_click", { device="mouse", key=MouseButton.BUTTON_LEFT, trigger="Pressed", context="gameplay" })
     
-    timer.every(0.1, function()
-        if input.action_down("do_something") then
-            log_debug("Space key down!") -- Debug message to indicate the space key was pressed
-        elseif input.action_released("do_something_else") then
+    timer.every(0.16, function()
+        
+        if input.action_pressed("do_something") then
+            log_debug("Space key pressed!") -- Debug message to indicate the space key was pressed
+        end
+        if input.action_released("do_something") then
             log_debug("Space key released!") -- Debug message to indicate the space key was released
-        elseif input.action_down("mouse_click") then
-            log_debug("Mouse left button clicked!") -- Debug message to indicate the mouse left button was clicked
+        end
+        if input.action_down("do_something") then
+            log_debug("Space key down!") -- Debug message to indicate the space key is being held down
         end
         
     end)

@@ -205,6 +205,8 @@ namespace ui_defs
     {
         
         auto parseResult = static_ui_text_system::parseText(text);
+        
+        // debugDumpIds(parseResult);
 
         auto rows = parseResult.lines.size();
 

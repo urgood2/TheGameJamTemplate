@@ -2,6 +2,8 @@
 
 This guide matches your current (working) Lua usage. It explains how to **bind**, how **triggers** interact with **polling functions**, how **contexts** gate bindings, and how to handle **mouse**, **keyboard**, and **axes** (incl. mouse wheel via Option 1).
 
+Note that press and down are functionally the same, and this has not been fixed.
+
 ---
 
 ## 0) Quick Start (exactly like your example)

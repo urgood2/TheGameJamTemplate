@@ -45,7 +45,10 @@
 #include "systems/chipmunk_objectivec/ChipmunkAutogeometry.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkTileCache.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkPointCloudSampler.hpp"
+#include "systems/scripting/binding_recorder.hpp"
 #include "systems/spring/spring.hpp"
+#include "systems/transform/transform.hpp"
+#include "systems/ui/ui_data.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
 #include "systems/uuid/uuid.hpp"
@@ -241,7 +244,7 @@ namespace game
             return t;
         }
 
-        void bind_world_quadtree(sol::state& L, WorldQT& world, WorldQT& ui)
+        void bind_quadtrees_lua(sol::state& L, WorldQT& world, WorldQT& ui)
         {
             // If you want, you can also bind Box, but not required if you use tables only.
             // L.new_usertype<quadtree::Box<float>>("Box", sol::no_constructor,
@@ -304,6 +307,95 @@ namespace game
                 [](float l, float t, float w, float h) { return quadtree::Box<float>({l,t},{w,h}); },
                 [](sol::table tbl) { return box_from_table(tbl); }
             ));
+            
+            // ------------------------------------------------------------
+            // Quadtree bindings: BindingRecorder entries
+            // ------------------------------------------------------------
+            
+            auto &rec = BindingRecorder::instance();
+
+            // Types
+            rec.add_type("WorldQuadtree");
+            rec.add_type("Box"); // pseudo-type (Lua table with fields), still document it
+
+            // Box (table) fields
+            rec.record_property("Box",   {"left",   "number", "Left (x) position"});
+            rec.record_property("Box",   {"top",    "number", "Top (y) position"});
+            rec.record_property("Box",   {"width",  "number", "Width"});
+            rec.record_property("Box",   {"height", "number", "Height"});
+
+            // Injected instances (globals). If your recorder has a “record_global” helper, use it;
+            // otherwise document them as properties on the (implicit) global table "" or a module.
+            // Here we mark them as globals with brief descriptions.
+            rec.record_property("", {"quadtreeWorld", "WorldQuadtree", "Spatial index for world-entities (injected C++ instance)."});
+            rec.record_property("", {"quadtreeUI",    "WorldQuadtree", "Spatial index for UI-entities (injected C++ instance)."});
+
+            // Module: quadtree (for helpers like quadtree.box)
+            rec.add_type("quadtree"); // treat as a module namespace in docs
+
+            // quadtree.box overloads
+            rec.record_method("quadtree", {
+                "box",
+                "---@overload fun(left:number, top:number, width:number, height:number): Box\n"
+                "---@overload fun(tbl:Box): Box\n"
+                "---@return Box",
+                "Creates a Box from numbers or from a table with {left, top, width, height}."
+            });
+
+            // WorldQuadtree instance methods
+
+            // clear()
+            rec.record_method("WorldQuadtree", {
+                "clear",
+                "---@return nil",
+                "Removes all entities from the quadtree."
+            });
+
+            // add(e)
+            rec.record_method("WorldQuadtree", {
+                "add",
+                "---@param e Entity\n"
+                "---@return nil",
+                "Inserts the entity into the quadtree (entity must have a known AABB)."
+            });
+
+            // remove(e)
+            rec.record_method("WorldQuadtree", {
+                "remove",
+                "---@param e Entity\n"
+                "---@return nil",
+                "Removes the entity from the quadtree if present."
+            });
+
+            // query(box) -> Entity[]
+            rec.record_method("WorldQuadtree", {
+                "query",
+                "---@param box Box\n"
+                "---@return Entity[]",
+                "Returns all entities whose AABBs intersect the given box."
+            });
+
+            // find_all_intersections() -> { {Entity, Entity}, ... }
+            rec.record_method("WorldQuadtree", {
+                "find_all_intersections",
+                "---@return Entity[][]",
+                "Returns a list of intersecting pairs as 2-element arrays {a, b}."
+            });
+
+            // get_bounds() -> Box
+            rec.record_method("WorldQuadtree", {
+                "get_bounds",
+                "---@return Box",
+                "Returns the overall bounds of the quadtree space."
+            });
+
+            // (Optional) Type notes for Entity & AABB expectation. If your recorder supports notes:
+            rec.record_method("", {
+                "_note_quadtree_entity_req",
+                "---@private\n---@return nil",
+                "Quadtree assumes each Entity queried/inserted has a retrievable AABB; "
+                "your C++ side should ensure conversions to/from Box are consistent."
+            });
         }
 
     } // namespace luaqt
@@ -726,6 +818,46 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
     auto init() -> void
     {
         
+        // testing
+        auto textTestDef = static_ui_text_system::getTextFromString("[Hello here's a longer test\nNow test this](id=stringID;color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](id=imageID;color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
+        
+        // make new uiroot
+        
+        auto alertRoot = ui::UIElementTemplateNode::Builder::create()
+            .addType(ui::UITypeEnum::ROOT)
+            .addConfig(
+                ui::UIConfig::Builder::create()
+                    .addPadding(0.f)
+                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+                    .build())
+            .addChild(textTestDef)
+            .build();
+            
+        auto testTextBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
+        
+        auto rootUiTextBoxEntity = globals::registry.get<ui::UIBoxComponent>(testTextBox).uiRoot;
+        
+        
+        static_ui_text_system::TextUIHandle handle;
+        
+        auto traverseChildren = [](entt::registry& R, entt::entity e) -> std::vector<entt::entity> {
+            // Replace this with however you enumerate child UI nodes in your ECS.
+            // Example:
+            if (R.valid(e) && R.any_of<transform::GameObject>(e)) {
+                return R.get<transform::GameObject>(e).orderedChildren;
+            }
+            return {};
+        };
+
+        
+        buildIdMapFromRoot(globals::registry, rootUiTextBoxEntity.value(), handle, traverseChildren);
+        
+        // Now you can O(1) fetch & mutate:
+        if (auto e = getTextNode(handle, "stringID"); e != entt::null) {
+            auto &cfg = globals::registry.get<ui::UIConfig>(e);
+            cfg.color = util::getColor("LIME");
+            // mark dirty if your layout/text system needs it
+        }
         
         // set camera to fill the screen
         // globals::camera = {0};

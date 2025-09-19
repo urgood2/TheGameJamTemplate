@@ -10,6 +10,7 @@
 #include <set>
 #include <variant>
 
+#include "systems/scripting/binding_recorder.hpp"
 #include "systems/ui/ui_data.hpp"
 
 #include "util/common_headers.hpp"
@@ -285,7 +286,7 @@ namespace static_ui_text_system {
 
             if (R.valid(e) && R.any_of<ui::UIConfig>(e)) {
                 auto& cfg = R.get<ui::UIConfig>(e);
-                if (!cfg.id->empty()) {
+                if (cfg.id) {
                     handle.idMap[cfg.id.value()] = e;
                 }
             }
@@ -463,23 +464,180 @@ namespace static_ui_text_system {
     }
     
     inline void debugDumpIds(const static_ui_text_system::StaticStyledText& parsed) {
-    for (int i = 0; i < (int)parsed.lines.size(); ++i) {
-        const auto& line = parsed.lines[i];
-        for (int j = 0; j < (int)line.segments.size(); ++j) {
-            const auto& seg = line.segments[j];
-            const std::string segId = resolveNodeId(seg.attributes, i, j, false);
-            const char* t = (seg.type == static_ui_text_system::StaticStyledTextSegmentType::TEXT) ? "TEXT" :
-                            (seg.type == static_ui_text_system::StaticStyledTextSegmentType::IMAGE) ? "IMAGE" :
-                            "ANIM";
-            SPDLOG_INFO("seg [{}] line={} idx={} id='{}' text='{}'",
-                        t, i, j, segId, seg.text);
-            if (getAttrString(seg.attributes, "background")) {
-                const std::string wrapId = resolveNodeId(seg.attributes, i, j, true);
-                SPDLOG_INFO("wrap line={} idx={} id='{}'", i, j, wrapId);
+            for (int i = 0; i < (int)parsed.lines.size(); ++i) {
+                const auto& line = parsed.lines[i];
+                for (int j = 0; j < (int)line.segments.size(); ++j) {
+                    const auto& seg = line.segments[j];
+                    const std::string segId = resolveNodeId(seg.attributes, i, j, false);
+                    const char* t = (seg.type == static_ui_text_system::StaticStyledTextSegmentType::TEXT) ? "TEXT" :
+                                    (seg.type == static_ui_text_system::StaticStyledTextSegmentType::IMAGE) ? "IMAGE" :
+                                    "ANIM";
+                    SPDLOG_INFO("seg [{}] line={} idx={} id='{}' text='{}'",
+                                t, i, j, segId, seg.text);
+                    if (getAttrString(seg.attributes, "background")) {
+                        const std::string wrapId = resolveNodeId(seg.attributes, i, j, true);
+                        SPDLOG_INFO("wrap line={} idx={} id='{}'", i, j, wrapId);
+                    }
+                }
+            }
+        }
+
+
+    // --- Lightweight Lua-facing handle ---
+    struct TextUIHandleLua {
+        entt::entity root{entt::null};
+        std::unordered_map<std::string, entt::entity> idMap;
+
+        void clear() { idMap.clear(); root = entt::null; }
+        size_t size() const { return idMap.size(); }
+        bool has(const std::string& k) const { return idMap.find(k) != idMap.end(); }
+        entt::entity get(const std::string& k) const {
+            if (auto it = idMap.find(k); it != idMap.end()) return it->second;
+            return entt::null;
+        }
+    };
+    
+    inline std::vector<entt::entity> defaultTraverse(entt::registry& R, entt::entity e) {
+        if (R.valid(e) && R.any_of<transform::GameObject>(e)) {
+            return R.get<transform::GameObject>(e).orderedChildren;
+        }
+        return {};
+    }
+
+    inline void buildIdMapFromRootDefault(entt::registry& R,
+                                        entt::entity root,
+                                        TextUIHandleLua& handle) {
+        handle.root = root;
+        std::vector<entt::entity> stack{root};
+
+        while (!stack.empty()) {
+            auto e = stack.back();
+            stack.pop_back();
+
+            if (R.valid(e) && R.any_of<ui::UIConfig>(e)) {
+                auto& cfg = R.get<ui::UIConfig>(e);
+                if (cfg.id) {
+                    handle.idMap[cfg.id.value()] = e;
+                }
+            }
+
+            for (entt::entity child : defaultTraverse(R, e)) {
+                if (child != entt::null) stack.push_back(child);
             }
         }
     }
-}
+
+
+    inline void exposeToLua(sol::state &lua)
+    {
+        // Create ui.text table
+        sol::table ui   = lua["ui"].get_or_create<sol::table>();
+        sol::table text = lua["ui"]["text"].get_or_create<sol::table>();
+
+        
+        auto &rec = BindingRecorder::instance();
+        rec.add_type("ui.text");
+
+        // TextUIHandleLua usertype (opaque-ish; methods only)
+        lua.new_usertype<TextUIHandleLua>("TextUIHandle",
+            "size",  &TextUIHandleLua::size,
+            "has",   &TextUIHandleLua::has,
+            "get",   &TextUIHandleLua::get,
+            "root",  &TextUIHandleLua::root
+        );
+        auto uiHandleType = rec.add_type("TextUIHandle");
+        uiHandleType.doc = "A handle to a static UI text instance, with O(1) id→entity mapping.";
+        rec.record_property("TextUIHandle", {"size", "integer", "Number of ids in the handle."});
+        rec.record_property("TextUIHandle", {"has",  "fun(id:string):boolean", "Check if id exists in the handle."});
+        rec.record_property("TextUIHandle", {"get",  "fun(id:string):Entity|nil", "Fetch entity by id, or nil if not found."});
+
+        // ui.text.buildIdMap(root, traverseChildrenFn) -> TextUIHandle
+        text.set_function("buildIdMapDefault",
+            [](entt::entity root) {
+                TextUIHandleLua handle;
+                buildIdMapFromRootDefault(globals::registry, root, handle);
+                return handle;
+            });
+        rec.record_free_function(
+            {"ui","text"},
+            {"buildIdMapDefault", R"(
+        ---@param root Entity
+        ---@return TextUIHandle
+        )", "Build an id→entity map starting at root, using transform::GameObject.orderedChildren by default.", true, false}
+        );
+
+        // ui.text.getNode(handle, id) -> Entity|nil
+        text.set_function("getNode",
+            [](TextUIHandleLua& handle, const std::string& id) -> sol::optional<entt::entity> {
+                auto e = handle.get(id);
+                if (e == entt::null) return sol::nullopt;
+                return e;
+            });
+        rec.record_free_function(
+            {"ui","text"},
+            {"getNode", "---@param handle TextUIHandle\n---@param id string\n---@return Entity|nil",
+            "Fetch an entity by id (O(1)).", true, false}
+        );
+
+        // ui.text.keys(handle) -> string[]
+        text.set_function("keys",
+            [&lua](TextUIHandleLua& handle) {
+                sol::table out = lua.create_table();
+                int i = 1;
+                for (auto& kv : handle.idMap) {
+                    out[i++] = kv.first;
+                }
+                return out;
+            });
+
+        rec.record_free_function(
+            {"ui","text"},
+            {"keys", "---@param handle TextUIHandle\n---@return string[]", "Return all ids in the handle.", true, false}
+        );
+
+        // ui.text.size(handle) -> integer
+        text.set_function("size",
+            [](TextUIHandleLua& handle) { return (int)handle.size(); });
+        rec.record_free_function(
+            {"ui","text"},
+            {"size", "---@param handle TextUIHandle\n---@return integer", "Number of ids.", true, false}
+        );
+
+        // Small ergonomic mutator: setColor(handle, id, colorName) -> boolean
+        text.set_function("setColor",
+            [](TextUIHandleLua& handle, const std::string& id, const std::string& colorName) {
+                auto e = handle.get(id);
+                if (e == entt::null || !globals::registry.valid(e) || !globals::registry.any_of<ui::UIConfig>(e))
+                    return false;
+                auto& cfg = globals::registry.get<ui::UIConfig>(e);
+                cfg.color = util::getColor(colorName);
+                return true;
+            });
+        rec.record_free_function(
+            {"ui","text"},
+            {"setColor", R"(
+    ---@param handle TextUIHandle
+    ---@param id string
+    ---@param colorName string
+    ---@return boolean  -- false if id/entity not found
+    )", "Convenience: set UIConfig.color by id.", true, false}
+        );
+
+        // Debug mirror: ui.text.debugDumpIdsFromString(text)
+        text.set_function("debugDumpIdsFromString",
+            [](const std::string& raw) {
+                auto parsed = static_ui_text_system::parseText(raw);
+                debugDumpIds(parsed);
+            });
+        rec.record_free_function(
+            {"ui","text"},
+            {"debugDumpIdsFromString", "---@param text string\n---@return nil",
+            "Parse and log segment/wrapper ids for a raw text string.", true, false}
+        );
+
+        // You already expose: ui.definitions.getTextFromString(text) etc.
+        // No changes needed there.
+    }
 
 
 

@@ -93,12 +93,14 @@ namespace ui {
         lua.new_usertype<UIBoxComponent>("UIBoxComponent",
             "uiRoot",     &UIBoxComponent::uiRoot,
             "drawLayers", &UIBoxComponent::drawLayers,
+            "onBoxResize", &UIBoxComponent::onBoxResize,
             "type_id", []() { return entt::type_hash<UIBoxComponent>::value(); }
         );
         auto& boxDef = rec.add_type("UIBoxComponent", /*is_data_class=*/true);
         boxDef.doc = "Defines a root of a UI tree, managing its draw layers.";
         rec.record_property("UIBoxComponent", {"uiRoot", "Entity", "The root entity of this UI tree."});
         rec.record_property("UIBoxComponent", {"drawLayers", "table", "A map of layers used for drawing the UI."});
+        rec.record_property("UIBoxComponent", {"onBoxResize", "function|nil", "A callback function triggered when the box is resized."});
 
         // 7) UIState
         lua.new_usertype<UIState>("UIState",

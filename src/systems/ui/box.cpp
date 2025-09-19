@@ -183,6 +183,9 @@ namespace ui
                     int idx = static_cast<int>(parentGO.children.size());
                     thisConfig.id = std::to_string(idx);
                 }
+                else {
+                    SPDLOG_DEBUG("UI element has ID: {}", *thisConfig.id);
+                }
                 auto &parentGO = registry.get<transform::GameObject>(parent);
                 const auto &id = thisConfig.id.value();
 
@@ -209,6 +212,9 @@ namespace ui
                     if (!def.children[i].config.id.has_value())
                     {
                         def.children[i].config.id = std::to_string(i); // or use indexToAlphaID(i)
+                    }
+                    else {
+                        SPDLOG_DEBUG("Child UI element already has ID: {}", *(def.children[i].config.id));
                     }
                     stack.push({def.children[i], entity});
                 }
@@ -385,15 +391,15 @@ namespace ui
         placeUIElementsRecursively(registry, uiRoot, runningTransform, UITypeEnum::VERTICAL_CONTAINER, uiRoot);
         
         // check offset value for entity 70
-        auto &debugConfig = registry.get<UIConfig>(entt::entity(70));
-        auto &debugRole = registry.get<transform::InheritedProperties>(entt::entity(70));
-        SPDLOG_DEBUG("Entity 70 offset: ({}, {}), role offset: ({}, {})", debugConfig.offset->x, debugConfig.offset->y, debugRole.offset->x, debugRole.offset->y);
+        // auto &debugConfig = registry.get<UIConfig>(entt::entity(70));
+        // auto &debugRole = registry.get<transform::InheritedProperties>(entt::entity(70));
+        // SPDLOG_DEBUG("Entity 70 offset: ({}, {}), role offset: ({}, {})", debugConfig.offset->x, debugConfig.offset->y, debugRole.offset->x, debugRole.offset->y);
         
 
         handleAlignment(registry, uiRoot);
         // ui::element::SetAlignments(registry, uiRoot, uiBoxRole->offset, true);
         
-        SPDLOG_DEBUG("Entity 70 offset after handleAlignment: ({}, {}), role offset: ({}, {})", debugConfig.offset->x, debugConfig.offset->y, debugRole.offset->x, debugRole.offset->y);
+        // SPDLOG_DEBUG("Entity 70 offset after handleAlignment: ({}, {}), role offset: ({}, {})", debugConfig.offset->x, debugConfig.offset->y, debugRole.offset->x, debugRole.offset->y);
 
         // auto final_WH = ui::element::SetWH(registry, uiRoot);
 

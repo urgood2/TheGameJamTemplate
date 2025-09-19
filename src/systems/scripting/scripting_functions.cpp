@@ -2,6 +2,7 @@
 
 #include "../../util/common_headers.hpp"
 
+#include "core/globals.hpp"
 #include "raylib.h"
 #include "sol/sol.hpp"
 #include "../ai/ai_system.hpp"
@@ -30,6 +31,7 @@
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
+#include "systems/text/static_ui_text.hpp"
 #include "util/utilities.hpp"
 
 #include "meta_helper.hpp"
@@ -422,6 +424,16 @@ namespace scripting {
         rec.record_free_function({""}, {"remove_fullscreen_shader",
             "---@param shaderName string\n",
             "Removes a fullscreen shader from the game.", true, false});
+            
+        // ------------------------------------------------------
+        // quad tree
+        // ------------------------------------------------------
+        game::luaqt::bind_quadtrees_lua(stateToInit, globals::quadtreeWorld, globals::quadtreeUI);
+        
+        // ------------------------------------------------------
+        // static ui text functions
+        // ------------------------------------------------------
+        static_ui_text_system::exposeToLua(stateToInit);
 
         // Also expose your globalShaderUniforms so Lua can call
         //   globalShaderUniforms.set(shaderName, uniformName, value)

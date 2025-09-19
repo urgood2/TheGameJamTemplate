@@ -38,86 +38,6 @@ self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, func
 
 ## TODOS fast
 
-- [ ] test particle z level and space
-```lua
-local e = particle.CreateParticle(
-  Vec2(100, 80),
-  Vec2(10, 10),
-  {
-    color = Col(255, 180, 64, 255),
-    z = 120,                 -- draw above most stuff
-    space = "screen",        -- also accepts: particle.RenderSpace.SCREEN
-  }
-)
-
-local emitter = particle.CreateParticleEmitter(
-  Vec2(300, 220),
-  {
-    size = Vec2(64, 64),
-    particleSpeed = 80,
-    defaultZ = -50,                  -- whole cloud draws behind
-    defaultSpace = "world",          -- or particle.RenderSpace.WORLD
-    useGlobalCoords = true           -- still honored; defaultSpace wins if set
-  }
-)
-
--- you can still override per particle:
-particle.CreateParticle(Vec2(0,0), Vec2(6,6), { z = 999, space = "screen" })
-
-```
-- [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
-- [ ] test task system in lua
-- [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
--  streamlined way to access quadtree features, like collision checking specific areas -> use bind_world_quadtree and document.
-- [ ] optimizing text ui generation from coded strings -> all done, just need to test:
-```cpp
-TextUIHandle handle;
-
-auto traverseChildren = [](entt::registry& R, entt::entity e) -> std::vector<entt::entity> {
-    // Replace this with however you enumerate child UI nodes in your ECS.
-    // Example:
-    if (R.valid(e) && R.any_of<ui::UIElement>(e)) {
-        return R.get<ui::UIElement>(e).children;
-    }
-    return {};
-};
-
-buildIdMapFromRoot(registry, rootUiEntity, handle, traverseChildren);
-
-// Now you can O(1) fetch & mutate:
-if (auto e = getTextNode(handle, "good"); e != entt::null) {
-    auto &cfg = registry.get<ui::UIConfig>(e);
-    cfg.color = util::getColor("LIME");
-    // mark dirty if your layout/text system needs it
-}
-```
-also:
-```cpp
-auto parsed = static_ui_text_system::parseText(rawText);
-debugDumpIds(parsed);
-```
-- [ ] doucment this and add lua binding
-```cpp
-std::function<void(entt::entity)> onBoxResize = nullptr; // callback when the box is resized
-```
-- [ ] test physics world layers
-```cpp
-world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});
-SetObjectLayerPhysicsTag(registry, *world, "Walls", "WORLD");
-
-// Example collision matrix:
-SetObjectLayerCollidesWith(registry, *world, "WORLD",      {"PLAYER","ENEMY","PROJECTILE"});
-SetObjectLayerCollidesWith(registry, *world, "PLAYER",     {"WORLD","ENEMY","TRIGGER"});
-SetObjectLayerCollidesWith(registry, *world, "ENEMY",      {"WORLD","PLAYER","TRIGGER"});
-SetObjectLayerCollidesWith(registry, *world, "PROJECTILE", {"WORLD","ENEMY","TRIGGER"});
-SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PROJECTILE"});
-
-```
-- [ ] make lua bindings for physics steering functions, and test them.
-- [ ] lua access to input component, acccessing text & setting callback
-- [ ] expose current camera manager & camera custom class to lua
-- [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
-- [] way to make sure certain texts & images should be worldspace, or not
 - test:
 ```lua
 -- Quick usage examples
@@ -187,11 +107,89 @@ local ReactiveBalm = {
 }
 
 ```
+
+
+
+- [ ] test particle z level and space
+```lua
+local e = particle.CreateParticle(
+  Vec2(100, 80),
+  Vec2(10, 10),
+  {
+    color = Col(255, 180, 64, 255),
+    z = 120,                 -- draw above most stuff
+    space = "screen",        -- also accepts: particle.RenderSpace.SCREEN
+  }
+)
+
+local emitter = particle.CreateParticleEmitter(
+  Vec2(300, 220),
+  {
+    size = Vec2(64, 64),
+    particleSpeed = 80,
+    defaultZ = -50,                  -- whole cloud draws behind
+    defaultSpace = "world",          -- or particle.RenderSpace.WORLD
+    useGlobalCoords = true           -- still honored; defaultSpace wins if set
+  }
+)
+
+-- you can still override per particle:
+particle.CreateParticle(Vec2(0,0), Vec2(6,6), { z = 999, space = "screen" })
+
+```
+- [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
+- [ ] test task system in lua
+- [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
+- [ ] optimizing text ui generation from coded strings -> all done, just need to test:
+```cpp
+TextUIHandle handle;
+
+auto traverseChildren = [](entt::registry& R, entt::entity e) -> std::vector<entt::entity> {
+    // Replace this with however you enumerate child UI nodes in your ECS.
+    // Example:
+    if (R.valid(e) && R.any_of<ui::UIElement>(e)) {
+        return R.get<ui::UIElement>(e).children;
+    }
+    return {};
+};
+
+buildIdMapFromRoot(registry, rootUiEntity, handle, traverseChildren);
+
+// Now you can O(1) fetch & mutate:
+if (auto e = getTextNode(handle, "good"); e != entt::null) {
+    auto &cfg = registry.get<ui::UIConfig>(e);
+    cfg.color = util::getColor("LIME");
+    // mark dirty if your layout/text system needs it
+}
+```
+also:
+```cpp
+auto parsed = static_ui_text_system::parseText(rawText);
+debugDumpIds(parsed);
+```
+- [ ] test physics world layers
+```cpp
+world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});
+SetObjectLayerPhysicsTag(registry, *world, "Walls", "WORLD");
+
+// Example collision matrix:
+SetObjectLayerCollidesWith(registry, *world, "WORLD",      {"PLAYER","ENEMY","PROJECTILE"});
+SetObjectLayerCollidesWith(registry, *world, "PLAYER",     {"WORLD","ENEMY","TRIGGER"});
+SetObjectLayerCollidesWith(registry, *world, "ENEMY",      {"WORLD","PLAYER","TRIGGER"});
+SetObjectLayerCollidesWith(registry, *world, "PROJECTILE", {"WORLD","ENEMY","TRIGGER"});
+SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PROJECTILE"});
+
+```
+- [ ] make lua bindings for physics steering functions, and test them.
+- [ ] lua access to input component, acccessing text & setting callback
+- [ ] expose current camera manager & camera custom class to lua
+- [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
+- [] way to make sure certain texts & images should be worldspace, or not
+
 - document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.
 - [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
-- [ ] hit circle - make my own structure for attaching to entities.
 - [ ] changing color of a hit circle using chaining:
 ```lua
 function HitCircle:change_color(delay_multiplier, target_color)

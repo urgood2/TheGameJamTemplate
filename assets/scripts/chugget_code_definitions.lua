@@ -3275,6 +3275,7 @@ TextInputHook = {
 UIBoxComponent = {
     uiRoot = nil, -- Entity The root entity of this UI tree.
     drawLayers = nil, -- table A map of layers used for drawing the UI.
+    onBoxResize = nil, -- function|nil A callback function triggered when the box is resized.
 }
 
 
@@ -4334,6 +4335,81 @@ function Spring:disable(...) end
 ---
 void()
 function Spring:snap_to_target(...) end
+
+
+---
+--- 
+---
+---@class WorldQuadtree
+WorldQuadtree = {
+}
+
+---
+--- Removes all entities from the quadtree.
+---
+---@return nil
+function WorldQuadtree:clear(...) end
+
+---
+--- Inserts the entity into the quadtree (entity must have a known AABB).
+---
+---@param e Entity
+---@return nil
+function WorldQuadtree:add(...) end
+
+---
+--- Removes the entity from the quadtree if present.
+---
+---@param e Entity
+---@return nil
+function WorldQuadtree:remove(...) end
+
+---
+--- Returns all entities whose AABBs intersect the given box.
+---
+---@param box Box
+---@return Entity[]
+function WorldQuadtree:query(...) end
+
+---
+--- Returns a list of intersecting pairs as 2-element arrays {a, b}.
+---
+---@return Entity[][]
+function WorldQuadtree:find_all_intersections(...) end
+
+---
+--- Returns the overall bounds of the quadtree space.
+---
+---@return Box
+function WorldQuadtree:get_bounds(...) end
+
+
+---
+--- 
+---
+---@class Box
+Box = {
+    left = number,  -- Left (x) position
+    top = number,  -- Top (y) position
+    width = number,  -- Width
+    height = number  -- Height
+}
+
+
+---
+--- 
+---
+---@class quadtree
+quadtree = {
+}
+
+---
+--- Creates a Box from numbers or from a table with {left, top, width, height}.
+---
+---@overload fun(left:number, top:number, width:number, height:number): Box
+---@overload fun(tbl:Box): Box
+---@return Box
+function quadtree:box(...) end
 
 
 ---

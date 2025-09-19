@@ -49,4 +49,16 @@ namespace game {
     extern bool isPaused, isGameOver;
     extern bool isGameOver;
     extern bool gameStarted; // if game state has begun (not in menu )
+    
+    
+    namespace luaqt {
+        using WorldQT = quadtree::Quadtree<
+            entt::entity,
+            decltype(globals::getBoxWorld),
+            std::equal_to<entt::entity>,
+            float
+        >;    
+        extern void bind_quadtrees_lua(sol::state& L, WorldQT& world, WorldQT& ui);
+    }
+    
 }

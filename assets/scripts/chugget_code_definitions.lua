@@ -702,13 +702,13 @@ function entt.registry:runtime_view(...) end
 ---@class ScriptComponent
 ScriptComponent = {
     ---@type nil
-    id = nil  -- Entity: (Read-only) The entity handle this script is attached to. Injected by the system.
+    id = nil,  -- Entity: (Read-only) The entity handle this script is attached to. Injected by the system.
     ---@type nil
-    owner = nil  -- registry: (Read-only) A reference to the C++ registry. Injected by the system.
+    owner = nil,  -- registry: (Read-only) A reference to the C++ registry. Injected by the system.
     ---@type nil
-    init = nil  -- function(): Optional function called once when the script is attached to an entity.
+    init = nil,  -- function(): Optional function called once when the script is attached to an entity.
     ---@type nil
-    update = nil  -- function(dt: number): Function called every frame.
+    update = nil,  -- function(dt: number): Function called every frame.
     ---@type nil
     destroy = nil  -- function(): Optional function called just before the entity is destroyed.
 }
@@ -1548,11 +1548,11 @@ shader_pipeline = {
 ---@class shader_pipeline.ShaderPass
 shader_pipeline.ShaderPass = {
     ---@type string
-    shaderName = nil  -- Name of the shader to use for this pass
+    shaderName = nil,  -- Name of the shader to use for this pass
     ---@type bool
-    injectAtlasUniforms = nil  -- Whether to inject atlas UV uniforms into this pass
+    injectAtlasUniforms = nil,  -- Whether to inject atlas UV uniforms into this pass
     ---@type bool
-    enabled = nil  -- Whether this shader pass is enabled
+    enabled = nil,  -- Whether this shader pass is enabled
     ---@type fun()
     customPrePassFunction = nil  -- Function to run before activating this pass
 }
@@ -1574,13 +1574,13 @@ shader_pipeline.OverlayInputSource = {
 ---@class shader_pipeline.ShaderOverlayDraw
 shader_pipeline.ShaderOverlayDraw = {
     ---@type OverlayInputSource
-    inputSource = nil  -- Where to sample input from
+    inputSource = nil,  -- Where to sample input from
     ---@type string
-    shaderName = nil  -- Name of the overlay shader
+    shaderName = nil,  -- Name of the overlay shader
     ---@type fun()
-    customPrePassFunction = nil  -- Function to run before this overlay
+    customPrePassFunction = nil,  -- Function to run before this overlay
     ---@type BlendMode
-    blendMode = nil  -- Blend mode for this overlay
+    blendMode = nil,  -- Blend mode for this overlay
     ---@type bool
     enabled = nil  -- Whether this overlay is enabled
 }
@@ -1592,9 +1592,9 @@ shader_pipeline.ShaderOverlayDraw = {
 ---@class shader_pipeline.ShaderPipelineComponent
 shader_pipeline.ShaderPipelineComponent = {
     ---@type std::vector<ShaderPass>
-    passes = nil  -- Ordered list of shader passes
+    passes = nil,  -- Ordered list of shader passes
     ---@type std::vector<ShaderOverlayDraw>
-    overlayDraws = nil  -- Ordered list of overlays
+    overlayDraws = nil,  -- Ordered list of overlays
     ---@type float
     padding = nil  -- Safe-area padding around overlays
 }
@@ -1633,19 +1633,19 @@ layer.LayerOrderComponent = {
 ---@class layer.Layer
 layer.Layer = {
     ---@type table
-    canvases = nil  -- Map of canvas names to textures
+    canvases = nil,  -- Map of canvas names to textures
     ---@type table
-    drawCommands = nil  -- Command list
+    drawCommands = nil,  -- Command list
     ---@type boolean
-    fixed = nil  -- Whether layer is fixed
+    fixed = nil,  -- Whether layer is fixed
     ---@type integer
-    zIndex = nil  -- Z-index
+    zIndex = nil,  -- Z-index
     ---@type Color
-    backgroundColor = nil  -- Background fill color
+    backgroundColor = nil,  -- Background fill color
     ---@type table
-    commands = nil  -- Draw commands list
+    commands = nil,  -- Draw commands list
     ---@type boolean
-    isSorted = nil  -- True if layer is sorted
+    isSorted = nil,  -- True if layer is sorted
     ---@type vector
     postProcessShaders = nil  -- List of post-process shaders to run after drawing
 }
@@ -1761,7 +1761,7 @@ layer.CmdEndScissorMode = {
 ---@class layer.CmdTranslate
 layer.CmdTranslate = {
     ---@type number
-    x = nil  -- X offset
+    x = nil,  -- X offset
     ---@type number
     y = nil  -- Y offset
 }
@@ -1823,15 +1823,15 @@ layer.CmdEndStencilMask = {
 ---@class layer.CmdDrawCenteredEllipse
 layer.CmdDrawCenteredEllipse = {
     ---@type number
-    x = nil  -- Center X
+    x = nil,  -- Center X
     ---@type number
-    y = nil  -- Center Y
+    y = nil,  -- Center Y
     ---@type number
-    rx = nil  -- Radius X
+    rx = nil,  -- Radius X
     ---@type number
-    ry = nil  -- Radius Y
+    ry = nil,  -- Radius Y
     ---@type Color
-    color = nil  -- Ellipse color
+    color = nil,  -- Ellipse color
     ---@type number|nil
     lineWidth = nil  -- Line width for outline; nil for filled
 }
@@ -1843,15 +1843,15 @@ layer.CmdDrawCenteredEllipse = {
 ---@class layer.CmdDrawRoundedLine
 layer.CmdDrawRoundedLine = {
     ---@type number
-    x1 = nil  -- Start X
+    x1 = nil,  -- Start X
     ---@type number
-    y1 = nil  -- Start Y
+    y1 = nil,  -- Start Y
     ---@type number
-    x2 = nil  -- End X
+    x2 = nil,  -- End X
     ---@type number
-    y2 = nil  -- End Y
+    y2 = nil,  -- End Y
     ---@type Color
-    color = nil  -- Line color
+    color = nil,  -- Line color
     ---@type number
     lineWidth = nil  -- Line width
 }
@@ -1863,9 +1863,9 @@ layer.CmdDrawRoundedLine = {
 ---@class layer.CmdDrawPolyline
 layer.CmdDrawPolyline = {
     ---@type Vector2[]
-    points = nil  -- List of points
+    points = nil,  -- List of points
     ---@type Color
-    color = nil  -- Line color
+    color = nil,  -- Line color
     ---@type number
     lineWidth = nil  -- Line width
 }
@@ -1877,21 +1877,21 @@ layer.CmdDrawPolyline = {
 ---@class layer.CmdDrawArc
 layer.CmdDrawArc = {
     ---@type string
-    type = nil  -- Arc type (e.g., 'OPEN', 'CHORD', 'PIE')
+    type = nil,  -- Arc type (e.g., 'OPEN', 'CHORD', 'PIE')
     ---@type number
-    x = nil  -- Center X
+    x = nil,  -- Center X
     ---@type number
-    y = nil  -- Center Y
+    y = nil,  -- Center Y
     ---@type number
-    r = nil  -- Radius
+    r = nil,  -- Radius
     ---@type number
-    r1 = nil  -- Inner radius (for ring arcs)
+    r1 = nil,  -- Inner radius (for ring arcs)
     ---@type number
-    r2 = nil  -- Outer radius (for ring arcs)
+    r2 = nil,  -- Outer radius (for ring arcs)
     ---@type Color
-    color = nil  -- Arc color
+    color = nil,  -- Arc color
     ---@type number
-    lineWidth = nil  -- Line width
+    lineWidth = nil,  -- Line width
     ---@type number
     segments = nil  -- Number of segments
 }
@@ -1903,13 +1903,13 @@ layer.CmdDrawArc = {
 ---@class layer.CmdDrawTriangleEquilateral
 layer.CmdDrawTriangleEquilateral = {
     ---@type number
-    x = nil  -- Center X
+    x = nil,  -- Center X
     ---@type number
-    y = nil  -- Center Y
+    y = nil,  -- Center Y
     ---@type number
-    w = nil  -- Width of the triangle
+    w = nil,  -- Width of the triangle
     ---@type Color
-    color = nil  -- Triangle color
+    color = nil,  -- Triangle color
     ---@type number|nil
     lineWidth = nil  -- Line width for outline; nil for filled
 }
@@ -1921,19 +1921,19 @@ layer.CmdDrawTriangleEquilateral = {
 ---@class layer.CmdDrawCenteredFilledRoundedRect
 layer.CmdDrawCenteredFilledRoundedRect = {
     ---@type number
-    x = nil  -- Center X
+    x = nil,  -- Center X
     ---@type number
-    y = nil  -- Center Y
+    y = nil,  -- Center Y
     ---@type number
-    w = nil  -- Width
+    w = nil,  -- Width
     ---@type number
-    h = nil  -- Height
+    h = nil,  -- Height
     ---@type number|nil
-    rx = nil  -- Corner radius X; nil for default
+    rx = nil,  -- Corner radius X; nil for default
     ---@type number|nil
-    ry = nil  -- Corner radius Y; nil for default
+    ry = nil,  -- Corner radius Y; nil for default
     ---@type Color
-    color = nil  -- Fill color
+    color = nil,  -- Fill color
     ---@type number|nil
     lineWidth = nil  -- Line width for outline; nil for filled
 }
@@ -1945,15 +1945,15 @@ layer.CmdDrawCenteredFilledRoundedRect = {
 ---@class layer.CmdDrawSpriteCentered
 layer.CmdDrawSpriteCentered = {
     ---@type string
-    spriteName = nil  -- Name of the sprite
+    spriteName = nil,  -- Name of the sprite
     ---@type number
-    x = nil  -- Center X
+    x = nil,  -- Center X
     ---@type number
-    y = nil  -- Center Y
+    y = nil,  -- Center Y
     ---@type number|nil
-    dstW = nil  -- Destination width; nil for original width
+    dstW = nil,  -- Destination width; nil for original width
     ---@type number|nil
-    dstH = nil  -- Destination height; nil for original height
+    dstH = nil,  -- Destination height; nil for original height
     ---@type Color
     tint = nil  -- Tint color
 }
@@ -1965,15 +1965,15 @@ layer.CmdDrawSpriteCentered = {
 ---@class layer.CmdDrawSpriteTopLeft
 layer.CmdDrawSpriteTopLeft = {
     ---@type string
-    spriteName = nil  -- Name of the sprite
+    spriteName = nil,  -- Name of the sprite
     ---@type number
-    x = nil  -- Top-left X
+    x = nil,  -- Top-left X
     ---@type number
-    y = nil  -- Top-left Y
+    y = nil,  -- Top-left Y
     ---@type number|nil
-    dstW = nil  -- Destination width; nil for original width
+    dstW = nil,  -- Destination width; nil for original width
     ---@type number|nil
-    dstH = nil  -- Destination height; nil for original height
+    dstH = nil,  -- Destination height; nil for original height
     ---@type Color
     tint = nil  -- Tint color
 }
@@ -1985,19 +1985,19 @@ layer.CmdDrawSpriteTopLeft = {
 ---@class layer.CmdDrawDashedCircle
 layer.CmdDrawDashedCircle = {
     ---@type Vector2
-    center = nil  -- Center position
+    center = nil,  -- Center position
     ---@type number
-    radius = nil  -- Radius
+    radius = nil,  -- Radius
     ---@type number
-    dashLength = nil  -- Length of each dash
+    dashLength = nil,  -- Length of each dash
     ---@type number
-    gapLength = nil  -- Length of gap between dashes
+    gapLength = nil,  -- Length of gap between dashes
     ---@type number
-    phase = nil  -- Phase offset for dashes
+    phase = nil,  -- Phase offset for dashes
     ---@type number
-    segments = nil  -- Number of segments to approximate the circle
+    segments = nil,  -- Number of segments to approximate the circle
     ---@type number
-    thickness = nil  -- Thickness of the dashes
+    thickness = nil,  -- Thickness of the dashes
     ---@type Color
     color = nil  -- Color of the dashes
 }
@@ -2009,19 +2009,19 @@ layer.CmdDrawDashedCircle = {
 ---@class layer.CmdDrawDashedRoundedRect
 layer.CmdDrawDashedRoundedRect = {
     ---@type Rectangle
-    rec = nil  -- Rectangle area
+    rec = nil,  -- Rectangle area
     ---@type number
-    dashLen = nil  -- Length of each dash
+    dashLen = nil,  -- Length of each dash
     ---@type number
-    gapLen = nil  -- Length of gap between dashes
+    gapLen = nil,  -- Length of gap between dashes
     ---@type number
-    phase = nil  -- Phase offset for dashes
+    phase = nil,  -- Phase offset for dashes
     ---@type number
-    radius = nil  -- Corner radius
+    radius = nil,  -- Corner radius
     ---@type number
-    arcSteps = nil  -- Number of segments for corner arcs
+    arcSteps = nil,  -- Number of segments for corner arcs
     ---@type number
-    thickness = nil  -- Thickness of the dashes
+    thickness = nil,  -- Thickness of the dashes
     ---@type Color
     color = nil  -- Color of the dashes
 }
@@ -2033,33 +2033,33 @@ layer.CmdDrawDashedRoundedRect = {
 ---@class layer.CmdDrawDashedLine
 layer.CmdDrawDashedLine = {
     ---@type Vector2
-    start = nil  -- Start position
+    start = nil,  -- Start position
     ---@type Vector2
-    endPoint = nil  -- End position
+    endPoint = nil,  -- End position
     ---@type number
-    dashLength = nil  -- Length of each dash
+    dashLength = nil,  -- Length of each dash
     ---@type number
-    gapLength = nil  -- Length of gap between dashes
+    gapLength = nil,  -- Length of gap between dashes
     ---@type number
-    phase = nil  -- Phase offset for dashes
+    phase = nil,  -- Phase offset for dashes
     ---@type number
-    thickness = nil  -- Thickness of the dashes
+    thickness = nil,  -- Thickness of the dashes
     ---@type Color
-    color = nil  -- Color of the dashes
+    color = nil,  -- Color of the dashes
     ---@type number
-    x1 = nil  -- Start X
+    x1 = nil,  -- Start X
     ---@type number
-    y1 = nil  -- Start Y
+    y1 = nil,  -- Start Y
     ---@type number
-    x2 = nil  -- End X
+    x2 = nil,  -- End X
     ---@type number
-    y2 = nil  -- End Y
+    y2 = nil,  -- End Y
     ---@type number
-    dashSize = nil  -- Dash size
+    dashSize = nil,  -- Dash size
     ---@type number
-    gapSize = nil  -- Gap size
+    gapSize = nil,  -- Gap size
     ---@type Color
-    color = nil  -- Color
+    color = nil,  -- Color
     ---@type number
     lineWidth = nil  -- Line width
 }
@@ -2071,7 +2071,7 @@ layer.CmdDrawDashedLine = {
 ---@class layer.CmdScale
 layer.CmdScale = {
     ---@type number
-    scaleX = nil  -- Scale in X
+    scaleX = nil,  -- Scale in X
     ---@type number
     scaleY = nil  -- Scale in Y
 }
@@ -2133,11 +2133,11 @@ layer.CmdPopMatrix = {
 ---@class layer.CmdDrawCircleFilled
 layer.CmdDrawCircleFilled = {
     ---@type number
-    x = nil  -- Center X
+    x = nil,  -- Center X
     ---@type number
-    y = nil  -- Center Y
+    y = nil,  -- Center Y
     ---@type number
-    radius = nil  -- Radius
+    radius = nil,  -- Radius
     ---@type Color
     color = nil  -- Fill color
 }
@@ -2149,19 +2149,19 @@ layer.CmdDrawCircleFilled = {
 ---@class layer.CmdDrawCircleLine
 layer.CmdDrawCircleLine = {
     ---@type number
-    x = nil  -- Center X
+    x = nil,  -- Center X
     ---@type number
-    y = nil  -- Center Y
+    y = nil,  -- Center Y
     ---@type number
-    innerRadius = nil  -- Inner radius
+    innerRadius = nil,  -- Inner radius
     ---@type number
-    outerRadius = nil  -- Outer radius
+    outerRadius = nil,  -- Outer radius
     ---@type number
-    startAngle = nil  -- Start angle in degrees
+    startAngle = nil,  -- Start angle in degrees
     ---@type number
-    endAngle = nil  -- End angle in degrees
+    endAngle = nil,  -- End angle in degrees
     ---@type number
-    segments = nil  -- Number of segments
+    segments = nil,  -- Number of segments
     ---@type Color
     color = nil  -- Line color
 }
@@ -2173,15 +2173,15 @@ layer.CmdDrawCircleLine = {
 ---@class layer.CmdDrawRectangle
 layer.CmdDrawRectangle = {
     ---@type number
-    x = nil  -- Top-left X
+    x = nil,  -- Top-left X
     ---@type number
-    y = nil  -- Top-left Y
+    y = nil,  -- Top-left Y
     ---@type number
-    width = nil  -- Width
+    width = nil,  -- Width
     ---@type number
-    height = nil  -- Height
+    height = nil,  -- Height
     ---@type Color
-    color = nil  -- Fill color
+    color = nil,  -- Fill color
     ---@type number
     lineWidth = nil  -- Line width
 }
@@ -2193,15 +2193,15 @@ layer.CmdDrawRectangle = {
 ---@class layer.CmdDrawRectanglePro
 layer.CmdDrawRectanglePro = {
     ---@type number
-    offsetX = nil  -- Offset X
+    offsetX = nil,  -- Offset X
     ---@type number
-    offsetY = nil  -- Offset Y
+    offsetY = nil,  -- Offset Y
     ---@type Vector2
-    size = nil  -- Size
+    size = nil,  -- Size
     ---@type Vector2
-    rotationCenter = nil  -- Rotation center
+    rotationCenter = nil,  -- Rotation center
     ---@type number
-    rotation = nil  -- Rotation
+    rotation = nil,  -- Rotation
     ---@type Color
     color = nil  -- Color
 }
@@ -2213,13 +2213,13 @@ layer.CmdDrawRectanglePro = {
 ---@class layer.CmdDrawRectangleLinesPro
 layer.CmdDrawRectangleLinesPro = {
     ---@type number
-    offsetX = nil  -- Offset X
+    offsetX = nil,  -- Offset X
     ---@type number
-    offsetY = nil  -- Offset Y
+    offsetY = nil,  -- Offset Y
     ---@type Vector2
-    size = nil  -- Size
+    size = nil,  -- Size
     ---@type number
-    lineThickness = nil  -- Line thickness
+    lineThickness = nil,  -- Line thickness
     ---@type Color
     color = nil  -- Color
 }
@@ -2231,15 +2231,15 @@ layer.CmdDrawRectangleLinesPro = {
 ---@class layer.CmdDrawLine
 layer.CmdDrawLine = {
     ---@type number
-    x1 = nil  -- Start X
+    x1 = nil,  -- Start X
     ---@type number
-    y1 = nil  -- Start Y
+    y1 = nil,  -- Start Y
     ---@type number
-    x2 = nil  -- End X
+    x2 = nil,  -- End X
     ---@type number
-    y2 = nil  -- End Y
+    y2 = nil,  -- End Y
     ---@type Color
-    color = nil  -- Line color
+    color = nil,  -- Line color
     ---@type number
     lineWidth = nil  -- Line width
 }
@@ -2259,15 +2259,15 @@ layer.CmdDrawDashedLine = {
 ---@class layer.CmdDrawText
 layer.CmdDrawText = {
     ---@type string
-    text = nil  -- Text
+    text = nil,  -- Text
     ---@type Font
-    font = nil  -- Font
+    font = nil,  -- Font
     ---@type number
-    x = nil  -- X
+    x = nil,  -- X
     ---@type number
-    y = nil  -- Y
+    y = nil,  -- Y
     ---@type Color
-    color = nil  -- Color
+    color = nil,  -- Color
     ---@type number
     fontSize = nil  -- Font size
 }
@@ -2279,15 +2279,15 @@ layer.CmdDrawText = {
 ---@class layer.CmdDrawTextCentered
 layer.CmdDrawTextCentered = {
     ---@type string
-    text = nil  -- Text
+    text = nil,  -- Text
     ---@type Font
-    font = nil  -- Font
+    font = nil,  -- Font
     ---@type number
-    x = nil  -- X
+    x = nil,  -- X
     ---@type number
-    y = nil  -- Y
+    y = nil,  -- Y
     ---@type Color
-    color = nil  -- Color
+    color = nil,  -- Color
     ---@type number
     fontSize = nil  -- Font size
 }
@@ -2299,21 +2299,21 @@ layer.CmdDrawTextCentered = {
 ---@class layer.CmdTextPro
 layer.CmdTextPro = {
     ---@type string
-    text = nil  -- Text
+    text = nil,  -- Text
     ---@type Font
-    font = nil  -- Font
+    font = nil,  -- Font
     ---@type number
-    x = nil  -- X
+    x = nil,  -- X
     ---@type number
-    y = nil  -- Y
+    y = nil,  -- Y
     ---@type Vector2
-    origin = nil  -- Origin
+    origin = nil,  -- Origin
     ---@type number
-    rotation = nil  -- Rotation
+    rotation = nil,  -- Rotation
     ---@type number
-    fontSize = nil  -- Font size
+    fontSize = nil,  -- Font size
     ---@type number
-    spacing = nil  -- Spacing
+    spacing = nil,  -- Spacing
     ---@type Color
     color = nil  -- Color
 }
@@ -2325,17 +2325,17 @@ layer.CmdTextPro = {
 ---@class layer.CmdDrawImage
 layer.CmdDrawImage = {
     ---@type Texture2D
-    image = nil  -- Image
+    image = nil,  -- Image
     ---@type number
-    x = nil  -- X
+    x = nil,  -- X
     ---@type number
-    y = nil  -- Y
+    y = nil,  -- Y
     ---@type number
-    rotation = nil  -- Rotation
+    rotation = nil,  -- Rotation
     ---@type number
-    scaleX = nil  -- Scale X
+    scaleX = nil,  -- Scale X
     ---@type number
-    scaleY = nil  -- Scale Y
+    scaleY = nil,  -- Scale Y
     ---@type Color
     color = nil  -- Tint color
 }
@@ -2347,19 +2347,19 @@ layer.CmdDrawImage = {
 ---@class layer.CmdTexturePro
 layer.CmdTexturePro = {
     ---@type Texture2D
-    texture = nil  -- Texture
+    texture = nil,  -- Texture
     ---@type Rectangle
-    source = nil  -- Source rect
+    source = nil,  -- Source rect
     ---@type number
-    offsetX = nil  -- Offset X
+    offsetX = nil,  -- Offset X
     ---@type number
-    offsetY = nil  -- Offset Y
+    offsetY = nil,  -- Offset Y
     ---@type Vector2
-    size = nil  -- Size
+    size = nil,  -- Size
     ---@type Vector2
-    rotationCenter = nil  -- Rotation center
+    rotationCenter = nil,  -- Rotation center
     ---@type number
-    rotation = nil  -- Rotation
+    rotation = nil,  -- Rotation
     ---@type Color
     color = nil  -- Color
 }
@@ -2371,11 +2371,11 @@ layer.CmdTexturePro = {
 ---@class layer.CmdDrawEntityAnimation
 layer.CmdDrawEntityAnimation = {
     ---@type Entity
-    e = nil  -- entt::entity
+    e = nil,  -- entt::entity
     ---@type Registry
-    registry = nil  -- EnTT registry
+    registry = nil,  -- EnTT registry
     ---@type number
-    x = nil  -- X
+    x = nil,  -- X
     ---@type number
     y = nil  -- Y
 }
@@ -2387,7 +2387,7 @@ layer.CmdDrawEntityAnimation = {
 ---@class layer.CmdDrawTransformEntityAnimation
 layer.CmdDrawTransformEntityAnimation = {
     ---@type Entity
-    e = nil  -- entt::entity
+    e = nil,  -- entt::entity
     ---@type Registry
     registry = nil  -- EnTT registry
 }
@@ -2399,7 +2399,7 @@ layer.CmdDrawTransformEntityAnimation = {
 ---@class layer.CmdDrawTransformEntityAnimationPipeline
 layer.CmdDrawTransformEntityAnimationPipeline = {
     ---@type Entity
-    e = nil  -- entt::entity
+    e = nil,  -- entt::entity
     ---@type Registry
     registry = nil  -- EnTT registry
 }
@@ -2449,9 +2449,9 @@ layer.CmdUnsetBlendMode = {
 ---@class layer.CmdSendUniformFloat
 layer.CmdSendUniformFloat = {
     ---@type Shader
-    shader = nil  -- Shader
+    shader = nil,  -- Shader
     ---@type string
-    uniform = nil  -- Uniform name
+    uniform = nil,  -- Uniform name
     ---@type number
     value = nil  -- Float value
 }
@@ -2463,9 +2463,9 @@ layer.CmdSendUniformFloat = {
 ---@class layer.CmdSendUniformInt
 layer.CmdSendUniformInt = {
     ---@type Shader
-    shader = nil  -- Shader
+    shader = nil,  -- Shader
     ---@type string
-    uniform = nil  -- Uniform name
+    uniform = nil,  -- Uniform name
     ---@type number
     value = nil  -- Int value
 }
@@ -2477,9 +2477,9 @@ layer.CmdSendUniformInt = {
 ---@class layer.CmdSendUniformVec2
 layer.CmdSendUniformVec2 = {
     ---@type Shader
-    shader = nil  -- Shader
+    shader = nil,  -- Shader
     ---@type string
-    uniform = nil  -- Uniform name
+    uniform = nil,  -- Uniform name
     ---@type Vector2
     value = nil  -- Vec2 value
 }
@@ -2491,9 +2491,9 @@ layer.CmdSendUniformVec2 = {
 ---@class layer.CmdSendUniformVec3
 layer.CmdSendUniformVec3 = {
     ---@type Shader
-    shader = nil  -- Shader
+    shader = nil,  -- Shader
     ---@type string
-    uniform = nil  -- Uniform name
+    uniform = nil,  -- Uniform name
     ---@type Vector3
     value = nil  -- Vec3 value
 }
@@ -2505,9 +2505,9 @@ layer.CmdSendUniformVec3 = {
 ---@class layer.CmdSendUniformVec4
 layer.CmdSendUniformVec4 = {
     ---@type Shader
-    shader = nil  -- Shader
+    shader = nil,  -- Shader
     ---@type string
-    uniform = nil  -- Uniform name
+    uniform = nil,  -- Uniform name
     ---@type Vector4
     value = nil  -- Vec4 value
 }
@@ -2519,9 +2519,9 @@ layer.CmdSendUniformVec4 = {
 ---@class layer.CmdSendUniformFloatArray
 layer.CmdSendUniformFloatArray = {
     ---@type Shader
-    shader = nil  -- Shader
+    shader = nil,  -- Shader
     ---@type string
-    uniform = nil  -- Uniform name
+    uniform = nil,  -- Uniform name
     ---@type table
     values = nil  -- Float array
 }
@@ -2533,9 +2533,9 @@ layer.CmdSendUniformFloatArray = {
 ---@class layer.CmdSendUniformIntArray
 layer.CmdSendUniformIntArray = {
     ---@type Shader
-    shader = nil  -- Shader
+    shader = nil,  -- Shader
     ---@type string
-    uniform = nil  -- Uniform name
+    uniform = nil,  -- Uniform name
     ---@type table
     values = nil  -- Int array
 }
@@ -2547,7 +2547,7 @@ layer.CmdSendUniformIntArray = {
 ---@class layer.CmdVertex
 layer.CmdVertex = {
     ---@type Vector3
-    v = nil  -- Position
+    v = nil,  -- Position
     ---@type Color
     color = nil  -- Vertex color
 }
@@ -2609,11 +2609,11 @@ layer.CmdSetTexture = {
 ---@class layer.CmdRenderRectVerticesFilledLayer
 layer.CmdRenderRectVerticesFilledLayer = {
     ---@type Rectangle
-    outerRec = nil  -- Outer rectangle
+    outerRec = nil,  -- Outer rectangle
     ---@type bool
-    progressOrFullBackground = nil  -- Mode
+    progressOrFullBackground = nil,  -- Mode
     ---@type table
-    cache = nil  -- Vertex cache
+    cache = nil,  -- Vertex cache
     ---@type Color
     color = nil  -- Fill color
 }
@@ -2625,9 +2625,9 @@ layer.CmdRenderRectVerticesFilledLayer = {
 ---@class layer.CmdRenderRectVerticesOutlineLayer
 layer.CmdRenderRectVerticesOutlineLayer = {
     ---@type table
-    cache = nil  -- Vertex cache
+    cache = nil,  -- Vertex cache
     ---@type Color
-    color = nil  -- Outline color
+    color = nil,  -- Outline color
     ---@type bool
     useFullVertices = nil  -- Use full vertices
 }
@@ -2639,9 +2639,9 @@ layer.CmdRenderRectVerticesOutlineLayer = {
 ---@class layer.CmdDrawPolygon
 layer.CmdDrawPolygon = {
     ---@type table
-    vertices = nil  -- Vertex array
+    vertices = nil,  -- Vertex array
     ---@type Color
-    color = nil  -- Polygon color
+    color = nil,  -- Polygon color
     ---@type number
     lineWidth = nil  -- Line width
 }
@@ -2653,15 +2653,15 @@ layer.CmdDrawPolygon = {
 ---@class layer.CmdRenderNPatchRect
 layer.CmdRenderNPatchRect = {
     ---@type Texture2D
-    sourceTexture = nil  -- Source texture
+    sourceTexture = nil,  -- Source texture
     ---@type NPatchInfo
-    info = nil  -- Nine-patch info
+    info = nil,  -- Nine-patch info
     ---@type Rectangle
-    dest = nil  -- Destination
+    dest = nil,  -- Destination
     ---@type Vector2
-    origin = nil  -- Origin
+    origin = nil,  -- Origin
     ---@type number
-    rotation = nil  -- Rotation
+    rotation = nil,  -- Rotation
     ---@type Color
     tint = nil  -- Tint color
 }
@@ -2673,11 +2673,11 @@ layer.CmdRenderNPatchRect = {
 ---@class layer.CmdDrawTriangle
 layer.CmdDrawTriangle = {
     ---@type Vector2
-    p1 = nil  -- Point 1
+    p1 = nil,  -- Point 1
     ---@type Vector2
-    p2 = nil  -- Point 2
+    p2 = nil,  -- Point 2
     ---@type Vector2
-    p3 = nil  -- Point 3
+    p3 = nil,  -- Point 3
     ---@type Color
     color = nil  -- Triangle color
 }
@@ -2689,9 +2689,9 @@ layer.CmdDrawTriangle = {
 ---@class layer.DrawCommandV2
 layer.DrawCommandV2 = {
     ---@type number
-    type = nil  -- The draw command type enum
+    type = nil,  -- The draw command type enum
     ---@type any
-    data = nil  -- The actual command data (CmdX struct)
+    data = nil,  -- The actual command data (CmdX struct)
     ---@type number
     z = nil  -- Z-order depth value for sorting
 }
@@ -2703,7 +2703,7 @@ layer.DrawCommandV2 = {
 ---@class layer.DrawCommandSpace
 layer.DrawCommandSpace = {
     ---@type number
-    Screen = nil  -- Screen space draw commands
+    Screen = nil,  -- Screen space draw commands
     ---@type number
     World = nil  -- World space draw commands
 }
@@ -2874,17 +2874,17 @@ EventQueueSystem.TimerType = {
 ---@class EventQueueSystem.EaseData
 EventQueueSystem.EaseData = {
     ---@type EventQueueSystem.EaseType
-    type = nil  -- The easing function to use.
+    type = nil,  -- The easing function to use.
     ---@type number
-    startValue = nil  -- The starting value of the tween.
+    startValue = nil,  -- The starting value of the tween.
     ---@type number
-    endValue = nil  -- The ending value of the tween.
+    endValue = nil,  -- The ending value of the tween.
     ---@type number
-    startTime = nil  -- The start time of the tween.
+    startTime = nil,  -- The start time of the tween.
     ---@type number
-    endTime = nil  -- The end time of the tween.
+    endTime = nil,  -- The end time of the tween.
     ---@type fun(value:number)
-    setValueCallback = nil  -- Callback to apply the tweened value.
+    setValueCallback = nil,  -- Callback to apply the tweened value.
     ---@type fun():number
     getValueCallback = nil  -- Callback to get the current value.
 }
@@ -2906,35 +2906,35 @@ EventQueueSystem.ConditionData = {
 ---@class EventQueueSystem.Event
 EventQueueSystem.Event = {
     ---@type EventQueueSystem.TriggerType
-    eventTrigger = nil  -- When the event should trigger.
+    eventTrigger = nil,  -- When the event should trigger.
     ---@type boolean
-    blocksQueue = nil  -- If true, no other events will process until this one completes.
+    blocksQueue = nil,  -- If true, no other events will process until this one completes.
     ---@type boolean
-    canBeBlocked = nil  -- If true, this event can be blocked by another.
+    canBeBlocked = nil,  -- If true, this event can be blocked by another.
     ---@type boolean
-    complete = nil  -- True if the event has finished processing.
+    complete = nil,  -- True if the event has finished processing.
     ---@type boolean
-    timerStarted = nil  -- Internal flag for timed events.
+    timerStarted = nil,  -- Internal flag for timed events.
     ---@type number
-    delaySeconds = nil  -- The delay in seconds for 'AFTER' triggers.
+    delaySeconds = nil,  -- The delay in seconds for 'AFTER' triggers.
     ---@type boolean
-    retainAfterCompletion = nil  -- If true, the event remains in the queue after completion.
+    retainAfterCompletion = nil,  -- If true, the event remains in the queue after completion.
     ---@type boolean
-    createdWhilePaused = nil  -- If true, the event was created while the game was paused.
+    createdWhilePaused = nil,  -- If true, the event was created while the game was paused.
     ---@type function
-    func = nil  -- The callback function to execute.
+    func = nil,  -- The callback function to execute.
     ---@type EventQueueSystem.TimerType
-    timerType = nil  -- The clock type to use for this event's timer.
+    timerType = nil,  -- The clock type to use for this event's timer.
     ---@type number
-    time = nil  -- Internal time tracking for the event.
+    time = nil,  -- Internal time tracking for the event.
     ---@type EventQueueSystem.EaseData
-    ease = nil  -- Easing data for tweening events.
+    ease = nil,  -- Easing data for tweening events.
     ---@type EventQueueSystem.ConditionData
-    condition = nil  -- Condition data for conditional events.
+    condition = nil,  -- Condition data for conditional events.
     ---@type string
-    tag = nil  -- An optional tag for finding the event later.
+    tag = nil,  -- An optional tag for finding the event later.
     ---@type string
-    debugID = nil  -- A debug identifier for the event.
+    debugID = nil,  -- A debug identifier for the event.
     ---@type boolean
     deleteNextCycleImmediately = nil  -- If true, deletes the event on the next update cycle.
 }
@@ -3134,23 +3134,23 @@ util = {
 ---@class Transform
 Transform = {
     ---@type number
-    actualX = nil  -- The logical X position.
+    actualX = nil,  -- The logical X position.
     ---@type number
-    visualX = nil  -- The visual (spring-interpolated) X position.
+    visualX = nil,  -- The visual (spring-interpolated) X position.
     ---@type number
-    actualY = nil  -- The logical Y position.
+    actualY = nil,  -- The logical Y position.
     ---@type number
-    visualY = nil  -- The visual (spring-interpolated) Y position.
+    visualY = nil,  -- The visual (spring-interpolated) Y position.
     ---@type number
-    actualW = nil  -- The logical width.
+    actualW = nil,  -- The logical width.
     ---@type number
-    visualW = nil  -- The visual width.
+    visualW = nil,  -- The visual width.
     ---@type number
-    actualH = nil  -- The logical height.
+    actualH = nil,  -- The logical height.
     ---@type number
-    visualH = nil  -- The visual height.
+    visualH = nil,  -- The visual height.
     ---@type number
-    rotation = nil  -- The logical rotation in degrees.
+    rotation = nil,  -- The logical rotation in degrees.
     ---@type number
     scale = nil  -- The logical scale multiplier.
 }
@@ -3279,9 +3279,9 @@ AlignmentFlag = {
 ---@class Alignment
 Alignment = {
     ---@type integer
-    alignment = nil  -- The raw bitmask of alignment flags.
+    alignment = nil,  -- The raw bitmask of alignment flags.
     ---@type Vector2
-    extraOffset = nil  -- Additional fine-tuning offset.
+    extraOffset = nil,  -- Additional fine-tuning offset.
     ---@type Vector2
     prevExtraOffset = nil  -- Previous frame's fine-tuning offset.
 }
@@ -3321,23 +3321,23 @@ function Alignment:toggleFlag(...) end
 ---@class InheritedProperties
 InheritedProperties = {
     ---@type InheritedPropertiesType
-    role_type = nil  -- The role of this entity in the hierarchy.
+    role_type = nil,  -- The role of this entity in the hierarchy.
     ---@type Entity
-    master = nil  -- The master entity this entity inherits from.
+    master = nil,  -- The master entity this entity inherits from.
     ---@type Vector2
-    offset = nil  -- The current offset from the master.
+    offset = nil,  -- The current offset from the master.
     ---@type Vector2
-    prevOffset = nil  -- The previous frame's offset.
+    prevOffset = nil,  -- The previous frame's offset.
     ---@type InheritedPropertiesSync|nil
-    location_bond = nil  -- The sync bond for location.
+    location_bond = nil,  -- The sync bond for location.
     ---@type InheritedPropertiesSync|nil
-    size_bond = nil  -- The sync bond for size.
+    size_bond = nil,  -- The sync bond for size.
     ---@type InheritedPropertiesSync|nil
-    rotation_bond = nil  -- The sync bond for rotation.
+    rotation_bond = nil,  -- The sync bond for rotation.
     ---@type Vector2
-    extraAlignmentFinetuningOffset = nil  -- An additional fine-tuning offset for alignment.
+    extraAlignmentFinetuningOffset = nil,  -- An additional fine-tuning offset for alignment.
     ---@type InheritedPropertiesSync|nil
-    scale_bond = nil  -- The sync bond for scale.
+    scale_bond = nil,  -- The sync bond for scale.
     ---@type Alignment|nil
     flags = nil  -- Alignment flags and data.
 }
@@ -3426,21 +3426,21 @@ function InheritedPropertiesBuilder:build(...) end
 ---@class GameObjectMethods
 GameObjectMethods = {
     ---@type function|nil
-    getObjectToDrag = nil  -- Returns the entity that should be dragged.
+    getObjectToDrag = nil,  -- Returns the entity that should be dragged.
     ---@type function|nil
-    update = nil  -- Called every frame.
+    update = nil,  -- Called every frame.
     ---@type function|nil
-    draw = nil  -- Called every frame for drawing.
+    draw = nil,  -- Called every frame for drawing.
     ---@type function|nil
-    onClick = nil  -- Called on click.
+    onClick = nil,  -- Called on click.
     ---@type function|nil
-    onRelease = nil  -- Called on click release.
+    onRelease = nil,  -- Called on click release.
     ---@type function|nil
-    onHover = nil  -- Called when hover starts.
+    onHover = nil,  -- Called when hover starts.
     ---@type function|nil
-    onStopHover = nil  -- Called when hover ends.
+    onStopHover = nil,  -- Called when hover ends.
     ---@type function|nil
-    onDrag = nil  -- Called while dragging.
+    onDrag = nil,  -- Called while dragging.
     ---@type function|nil
     onStopDrag = nil  -- Called when dragging stops.
 }
@@ -3452,35 +3452,35 @@ GameObjectMethods = {
 ---@class GameObjectState
 GameObjectState = {
     ---@type boolean
-    visible = nil
+    visible = nil,
     ---@type boolean
-    collisionEnabled = nil
+    collisionEnabled = nil,
     ---@type boolean
-    isColliding = nil
+    isColliding = nil,
     ---@type boolean
-    focusEnabled = nil
+    focusEnabled = nil,
     ---@type boolean
-    isBeingFocused = nil
+    isBeingFocused = nil,
     ---@type boolean
-    hoverEnabled = nil
+    hoverEnabled = nil,
     ---@type boolean
-    isBeingHovered = nil
+    isBeingHovered = nil,
     ---@type boolean
-    enlargeOnHover = nil
+    enlargeOnHover = nil,
     ---@type boolean
-    enlargeOnDrag = nil
+    enlargeOnDrag = nil,
     ---@type boolean
-    clickEnabled = nil
+    clickEnabled = nil,
     ---@type boolean
-    isBeingClicked = nil
+    isBeingClicked = nil,
     ---@type boolean
-    dragEnabled = nil
+    dragEnabled = nil,
     ---@type boolean
-    isBeingDragged = nil
+    isBeingDragged = nil,
     ---@type boolean
-    triggerOnReleaseEnabled = nil
+    triggerOnReleaseEnabled = nil,
     ---@type boolean
-    isTriggeringOnRelease = nil
+    isTriggeringOnRelease = nil,
     ---@type boolean
     isUnderOverlay = nil
 }
@@ -3492,39 +3492,39 @@ GameObjectState = {
 ---@class GameObject
 GameObject = {
     ---@type Entity|nil
-    parent = nil
+    parent = nil,
     ---@type table<Entity, boolean>
-    children = nil
+    children = nil,
     ---@type table<integer, Entity>
-    orderedChildren = nil
+    orderedChildren = nil,
     ---@type boolean
-    ignoresPause = nil
+    ignoresPause = nil,
     ---@type Entity|nil
-    container = nil
+    container = nil,
     ---@type Transform|nil
-    collisionTransform = nil
+    collisionTransform = nil,
     ---@type number
-    clickTimeout = nil
+    clickTimeout = nil,
     ---@type GameObjectMethods|nil
-    methods = nil
+    methods = nil,
     ---@type function|nil
-    updateFunction = nil
+    updateFunction = nil,
     ---@type function|nil
-    drawFunction = nil
+    drawFunction = nil,
     ---@type GameObjectState
-    state = nil
+    state = nil,
     ---@type Vector2
-    dragOffset = nil
+    dragOffset = nil,
     ---@type Vector2
-    clickOffset = nil
+    clickOffset = nil,
     ---@type Vector2
-    hoverOffset = nil
+    hoverOffset = nil,
     ---@type Vector2
-    shadowDisplacement = nil
+    shadowDisplacement = nil,
     ---@type Vector2
-    layerDisplacement = nil
+    layerDisplacement = nil,
     ---@type Vector2
-    layerDisplacementPrev = nil
+    layerDisplacementPrev = nil,
     ---@type number
     shadowHeight = nil
 }
@@ -3536,11 +3536,11 @@ GameObject = {
 ---@class CollisionOrderInfo
 CollisionOrderInfo = {
     ---@type boolean
-    hasCollisionOrder = nil
+    hasCollisionOrder = nil,
     ---@type Rectangle
-    parentBox = nil
+    parentBox = nil,
     ---@type integer
-    treeOrder = nil
+    treeOrder = nil,
     ---@type integer
     layerOrder = nil
 }
@@ -3596,9 +3596,9 @@ UITypeEnum = {
 ---@class UIElementComponent
 UIElementComponent = {
     ---@type UITypeEnum
-    UIT = nil  -- The type of this UI element.
+    UIT = nil,  -- The type of this UI element.
     ---@type Entity
-    uiBox = nil  -- The root entity of the UI box this element belongs to.
+    uiBox = nil,  -- The root entity of the UI box this element belongs to.
     ---@type UIConfig
     config = nil  -- The configuration settings for this element.
 }
@@ -3610,13 +3610,13 @@ UIElementComponent = {
 ---@class TextInput
 TextInput = {
     ---@type string
-    text = nil  -- The current text content.
+    text = nil,  -- The current text content.
     ---@type integer
-    cursorPos = nil  -- The position of the text cursor.
+    cursorPos = nil,  -- The position of the text cursor.
     ---@type integer
-    maxLength = nil  -- The maximum allowed length of the text.
+    maxLength = nil,  -- The maximum allowed length of the text.
     ---@type boolean
-    allCaps = nil  -- If true, all input is converted to uppercase.
+    allCaps = nil,  -- If true, all input is converted to uppercase.
     ---@type function|nil
     callback = nil  -- A callback function triggered on text change.
 }
@@ -3638,9 +3638,9 @@ TextInputHook = {
 ---@class UIBoxComponent
 UIBoxComponent = {
     ---@type Entity
-    uiRoot = nil  -- The root entity of this UI tree.
+    uiRoot = nil,  -- The root entity of this UI tree.
     ---@type table
-    drawLayers = nil  -- A map of layers used for drawing the UI.
+    drawLayers = nil,  -- A map of layers used for drawing the UI.
     ---@type function|nil
     onBoxResize = nil  -- A callback function triggered when the box is resized.
 }
@@ -3652,13 +3652,13 @@ UIBoxComponent = {
 ---@class UIState
 UIState = {
     ---@type Vector2
-    contentDimensions = nil  -- The calculated dimensions of the element's content.
+    contentDimensions = nil,  -- The calculated dimensions of the element's content.
     ---@type TextDrawable
-    textDrawable = nil  -- The drawable text object.
+    textDrawable = nil,  -- The drawable text object.
     ---@type Entity
-    last_clicked = nil  -- The last entity that was clicked within this UI context.
+    last_clicked = nil,  -- The last entity that was clicked within this UI context.
     ---@type number
-    object_focus_timer = nil  -- Timer for object focus events.
+    object_focus_timer = nil,  -- Timer for object focus events.
     ---@type number
     focus_timer = nil  -- General purpose focus timer.
 }
@@ -3670,7 +3670,7 @@ UIState = {
 ---@class Tooltip
 Tooltip = {
     ---@type string
-    title = nil  -- The title of the tooltip.
+    title = nil,  -- The title of the tooltip.
     ---@type string
     text = nil  -- The main body text of the tooltip.
 }
@@ -3682,19 +3682,19 @@ Tooltip = {
 ---@class FocusArgs
 FocusArgs = {
     ---@type GamepadButton
-    button = nil  -- The gamepad button associated with this focus.
+    button = nil,  -- The gamepad button associated with this focus.
     ---@type boolean
-    snap_to = nil  -- If the view should snap to this element when focused.
+    snap_to = nil,  -- If the view should snap to this element when focused.
     ---@type boolean
-    registered = nil  -- Whether this focus is registered with the focus system.
+    registered = nil,  -- Whether this focus is registered with the focus system.
     ---@type string
-    type = nil  -- The type of focus.
+    type = nil,  -- The type of focus.
     ---@type table<string, Entity>
-    claim_focus_from = nil  -- Entities this element can claim focus from.
+    claim_focus_from = nil,  -- Entities this element can claim focus from.
     ---@type Entity|nil
-    redirect_focus_to = nil  -- Redirect focus to another entity.
+    redirect_focus_to = nil,  -- Redirect focus to another entity.
     ---@type table<string, Entity>
-    nav = nil  -- Navigation map (e.g., nav.up = otherEntity).
+    nav = nil,  -- Navigation map (e.g., nav.up = otherEntity).
     ---@type boolean
     no_loop = nil  -- Disables navigation looping.
 }
@@ -3706,19 +3706,19 @@ FocusArgs = {
 ---@class SliderComponent
 SliderComponent = {
     ---@type string
-    color = nil
+    color = nil,
     ---@type string
-    text = nil
+    text = nil,
     ---@type number
-    min = nil
+    min = nil,
     ---@type number
-    max = nil
+    max = nil,
     ---@type number
-    value = nil
+    value = nil,
     ---@type integer
-    decimal_places = nil
+    decimal_places = nil,
     ---@type number
-    w = nil
+    w = nil,
     ---@type number
     h = nil
 }
@@ -3750,201 +3750,201 @@ UIStylingType = {
 ---@class UIConfig
 UIConfig = {
     ---@type UIStylingType|nil
-    stylingType = nil  -- The visual style of the element.
+    stylingType = nil,  -- The visual style of the element.
     ---@type NPatchInfo|nil
-    nPatchInfo = nil  -- 9-patch slicing information.
+    nPatchInfo = nil,  -- 9-patch slicing information.
     ---@type string|nil
-    nPatchSourceTexture = nil  -- Texture path for the 9-patch.
+    nPatchSourceTexture = nil,  -- Texture path for the 9-patch.
     ---@type string|nil
-    id = nil  -- Unique identifier for this UI element.
+    id = nil,  -- Unique identifier for this UI element.
     ---@type string|nil
-    instanceType = nil  -- A specific instance type for categorization.
+    instanceType = nil,  -- A specific instance type for categorization.
     ---@type UITypeEnum|nil
-    uiType = nil  -- The fundamental type of the UI element.
+    uiType = nil,  -- The fundamental type of the UI element.
     ---@type string|nil
-    drawLayer = nil  -- The layer on which this element is drawn.
+    drawLayer = nil,  -- The layer on which this element is drawn.
     ---@type string|nil
-    group = nil  -- The focus group this element belongs to.
+    group = nil,  -- The focus group this element belongs to.
     ---@type string|nil
-    groupParent = nil  -- The parent focus group.
+    groupParent = nil,  -- The parent focus group.
     ---@type InheritedPropertiesSync|nil
-    location_bond = nil  -- Bonding strength for location.
+    location_bond = nil,  -- Bonding strength for location.
     ---@type InheritedPropertiesSync|nil
-    rotation_bond = nil  -- Bonding strength for rotation.
+    rotation_bond = nil,  -- Bonding strength for rotation.
     ---@type InheritedPropertiesSync|nil
-    size_bond = nil  -- Bonding strength for size.
+    size_bond = nil,  -- Bonding strength for size.
     ---@type InheritedPropertiesSync|nil
-    scale_bond = nil  -- Bonding strength for scale.
+    scale_bond = nil,  -- Bonding strength for scale.
     ---@type Vector2|nil
-    offset = nil  -- Offset from the parent/aligned position.
+    offset = nil,  -- Offset from the parent/aligned position.
     ---@type number|nil
-    scale = nil  -- Scale multiplier.
+    scale = nil,  -- Scale multiplier.
     ---@type number|nil
-    textSpacing = nil  -- Spacing for text characters.
+    textSpacing = nil,  -- Spacing for text characters.
     ---@type boolean|nil
-    focusWithObject = nil  -- Whether focus is tied to a game object.
+    focusWithObject = nil,  -- Whether focus is tied to a game object.
     ---@type boolean|nil
-    refreshMovement = nil  -- Force movement refresh.
+    refreshMovement = nil,  -- Force movement refresh.
     ---@type boolean|nil
-    no_recalc = nil  -- Prevents recalculation of transform.
+    no_recalc = nil,  -- Prevents recalculation of transform.
     ---@type boolean|nil
-    non_recalc = nil  -- Alias for no_recalc.
+    non_recalc = nil,  -- Alias for no_recalc.
     ---@type boolean|nil
-    noMovementWhenDragged = nil  -- Prevents movement while being dragged.
+    noMovementWhenDragged = nil,  -- Prevents movement while being dragged.
     ---@type string|nil
-    master = nil  -- ID of the master element.
+    master = nil,  -- ID of the master element.
     ---@type string|nil
-    parent = nil  -- ID of the parent element.
+    parent = nil,  -- ID of the parent element.
     ---@type Entity|nil
-    object = nil  -- The game object associated with this UI element.
+    object = nil,  -- The game object associated with this UI element.
     ---@type boolean|nil
-    objectRecalculate = nil  -- Force recalculation based on the object.
+    objectRecalculate = nil,  -- Force recalculation based on the object.
     ---@type integer|nil
-    alignmentFlags = nil  -- Bitmask of alignment flags.
+    alignmentFlags = nil,  -- Bitmask of alignment flags.
     ---@type number|nil
-    width = nil  -- Explicit width.
+    width = nil,  -- Explicit width.
     ---@type number|nil
-    height = nil  -- Explicit height.
+    height = nil,  -- Explicit height.
     ---@type number|nil
-    maxWidth = nil  -- Maximum width.
+    maxWidth = nil,  -- Maximum width.
     ---@type number|nil
-    maxHeight = nil  -- Maximum height.
+    maxHeight = nil,  -- Maximum height.
     ---@type number|nil
-    minWidth = nil  -- Minimum width.
+    minWidth = nil,  -- Minimum width.
     ---@type number|nil
-    minHeight = nil  -- Minimum height.
+    minHeight = nil,  -- Minimum height.
     ---@type number|nil
-    padding = nil  -- Padding around the content.
+    padding = nil,  -- Padding around the content.
     ---@type string|nil
-    color = nil  -- Background color.
+    color = nil,  -- Background color.
     ---@type string|nil
-    outlineColor = nil  -- Outline color.
+    outlineColor = nil,  -- Outline color.
     ---@type number|nil
-    outlineThickness = nil  -- Outline thickness in pixels.
+    outlineThickness = nil,  -- Outline thickness in pixels.
     ---@type boolean|nil
-    makeMovementDynamic = nil  -- Enables springy movement.
+    makeMovementDynamic = nil,  -- Enables springy movement.
     ---@type Vector2|nil
-    shadow = nil  -- Offset for the shadow.
+    shadow = nil,  -- Offset for the shadow.
     ---@type Vector2|nil
-    outlineShadow = nil  -- Offset for the outline shadow.
+    outlineShadow = nil,  -- Offset for the outline shadow.
     ---@type string|nil
-    shadowColor = nil  -- Color of the shadow.
+    shadowColor = nil,  -- Color of the shadow.
     ---@type boolean|nil
-    noFill = nil  -- If true, the background is not filled.
+    noFill = nil,  -- If true, the background is not filled.
     ---@type boolean|nil
-    pixelatedRectangle = nil  -- Use pixel-perfect rectangle drawing.
+    pixelatedRectangle = nil,  -- Use pixel-perfect rectangle drawing.
     ---@type boolean|nil
-    canCollide = nil  -- Whether collision is possible.
+    canCollide = nil,  -- Whether collision is possible.
     ---@type boolean|nil
-    collideable = nil  -- Alias for canCollide.
+    collideable = nil,  -- Alias for canCollide.
     ---@type boolean|nil
-    forceCollision = nil  -- Forces collision checks.
+    forceCollision = nil,  -- Forces collision checks.
     ---@type boolean|nil
-    button_UIE = nil  -- Behaves as a button.
+    button_UIE = nil,  -- Behaves as a button.
     ---@type boolean|nil
-    disable_button = nil  -- Disables button functionality.
+    disable_button = nil,  -- Disables button functionality.
     ---@type function|nil
-    progressBarFetchValueLambda = nil  -- Function to get the progress bar's current value.
+    progressBarFetchValueLambda = nil,  -- Function to get the progress bar's current value.
     ---@type boolean|nil
-    progressBar = nil  -- If this element is a progress bar.
+    progressBar = nil,  -- If this element is a progress bar.
     ---@type string|nil
-    progressBarEmptyColor = nil  -- Color of the empty part of the progress bar.
+    progressBarEmptyColor = nil,  -- Color of the empty part of the progress bar.
     ---@type string|nil
-    progressBarFullColor = nil  -- Color of the filled part of the progress bar.
+    progressBarFullColor = nil,  -- Color of the filled part of the progress bar.
     ---@type number|nil
-    progressBarMaxValue = nil  -- The maximum value of the progress bar.
+    progressBarMaxValue = nil,  -- The maximum value of the progress bar.
     ---@type string|nil
-    progressBarValueComponentName = nil  -- Component name to fetch progress value from.
+    progressBarValueComponentName = nil,  -- Component name to fetch progress value from.
     ---@type string|nil
-    progressBarValueFieldName = nil  -- Field name to fetch progress value from.
+    progressBarValueFieldName = nil,  -- Field name to fetch progress value from.
     ---@type boolean|nil
-    ui_object_updated = nil  -- Flag indicating the UI object was updated.
+    ui_object_updated = nil,  -- Flag indicating the UI object was updated.
     ---@type boolean|nil
-    buttonDelayStart = nil  -- Flag for button delay start.
+    buttonDelayStart = nil,  -- Flag for button delay start.
     ---@type number|nil
-    buttonDelay = nil  -- Delay for button actions.
+    buttonDelay = nil,  -- Delay for button actions.
     ---@type number|nil
-    buttonDelayProgress = nil  -- Progress of the button delay.
+    buttonDelayProgress = nil,  -- Progress of the button delay.
     ---@type boolean|nil
-    buttonDelayEnd = nil  -- Flag for button delay end.
+    buttonDelayEnd = nil,  -- Flag for button delay end.
     ---@type boolean|nil
-    buttonClicked = nil  -- True if the button was clicked this frame.
+    buttonClicked = nil,  -- True if the button was clicked this frame.
     ---@type number|nil
-    buttonDistance = nil  -- Distance for button press effect.
+    buttonDistance = nil,  -- Distance for button press effect.
     ---@type string|nil
-    tooltip = nil  -- Simple tooltip text.
+    tooltip = nil,  -- Simple tooltip text.
     ---@type Tooltip|nil
-    detailedTooltip = nil  -- A detailed tooltip object.
+    detailedTooltip = nil,  -- A detailed tooltip object.
     ---@type function|nil
-    onDemandTooltip = nil  -- A function that returns a tooltip.
+    onDemandTooltip = nil,  -- A function that returns a tooltip.
     ---@type boolean|nil
-    hover = nil  -- Flag indicating if the element is being hovered.
+    hover = nil,  -- Flag indicating if the element is being hovered.
     ---@type boolean|nil
-    force_focus = nil  -- Forces this element to take focus.
+    force_focus = nil,  -- Forces this element to take focus.
     ---@type boolean|nil
-    dynamicMotion = nil  -- Enables dynamic motion effects.
+    dynamicMotion = nil,  -- Enables dynamic motion effects.
     ---@type boolean|nil
-    choice = nil  -- Marks this as a choice in a selection.
+    choice = nil,  -- Marks this as a choice in a selection.
     ---@type boolean|nil
-    chosen = nil  -- True if this choice is currently selected.
+    chosen = nil,  -- True if this choice is currently selected.
     ---@type boolean|nil
-    one_press = nil  -- Button can only be pressed once.
+    one_press = nil,  -- Button can only be pressed once.
     ---@type boolean|nil
-    chosen_vert = nil  -- Indicates a vertical choice selection.
+    chosen_vert = nil,  -- Indicates a vertical choice selection.
     ---@type boolean|nil
-    draw_after = nil  -- Draw this element after its children.
+    draw_after = nil,  -- Draw this element after its children.
     ---@type FocusArgs|nil
-    focusArgs = nil  -- Arguments for focus behavior.
+    focusArgs = nil,  -- Arguments for focus behavior.
     ---@type function|nil
-    updateFunc = nil  -- Custom update function.
+    updateFunc = nil,  -- Custom update function.
     ---@type function|nil
-    initFunc = nil  -- Custom initialization function.
+    initFunc = nil,  -- Custom initialization function.
     ---@type function|nil
-    onUIResizeFunc = nil  -- Callback for when the UI is resized.
+    onUIResizeFunc = nil,  -- Callback for when the UI is resized.
     ---@type function|nil
-    onUIScalingResetToOne = nil  -- Callback for when UI scaling resets.
+    onUIScalingResetToOne = nil,  -- Callback for when UI scaling resets.
     ---@type function|nil
-    instaFunc = nil  -- A function to be executed instantly.
+    instaFunc = nil,  -- A function to be executed instantly.
     ---@type function|nil
-    buttonCallback = nil  -- Callback for button presses.
+    buttonCallback = nil,  -- Callback for button presses.
     ---@type boolean|nil
-    buttonTemp = nil  -- Temporary button flag.
+    buttonTemp = nil,  -- Temporary button flag.
     ---@type function|nil
-    textGetter = nil  -- Function to dynamically get text content.
+    textGetter = nil,  -- Function to dynamically get text content.
     ---@type Entity|nil
-    ref_entity = nil  -- A referenced entity.
+    ref_entity = nil,  -- A referenced entity.
     ---@type string|nil
-    ref_component = nil  -- Name of a referenced component.
+    ref_component = nil,  -- Name of a referenced component.
     ---@type any|nil
-    ref_value = nil  -- A referenced value.
+    ref_value = nil,  -- A referenced value.
     ---@type any|nil
-    prev_ref_value = nil  -- The previous referenced value.
+    prev_ref_value = nil,  -- The previous referenced value.
     ---@type string|nil
-    text = nil  -- Static text content.
+    text = nil,  -- Static text content.
     ---@type string|nil
-    language = nil  -- Language key for localization.
+    language = nil,  -- Language key for localization.
     ---@type boolean|nil
-    verticalText = nil  -- If true, text is rendered vertically.
+    verticalText = nil,  -- If true, text is rendered vertically.
     ---@type boolean|nil
-    hPopup = nil  -- Is a horizontal popup.
+    hPopup = nil,  -- Is a horizontal popup.
     ---@type boolean|nil
-    dPopup = nil  -- Is a detailed popup.
+    dPopup = nil,  -- Is a detailed popup.
     ---@type UIConfig|nil
-    hPopupConfig = nil  -- Configuration for the horizontal popup.
+    hPopupConfig = nil,  -- Configuration for the horizontal popup.
     ---@type UIConfig|nil
-    dPopupConfig = nil  -- Configuration for the detailed popup.
+    dPopupConfig = nil,  -- Configuration for the detailed popup.
     ---@type boolean|nil
-    extend_up = nil  -- If the element extends upwards.
+    extend_up = nil,  -- If the element extends upwards.
     ---@type Vector2|nil
-    resolution = nil  -- Resolution context for this element.
+    resolution = nil,  -- Resolution context for this element.
     ---@type boolean|nil
-    emboss = nil  -- Apply an emboss effect.
+    emboss = nil,  -- Apply an emboss effect.
     ---@type boolean|nil
-    line_emboss = nil  -- Apply a line emboss effect.
+    line_emboss = nil,  -- Apply a line emboss effect.
     ---@type boolean|nil
-    mid = nil  -- A miscellaneous flag.
+    mid = nil,  -- A miscellaneous flag.
     ---@type boolean|nil
-    noRole = nil  -- This element has no inherited properties role.
+    noRole = nil,  -- This element has no inherited properties role.
     ---@type InheritedProperties|nil
     role = nil  -- The inherited properties role.
 }
@@ -4649,9 +4649,9 @@ function UIConfigBuilder:build(...) end
 ---@class UIElementTemplateNode
 UIElementTemplateNode = {
     ---@type UITypeEnum
-    type = nil
+    type = nil,
     ---@type UIConfig
-    config = nil
+    config = nil,
     ---@type table<integer, UIElementTemplateNode>
     children = nil
 }
@@ -4947,21 +4947,318 @@ camera.FollowStyle = {
 
 
 ---
---- Smooth 2D camera with springs, follow modes, bounds, shake, flash/fade.
+--- Smooth 2D camera with springs, follow modes, bounds, shake, and flash/fade.
+Actual* setters target the spring (smoothed) values; Visual* setters apply immediately.
 ---
 ---@class GameCamera
 GameCamera = {
-    Begin() = ,  -- BeginMode2D with this camera.
-    End(layer?) = ,  -- EndMode2D; optional overlay draw.
-    Update(dt) = ,  -- Advance springs/effects/follow/bounds.
-    Move(dx,dy) = ,  -- Nudge target immediately.
-    Follow(worldPos) = ,  -- Set follow target (enables deadzone).
-    SetFollowStyle(style) = ,  -- Set follow mode.
-    Flash(duration,color) = ,  -- Full-screen flash.
-    Fade(duration,color,cb?) = ,  -- Fade to color then call cb().
-    Shake(amp,dur,freq?) = ,  -- Noise-based shake.
-    SpringShake(intensity,angle,stiffness,damping) =   -- Impulse via offset springs.
 }
+
+---
+--- Enter 2D mode using this camera.
+---
+---@return nil
+function GameCamera:Begin(...) end
+
+---
+--- End 2D mode for this camera.
+---
+---@return nil
+function GameCamera:End(...) end
+
+---
+--- Instantly move the camera’s actual position to (x, y), skipping smoothing.
+--- Resets spring values/velocities, clears shakes, and suppresses follow logic for a couple frames.
+--- Use when teleporting or hard-setting camera position.
+---
+---@param x number
+---@param y number
+---@return nil
+function GameCamera:SnapActualTo(...) end
+
+---
+--- End 2D mode, then draw an overlay using the given Layer.
+---
+---@overload fun(layer:Layer):nil
+function GameCamera:End(...) end
+
+---
+--- Single-call smooth move to (x, y). Zeroes velocity, boosts damping briefly to prevent jitter on big jumps,
+--- and suppresses follow/deadzone for a few frames. Restores tuning automatically.
+---
+---@param x number
+---@param y number
+---@param frames integer @frames of boosted damping (default 8)
+---@param kBoost number @temporary stiffness (default 2000)
+---@param dBoost number @temporary damping (default 200)
+---@param jumpThreshold number @world distance to trigger boosted settle; <=0 means always (default 0)
+---@return nil
+function GameCamera:SetActualTargetSmooth(...) end
+
+---
+--- Nudge the camera target immediately by (dx, dy).
+---
+---@param dx number
+---@param dy number
+---@return nil
+function GameCamera:Move(...) end
+
+---
+--- Nudge the camera target by a vector.
+---
+---@overload fun(delta:Vector2):nil
+function GameCamera:Move(...) end
+
+---
+--- Set the world-space follow target (enables deadzone logic).
+---
+---@param worldPos Vector2
+---@return nil
+function GameCamera:Follow(...) end
+
+---
+--- Set or clear the deadzone rectangle (world units).
+---
+---@param rect Rectangle|nil # nil disables deadzone
+---@return nil
+function GameCamera:SetDeadzone(...) end
+
+---
+--- Choose the follow behavior.
+---
+---@param style integer|camera.FollowStyle
+---@return nil
+function GameCamera:SetFollowStyle(...) end
+
+---
+--- Higher t snaps faster; lower t is smoother.
+---
+---@param t number # 0..1 smoothing toward follow target
+---@return nil
+function GameCamera:SetFollowLerp(...) end
+
+---
+--- Lead the camera ahead of movement.
+---
+---@param lead Vector2
+---@return nil
+function GameCamera:SetFollowLead(...) end
+
+---
+--- Lead the camera by components.
+---
+---@overload fun(x:number, y:number):nil
+function GameCamera:SetFollowLead(...) end
+
+---
+--- Fullscreen flash of the given color.
+---
+---@param duration number
+---@param color Color
+---@return nil
+function GameCamera:Flash(...) end
+
+---
+--- Fade to color; optional callback invoked when fade completes.
+---
+---@param duration number
+---@param color Color
+---@param cb? fun():nil
+---@return nil
+function GameCamera:Fade(...) end
+
+---
+--- Noise-based screenshake.
+---
+---@param amplitude number
+---@param duration number
+---@param frequency? number
+---@return nil
+function GameCamera:Shake(...) end
+
+---
+--- Kick the offset spring system with an impulse.
+---
+---@param intensity number
+---@param angle number # radians
+---@param stiffness number
+---@param damping number
+---@return nil
+function GameCamera:SpringShake(...) end
+
+---
+--- Set spring-target zoom (smoothed).
+---
+---@param z number
+---@return nil
+function GameCamera:SetActualZoom(...) end
+
+---
+--- Set immediate zoom (unsmoothed).
+---
+---@param z number
+---@return nil
+function GameCamera:SetVisualZoom(...) end
+
+---
+--- Current spring-target zoom.
+---
+---@return number
+function GameCamera:GetActualZoom(...) end
+
+---
+--- Current immediate zoom.
+---
+---@return number
+function GameCamera:GetVisualZoom(...) end
+
+---
+--- Set spring-target rotation (radians).
+---
+---@param radians number
+---@return nil
+function GameCamera:SetActualRotation(...) end
+
+---
+--- Set immediate rotation (radians).
+---
+---@param radians number
+---@return nil
+function GameCamera:SetVisualRotation(...) end
+
+---
+--- Current spring-target rotation (radians).
+---
+---@return number
+function GameCamera:GetActualRotation(...) end
+
+---
+--- Current immediate rotation (radians).
+---
+---@return number
+function GameCamera:GetVisualRotation(...) end
+
+---
+--- Set spring-target offset.
+---
+---@param offset Vector2
+---@return nil
+function GameCamera:SetActualOffset(...) end
+
+---
+--- Set spring-target offset by components.
+---
+---@overload fun(x:number, y:number):nil
+function GameCamera:SetActualOffset(...) end
+
+---
+--- Set immediate offset.
+---
+---@param offset Vector2
+---@return nil
+function GameCamera:SetVisualOffset(...) end
+
+---
+--- Set immediate offset by components.
+---
+---@overload fun(x:number, y:number):nil
+function GameCamera:SetVisualOffset(...) end
+
+---
+--- Current spring-target offset.
+---
+---@return Vector2
+function GameCamera:GetActualOffset(...) end
+
+---
+--- Current immediate offset.
+---
+---@return Vector2
+function GameCamera:GetVisualOffset(...) end
+
+---
+--- Set spring-target position.
+---
+---@param world Vector2
+---@return nil
+function GameCamera:SetActualTarget(...) end
+
+---
+--- Set spring-target position by components.
+---
+---@overload fun(x:number, y:number):nil
+function GameCamera:SetActualTarget(...) end
+
+---
+--- Set immediate position.
+---
+---@param world Vector2
+---@return nil
+function GameCamera:SetVisualTarget(...) end
+
+---
+--- Set immediate position by components.
+---
+---@overload fun(x:number, y:number):nil
+function GameCamera:SetVisualTarget(...) end
+
+---
+--- Current spring-target position.
+---
+---@return Vector2
+function GameCamera:GetActualTarget(...) end
+
+---
+--- Current immediate position.
+---
+---@return Vector2
+function GameCamera:GetVisualTarget(...) end
+
+---
+--- Set world-space clamp rectangle or disable when nil.
+---
+---@param rect Rectangle|nil # nil disables clamping
+---@return nil
+function GameCamera:SetBounds(...) end
+
+---
+--- Enable/disable damping on the offset spring.
+---
+---@param enabled boolean
+---@return nil
+function GameCamera:SetOffsetDampingEnabled(...) end
+
+---
+--- Whether offset damping is enabled.
+---
+---@return boolean
+function GameCamera:IsOffsetDampingEnabled(...) end
+
+---
+--- Enable/disable strafe tilt effect.
+---
+---@param enabled boolean
+---@return nil
+function GameCamera:SetStrafeTiltEnabled(...) end
+
+---
+--- Whether strafe tilt is enabled.
+---
+---@return boolean
+function GameCamera:IsStrafeTiltEnabled(...) end
+
+---
+--- Mouse position in world space using this camera.
+---
+---@return Vector2
+function GameCamera:GetMouseWorld(...) end
+
+---
+--- Advance springs, effects, follow, and bounds by dt seconds.
+---
+---@param dt number
+---@return nil
+function GameCamera:Update(...) end
 
 
 ---
@@ -4970,123 +5267,123 @@ GameCamera = {
 ---@class InputState
 InputState = {
     ---@type Entity
-    cursor_clicked_target = nil  -- Entity clicked this frame
+    cursor_clicked_target = nil,  -- Entity clicked this frame
     ---@type Entity
-    cursor_prev_clicked_target = nil  -- Entity clicked in previous frame
+    cursor_prev_clicked_target = nil,  -- Entity clicked in previous frame
     ---@type Entity
-    cursor_focused_target = nil  -- Entity under cursor focus now
+    cursor_focused_target = nil,  -- Entity under cursor focus now
     ---@type Entity
-    cursor_prev_focused_target = nil  -- Entity under cursor focus last frame
+    cursor_prev_focused_target = nil,  -- Entity under cursor focus last frame
     ---@type Rectangle
-    cursor_focused_target_area = nil  -- Bounds of the focused target
+    cursor_focused_target_area = nil,  -- Bounds of the focused target
     ---@type Entity
-    cursor_dragging_target = nil  -- Entity currently being dragged
+    cursor_dragging_target = nil,  -- Entity currently being dragged
     ---@type Entity
-    cursor_prev_dragging_target = nil  -- Entity dragged last frame
+    cursor_prev_dragging_target = nil,  -- Entity dragged last frame
     ---@type Entity
-    cursor_prev_released_on_target = nil  -- Entity released on target last frame
+    cursor_prev_released_on_target = nil,  -- Entity released on target last frame
     ---@type Entity
-    cursor_released_on_target = nil  -- Entity released on target this frame
+    cursor_released_on_target = nil,  -- Entity released on target this frame
     ---@type Entity
-    current_designated_hover_target = nil  -- Entity designated for hover handling
+    current_designated_hover_target = nil,  -- Entity designated for hover handling
     ---@type Entity
-    prev_designated_hover_target = nil  -- Previously designated hover target
+    prev_designated_hover_target = nil,  -- Previously designated hover target
     ---@type Entity
-    cursor_hovering_target = nil  -- Entity being hovered now
+    cursor_hovering_target = nil,  -- Entity being hovered now
     ---@type Entity
-    cursor_prev_hovering_target = nil  -- Entity hovered last frame
+    cursor_prev_hovering_target = nil,  -- Entity hovered last frame
     ---@type bool
-    cursor_hovering_handled = nil  -- Whether hover was already handled
+    cursor_hovering_handled = nil,  -- Whether hover was already handled
     ---@type std::vector<Entity>
-    collision_list = nil  -- All entities colliding with cursor
+    collision_list = nil,  -- All entities colliding with cursor
     ---@type std::vector<NodeData>
-    nodes_at_cursor = nil  -- All UI nodes under cursor
+    nodes_at_cursor = nil,  -- All UI nodes under cursor
     ---@type Vector2
-    cursor_position = nil  -- Current cursor position
+    cursor_position = nil,  -- Current cursor position
     ---@type Vector2
-    cursor_down_position = nil  -- Position where cursor was pressed
+    cursor_down_position = nil,  -- Position where cursor was pressed
     ---@type Vector2
-    cursor_up_position = nil  -- Position where cursor was released
+    cursor_up_position = nil,  -- Position where cursor was released
     ---@type Vector2
-    focus_cursor_pos = nil  -- Cursor pos used for gamepad/keyboard focus
+    focus_cursor_pos = nil,  -- Cursor pos used for gamepad/keyboard focus
     ---@type float
-    cursor_down_time = nil  -- Time of last cursor press
+    cursor_down_time = nil,  -- Time of last cursor press
     ---@type float
-    cursor_up_time = nil  -- Time of last cursor release
+    cursor_up_time = nil,  -- Time of last cursor release
     ---@type bool
-    cursor_down_handled = nil  -- Down event handled flag
+    cursor_down_handled = nil,  -- Down event handled flag
     ---@type Entity
-    cursor_down_target = nil  -- Entity pressed down on
+    cursor_down_target = nil,  -- Entity pressed down on
     ---@type float
-    cursor_down_target_click_timeout = nil  -- Click timeout interval
+    cursor_down_target_click_timeout = nil,  -- Click timeout interval
     ---@type bool
-    cursor_up_handled = nil  -- Up event handled flag
+    cursor_up_handled = nil,  -- Up event handled flag
     ---@type Entity
-    cursor_up_target = nil  -- Entity released on
+    cursor_up_target = nil,  -- Entity released on
     ---@type bool
-    cursor_released_on_handled = nil  -- Release handled flag
+    cursor_released_on_handled = nil,  -- Release handled flag
     ---@type bool
-    cursor_click_handled = nil  -- Click handled flag
+    cursor_click_handled = nil,  -- Click handled flag
     ---@type bool
-    is_cursor_down = nil  -- Is cursor currently down?
+    is_cursor_down = nil,  -- Is cursor currently down?
     ---@type std::vector<InputButton>
-    frame_buttonpress = nil  -- Buttons pressed this frame
+    frame_buttonpress = nil,  -- Buttons pressed this frame
     ---@type std::unordered_map<InputButton,float>
-    repress_timer = nil  -- Cooldown per button
+    repress_timer = nil,  -- Cooldown per button
     ---@type bool
-    no_holdcap = nil  -- Disable repeated hold events
+    no_holdcap = nil,  -- Disable repeated hold events
     ---@type std::function<void(int)>
-    text_input_hook = nil  -- Callback for text input events
+    text_input_hook = nil,  -- Callback for text input events
     ---@type bool
-    capslock = nil  -- Is caps-lock active
+    capslock = nil,  -- Is caps-lock active
     ---@type bool
-    coyote_focus = nil  -- Allow focus grace period
+    coyote_focus = nil,  -- Allow focus grace period
     ---@type Transform
-    cursor_hover_transform = nil  -- Transform under cursor
+    cursor_hover_transform = nil,  -- Transform under cursor
     ---@type float
-    cursor_hover_time = nil  -- Hover duration
+    cursor_hover_time = nil,  -- Hover duration
     ---@type std::deque<Entity>
-    L_cursor_queue = nil  -- Recent cursor targets queue
+    L_cursor_queue = nil,  -- Recent cursor targets queue
     ---@type std::vector<KeyboardKey>
-    keysPressedThisFrame = nil  -- Keys pressed this frame
+    keysPressedThisFrame = nil,  -- Keys pressed this frame
     ---@type std::vector<KeyboardKey>
-    keysHeldThisFrame = nil  -- Keys held down
+    keysHeldThisFrame = nil,  -- Keys held down
     ---@type std::unordered_map<KeyboardKey,float>
-    heldKeyDurations = nil  -- Hold durations per key
+    heldKeyDurations = nil,  -- Hold durations per key
     ---@type std::vector<KeyboardKey>
-    keysReleasedThisFrame = nil  -- Keys released this frame
+    keysReleasedThisFrame = nil,  -- Keys released this frame
     ---@type std::vector<GamepadButton>
-    gamepadButtonsPressedThisFrame = nil  -- Gamepad buttons pressed this frame
+    gamepadButtonsPressedThisFrame = nil,  -- Gamepad buttons pressed this frame
     ---@type std::vector<GamepadButton>
-    gamepadButtonsHeldThisFrame = nil  -- Held gamepad buttons
+    gamepadButtonsHeldThisFrame = nil,  -- Held gamepad buttons
     ---@type std::unordered_map<GamepadButton,float>
-    gamepadHeldButtonDurations = nil  -- Hold durations per button
+    gamepadHeldButtonDurations = nil,  -- Hold durations per button
     ---@type std::vector<GamepadButton>
-    gamepadButtonsReleasedThisFrame = nil  -- Released gamepad buttons
+    gamepadButtonsReleasedThisFrame = nil,  -- Released gamepad buttons
     ---@type bool
-    focus_interrupt = nil  -- Interrupt focus navigation
+    focus_interrupt = nil,  -- Interrupt focus navigation
     ---@type std::vector<InputLock>
-    activeInputLocks = nil  -- Currently active input locks
+    activeInputLocks = nil,  -- Currently active input locks
     ---@type bool
-    inputLocked = nil  -- Is global input locked
+    inputLocked = nil,  -- Is global input locked
     ---@type std::unordered_map<GamepadAxis,AxisButtonState>
-    axis_buttons = nil  -- Axis-as-button states
+    axis_buttons = nil,  -- Axis-as-button states
     ---@type float
-    axis_cursor_speed = nil  -- Cursor speed from gamepad axis
+    axis_cursor_speed = nil,  -- Cursor speed from gamepad axis
     ---@type ButtonRegistry
-    button_registry = nil  -- Action-to-button mapping
+    button_registry = nil,  -- Action-to-button mapping
     ---@type SnapTarget
-    snap_cursor_to = nil  -- Cursor snap target
+    snap_cursor_to = nil,  -- Cursor snap target
     ---@type CursorContext
-    cursor_context = nil  -- Nested cursor focus contexts
+    cursor_context = nil,  -- Nested cursor focus contexts
     ---@type HIDFlags
-    hid = nil  -- Current HID flags
+    hid = nil,  -- Current HID flags
     ---@type GamepadState
-    gamepad = nil  -- Latest gamepad info
+    gamepad = nil,  -- Latest gamepad info
     ---@type float
-    overlay_menu_active_timer = nil  -- Overlay menu timer
+    overlay_menu_active_timer = nil,  -- Overlay menu timer
     ---@type bool
-    overlay_menu_active = nil  -- Is overlay menu active
+    overlay_menu_active = nil,  -- Is overlay menu active
     ---@type ScreenKeyboard
     screen_keyboard = nil  -- On-screen keyboard state
 }
@@ -5323,8 +5620,10 @@ CursorContext::CursorLayer = {
 ---
 ---@class CursorContext
 CursorContext = {
-    layer = CursorContext::CursorLayer,  -- Current layer
-    stack = std::vector<CursorContext::CursorLayer>  -- Layer stack
+    ---@type CursorContext::CursorLayer
+    layer = nil,  -- Current layer
+    ---@type std::vector<CursorContext::CursorLayer>
+    stack = nil  -- Layer stack
 }
 
 
@@ -5333,11 +5632,16 @@ CursorContext = {
 ---
 ---@class GamepadState
 GamepadState = {
-    object = GamepadObject,  -- Raw gamepad object
-    mapping = GamepadMapping,  -- Button/axis mapping
-    name = std::string,  -- Gamepad name
-    console = bool,  -- Is console gamepad?
-    id = int  -- System device ID
+    ---@type GamepadObject
+    object = nil,  -- Raw gamepad object
+    ---@type GamepadMapping
+    mapping = nil,  -- Button/axis mapping
+    ---@type std::string
+    name = nil,  -- Gamepad name
+    ---@type bool
+    console = nil,  -- Is console gamepad?
+    ---@type int
+    id = nil  -- System device ID
 }
 
 

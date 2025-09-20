@@ -1,4 +1,5 @@
 -- Modified by Chugget
+-- Deprecated!!!!!
 -- Additional docs: https://hump.readthedocs.io/en/latest/camera.html
 
 --[[

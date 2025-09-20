@@ -1009,6 +1009,13 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             worldCamera->Shake(10, 2.0f);
         }
         
+        // random chance to set camera target to random location
+        // if (Random::get<int>(0, 100) < 5) {
+        //     worldCamera->SetActualTarget(
+        //         {Random::get<float>(0, GetScreenWidth()), worldCamera->GetActualTarget().y}
+        //     );
+        // }
+        
         //TODO: remove later
         
         // 1) On mouse‐down:

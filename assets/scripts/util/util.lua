@@ -1,5 +1,54 @@
 local task = require("task/task")
 
+--- Smoothly step the camera toward a target to avoid big-jump jitter.
+-- @param camName string   Name used with camera.Get(...)
+-- @param tx      number   Target world X
+-- @param ty      number   Target world Y
+-- @param opts    table?   { increments, interval, tag, after }
+--   - increments (int): how many steps (default 5)
+--   - interval   (num): seconds between steps (default 0.01)
+--   - tag        (str): timer tag to allow cancel/debounce (default "cam_step_<camName>")
+--   - after    (func?): optional callback after the move finishes
+function camera_smooth_pan_to(camName, tx, ty, opts)
+    opts = opts or {}
+    local increments = opts.increments or 5
+    local interval   = opts.interval   or 0.01
+    local tag        = opts.tag        or ("cam_step_" .. camName)
+
+    local cam = camera.Get(camName)
+    if not cam then
+        log_error(("CameraUtils.step_move: camera '%s' not found"):format(camName))
+        return false
+    end
+
+    -- Cancel any in-flight timer with the same tag to avoid overlap.
+    if timer.cancel then timer.cancel(tag) end
+
+    local cur = cam:GetActualTarget()
+    local stepX = (tx - cur.x) / increments
+    local stepY = (ty - cur.y) / increments
+
+    -- Finalizer: ensure we land exactly on (tx, ty), then call user 'after' if provided.
+    local function on_done()
+        -- cam:SetActualTarget(tx, ty)
+        if type(opts.after) == "function" then opts.after() end
+    end
+
+    timer.every(
+        interval,
+        function()
+            local c = cam:GetActualTarget()
+            cam:SetActualTarget(c.x + stepX, c.y + stepY)
+        end,
+        increments,         -- repetitions
+        false,              -- do not start immediately (matches your behavior)
+        on_done,            -- after callback
+        tag                 -- unique tag
+    )
+
+    return true
+end
+
 -- Wraps v into the interval [−size, limit]
 function wrap(v, size, limit)
   if v > limit then return -size end

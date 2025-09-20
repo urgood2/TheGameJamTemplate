@@ -3403,11 +3403,11 @@ namespace input
         rec.record_property("CursorContext::CursorLayer", {"cursor_position", "Vector2", "Layer’s cursor position"});
         rec.record_property("CursorContext::CursorLayer", {"focus_interrupt", "bool", "Interrupt flag for this layer"});
 
-        rec.add_type("CursorContext");
+        rec.add_type("CursorContext", true);
         rec.record_property("CursorContext", {"layer", "CursorContext::CursorLayer", "Current layer"});
         rec.record_property("CursorContext", {"stack", "std::vector<CursorContext::CursorLayer>", "Layer stack"});
 
-        rec.add_type("GamepadState");
+        rec.add_type("GamepadState", true);
         rec.record_property("GamepadState", {"object", "GamepadObject", "Raw gamepad object"});
         rec.record_property("GamepadState", {"mapping", "GamepadMapping", "Button/axis mapping"});
         rec.record_property("GamepadState", {"name", "std::string", "Gamepad name"});

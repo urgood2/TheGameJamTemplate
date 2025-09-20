@@ -2,6 +2,8 @@
 
 This doc packages a production-ready Lua API around your `GameCamera` and `camera_manager` using Sol2, plus examples, gotchas, and a quick reference. It assumes the binding function you posted (below as **Binding Kernel**) is compiled into your engine and that **`entt::registry*`**, **Raylib PODs** (`Vector2`, `Rectangle`, `Color`), and your **`layer::Layer`** handle are already usable from Lua.
 
+Quick note: use camera_smooth_pan_to() from core/camera_utils.lua to smoothly pan the camera to a target position over time.
+
 ---
 
 ## TL;DR — Quick Start

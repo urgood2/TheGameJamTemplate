@@ -112,5 +112,8 @@
         "*.hpp11": "cpp",
         "expected": "cpp"
     },
-     "C_Cpp.intelliSenseEngine": "disabled"
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "Lua.diagnostics.disable": [
+        "unused-local"
+    ]
 }

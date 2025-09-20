@@ -11,7 +11,6 @@ local combat_core = require("combat.combat_system")
 local shader_prepass = require("shaders.prepass_example")
 local Chain = require("external.knife.chain")
 lume = require("external.lume")
-local camera, methods = require("external.hump.camera")
 -- Represents game loop main module
 main = {}
 
@@ -20,9 +19,6 @@ GAMESTATE = {
     MAIN_MENU = 0,
     IN_GAME = 1
 }
-
-local testCamera = camera.new(0, 0, 1, 0, camera.smooth.damped(0.1)) -- Create a new camera instance with damping
--- testCamera:move(400,400)
 
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
 
@@ -38,11 +34,12 @@ end
 function initMainMenu()
     
     -- testing: shift camera randomly every second
-    timer.every(3.0, function()
+    timer.every(5.0, function()
         local targetX = random_utils.random_int(0, globals.screenWidth() - globals.tileSize)
         local targetY = random_utils.random_int(0, globals.screenHeight() - globals.tileSize)
-        local cam = camera.Get("world_camera")
-        cam.SetActualTarget(random_utils.random_int(0, globals.screenWidth()), random_utils.random_int(0, globals.screenHeight()))
+        
+        camera_smooth_pan_to("world_camera", targetX, targetY) -- pan to the target smoothly
+        
     end)
     
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU

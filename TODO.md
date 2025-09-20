@@ -129,7 +129,7 @@ SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PR
 - [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
-- [ ] hook physics, use this order
+- [ ] hook physics, use this order-> continue here: https://chatgpt.com/share/68ceb21c-d1c8-800a-8e57-1d32303e6370
 ```cpp
 // frame start
 HandleUIAndTransformInteractions(registry); // hover/drag update Transform + states

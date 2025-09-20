@@ -30,7 +30,8 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 
 namespace globals {
-
+    
+    std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
     
     std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
 

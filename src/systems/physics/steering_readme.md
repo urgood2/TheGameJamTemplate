@@ -4,31 +4,6 @@ This document explains how to **set up and use the unified Steering System** (En
 
 ---
 
-## 0. Fix a Bug First
-
-Your overload was recursive:
-
-```cpp
-void SeekPoint(entt::registry& r, entt::entity e,
-               const Vector2& rlTarget,
-               float decel, float weight) {
-    // BAD: calls itself
-    SeekPoint(r, e, rlTarget, decel, weight);
-}
-```
-
-Fix by converting Raylib → Chipmunk:
-
-```cpp
-void SeekPoint(entt::registry& r, entt::entity e,
-               const Vector2& rlTarget,
-               float decel, float weight) {
-    Steering::SeekPoint(r, e, physics::raylibToChipmunkCoords(rlTarget), decel, weight);
-}
-```
-
----
-
 ## 1. Setup
 
 ```cpp

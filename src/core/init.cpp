@@ -532,6 +532,10 @@ namespace init {
         loadConfigFileValues(); // should be called after loadJSONData()
         // in general, loadConfigFileValues() should be called before any pertinent values are used
         
+        // load physics manager
+        globals::physicsManager = std::make_shared<PhysicsManager>(globals::registry);
+        
+        
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);
         

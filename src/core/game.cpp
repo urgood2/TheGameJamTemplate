@@ -45,6 +45,7 @@
 #include "systems/chipmunk_objectivec/ChipmunkAutogeometry.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkTileCache.hpp"
 #include "systems/chipmunk_objectivec/ChipmunkPointCloudSampler.hpp"
+#include "systems/physics/transform_physics_hook.hpp"
 #include "systems/scripting/binding_recorder.hpp"
 #include "systems/spring/spring.hpp"
 #include "systems/transform/transform.hpp"
@@ -903,6 +904,16 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // init physics
         physicsWorld = physics::InitPhysicsWorld(&globals::registry, 64.0f, 0.0f, 0.f);
+        
+        // add to physics manager
+        globals::physicsManager->add("world", physicsWorld);
+        
+        // enable debug draw and step updates
+        globals::physicsManager->enableDebugDraw("world", true);
+        globals::physicsManager->enableStep("world", true);
+        
+        physics::CreatePhysicsForTransform(
+        
         
         entt::entity testEntity = globals::registry.create();
         

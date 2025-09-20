@@ -30,6 +30,8 @@
 #include "../systems/collision/Quadtree.h"
 #include "../systems/localization/localization.hpp"
 
+#include "../systems/physics/physics_manager.hpp"
+
 #include "third_party/rlImGui/imgui.h" // raylib imGUI binding
 
 #include "gui.hpp"
@@ -95,6 +97,8 @@ namespace layer
 
 namespace globals
 {
+    extern std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
+    
     extern std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;
     
     extern std::unordered_map<entt::entity, transform::MasterCacheEntry> getMasterCacheEntityToParentCompMap;

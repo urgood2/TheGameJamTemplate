@@ -30,7 +30,6 @@
 #include "../systems/collision/Quadtree.h"
 #include "../systems/localization/localization.hpp"
 
-#include "../systems/physics/physics_manager.hpp"
 
 #include "third_party/rlImGui/imgui.h" // raylib imGUI binding
 
@@ -94,6 +93,8 @@ namespace layer
 {
     struct Layer;
 }
+
+class PhysicsManager;
 
 namespace globals
 {

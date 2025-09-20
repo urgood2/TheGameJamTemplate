@@ -912,9 +912,6 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         globals::physicsManager->enableDebugDraw("world", true);
         globals::physicsManager->enableStep("world", true);
         
-        physics::CreatePhysicsForTransform(
-        
-        
         entt::entity testEntity = globals::registry.create();
         
         physicsWorld->AddCollider(testEntity, "player", "rectangle", 50, 50, -1, -1, false);

@@ -12,6 +12,7 @@
 #include "../systems/sound/sound_system.hpp"
 #include "../systems/localization/localization.hpp"
 #include "../systems/ai/ai_system.hpp"
+#include "../systems/physics/physics_manager.hpp"
 
 #include <chrono>
 

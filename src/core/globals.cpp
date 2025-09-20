@@ -11,6 +11,8 @@
 #include "systems/collision/Quadtree.h"
 #include "systems/localization/localization.hpp"
 
+#include "../systems/physics/physics_manager.hpp"
+
 #include <iostream>
 #include <sstream>
 #include <string>

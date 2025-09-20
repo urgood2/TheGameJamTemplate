@@ -7,9 +7,9 @@ require("core.entity_factory")
 require("monobehavior.behavior_script_v2") -- the new monobehavior script
 local palette = require("color.palette")
 local combat_core = require("combat.combat_system")
+local TimerChain = require("core.timer_chain")
 
 local shader_prepass = require("shaders.prepass_example")
-local Chain = require("external.knife.chain")
 lume = require("external.lume")
 -- Represents game loop main module
 main = {}
@@ -41,6 +41,35 @@ function initMainMenu()
         camera_smooth_pan_to("world_camera", targetX, targetY) -- pan to the target smoothly
         
     end)
+    
+    local function burstParticleAtMouse()
+        local mouseT           = registry:get(globals.cursor(), Transform)
+            
+        -- spawnGrowingCircleParticle(mouseT.visualX, mouseT.visualY, 100, 100, 0.2)
+        
+        spawnCircularBurstParticles(
+            mouseT.visualX, 
+            mouseT.visualY, 
+            10, -- count
+            0.5, -- seconds
+            util.getColor("apricot_cream"), -- start color
+            util.getColor("coral_pink"), -- end color
+            "outCubic", -- from util.easing
+            "screen" -- screen space
+        )
+        
+    end
+    
+    -- chaining timers as a queue of sorts.
+    
+    TimerChain:new("chainGroup")
+        :after(10.0, function() burstParticleAtMouse() end)
+        :wait(5)
+        :every(0.1, function() burstParticleAtMouse() end, 10)
+        :wait(3)
+        :every(0.5, function() burstParticleAtMouse() end, 5)
+        :start()
+
     
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     setCategoryVolume("effects", 0.2)

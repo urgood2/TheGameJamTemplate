@@ -548,8 +548,8 @@ namespace static_ui_text_system {
         auto uiHandleType = rec.add_type("TextUIHandle");
         uiHandleType.doc = "A handle to a static UI text instance, with O(1) id→entity mapping.";
         rec.record_property("TextUIHandle", {"size", "integer", "Number of ids in the handle."});
-        rec.record_property("TextUIHandle", {"has",  "nil --[fun(id:string):boolean]--", "Check if id exists in the handle."});
-        rec.record_property("TextUIHandle", {"get",  "nil --[fun(id:string):Entity|nil]--", "Fetch entity by id, or nil if not found."});
+        rec.record_property("TextUIHandle", {"has",  "nil, --[fun(id:string):boolean]--", "Check if id exists in the handle."});
+        rec.record_property("TextUIHandle", {"get",  "nil, --[fun(id:string):Entity|nil]--", "Fetch entity by id, or nil if not found."});
 
         // ui.text.buildIdMap(root, traverseChildrenFn) -> TextUIHandle
         text.set_function("buildIdMapDefault",

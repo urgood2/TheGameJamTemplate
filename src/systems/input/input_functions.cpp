@@ -3136,7 +3136,7 @@ namespace input
         auto inputPath = std::vector<std::string>{"input"};
 
         // 1) InputState usertype
-        rec.add_type("InputState");
+        rec.add_type("InputState", true);
         auto &isDef = rec.add_type("InputState");
         isDef.doc = "Per-frame snapshot of cursor, keyboard, mouse, and gamepad state.";
 

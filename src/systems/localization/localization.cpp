@@ -201,7 +201,7 @@ namespace localization
             },
             // Lua-facing documentation
             "---@return string # The currently active language code.\n"
-            "Gets the currently active language code. This is useful for checking which language is currently set.",
+            "---Gets the currently active language code. This is useful for checking which language is currently set.",
             "Returns the currently active language code."
         );
 

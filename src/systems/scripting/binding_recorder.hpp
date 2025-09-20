@@ -188,10 +188,21 @@ public:
             if (t.is_data_class) {
                 // Emit as initialized table with nil fields + comments
                 out << t.name << " = {\n";
-                for (auto& prop : t.properties) {
+                for (size_t i = 0; i < t.properties.size(); ++i) {
+                    const auto &prop = t.properties[i];
+
+                    // Optional typed hint line
+                    if (!prop.value.empty()) {
+                        out << "    ---@type " << prop.value << "\n";
+                    }
+
+                    // Field line with comma except for the last entry
                     out << "    " << prop.name << " = nil";
-                    out << ", -- " << prop.value;
-                    if (!prop.doc.empty()) out << " " << prop.doc;
+                    if (i + 1 < t.properties.size()) out << ",";
+
+                    // Optional trailing inline doc
+                    if (!prop.doc.empty()) out << "  -- " << prop.doc;
+
                     out << "\n";
                 }
                 out << "}\n\n";

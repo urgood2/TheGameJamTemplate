@@ -28,6 +28,7 @@
 
 #include "systems/anim_system.hpp"
 
+#include "systems/camera/camera_bindings.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
@@ -434,6 +435,11 @@ namespace scripting {
         // static ui text functions
         // ------------------------------------------------------
         static_ui_text_system::exposeToLua(stateToInit);
+        
+        // ------------------------------------------------------
+        // camera manager & camera bindings
+        // ------------------------------------------------------
+        camera_bindings::expose_camera_to_lua(stateToInit);
 
         // Also expose your globalShaderUniforms so Lua can call
         //   globalShaderUniforms.set(shaderName, uniformName, value)

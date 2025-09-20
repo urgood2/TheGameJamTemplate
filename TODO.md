@@ -21,10 +21,6 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 ```
 - [ ] use this https://github.com/nhartland/forma for random generation in tiled settings, refer to chat gpt for practical use advice
 - [ ] 1 bit tilemap - use ascii_sprites.tps for a tileset for a gamejam game, using ldtk
-- [ ] smooth particle movement:
-```lua
-self.t:tween(self.duration, self, {w = 2, h = 2, v = 0}, math.cubic_in_out, function() self.dead = true end)
-```
 - [ ] copy SNKRX's dead-simple transition thing. Circle with text. 
 - [ ] do what SNKRX does and add a sort of dark overlay behind everything else when showing gui -> probably render a rect
 - [ ] change image color on hover
@@ -110,33 +106,6 @@ local ReactiveBalm = {
 
 
 
-- [ ] test particle z level and space
-```lua
-local e = particle.CreateParticle(
-  Vec2(100, 80),
-  Vec2(10, 10),
-  {
-    color = Col(255, 180, 64, 255),
-    z = 120,                 -- draw above most stuff
-    space = "screen",        -- also accepts: particle.RenderSpace.SCREEN
-  }
-)
-
-local emitter = particle.CreateParticleEmitter(
-  Vec2(300, 220),
-  {
-    size = Vec2(64, 64),
-    particleSpeed = 80,
-    defaultZ = -50,                  -- whole cloud draws behind
-    defaultSpace = "world",          -- or particle.RenderSpace.WORLD
-    useGlobalCoords = true           -- still honored; defaultSpace wins if set
-  }
-)
-
--- you can still override per particle:
-particle.CreateParticle(Vec2(0,0), Vec2(6,6), { z = 999, space = "screen" })
-
-```
 - [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] test task system in lua
 - [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
@@ -157,21 +126,11 @@ SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PR
 - [ ] lua access to input component, acccessing text & setting callback
 - [ ] expose current camera manager & camera custom class to lua
 - [ ] test & integrate new timer chaining feature ;: [timer chain file](assets/scripts/core/timer_chain.lua)
-- [] way to make sure certain texts & images should be worldspace, or not
-
+- [ ] way to make sure certain texts & images should be worldspace, or not
 - document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.
 - [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
-- [ ] changing color of a hit circle using chaining:
-```lua
-function HitCircle:change_color(delay_multiplier, target_color)
-  delay_multiplier = delay_multiplier or 0.5
-  self.t:after(delay_multiplier * self.duration,
-               function() self.color = target_color end)
-  return self
-end
-```
 - [ ] hook physics, use this order
 ```cpp
 // frame start

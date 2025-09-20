@@ -36,6 +36,15 @@ function myCustomCallback()
 end
 
 function initMainMenu()
+    
+    -- testing: shift camera randomly every second
+    timer.every(3.0, function()
+        local targetX = random_utils.random_int(0, globals.screenWidth() - globals.tileSize)
+        local targetY = random_utils.random_int(0, globals.screenHeight() - globals.tileSize)
+        local cam = camera.Get("world_camera")
+        cam.SetActualTarget(random_utils.random_int(0, globals.screenWidth()), random_utils.random_int(0, globals.screenHeight()))
+    end)
+    
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     setCategoryVolume("effects", 0.2)
     playMusic("main-menu", true) -- Play the main menu music

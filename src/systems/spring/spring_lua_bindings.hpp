@@ -122,7 +122,7 @@ inline void bind_spring(sol::state& lua) {
     rec.record_property("Spring", {"timeToTarget", "number|nil", "If set, animate_to_time controls k/d over time."});
     rec.record_method("Spring", {"pull", "---void(number force, number? k, number? d)", "Impulse-like tug on current value."});
     rec.record_method("Spring", {"animate_to", "---void(number target, number k, number d)", "Move anchor with spring params."});
-    rec.record_method("Spring", {"animate_to_time", "void(number target, number T, function? easing, number? k0, number? d0)", "Time-based targeting with easing."});
+    rec.record_method("Spring", {"animate_to_time", "---void(number target, number T, function? easing, number? k0, number? d0)", "Time-based targeting with easing."});
     rec.record_method("Spring", {"enable", "---void()", "Enable updates."});
     rec.record_method("Spring", {"disable", "---void()", "Disable updates."});
     rec.record_method("Spring", {"snap_to_target", "---void()", "Snap value to target; zero velocity."});

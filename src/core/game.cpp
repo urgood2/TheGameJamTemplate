@@ -905,6 +905,9 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // init physics
         physicsWorld = physics::InitPhysicsWorld(&globals::registry, 64.0f, 0.0f, 0.f);
         
+        physicsWorld->AddCollisionTag("WORLD"); // default tag
+        physicsWorld->EnableCollisionBetween("WORLD", {"WORLD"});
+        
         // add to physics manager
         globals::physicsManager->add("world", physicsWorld);
         
@@ -926,9 +929,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
         
+        // second entity
+        
         entt::entity testEntity = globals::registry.create();
         
-        physicsWorld->AddCollider(testEntity, "player", "rectangle", 50, 50, -1, -1, false);
+        physicsWorld->AddCollider(testEntity, "WORLD" /* default tag */, "rectangle", 50, 50, -1, -1, false);
         
         physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
 
@@ -940,13 +945,17 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         physicsWorld->SetFriction(testEntity, 0.2f);
         physicsWorld->CreateTopDownController(testEntity);
         
-        static cpVect                                 _randomOffset;
         
-        static std::shared_ptr<ChipmunkSpace> physicsSpace = std::make_shared<ChipmunkSpace>(physicsWorld->space);
-        // Assuming 'camera' is your Camera2D…
-        Vector2 topLeft     = GetScreenToWorld2D({ 0, 0 },            camera_manager::Get("world_camera")->cam);
-        Vector2 bottomRight = GetScreenToWorld2D({ (float)GetScreenWidth(),
-        (float)GetScreenHeight() }, camera_manager::Get("world_camera")->cam);
+        // Apply collision filter via your tag system
+        auto rec = globals::physicsManager->get("world");
+        // rec->w->AddCollisionTag("WORLD"); // default tag
+        auto shape = globals::registry.get<physics::ColliderComponent>(testEntity).shape;
+        rec->w->ApplyCollisionFilter(shape.get(), "WORLD" ); // default tag for testing
+        
+        // make world collide with world
+        // rec->w->EnableCollisionBetween("WORLD", {"WORLD"});
+
+
 
         
         // try using ldtk

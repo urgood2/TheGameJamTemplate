@@ -880,25 +880,33 @@ void PhysicsWorld::UpdateCollisionMasks(
  * // "player" will be assigned category 1, "enemy" will be assigned category 2,
  * etc.
  */
-void PhysicsWorld::ApplyCollisionFilter(cpShape *shape,
-                                        const std::string &tag) {
-  if (collisionTags.find(tag) == collisionTags.end()) {
+void PhysicsWorld::ApplyCollisionFilter(cpShape* shape, const std::string& tag) {
+  auto it = collisionTags.find(tag);
+  if (it == collisionTags.end()) {
     SPDLOG_DEBUG("Invalid tag: {}. Tag not applied", tag);
-    return; // Invalid tag
+    return;
   }
 
-  const auto &collisionTag = collisionTags[tag];
-  int mask = 0;
+  const auto& collisionTag = it->second;
 
-  // Combine masks into a single bitfield
-  for (int category : collisionTag.masks) {
-    mask |= category;
+  // Build mask (what this tag collides WITH)
+  cpBitmask maskBits = 0;
+  for (int cat : collisionTag.masks) {
+    maskBits |= static_cast<cpBitmask>(cat);
+  }
+
+  // If nothing was configured, choose a sane default (often "collide with all"):
+  if (maskBits == 0) {
+    maskBits = CP_ALL_CATEGORIES;
+    SPDLOG_DEBUG("Tag '{}' has empty masks; defaulting mask to CP_ALL_CATEGORIES", tag);
   }
 
   cpShapeFilter filter = {
-      static_cast<cpGroup>(collisionTag.category), static_cast<cpBitmask>(mask),
-      static_cast<cpBitmask>(
-          CP_ALL_CATEGORIES)}; // CP_ALL_CATEGORIES is the default wildcard
+    0, // group: 0 unless you explicitly want to group-disable collisions
+    static_cast<cpBitmask>(collisionTag.category), // categories: what this shape IS
+    maskBits                                       // mask: what it collides WITH
+  };
+
   cpShapeSetFilter(shape, filter);
 }
 

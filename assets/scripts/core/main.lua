@@ -40,7 +40,7 @@ function initMainMenu()
         
         camera_smooth_pan_to("world_camera", targetX, targetY) -- pan to the target smoothly
         
-        timer.cancel("main_menu_camera_pan") -- cancel itself inside callback (testing)
+        -- timer.cancel("main_menu_camera_pan") -- cancel itself inside callback (testing)
         
     end,
     0, -- infinite repetitions,

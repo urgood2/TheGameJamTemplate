@@ -95,7 +95,6 @@ extern void MakeSteerable(entt::registry &r, entt::entity e, float maxSpeed,
 // Frame update
 //--------------------------------------------
 extern void Update(entt::registry &r, entt::entity e, float dt);
-
 //--------------------------------------------
 // Behaviors
 //--------------------------------------------

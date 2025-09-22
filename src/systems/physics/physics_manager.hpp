@@ -2,6 +2,7 @@
 #include "physics_world.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "core/globals.hpp"
+#include "steering.hpp"
 
 #include "third_party/navmesh/source/path_finder.h"
 #include "third_party/navmesh/source/cone_of_vision.h"
@@ -159,8 +160,28 @@ public:
     }
 
     void stepAll(float dt) {
-        for (auto& [_, rec] : worlds) {
-            if (!world_active(rec)) continue;
+        // 0) Precompute which worlds are active this frame
+        std::unordered_set<std::size_t> active;
+        active.reserve(worlds.size());
+        for (auto& [h, rec] : worlds) {
+            if (world_active(rec)) active.insert(h);
+        }
+
+        // 1) Apply steering ONLY for agents whose world is active
+        //    (requires PhysicsWorldRef on the entity)
+        auto view = R.view<SteerableComponent, PhysicsWorldRef>();
+        for (auto e : view) {
+            const auto& ref = view.get<PhysicsWorldRef>(e);
+            const auto h = std::hash<std::string>{}(ref.name);
+            if (active.find(h) == active.end()) {
+                continue; // world missing or inactive -> skip steering this frame
+            }
+            Steering::Update(R, e, dt);
+        }
+
+        // 2) Step only active worlds
+        for (auto& [h, rec] : worlds) {
+            if (active.find(h) == active.end()) continue;
             rec.w->Update(dt);
             rec.w->PostUpdate();
         }

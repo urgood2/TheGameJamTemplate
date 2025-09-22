@@ -105,7 +105,7 @@ local ReactiveBalm = {
 ```
 
 
-- [ ] lua bindings for physics world, manager, etc.
+- [ ] test stuf in physics_docs.md
 - [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] test task system in lua
 - [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
@@ -122,7 +122,6 @@ SetObjectLayerCollidesWith(registry, *world, "PROJECTILE", {"WORLD","ENEMY","TRI
 SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PROJECTILE"});
 
 ```
-- [ ] make lua bindings for physics steering functions, and test them.
 - [ ] lua access to input component, acccessing text & setting callback
 - [ ] way to make sure certain texts & images should be worldspace, or not
 - document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.

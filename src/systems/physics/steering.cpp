@@ -92,7 +92,7 @@ namespace Steering {
     //--------------------------------------------
     // Frame update
     //--------------------------------------------
-    inline void Update(entt::registry& r, entt::entity e, float dt){
+    void Update(entt::registry& r, entt::entity e, float dt){
         auto &s = r.get<SteerableComponent>(e);
         if(!s.enabled) return;
 

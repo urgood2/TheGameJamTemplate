@@ -5,7 +5,6 @@ This doc shows how to drive your Chipmunk2D physics + steering from Lua using th
 > **Units & Coordinates**
 >
 > * "Chipmunk units" here match your engine’s physics units.
-> * If your render world is Raylib pixels, convert with your helpers (`raylibToChipmunkCoords`, etc.) and mind the Y‑flip when sampling from the screen.
 
 ---
 
@@ -15,7 +14,7 @@ This doc shows how to drive your Chipmunk2D physics + steering from Lua using th
 2. [Collision tags, masks & triggers](#collision-tags-masks--triggers)
 3. [Adding colliders](#adding-colliders)
 4. [Creating physics from transforms](#creating-physics-from-transforms)
-5. [Physics Manager & Navmesh (`pm.*`)](#physics-manager--navmesh-pm)
+5. [Physics Manager & Navmesh (`PhysicsManager.*`)](#physics-manager--navmesh-pm)
 6. [Queries: Raycast & AABB](#queries-raycast--aabb)
 7. [Collision/Trigger events](#collisiontrigger-events)
 8. [Steering: Make an agent & update](#steering-make-an-agent--update)
@@ -38,16 +37,6 @@ This doc shows how to drive your Chipmunk2D physics + steering from Lua using th
 -- Construct a PhysicsWorld (C++ ctor is PhysicsWorld(entt::registry*, meter, gx, gy)).
 local W = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)  -- 64 px = 1 unit, gravity downward
 
--- Step each frame:
-function game_update(dt)
-  W:Update(dt)
-  W:PostUpdate()  -- if you buffer events that flush after stepping
-end
-
--- Optional visuals (debug)
-function game_debug_draw()
-  W:RenderColliders()
-end
 ```
 
 ---
@@ -146,7 +135,7 @@ physics.create_physics_for_transform(registry, physicsManager, player, info)
 
 ---
 
-## Physics Manager & Navmesh (`pm.*`)
+## Physics Manager & Navmesh (`PhysicsManager.*`)
 
 High-level utilities to **register worlds**, **step/draw them centrally**, and run **navmesh pathfinding** / **visibility (cone-of-vision)** against your colliders.
 
@@ -156,36 +145,27 @@ High-level utilities to **register worlds**, **step/draw them centrally**, and r
 
 ```lua
 -- Register a PhysicsWorld under a name (optionally bind to a game-state string).
-pm.add_world("world", W)               -- or: pm.add_world("world", W, "InGame")
+PhysicsManager.add_world("world", W)               -- or: PhysicsManager.add_world("world", W, "InGame")
 
 -- Toggle stepping & debug draw per world:
-pm.enable_step("world", true)
-pm.enable_debug_draw("world", true)
-
--- Central stepping/drawing (honors state binding + toggles):
-function game_update(dt)
-  pm.step_all(dt)
-end
-
-function game_debug_draw()
-  pm.draw_all()
-end
+PhysicsManager.enable_step("world", true)
+PhysicsManager.enable_debug_draw("world", true)
 
 -- Move an entity between worlds safely:
-pm.move_entity_to_world(npc, "dungeon_world")
+PhysicsManager.move_entity_to_world(npc, "dungeon_world")
 ```
 
 ### Navmesh config (per world)
 
 ```lua
 -- Read current nav config (table with fields).
-local cfg = pm.get_nav_config("world")
+local cfg = PhysicsManager.get_nav_config("world")
 -- Tweak and apply (marks navmesh dirty):
 cfg.default_inflate_px = 12
-pm.set_nav_config("world", cfg)
+PhysicsManager.set_nav_config("world", cfg)
 
 -- Force rebuild now (optional; otherwise lazy on first query):
-pm.rebuild_navmesh("world")
+PhysicsManager.rebuild_navmesh("world")
 ```
 
 **What is `default_inflate_px`?**
@@ -196,21 +176,21 @@ The clearance padding applied to obstacles when building the navmesh. Too small 
 Whenever you add/remove static terrain or flip “obstacle” flags, mark the mesh dirty:
 
 ```lua
-pm.mark_navmesh_dirty("world")
+PhysicsManager.mark_navmesh_dirty("world")
 ```
 
 You can also tag/untag specific entities as navmesh obstacles:
 
 ```lua
 -- Include/exclude an entity's collider in navmesh obstacle set:
-pm.set_nav_obstacle(groundEntity, true)   -- marks dirty for its world automatically
+PhysicsManager.set_nav_obstacle(groundEntity, true)   -- marks dirty for its world automatically
 ```
 
 ### Pathfinding
 
 ```lua
 -- Find a path from (sx,sy) to (dx,dy) in Chipmunk/navmesh units.
-local path = pm.find_path("world", sx, sy, dx, dy)
+local path = PhysicsManager.find_path("world", sx, sy, dx, dy)
 -- path is an array of waypoints: { {x=..,y=..}, ... }
 
 -- Example: feed waypoints into your steering path follower
@@ -223,7 +203,7 @@ end
 
 ```lua
 -- Visibility fan points from a source within radius (against obstacles)
-local fan = pm.vision_fan("world", actor.x, actor.y, 180)
+local fan = PhysicsManager.vision_fan("world", actor.x, actor.y, 180)
 -- fan is an array of {x,y} you can draw as a polygon
 ```
 
@@ -232,31 +212,31 @@ local fan = pm.vision_fan("world", actor.x, actor.y, 180)
 ```lua
 -- 1) World & registration
 local W = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)
-pm.add_world("world", W)
-pm.enable_step("world", true)
-pm.enable_debug_draw("world", true)
+PhysicsManager.add_world("world", W)
+PhysicsManager.enable_step("world", true)
+PhysicsManager.enable_debug_draw("world", true)
 
 -- 2) Mark terrain as nav obstacles
-pm.set_nav_obstacle(terrainEntity, true)
+PhysicsManager.set_nav_obstacle(terrainEntity, true)
 
 -- 3) Configure, rebuild, and query a path
-local cfg = pm.get_nav_config("world")
+local cfg = PhysicsManager.get_nav_config("world")
 cfg.default_inflate_px = 10
-pm.set_nav_config("world", cfg)
-pm.rebuild_navmesh("world")
+PhysicsManager.set_nav_config("world", cfg)
+PhysicsManager.rebuild_navmesh("world")
 
-local pts = pm.find_path("world", 32,32, 640,256)
+local pts = PhysicsManager.find_path("world", 32,32, 640,256)
 if #pts > 0 then steering.set_path(registry, agent, pts, 14) end
 
 -- 4) Frame loop
 function update(dt)
-  pm.step_all(dt)              -- steps all active worlds
+  PhysicsManager.step_all(dt)              -- steps all active worlds
   steering.path_follow(registry, agent, 1.0, 1.0)
   steering.update(registry, agent, dt)
 end
 
 function debug_draw()
-  pm.draw_all()                -- draws colliders for worlds with debug on
+  PhysicsManager.draw_all()                -- draws colliders for worlds with debug on
 end
 ```
 
@@ -264,7 +244,7 @@ end
 
 * Path/vision inputs cast to integers in your current binding. If truncation bites, change cast to rounding on the C++ side.
 * Rebuild cost scales with obstacle count; if it’s hot, cache converted polygons or rebuild incrementally.
-* Worlds bound to inactive game-states won’t step/draw via `pm.step_all/pm.draw_all`. That’s intended.
+* Worlds bound to inactive game-states won’t step/draw via `PhysicsManager.step_all/PhysicsManager.draw_all`. That’s intended.
 
 ---
 
@@ -314,8 +294,6 @@ end
 -- Add a steerable component with caps
 steering.make_steerable(registry, agent, 140.0, 2000.0, math.pi*2.0, 2.0)
 
--- Per-frame: compose forces & clamp
-steering.update(registry, agent, dt)
 ```
 
 > Steering expects a Chipmunk `cpBody*` reachable from your entity (via `ColliderComponent` or legacy `BodyComponent`).
@@ -481,9 +459,9 @@ physics.AddCollider(W, player, "player",  "circle",    14,0,0,0, false)
 physics.AddCollider(W, enemy,  "enemy",   "rectangle", 24,24,0,0, false)
 
 -- Register world with manager and enable
-pm.add_world("world", W)
-pm.enable_step("world", true)
-pm.enable_debug_draw("world", true)
+PhysicsManager.add_world("world", W)
+PhysicsManager.enable_step("world", true)
+PhysicsManager.enable_debug_draw("world", true)
 
 -- Steering caps
 steering.make_steerable(registry, player, 160, 2200, math.pi*2, 2.0)
@@ -499,7 +477,7 @@ function update(dt)
   steering.update(registry, enemy,  dt)
 
   -- step via manager
-  pm.step_all(dt)
+  PhysicsManager.step_all(dt)
 
   -- events
   for _, ev in ipairs(W:GetCollisionEnter("player","enemy")) do
@@ -508,6 +486,6 @@ function update(dt)
 end
 
 function debug_draw()
-  pm.draw_all()
+  PhysicsManager.draw_all()
 end
 ```

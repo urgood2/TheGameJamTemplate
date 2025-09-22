@@ -1,5 +1,7 @@
 # Quadtree Lua API
 
+Quadtrees are used for "transforms" only and not for physics objects.
+
 Two `WorldQuadtree` instances are injected into Lua:
 
 * `quadtreeWorld` → spatial index for world entities

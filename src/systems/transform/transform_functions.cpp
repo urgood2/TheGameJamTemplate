@@ -21,6 +21,7 @@
 #include "systems/scripting/binding_recorder.hpp"
 
 #include "core/globals.hpp"
+#include "types.hpp"
 
 namespace transform
 {
@@ -2723,6 +2724,171 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
     //=========================================================
     sol::table transform_tbl = lua.create_named_table("transform");
     rec.add_type("transform").doc = "A global system for creating and managing all Transforms and GameObjects.";
+    
+    // --- Docs for the component "type" entry (namespaced doc)
+    rec.add_type("transform.RenderLocalCallback").doc =
+        "Attach a per-entity Lua drawing callback that renders in local space. "
+        "Use for custom shapes, outlines, meters, or HUD overlays. "
+        "Local (0,0) is top-left of the content rectangle.";
+
+    // -----------------------------------------------------------------------------
+    // install_local_callback — positional overload
+    // -----------------------------------------------------------------------------
+    rec.record_free_function(
+        {"transform"},
+        {
+            "install_local_callback",
+            "---@param e Entity\n"
+            "---@param fn fun(width:number, height:number, isShadow:boolean)\n"
+            "---@param after boolean @ draw after shader pipeline if true\n"
+            "---@param width number  @ content width when no sprite drives size\n"
+            "---@param height number @ content height when no sprite drives size\n"
+            "---@return nil",
+            "Install or replace a local render callback on an entity.\n"
+            "Positional overload.",
+            true,   // free function
+            false   // not a method
+        }
+    );
+
+    // -----------------------------------------------------------------------------
+    // install_local_callback — table overload
+    // -----------------------------------------------------------------------------
+    rec.record_free_function(
+        {"transform"},
+        {
+            "install_local_callback",
+            "---@param e Entity\n"
+            "---@param fn fun(width:number, height:number, isShadow:boolean)\n"
+            "---@param opts table|nil @ { after?:boolean=false, width?:number=64, height?:number=64 }\n"
+            "---@return nil",
+            "Install or replace a local render callback on an entity.\n"
+            "Table overload: (e, fn, { after?, width?, height? }).",
+            true,
+            false
+        }
+    );
+
+    // -----------------------------------------------------------------------------
+    // remove_local_callback
+    // -----------------------------------------------------------------------------
+    rec.record_free_function(
+        {"transform"},
+        {
+            "remove_local_callback",
+            "---@param e Entity\n---@return nil",
+            "Remove the installed local render callback for the entity (no-op if none).",
+            true,
+            false
+        }
+    );
+
+    // -----------------------------------------------------------------------------
+    // has_local_callback
+    // -----------------------------------------------------------------------------
+    rec.record_free_function(
+        {"transform"},
+        {
+            "has_local_callback",
+            "---@param e Entity\n---@return boolean",
+            "Returns true if the entity has a local render callback.",
+            true,
+            false
+        }
+    );
+
+    // -----------------------------------------------------------------------------
+    // get_local_callback_info
+    // -----------------------------------------------------------------------------
+    rec.record_free_function(
+        {"transform"},
+        {
+            "get_local_callback_info",
+            "---@param e Entity\n"
+            "---@return table|nil @ { width:number, height:number, after:boolean }",
+            "Return info for the local render callback or nil if none.",
+            true,
+            false
+        }
+    );
+
+    // -----------------------------------------------------------------------------
+    // set_local_callback_size
+    // -----------------------------------------------------------------------------
+    rec.record_free_function(
+        {"transform"},
+        {
+            "set_local_callback_size",
+            "---@param e Entity\n---@param width number\n---@param height number\n---@return nil",
+            "Update content width/height used when no sprite dictates size.",
+            true,
+            false
+        }
+    );
+
+    // -----------------------------------------------------------------------------
+    // set_local_callback_after_pipeline
+    // -----------------------------------------------------------------------------
+    rec.record_free_function(
+        {"transform"},
+        {
+            "set_local_callback_after_pipeline",
+            "---@param e Entity\n---@param after boolean\n---@return nil",
+            "Toggle drawing after the shader pipeline (true) or before (false).",
+            true,
+            false
+        }
+    );
+
+    // --- get_space ---
+    transform_tbl.set_function("get_space", [](entt::entity e) {
+        return globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e)
+            ? std::string("screen")
+            : std::string("world");
+    });
+    // path = {"transform"}
+    rec.record_free_function(
+        {"transform"},
+        {"get_space",
+        "---@param e Entity\n---@return string @ 'world' | 'screen'",
+        "Returns 'world' or 'screen' depending on whether the entity has ScreenSpaceCollisionMarker.",
+        true,  // free function (not a method)
+        false} // not a method
+    );
+
+    // --- is_screen_space ---
+    transform_tbl.set_function("is_screen_space", [](entt::entity e) {
+        return globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+    });
+    rec.record_free_function(
+        {"transform"},
+        {"is_screen_space",
+        "---@param e Entity\n---@return boolean",
+        "Returns true if entity has ScreenSpaceCollisionMarker (UI-space).",
+        true,
+        false}
+    );
+
+    // --- set_space ---
+    transform_tbl.set_function("set_space", [](entt::entity e, const std::string& space, sol::optional<bool> /*convert*/) {
+        if (space == "screen") {
+            globals::registry.emplace_or_replace<collision::ScreenSpaceCollisionMarker>(e);
+        } else if (space == "world") {
+            if (globals::registry.any_of<collision::ScreenSpaceCollisionMarker>(e))
+                globals::registry.remove<collision::ScreenSpaceCollisionMarker>(e);
+        }
+        // `convert` is ignored here — no coordinate conversion in this minimal version
+    });
+    rec.record_free_function(
+        {"transform"},
+        {"set_space",
+        "---@param e Entity\n---@param space string @ 'world' | 'screen'\n---@param convert_coords? boolean @ currently ignored\n---@return void",
+        "Sets entity space to 'world' or 'screen'. Optional third arg (convert_coords) is accepted but ignored.",
+        true,
+        false}
+    );
+
+
 
     transform_tbl.set_function("InitializeSystem", &transform::InitializeSystem);
     rec.record_free_function({"transform"}, {"InitializeSystem", "---@return nil", "Initializes the transform system.", true, false});

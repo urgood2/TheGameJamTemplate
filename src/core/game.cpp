@@ -651,7 +651,8 @@ namespace game
         // 1) InputState usertype
         rec.add_type("layers").doc = "Root table for game layers and their components.";
         lua["layers"] = sol::table(lua, sol::create);
-
+        
+        // lua["PhysicsManagerInstance"] = std::ref(*globals::physicsManager);
 
         lua["layers"]["background"] = background;
         lua["layers"]["sprites"] = sprites;

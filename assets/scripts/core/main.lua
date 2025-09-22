@@ -49,6 +49,8 @@ function initMainMenu()
     "main_menu_camera_pan" -- unique tag for this timer
     )
     
+    
+    
     local function burstParticleAtMouse()
         local mouseT           = registry:get(globals.cursor(), Transform)
             

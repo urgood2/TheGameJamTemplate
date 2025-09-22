@@ -405,15 +405,58 @@ inline void expose_steering_to_lua(sol::state& lua) {
 struct NavmeshWorldConfigPublicView {
     int default_inflate_px = 8; // sensible default; mirror your C++ default
 };
+
 inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
     using std::string;
     auto &rec = BindingRecorder::instance();
 
-    // Root module
-    sol::table pm = lua["pm"].get_or_create<sol::table>();
-    rec.add_type("pm").doc =
+    // Lua table is "PhysicsManager"
+    sol::table pm = lua["PhysicsManager"].get_or_create<sol::table>();
+    rec.add_type("PhysicsManager").doc =
         "Physics manager utilities: manage physics worlds, debug toggles, "
         "navmesh (pathfinding / vision), and safe world migration for entities.";
+
+    // --------- Getter(s) ----------
+    pm.set_function("get_world",
+        [&PM](const string &name) -> std::shared_ptr<physics::PhysicsWorld> {
+            if (auto *wr = PM.get(name)) return wr->w;  // sol2 maps empty shared_ptr -> nil
+            return {};
+        });
+    rec.record_free_function(
+        {"PhysicsManager"},
+        {
+            "get_world",
+            "---@param name string\n---@return PhysicsWorld|nil",
+            "Return the PhysicsWorld registered under name, or nil if missing.",
+            true, false
+        });
+
+    pm.set_function("has_world",
+        [&PM](const string &name) {
+            return PM.get(name) != nullptr;
+        });
+    rec.record_free_function(
+        {"PhysicsManager"},
+        {
+            "has_world",
+            "---@param name string\n---@return boolean",
+            "True if a world with this name exists.",
+            true, false
+        });
+
+    pm.set_function("is_world_active",
+        [&PM](const string &name) {
+            if (auto *wr = PM.get(name)) return PhysicsManager::world_active(*wr);
+            return false;
+        });
+    rec.record_free_function(
+        {"PhysicsManager"},
+        {
+            "is_world_active",
+            "---@param name string\n---@return boolean",
+            "True if the world's step toggle is on and its bound game-state (if any) is active.",
+            true, false
+        });
 
     // ---------- World management ----------
     pm.set_function("add_world",
@@ -422,82 +465,68 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
               sol::optional<string> bindsToState) {
             PM.add(name, std::move(w),
                    bindsToState ? std::optional<string>(*bindsToState) : std::nullopt);
-        }
-    );
+        });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "add_world",
             "---@param name string\n---@param world PhysicsWorld\n---@param bindsToState string|nil\n---@return void",
             "Register a PhysicsWorld under a name. Optionally bind to a game-state string.",
             true, false
-        }
-    );
+        });
 
     pm.set_function("enable_step",
-        [&PM](const string &name, bool on){ PM.enableStep(name, on); }
-    );
+        [&PM](const string &name, bool on){ PM.enableStep(name, on); });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "enable_step",
             "---@param name string\n---@param on boolean\n---@return void",
             "Enable or disable stepping for a world.",
             true, false
-        }
-    );
+        });
 
     pm.set_function("enable_debug_draw",
-        [&PM](const string &name, bool on){ PM.enableDebugDraw(name, on); }
-    );
+        [&PM](const string &name, bool on){ PM.enableDebugDraw(name, on); });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "enable_debug_draw",
             "---@param name string\n---@param on boolean\n---@return void",
             "Enable or disable debug draw for a world.",
             true, false
-        }
-    );
+        });
 
-    pm.set_function("step_all",
-        [&PM](float dt){ PM.stepAll(dt); }
-    );
+    pm.set_function("step_all", [&PM](float dt){ PM.stepAll(dt); });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "step_all",
             "---@param dt number\n---@return void",
             "Step all active worlds (honors per-world toggle and game-state binding).",
             true, false
-        }
-    );
+        });
 
-    pm.set_function("draw_all",
-        [&PM](){ PM.drawAll(); }
-    );
+    pm.set_function("draw_all", [&PM](){ PM.drawAll(); });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "draw_all",
             "---@return void",
             "Debug-draw all worlds that are active and have debug draw enabled.",
             true, false
-        }
-    );
+        });
 
     pm.set_function("move_entity_to_world",
-        [&PM](entt::entity e, const string &dst){ PM.moveEntityToWorld(e, dst); }
-    );
+        [&PM](entt::entity e, const string &dst){ PM.moveEntityToWorld(e, dst); });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "move_entity_to_world",
             "---@param e entt.entity\n---@param dst string\n---@return void",
             "Move an entity's body/shape to another registered world (safe migration).",
             true, false
-        }
-    );
+        });
 
     // ---------- Navmesh config ----------
     pm.set_function("get_nav_config",
@@ -509,17 +538,15 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
                 t["default_inflate_px"] = 8;
             }
             return t;
-        }
-    );
+        });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "get_nav_config",
             "---@param world string\n---@return table { default_inflate_px: integer }",
             "Return the navmesh config table for a world.",
             true, false
-        }
-    );
+        });
 
     pm.set_function("set_nav_config",
         [&PM](const string &world, sol::table cfg){
@@ -529,43 +556,37 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
                     nav->dirty = true;
                 }
             }
-        }
-    );
+        });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "set_nav_config",
             "---@param world string\n---@param cfg table { default_inflate_px: integer|nil }\n---@return void",
             "Patch navmesh config for a world; marks the navmesh dirty.",
             true, false
-        }
-    );
+        });
 
     pm.set_function("mark_navmesh_dirty",
-        [&PM](const string &world){ PM.markNavmeshDirty(world); }
-    );
+        [&PM](const string &world){ PM.markNavmeshDirty(world); });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "mark_navmesh_dirty",
             "---@param world string\n---@return void",
             "Mark a world's navmesh dirty (will rebuild on next query or when forced).",
             true, false
-        }
-    );
+        });
 
     pm.set_function("rebuild_navmesh",
-        [&PM](const string &world){ PM.rebuildNavmeshFor(world); }
-    );
+        [&PM](const string &world){ PM.rebuildNavmeshFor(world); });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "rebuild_navmesh",
             "---@param world string\n---@return void",
             "Force an immediate navmesh rebuild for a world.",
             true, false
-        }
-    );
+        });
 
     // ---------- Pathfinding ----------
     pm.set_function("find_path",
@@ -583,17 +604,15 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
                 out[i++] = tp;
             }
             return out;
-        }
-    );
+        });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "find_path",
             "---@param world string\n---@param sx number\n---@param sy number\n---@param dx number\n---@param dy number\n---@return table<number,{x:integer,y:integer}>",
             "Find a path on the world's navmesh. Returns an array of {x,y} points.",
             true, false
-        }
-    );
+        });
 
     // ---------- Cone of vision ----------
     pm.set_function("vision_fan",
@@ -610,17 +629,15 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
                 out[i++] = tp;
             }
             return out;
-        }
-    );
+        });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "vision_fan",
             "---@param world string\n---@param sx number\n---@param sy number\n---@param radius number\n---@return table<number,{x:integer,y:integer}>",
             "Compute a visibility polygon (fan) from a point and radius against world obstacles.",
             true, false
-        }
-    );
+        });
 
     // ---------- Obstacle tagging ----------
     pm.set_function("set_nav_obstacle",
@@ -634,18 +651,15 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             if (auto wr = R.try_get<PhysicsWorldRef>(e)) {
                 PM.markNavmeshDirty(wr->name);
             }
-        }
-    );
+        });
     rec.record_free_function(
-        {"pm"},
+        {"PhysicsManager"},
         {
             "set_nav_obstacle",
             "---@param e entt.entity\n---@param include boolean\n---@return void",
             "Tag/untag an entity as a navmesh obstacle and mark its world's navmesh dirty.",
             true, false
-        }
-    );
+        });
 }
-
 
 } // namespace physics

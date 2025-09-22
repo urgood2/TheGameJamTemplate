@@ -3565,6 +3565,14 @@ transform = {
 
 
 ---
+--- Attach a per-entity Lua drawing callback that renders in local space. Use for custom shapes, outlines, meters, or HUD overlays. Local (0,0) is top-left of the content rectangle.
+---
+---@class transform.RenderLocalCallback
+transform.RenderLocalCallback = {
+}
+
+
+---
 --- A tag component indicating an entity is attached to a UI element.
 ---
 ---@class ObjectAttachedToUITag
@@ -4967,8 +4975,8 @@ steering = {
 ---
 --- Physics manager utilities: manage physics worlds, debug toggles, navmesh (pathfinding / vision), and safe world migration for entities.
 ---
----@class pm
-pm = {
+---@class PhysicsManager
+PhysicsManager = {
 }
 
 
@@ -5757,6 +5765,131 @@ function EventQueueSystem.clear_queue(...) end
 ---@param forced? boolean # Optional: If true, forces an update step.
 ---@return nil
 function EventQueueSystem.update(...) end
+
+---
+--- Return the PhysicsWorld registered under name, or nil if missing.
+---
+---@param name string
+---@return PhysicsWorld|nil
+function PhysicsManager.get_world(...) end
+
+---
+--- True if a world with this name exists.
+---
+---@param name string
+---@return boolean
+function PhysicsManager.has_world(...) end
+
+---
+--- True if the world's step toggle is on and its bound game-state (if any) is active.
+---
+---@param name string
+---@return boolean
+function PhysicsManager.is_world_active(...) end
+
+---
+--- Register a PhysicsWorld under a name. Optionally bind to a game-state string.
+---
+---@param name string
+---@param world PhysicsWorld
+---@param bindsToState string|nil
+---@return void
+function PhysicsManager.add_world(...) end
+
+---
+--- Enable or disable stepping for a world.
+---
+---@param name string
+---@param on boolean
+---@return void
+function PhysicsManager.enable_step(...) end
+
+---
+--- Enable or disable debug draw for a world.
+---
+---@param name string
+---@param on boolean
+---@return void
+function PhysicsManager.enable_debug_draw(...) end
+
+---
+--- Step all active worlds (honors per-world toggle and game-state binding).
+---
+---@param dt number
+---@return void
+function PhysicsManager.step_all(...) end
+
+---
+--- Debug-draw all worlds that are active and have debug draw enabled.
+---
+---@return void
+function PhysicsManager.draw_all(...) end
+
+---
+--- Move an entity's body/shape to another registered world (safe migration).
+---
+---@param e entt.entity
+---@param dst string
+---@return void
+function PhysicsManager.move_entity_to_world(...) end
+
+---
+--- Return the navmesh config table for a world.
+---
+---@param world string
+---@return table { default_inflate_px: integer }
+function PhysicsManager.get_nav_config(...) end
+
+---
+--- Patch navmesh config for a world; marks the navmesh dirty.
+---
+---@param world string
+---@param cfg table { default_inflate_px: integer|nil }
+---@return void
+function PhysicsManager.set_nav_config(...) end
+
+---
+--- Mark a world's navmesh dirty (will rebuild on next query or when forced).
+---
+---@param world string
+---@return void
+function PhysicsManager.mark_navmesh_dirty(...) end
+
+---
+--- Force an immediate navmesh rebuild for a world.
+---
+---@param world string
+---@return void
+function PhysicsManager.rebuild_navmesh(...) end
+
+---
+--- Find a path on the world's navmesh. Returns an array of {x,y} points.
+---
+---@param world string
+---@param sx number
+---@param sy number
+---@param dx number
+---@param dy number
+---@return table<number,{x:integer,y:integer}>
+function PhysicsManager.find_path(...) end
+
+---
+--- Compute a visibility polygon (fan) from a point and radius against world obstacles.
+---
+---@param world string
+---@param sx number
+---@param sy number
+---@param radius number
+---@return table<number,{x:integer,y:integer}>
+function PhysicsManager.vision_fan(...) end
+
+---
+--- Tag/untag an entity as a navmesh obstacle and mark its world's navmesh dirty.
+---
+---@param e entt.entity
+---@param include boolean
+---@return void
+function PhysicsManager.set_nav_obstacle(...) end
 
 ---
 --- Adjusts text alignment based on calculated line widths.
@@ -7257,110 +7390,6 @@ function physics.SetEntityToBody(...) end
 function physics.create_physics_for_transform(...) end
 
 ---
---- Register a PhysicsWorld under a name. Optionally bind to a game-state string.
----
----@param name string
----@param world PhysicsWorld
----@param bindsToState string|nil
----@return void
-function pm.add_world(...) end
-
----
---- Enable or disable stepping for a world.
----
----@param name string
----@param on boolean
----@return void
-function pm.enable_step(...) end
-
----
---- Enable or disable debug draw for a world.
----
----@param name string
----@param on boolean
----@return void
-function pm.enable_debug_draw(...) end
-
----
---- Step all active worlds (honors per-world toggle and game-state binding).
----
----@param dt number
----@return void
-function pm.step_all(...) end
-
----
---- Debug-draw all worlds that are active and have debug draw enabled.
----
----@return void
-function pm.draw_all(...) end
-
----
---- Move an entity's body/shape to another registered world (safe migration).
----
----@param e entt.entity
----@param dst string
----@return void
-function pm.move_entity_to_world(...) end
-
----
---- Return the navmesh config table for a world.
----
----@param world string
----@return table { default_inflate_px: integer }
-function pm.get_nav_config(...) end
-
----
---- Patch navmesh config for a world; marks the navmesh dirty.
----
----@param world string
----@param cfg table { default_inflate_px: integer|nil }
----@return void
-function pm.set_nav_config(...) end
-
----
---- Mark a world's navmesh dirty (will rebuild on next query or when forced).
----
----@param world string
----@return void
-function pm.mark_navmesh_dirty(...) end
-
----
---- Force an immediate navmesh rebuild for a world.
----
----@param world string
----@return void
-function pm.rebuild_navmesh(...) end
-
----
---- Find a path on the world's navmesh. Returns an array of {x,y} points.
----
----@param world string
----@param sx number
----@param sy number
----@param dx number
----@param dy number
----@return table<number,{x:integer,y:integer}>
-function pm.find_path(...) end
-
----
---- Compute a visibility polygon (fan) from a point and radius against world obstacles.
----
----@param world string
----@param sx number
----@param sy number
----@param radius number
----@return table<number,{x:integer,y:integer}>
-function pm.vision_fan(...) end
-
----
---- Tag/untag an entity as a navmesh obstacle and mark its world's navmesh dirty.
----
----@param e entt.entity
----@param include boolean
----@return void
-function pm.set_nav_obstacle(...) end
-
----
 --- Sets the seed for deterministic random behavior.
 ---
 ---@param seed integer # The seed for the random number generator.
@@ -8203,6 +8232,89 @@ function timer.math.remap(...) end
 ---@param t number
 ---@return number
 function timer.math.lerp(...) end
+
+---
+--- Install or replace a local render callback on an entity.
+--- Positional overload.
+---
+---@param e Entity
+---@param fn fun(width:number, height:number, isShadow:boolean)
+---@param after boolean @ draw after shader pipeline if true
+---@param width number  @ content width when no sprite drives size
+---@param height number @ content height when no sprite drives size
+---@return nil
+function transform.install_local_callback(...) end
+
+---
+--- Install or replace a local render callback on an entity.
+--- Table overload: (e, fn, { after?, width?, height? }).
+---
+---@param e Entity
+---@param fn fun(width:number, height:number, isShadow:boolean)
+---@param opts table|nil @ { after?:boolean=false, width?:number=64, height?:number=64 }
+---@return nil
+function transform.install_local_callback(...) end
+
+---
+--- Remove the installed local render callback for the entity (no-op if none).
+---
+---@param e Entity
+---@return nil
+function transform.remove_local_callback(...) end
+
+---
+--- Returns true if the entity has a local render callback.
+---
+---@param e Entity
+---@return boolean
+function transform.has_local_callback(...) end
+
+---
+--- Return info for the local render callback or nil if none.
+---
+---@param e Entity
+---@return table|nil @ { width:number, height:number, after:boolean }
+function transform.get_local_callback_info(...) end
+
+---
+--- Update content width/height used when no sprite dictates size.
+---
+---@param e Entity
+---@param width number
+---@param height number
+---@return nil
+function transform.set_local_callback_size(...) end
+
+---
+--- Toggle drawing after the shader pipeline (true) or before (false).
+---
+---@param e Entity
+---@param after boolean
+---@return nil
+function transform.set_local_callback_after_pipeline(...) end
+
+---
+--- Returns 'world' or 'screen' depending on whether the entity has ScreenSpaceCollisionMarker.
+---
+---@param e Entity
+---@return string @ 'world' | 'screen'
+function transform.get_space(...) end
+
+---
+--- Returns true if entity has ScreenSpaceCollisionMarker (UI-space).
+---
+---@param e Entity
+---@return boolean
+function transform.is_screen_space(...) end
+
+---
+--- Sets entity space to 'world' or 'screen'. Optional third arg (convert_coords) is accepted but ignored.
+---
+---@param e Entity
+---@param space string @ 'world' | 'screen'
+---@param convert_coords? boolean @ currently ignored
+---@return void
+function transform.set_space(...) end
 
 ---
 --- Initializes the transform system.

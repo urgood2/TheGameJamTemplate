@@ -4925,6 +4925,54 @@ TextUIHandle = {
 
 
 ---
+--- Physics namespace (Chipmunk2D). Create worlds, set tags/masks, raycast, query areas, and attach colliders to entities.
+---
+---@class physics
+physics = {
+}
+
+
+---
+--- Result of a raycast: shape pointer, hit point, normal, and fraction along the ray.
+---
+---@class physics.RaycastHit
+physics.RaycastHit = {
+}
+
+
+---
+--- Owns Chipmunk space, tags/masks, and collision/trigger buffers. Step with Update(dt).
+---
+---@class physics.PhysicsWorld
+physics.PhysicsWorld = {
+}
+
+
+---
+--- Collider shape enum; use string names for config too.
+---
+---@class physics.ColliderShapeType
+physics.ColliderShapeType = {
+}
+
+
+---
+--- Steering behaviors (seek/flee/wander/boids/path) that push forces into Chipmunk bodies.
+---
+---@class steering
+steering = {
+}
+
+
+---
+--- Physics manager utilities: manage physics worlds, debug toggles, navmesh (pathfinding / vision), and safe world migration for entities.
+---
+---@class pm
+pm = {
+}
+
+
+---
 --- Camera namespace. Create named cameras, update them, and use them for rendering.
 ---
 ---@class camera
@@ -7147,6 +7195,172 @@ function particle.CreateParticleEmitter(...) end
 function particle.CreateParticle(...) end
 
 ---
+--- Segment raycast through the physics space (Chipmunk2D).
+---
+---@param world physics.PhysicsWorld
+---@param x1 number @ray start X (Chipmunk units)
+---@param y1 number @ray start Y (Chipmunk units)
+---@param x2 number @ray end X (Chipmunk units)
+---@param y2 number @ray end Y (Chipmunk units)
+---@return physics.RaycastHit[] # Array of hits, nearest-first.
+function physics.Raycast(...) end
+
+---
+--- Returns userData for all shapes intersecting the rectangle [x1,y1]-[x2,y2].
+---
+---@param world physics.PhysicsWorld
+---@param x1 number @rect min X (Chipmunk units)
+---@param y1 number @rect min Y (Chipmunk units)
+---@param x2 number @rect max X (Chipmunk units)
+---@param y2 number @rect max Y (Chipmunk units)
+---@return lightuserdata[] # userData from shapes intersecting the AABB
+function physics.GetObjectsInArea(...) end
+
+---
+--- Creates a cpBody+cpShape, applies tag filter (default masks = 'all' if none set), and emplaces a ColliderComponent. For polygon/chain, provide explicit vertices via `points`.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param tag string @Collision tag/category name
+---@param shapeType 'rectangle'|'circle'|'segment'|'polygon'|'chain'
+---@param a number @rectangle: width | circle: radius | segment: x1 | polygon/chain: ignored if points given
+---@param b number @rectangle: height | circle: ignored | segment: y1 | polygon/chain: ignored if points given
+---@param c number @segment: x2 | others: shape-specific/ignored
+---@param d number @segment: y2 | others: shape-specific/ignored
+---@param isSensor boolean @sensor shapes don’t collide but still trigger
+---@param points { {x:number,y:number} }? @optional explicit vertices for polygon/chain (overrides a–d)
+---@return nil
+function physics.AddCollider(...) end
+
+---
+--- Stores an entity ID into shape->userData.
+---
+---@param shape lightuserdata @cpShape*
+---@param e entt.entity
+function physics.SetEntityToShape(...) end
+
+---
+--- Stores an entity ID into body->userData.
+---
+---@param body lightuserdata @cpBody*
+---@param e entt.entity
+function physics.SetEntityToBody(...) end
+
+---
+--- Create a Chipmunk body+shape for entity based on its Transform.ACTUAL size/rotation, attach ColliderComponent, tag+filter it, and add to its referenced PhysicsWorld.
+---
+---@param r entt.registry& @Registry reference
+---@param pm PhysicsManager& @Physics manager
+---@param e entt.entity
+---@param config table @{ shape?:'rectangle'|'circle'|'segment'|'polygon'|'chain', tag?:string, sensor?:boolean, density?:number }
+---@return nil
+function physics.create_physics_for_transform(...) end
+
+---
+--- Register a PhysicsWorld under a name. Optionally bind to a game-state string.
+---
+---@param name string
+---@param world PhysicsWorld
+---@param bindsToState string|nil
+---@return void
+function pm.add_world(...) end
+
+---
+--- Enable or disable stepping for a world.
+---
+---@param name string
+---@param on boolean
+---@return void
+function pm.enable_step(...) end
+
+---
+--- Enable or disable debug draw for a world.
+---
+---@param name string
+---@param on boolean
+---@return void
+function pm.enable_debug_draw(...) end
+
+---
+--- Step all active worlds (honors per-world toggle and game-state binding).
+---
+---@param dt number
+---@return void
+function pm.step_all(...) end
+
+---
+--- Debug-draw all worlds that are active and have debug draw enabled.
+---
+---@return void
+function pm.draw_all(...) end
+
+---
+--- Move an entity's body/shape to another registered world (safe migration).
+---
+---@param e entt.entity
+---@param dst string
+---@return void
+function pm.move_entity_to_world(...) end
+
+---
+--- Return the navmesh config table for a world.
+---
+---@param world string
+---@return table { default_inflate_px: integer }
+function pm.get_nav_config(...) end
+
+---
+--- Patch navmesh config for a world; marks the navmesh dirty.
+---
+---@param world string
+---@param cfg table { default_inflate_px: integer|nil }
+---@return void
+function pm.set_nav_config(...) end
+
+---
+--- Mark a world's navmesh dirty (will rebuild on next query or when forced).
+---
+---@param world string
+---@return void
+function pm.mark_navmesh_dirty(...) end
+
+---
+--- Force an immediate navmesh rebuild for a world.
+---
+---@param world string
+---@return void
+function pm.rebuild_navmesh(...) end
+
+---
+--- Find a path on the world's navmesh. Returns an array of {x,y} points.
+---
+---@param world string
+---@param sx number
+---@param sy number
+---@param dx number
+---@param dy number
+---@return table<number,{x:integer,y:integer}>
+function pm.find_path(...) end
+
+---
+--- Compute a visibility polygon (fan) from a point and radius against world obstacles.
+---
+---@param world string
+---@param sx number
+---@param sy number
+---@param radius number
+---@return table<number,{x:integer,y:integer}>
+function pm.vision_fan(...) end
+
+---
+--- Tag/untag an entity as a navmesh obstacle and mark its world's navmesh dirty.
+---
+---@param e entt.entity
+---@param include boolean
+---@return void
+function pm.set_nav_obstacle(...) end
+
+---
 --- Sets the seed for deterministic random behavior.
 ---
 ---@param seed integer # The seed for the random number generator.
@@ -7578,6 +7792,134 @@ function shaders.ShowShaderEditorUI(...) end
         ---@return nil
         
 function shaders.TryApplyUniforms(...) end
+
+---
+--- Attach and initialize a SteerableComponent with speed/force/turn caps.
+---
+---@param r entt.registry& @Registry reference
+---@param e entt.entity
+---@param maxSpeed number
+---@param maxForce number
+---@param maxTurnRate number @radians/sec (default 2π)
+---@param turnMul number @turn responsiveness multiplier (default 2.0)
+function steering.make_steerable(...) end
+
+---
+--- Seek a world point (Chipmunk coords) with adjustable deceleration and blend weight.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param target {x:number,y:number}|(number,number)
+---@param decel number @arrival deceleration factor
+---@param weight number @blend weight
+function steering.seek_point(...) end
+
+---
+--- Flee from a point if within panicDist (Chipmunk coords).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param threat {x:number,y:number}
+---@param panicDist number @only flee if within this distance
+---@param weight number @blend weight
+function steering.flee_point(...) end
+
+---
+--- Classic wander on a projected circle (Chipmunk/world coordinates).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param jitter number @per-step target jitter
+---@param radius number @wander circle radius
+---@param distance number @circle forward distance
+---@param weight number @blend weight
+function steering.wander(...) end
+
+---
+--- Repulsive boids term; pushes away when too close.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param separationRadius number
+---@param neighbors entt.entity[] @Lua array/table of entities
+---@param weight number @blend weight
+function steering.separate(...) end
+
+---
+--- Boids alignment (match headings of nearby agents).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param neighbors entt.entity[] @Lua array/table of entities
+---@param alignRadius number
+---@param weight number @blend weight
+function steering.align(...) end
+
+---
+--- Boids cohesion (seek the local group center).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param neighbors entt.entity[] @Lua array/table of entities
+---@param cohesionRadius number
+---@param weight number @blend weight
+function steering.cohesion(...) end
+
+---
+--- Predict target future position and seek it (pursuit).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param target entt.entity @entity to predict and chase
+---@param weight number @blend weight
+function steering.pursuit(...) end
+
+---
+--- Predict pursuer future position and flee it (evade).
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param pursuer entt.entity @entity to predict and flee from
+---@param weight number @blend weight
+function steering.evade(...) end
+
+---
+--- Define waypoints to follow and an arrival radius.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param points { {x:number,y:number}, ... } @Lua array of waypoints (Chipmunk coords)
+---@param arriveRadius number @advance when within this radius
+function steering.set_path(...) end
+
+---
+--- Seek current waypoint; auto-advance when within arriveRadius.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param decel number @arrival deceleration factor
+---@param weight number @blend weight
+function steering.path_follow(...) end
+
+---
+--- Apply a world-space force that linearly decays to zero over <seconds>.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param f number @force magnitude (world units)
+---@param radians number @direction in radians
+---@param seconds number @duration seconds
+function steering.apply_force(...) end
+
+---
+--- Apply a constant per-frame impulse (f / sec) for <seconds> in world space.
+---
+---@param r entt.registry&
+---@param e entt.entity
+---@param f number @impulse-per-second magnitude
+---@param radians number @direction in radians
+---@param seconds number @duration seconds
+function steering.apply_impulse(...) end
 
 ---
 --- Cancels and destroys an active timer.

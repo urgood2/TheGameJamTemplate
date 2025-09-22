@@ -191,8 +191,10 @@ public:
 
         R.emplace_or_replace<PhysicsWorldRef>(e, dst);
     }
+    
+    entt::registry& R;
 
 private:
-    entt::registry& R;
+    
     std::unordered_map<std::size_t, WorldRec> worlds;
 };

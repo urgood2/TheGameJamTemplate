@@ -31,6 +31,7 @@
 #include "systems/camera/camera_bindings.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
+#include "systems/physics/physics_lua_bindings.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
 #include "systems/text/static_ui_text.hpp"
 #include "util/utilities.hpp"
@@ -435,6 +436,13 @@ namespace scripting {
         // static ui text functions
         // ------------------------------------------------------
         static_ui_text_system::exposeToLua(stateToInit);
+        
+        // ------------------------------------------------------
+        // lua physics bindings
+        // ------------------------------------------------------
+        physics::expose_physics_to_lua(stateToInit);   
+        physics::expose_steering_to_lua(stateToInit);
+        physics::expose_physics_manager_to_lua(stateToInit, *globals::physicsManager);
         
         // ------------------------------------------------------
         // camera manager & camera bindings

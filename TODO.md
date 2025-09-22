@@ -105,7 +105,7 @@ local ReactiveBalm = {
 ```
 
 
-
+- [ ] lua bindings for physics world, manager, etc.
 - [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] test task system in lua
 - [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders

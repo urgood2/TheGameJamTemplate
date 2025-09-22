@@ -129,23 +129,6 @@ SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PR
 - [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
-- [ ] hook physics, use this order-> continue here: https://chatgpt.com/share/68ceb21c-d1c8-800a-8e57-1d32303e6370
-```cpp
-// frame start
-HandleUIAndTransformInteractions(registry); // hover/drag update Transform + states
-
-ApplyAuthoritativeTransform(registry, PM);  // Transform(actual) -> Chipmunk (only when driving)
-
-PM.stepAll(dt);                             // Physics worlds step (active ones)
-
-ApplyAuthoritativePhysics(registry, PM);    // Chipmunk -> Transform(actual) (when physics is boss)
-
-AdvanceSpringsAndDynamicMotion(registry);   // your existing spring updates
-
-// your established DrawTransformEntityWithAnimationWithPipeline(...) uses visual values
-RenderAll(registry, PM);
-
-```
 - [ ] also test:
 ```cpp
 // Construct worlds

@@ -1,4 +1,5 @@
 #include "systems/input/input_functions.hpp"
+#include "systems/physics/transform_physics_hook.hpp"
 #define RAYGUI_IMPLEMENTATION // needed to use raygui
 
 #define _WIN32_WINNT 0x0600
@@ -391,12 +392,20 @@ auto updateSystems(float dt) -> void
     globals::updateGlobalVariables();
     sound_system::Update(dt); // update sound system
     
+    
+physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    
+    globals::physicsManager->stepAll(dt); // step all physics worlds
+    
+    physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    
     // systems
     shaders::update(dt);
     timer::TimerSystem::update_timers(dt);
     spring::updateAllSprings(globals::registry, dt);
     animation_system::update(dt);
     transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
+    
 
     // update event queue
     timer::EventQueueSystem::EventManager::update(dt);

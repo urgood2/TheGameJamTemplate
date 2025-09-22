@@ -213,8 +213,8 @@ namespace physics {
         const cpVect p = cpBodyGetPosition(CC.body.get());
         const float a  = (float)cpBodyGetAngle(CC.body.get());
 
-        // Chipmunk Y up vs your screen Y down: you already have helpers.
-        const Vector2 rl = physics::chipmunkToRaylibCoords(p);
+        // raylib coords
+        const Vector2 rl = { (float) p.x - T.getActualW() / 2, (float)  p.y - T.getActualH() / 2};
 
         // Write ACTUAL targets (not visual) so springs smoothly approach
         T.setActualX(rl.x);
@@ -232,7 +232,7 @@ namespace physics {
         const Vector2 rl = { T.getActualX(), T.getActualY() };
         const float   a  = T.getActualRotation() * DEG2RAD;
 
-        const cpVect  cp = physics::raylibToChipmunkCoords(rl);
+        const cpVect  cp = { rl.x + T.getActualW() / 2, rl.y + T.getActualH() / 2 };
         cpBodySetPosition(CC.body.get(), cp);
         cpBodySetAngle(CC.body.get(), a);
 

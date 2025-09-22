@@ -916,6 +916,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 100, 100, 100, 100);
         globals::registry.emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
         
+        auto &gameObjectTest = globals::registry.get<transform::GameObject>(testTransformEntity);
+        gameObjectTest.state.collisionEnabled = true;
+        gameObjectTest.state.dragEnabled = true;
+        gameObjectTest.state.hoverEnabled = true;
+        
         physics::PhysicsCreateInfo info{};
         info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
         
@@ -981,7 +986,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
     auto update(float delta) -> void
     {
-        physicsWorld->Update(delta);
+        // physicsWorld->Update(delta);
         // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
         camera_manager::UpdateAll(delta);

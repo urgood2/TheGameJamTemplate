@@ -50,6 +50,7 @@
 #include "systems/spring/spring.hpp"
 #include "systems/transform/transform.hpp"
 #include "systems/ui/ui_data.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 #include "third_party/chipmunk/include/chipmunk/cpBB.h"
 #include "systems/uuid/uuid.hpp"
@@ -928,6 +929,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
         
         physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
+        
+        cpSpaceSetDamping(physicsWorld->space,0.1f); // global damping
+        
+        // physicsWorld->SetDamping(testTransformEntity, 3.5f);
+        // physicsWorld->SetAngularDamping(testTransformEntity, 3.0f);
         
         // second entity
         

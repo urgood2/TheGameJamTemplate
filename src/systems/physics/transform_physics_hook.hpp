@@ -2,6 +2,7 @@
 
 #include "physics_manager.hpp"
 #include "systems/transform/transform.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 
 
 /*
@@ -167,6 +168,8 @@ namespace physics {
 
         physics::SetEntityToShape(shape.get(), e);
         cpShapeSetSensor(shape.get(), ci.sensor);
+        
+        
 
         // Add to world
         cpSpaceAddBody(rec->w->space, body.get());
@@ -327,7 +330,16 @@ namespace physics {
             cpBodySetAngularVelocity(cc->body.get(), 0.f);
 
             // restore whatever the body type was pre-drag (usually DYNAMIC)
-            cpBodySetType(cc->body.get(), cfg.prevType);
+            // cpBodySetType(cc->body.get(), cfg.prevType);
+            // FIXME: TESTING:
+            cpBodySetType(cc->body.get(), CP_BODY_TYPE_DYNAMIC);
+            // set mass and moment to nonzero
+            if (cpBodyGetType(cc->body.get()) == CP_BODY_TYPE_DYNAMIC) {
+                // if (cpBodyGetMass(cc->body.get()) == INFINITY) 
+                cpBodySetMass(cc->body.get(), 1.0f);
+                // if (cpBodyGetMoment(cc->body.get()) == INFINITY) 
+                cpBodySetMoment(cc->body.get(), INFINITY);
+            }
 
             // now let physics be authoritative again; body -> Transform.actual post-step
             cfg.mode = PhysicsSyncMode::AuthoritativePhysics;

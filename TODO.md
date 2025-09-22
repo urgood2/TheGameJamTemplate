@@ -105,7 +105,7 @@ local ReactiveBalm = {
 ```
 
 
-- [ ] test stuf in physics_docs.md -> use PhysicsManagerInstance global
+- [ ] test stuf in physics_docs.md -> physics manager and physics namespace
 - [ ] test physics world layers
 ```cpp
 world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});
@@ -234,7 +234,6 @@ int main() {
 - [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
 - [ ] lua access to input component, acccessing text & setting callback
-- document the use of RenderLocalCallback, and also expose install_local_callback to lua and test.
 - [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
 - how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)

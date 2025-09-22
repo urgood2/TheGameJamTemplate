@@ -136,7 +136,7 @@ local s = timer.math.remap(0.5, 0, 1, 100,0)  -- 50
 All functions live on `timer`.
 
 * `timer.update(dt)` — advance all timers; call once per frame.
-* `timer.cancel(handle)` — cancel one timer by handle.
+* `timer.cancel(handle)` — cancel one timer by handle. You can cancel timers inside their own callbacks by calling `timer.cancel(handle)`.
 * `timer.reset(handle)` — reset elapsed time (e.g., cooldown).
 * `timer.get_delay(handle) -> number|nil`
 * `timer.get_every_index(handle) -> integer|nil` — current tick count.

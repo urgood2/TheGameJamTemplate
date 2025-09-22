@@ -908,9 +908,18 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // add to physics manager
         globals::physicsManager->add("world", physicsWorld);
         
-        // enable debug draw and step updates
+        // enable debug draw and step debug
         globals::physicsManager->enableDebugDraw("world", true);
         globals::physicsManager->enableStep("world", true);
+        
+        // make test transform entity
+        entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 100, 100, 100, 100);
+        globals::registry.emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
+        
+        physics::PhysicsCreateInfo info{};
+        info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
+        
+        physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
         
         entt::entity testEntity = globals::registry.create();
         

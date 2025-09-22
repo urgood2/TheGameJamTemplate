@@ -142,7 +142,7 @@ namespace physics {
         float h = std::max(1.f, T.getActualH());
 
         // Chipmunk expects meters-ish; your PIXELS_PER_PIXEL_UNIT = 1.0f, so we’ll just convert coords.
-        cpBodySetPosition(body.get(), physics::raylibToChipmunkCoords({T.getActualX(), T.getActualY()}));
+        cpBodySetPosition(body.get(), {T.getActualX() + w / 2, T.getActualY() + h / 2});
         cpBodySetAngle(body.get(), T.getActualRotation() * DEG2RAD);
 
         std::shared_ptr<cpShape> shape;

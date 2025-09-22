@@ -106,6 +106,33 @@ local ReactiveBalm = {
 
 
 - [ ] test stuf in physics_docs.md -> physics manager and physics namespace
+- [ ] test actual collision callbacks, also, is this the best way to do this gameplay code wise? can I make it more local to the code?
+```lua
+-- one-time
+world:SetCollisionCallbacks()
+
+function update_physics(dt)
+  world:Update(dt)
+
+  -- 1) Physical collision starts between PLAYER and ENEMY
+  for _, ev in ipairs(physics.GetCollisionEnter(world, "PLAYER", "ENEMY")) do
+    -- objectA/objectB are whatever you put into userData (shape/body/entity)
+    local eA = physics.entity_from_ptr(ev.objectA) -- or physics.GetEntityFromBody(ev.objectA)
+    local eB = physics.entity_from_ptr(ev.objectB)
+    -- do gameplay: damage, knockback, play SFX, etc.
+    -- you also have contact geometry: ev.x1,ev.y1, ev.x2,ev.y2, ev.nx,ev.ny
+  end
+
+  -- 2) Trigger zones (e.g., PLAYER entering PICKUP sensor)
+  for _, ptr in ipairs(physics.GetTriggerEnter(world, "PLAYER", "PICKUP")) do
+    local pickup = physics.entity_from_ptr(ptr)
+    -- mark pickup as collected, queue destroy, etc.
+  end
+
+  world:PostUpdate()  -- IMPORTANT: clear/rotate buffers after consuming them
+end
+
+```
 - [ ] test physics world layers
 ```cpp
 world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});

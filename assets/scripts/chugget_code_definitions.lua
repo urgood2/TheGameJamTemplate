@@ -4949,6 +4949,14 @@ physics.RaycastHit = {
 
 
 ---
+--- Collision event: endpoints (x1,y1)-(x2,y2), normal (nx,ny), and the two objects.
+---
+---@class physics.CollisionEvent
+physics.CollisionEvent = {
+}
+
+
+---
 --- Owns Chipmunk space, tags/masks, and collision/trigger buffers. Step with Update(dt).
 ---
 ---@class physics.PhysicsWorld
@@ -7326,6 +7334,179 @@ function particle.CreateParticleEmitter(...) end
 ---@param tag      string?                        # optional string tag to attach to this particle
 ---@return entt::entity                            # the newly created particle entity
 function particle.CreateParticle(...) end
+
+---
+--- Buffered collision-begin events for (type1,type2) since last PostUpdate().
+---
+---@param world physics.PhysicsWorld
+---@param type1 string
+---@param type2 string
+---@return physics.CollisionEvent[]
+function physics.GetCollisionEnter(...) end
+
+---
+---
+---@param body lightuserdata @cpBody*
+---@return entt.entity
+function physics.GetEntityFromBody(...) end
+
+---
+---
+---@param p lightuserdata
+---@return entt.entity
+function physics.entity_from_ptr(...) end
+
+---
+--- Buffered trigger-begin hits for (type1,type2) since last PostUpdate().
+---
+---@param world physics.PhysicsWorld
+---@param type1 string
+---@param type2 string
+---@return lightuserdata[]
+function physics.GetTriggerEnter(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param angularDamping number
+function physics.SetAngularDamping(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param angularImpulse number
+function physics.ApplyAngularImpulse(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param torque number
+function physics.ApplyTorque(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param isBullet boolean
+function physics.SetBullet(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return {x:number,y:number}
+function physics.GetPosition(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param x number
+---@param y number
+function physics.SetPosition(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return number @radians
+function physics.GetAngle(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param radians number
+function physics.SetAngle(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param vx number
+---@param vy number
+function physics.SetVelocity(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param av number @radians/sec
+function physics.SetAngularVelocity(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param fx number
+---@param fy number
+function physics.ApplyForce(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param ix number
+---@param iy number
+function physics.ApplyImpulse(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param linear number
+function physics.SetDamping(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param damping number
+function physics.SetGlobalDamping(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param restitution number
+function physics.SetRestitution(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param friction number
+function physics.SetFriction(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param awake boolean
+function physics.SetAwake(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param fixed boolean
+function physics.SetFixedRotation(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return number
+function physics.GetMass(...) end
+
+---
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param mass number
+function physics.SetMass(...) end
 
 ---
 --- Segment raycast through the physics space (Chipmunk2D).

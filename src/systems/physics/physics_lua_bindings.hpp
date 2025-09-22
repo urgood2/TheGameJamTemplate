@@ -53,6 +53,73 @@ inline void expose_physics_to_lua(sol::state& lua) {
     );
     auto& rch = rec.add_type("physics.RaycastHit");
     rch.doc = "Result of a raycast: shape pointer, hit point, normal, and fraction along the ray.";
+    
+    // ---- Add near LuaRaycastHit ----
+    struct LuaCollisionEvent {
+        void* objectA{};
+        void* objectB{};
+        float x1{}, y1{}, x2{}, y2{}, nx{}, ny{};
+    };
+
+    lua.new_usertype<LuaCollisionEvent>("CollisionEvent",
+        "objectA", &LuaCollisionEvent::objectA,
+        "objectB", &LuaCollisionEvent::objectB,
+        "x1", &LuaCollisionEvent::x1, "y1", &LuaCollisionEvent::y1,
+        "x2", &LuaCollisionEvent::x2, "y2", &LuaCollisionEvent::y2,
+        "nx", &LuaCollisionEvent::nx, "ny", &LuaCollisionEvent::ny
+    );
+    rec.add_type("physics.CollisionEvent").doc =
+        "Collision event: endpoints (x1,y1)-(x2,y2), normal (nx,ny), and the two objects.";
+
+    // ---- Replace direct bindings for GetCollisionEnter/GetTriggerEnter with wrappers ----
+    rec.bind_function(lua, path, "GetCollisionEnter",
+        [](physics::PhysicsWorld& W, const std::string& t1, const std::string& t2) {
+            const auto& v = W.GetCollisionEnter(t1, t2);
+            std::vector<LuaCollisionEvent> out; out.reserve(v.size());
+            for (auto& e : v) {
+                LuaCollisionEvent L;
+                L.objectA = e.objectA; L.objectB = e.objectB;
+                L.x1=e.x1; L.y1=e.y1; L.x2=e.x2; L.y2=e.y2; L.nx=e.nx; L.ny=e.ny;
+                out.push_back(L);
+            }
+            return sol::as_table(out);
+        },
+        "---@param world physics.PhysicsWorld\n"
+        "---@param type1 string\n"
+        "---@param type2 string\n"
+        "---@return physics.CollisionEvent[]",
+        "Buffered collision-begin events for (type1,type2) since last PostUpdate()."
+    );
+    
+    // Optional: if you have a shape->entity getter in C++, expose it similarly.
+// For now, expose body->entity as declared:
+rec.bind_function(lua, path, "GetEntityFromBody",
+    &physics::GetEntityFromBody,
+    "---@param body lightuserdata @cpBody*\n---@return entt.entity"
+);
+
+// Generic pointer->entity (works if you store the entity as uintptr_t in userData).
+// If you DON'T store entity that way, replace this with your exact decode logic.
+rec.bind_function(lua, path, "entity_from_ptr",
+    [](void* p) -> entt::entity {
+        // WARNING: this assumes you stored the entity id directly as an integer/uintptr_t in userData.
+        // If instead you're storing cpBody*/cpShape*, go through GetEntityFromBody/your own GetEntityFromShape.
+        return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p));
+    },
+    "---@param p lightuserdata\n---@return entt.entity"
+);
+
+    rec.bind_function(lua, path, "GetTriggerEnter",
+        [](physics::PhysicsWorld& W, const std::string& t1, const std::string& t2) {
+            const auto& v = W.GetTriggerEnter(t1, t2); // vector<void*>
+            return sol::as_table(v);
+        },
+        "---@param world physics.PhysicsWorld\n"
+        "---@param type1 string\n"
+        "---@param type2 string\n"
+        "---@return lightuserdata[]",
+        "Buffered trigger-begin hits for (type1,type2) since last PostUpdate()."
+    );
 
     using physics::PhysicsWorld;
 
@@ -85,6 +152,116 @@ inline void expose_physics_to_lua(sol::state& lua) {
 
     auto& pw = rec.add_type("physics.PhysicsWorld");
     pw.doc = "Owns Chipmunk space, tags/masks, and collision/trigger buffers. Step with Update(dt).";
+    
+    // --- Angular damping / torque / angular impulse / bullet flag ---
+rec.bind_function(lua, path, "SetAngularDamping",
+    &physics::PhysicsWorld::SetAngularDamping,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularDamping number"
+);
+
+rec.bind_function(lua, path, "ApplyAngularImpulse",
+    &physics::PhysicsWorld::ApplyAngularImpulse,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularImpulse number"
+);
+
+rec.bind_function(lua, path, "ApplyTorque",
+    &physics::PhysicsWorld::ApplyTorque,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param torque number"
+);
+
+rec.bind_function(lua, path, "SetBullet",
+    &physics::PhysicsWorld::SetBullet,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param isBullet boolean"
+);
+
+// --- Position / angle ---
+rec.bind_function(lua, path, "GetPosition",
+    [](physics::PhysicsWorld& W, entt::entity e, sol::this_state s) {
+        auto p = W.GetPosition(e);
+        return vec_to_lua(sol::state_view{s}, p);
+    },
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return {x:number,y:number}"
+);
+
+rec.bind_function(lua, path, "SetPosition",
+    &physics::PhysicsWorld::SetPosition,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param x number\n---@param y number"
+);
+
+rec.bind_function(lua, path, "GetAngle",
+    &physics::PhysicsWorld::GetAngle,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return number @radians"
+);
+
+rec.bind_function(lua, path, "SetAngle",
+    &physics::PhysicsWorld::SetAngle,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param radians number"
+);
+
+// --- Linear / angular velocity ---
+rec.bind_function(lua, path, "SetVelocity",
+    &physics::PhysicsWorld::SetVelocity,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param vx number\n---@param vy number"
+);
+
+rec.bind_function(lua, path, "SetAngularVelocity",
+    &physics::PhysicsWorld::SetAngularVelocity,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param av number @radians/sec"
+);
+
+// --- Forces / impulses ---
+rec.bind_function(lua, path, "ApplyForce",
+    &physics::PhysicsWorld::ApplyForce,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fx number\n---@param fy number"
+);
+
+rec.bind_function(lua, path, "ApplyImpulse",
+    &physics::PhysicsWorld::ApplyImpulse,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param ix number\n---@param iy number"
+);
+
+// --- Material / damping ---
+rec.bind_function(lua, path, "SetDamping",
+    &physics::PhysicsWorld::SetDamping,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param linear number"
+);
+
+rec.bind_function(lua, path, "SetGlobalDamping",
+    &physics::PhysicsWorld::SetGlobalDamping,
+    "---@param world physics.PhysicsWorld\n---@param damping number"
+);
+
+rec.bind_function(lua, path, "SetRestitution",
+    &physics::PhysicsWorld::SetRestitution,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param restitution number"
+);
+
+rec.bind_function(lua, path, "SetFriction",
+    &physics::PhysicsWorld::SetFriction,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param friction number"
+);
+
+// --- Flags / mass ---
+rec.bind_function(lua, path, "SetAwake",
+    &physics::PhysicsWorld::SetAwake,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param awake boolean"
+);
+
+rec.bind_function(lua, path, "SetFixedRotation",
+    &physics::PhysicsWorld::SetFixedRotation,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fixed boolean"
+);
+
+rec.bind_function(lua, path, "GetMass",
+    &physics::PhysicsWorld::GetMass,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return number"
+);
+
+rec.bind_function(lua, path, "SetMass",
+    &physics::PhysicsWorld::SetMass,
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param mass number"
+);
+
 
     // ---------- Helpers exposed under physics.* ----------
     // Wrap Raycast -> {RaycastHit[]}

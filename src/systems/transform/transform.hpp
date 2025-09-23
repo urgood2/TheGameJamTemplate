@@ -5,10 +5,12 @@
 #include "core/globals.hpp"
 
 #include "entt/entt.hpp"
+#include "systems/physics/physics_world.hpp"
 #include "util/common_headers.hpp"
 
 #include "systems/layer/layer.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
+#include "systems/physics/physics_manager.hpp"
 
 #include <vector>
 #include <optional>
@@ -842,6 +844,24 @@ namespace transform
             registry.destroy(transform.s);
             // std::cout << "Particle " << particle.id << " destroyed!" << std::endl;
         }
+        
+        // 1) If there’s no collider, nothing else to do.
+        if (!globals::registry.any_of<physics::ColliderComponent>(entity)) return;
+
+        // 2) If we have a world ref and a live world, detach via that world (preferred).
+        if (auto* ref = globals::registry.try_get<PhysicsWorldRef>(entity)) {
+            if (globals::physicsManager) {
+                if (auto* wr = globals::physicsManager->get(ref->name)) {
+                    // Preferred: use the world’s own method (it knows its cpSpace)
+                    wr->w->DetachPhysicsComponent(entity);
+                    return;
+                }
+            }
+        }
+
+        // 3) Fallback if no world ref or world not found.
+        physics::PhysicsWorld::DetachPhysicsComponentFallback(globals::registry, entity);
+
     }
 
     // Function to register the destruction callback

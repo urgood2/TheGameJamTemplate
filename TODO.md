@@ -34,6 +34,8 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 ## TODOS fast
 
+- [ ] aupdate bindings & docs for physics world
+
 - test:
 ```lua
 -- Quick usage examples

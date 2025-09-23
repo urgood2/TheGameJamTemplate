@@ -338,7 +338,36 @@ namespace physics
         void SetCollisionTags(const std::vector<std::string> &tags);
         void ApplyCollisionFilter(cpShape *shape, const std::string &tag);
         void UpdateColliderTag(entt::entity entity, const std::string &newTag);
+        void InstallWildcardCollisionHandlers();
+        void RegisterExclusivePairCollisionHandler(const std::string& tagA, const std::string& tagB);
+        
+        // -------- Local fallback (no world available) --------
+        static void DetachPhysicsComponentFallback(entt::registry& R, entt::entity e) {
+            using namespace physics;
+            auto* cc = R.try_get<ColliderComponent>(e);
+            if (!cc) return;
 
+            if (auto* s = cc->shape.get()) {
+                if (auto* sp = cpShapeGetSpace(s)) cpSpaceRemoveShape(sp, s);
+                cpShapeSetUserData(s, nullptr);
+            }
+            if (auto* b = cc->body.get()) {
+                if (auto* sp = cpBodyGetSpace(b)) cpSpaceRemoveBody(sp, b);
+                cpBodySetUserData(b, nullptr);
+            }
+
+            R.remove<ColliderComponent>(e);
+        }
+        
+        void DetachPhysicsComponent(entt::entity e) {
+            auto& cc = registry->get<physics::ColliderComponent>(e);
+            if (auto* s = cc.shape.get()) if (auto* sp = cpShapeGetSpace(s)) cpSpaceRemoveShape(sp, s);
+            if (auto* b = cc.body.get())  if (auto* sp = cpBodyGetSpace(b))  cpSpaceRemoveBody(sp, b);
+            cpShapeSetUserData(cc.shape.get(), nullptr);
+            cpBodySetUserData(cc.body.get(),   nullptr);
+            registry->remove<physics::ColliderComponent>(e);
+        }
+        
         // Utility Functions
         /**
         * Enable union-find grouping on collisions.
@@ -391,6 +420,10 @@ namespace physics
         // Collider Management
         std::shared_ptr<cpShape> AddShape(cpBody *body, float width, float height, const std::string &tag);
         void AddCollider(entt::entity entity, const std::string &tag, const std::string &shapeType, float a, float b, float c, float d, bool isSensor, const std::vector<cpVect> &points = {});
+        
+        void OnPreSolve(cpArbiter* arb);
+        void OnPostSolve(cpArbiter* arb);
+        void InstallWildcardHandlersForAllTags() ;
 
         // Rendering and Debugging
         void RenderColliders(); // TODO: remove
@@ -453,7 +486,15 @@ namespace physics
         void SetBodyType(entt::entity entity, const std::string &bodyType);
         
         
+        // helper for mapping string tags to collisionType integers
+        cpCollisionType TypeForTag(const std::string& tag) const {
+            auto it = _tagToCollisionType.find(tag);
+            return (it == _tagToCollisionType.end()) ? 0 : it->second; // 0 => default
+        }
+        
     private:
+        std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
+        cpCollisionType                                  _nextCollisionType = 1; // Start from 1, as 0 is default in Chipmunk
         
         // —— Union-Find state ——
         std::unordered_map<cpBody*, UFNode>           _groupNodes;
@@ -465,6 +506,15 @@ namespace physics
         UFNode&  FindNode(cpBody* body);
         void     UnionBodies(cpBody* a, cpBody* b);
         void     ProcessGroups();
+        
+        std::unordered_set<cpCollisionType> _installedWildcardTypes;
+        std::unordered_set<uint64_t>        _installedPairs; // key = min(typeA,typeB)<<32 | max(typeA,typeB)
+
+        static inline uint64_t PairKey(cpCollisionType a, cpCollisionType b) {
+        if (a > b) std::swap(a,b);
+        return (uint64_t(a) << 32) | uint64_t(b);
+        }
+
 
         // —— Collision callback trampoline ——
         static void GroupPostSolveCallback(cpArbiter* arb,
@@ -476,7 +526,11 @@ namespace physics
     
     
     inline static std::shared_ptr<PhysicsWorld> InitPhysicsWorld(entt::registry *registry, float meter = 64.0f, float gravityX = 0.0f, float gravityY = 0.0f) {
-        return std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY);
+         auto toReturn = std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY);
+         
+         toReturn->SetCollisionCallbacks();
+         
+            return toReturn;
     }
     
     

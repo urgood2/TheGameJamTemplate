@@ -4981,6 +4981,51 @@ steering = {
 
 
 ---
+--- Actual userdata type for the PhysicsManager class. Use the global `physics_manager` to access the live instance.
+Methods mirror the helpers on the `PhysicsManager` table.
+---
+---@class PhysicsManagerUD
+PhysicsManagerUD = {
+    get_world = ,  -- ---@param name string
+---@return PhysicsWorld|nil
+    has_world = ,  -- ---@param name string
+---@return boolean
+    is_world_active = ,  -- ---@param name string
+---@return boolean
+    add_world = ,  -- ---@param name string
+---@param world PhysicsWorld
+---@param bindsToState string|nil
+    enable_step = ,  -- ---@param name string
+---@param on boolean
+    enable_debug_draw = ,  -- ---@param name string
+---@param on boolean
+    step_all = ,  -- ---@param dt number
+    draw_all = ,
+    move_entity_to_world = ,  -- ---@param e entt.entity
+---@param dst string
+    get_nav_config = ,  -- ---@param world string
+---@return table { default_inflate_px: integer }
+    set_nav_config = ,  -- ---@param world string
+---@param cfg table { default_inflate_px: integer|nil }
+    mark_navmesh_dirty = ,  -- ---@param world string
+    rebuild_navmesh = ,  -- ---@param world string
+    find_path = ,  -- ---@param world string
+---@param sx number
+---@param sy number
+---@param dx number
+---@param dy number
+---@return table<number,{x:integer,y:integer}>
+    vision_fan = ,  -- ---@param world string
+---@param sx number
+---@param sy number
+---@param radius number
+---@return table<number,{x:integer,y:integer}>
+    set_nav_obstacle =   -- ---@param e entt.entity
+---@param include boolean
+}
+
+
+---
 --- Physics manager utilities: manage physics worlds, debug toggles, navmesh (pathfinding / vision), and safe world migration for entities.
 ---
 ---@class PhysicsManager
@@ -7336,13 +7381,22 @@ function particle.CreateParticleEmitter(...) end
 function particle.CreateParticle(...) end
 
 ---
---- Buffered collision-begin events for (type1,type2) since last PostUpdate().
+--- Buffered collision-begin events for (type1,type2) since last PostUpdate(). Returns a list of event tables with 'a' and 'b' as entt.entity handles.
 ---
 ---@param world physics.PhysicsWorld
 ---@param type1 string
 ---@param type2 string
----@return physics.CollisionEvent[]
+---@return {a:entt.entity,b:entt.entity,x1:number,y1:number,x2:number,y2:number,nx:number,ny:number}[]
 function physics.GetCollisionEnter(...) end
+
+---
+--- Buffered trigger-begin hits for (type1,type2) since last PostUpdate(). Returns entities (entt.entity) rather than opaque pointers.
+---
+---@param world physics.PhysicsWorld
+---@param type1 string
+---@param type2 string
+---@return entt.entity[]
+function physics.GetTriggerEnter(...) end
 
 ---
 ---
@@ -7355,15 +7409,6 @@ function physics.GetEntityFromBody(...) end
 ---@param p lightuserdata
 ---@return entt.entity
 function physics.entity_from_ptr(...) end
-
----
---- Buffered trigger-begin hits for (type1,type2) since last PostUpdate().
----
----@param world physics.PhysicsWorld
----@param type1 string
----@param type2 string
----@return lightuserdata[]
-function physics.GetTriggerEnter(...) end
 
 ---
 ---
@@ -7520,14 +7565,14 @@ function physics.SetMass(...) end
 function physics.Raycast(...) end
 
 ---
---- Returns userData for all shapes intersecting the rectangle [x1,y1]-[x2,y2].
+--- Returns entity handles for all shapes intersecting the rectangle [x1,y1]-[x2,y2].
 ---
 ---@param world physics.PhysicsWorld
 ---@param x1 number @rect min X (Chipmunk units)
 ---@param y1 number @rect min Y (Chipmunk units)
 ---@param x2 number @rect max X (Chipmunk units)
 ---@param y2 number @rect max Y (Chipmunk units)
----@return lightuserdata[] # userData from shapes intersecting the AABB
+---@return entt.entity[] @entities whose shapes intersect the AABB
 function physics.GetObjectsInArea(...) end
 
 ---
@@ -7569,6 +7614,29 @@ function physics.SetEntityToBody(...) end
 ---@param config table @{ shape?:'rectangle'|'circle'|'segment'|'polygon'|'chain', tag?:string, sensor?:boolean, density?:number }
 ---@return nil
 function physics.create_physics_for_transform(...) end
+
+---
+--- Create physics for an entity in the given world, with optional signed inflate.
+---
+---@param R entt.registry
+---@param pm PhysicsManagerUD|PhysicsManager @manager
+---@param e entt.entity
+---@param world string @name of physics world
+---@param cfg table
+---@field cfg.shape 'rectangle'|'circle'|'segment'|'polygon'|'chain'|nil
+---@field cfg.tag string|nil @Collision tag
+---@field cfg.sensor boolean|nil
+---@field cfg.density number|nil @reserved
+---@field cfg.inflate_px number|nil @signed pixels; positive expands, negative shrinks
+---@field cfg.set_world_ref boolean|nil @default true
+---@return void
+function physics.create_physics_for_transform(...) end
+
+---
+--- The live PhysicsManager instance (userdata). Methods mirror the PhysicsManager table.
+---
+---@type PhysicsManagerUD
+function physics_manager.instance(...) end
 
 ---
 --- Sets the seed for deterministic random behavior.

@@ -122,6 +122,78 @@ namespace physics {
         bool sensor = false;
         float density = 1.0f;
     };
+    
+    inline void CreatePhysicsForTransform(entt::registry& R,
+                                      PhysicsManager& PM,
+                                      entt::entity e,
+                                      const physics::PhysicsCreateInfo& ci,
+                                      const std::string& worldName,
+                                      float inflate_px = 0.0f,
+                                      bool set_world_ref_on_entity = true)
+{
+    auto& T = R.get<transform::Transform>(e);
+    auto* rec = PM.get(worldName);
+    if (!rec) return;
+
+    // Body
+    auto body = physics::MakeSharedBody(/*mass*/1.0f, /*moment*/INFINITY);
+    physics::SetEntityToBody(body.get(), e);
+
+    // Base size from ACTUAL W/H
+    float base_w = std::max(1.f, T.getActualW());
+    float base_h = std::max(1.f, T.getActualH());
+
+    // Signed inflate (pixels)
+    const float w = std::max(1.f, base_w + 2.f * inflate_px);
+    const float h = std::max(1.f, base_h + 2.f * inflate_px);
+
+    // Keep original center
+    const float cx = T.getActualX() + base_w * 0.5f;
+    const float cy = T.getActualY() + base_h * 0.5f;
+
+    cpBodySetPosition(body.get(), {cx, cy});
+    cpBodySetAngle(body.get(), T.getActualRotation() * DEG2RAD);
+
+    std::shared_ptr<cpShape> shape;
+    switch (ci.shape) {
+        case physics::ColliderShapeType::Rectangle: {
+            const cpVect verts[4] = {
+                cpv(-w*0.5f, -h*0.5f), cpv( w*0.5f, -h*0.5f),
+                cpv( w*0.5f,  h*0.5f), cpv(-w*0.5f,  h*0.5f),
+            };
+            shape.reset(cpPolyShapeNew(body.get(), 4, verts, cpTransformIdentity, 0), cpShapeFree);
+        } break;
+        case physics::ColliderShapeType::Circle: {
+            float r = 0.5f * std::max(w, h);
+            shape.reset(cpCircleShapeNew(body.get(), r, cpvzero), cpShapeFree);
+        } break;
+        default: {
+            shape = physics::MakeSharedShape(body.get(), w, h);
+        } break;
+    }
+
+    physics::SetEntityToShape(shape.get(), e);
+    cpShapeSetSensor(shape.get(), ci.sensor);
+
+    // Add to world
+    cpSpaceAddBody (rec->w->space, body.get());
+    cpSpaceAddShape(rec->w->space, shape.get());
+
+    // Store on entity
+    R.emplace_or_replace<physics::ColliderComponent>(e, body, shape, ci.tag, ci.sensor, ci.shape);
+
+    // ✅ Also stamp the world ref (constructor computes hash for us)
+    if (set_world_ref_on_entity) {
+        R.emplace_or_replace<PhysicsWorldRef>(e, worldName);
+        // Equivalent explicit form if you prefer clarity:
+        // R.emplace_or_replace<PhysicsWorldRef>(e, PhysicsWorldRef{worldName});
+    }
+
+    // Tag/filter
+    rec->w->AddCollisionTag(ci.tag);
+    rec->w->ApplyCollisionFilter(shape.get(), ci.tag);
+}
+
 
     // Helper: center-based rectangle from Transform ACTUAL size.
     inline void CreatePhysicsForTransform(entt::registry& R,

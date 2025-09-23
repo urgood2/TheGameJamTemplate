@@ -183,6 +183,21 @@ public:
         for (auto& [h, rec] : worlds) {
             if (active.find(h) == active.end()) continue;
             rec.w->Update(dt);
+        }
+    }
+    
+    // call after all game logic at the end of the frame
+    void stepAllPostUpdate(float dt) {
+        // 0) Precompute which worlds are active this frame
+        std::unordered_set<std::size_t> active;
+        active.reserve(worlds.size());
+        for (auto& [h, rec] : worlds) {
+            if (world_active(rec)) active.insert(h);
+        }
+
+        // 2) Step only active worlds
+        for (auto& [h, rec] : worlds) {
+            if (active.find(h) == active.end()) continue;
             rec.w->PostUpdate();
         }
     }

@@ -33,6 +33,46 @@ end
 
 function initMainMenu()
     
+    -- Physics world testing
+    local world = PhysicsManager.get_world("world")
+    
+    local cfg = PhysicsManager.get_nav_config("world")
+    
+    local detected = physics.GetObjectsInArea(world, 0, 0, 500, 500)
+    
+    local active = PhysicsManager.is_world_active("world")
+    
+    local player = animation_system.createAnimatedObjectWithTransform(
+        "example_char", -- animation ID
+        false,             -- use animation, not sprite identifier, if false
+        300, 300
+    )
+    
+    
+    local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = -3 } -- default tag is "WORLD"
+    physics.create_physics_for_transform(registry,
+        physics_manager_instance, -- global instance
+        player,
+        "world", -- physics world identifier
+        info
+    )
+    
+    timer.every(5.0, function()
+        
+        -- check between some test objects
+        local ce = physics.GetCollisionEnter(world, "WORLD", "player")
+        local otherWay = physics.GetCollisionEnter(world, "player", "WORLD")
+        
+        log_debug("Collision enter between WORLD and player: " .. tostring(ce))
+        
+    end)
+    
+    timer.after(30.0, function()
+        registry:destroy(player)
+    end)
+    
+    
+    
     -- testing: shift camera randomly every second
     timer.every(5.0, function()
         local targetX = random_utils.random_int(0, globals.screenWidth() - globals.tileSize)

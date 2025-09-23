@@ -908,7 +908,8 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         physicsWorld = physics::InitPhysicsWorld(&globals::registry, 64.0f, 0.0f, 0.f);
         
         physicsWorld->AddCollisionTag("WORLD"); // default tag
-        physicsWorld->EnableCollisionBetween("WORLD", {"WORLD"});
+        physicsWorld->AddCollisionTag("player");
+        physicsWorld->EnableCollisionBetween("WORLD", {"WORLD", "player"});
         
         // add to physics manager
         globals::physicsManager->add("world", physicsWorld);
@@ -940,7 +941,7 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         entt::entity testEntity = globals::registry.create();
         
-        physicsWorld->AddCollider(testEntity, "WORLD" /* default tag */, "rectangle", 50, 50, -1, -1, false);
+        physicsWorld->AddCollider(testEntity, "player" /* default tag */, "rectangle", 50, 50, -1, -1, false);
         
         physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
 

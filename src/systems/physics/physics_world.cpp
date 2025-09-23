@@ -732,17 +732,23 @@ PhysicsWorld::GetTriggerEnter(const std::string &type1,
  * // "player" will be assigned category 1, "enemy" will be assigned category 2,
  * etc.
  */
-void PhysicsWorld::SetCollisionTags(const std::vector<std::string> &tags) {
+void PhysicsWorld::SetCollisionTags(const std::vector<std::string>& tags) {
   collisionTags.clear();
   triggerTags.clear();
+  categoryToTag.clear();
+  _tagToCollisionType.clear();
 
-  int category =
-      1; // Start with category 1 (Chipmunk categories are powers of 2)
-  for (const auto &tag : tags) {
+  cpCollisionType _nextType = 1; // reserve 0 for default
+
+  int category = 1;  // Start with category 1 (Chipmunk categories are powers of 2)
+  for (const auto& tag : tags) {
     collisionTags[tag] = {category, {}, {}};
-    triggerTags[tag] = {category, {}, {}};
+    triggerTags[tag]   = {category, {}, {}};
     categoryToTag[category] = tag; // Populate reverse map
-    category <<= 1;                // Move to the next bit
+
+    _tagToCollisionType[tag] = _nextType++; // stable small integers
+
+    category <<= 1; // Move to the next bit
   }
 }
 
@@ -774,6 +780,7 @@ void PhysicsWorld::UpdateColliderTag(entt::entity entity,
 
   auto &collider = registry->get<ColliderComponent>(entity);
   ApplyCollisionFilter(collider.shape.get(), newTag);
+  cpShapeSetCollisionType(collider.shape.get(), _tagToCollisionType[newTag]);
 }
 
 void PhysicsWorld::PrintCollisionTags() {
@@ -784,6 +791,28 @@ void PhysicsWorld::PrintCollisionTags() {
       SPDLOG_DEBUG("{}", mask);
   }
 }
+
+void PhysicsWorld::OnPreSolve(cpArbiter* arb) {
+  // Placeholder for pre-solve logic
+}
+
+void PhysicsWorld::OnPostSolve(cpArbiter* arb) {
+  // Placeholder for post-solve logic
+}
+
+void PhysicsWorld::InstallWildcardHandlersForAllTags() {
+  for (auto& [tag, type] : _tagToCollisionType) {
+    if (_installedWildcardTypes.count(type)) continue;
+    cpCollisionHandler* h = cpSpaceAddWildcardHandler(space, type);
+    h->userData = this;
+    h->beginFunc    = [](cpArbiter* a, cpSpace* s, void* d)->cpBool { static_cast<PhysicsWorld*>(d)->OnCollisionBegin(a); return cpTrue; };
+    h->preSolveFunc = [](cpArbiter* a, cpSpace* s, void* d)->cpBool { return static_cast<PhysicsWorld*>(d)->OnPreSolve(a); };
+    h->postSolveFunc= [](cpArbiter* a, cpSpace* s, void* d){ static_cast<PhysicsWorld*>(d)->OnPostSolve(a); };
+    h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d){ static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a); };
+    _installedWildcardTypes.insert(type);
+  }
+}
+
 
 void PhysicsWorld::AddCollisionTag(const std::string &tag) {
   if (collisionTags.find(tag) != collisionTags.end())
@@ -797,6 +826,7 @@ void PhysicsWorld::AddCollisionTag(const std::string &tag) {
   collisionTags[tag] = {category, {}, {}};
   triggerTags[tag] = {category, {}, {}};
   categoryToTag[category] = tag;
+  _tagToCollisionType[tag] = _nextCollisionType++;
 }
 
 void PhysicsWorld::RemoveCollisionTag(const std::string &tag) {
@@ -819,6 +849,7 @@ void PhysicsWorld::RemoveCollisionTag(const std::string &tag) {
         if (filter.categories == category) {
           ApplyCollisionFilter(collider.shape.get(),
                                "default"); // Reset to a default tag
+          cpShapeSetCollisionType(collider.shape.get(), _tagToCollisionType["default"]);
         }
       });
 }
@@ -845,6 +876,7 @@ void PhysicsWorld::UpdateCollisionMasks(
 
         if (filter.categories == targetCategory) {
           ApplyCollisionFilter(collider.shape.get(), tag);
+          cpShapeSetCollisionType(collider.shape.get(), _tagToCollisionType[tag]);
         }
       });
 }
@@ -1075,9 +1107,10 @@ std::shared_ptr<cpShape> PhysicsWorld::AddShape(cpBody *body, float width,
 
   // Apply the collision filter based on the tag
   ApplyCollisionFilter(shape.get(), tag);
+  cpShapeSetCollisionType(shape.get(), _tagToCollisionType[tag]);
 
   // Set user data (optional, e.g., a reference to the game object)
-  cpShapeSetUserData(shape.get(), static_cast<void *>(this));
+  // cpShapeSetUserData(shape.get(), static_cast<void *>(this));
 
   // Add the shape to the space
   cpSpaceAddShape(space, shape.get());
@@ -1197,6 +1230,7 @@ void PhysicsWorld::AddCollider(entt::entity entity, const std::string &tag,
 
   // Apply collision filtering
   ApplyCollisionFilter(shape.get(), tag);
+  cpShapeSetCollisionType(shape.get(), _tagToCollisionType[tag]);
   cpShapeSetSensor(shape.get(), isSensor);
 
   // Register component with EnTT
@@ -3193,31 +3227,65 @@ void PhysicsWorld::AddUprightSpring(entt::entity e, float stiffness,
   cpSpaceAddConstraint(space, spring);
 }
 
+void PhysicsWorld::InstallWildcardCollisionHandlers() {
+  for (auto& [tag, type] : _tagToCollisionType) {
+    cpCollisionHandler* h = cpSpaceAddWildcardHandler(space, type);
+    h->userData = this;
+    h->beginFunc    = [](cpArbiter* a, cpSpace* s, void* d) -> cpBool {
+      static_cast<PhysicsWorld*>(d)->OnCollisionBegin(a);
+      return cpTrue;
+    };
+    h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d) {
+      static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a);
+    };
+    // If you also want preSolve/postSolve, set those too.
+  }
+}
+
+void PhysicsWorld::RegisterExclusivePairCollisionHandler(const std::string& tagA, const std::string& tagB) {
+  cpCollisionType ta = TypeForTag(tagA);
+  cpCollisionType tb = TypeForTag(tagB);
+
+  cpCollisionHandler* h = cpSpaceAddCollisionHandler(space, ta, tb);
+  h->userData = this;
+
+  h->beginFunc    = [](cpArbiter* a, cpSpace* s, void* d) -> cpBool {
+    // Return cpFalse to cancel collision; cpTrue to allow it.
+    // You can still treat sensors specially inside OnCollisionBegin.
+    static_cast<PhysicsWorld*>(d)->OnCollisionBegin(a);
+    return cpTrue;
+  };
+  h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d) {
+    static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a);
+  };
+
+  // Optional:
+  // h->preSolveFunc  = ...
+  // h->postSolveFunc = ...
+}
+
 /// Create four static segment‐shapes around [xMin,yMin]→[xMax,yMax].
 /// 'thickness' is the segment radius.
-void PhysicsWorld::AddScreenBounds(float xMin, float yMin, float xMax,
-                                   float yMax, float thickness) {
-  // Grab the built‑in static body (infinite mass)
-  cpBody *staticBody = cpSpaceGetStaticBody(space);
+void PhysicsWorld::AddScreenBounds(float xMin, float yMin, float xMax, float yMax, float thickness,
+                                   const std::string& collisionTag)
+{
+  cpBody* staticBody = cpSpaceGetStaticBody(space);
+  cpShapeFilter filter = CP_SHAPE_FILTER_ALL;
+  cpCollisionType type = TypeForTag(collisionTag); // integer-like; safe
 
   auto makeWall = [&](float ax, float ay, float bx, float by) {
-    // segment from A→B with given thickness
-    cpShape *seg =
-        cpSegmentShapeNew(staticBody, cpv(ax, ay), cpv(bx, by), thickness);
-    // optional: tune friction/elasticity
+    cpShape* seg = cpSegmentShapeNew(staticBody, cpv(ax, ay), cpv(bx, by), thickness);
     cpShapeSetFriction(seg, 1.0f);
     cpShapeSetElasticity(seg, 0.0f);
+    cpShapeSetFilter(seg, filter);
+    cpShapeSetCollisionType(seg, type);
     cpSpaceAddShape(space, seg);
   };
 
-  // bottom
   makeWall(xMin, yMin, xMax, yMin);
-  // right
+  makeWall(xMin, yMin, xMin, yMax);
+  makeWall(xMin, yMax, xMax, yMax);
   makeWall(xMax, yMin, xMax, yMax);
-  // top
-  makeWall(xMax, yMax, xMin, yMax);
-  // left
-  makeWall(xMin, yMax, xMin, yMin);
 }
 
 void PhysicsWorld::StartMouseDrag(float x, float y) {

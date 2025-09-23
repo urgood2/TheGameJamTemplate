@@ -808,7 +808,12 @@ void PhysicsWorld::InstallWildcardHandlersForAllTags() {
     h->beginFunc    = [](cpArbiter* a, cpSpace* s, void* d)->cpBool { static_cast<PhysicsWorld*>(d)->OnCollisionBegin(a); return cpTrue; };
     // h->preSolveFunc = [](cpArbiter* a, cpSpace* s, void* d)->cpBool { return static_cast<PhysicsWorld*>(d)->OnPreSolve(a); };
     // h->postSolveFunc= [](cpArbiter* a, cpSpace* s, void* d){ static_cast<PhysicsWorld*>(d)->OnPostSolve(a); };
-    h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d){ static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a); };
+    h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d){ 
+      
+      static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a); 
+      // free arbiter store if there is any
+      free_store(a);
+    };
     _installedWildcardTypes.insert(type);
   }
 }
@@ -3237,6 +3242,8 @@ void PhysicsWorld::InstallWildcardCollisionHandlers() {
     };
     h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d) {
       static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a);
+      //free arbiter userdata if you allocated any
+      free_store(a);
     };
     // If you also want preSolve/postSolve, set those too.
   }
@@ -3257,6 +3264,7 @@ void PhysicsWorld::RegisterExclusivePairCollisionHandler(const std::string& tagA
   };
   h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d) {
     static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a);
+    free_store(a);
   };
 
   // Optional:

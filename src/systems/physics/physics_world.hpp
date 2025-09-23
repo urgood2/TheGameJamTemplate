@@ -490,6 +490,44 @@ namespace physics
             return (it == _tagToCollisionType.end()) ? 0 : it->second; // 0 => default
         }
         
+        
+/* -------------------- free body / shape usage from lua: ------------------- */
+        
+        // In PhysicsWorld (private):
+        uint64_t _nextBodyId = 1;
+        std::unordered_map<uint64_t, std::shared_ptr<cpBody>> _bodyHandles;
+
+        // internal helpers
+        uint64_t registerBody(std::shared_ptr<cpBody> b) {
+            const auto id = _nextBodyId++;
+            _bodyHandles.emplace(id, std::move(b));
+            return id;
+        }
+        std::shared_ptr<cpBody> bodyFrom(uint64_t id) {
+            auto it = _bodyHandles.find(id);
+            return (it == _bodyHandles.end()) ? nullptr : it->second;
+        }
+        void unregisterBody(uint64_t id) { _bodyHandles.erase(id); }
+        
+        
+/* ------------------------ Arbiter user-data storage ----------------------- */
+        
+        struct ArbiterStore {
+            // string -> stored value; keep it simple & safe for Lua
+            std::unordered_map<std::string, double> nums;
+            std::unordered_map<std::string, bool>   bools;
+            std::unordered_map<std::string, uintptr_t> ptrs; // lightuserdata / entity ids
+        };
+        static ArbiterStore* ensure_store(cpArbiter* arb) {
+            if (auto p = (ArbiterStore*)cpArbiterGetUserData(arb)) return p;
+            auto* store = new ArbiterStore();
+            cpArbiterSetUserData(arb, store);
+            return store;
+        }
+        static void free_store(cpArbiter* arb) {
+            if (auto* p = (ArbiterStore*)cpArbiterGetUserData(arb)) { delete p; cpArbiterSetUserData(arb, nullptr); }
+        }
+        
     private:
         std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
         cpCollisionType                                  _nextCollisionType = 1; // Start from 1, as 0 is default in Chipmunk
@@ -520,6 +558,10 @@ namespace physics
                                             void*      userData);
         // Called by the static callback; unions the two colliding bodies.
         void    OnGroupPostSolve(cpArbiter* arb);
+        
+
+        
+
     };
     
     

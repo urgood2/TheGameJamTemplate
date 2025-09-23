@@ -31,12 +31,10 @@ inline void expose_physics_to_lua(sol::state& lua) {
     auto& rec = BindingRecorder::instance();
     const std::vector<std::string> path = {"physics"};
 
-    // Namespace doc
     rec.add_type("physics").doc =
         "Physics namespace (Chipmunk2D). Create worlds, set tags/masks, raycast, "
         "query areas, and attach colliders to entities.";
 
-    // ---------- RaycastHit (Lua-facing) ----------
     struct LuaRaycastHit {
         void* shape{};
         cpVect point{0,0};
@@ -54,7 +52,6 @@ inline void expose_physics_to_lua(sol::state& lua) {
     auto& rch = rec.add_type("physics.RaycastHit");
     rch.doc = "Result of a raycast: shape pointer, hit point, normal, and fraction along the ray.";
     
-    // ---- Add near LuaRaycastHit ----
     struct LuaCollisionEvent {
         void* objectA{};
         void* objectB{};
@@ -71,36 +68,30 @@ inline void expose_physics_to_lua(sol::state& lua) {
     rec.add_type("physics.CollisionEvent").doc =
         "Collision event: endpoints (x1,y1)-(x2,y2), normal (nx,ny), and the two objects.";
 
-// ---- Replace direct bindings for GetCollisionEnter/GetTriggerEnter with entity-aware wrappers ----
     static auto to_entity = [](void* p) -> entt::entity {
-        // WARNING: this assumes you stored the entity id directly as an integer/uintptr_t in userData.
-        // If instead you're storing cpBody*/cpShape*, go through GetEntityFromBody/your own GetEntityFromShape.
         return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p));
     };
 
-// CollisionBegin: returns an array of event tables with entity handles
 rec.bind_function(lua, path, "GetCollisionEnter",
     [&lua](physics::PhysicsWorld& W, const std::string& t1, const std::string& t2) {
         const auto& v = W.GetCollisionEnter(t1, t2);
         sol::table out = lua.create_table(static_cast<int>(v.size()), 0);
         int i = 1;
         for (const auto& e : v) {
-            // e.objectA / e.objectB assumed to be void* userData from shapes/bodies
             const entt::entity a = to_entity(e.objectA);
             const entt::entity b = to_entity(e.objectB);
 
             sol::table ev = lua.create_table();
-            ev["a"]  = a;               // entt.entity
-            ev["b"]  = b;               // entt.entity
+            ev["a"]  = a;
+            ev["b"]  = b;
             ev["x1"] = e.x1; ev["y1"] = e.y1;
             ev["x2"] = e.x2; ev["y2"] = e.y2;
             ev["nx"] = e.nx; ev["ny"] = e.ny;
 
             out[i++] = ev;
         }
-        return out; // -> { {a=entt.entity,b=entt.entity,x1=...,y1=..., ...}, ... }
+        return out;
     },
-    // --- EmmyLua ---
     "---@param world physics.PhysicsWorld\n"
     "---@param type1 string\n"
     "---@param type2 string\n"
@@ -109,18 +100,16 @@ rec.bind_function(lua, path, "GetCollisionEnter",
     "Returns a list of event tables with 'a' and 'b' as entt.entity handles."
 );
 
-// TriggerBegin: returns an array of entt.entity (hit other)
 rec.bind_function(lua, path, "GetTriggerEnter",
     [](physics::PhysicsWorld& W, const std::string& t1, const std::string& t2) {
-        const auto& v = W.GetTriggerEnter(t1, t2); // vector<void*>
+        const auto& v = W.GetTriggerEnter(t1, t2);
         std::vector<entt::entity> out;
         out.reserve(v.size());
         for (void* u : v) {
             out.push_back(to_entity(u));
         }
-        return sol::as_table(out); // -> entt.entity[]
+        return sol::as_table(out);
     },
-    // --- EmmyLua ---
     "---@param world physics.PhysicsWorld\n"
     "---@param type1 string\n"
     "---@param type2 string\n"
@@ -130,19 +119,13 @@ rec.bind_function(lua, path, "GetTriggerEnter",
 );
 
     
-    // Optional: if you have a shape->entity getter in C++, expose it similarly.
-// For now, expose body->entity as declared:
 rec.bind_function(lua, path, "GetEntityFromBody",
     &physics::GetEntityFromBody,
     "---@param body lightuserdata @cpBody*\n---@return entt.entity"
 );
 
-// Generic pointer->entity (works if you store the entity as uintptr_t in userData).
-// If you DON'T store entity that way, replace this with your exact decode logic.
 rec.bind_function(lua, path, "entity_from_ptr",
     [](void* p) -> entt::entity {
-        // WARNING: this assumes you stored the entity id directly as an integer/uintptr_t in userData.
-        // If instead you're storing cpBody*/cpShape*, go through GetEntityFromBody/your own GetEntityFromShape.
         return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p));
     },
     "---@param p lightuserdata\n---@return entt.entity"
@@ -152,37 +135,31 @@ rec.bind_function(lua, path, "entity_from_ptr",
 
     using physics::PhysicsWorld;
 
-    // ---------- PhysicsWorld ----------
     lua.new_usertype<PhysicsWorld>("PhysicsWorld",
         sol::constructors<PhysicsWorld(entt::registry*, float, float, float)>(),
-        // lifecycle
         "Update",            &PhysicsWorld::Update,
         "PostUpdate",        &PhysicsWorld::PostUpdate,
         "SetGravity",        &PhysicsWorld::SetGravity,
         "SetMeter",          &PhysicsWorld::SetMeter,
         "SetCollisionCallbacks", &PhysicsWorld::SetCollisionCallbacks,
-        // tags & masks
         "SetCollisionTags",      &PhysicsWorld::SetCollisionTags,
-        "EnableCollisionBetween",&PhysicsWorld::EnableCollisionBetween,   // tag1, {tags}  (adds masks) :contentReference[oaicite:7]{index=7}
-        "DisableCollisionBetween",&PhysicsWorld::DisableCollisionBetween, // tag1, {tags}  (removes masks) :contentReference[oaicite:8]{index=8}
+        "EnableCollisionBetween",&PhysicsWorld::EnableCollisionBetween,
+        "DisableCollisionBetween",&PhysicsWorld::DisableCollisionBetween,
         "EnableTriggerBetween",  &PhysicsWorld::EnableTriggerBetween,
         "DisableTriggerBetween", &PhysicsWorld::DisableTriggerBetween,
-        "UpdateCollisionMasks",  &PhysicsWorld::UpdateCollisionMasks,     // bulk reset + reapply :contentReference[oaicite:9]{index=9}
+        "UpdateCollisionMasks",  &PhysicsWorld::UpdateCollisionMasks,
         "AddCollisionTag",       &PhysicsWorld::AddCollisionTag,
         "RemoveCollisionTag",    &PhysicsWorld::RemoveCollisionTag,
         "UpdateColliderTag",     &PhysicsWorld::UpdateColliderTag,
         "PrintCollisionTags",    &PhysicsWorld::PrintCollisionTags,
-        // queries
         "GetCollisionEnter",     &PhysicsWorld::GetCollisionEnter,
         "GetTriggerEnter",       &PhysicsWorld::GetTriggerEnter,
-        // debug
         "RenderColliders",       &PhysicsWorld::RenderColliders
     );
 
     auto& pw = rec.add_type("physics.PhysicsWorld");
     pw.doc = "Owns Chipmunk space, tags/masks, and collision/trigger buffers. Step with Update(dt).";
     
-    // --- Angular damping / torque / angular impulse / bullet flag ---
 rec.bind_function(lua, path, "SetAngularDamping",
     &physics::PhysicsWorld::SetAngularDamping,
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularDamping number"
@@ -203,7 +180,6 @@ rec.bind_function(lua, path, "SetBullet",
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param isBullet boolean"
 );
 
-// --- Position / angle ---
 rec.bind_function(lua, path, "GetPosition",
     [](physics::PhysicsWorld& W, entt::entity e, sol::this_state s) {
         auto p = W.GetPosition(e);
@@ -227,7 +203,6 @@ rec.bind_function(lua, path, "SetAngle",
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param radians number"
 );
 
-// --- Linear / angular velocity ---
 rec.bind_function(lua, path, "SetVelocity",
     &physics::PhysicsWorld::SetVelocity,
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param vx number\n---@param vy number"
@@ -238,7 +213,6 @@ rec.bind_function(lua, path, "SetAngularVelocity",
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param av number @radians/sec"
 );
 
-// --- Forces / impulses ---
 rec.bind_function(lua, path, "ApplyForce",
     &physics::PhysicsWorld::ApplyForce,
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fx number\n---@param fy number"
@@ -249,7 +223,6 @@ rec.bind_function(lua, path, "ApplyImpulse",
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param ix number\n---@param iy number"
 );
 
-// --- Material / damping ---
 rec.bind_function(lua, path, "SetDamping",
     &physics::PhysicsWorld::SetDamping,
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param linear number"
@@ -270,7 +243,6 @@ rec.bind_function(lua, path, "SetFriction",
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param friction number"
 );
 
-// --- Flags / mass ---
 rec.bind_function(lua, path, "SetAwake",
     &physics::PhysicsWorld::SetAwake,
     "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param awake boolean"
@@ -292,11 +264,9 @@ rec.bind_function(lua, path, "SetMass",
 );
 
 
-    // ---------- Helpers exposed under physics.* ----------
-    // Wrap Raycast -> {RaycastHit[]}
     rec.bind_function(lua, path, "Raycast",
         [](PhysicsWorld& W, float x1, float y1, float x2, float y2, sol::this_state s) {
-            auto hits = W.Raycast(x1, y1, x2, y2); // native vector
+            auto hits = W.Raycast(x1, y1, x2, y2);
             sol::state_view L(s);
             std::vector<LuaRaycastHit> out;
             out.reserve(hits.size());
@@ -318,10 +288,9 @@ rec.bind_function(lua, path, "SetMass",
         "---@return physics.RaycastHit[] # Array of hits, nearest-first.",
         "Segment raycast through the physics space (Chipmunk2D).");
 
-    // Wrap GetObjectsInArea -> {entityPtr[]}
     rec.bind_function(lua, path, "GetObjectsInArea",
     [](physics::PhysicsWorld& W, float x1, float y1, float x2, float y2) {
-        auto raw = W.GetObjectsInArea(x1, y1, x2, y2); // std::vector<void*>
+        auto raw = W.GetObjectsInArea(x1, y1, x2, y2);
         std::vector<entt::entity> out;
         out.reserve(raw.size());
         for (void* p : raw) {
@@ -330,9 +299,8 @@ rec.bind_function(lua, path, "SetMass",
                 : entt::null;
             out.push_back(e);
         }
-        return sol::as_table(out); // -> entt.entity[]
+        return sol::as_table(out);
     },
-    // --- EmmyLua (updated return type!) ---
     "---@param world physics.PhysicsWorld\n"
     "---@param x1 number @rect min X (Chipmunk units)\n"
     "---@param y1 number @rect min Y (Chipmunk units)\n"
@@ -343,7 +311,6 @@ rec.bind_function(lua, path, "SetMass",
 );
 
 
-    // AddCollider with table-of-points override
     rec.bind_function(lua, path, "AddCollider",
         [](PhysicsWorld& W, entt::entity e, const std::string& tag,
            const std::string& shapeType,
@@ -374,7 +341,6 @@ rec.bind_function(lua, path, "SetMass",
         "Creates a cpBody+cpShape, applies tag filter (default masks = 'all' if none set), "
         "and emplaces a ColliderComponent. For polygon/chain, provide explicit vertices via `points`.");
 
-    // Small helpers to stuff entity IDs into Chipmunk userdata (when needed)
     rec.bind_function(lua, path, "SetEntityToShape",
         &physics::SetEntityToShape,
         "---@param shape lightuserdata @cpShape*\n"
@@ -387,7 +353,6 @@ rec.bind_function(lua, path, "SetMass",
         "Stores an entity ID into body->userData.");
         
     
-    // 1) Optional: Enum table for convenience (matches your C++ enum)
     lua["physics"]["ColliderShapeType"] = lua.create_table_with(
         "Rectangle", static_cast<int>(physics::ColliderShapeType::Rectangle),
         "Segment",   static_cast<int>(physics::ColliderShapeType::Segment),
@@ -400,14 +365,12 @@ rec.bind_function(lua, path, "SetMass",
         t.doc   = "Collider shape enum; use string names for config too.";
     }
 
-    // 2) create_physics_for_transform(registry, pm, e, config_tbl)
     rec.bind_function(lua, path, "create_physics_for_transform",
         [](entt::registry& R,
         PhysicsManager& PM,
         entt::entity e,
         sol::table cfg)
         {
-            // --- Parse config table with defaults ---
             auto get_string = [&](const char* k, const char* def)->std::string {
                 if (auto v = cfg[k]; v.valid() && v.get_type() == sol::type::string) return v.get<std::string>();
                 return def;
@@ -421,7 +384,6 @@ rec.bind_function(lua, path, "SetMass",
                 return def;
             };
 
-            // shape: accept string names (case-insensitive-ish on first char)
             auto shapeStr = get_string("shape", "rectangle");
             physics::ColliderShapeType shape = physics::ColliderShapeType::Rectangle;
             if      (shapeStr == "rectangle" || shapeStr == "Rectangle") shape = physics::ColliderShapeType::Rectangle;
@@ -434,18 +396,15 @@ rec.bind_function(lua, path, "SetMass",
             ci.shape   = shape;
             ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG.c_str());
             ci.sensor  = get_bool("sensor", false);
-            ci.density = get_num("density", 1.0f); // currently unused by your impl, but kept for forward-compat
+            ci.density = get_num("density", 1.0f);
 
-            // --- Call your engine function ---
             physics::CreatePhysicsForTransform(R, PM, e, ci);
         },
-        // EmmyLua doc:
         "---@param r entt.registry& @Registry reference\n"
         "---@param pm PhysicsManager& @Physics manager\n"
         "---@param e entt.entity\n"
         "---@param config table @{ shape?:'rectangle'|'circle'|'segment'|'polygon'|'chain', tag?:string, sensor?:boolean, density?:number }\n"
         "---@return nil",
-        // Human doc:
         "Create a Chipmunk body+shape for entity based on its Transform.ACTUAL size/rotation, "
         "attach ColliderComponent, tag+filter it, and add to its referenced PhysicsWorld."
     );
@@ -470,7 +429,6 @@ rec.bind_function(lua, path, "SetMass",
             return def;
         };
 
-        // shape
         auto shapeStr = get_string("shape", "rectangle");
         physics::ColliderShapeType shape = physics::ColliderShapeType::Rectangle;
         if      (shapeStr == "rectangle" || shapeStr == "Rectangle") shape = physics::ColliderShapeType::Rectangle;
@@ -483,16 +441,14 @@ rec.bind_function(lua, path, "SetMass",
         ci.shape   = shape;
         ci.tag     = get_string("tag", DEFAULT_COLLISION_TAG.c_str());
         ci.sensor  = get_bool("sensor", false);
-        ci.density = get_num("density", 1.0f); // reserved for future use
+        ci.density = get_num("density", 1.0f);
 
-        const float inflate_px = get_num("inflate_px", 0.0f); // NEW: signed inflate
+        const float inflate_px = get_num("inflate_px", 0.0f);
 
-        // Optional: allow scripts to *not* stamp PhysicsWorldRef if they don’t want it
         const bool set_ref = get_bool("set_world_ref", true);
 
         physics::CreatePhysicsForTransform(R, PM, e, ci, world, inflate_px, set_ref);
     },
-    // --- EmmyLua ---
     "---@param R entt.registry\n"
     "---@param pm PhysicsManagerUD|PhysicsManager @manager\n"
     "---@param e entt.entity\n"
@@ -508,6 +464,115 @@ rec.bind_function(lua, path, "SetMass",
     "Create physics for an entity in the given world, with optional signed inflate."
 );
 
+// Get main body from ColliderComponent, add an extra rectangle shape on it.
+rec.bind_function(lua, {"physics"}, "add_shape_to_entity",
+    [](physics::PhysicsWorld& W, entt::entity e, float w, float h, const std::string& tag, bool sensor){
+        auto& col = W.registry->get<ColliderComponent>(e);
+        auto shp = W.AddShape(col.body.get(), w, h, tag); // applies filter & adds to space
+        cpShapeSetSensor(shp.get(), sensor);
+        // Optionally store extra shapes somewhere if you track them explicitly.
+    },
+    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param w number\n---@param h number\n---@param tag string\n---@param sensor boolean");
+    
+    // Make a free body (dynamic/kinematic/static) not tied to an entity
+    rec.bind_function(lua, {"physics"}, "body_create",
+        [&] (physics::PhysicsWorld& W, const std::string& type, double mass, double moment){
+            std::shared_ptr<cpBody> b;
+            if (type == "dynamic")   b = MakeSharedBody((cpFloat)mass, (cpFloat)moment);
+            else if (type == "kinematic") b = std::shared_ptr<cpBody>(cpBodyNewKinematic(), cpBodyFree);
+            else /*static*/              b = std::shared_ptr<cpBody>(cpBodyNewStatic(), cpBodyFree);
+            cpSpaceAddBody(W.space, b.get());
+            return W.registerBody(std::move(b));
+        },
+        "---@param world physics.PhysicsWorld\n---@param type 'dynamic'|'kinematic'|'static'\n---@param mass number\n---@param moment number\n---@return integer @body_handle");
+
+    // Destroy
+    rec.bind_function(lua, {"physics"}, "body_destroy",
+        [&] (physics::PhysicsWorld& W, uint64_t id){
+            if (auto b = W.bodyFrom(id)) { cpSpaceRemoveBody(W.space, b.get()); W.unregisterBody(id); }
+        },
+        "---@param world physics.PhysicsWorld\n---@param body_handle integer");
+
+    // Mutators
+    rec.bind_function(lua, {"physics"}, "body_set_position",
+        [&] (physics::PhysicsWorld& W, uint64_t id, double x, double y){
+            if (auto b = W.bodyFrom(id)) cpBodySetPosition(b.get(), cpv((cpFloat)x,(cpFloat)y));
+        },
+        "---@return void");
+
+    rec.bind_function(lua, {"physics"}, "body_apply_force",
+        [&] (physics::PhysicsWorld& W, uint64_t id, double fx, double fy){
+            if (auto b = W.bodyFrom(id)) cpBodyApplyForceAtWorldPoint(b.get(), cpv(fx,fy), cpBodyGetPosition(b.get()));
+        },
+        "");
+
+    rec.bind_function(lua, {"physics"}, "body_get_entity",
+        [] (uint64_t /*world ignored in helper?*/, void* bodyPtr){
+            return GetEntityFromBody(static_cast<cpBody*>(bodyPtr));
+        },
+        "---@param body lightuserdata @cpBody*\n---@return entt.entity|entt.null");
+        
+    rec.bind_function(lua, {"physics"}, "get_body_handle_for_entity",
+    [&] (physics::PhysicsWorld& W, entt::entity e){
+        auto& col = W.registry->get<ColliderComponent>(e);
+        return W.registerBody(col.body); // shares ownership
+    },
+    "---@return integer @body_handle");
+    
+    // number
+    rec.bind_function(lua, {"physics"}, "arb_set_number",
+        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, double val){
+            auto* s = world.ensure_store(static_cast<cpArbiter*>(arbPtr));
+            s->nums[key] = val;
+        },
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value number");
+
+    rec.bind_function(lua, {"physics"}, "arb_get_number",
+        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<double> def){
+            if (auto* s = static_cast<physics::PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
+                if (auto it = s->nums.find(key); it != s->nums.end()) return it->second;
+            }
+            return def.value_or(0.0);
+        },
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param default number|nil\n---@return number");
+
+    // bool
+    rec.bind_function(lua, {"physics"}, "arb_set_bool",
+        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, bool v){
+            auto* s = world.ensure_store(static_cast<cpArbiter*>(arbPtr));
+            s->bools[key] = v;
+        },
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value boolean");
+
+    rec.bind_function(lua, {"physics"}, "arb_get_bool",
+        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<bool> def){
+            if (auto* s = static_cast<physics::PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
+                if (auto it = s->bools.find(key); it != s->bools.end()) return it->second;
+            }
+            return def.value_or(false);
+        },
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param default boolean|nil\n---@return boolean");
+
+    // ptr (lightuserdata / entity ids)
+    rec.bind_function(lua, {"physics"}, "arb_set_ptr",
+        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, void* p){
+            auto* s = world.ensure_store(static_cast<cpArbiter*>(arbPtr));
+            s->ptrs[key] = (uintptr_t)p;
+        },
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value lightuserdata");
+
+    rec.bind_function(lua, {"physics"}, "arb_get_ptr",
+        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key){
+            void* out = nullptr;
+            if (auto* s = static_cast<physics::PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
+                if (auto it = s->ptrs.find(key); it != s->ptrs.end()) out = (void*)it->second;
+            }
+            return out;
+        },
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@return lightuserdata|nil");
+
+
+
 }
 
 
@@ -520,7 +585,6 @@ inline void expose_steering_to_lua(sol::state& lua) {
     rec.add_type("steering").doc =
         "Steering behaviors (seek/flee/wander/boids/path) that push forces into Chipmunk bodies.";
 
-    // Factory: add a SteerableComponent with caps
     rec.bind_function(lua, path, "make_steerable",
         &::Steering::MakeSteerable,
         "---@param r entt.registry& @Registry reference\n"
@@ -531,22 +595,12 @@ inline void expose_steering_to_lua(sol::state& lua) {
         "---@param turnMul number @turn responsiveness multiplier (default 2.0)",
         "Attach and initialize a SteerableComponent with speed/force/turn caps.");
 
-    // // Per-frame update (composes enabled behaviors and clamps)
-    // rec.bind_function(lua, path, "update",
-    //     &::Steering::Update,
-    //     "---@param r entt.registry& @Registry reference\n"
-    //     "---@param e entt.entity\n"
-    //     "---@param dt number @seconds",
-    //     "Compose enabled behaviors, apply to Chipmunk body, clamp force and velocity to caps.");
 
-    // Behaviors (Chipmunk-space versions)
     rec.bind_function(lua, path, "seek_point",
         sol::overload(
-            // Accept table {x,y}
             [](entt::registry& r, entt::entity e, sol::table p, float decel, float weight) {
                 ::Steering::SeekPoint(r, e, vec_from_lua(p), decel, weight);
             },
-            // Accept x,y
             [](entt::registry& r, entt::entity e, float x, float y, float decel, float weight) {
                 ::Steering::SeekPoint(r, e, cpv(x,y), decel, weight);
             }
@@ -636,7 +690,6 @@ inline void expose_steering_to_lua(sol::state& lua) {
         "---@param weight number @blend weight",
         "Predict pursuer future position and flee it (evade).");
 
-    // Path helpers
     rec.bind_function(lua, path, "set_path",
         [](entt::registry& r, entt::entity e, sol::table points, float arriveRadius){
             ::Steering::SetPath(r, e, vecarray_from_lua(points), arriveRadius);
@@ -655,7 +708,6 @@ inline void expose_steering_to_lua(sol::state& lua) {
         "---@param weight number @blend weight",
         "Seek current waypoint; auto-advance when within arriveRadius.");
 
-    // Timed push/impulse (internally decays over duration)
     rec.bind_function(lua, path, "apply_force",
         &::Steering::ApplySteeringForce,
         "---@param r entt.registry&\n"
@@ -676,10 +728,8 @@ inline void expose_steering_to_lua(sol::state& lua) {
 }
 
 
-// Minimal peek into NavmeshWorldConfig so we can expose/patch a couple fields.
-// If your struct has more fields, add them here in both get/set code paths.
 struct NavmeshWorldConfigPublicView {
-    int default_inflate_px = 8; // sensible default; mirror your C++ default
+    int default_inflate_px = 8;
 };
 
 inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
@@ -687,18 +737,10 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
     auto &rec = BindingRecorder::instance();
     
     
-    // ---------------------------
-    // 0) CLASS / USERTYPE BINDING
-    // ---------------------------
-    //
-    // NOTE: we call the usertype "PhysicsManagerUD" so it won't conflict with your existing
-    // global table named "PhysicsManager". The underlying C++ type is still PhysicsManager,
-    // so instances (like physics_manager) will get these methods.
     auto pm_ud = lua.new_usertype<PhysicsManager>(
         "PhysicsManagerUD",
         sol::no_constructor,
 
-        // ----- world queries / toggles -----
         "get_world", [](PhysicsManager* self, const string& name) -> std::shared_ptr<physics::PhysicsWorld> {
             if (auto* wr = self->get(name)) return wr->w;
             return {};
@@ -719,16 +761,13 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
         "enable_step",       [](PhysicsManager* self, const string& name, bool on){ self->enableStep(name, on); },
         "enable_debug_draw", [](PhysicsManager* self, const string& name, bool on){ self->enableDebugDraw(name, on); },
 
-        // ----- global ops -----
         "step_all", [](PhysicsManager* self, float dt){ self->stepAll(dt); },
         "draw_all", [](PhysicsManager* self){ self->drawAll(); },
 
-        // ----- entity migration -----
         "move_entity_to_world", [](PhysicsManager* self, entt::entity e, const string& dst){
             self->moveEntityToWorld(e, dst);
         },
 
-        // ----- navmesh config -----
         "get_nav_config", [&lua](PhysicsManager* self, const string& world) {
             sol::table t = lua.create_table();
             if (auto* nav = self->nav_of(world)) {
@@ -749,7 +788,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
         "mark_navmesh_dirty", [](PhysicsManager* self, const string& world){ self->markNavmeshDirty(world); },
         "rebuild_navmesh",    [](PhysicsManager* self, const string& world){ self->rebuildNavmeshFor(world); },
 
-        // ----- pathfinding / vision -----
         "find_path", [&lua](PhysicsManager* self, const string& world, float sx, float sy, float dx, float dy) {
             NavMesh::Point s{(int)sx, (int)sy};
             NavMesh::Point d{(int)dx, (int)dy};
@@ -776,7 +814,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             return out;
         },
 
-        // ----- obstacle tagging (convenience) -----
         "set_nav_obstacle", [](PhysicsManager* self, entt::entity e, bool include){
             auto &R = self->R;
             if (auto comp = R.try_get<NavmeshObstacle>(e)) {
@@ -790,7 +827,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
         }
     );
 
-    // Recorder docs for the usertype + instance
     rec.add_type("PhysicsManagerUD").doc =
         "Actual userdata type for the PhysicsManager class. "
         "Use the global `physics_manager` to access the live instance.\n"
@@ -830,16 +866,14 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
         {"set_nav_obstacle", "", "---@param e entt.entity\n---@param include boolean"});
 
 
-    // Lua table is "PhysicsManager"
     sol::table pm = lua["PhysicsManager"].get_or_create<sol::table>();
     rec.add_type("PhysicsManager").doc =
         "Physics manager utilities: manage physics worlds, debug toggles, "
         "navmesh (pathfinding / vision), and safe world migration for entities.";
 
-    // --------- Getter(s) ----------
     pm.set_function("get_world",
         [&PM](const string &name) -> std::shared_ptr<physics::PhysicsWorld> {
-            if (auto *wr = PM.get(name)) return wr->w;  // sol2 maps empty shared_ptr -> nil
+            if (auto *wr = PM.get(name)) return wr->w;
             return {};
         });
     rec.record_free_function(
@@ -878,7 +912,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             true, false
         });
 
-    // ---------- World management ----------
     pm.set_function("add_world",
         [&PM](const string &name,
               std::shared_ptr<physics::PhysicsWorld> w,
@@ -948,7 +981,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             true, false
         });
 
-    // ---------- Navmesh config ----------
     pm.set_function("get_nav_config",
         [&lua, &PM](const string &world){
             sol::table t = lua.create_table();
@@ -1008,7 +1040,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             true, false
         });
 
-    // ---------- Pathfinding ----------
     pm.set_function("find_path",
         [&lua, &PM](const string &world, float sx, float sy, float dx, float dy) {
             NavMesh::Point s{(int)sx, (int)sy};
@@ -1034,7 +1065,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             true, false
         });
 
-    // ---------- Cone of vision ----------
     pm.set_function("vision_fan",
         [&lua, &PM](const string &world, float sx, float sy, float radius) {
             NavMesh::Point s{(int)sx, (int)sy};
@@ -1059,7 +1089,6 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             true, false
         });
 
-    // ---------- Obstacle tagging ----------
     pm.set_function("set_nav_obstacle",
         [&PM](entt::entity e, bool include){
             auto &R = PM.R;
@@ -1081,10 +1110,7 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             true, false
         });
         
-    // -----------------------------------------
-    // 2) SINGLETON INSTANCE: physics_manager UD
-    // -----------------------------------------
-    lua["physics_manager_instance"] = &PM;  // live instance (userdata with PhysicsManagerUD methods)
+    lua["physics_manager_instance"] = &PM;
 
         rec.record_free_function(
             {"physics_manager"},
@@ -1096,4 +1122,4 @@ inline void expose_physics_manager_to_lua(sol::state &lua, PhysicsManager &PM) {
             });
     }
 
-} // namespace physics
+}

@@ -806,8 +806,8 @@ void PhysicsWorld::InstallWildcardHandlersForAllTags() {
     cpCollisionHandler* h = cpSpaceAddWildcardHandler(space, type);
     h->userData = this;
     h->beginFunc    = [](cpArbiter* a, cpSpace* s, void* d)->cpBool { static_cast<PhysicsWorld*>(d)->OnCollisionBegin(a); return cpTrue; };
-    h->preSolveFunc = [](cpArbiter* a, cpSpace* s, void* d)->cpBool { return static_cast<PhysicsWorld*>(d)->OnPreSolve(a); };
-    h->postSolveFunc= [](cpArbiter* a, cpSpace* s, void* d){ static_cast<PhysicsWorld*>(d)->OnPostSolve(a); };
+    // h->preSolveFunc = [](cpArbiter* a, cpSpace* s, void* d)->cpBool { return static_cast<PhysicsWorld*>(d)->OnPreSolve(a); };
+    // h->postSolveFunc= [](cpArbiter* a, cpSpace* s, void* d){ static_cast<PhysicsWorld*>(d)->OnPostSolve(a); };
     h->separateFunc = [](cpArbiter* a, cpSpace* s, void* d){ static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a); };
     _installedWildcardTypes.insert(type);
   }
@@ -3421,34 +3421,6 @@ void PhysicsWorld::CreateTopDownController(entt::entity entity, float maxBias,
   cpSpaceAddConstraint(space, joint);
 }
 
-void PhysicsWorld::AddScreenBounds(float xMin, float yMin, float xMax,
-                                   float yMax, float thickness,
-                                   const std::string &collisionTag) {
-  // Pull in the static “wall” body
-  cpBody *staticBody = cpSpaceGetStaticBody(space);
-
-  // Prepare our filter & collision type
-  cpShapeFilter filter = CP_SHAPE_FILTER_ALL;
-  cpCollisionType colType = reinterpret_cast<cpCollisionType>(
-      const_cast<char *>(collisionTag.c_str()));
-
-  auto makeWall = [&](float ax, float ay, float bx, float by) {
-    cpShape *seg =
-        cpSegmentShapeNew(staticBody, cpv(ax, ay), cpv(bx, by), thickness);
-    cpShapeSetFriction(seg, 1.0f);
-    cpShapeSetElasticity(seg, 0.0f);
-    cpShapeSetFilter(seg, filter);
-    cpShapeSetCollisionType(seg, colType);
-    // (optionally) cpShapeSetUserData(seg, /* your userdata */);
-    cpSpaceAddShape(space, seg);
-  };
-
-  // bottom, left, top, right
-  makeWall(xMin, yMin, xMax, yMin);
-  makeWall(xMin, yMin, xMin, yMax);
-  makeWall(xMin, yMax, xMax, yMax);
-  makeWall(xMax, yMin, xMax, yMax);
-}
 
 
 void PhysicsWorld::EnableCollisionGrouping(cpCollisionType minType,

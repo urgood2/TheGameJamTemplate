@@ -118,7 +118,7 @@ namespace physics {
 /* ---------------- Making physics bodies based on transform ---------------- */
     struct PhysicsCreateInfo {
         physics::ColliderShapeType shape = physics::ColliderShapeType::Rectangle;
-        std::string tag = "WORLD";        // your collision tag
+        std::string tag = DEFAULT_COLLISION_TAG;        // your collision tag
         bool sensor = false;
         float density = 1.0f;
     };

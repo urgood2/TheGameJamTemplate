@@ -432,7 +432,7 @@ rec.bind_function(lua, path, "SetMass",
 
             physics::PhysicsCreateInfo ci;
             ci.shape   = shape;
-            ci.tag     = get_string("tag", "WORLD");
+            ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG.c_str());
             ci.sensor  = get_bool("sensor", false);
             ci.density = get_num("density", 1.0f); // currently unused by your impl, but kept for forward-compat
 
@@ -481,7 +481,7 @@ rec.bind_function(lua, path, "SetMass",
 
         physics::PhysicsCreateInfo ci;
         ci.shape   = shape;
-        ci.tag     = get_string("tag", "WORLD");
+        ci.tag     = get_string("tag", DEFAULT_COLLISION_TAG.c_str());
         ci.sensor  = get_bool("sensor", false);
         ci.density = get_num("density", 1.0f); // reserved for future use
 

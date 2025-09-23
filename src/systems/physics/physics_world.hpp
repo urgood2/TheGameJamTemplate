@@ -20,6 +20,8 @@ namespace physics
     /// - Default is 1.0f (1px == 1 unit).
     */
     constexpr float PIXELS_PER_PIXEL_UNIT = 1.0f;
+    
+    constexpr std::string DEFAULT_COLLISION_TAG = "WORLD";
 
     /**
     * @brief Convert a Raylib world‐space point (pixels, Y‐down) to Chipmunk physics‐space (units, Y‐up).
@@ -382,10 +384,9 @@ namespace physics
                                     cpCollisionType maxType,
                                     int threshold,
                                     std::function<void(cpBody*)> onGroupRemoved);
-        void AddScreenBounds(float xMin, float yMin,
-                                   float xMax, float yMax,
-                                   float thickness,
-                                   const std::string& collisionTag);
+        void AddScreenBounds(float xMin, float yMin, float xMax,
+                                   float yMax, float thickness = 1.0f,
+                                   const std::string &collisionTag = DEFAULT_COLLISION_TAG);
         void CreateTilemapColliders(
             const std::vector<std::vector<bool>>& collidable,
             float tileSize,
@@ -396,9 +397,6 @@ namespace physics
             float maxBias  = 200.0f,
             float maxForce = 3000.0f);
         void AddUprightSpring(entt::entity e, float stiffness = 100.0f, float damping = 10.0f);
-        void AddScreenBounds(float xMin, float yMin,
-                                    float xMax, float yMax,
-                                    float thickness = 1.0f);
         entt::entity PointQuery(float x, float y);
         /// Teleport an entity's body to (x,y).
         void SetBodyPosition(entt::entity e, float x, float y);\

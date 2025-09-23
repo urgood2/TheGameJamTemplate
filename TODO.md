@@ -33,7 +33,7 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-
+- [ ] implement pre/post solve for physics: https://chatgpt.com/share/68d215b4-fac8-800a-8b4e-3842c951b1c9
 - [ ] aupdate bindings & docs for physics world
 
 - test:

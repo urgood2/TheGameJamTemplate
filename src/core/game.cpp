@@ -907,9 +907,11 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         // init physics
         physicsWorld = physics::InitPhysicsWorld(&globals::registry, 64.0f, 0.0f, 0.f);
         
-        physicsWorld->AddCollisionTag("WORLD"); // default tag
+        physicsWorld->AddCollisionTag(physics::DEFAULT_COLLISION_TAG); // default tag
         physicsWorld->AddCollisionTag("player");
-        physicsWorld->EnableCollisionBetween("WORLD", {"WORLD", "player"});
+        physicsWorld->EnableCollisionBetween(physics::DEFAULT_COLLISION_TAG, {physics::DEFAULT_COLLISION_TAG, "player"});
+        
+        physicsWorld->InstallWildcardHandlersForAllTags();
         
         // add to physics manager
         globals::physicsManager->add("world", physicsWorld);

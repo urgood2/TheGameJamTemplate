@@ -35,7 +35,6 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 ## TODOS fast
 - [ ] how to render arbitrary polygones from physics engine in a nice way?
 - [ ] gotta test the various bindings of physics world including steering.
-- [ ] Do the rest of chipunk demo snippet extraction https://chatgpt.com/share/68d29464-6f3c-800a-ad55-1ee553a3cb26
 - [ ] update lua bindings & docs for physics world
 
 - test:

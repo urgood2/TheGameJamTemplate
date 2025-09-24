@@ -1791,24 +1791,26 @@ float PhysicsWorld::WeightOn(entt::entity e, float dt) {
 
 CrushMetrics PhysicsWorld::CrushOn(entt::entity e, float dt) {
     auto& c = registry->get<ColliderComponent>(e);
-    float magnitudeSum = 0.f;
-    cpVect vectorSum = cpvzero;
-    int count = 0;
 
-    cpBodyEachArbiter(c.body.get(), +[](cpBody* body, cpArbiter* arb, void* ctx){
-        auto* P = static_cast<std::pair<std::pair<float,cpVect>, int>*>(ctx);
-        cpVect J = cpArbiterTotalImpulse(arb);
-        P->first.first  += cpvlength(J);              // magnitudeSum
-        P->first.second  = cpvadd(P->first.second, J); // vectorSum
-        P->second++;                                   // touchingCount
-    }, (void*)&std::pair<std::pair<float,cpVect>, int>{{magnitudeSum, vectorSum}, count});
+    // Keep the accumulator as a real variable on the stack
+    std::pair<std::pair<float, cpVect>, int> accum{{0.f, cpvzero}, 0};
 
-    // Re-read values (lambda captured by pointer)
+    cpBodyEachArbiter(c.body.get(),
+        +[](cpBody* body, cpArbiter* arb, void* ctx) {
+            auto* P = static_cast<std::pair<std::pair<float,cpVect>, int>*>(ctx);
+            cpVect J = cpArbiterTotalImpulse(arb);
+            P->first.first  += cpvlength(J);              // magnitudeSum
+            P->first.second = cpvadd(P->first.second, J); // vectorSum
+            P->second++;                                  // touchingCount
+        },
+        &accum);
+
     CrushMetrics out;
-    out.touchingCount = count;
-    out.crush = (magnitudeSum - cpvlength(vectorSum)) * dt; // same heuristic as demo
+    out.touchingCount = accum.second;
+    out.crush = (accum.first.first - cpvlength(accum.first.second)) * dt;
     return out;
 }
+
 
 bool PhysicsWorld::ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/)
 {
@@ -1917,7 +1919,7 @@ void PhysicsWorld::SetConstraintLimits(cpConstraint* c, cpFloat maxForce, cpFloa
     if (maxBias  >= 0) cpConstraintSetMaxBias(c, maxBias);
 }
 
-entt::entity PhysicsWorld::SpawnPixelBall(float x, float y, float r = 0.95f) {
+entt::entity PhysicsWorld::SpawnPixelBall(float x, float y, float r) {
     auto e = registry->create();
     // tag it however you like; "pixel" here assumes you’ve added it via SetCollisionTags()
     AddCollider(e, /*tag*/"pixel", /*shape*/"circle",
@@ -2109,8 +2111,8 @@ entt::entity PhysicsWorld::SpawnOrbitingBox(cpVect startPos, cpFloat halfSize,
 
 
 // Create a box "player" with infinite moment (no rotation) and a fat box shape for nice footing.
-entt::entity PhysicsWorld::CreatePlatformerPlayer(cpVect pos, float w=30.f, float h=55.f,
-                                                  const std::string& tag="player")
+entt::entity PhysicsWorld::CreatePlatformerPlayer(cpVect pos, float w, float h,
+                                                  const std::string& tag)
 {
   entt::entity e = registry->create();
 
@@ -2225,8 +2227,8 @@ void PhysicsWorld::PlayerVelUpdate(cpBody* body, cpVect gravity, cpFloat damping
   pc.lastJumpHeld = pc.jumpHeld;
 }
 
-SegmentQueryHit PhysicsWorld::SegmentQueryFirst(cpVect start, cpVect end, float radius = 10.0f,
-                                                cpShapeFilter filter = CP_SHAPE_FILTER_ALL) const
+SegmentQueryHit PhysicsWorld::SegmentQueryFirst(cpVect start, cpVect end, float radius,
+                                                cpShapeFilter filter) const
 {
   cpSegmentQueryInfo info{};
   SegmentQueryHit out;
@@ -2243,8 +2245,8 @@ SegmentQueryHit PhysicsWorld::SegmentQueryFirst(cpVect start, cpVect end, float 
   return out;
 }
 
-NearestPointHit PhysicsWorld::PointQueryNearest(cpVect p, float maxDistance = 100.0f,
-                                                cpShapeFilter filter = CP_SHAPE_FILTER_ALL) const
+NearestPointHit PhysicsWorld::PointQueryNearest(cpVect p, float maxDistance,
+                                                cpShapeFilter filter) const
 {
   cpPointQueryInfo info{};
   NearestPointHit out;
@@ -2721,20 +2723,20 @@ void PhysicsWorld::UpdateTanks(double dt)
 }
 
 void PhysicsWorld::AttachFrictionJoints(cpBody* body,
-                                        cpFloat linearMax = 1000.f,
-                                        cpFloat angularMax = 5000.f)
+                                        cpFloat linearMax,
+                                        cpFloat angularMax )
 {
   cpBody* staticBody = cpSpaceGetStaticBody(space);
 
   cpConstraint* pivot = cpSpaceAddConstraint(space,
                          cpPivotJointNew2(staticBody, body, cpvzero, cpvzero));
   cpConstraintSetMaxBias(pivot, 0.0f);
-  cpConstraintSetMaxForce(pivot, std::max(0.f, linearMax));
+  cpConstraintSetMaxForce(pivot, std::max(0.f, (float)linearMax));
 
   cpConstraint* gear = cpSpaceAddConstraint(space,
                         cpGearJointNew(staticBody, body, 0.0f, 1.0f));
   cpConstraintSetMaxBias(gear, 0.0f);
-  cpConstraintSetMaxForce(gear, std::max(0.f, angularMax));
+  cpConstraintSetMaxForce(gear, std::max(0.f, (float)angularMax));
 }
 
 

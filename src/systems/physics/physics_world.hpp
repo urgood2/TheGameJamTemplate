@@ -237,6 +237,22 @@ struct StickyConfig {
         cpVect      point = cpvzero;   // closest point on shape
         float       distance = INFINITY; // signed: <0 means the query point is inside
         };
+/* -------------------------------- tank demo ------------------------------- */
+
+struct TankController {
+  cpBody* body{nullptr};          // the dynamic tank body you drive
+  cpBody* control{nullptr};       // kinematic control body
+  cpConstraint* pivot{nullptr};   // control ↔ body pivot
+  cpConstraint* gear{nullptr};    // control ↔ body gear
+  float driveSpeed = 30.0f;       // world units/sec along facing
+  float stopRadius = 30.0f;       // stop when within this of target
+  float gearMaxBias = 1.2f;       // limit angular correction rate
+  float gearMaxForce = 50000.0f;  // angular “friction” strength
+  float pivotMaxForce = 10000.0f; // linear “friction” strength
+  cpVect target{cpvzero};         // steering target in world space
+  bool  hasTarget = false;
+};
+
     
 /* ---------------------------- one way platform ---------------------------- */
     
@@ -691,6 +707,26 @@ public:
     CrushMetrics CrushOn(entt::entity e, float dt) ;
     std::vector<entt::entity> TouchingEntities(entt::entity e);
 
+
+/* -------------------------------- tank demo ------------------------------- */
+
+    // entity -> controller
+    std::unordered_map<entt::entity, TankController> _tanks;
+    
+    
+void EnableTankController(entt::entity e,
+                                        float driveSpeed /*=30.f*/,
+                                        float stopRadius /*=30.f*/,
+                                        float pivotMaxForce /*=10000.f*/,
+                                        float gearMaxForce  /*=50000.f*/,
+                                        float gearMaxBias   /*=1.2f*/);
+void CommandTankTo(entt::entity e, cpVect targetWorld);
+
+void UpdateTanks(double dt);
+
+void AttachFrictionJoints(cpBody* body,
+                                        cpFloat linearMax = 1000.f,
+                                        cpFloat angularMax = 5000.f);
 
     
 /* -------------------------- constraints & joints -------------------------- */

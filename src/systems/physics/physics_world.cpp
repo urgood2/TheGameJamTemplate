@@ -2646,6 +2646,100 @@ void PhysicsWorld::StickySeparate(cpArbiter* arb)
     _stickyJoints.erase(it);
 }
 
+void PhysicsWorld::EnableTankController(entt::entity e,
+                                        float driveSpeed /*=30.f*/,
+                                        float stopRadius /*=30.f*/,
+                                        float pivotMaxForce /*=10000.f*/,
+                                        float gearMaxForce  /*=50000.f*/,
+                                        float gearMaxBias   /*=1.2f*/)
+{
+  auto& col = registry->get<ColliderComponent>(e);
+
+  // kinematic control body (one per tank)
+  cpBody* control = cpBodyNewKinematic();
+  cpSpaceAddBody(space, control);
+
+  // pivot & gear from control → tank body
+  cpConstraint* pivot = cpSpaceAddConstraint(space,
+                         cpPivotJointNew2(control, col.body.get(), cpvzero, cpvzero));
+  cpConstraintSetMaxBias(pivot, 0.0f);                 // no linear correction creep
+  cpConstraintSetMaxForce(pivot, std::max(0.f, pivotMaxForce));
+
+  cpConstraint* gear = cpSpaceAddConstraint(space,
+                        cpGearJointNew(control, col.body.get(), 0.0f, 1.0f));
+  cpConstraintSetErrorBias(gear, 0.0f);                // fully correct each step
+  cpConstraintSetMaxBias(gear, std::max(0.f, gearMaxBias));
+  cpConstraintSetMaxForce(gear, std::max(0.f, gearMaxForce));
+
+  TankController tc;
+  tc.body         = col.body.get();
+  tc.control      = control;
+  tc.pivot        = pivot;
+  tc.gear         = gear;
+  tc.driveSpeed   = driveSpeed;
+  tc.stopRadius   = stopRadius;
+  tc.gearMaxBias  = gearMaxBias;
+  tc.gearMaxForce = gearMaxForce;
+  tc.pivotMaxForce= pivotMaxForce;
+
+  _tanks[e] = tc;
+}
+
+void PhysicsWorld::CommandTankTo(entt::entity e, cpVect targetWorld)
+{
+  auto it = _tanks.find(e);
+  if (it == _tanks.end()) return;
+  it->second.target = targetWorld;
+  it->second.hasTarget = true;
+}
+
+void PhysicsWorld::UpdateTanks(double dt)
+{
+  for (auto& [e, tc] : _tanks) {
+    if (!tc.body || !tc.control) continue;
+    if (!tc.hasTarget) continue;
+
+    const cpVect pos = cpBodyGetPosition(tc.body);
+    const cpVect forward = cpBodyGetRotation(tc.body);
+    const cpVect toTarget = cpvsub(tc.target, pos);
+
+    // Angle from tank forward to target, measured in tank-local space
+    const cpVect localDelta = cpvunrotate(forward, toTarget);
+    const cpFloat turn = cpvtoangle(localDelta);
+
+    // Align control body’s angle so gear joint steers us toward the target
+    cpBodySetAngle(tc.control, cpBodyGetAngle(tc.body) - turn);
+
+    // Drive forward or reverse based on whether target is in front/behind
+    if (cpvnear(tc.target, pos, tc.stopRadius)) {
+      cpBodySetVelocity(tc.control, cpvzero);
+    } else {
+      const cpFloat dir = (cpvdot(toTarget, forward) > 0.f) ? 1.f : -1.f;
+      cpBodySetVelocity(tc.control, cpvrotate(forward, cpv(tc.driveSpeed * dir, 0.f)));
+    }
+  }
+}
+
+void PhysicsWorld::AttachFrictionJoints(cpBody* body,
+                                        cpFloat linearMax = 1000.f,
+                                        cpFloat angularMax = 5000.f)
+{
+  cpBody* staticBody = cpSpaceGetStaticBody(space);
+
+  cpConstraint* pivot = cpSpaceAddConstraint(space,
+                         cpPivotJointNew2(staticBody, body, cpvzero, cpvzero));
+  cpConstraintSetMaxBias(pivot, 0.0f);
+  cpConstraintSetMaxForce(pivot, std::max(0.f, linearMax));
+
+  cpConstraint* gear = cpSpaceAddConstraint(space,
+                        cpGearJointNew(staticBody, body, 0.0f, 1.0f));
+  cpConstraintSetMaxBias(gear, 0.0f);
+  cpConstraintSetMaxForce(gear, std::max(0.f, angularMax));
+}
+
+
+
+
 
 
 

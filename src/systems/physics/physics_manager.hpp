@@ -203,11 +203,11 @@ public:
     }
 
     void drawAll() {
-        for (auto& [_, rec] : worlds) {
-            // draw only when world is active AND requested
-            if (!world_active(rec) || !rec.draw_debug) continue;
-            rec.w->RenderColliders(); // or your ChipmunkDebugDraw wrapper
-        }
+        // for (auto& [_, rec] : worlds) {
+        //     // draw only when world is active AND requested
+        //     if (!world_active(rec) || !rec.draw_debug) continue;
+        //     rec.w->RenderColliders(); // or your ChipmunkDebugDraw wrapper
+        // }
     }
 
     // Move an entity's body/shape to another world (safe migration)

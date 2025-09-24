@@ -911,8 +911,6 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         physicsWorld->AddCollisionTag("player");
         physicsWorld->EnableCollisionBetween(physics::DEFAULT_COLLISION_TAG, {physics::DEFAULT_COLLISION_TAG, "player"});
         
-        physicsWorld->InstallWildcardHandlersForAllTags();
-        
         // add to physics manager
         globals::physicsManager->add("world", physicsWorld);
         
@@ -1506,7 +1504,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             
             physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
-            
+            physicsWorld->DebugDrawContacts();
             
 
             camera_manager::End(); // end camera mode for the physics world

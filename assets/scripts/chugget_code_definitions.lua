@@ -4941,7 +4941,11 @@ physics = {
 
 
 ---
---- Result of a raycast: shape pointer, hit point, normal, and fraction along the ray.
+--- Result of a raycast. Fields:
+- shape: lightuserdata @cpShape*
+- point: {x:number, y:number}
+- normal: {x:number, y:number}
+- fraction: number (0..1) distance fraction along the segment
 ---
 ---@class physics.RaycastHit
 physics.RaycastHit = {
@@ -4949,7 +4953,9 @@ physics.RaycastHit = {
 
 
 ---
---- Collision event: endpoints (x1,y1)-(x2,y2), normal (nx,ny), and the two objects.
+--- Collision event with contact info. Fields:
+- objectA, objectB: lightuserdata (internally mapped to entt.entity)
+- x1,y1 (point on A), x2,y2 (point on B), nx,ny (contact normal)
 ---
 ---@class physics.CollisionEvent
 physics.CollisionEvent = {
@@ -4957,18 +4963,20 @@ physics.CollisionEvent = {
 
 
 ---
---- Owns Chipmunk space, tags/masks, and collision/trigger buffers. Step with Update(dt).
+--- Enum of supported collider shapes:
+- Rectangle, Segment, Circle, Polygon, Chain
 ---
----@class physics.PhysicsWorld
-physics.PhysicsWorld = {
+---@class physics.ColliderShapeType
+physics.ColliderShapeType = {
 }
 
 
 ---
---- Collider shape enum; use string names for config too.
+--- Owns a Chipmunk cpSpace, manages collision/trigger tags, and buffers of collision/trigger events.
+Construct with (registry*, meter:number, gravityX:number, gravityY:number). Call Update(dt) each frame and PostUpdate() after consuming event buffers.
 ---
----@class physics.ColliderShapeType
-physics.ColliderShapeType = {
+---@class physics.PhysicsWorld
+physics.PhysicsWorld = {
 }
 
 
@@ -7381,7 +7389,21 @@ function particle.CreateParticleEmitter(...) end
 function particle.CreateParticle(...) end
 
 ---
---- Buffered collision-begin events for (type1,type2) since last PostUpdate(). Returns a list of event tables with 'a' and 'b' as entt.entity handles.
+--- Converts a lightuserdata (internally an entity id) to entt.entity.
+---
+---@param p lightuserdata
+---@return entt.entity
+function physics.entity_from_ptr(...) end
+
+---
+--- Returns entt.entity stored in body->userData or entt.null.
+---
+---@param body lightuserdata @cpBody*
+---@return entt.entity
+function physics.GetEntityFromBody(...) end
+
+---
+--- Buffered collision-begin events for the pair (type1,type2) since last PostUpdate().
 ---
 ---@param world physics.PhysicsWorld
 ---@param type1 string
@@ -7390,7 +7412,7 @@ function particle.CreateParticle(...) end
 function physics.GetCollisionEnter(...) end
 
 ---
---- Buffered trigger-begin hits for (type1,type2) since last PostUpdate(). Returns entities (entt.entity) rather than opaque pointers.
+--- Buffered trigger-begin hits for (type1,type2) since last PostUpdate(). Returns entity handles.
 ---
 ---@param world physics.PhysicsWorld
 ---@param type1 string
@@ -7399,75 +7421,109 @@ function physics.GetCollisionEnter(...) end
 function physics.GetTriggerEnter(...) end
 
 ---
+--- Segment raycast through the physics space (nearest-first).
+---
+---@param world physics.PhysicsWorld
+---@param x1 number @ray start X (Chipmunk units)
+---@param y1 number @ray start Y (Chipmunk units)
+---@param x2 number @ray end X (Chipmunk units)
+---@param y2 number @ray end Y (Chipmunk units)
+---@return physics.RaycastHit[]
+function physics.Raycast(...) end
+
+---
+--- Returns entities for all shapes intersecting the rectangle [x1,y1]-[x2,y2].
+---
+---@param world physics.PhysicsWorld
+---@param x1 number @rect minX
+---@param y1 number @rect minY
+---@param x2 number @rect maxX
+---@param y2 number @rect maxY
+---@return entt.entity[] @entities whose shapes intersect the AABB
+function physics.GetObjectsInArea(...) end
+
+---
+--- Stores an entity ID in shape->userData.
+---
+---@param shape lightuserdata @cpShape*
+---@param e entt.entity
+function physics.SetEntityToShape(...) end
+
+---
+--- Stores an entity ID in body->userData.
 ---
 ---@param body lightuserdata @cpBody*
----@return entt.entity
-function physics.GetEntityFromBody(...) end
+---@param e entt.entity
+function physics.SetEntityToBody(...) end
 
 ---
----
----@param p lightuserdata
----@return entt.entity
-function physics.entity_from_ptr(...) end
-
----
+--- Creates cpBody+cpShape for entity, applies tag filter + collisionType, and adds to space.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
----@param angularDamping number
-function physics.SetAngularDamping(...) end
+---@param tag string @collision tag/category
+---@param shapeType 'rectangle'|'circle'|'segment'|'polygon'|'chain'
+---@param a number @rectangle:width|circle:radius|segment:x1
+---@param b number @rectangle:height|segment:y1
+---@param c number @segment:x2
+---@param d number @segment:y2
+---@param isSensor boolean
+---@param points { {x:number,y:number} }|nil @optional polygon/chain vertices (overrides a–d)
+---@return nil
+function physics.AddCollider(...) end
 
 ---
+--- Adds an extra shape to an existing entity body (or creates a body if missing). Uses the same shape rules as AddCollider.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
----@param angularImpulse number
-function physics.ApplyAngularImpulse(...) end
+---@param tag string
+---@param shapeType 'rectangle'|'circle'|'segment'|'polygon'|'chain'
+---@param a number
+---@param b number
+---@param c number
+---@param d number
+---@param isSensor boolean
+---@param points { {x:number,y:number} }|nil
+---@return nil
+function physics.add_shape_to_entity(...) end
 
 ---
+--- Removes the shape at index (0 removes the primary). Returns true if removed.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
----@param torque number
-function physics.ApplyTorque(...) end
+---@param index integer @0=primary, >=1 extra
+---@return boolean
+function physics.remove_shape_at(...) end
 
 ---
+--- Removes the primary and all extra shapes from the entity.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
----@param isBullet boolean
-function physics.SetBullet(...) end
+---@return nil
+function physics.clear_all_shapes(...) end
 
 ---
+--- Returns the total number of shapes on the entity (primary + extras).
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
----@return {x:number,y:number}
-function physics.GetPosition(...) end
+---@return integer
+function physics.get_shape_count(...) end
 
 ---
+--- Returns the AABB (cpBB) of the shape at index.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
----@param x number
----@param y number
-function physics.SetPosition(...) end
+---@param index integer
+---@return {l:number,b:number,r:number,t:number}
+function physics.get_shape_bb(...) end
 
 ---
----
----@param world physics.PhysicsWorld
----@param e entt.entity
----@return number @radians
-function physics.GetAngle(...) end
-
----
----
----@param world physics.PhysicsWorld
----@param e entt.entity
----@param radians number
-function physics.SetAngle(...) end
-
----
+--- Sets linear velocity on the entity's body.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7476,6 +7532,7 @@ function physics.SetAngle(...) end
 function physics.SetVelocity(...) end
 
 ---
+--- Sets angular velocity on the entity's body.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7483,6 +7540,7 @@ function physics.SetVelocity(...) end
 function physics.SetAngularVelocity(...) end
 
 ---
+--- Applies a force at the body's current position.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7491,6 +7549,7 @@ function physics.SetAngularVelocity(...) end
 function physics.ApplyForce(...) end
 
 ---
+--- Applies an impulse at the body's current position.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7499,6 +7558,15 @@ function physics.ApplyForce(...) end
 function physics.ApplyImpulse(...) end
 
 ---
+--- Applies a simple 2-point torque pair to spin the body.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param torque number
+function physics.ApplyTorque(...) end
+
+---
+--- Scales current velocity by (1 - linear). Simple linear damping helper.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7506,12 +7574,47 @@ function physics.ApplyImpulse(...) end
 function physics.SetDamping(...) end
 
 ---
+--- Sets cpSpace global damping.
 ---
 ---@param world physics.PhysicsWorld
 ---@param damping number
 function physics.SetGlobalDamping(...) end
 
 ---
+--- Returns the body's position.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return {x:number,y:number}
+function physics.GetPosition(...) end
+
+---
+--- Sets the body's position directly.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param x number
+---@param y number
+function physics.SetPosition(...) end
+
+---
+--- Returns the body's angle (radians).
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return number @radians
+function physics.GetAngle(...) end
+
+---
+--- Sets the body's angle (radians).
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param radians number
+function physics.SetAngle(...) end
+
+---
+--- Sets elasticity on ALL shapes owned by this entity (primary + extras).
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7519,6 +7622,7 @@ function physics.SetGlobalDamping(...) end
 function physics.SetRestitution(...) end
 
 ---
+--- Sets friction on ALL shapes owned by this entity (primary + extras).
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7526,6 +7630,7 @@ function physics.SetRestitution(...) end
 function physics.SetFriction(...) end
 
 ---
+--- Wakes or sleeps the body.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7533,13 +7638,7 @@ function physics.SetFriction(...) end
 function physics.SetAwake(...) end
 
 ---
----
----@param world physics.PhysicsWorld
----@param e entt.entity
----@param fixed boolean
-function physics.SetFixedRotation(...) end
-
----
+--- Returns body mass.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7547,6 +7646,7 @@ function physics.SetFixedRotation(...) end
 function physics.GetMass(...) end
 
 ---
+--- Sets body mass.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
@@ -7554,83 +7654,206 @@ function physics.GetMass(...) end
 function physics.SetMass(...) end
 
 ---
---- Segment raycast through the physics space (Chipmunk2D).
----
----@param world physics.PhysicsWorld
----@param x1 number @ray start X (Chipmunk units)
----@param y1 number @ray start Y (Chipmunk units)
----@param x2 number @ray end X (Chipmunk units)
----@param y2 number @ray end Y (Chipmunk units)
----@return physics.RaycastHit[] # Array of hits, nearest-first.
-function physics.Raycast(...) end
-
----
---- Returns entity handles for all shapes intersecting the rectangle [x1,y1]-[x2,y2].
----
----@param world physics.PhysicsWorld
----@param x1 number @rect min X (Chipmunk units)
----@param y1 number @rect min Y (Chipmunk units)
----@param x2 number @rect max X (Chipmunk units)
----@param y2 number @rect max Y (Chipmunk units)
----@return entt.entity[] @entities whose shapes intersect the AABB
-function physics.GetObjectsInArea(...) end
-
----
---- Creates a cpBody+cpShape, applies tag filter (default masks = 'all' if none set), and emplaces a ColliderComponent. For polygon/chain, provide explicit vertices via `points`.
+--- Enables high-iteration + slop tuning on the world and custom velocity update for the body.
 ---
 ---@param world physics.PhysicsWorld
 ---@param e entt.entity
----@param tag string @Collision tag/category name
----@param shapeType 'rectangle'|'circle'|'segment'|'polygon'|'chain'
----@param a number @rectangle: width | circle: radius | segment: x1 | polygon/chain: ignored if points given
----@param b number @rectangle: height | circle: ignored | segment: y1 | polygon/chain: ignored if points given
----@param c number @segment: x2 | others: shape-specific/ignored
----@param d number @segment: y2 | others: shape-specific/ignored
----@param isSensor boolean @sensor shapes don’t collide but still trigger
----@param points { {x:number,y:number} }? @optional explicit vertices for polygon/chain (overrides a–d)
----@return nil
-function physics.AddCollider(...) end
+---@param isBullet boolean
+function physics.SetBullet(...) end
 
 ---
---- Stores an entity ID into shape->userData.
+--- If true, sets the moment to INFINITY (lock rotation).
 ---
----@param shape lightuserdata @cpShape*
+---@param world physics.PhysicsWorld
 ---@param e entt.entity
-function physics.SetEntityToShape(...) end
+---@param fixed boolean
+function physics.SetFixedRotation(...) end
 
 ---
---- Stores an entity ID into body->userData.
+--- Switch the Chipmunk body type for the entity.
 ---
----@param body lightuserdata @cpBody*
+---@param world physics.PhysicsWorld
 ---@param e entt.entity
-function physics.SetEntityToBody(...) end
+---@param bodyType 'static'|'kinematic'|'dynamic'
+function physics.SetBodyType(...) end
 
 ---
---- Create a Chipmunk body+shape for entity based on its Transform.ACTUAL size/rotation, attach ColliderComponent, tag+filter it, and add to its referenced PhysicsWorld.
+--- Creates cpBody+cpShape from Transform ACTUAL size in the entity's referenced world.
 ---
----@param r entt.registry& @Registry reference
----@param pm PhysicsManager& @Physics manager
+---@param R entt.registry &
+---@param PM PhysicsManager &
 ---@param e entt.entity
----@param config table @{ shape?:'rectangle'|'circle'|'segment'|'polygon'|'chain', tag?:string, sensor?:boolean, density?:number }
+---@param cfg table @{shape?:string, tag?:string, sensor?:boolean, density?:number}
 ---@return nil
 function physics.create_physics_for_transform(...) end
 
 ---
---- Create physics for an entity in the given world, with optional signed inflate.
+--- Creates physics for an entity in the given world; supports signed inflate in pixels and optional world-ref set.
 ---
 ---@param R entt.registry
----@param pm PhysicsManagerUD|PhysicsManager @manager
+---@param PM PhysicsManager
 ---@param e entt.entity
 ---@param world string @name of physics world
----@param cfg table
----@field cfg.shape 'rectangle'|'circle'|'segment'|'polygon'|'chain'|nil
----@field cfg.tag string|nil @Collision tag
----@field cfg.sensor boolean|nil
----@field cfg.density number|nil @reserved
----@field cfg.inflate_px number|nil @signed pixels; positive expands, negative shrinks
----@field cfg.set_world_ref boolean|nil @default true
----@return void
+---@param cfg table @{shape?:string, tag?:string, sensor?:boolean, density?:number, inflate_px?:number, set_world_ref?:boolean}
+---@return nil
 function physics.create_physics_for_transform(...) end
+
+---
+--- Creates a standalone Chipmunk body, adds it to the space, and returns a registered body handle.
+---
+---@param world physics.PhysicsWorld
+---@param type 'dynamic'|'kinematic'|'static'
+---@param mass number
+---@param moment number
+---@return integer @body_handle
+function physics.body_create(...) end
+
+---
+--- Removes a registered standalone body from the space and unregisters it.
+---
+---@param world physics.PhysicsWorld
+---@param body_handle integer
+function physics.body_destroy(...) end
+
+---
+--- Sets position on a registered standalone body.
+---
+---@param world physics.PhysicsWorld
+---@param body_handle integer
+---@param x number
+---@param y number
+---@return nil
+function physics.body_set_position(...) end
+
+---
+--- Applies a force at the body's current position.
+---
+---@param world physics.PhysicsWorld
+---@param body_handle integer
+---@param fx number
+---@param fy number
+---@return nil
+function physics.body_apply_force(...) end
+
+---
+--- Returns the entt.entity stored on body->userData if present.
+---
+---@param body lightuserdata @cpBody*
+---@return entt.entity|entt.null
+function physics.body_get_entity(...) end
+
+---
+--- Returns a registered body handle for the entity's body (shares ownership).
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return integer @body_handle
+function physics.get_body_handle_for_entity(...) end
+
+---
+--- Attach a transient number to an arbiter for the duration of contact.
+---
+---@param world physics.PhysicsWorld
+---@param arb lightuserdata @cpArbiter*
+---@param key string
+---@param value number
+function physics.arb_set_number(...) end
+
+---
+--- Get a number previously set on this arbiter (or default/0).
+---
+---@param world physics.PhysicsWorld
+---@param arb lightuserdata @cpArbiter*
+---@param key string
+---@param default number|nil
+---@return number
+function physics.arb_get_number(...) end
+
+---
+--- Attach a transient boolean to an arbiter.
+---
+---@param world physics.PhysicsWorld
+---@param arb lightuserdata @cpArbiter*
+---@param key string
+---@param value boolean
+function physics.arb_set_bool(...) end
+
+---
+--- Get a boolean previously set on this arbiter (or default/false).
+---
+---@param world physics.PhysicsWorld
+---@param arb lightuserdata @cpArbiter*
+---@param key string
+---@param default boolean|nil
+---@return boolean
+function physics.arb_get_bool(...) end
+
+---
+--- Attach a transient pointer (lightuserdata) to an arbiter.
+---
+---@param world physics.PhysicsWorld
+---@param arb lightuserdata @cpArbiter*
+---@param key string
+---@param value lightuserdata
+function physics.arb_set_ptr(...) end
+
+---
+--- Get a pointer previously set on this arbiter (or nil).
+---
+---@param world physics.PhysicsWorld
+---@param arb lightuserdata @cpArbiter*
+---@param key string
+---@return lightuserdata|nil
+function physics.arb_get_ptr(...) end
+
+---
+--- Registers a pre-solve callback for the pair (tagA, tagB). Return false to reject contact.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB string
+---@param fn fun(arb:lightuserdata):boolean|nil
+function physics.on_pair_presolve(...) end
+
+---
+--- Registers a post-solve callback for the pair (tagA, tagB).
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB string
+---@param fn fun(arb:lightuserdata)
+function physics.on_pair_postsolve(...) end
+
+---
+--- Registers a pre-solve wildcard callback for a single tag (fires for any counterpart).
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+---@param fn fun(arb:lightuserdata):boolean|nil
+function physics.on_wildcard_presolve(...) end
+
+---
+--- Registers a post-solve wildcard callback for a single tag (fires for any counterpart).
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+---@param fn fun(arb:lightuserdata)
+function physics.on_wildcard_postsolve(...) end
+
+---
+--- Clears registered Lua pre/post solve for that pair.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB string
+function physics.clear_pair_handlers(...) end
+
+---
+--- Clears registered Lua pre/post solve for that tag wildcard.
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+function physics.clear_wildcard_handlers(...) end
 
 ---
 --- The live PhysicsManager instance (userdata). Methods mirror the PhysicsManager table.

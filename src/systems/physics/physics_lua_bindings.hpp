@@ -73,7 +73,9 @@ inline void expose_physics_to_lua(sol::state &lua) {
         "- x1,y1 (point on A), x2,y2 (point on B), nx,ny (contact normal)";
 
     // ColliderShapeType enum (constant table)
-    lua["physics"]["ColliderShapeType"] = lua.create_table_with(
+    // Ensure both tables exist before assignment
+    sol::table physics_table = lua["physics"].get_or_create<sol::table>();
+    physics_table["ColliderShapeType"] = lua.create_table_with(
         "Rectangle", static_cast<int>(physics::ColliderShapeType::Rectangle),
         "Segment",   static_cast<int>(physics::ColliderShapeType::Segment),
         "Circle",    static_cast<int>(physics::ColliderShapeType::Circle),
@@ -101,8 +103,7 @@ inline void expose_physics_to_lua(sol::state &lua) {
         "AddCollisionTag",     &PhysicsWorld::AddCollisionTag,
         "RemoveCollisionTag",  &PhysicsWorld::RemoveCollisionTag,
         "UpdateColliderTag",   &PhysicsWorld::UpdateColliderTag,
-        "PrintCollisionTags",  &PhysicsWorld::PrintCollisionTags,
-        "RenderColliders",     &PhysicsWorld::RenderColliders
+        "PrintCollisionTags",  &PhysicsWorld::PrintCollisionTags
     );
     {
         auto &pw = rec.add_type("physics.PhysicsWorld");

@@ -3,6 +3,7 @@
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "../../third_party/chipmunk/include/chipmunk/cpMarch.h"
 #include "../../third_party/chipmunk/include/chipmunk/cpPolyline.h"
+#include "third_party/chipmunk/include/chipmunk/chipmunk_unsafe.h"
 #include "util/common_headers.hpp"
 #include <algorithm>
 #include <memory>
@@ -58,6 +59,8 @@ std::shared_ptr<cpShape> MakeSharedShape(cpBody *body, cpFloat width,
 PhysicsWorld::PhysicsWorld(entt::registry *registry, float meter,
                            float gravityX, float gravityY) {
   space = cpSpaceNew();
+  cpSpaceSetUserData(space, this);
+ 
   cpSpaceSetGravity(space, cpv(gravityX, gravityY));
   cpSpaceSetIterations(space, 10);
   this->registry = registry;
@@ -354,12 +357,137 @@ std::string PhysicsWorld::GetTagFromCategory(int category) {
   return "unknown";
 }
 
+auto PhysicsWorld::RegisterFluidVolume(const std::string& tag,
+                                       float density, float drag) -> void {
+  const cpCollisionType t = TypeForTag(tag);
+  _fluidByType[t] = FluidConfig{density, drag};
+  EnsureWildcardInstalled(t);
+}
+
+auto PhysicsWorld::AddFluidSensorAABB(float left, float bottom, float right, float top,
+                                      const std::string& tag) -> void {
+  cpBody* staticBody = cpSpaceGetStaticBody(space);
+  const cpCollisionType type = TypeForTag(tag);
+  const cpBB bb = cpBBNew(left, bottom, right, top);
+  cpShape* sensor = cpBoxShapeNew2(staticBody, bb, 0.0);
+  cpShapeSetSensor(sensor, cpTrue);
+  cpShapeSetCollisionType(sensor, type);
+  cpSpaceAddShape(space, sensor);
+}
+
+auto PhysicsWorld::WaterPreSolveNative(cpArbiter* arb, cpCollisionType waterType) -> void {
+  cpShape* sA; cpShape* sB; cpArbiterGetShapes(arb, &sA, &sB);
+  cpShape* water = (cpShapeGetCollisionType(sA) == waterType) ? sA : sB;
+  cpShape* other = (water == sA) ? sB : sA;
+
+  if (cpPolyShapeGetCount(other) <= 0) return;
+
+  cpBody* body = cpShapeGetBody(other);
+  const float level = cpShapeGetBB(water).t;
+
+  const int count = cpPolyShapeGetCount(other);
+  std::vector<cpVect> clipped;
+  clipped.reserve(count + 1);
+
+  for (int i = 0, j = count - 1; i < count; j = i, ++i) {
+    const cpVect a = cpBodyLocalToWorld(body, cpPolyShapeGetVert(other, j));
+    const cpVect b = cpBodyLocalToWorld(body, cpPolyShapeGetVert(other, i));
+    if (a.y < level) clipped.push_back(a);
+
+    const float a_level = a.y - level;
+    const float b_level = b.y - level;
+    if (a_level * b_level < 0.0f) {
+      const float t = std::fabs(a_level) / (std::fabs(a_level) + std::fabs(b_level));
+      clipped.push_back(cpvlerp(a, b, t));
+    }
+  }
+
+  const int clippedCount = static_cast<int>(clipped.size());
+  if (clippedCount < 3) return;
+
+  FluidConfig cfg{0.00014f, 2.0f};
+  if (auto it = _fluidByType.find(waterType); it != _fluidByType.end()) cfg = it->second;
+
+  const float dt = cpSpaceGetCurrentTimeStep(cpBodyGetSpace(body));
+  const cpVect g  = cpSpaceGetGravity(cpBodyGetSpace(body));
+
+  const float area = cpAreaForPoly(clippedCount, clipped.data(), 0.0f);
+  const float displacedMass = area * cfg.density;
+  const cpVect centroid = cpCentroidForPoly(clippedCount, clipped.data());
+
+  cpBodyApplyImpulseAtWorldPoint(body, cpvmult(g, -displacedMass * dt), centroid);
+
+  const cpVect v_centroid = cpBodyGetVelocityAtWorldPoint(body, centroid);
+  const float v_len = cpvlengthsq(v_centroid) > 0.f ? cpvlength(v_centroid) : 0.f;
+  if (v_len > 0.f) {
+    const cpVect n = cpvnormalize(v_centroid);
+    const float k = k_scalar_body(body, centroid, n);
+    const float damping = area * cfg.drag * cfg.density;
+    const float v_coef = cpfexp(-damping * dt * k);
+    const cpVect impulse = cpvmult(cpvsub(cpvmult(v_centroid, v_coef), v_centroid), 1.0f / k);
+    cpBodyApplyImpulseAtWorldPoint(body, impulse, centroid);
+  }
+
+  const cpVect cog = cpBodyLocalToWorld(body, cpBodyGetCenterOfGravity(body));
+  const float w_damping = cpMomentForPoly(cfg.drag * cfg.density * area,
+                                          clippedCount, clipped.data(), cpvneg(cog), 0.0f);
+  const float new_w = cpBodyGetAngularVelocity(body) *
+                      cpfexp(-w_damping * dt / cpBodyGetMoment(body));
+  cpBodySetAngularVelocity(body, new_w);
+}
+
+cpConstraint* PhysicsWorld::MakeBreakableSlideJoint(cpBody* a, cpBody* b,
+    cpVect anchorA, cpVect anchorB, cpFloat minDist, cpFloat maxDist,
+    cpFloat breakingForce, cpFloat triggerRatio, bool collideBodies,
+    bool useFatigue, cpFloat fatigueRate)
+{
+    cpConstraint* j = cpSlideJointNew(a, b, anchorA, anchorB, minDist, maxDist);
+    cpConstraintSetCollideBodies(j, collideBodies ? cpTrue : cpFalse);
+    cpSpaceAddConstraint(space, j);
+
+    physics::BJ_Attach(j, breakingForce, triggerRatio, useFatigue ? cpTrue : cpFalse, fatigueRate);
+    return j;
+}
+
+void PhysicsWorld::MakeConstraintBreakable(cpConstraint* c,
+    cpFloat breakingForce, cpFloat triggerRatio, bool useFatigue, cpFloat fatigueRate)
+{
+    physics::BJ_Attach(c, breakingForce, triggerRatio, useFatigue ? cpTrue : cpFalse, fatigueRate);
+}
+
+
 
 // instance: look up pair first, then wildcard
 cpBool PhysicsWorld::OnPreSolve(cpArbiter* arb) {
   cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
   cpCollisionType ta = cpShapeGetCollisionType(sa);
   cpCollisionType tb = cpShapeGetCollisionType(sb);
+  
+  // --- Built-in fluid step (native), executes BEFORE Lua handlers.
+  if (auto it = _fluidByType.find(ta); it != _fluidByType.end()) {
+    WaterPreSolveNative(arb, ta);
+  } else if (auto it2 = _fluidByType.find(tb); it2 != _fluidByType.end()) {
+    WaterPreSolveNative(arb, tb);
+  }
+  
+  // --- One-way platform native step ---
+    auto allowPass = [&](cpShape* platformShape, cpShape* otherShape, const OneWayPlatformData& cfg)->bool {
+        // Arbiter normal points from A -> B. We need the normal pointing out of the platform.
+        cpVect n = cpArbiterGetNormal(arb);
+        if (platformShape == sb) n = cpvneg(n); // flip if platform is B
+
+        // If motion is from the "back" side (dot < 0), ignore this contact.
+        // That lets the other object pass through.
+        if (cpvdot(n, cfg.n) < 0) return cpArbiterIgnore(arb);
+        return cpTrue;
+    };
+
+    if (auto it = _oneWayByType.find(ta); it != _oneWayByType.end()) {
+        if (!allowPass(sa, sb, it->second)) return cpFalse;
+    } else if (auto it = _oneWayByType.find(tb); it != _oneWayByType.end()) {
+        if (!allowPass(sb, sa, it->second)) return cpFalse;
+    }
+
 
   // canonicalize pair key (min,max) so A-B == B-A
   auto key = PairKey(std::min(ta,tb), std::max(ta,tb));
@@ -1616,4 +1744,485 @@ void PhysicsWorld::ProcessGroups() {
         }
     }
 }
+
+std::vector<entt::entity> PhysicsWorld::TouchingEntities(entt::entity e) {
+    auto& c = registry->get<ColliderComponent>(e);
+    std::vector<entt::entity> out;
+    cpBodyEachArbiter(c.body.get(), +[](cpBody* body, cpArbiter* arb, void* ctx){
+        auto* v = static_cast<std::vector<entt::entity>*>(ctx);
+        CP_ARBITER_GET_SHAPES(arb, sa, sb);
+        cpShape* other = (cpShapeGetBody(sa) == body) ? sb : sa;
+        if (void* u = cpShapeGetUserData(other)) {
+            v->push_back(static_cast<entt::entity>(reinterpret_cast<uintptr_t>(u)));
+        }
+    }, &out);
+    return out;
 }
+
+// After a step in the same frame (impulses are valid only then)
+cpVect PhysicsWorld::SumImpulsesForBody(cpBody* body) {
+    cpVect sum = cpvzero;
+    cpBodyEachArbiter(body, +[](cpBody*, cpArbiter* arb, void* s){
+        auto* acc = static_cast<cpVect*>(s);
+        *acc = cpvadd(*acc, cpArbiterTotalImpulse(arb));
+    }, &sum);
+    return sum;
+}
+
+float PhysicsWorld::TotalForceOn(entt::entity e, float dt) {
+    auto& c = registry->get<ColliderComponent>(e);
+    cpVect J = SumImpulsesForBody(c.body.get());
+    return (dt > 0.f) ? cpvlength(J) / dt : 0.f;
+}
+
+float PhysicsWorld::WeightOn(entt::entity e, float dt) {
+    auto& c = registry->get<ColliderComponent>(e);
+    cpVect J = SumImpulsesForBody(c.body.get());
+    cpVect g = cpSpaceGetGravity(space);
+    float gl2 = cpvlengthsq(g);
+    return (dt > 0.f && gl2 > 0.f) ? cpvdot(g, J) / (gl2 * dt) : 0.f;
+}
+
+CrushMetrics PhysicsWorld::CrushOn(entt::entity e, float dt) {
+    auto& c = registry->get<ColliderComponent>(e);
+    float magnitudeSum = 0.f;
+    cpVect vectorSum = cpvzero;
+    int count = 0;
+
+    cpBodyEachArbiter(c.body.get(), +[](cpBody* body, cpArbiter* arb, void* ctx){
+        auto* P = static_cast<std::pair<std::pair<float,cpVect>, int>*>(ctx);
+        cpVect J = cpArbiterTotalImpulse(arb);
+        P->first.first  += cpvlength(J);              // magnitudeSum
+        P->first.second  = cpvadd(P->first.second, J); // vectorSum
+        P->second++;                                   // touchingCount
+    }, (void*)&std::pair<std::pair<float,cpVect>, int>{{magnitudeSum, vectorSum}, count});
+
+    // Re-read values (lambda captured by pointer)
+    CrushMetrics out;
+    out.touchingCount = count;
+    out.crush = (magnitudeSum - cpvlength(vectorSum)) * dt; // same heuristic as demo
+    return out;
+}
+
+bool PhysicsWorld::ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/)
+{
+    auto& col = registry->get<ColliderComponent>(e);
+    if (!col.body || !col.shape) return false;
+
+    cpShape* s = col.shape.get();
+    if (cpPolyShapeGetCount(s) <= 0) return false; // not a poly/box
+
+    // Optional: only add if cursor is outside by > tolerance (like the demo).
+    // If you want the same behavior, uncomment:
+    // if (cpShapePointQuery(s, worldPoint, nullptr) <= tolerance) return false;
+
+    cpBody* body = col.body.get();
+    const int count = cpPolyShapeGetCount(s);
+
+    // Collect existing verts (LOCAL space), append new point (LOCAL).
+    std::vector<cpVect> verts;
+    verts.reserve(count + 1);
+    for (int i = 0; i < count; ++i)
+        verts.push_back(cpPolyShapeGetVert(s, i));
+
+    verts.push_back(cpBodyWorldToLocal(body, worldPoint));
+
+    // Convexify in place. (cpConvexHull can write the result back into the same array.)
+    int hullCount = cpConvexHull((int)verts.size(), verts.data(), verts.data(), nullptr, tolerance);
+    verts.resize(hullCount);
+
+    // Compute centroid/area in LOCAL space of the new polygon.
+    cpVect centroid = cpCentroidForPoly(hullCount, verts.data());
+    cpFloat area    = cpAreaForPoly(hullCount, verts.data(), 0.0f);
+    if (area <= 0) return false; // degenerate
+
+    // Recompute mass/moment (tune your density here if you want).
+    constexpr cpFloat DENSITY = (1.0 / 10000.0);
+    cpFloat mass   = area * DENSITY;
+    cpFloat moment = cpMomentForPoly(mass, hullCount, verts.data(), cpvneg(centroid), 0.0f);
+
+    // Shift the body so its world position = old world centroid of the new verts.
+    // (Same trick as the demo.)
+    cpBodySetMass(body,   mass);
+    cpBodySetMoment(body, moment);
+    cpBodySetPosition(body, cpBodyLocalToWorld(body, centroid));
+    cpBodyActivate(body);
+
+    // Finally, replace the polygon verts (LOCAL) with a transform that centers it.
+    // This keeps the world shape where the mouse added the point.
+    cpPolyShapeSetVerts(s, hullCount, verts.data(), cpTransformTranslate(cpvneg(centroid)));
+
+    return true;
+}
+
+
+
+// Resolve (entity,shapeIndex) -> cpBody*
+cpBody* PhysicsWorld::BodyOf(entt::entity e) {
+    return registry->get<ColliderComponent>(e).body.get();
+}
+
+// Pin joint
+cpConstraint* PhysicsWorld::AddPinJoint(entt::entity ea, cpVect aLocal, entt::entity eb, cpVect bLocal) {
+    auto* ja = cpSpaceAddConstraint(space, cpPinJointNew(BodyOf(ea), BodyOf(eb), aLocal, bLocal));
+    return ja;
+}
+
+// Slide joint
+cpConstraint* PhysicsWorld::AddSlideJoint(entt::entity ea, cpVect aLocal, entt::entity eb, cpVect bLocal, cpFloat minD, cpFloat maxD) {
+    return cpSpaceAddConstraint(space, cpSlideJointNew(BodyOf(ea), BodyOf(eb), aLocal, bLocal, minD, maxD));
+}
+
+// Pivot joint (world anchor)
+cpConstraint* PhysicsWorld::AddPivotJointWorld(entt::entity ea, entt::entity eb, cpVect worldAnchor) {
+    return cpSpaceAddConstraint(space, cpPivotJointNew(BodyOf(ea), BodyOf(eb), worldAnchor));
+}
+
+// Groove joint (A provides groove, in A's local space)
+cpConstraint* PhysicsWorld::AddGrooveJoint(entt::entity a, cpVect a1Local, cpVect a2Local, entt::entity b, cpVect bLocal) {
+    return cpSpaceAddConstraint(space, cpGrooveJointNew(BodyOf(a), BodyOf(b), a1Local, a2Local, bLocal));
+}
+
+// Springs
+cpConstraint* PhysicsWorld::AddDampedSpring(entt::entity ea, cpVect aLocal, entt::entity eb, cpVect bLocal, cpFloat rest, cpFloat k, cpFloat damp) {
+    return cpSpaceAddConstraint(space, cpDampedSpringNew(BodyOf(ea), BodyOf(eb), aLocal, bLocal, rest, k, damp));
+}
+cpConstraint* PhysicsWorld::AddDampedRotarySpring(entt::entity ea, entt::entity eb, cpFloat restAngle, cpFloat k, cpFloat damp) {
+    return cpSpaceAddConstraint(space, cpDampedRotarySpringNew(BodyOf(ea), BodyOf(eb), restAngle, k, damp));
+}
+
+// Angular joints
+cpConstraint* PhysicsWorld::AddRotaryLimit(entt::entity ea, entt::entity eb, cpFloat minAngle, cpFloat maxAngle) {
+    return cpSpaceAddConstraint(space, cpRotaryLimitJointNew(BodyOf(ea), BodyOf(eb), minAngle, maxAngle));
+}
+cpConstraint* PhysicsWorld::AddRatchet(entt::entity ea, entt::entity eb, cpFloat phase, cpFloat ratchet) {
+    return cpSpaceAddConstraint(space, cpRatchetJointNew(BodyOf(ea), BodyOf(eb), phase, ratchet));
+}
+cpConstraint* PhysicsWorld::AddGear(entt::entity ea, entt::entity eb, cpFloat phase, cpFloat ratio) {
+    return cpSpaceAddConstraint(space, cpGearJointNew(BodyOf(ea), BodyOf(eb), phase, ratio));
+}
+cpConstraint* PhysicsWorld::AddSimpleMotor(entt::entity ea, entt::entity eb, cpFloat rateRadPerSec) {
+    return cpSpaceAddConstraint(space, cpSimpleMotorNew(BodyOf(ea), BodyOf(eb), rateRadPerSec));
+}
+
+// Convenience tuning
+void PhysicsWorld::SetConstraintLimits(cpConstraint* c, cpFloat maxForce, cpFloat maxBias) {
+    if (maxForce >= 0) cpConstraintSetMaxForce(c, maxForce);
+    if (maxBias  >= 0) cpConstraintSetMaxBias(c, maxBias);
+}
+
+entt::entity PhysicsWorld::SpawnPixelBall(float x, float y, float r = 0.95f) {
+    auto e = registry->create();
+    // tag it however you like; "pixel" here assumes you’ve added it via SetCollisionTags()
+    AddCollider(e, /*tag*/"pixel", /*shape*/"circle",
+                /*a=radius*/ r, /*b*/0, /*c*/0, /*d*/0,
+                /*sensor*/ false, /*points*/ {});
+    SetPosition(e, x, y);
+    SetFriction(e, 0.0f);
+    SetRestitution(e, 0.0f);
+    // optional: very light mass for fast sim
+    SetMass(e, 1.0f);
+    return e;
+}
+
+void PhysicsWorld::BuildLogoFromBitmap(const unsigned char* bits,
+                                       int w, int h, int rowLenBytes,
+                                       float pixelWorldScale /*=2.0f*/,
+                                       float jitter /*=0.05f*/)
+{
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            if (!get_pixel(x, y, bits, rowLenBytes)) continue;
+
+            float jx = jitter * ((rand() % 200 - 100) / 100.0f);
+            float jy = jitter * ((rand() % 200 - 100) / 100.0f);
+
+            float wx = pixelWorldScale * (x - w * 0.5f + jx);
+            float wy = pixelWorldScale * (h * 0.5f - y + jy);
+            SpawnPixelBall(wx, wy);
+        }
+    }
+}
+entt::entity PhysicsWorld::AddOneWayPlatform(float x1, float y1,
+                                             float x2, float y2,
+                                             float thickness,
+                                             const std::string& tag /*= "one_way"*/,
+                                             cpVect n /*= cpv(0, 1)*/)
+{
+    // Ensure collision tag exists (category + collision type)
+    if (!collisionTags.contains(tag)) {
+        AddCollisionTag(tag);
+    }
+
+    // Register one-way behavior for this tag (stores in _oneWayByType and installs wildcard handler)
+    RegisterOneWayPlatform(tag, n);
+
+    // Build the static segment
+    cpBody* staticBody = cpSpaceGetStaticBody(space);
+    cpShape* seg = cpSegmentShapeNew(staticBody, cpv(x1, y1), cpv(x2, y2), thickness);
+    cpShapeSetElasticity(seg, 1.0f);
+    cpShapeSetFriction(seg, 1.0f);
+
+    // Apply your filter + collision type
+    ApplyCollisionFilter(seg, tag);
+    cpCollisionType type = _tagToCollisionType[tag];
+    cpShapeSetCollisionType(seg, type);
+
+    // Create an entity to track this platform (so your collision code sees a userData)
+    entt::entity e = registry->create();
+
+    // IMPORTANT: keep userData = entity (matches the rest of your engine)
+    cpShapeSetUserData(seg, reinterpret_cast<void*>(static_cast<uintptr_t>(e)));
+
+    // Add to space
+    cpSpaceAddShape(space, seg);
+
+    return e;
+}
+
+void PhysicsWorld::OnVelocityUpdate(cpBody* body, cpVect gravity, cpFloat damping, cpFloat dt) {
+  auto it = _gravityByBody.find(body);
+  if (it == _gravityByBody.end() || it->second.mode == GravityField::Mode::None) {
+    // default integration
+    cpBodyUpdateVelocity(body, gravity, damping, dt);
+    return;
+  }
+
+  const auto& f = it->second;
+  cpVect p = cpBodyGetPosition(body);
+  cpVect c = (f.mode == GravityField::Mode::InverseSquareToBody && f.centerBody)
+               ? cpBodyGetPosition(f.centerBody)
+               : f.point;
+  cpVect r = cpvsub(p, c);
+  cpFloat r2 = cpvlengthsq(r);
+  // avoid singularity; fall back to no extra gravity if too close
+  if (r2 < 1e-6f) {
+    cpBodyUpdateVelocity(body, gravity, damping, dt);
+    return;
+  }
+  cpFloat inv_r3 = 1.0f / (r2 * cpfsqrt(r2));
+  cpVect gvec = cpvmult(r, -f.GM * inv_r3); // -GM * r̂ / r^2
+
+  cpBodyUpdateVelocity(body, gvec, damping, dt);
+}
+
+void PhysicsWorld::C_VelocityUpdate(cpBody* body, cpVect gravity, cpFloat damping, cpFloat dt) {
+  cpSpace* sp = cpBodyGetSpace(body);
+  auto* world = static_cast<PhysicsWorld*>(cpSpaceGetUserData(sp));
+  if (!world) { cpBodyUpdateVelocity(body, gravity, damping, dt); return; }
+  world->OnVelocityUpdate(body, gravity, damping, dt);
+}
+
+
+// Toward a fixed point
+void PhysicsWorld::EnableInverseSquareGravityToPoint(entt::entity e, cpVect point, cpFloat GM) {
+  auto& c = registry->get<ColliderComponent>(e);
+  _gravityByBody[c.body.get()] = { GravityField::Mode::InverseSquareToPoint, GM, point, nullptr };
+  cpBodySetVelocityUpdateFunc(c.body.get(), &PhysicsWorld::C_VelocityUpdate);
+}
+
+void PhysicsWorld::EnableInverseSquareGravityToBody(entt::entity e, entt::entity center, cpFloat GM) {
+  auto& c  = registry->get<ColliderComponent>(e);
+  auto& cc = registry->get<ColliderComponent>(center);
+  _gravityByBody[c.body.get()] = { GravityField::Mode::InverseSquareToBody, GM, cpvzero, cc.body.get() };
+  cpBodySetVelocityUpdateFunc(c.body.get(), &PhysicsWorld::C_VelocityUpdate);
+}
+
+void PhysicsWorld::DisableCustomGravity(entt::entity e) {
+  auto& c = registry->get<ColliderComponent>(e);
+  _gravityByBody.erase(c.body.get());
+  cpBodySetVelocityUpdateFunc(c.body.get(), cpBodyUpdateVelocity); // restore default
+}
+
+entt::entity PhysicsWorld::CreatePlanet(cpFloat radius, cpFloat spinRadiansPerSec,
+                                        const std::string& tag /*= "planet"*/,
+                                        cpVect pos /*= {0,0}*/) {
+  entt::entity e = registry->create();
+
+  // make a kinematic body
+  auto body = MakeSharedBody(0.0f, INFINITY);
+  cpBodySetType(body.get(), CP_BODY_TYPE_KINEMATIC);
+  cpBodySetPosition(body.get(), pos);
+  cpBodySetAngularVelocity(body.get(), spinRadiansPerSec);
+  SetEntityToBody(body.get(), e);
+  cpSpaceAddBody(space, body.get());
+
+  // a circle shape for visuals/collisions
+  cpShape* ring = cpCircleShapeNew(body.get(), radius, cpvzero);
+  ApplyCollisionFilter(ring, tag);
+  cpShapeSetElasticity(ring, 1.0f);
+  cpShapeSetFriction(ring, 1.0f);
+  SetEntityToShape(ring, e);
+  cpSpaceAddShape(space, ring);
+
+  registry->emplace<ColliderComponent>(e, ColliderComponent{
+    body, std::shared_ptr<cpShape>(ring, cpShapeFree), tag, false, ColliderShapeType::Circle
+  });
+  return e;
+}
+
+entt::entity PhysicsWorld::SpawnOrbitingBox(cpVect startPos, cpFloat halfSize,
+                                            cpFloat mass, cpFloat GM,
+                                            cpVect gravityCenter /*usually {0,0} or planet pos*/) {
+  entt::entity e = registry->create();
+
+  // body + box shape
+  auto body = MakeSharedBody(mass, cpMomentForBox(mass, 2*halfSize, 2*halfSize));
+  cpBodySetPosition(body.get(), startPos);
+
+  auto shape = std::shared_ptr<cpShape>(
+      cpBoxShapeNew(body.get(), 2*halfSize, 2*halfSize, 0.0), cpShapeFree);
+  ApplyCollisionFilter(shape.get(), "dynamic"); // or your tag
+  cpShapeSetElasticity(shape.get(), 0.0f);
+  cpShapeSetFriction(shape.get(), 0.7f);
+
+  SetEntityToBody(body.get(), e);
+  SetEntityToShape(shape.get(), e);
+  cpSpaceAddBody(space, body.get());
+  cpSpaceAddShape(space, shape.get());
+
+  registry->emplace<ColliderComponent>(e, ColliderComponent{
+    body, shape, "dynamic", false, ColliderShapeType::Rectangle
+  });
+
+  // Initial circular orbit velocity
+  cpVect rvec = cpvsub(startPos, gravityCenter);
+  cpFloat r   = cpvlength(rvec);
+  if (r > 1e-4f) {
+    cpFloat v = cpfsqrt(GM / r) / r;               // matches the demo
+    cpBodySetVelocity(body.get(), cpvmult(cpvperp(rvec), v));
+    cpBodySetAngularVelocity(body.get(), v);
+    cpBodySetAngle(body.get(), cpfatan2(rvec.y, rvec.x));
+  }
+
+  // Hook in inverse-square gravity to that point
+  EnableInverseSquareGravityToPoint(e, gravityCenter, GM);
+
+  return e;
+}
+
+
+// Create a box "player" with infinite moment (no rotation) and a fat box shape for nice footing.
+entt::entity PhysicsWorld::CreatePlatformerPlayer(cpVect pos, float w=30.f, float h=55.f,
+                                                  const std::string& tag="player")
+{
+  entt::entity e = registry->create();
+
+  auto body = MakeSharedBody(/*mass*/1.0f, INFINITY);
+  cpBodySetType(body.get(), CP_BODY_TYPE_DYNAMIC);
+  cpBodySetPosition(body.get(), pos);
+  cpBodySetVelocityUpdateFunc(body.get(), &PhysicsWorld::C_PlayerVelUpdate);
+  SetEntityToBody(body.get(), e);
+  cpSpaceAddBody(space, body.get());
+
+  // Slightly rounded box for “feet”
+  cpBB bb = cpBBNew(-w*0.5f, -h*0.5f, w*0.5f, h*0.5f);
+  auto shape = std::shared_ptr<cpShape>(cpBoxShapeNew2(body.get(), bb, /*radius*/10.0), cpShapeFree);
+  ApplyCollisionFilter(shape.get(), tag);
+  cpShapeSetElasticity(shape.get(), 0.0f);
+  cpShapeSetFriction(shape.get(), 0.0f);          // friction is injected via surface velocity trick
+  SetEntityToShape(shape.get(), e);
+  cpSpaceAddShape(space, shape.get());
+
+  registry->emplace<ColliderComponent>(e, ColliderComponent{
+    body, shape, tag, /*isSensor*/false, ColliderShapeType::Rectangle
+  });
+
+  PlatformerCtrl ctrl;
+  ctrl.body = body.get();
+  ctrl.feet = shape.get();
+  ctrl.gravityY = 2000.f; // keep in sync with space gravity if you change it
+  _platformers.emplace(e, ctrl);
+  _platformerByBody.emplace(body.get(), e);
+
+  return e;
+}
+
+// Feed input each frame: moveX in [-1,1], jumpHeld = is jump currently held.
+void PhysicsWorld::SetPlatformerInput(entt::entity e, float moveX, bool jumpHeld)
+{
+  auto it = _platformers.find(e);
+  if (it == _platformers.end()) return;
+  it->second.moveX = std::clamp(moveX, -1.0f, 1.0f);
+  it->second.jumpHeld = jumpHeld;
+}
+
+void PhysicsWorld::C_PlayerVelUpdate(cpBody* body, cpVect gravity, cpFloat damping, cpFloat dt)
+{
+  cpSpace* sp = cpBodyGetSpace(body);
+  auto* world = static_cast<PhysicsWorld*>(cpSpaceGetUserData(sp));
+  if (!world) { cpBodyUpdateVelocity(body, gravity, damping, dt); return; }
+  world->PlayerVelUpdate(body, gravity, damping, dt);
+}
+
+void PhysicsWorld::SelectGroundNormal(cpBody*, cpArbiter* arb, cpVect* maxUp)
+{
+  // Up = negative collision normal in body’s frame (as in the demo).
+  cpVect n = cpvneg(cpArbiterGetNormal(arb));
+  if (n.y > maxUp->y) *maxUp = n;
+}
+
+static inline float lerpconst(float a, float b, float d)
+{
+  return (a < b) ? std::min(b, a + d) : std::max(b, a - d);
+}
+
+void PhysicsWorld::PlayerVelUpdate(cpBody* body, cpVect gravity, cpFloat damping, cpFloat dt)
+{
+  auto eit = _platformerByBody.find(body);
+  if (eit == _platformerByBody.end()) { cpBodyUpdateVelocity(body, gravity, damping, dt); return; }
+  PlatformerCtrl& pc = _platformers[eit->second];
+
+  // 1) Ground check from previous step’s contacts
+  cpVect groundUp = cpvzero;
+  cpBodyEachArbiter(body, (cpBodyArbiterIteratorFunc)&PhysicsWorld::SelectGroundNormal, &groundUp);
+  pc.grounded = (groundUp.y > 0.f);
+  if (groundUp.y < 0.f) pc.remainingBoost = 0.f; // sliding under ceilings cancels boost
+
+  // 2) Jump impulse: on rising edge of jump while grounded
+  if (pc.jumpHeld && !pc.lastJumpHeld && pc.grounded) {
+    float jump_v = std::sqrt(2.0f * pc.jumpHeight * pc.gravityY);
+    cpVect v = cpBodyGetVelocity(body);
+    v = cpv(v.x, v.y + jump_v);
+    cpBodySetVelocity(body, v);
+    pc.remainingBoost = pc.jumpBoostH / jump_v;
+  }
+
+  // 3) Gravity override for boost
+  const bool boosting = (pc.jumpHeld && pc.remainingBoost > 0.f);
+  cpVect g = boosting ? cpvzero : gravity; // zero gravity while boosting
+  cpBodyUpdateVelocity(body, g, damping, dt);
+
+  // 4) Ground control via surface velocity + friction “as accel”
+  const float targetVX = pc.maxVel * pc.moveX;
+
+  // feet move opposite to player desired motion (like a treadmill)
+  cpVect surfaceV = cpv(-targetVX, 0.0f);
+  cpShapeSetSurfaceVelocity(pc.feet, surfaceV);
+
+  // While grounded: µ ~ accel / g (unit-consistent approximation from demo)
+  cpShapeSetFriction(pc.feet, pc.grounded ? (pc.groundAccel / pc.gravityY) : 0.0f);
+
+  // 5) Air control: clamp vx toward target with a fixed accel
+  if (!pc.grounded) {
+    cpVect v = cpBodyGetVelocity(body);
+    v = cpv( lerpconst(v.x, targetVX, pc.airAccel*dt), v.y );
+    cpBodySetVelocity(body, v);
+  }
+
+  // 6) Clamp terminal fall speed
+  cpVect v = cpBodyGetVelocity(body);
+  if (v.y < -pc.fallVel) { v.y = -pc.fallVel; cpBodySetVelocity(body, v); }
+
+  // 7) boost timer
+  pc.remainingBoost = std::max(0.f, pc.remainingBoost - (float)dt);
+  pc.lastJumpHeld = pc.jumpHeld;
+}
+
+
+
+
+
+
+} // namespace physics
+ 

@@ -33,7 +33,6 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] ALSO check the flexibility of the api. for instance, if I created a standalone body from lua, could I use all the functionality of the physics world with it? or would I need to link it to an entity always? - z. https://chatgpt.com/share/68d2a73d-0a30-800a-82d6-fb3a313475c7 -> add multiple shape handling. also make it seamless with creating headless bodies from lua.
 - [ ] Do the rest of chipunk demo snippet extraction https://chatgpt.com/share/68d29464-6f3c-800a-ad55-1ee553a3cb26
 - [ ] update lua bindings & docs for physics world
 

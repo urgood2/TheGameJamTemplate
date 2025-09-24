@@ -27,37 +27,39 @@ inline sol::table vec_to_lua(sol::state_view L, const cpVect& v) {
     return t;
 }
 
-inline void expose_physics_to_lua(sol::state& lua) {
-    auto& rec = BindingRecorder::instance();
+inline void expose_physics_to_lua(sol::state &lua) {
+    auto &rec = BindingRecorder::instance();
     const std::vector<std::string> path = {"physics"};
 
+    // ---------- Types ----------
     rec.add_type("physics").doc =
-        "Physics namespace (Chipmunk2D). Create worlds, set tags/masks, raycast, "
-        "query areas, and attach colliders to entities.";
+        "Physics namespace (Chipmunk2D). Create worlds, set tags/masks, "
+        "raycast, query areas, and attach colliders to entities.";
 
     struct LuaRaycastHit {
-        void* shape{};
+        void*  shape{};
         cpVect point{0,0};
         cpVect normal{0,0};
-        float fraction{0.f};
+        float  fraction{0.f};
     };
     lua.new_usertype<LuaRaycastHit>("RaycastHit",
         "shape",    &LuaRaycastHit::shape,
-        "point",    sol::property(
-                        [](sol::this_state s, LuaRaycastHit& h){ return vec_to_lua(sol::state_view(s), h.point); }),
-        "normal",   sol::property(
-                        [](sol::this_state s, LuaRaycastHit& h){ return vec_to_lua(sol::state_view(s), h.normal); }),
+        "point",    sol::property([](sol::this_state s, LuaRaycastHit& h){ return vec_to_lua(sol::state_view(s), h.point); }),
+        "normal",   sol::property([](sol::this_state s, LuaRaycastHit& h){ return vec_to_lua(sol::state_view(s), h.normal); }),
         "fraction", &LuaRaycastHit::fraction
     );
-    auto& rch = rec.add_type("physics.RaycastHit");
-    rch.doc = "Result of a raycast: shape pointer, hit point, normal, and fraction along the ray.";
-    
+    rec.add_type("physics.RaycastHit").doc =
+        "Result of a raycast. Fields:\n"
+        "- shape: lightuserdata @cpShape*\n"
+        "- point: {x:number, y:number}\n"
+        "- normal: {x:number, y:number}\n"
+        "- fraction: number (0..1) distance fraction along the segment";
+
     struct LuaCollisionEvent {
         void* objectA{};
         void* objectB{};
         float x1{}, y1{}, x2{}, y2{}, nx{}, ny{};
     };
-
     lua.new_usertype<LuaCollisionEvent>("CollisionEvent",
         "objectA", &LuaCollisionEvent::objectA,
         "objectB", &LuaCollisionEvent::objectB,
@@ -66,293 +68,11 @@ inline void expose_physics_to_lua(sol::state& lua) {
         "nx", &LuaCollisionEvent::nx, "ny", &LuaCollisionEvent::ny
     );
     rec.add_type("physics.CollisionEvent").doc =
-        "Collision event: endpoints (x1,y1)-(x2,y2), normal (nx,ny), and the two objects.";
+        "Collision event with contact info. Fields:\n"
+        "- objectA, objectB: lightuserdata (internally mapped to entt.entity)\n"
+        "- x1,y1 (point on A), x2,y2 (point on B), nx,ny (contact normal)";
 
-    static auto to_entity = [](void* p) -> entt::entity {
-        return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p));
-    };
-
-rec.bind_function(lua, path, "GetCollisionEnter",
-    [&lua](physics::PhysicsWorld& W, const std::string& t1, const std::string& t2) {
-        const auto& v = W.GetCollisionEnter(t1, t2);
-        sol::table out = lua.create_table(static_cast<int>(v.size()), 0);
-        int i = 1;
-        for (const auto& e : v) {
-            const entt::entity a = to_entity(e.objectA);
-            const entt::entity b = to_entity(e.objectB);
-
-            sol::table ev = lua.create_table();
-            ev["a"]  = a;
-            ev["b"]  = b;
-            ev["x1"] = e.x1; ev["y1"] = e.y1;
-            ev["x2"] = e.x2; ev["y2"] = e.y2;
-            ev["nx"] = e.nx; ev["ny"] = e.ny;
-
-            out[i++] = ev;
-        }
-        return out;
-    },
-    "---@param world physics.PhysicsWorld\n"
-    "---@param type1 string\n"
-    "---@param type2 string\n"
-    "---@return {a:entt.entity,b:entt.entity,x1:number,y1:number,x2:number,y2:number,nx:number,ny:number}[]",
-    "Buffered collision-begin events for (type1,type2) since last PostUpdate(). "
-    "Returns a list of event tables with 'a' and 'b' as entt.entity handles."
-);
-
-rec.bind_function(lua, path, "GetTriggerEnter",
-    [](physics::PhysicsWorld& W, const std::string& t1, const std::string& t2) {
-        const auto& v = W.GetTriggerEnter(t1, t2);
-        std::vector<entt::entity> out;
-        out.reserve(v.size());
-        for (void* u : v) {
-            out.push_back(to_entity(u));
-        }
-        return sol::as_table(out);
-    },
-    "---@param world physics.PhysicsWorld\n"
-    "---@param type1 string\n"
-    "---@param type2 string\n"
-    "---@return entt.entity[]",
-    "Buffered trigger-begin hits for (type1,type2) since last PostUpdate(). "
-    "Returns entities (entt.entity) rather than opaque pointers."
-);
-
-    
-rec.bind_function(lua, path, "GetEntityFromBody",
-    &physics::GetEntityFromBody,
-    "---@param body lightuserdata @cpBody*\n---@return entt.entity"
-);
-
-rec.bind_function(lua, path, "entity_from_ptr",
-    [](void* p) -> entt::entity {
-        return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p));
-    },
-    "---@param p lightuserdata\n---@return entt.entity"
-);
-
-    
-
-    using physics::PhysicsWorld;
-
-    lua.new_usertype<PhysicsWorld>("PhysicsWorld",
-        sol::constructors<PhysicsWorld(entt::registry*, float, float, float)>(),
-        "Update",            &PhysicsWorld::Update,
-        "PostUpdate",        &PhysicsWorld::PostUpdate,
-        "SetGravity",        &PhysicsWorld::SetGravity,
-        "SetMeter",          &PhysicsWorld::SetMeter,
-        "SetCollisionCallbacks", &PhysicsWorld::SetCollisionCallbacks,
-        "SetCollisionTags",      &PhysicsWorld::SetCollisionTags,
-        "EnableCollisionBetween",&PhysicsWorld::EnableCollisionBetween,
-        "DisableCollisionBetween",&PhysicsWorld::DisableCollisionBetween,
-        "EnableTriggerBetween",  &PhysicsWorld::EnableTriggerBetween,
-        "DisableTriggerBetween", &PhysicsWorld::DisableTriggerBetween,
-        "UpdateCollisionMasks",  &PhysicsWorld::UpdateCollisionMasks,
-        "AddCollisionTag",       &PhysicsWorld::AddCollisionTag,
-        "RemoveCollisionTag",    &PhysicsWorld::RemoveCollisionTag,
-        "UpdateColliderTag",     &PhysicsWorld::UpdateColliderTag,
-        "PrintCollisionTags",    &PhysicsWorld::PrintCollisionTags,
-        "GetCollisionEnter",     &PhysicsWorld::GetCollisionEnter,
-        "GetTriggerEnter",       &PhysicsWorld::GetTriggerEnter,
-        "RenderColliders",       &PhysicsWorld::RenderColliders
-    );
-
-    auto& pw = rec.add_type("physics.PhysicsWorld");
-    pw.doc = "Owns Chipmunk space, tags/masks, and collision/trigger buffers. Step with Update(dt).";
-    
-rec.bind_function(lua, path, "SetAngularDamping",
-    &physics::PhysicsWorld::SetAngularDamping,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularDamping number"
-);
-
-rec.bind_function(lua, path, "ApplyAngularImpulse",
-    &physics::PhysicsWorld::ApplyAngularImpulse,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularImpulse number"
-);
-
-rec.bind_function(lua, path, "ApplyTorque",
-    &physics::PhysicsWorld::ApplyTorque,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param torque number"
-);
-
-rec.bind_function(lua, path, "SetBullet",
-    &physics::PhysicsWorld::SetBullet,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param isBullet boolean"
-);
-
-rec.bind_function(lua, path, "GetPosition",
-    [](physics::PhysicsWorld& W, entt::entity e, sol::this_state s) {
-        auto p = W.GetPosition(e);
-        return vec_to_lua(sol::state_view{s}, p);
-    },
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return {x:number,y:number}"
-);
-
-rec.bind_function(lua, path, "SetPosition",
-    &physics::PhysicsWorld::SetPosition,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param x number\n---@param y number"
-);
-
-rec.bind_function(lua, path, "GetAngle",
-    &physics::PhysicsWorld::GetAngle,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return number @radians"
-);
-
-rec.bind_function(lua, path, "SetAngle",
-    &physics::PhysicsWorld::SetAngle,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param radians number"
-);
-
-rec.bind_function(lua, path, "SetVelocity",
-    &physics::PhysicsWorld::SetVelocity,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param vx number\n---@param vy number"
-);
-
-rec.bind_function(lua, path, "SetAngularVelocity",
-    &physics::PhysicsWorld::SetAngularVelocity,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param av number @radians/sec"
-);
-
-rec.bind_function(lua, path, "ApplyForce",
-    &physics::PhysicsWorld::ApplyForce,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fx number\n---@param fy number"
-);
-
-rec.bind_function(lua, path, "ApplyImpulse",
-    &physics::PhysicsWorld::ApplyImpulse,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param ix number\n---@param iy number"
-);
-
-rec.bind_function(lua, path, "SetDamping",
-    &physics::PhysicsWorld::SetDamping,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param linear number"
-);
-
-rec.bind_function(lua, path, "SetGlobalDamping",
-    &physics::PhysicsWorld::SetGlobalDamping,
-    "---@param world physics.PhysicsWorld\n---@param damping number"
-);
-
-rec.bind_function(lua, path, "SetRestitution",
-    &physics::PhysicsWorld::SetRestitution,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param restitution number"
-);
-
-rec.bind_function(lua, path, "SetFriction",
-    &physics::PhysicsWorld::SetFriction,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param friction number"
-);
-
-rec.bind_function(lua, path, "SetAwake",
-    &physics::PhysicsWorld::SetAwake,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param awake boolean"
-);
-
-rec.bind_function(lua, path, "SetFixedRotation",
-    &physics::PhysicsWorld::SetFixedRotation,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fixed boolean"
-);
-
-rec.bind_function(lua, path, "GetMass",
-    &physics::PhysicsWorld::GetMass,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return number"
-);
-
-rec.bind_function(lua, path, "SetMass",
-    &physics::PhysicsWorld::SetMass,
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param mass number"
-);
-
-
-    rec.bind_function(lua, path, "Raycast",
-        [](PhysicsWorld& W, float x1, float y1, float x2, float y2, sol::this_state s) {
-            auto hits = W.Raycast(x1, y1, x2, y2);
-            sol::state_view L(s);
-            std::vector<LuaRaycastHit> out;
-            out.reserve(hits.size());
-            for (auto& h : hits) {
-                LuaRaycastHit r;
-                r.shape    = h.shape;
-                r.point    = h.point;
-                r.normal   = h.normal;
-                r.fraction = h.fraction;
-                out.push_back(r);
-            }
-            return sol::as_table(out);
-        },
-        "---@param world physics.PhysicsWorld\n"
-        "---@param x1 number @ray start X (Chipmunk units)\n"
-        "---@param y1 number @ray start Y (Chipmunk units)\n"
-        "---@param x2 number @ray end X (Chipmunk units)\n"
-        "---@param y2 number @ray end Y (Chipmunk units)\n"
-        "---@return physics.RaycastHit[] # Array of hits, nearest-first.",
-        "Segment raycast through the physics space (Chipmunk2D).");
-
-    rec.bind_function(lua, path, "GetObjectsInArea",
-    [](physics::PhysicsWorld& W, float x1, float y1, float x2, float y2) {
-        auto raw = W.GetObjectsInArea(x1, y1, x2, y2);
-        std::vector<entt::entity> out;
-        out.reserve(raw.size());
-        for (void* p : raw) {
-            entt::entity e = p
-                ? static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p))
-                : entt::null;
-            out.push_back(e);
-        }
-        return sol::as_table(out);
-    },
-    "---@param world physics.PhysicsWorld\n"
-    "---@param x1 number @rect min X (Chipmunk units)\n"
-    "---@param y1 number @rect min Y (Chipmunk units)\n"
-    "---@param x2 number @rect max X (Chipmunk units)\n"
-    "---@param y2 number @rect max Y (Chipmunk units)\n"
-    "---@return entt.entity[] @entities whose shapes intersect the AABB",
-    "Returns entity handles for all shapes intersecting the rectangle [x1,y1]-[x2,y2]."
-);
-
-
-    rec.bind_function(lua, path, "AddCollider",
-        [](PhysicsWorld& W, entt::entity e, const std::string& tag,
-           const std::string& shapeType,
-           sol::object a, sol::object b, sol::object c, sol::object d,
-           bool isSensor, sol::object pointsOpt) {
-            float A = a.is<double>() ? a.as<double>() : 0.0;
-            float B = b.is<double>() ? b.as<double>() : 0.0;
-            float C = c.is<double>() ? c.as<double>() : 0.0;
-            float D = d.is<double>() ? d.as<double>() : 0.0;
-
-            std::vector<cpVect> points;
-            if (pointsOpt.is<sol::table>()) {
-                points = vecarray_from_lua(pointsOpt.as<sol::table>());
-            }
-            W.AddCollider(e, tag, shapeType, A, B, C, D, isSensor, points);
-        },
-        "---@param world physics.PhysicsWorld\n"
-        "---@param e entt.entity\n"
-        "---@param tag string @Collision tag/category name\n"
-        "---@param shapeType 'rectangle'|'circle'|'segment'|'polygon'|'chain'\n"
-        "---@param a number @rectangle: width | circle: radius | segment: x1 | polygon/chain: ignored if points given\n"
-        "---@param b number @rectangle: height | circle: ignored | segment: y1 | polygon/chain: ignored if points given\n"
-        "---@param c number @segment: x2 | others: shape-specific/ignored\n"
-        "---@param d number @segment: y2 | others: shape-specific/ignored\n"
-        "---@param isSensor boolean @sensor shapes don’t collide but still trigger\n"
-        "---@param points { {x:number,y:number} }? @optional explicit vertices for polygon/chain (overrides a–d)\n"
-        "---@return nil",
-        "Creates a cpBody+cpShape, applies tag filter (default masks = 'all' if none set), "
-        "and emplaces a ColliderComponent. For polygon/chain, provide explicit vertices via `points`.");
-
-    rec.bind_function(lua, path, "SetEntityToShape",
-        &physics::SetEntityToShape,
-        "---@param shape lightuserdata @cpShape*\n"
-        "---@param e entt.entity",
-        "Stores an entity ID into shape->userData.");
-    rec.bind_function(lua, path, "SetEntityToBody",
-        &physics::SetEntityToBody,
-        "---@param body lightuserdata @cpBody*\n"
-        "---@param e entt.entity",
-        "Stores an entity ID into body->userData.");
-        
-    
+    // ColliderShapeType enum (constant table)
     lua["physics"]["ColliderShapeType"] = lua.create_table_with(
         "Rectangle", static_cast<int>(physics::ColliderShapeType::Rectangle),
         "Segment",   static_cast<int>(physics::ColliderShapeType::Segment),
@@ -360,256 +80,720 @@ rec.bind_function(lua, path, "SetMass",
         "Polygon",   static_cast<int>(physics::ColliderShapeType::Polygon),
         "Chain",     static_cast<int>(physics::ColliderShapeType::Chain)
     );
+    rec.add_type("physics.ColliderShapeType").doc =
+        "Enum of supported collider shapes:\n"
+        "- Rectangle, Segment, Circle, Polygon, Chain";
+
+    // ---------- PhysicsWorld usertype ----------
+    using physics::PhysicsWorld;
+    lua.new_usertype<PhysicsWorld>("PhysicsWorld",
+        sol::constructors<PhysicsWorld(entt::registry*, float, float, float)>(),
+        "Update",              &PhysicsWorld::Update,
+        "PostUpdate",          &PhysicsWorld::PostUpdate,
+        "SetGravity",          &PhysicsWorld::SetGravity,
+        "SetMeter",            &PhysicsWorld::SetMeter,
+        "SetCollisionTags",    &PhysicsWorld::SetCollisionTags,
+        "EnableCollisionBetween", &PhysicsWorld::EnableCollisionBetween,
+        "DisableCollisionBetween",&PhysicsWorld::DisableCollisionBetween,
+        "EnableTriggerBetween",&PhysicsWorld::EnableTriggerBetween,
+        "DisableTriggerBetween",&PhysicsWorld::DisableTriggerBetween,
+        "UpdateCollisionMasks",&PhysicsWorld::UpdateCollisionMasks,
+        "AddCollisionTag",     &PhysicsWorld::AddCollisionTag,
+        "RemoveCollisionTag",  &PhysicsWorld::RemoveCollisionTag,
+        "UpdateColliderTag",   &PhysicsWorld::UpdateColliderTag,
+        "PrintCollisionTags",  &PhysicsWorld::PrintCollisionTags,
+        "RenderColliders",     &PhysicsWorld::RenderColliders
+    );
     {
-        auto& t = rec.add_type("physics.ColliderShapeType");
-        t.doc   = "Collider shape enum; use string names for config too.";
+        auto &pw = rec.add_type("physics.PhysicsWorld");
+        pw.doc =
+            "Owns a Chipmunk cpSpace, manages collision/trigger tags, and buffers of collision/trigger events.\n"
+            "Construct with (registry*, meter:number, gravityX:number, gravityY:number). Call Update(dt) each frame and PostUpdate() after consuming event buffers.";
     }
 
-    rec.bind_function(lua, path, "create_physics_for_transform",
-        [](entt::registry& R,
-        PhysicsManager& PM,
-        entt::entity e,
-        sol::table cfg)
+    // ---------- Convenience mappers ----------
+    static auto to_entity = [](void* p)->entt::entity {
+        return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p));
+    };
+
+    rec.record_free_function(path, {
+        "entity_from_ptr",
+        "---@param p lightuserdata\n"
+        "---@return entt.entity",
+        "Converts a lightuserdata (internally an entity id) to entt.entity.",
+        true, false
+    });
+    lua["physics"]["entity_from_ptr"] = [](void* p)->entt::entity {
+        return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p));
+    };
+
+    rec.record_free_function(path, {
+        "GetEntityFromBody",
+        "---@param body lightuserdata @cpBody*\n"
+        "---@return entt.entity",
+        "Returns entt.entity stored in body->userData or entt.null.",
+        true, false
+    });
+    lua["physics"]["GetEntityFromBody"] = &physics::GetEntityFromBody;
+
+    // ---------- Collision/Trigger buffered reads ----------
+    rec.record_free_function(path, {
+        "GetCollisionEnter",
+        "---@param world physics.PhysicsWorld\n"
+        "---@param type1 string\n"
+        "---@param type2 string\n"
+        "---@return {a:entt.entity,b:entt.entity,x1:number,y1:number,x2:number,y2:number,nx:number,ny:number}[]",
+        "Buffered collision-begin events for the pair (type1,type2) since last PostUpdate().",
+        true, false
+    });
+    lua["physics"]["GetCollisionEnter"] = [&lua](PhysicsWorld& W, const std::string& t1, const std::string& t2) {
+        const auto& v = W.GetCollisionEnter(t1,t2);
+        sol::table out = lua.create_table(static_cast<int>(v.size()), 0);
+        int i = 1;
+        for (const auto& e : v) {
+            const entt::entity a = to_entity(e.objectA);
+            const entt::entity b = to_entity(e.objectB);
+            sol::table ev = lua.create_table();
+            ev["a"]  = a; ev["b"]  = b;
+            ev["x1"] = e.x1; ev["y1"] = e.y1;
+            ev["x2"] = e.x2; ev["y2"] = e.y2;
+            ev["nx"] = e.nx; ev["ny"] = e.ny;
+            out[i++] = ev;
+        }
+        return out;
+    };
+
+    rec.record_free_function(path, {
+        "GetTriggerEnter",
+        "---@param world physics.PhysicsWorld\n"
+        "---@param type1 string\n"
+        "---@param type2 string\n"
+        "---@return entt.entity[]",
+        "Buffered trigger-begin hits for (type1,type2) since last PostUpdate(). Returns entity handles.",
+        true, false
+    });
+    lua["physics"]["GetTriggerEnter"] = [](PhysicsWorld& W, const std::string& t1, const std::string& t2) {
+        const auto& v = W.GetTriggerEnter(t1,t2);
+        std::vector<entt::entity> out; out.reserve(v.size());
+        for (void* u : v) out.push_back(to_entity(u));
+        return sol::as_table(out);
+    };
+
+    // ---------- Spatial queries ----------
+    rec.record_free_function(path, {
+        "Raycast",
+        "---@param world physics.PhysicsWorld\n"
+        "---@param x1 number @ray start X (Chipmunk units)\n"
+        "---@param y1 number @ray start Y (Chipmunk units)\n"
+        "---@param x2 number @ray end X (Chipmunk units)\n"
+        "---@param y2 number @ray end Y (Chipmunk units)\n"
+        "---@return physics.RaycastHit[]",
+        "Segment raycast through the physics space (nearest-first).",
+        true, false
+    });
+    lua["physics"]["Raycast"] = [](PhysicsWorld& W, float x1, float y1, float x2, float y2, sol::this_state s) {
+        auto hits = W.Raycast(x1,y1,x2,y2);
+        std::vector<LuaRaycastHit> out; out.reserve(hits.size());
+        for (auto& h : hits) {
+            LuaRaycastHit r; r.shape = h.shape; r.point = h.point; r.normal = h.normal; r.fraction = h.fraction;
+            out.push_back(r);
+        }
+        return sol::as_table(out);
+    };
+
+    rec.record_free_function(path, {
+        "GetObjectsInArea",
+        "---@param world physics.PhysicsWorld\n"
+        "---@param x1 number @rect minX\n"
+        "---@param y1 number @rect minY\n"
+        "---@param x2 number @rect maxX\n"
+        "---@param y2 number @rect maxY\n"
+        "---@return entt.entity[] @entities whose shapes intersect the AABB",
+        "Returns entities for all shapes intersecting the rectangle [x1,y1]-[x2,y2].",
+        true, false
+    });
+    lua["physics"]["GetObjectsInArea"] = [](PhysicsWorld& W, float x1,float y1,float x2,float y2) {
+        auto raw = W.GetObjectsInArea(x1,y1,x2,y2);
+        std::vector<entt::entity> out; out.reserve(raw.size());
+        for (void* p : raw) out.push_back(p ? static_cast<entt::entity>(reinterpret_cast<uintptr_t>(p)) : entt::null);
+        return sol::as_table(out);
+    };
+
+    // ---------- Attach body/shape to entity ----------
+    rec.record_free_function(path, {
+        "SetEntityToShape",
+        "---@param shape lightuserdata @cpShape*\n---@param e entt.entity",
+        "Stores an entity ID in shape->userData.",
+        true, false
+    });
+    lua["physics"]["SetEntityToShape"] = &physics::SetEntityToShape;
+
+    rec.record_free_function(path, {
+        "SetEntityToBody",
+        "---@param body lightuserdata @cpBody*\n---@param e entt.entity",
+        "Stores an entity ID in body->userData.",
+        true, false
+    });
+    lua["physics"]["SetEntityToBody"] = &physics::SetEntityToBody;
+
+    // ---------- Create collider(s) ----------
+    rec.record_free_function(path, {
+        "AddCollider",
+        "---@param world physics.PhysicsWorld\n"
+        "---@param e entt.entity\n"
+        "---@param tag string @collision tag/category\n"
+        "---@param shapeType 'rectangle'|'circle'|'segment'|'polygon'|'chain'\n"
+        "---@param a number @rectangle:width|circle:radius|segment:x1\n"
+        "---@param b number @rectangle:height|segment:y1\n"
+        "---@param c number @segment:x2\n"
+        "---@param d number @segment:y2\n"
+        "---@param isSensor boolean\n"
+        "---@param points { {x:number,y:number} }|nil @optional polygon/chain vertices (overrides a–d)\n"
+        "---@return nil",
+        "Creates cpBody+cpShape for entity, applies tag filter + collisionType, and adds to space.",
+        true, false
+    });
+    lua["physics"]["AddCollider"] =
+        [](PhysicsWorld& W, entt::entity e, const std::string& tag, const std::string& shapeType,
+           sol::object a, sol::object b, sol::object c, sol::object d, bool isSensor, sol::object pointsOpt)
         {
+            float A = a.is<double>() ? a.as<double>() : 0.0f;
+            float B = b.is<double>() ? b.as<double>() : 0.0f;
+            float C = c.is<double>() ? c.as<double>() : 0.0f;
+            float D = d.is<double>() ? d.as<double>() : 0.0f;
+            std::vector<cpVect> points;
+            if (pointsOpt.is<sol::table>()) points = vecarray_from_lua(pointsOpt.as<sol::table>());
+            W.AddCollider(e, tag, shapeType, A, B, C, D, isSensor, points);
+        };
+
+    // Multi-shape helpers (backed by your C++ multi-shape API)
+    rec.record_free_function(path, {
+        "add_shape_to_entity",
+        "---@param world physics.PhysicsWorld\n"
+        "---@param e entt.entity\n"
+        "---@param tag string\n"
+        "---@param shapeType 'rectangle'|'circle'|'segment'|'polygon'|'chain'\n"
+        "---@param a number\n"
+        "---@param b number\n"
+        "---@param c number\n"
+        "---@param d number\n"
+        "---@param isSensor boolean\n"
+        "---@param points { {x:number,y:number} }|nil\n"
+        "---@return nil",
+        "Adds an extra shape to an existing entity body (or creates a body if missing). Uses the same shape rules as AddCollider.",
+        true, false
+    });
+    lua["physics"]["add_shape_to_entity"] =
+        [](PhysicsWorld& W, entt::entity e, const std::string& tag, const std::string& shapeType,
+           double a, double b, double c, double d, bool isSensor, sol::object pointsOpt)
+        {
+            std::vector<cpVect> points;
+            if (pointsOpt.is<sol::table>()) points = vecarray_from_lua(pointsOpt.as<sol::table>());
+            W.AddShapeToEntity(e, tag, shapeType, (float)a, (float)b, (float)c, (float)d, isSensor, points);
+        };
+
+    rec.record_free_function(path, {
+        "remove_shape_at",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param index integer @0=primary, >=1 extra\n---@return boolean",
+        "Removes the shape at index (0 removes the primary). Returns true if removed.",
+        true, false
+    });
+    lua["physics"]["remove_shape_at"] = [](PhysicsWorld& W, entt::entity e, uint64_t idx) {
+        return W.RemoveShapeAt(e, static_cast<size_t>(idx));
+    };
+
+    rec.record_free_function(path, {
+        "clear_all_shapes",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return nil",
+        "Removes the primary and all extra shapes from the entity.",
+        true, false
+    });
+    lua["physics"]["clear_all_shapes"] = [](PhysicsWorld& W, entt::entity e) { W.ClearAllShapes(e); };
+
+    rec.record_free_function(path, {
+        "get_shape_count",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return integer",
+        "Returns the total number of shapes on the entity (primary + extras).",
+        true, false
+    });
+    lua["physics"]["get_shape_count"] = [](const PhysicsWorld& W, entt::entity e) {
+        return (uint64_t)W.GetShapeCount(e);
+    };
+
+    rec.record_free_function(path, {
+        "get_shape_bb",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param index integer\n---@return {l:number,b:number,r:number,t:number}",
+        "Returns the AABB (cpBB) of the shape at index.",
+        true, false
+    });
+    lua["physics"]["get_shape_bb"] = [](const PhysicsWorld& W, entt::entity e, uint64_t idx, sol::this_state s){
+        cpBB bb = W.GetShapeBB(e, (size_t)idx);
+        sol::state_view L(s);
+        sol::table t = L.create_table();
+        t["l"] = (double)bb.l; t["b"] = (double)bb.b;
+        t["r"] = (double)bb.r; t["t"] = (double)bb.t;
+        return t;
+    };
+
+    // ---------- Body kinematics / forces ----------
+    rec.record_free_function(path, {
+        "SetVelocity",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param vx number\n---@param vy number",
+        "Sets linear velocity on the entity's body.",
+        true, false
+    });
+    lua["physics"]["SetVelocity"] = &PhysicsWorld::SetVelocity;
+
+    rec.record_free_function(path, {
+        "SetAngularVelocity",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param av number @radians/sec",
+        "Sets angular velocity on the entity's body.",
+        true, false
+    });
+    lua["physics"]["SetAngularVelocity"] = &PhysicsWorld::SetAngularVelocity;
+
+    rec.record_free_function(path, {
+        "ApplyForce",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fx number\n---@param fy number",
+        "Applies a force at the body's current position.",
+        true, false
+    });
+    lua["physics"]["ApplyForce"] = &PhysicsWorld::ApplyForce;
+
+    rec.record_free_function(path, {
+        "ApplyImpulse",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param ix number\n---@param iy number",
+        "Applies an impulse at the body's current position.",
+        true, false
+    });
+    lua["physics"]["ApplyImpulse"] = &PhysicsWorld::ApplyImpulse;
+
+    rec.record_free_function(path, {
+        "ApplyTorque",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param torque number",
+        "Applies a simple 2-point torque pair to spin the body.",
+        true, false
+    });
+    lua["physics"]["ApplyTorque"] = &PhysicsWorld::ApplyTorque;
+
+    rec.record_free_function(path, {
+        "SetDamping",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param linear number",
+        "Scales current velocity by (1 - linear). Simple linear damping helper.",
+        true, false
+    });
+    lua["physics"]["SetDamping"] = &PhysicsWorld::SetDamping;
+
+    rec.record_free_function(path, {
+        "SetGlobalDamping",
+        "---@param world physics.PhysicsWorld\n---@param damping number",
+        "Sets cpSpace global damping.",
+        true, false
+    });
+    lua["physics"]["SetGlobalDamping"] = &PhysicsWorld::SetGlobalDamping;
+
+    rec.record_free_function(path, {
+        "GetPosition",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return {x:number,y:number}",
+        "Returns the body's position.",
+        true, false
+    });
+    lua["physics"]["GetPosition"] = [](PhysicsWorld& W, entt::entity e, sol::this_state s){
+        auto p = W.GetPosition(e);
+        return vec_to_lua(sol::state_view(s), p);
+    };
+
+    rec.record_free_function(path, {
+        "SetPosition",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param x number\n---@param y number",
+        "Sets the body's position directly.",
+        true, false
+    });
+    lua["physics"]["SetPosition"] = &PhysicsWorld::SetPosition;
+
+    rec.record_free_function(path, {
+        "GetAngle",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return number @radians",
+        "Returns the body's angle (radians).",
+        true, false
+    });
+    lua["physics"]["GetAngle"] = &PhysicsWorld::GetAngle;
+
+    rec.record_free_function(path, {
+        "SetAngle",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param radians number",
+        "Sets the body's angle (radians).",
+        true, false
+    });
+    lua["physics"]["SetAngle"] = &PhysicsWorld::SetAngle;
+
+    rec.record_free_function(path, {
+        "SetRestitution",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param restitution number",
+        "Sets elasticity on ALL shapes owned by this entity (primary + extras).",
+        true, false
+    });
+    lua["physics"]["SetRestitution"] = &PhysicsWorld::SetRestitution;
+
+    rec.record_free_function(path, {
+        "SetFriction",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param friction number",
+        "Sets friction on ALL shapes owned by this entity (primary + extras).",
+        true, false
+    });
+    lua["physics"]["SetFriction"] = &PhysicsWorld::SetFriction;
+
+    rec.record_free_function(path, {
+        "SetAwake",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param awake boolean",
+        "Wakes or sleeps the body.",
+        true, false
+    });
+    lua["physics"]["SetAwake"] = &PhysicsWorld::SetAwake;
+
+    rec.record_free_function(path, {
+        "GetMass",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return number",
+        "Returns body mass.",
+        true, false
+    });
+    lua["physics"]["GetMass"] = &PhysicsWorld::GetMass;
+
+    rec.record_free_function(path, {
+        "SetMass",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param mass number",
+        "Sets body mass.",
+        true, false
+    });
+    lua["physics"]["SetMass"] = &PhysicsWorld::SetMass;
+
+    rec.record_free_function(path, {
+        "SetBullet",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param isBullet boolean",
+        "Enables high-iteration + slop tuning on the world and custom velocity update for the body.",
+        true, false
+    });
+    lua["physics"]["SetBullet"] = &PhysicsWorld::SetBullet;
+
+    rec.record_free_function(path, {
+        "SetFixedRotation",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param fixed boolean",
+        "If true, sets the moment to INFINITY (lock rotation).",
+        true, false
+    });
+    lua["physics"]["SetFixedRotation"] = &PhysicsWorld::SetFixedRotation;
+
+    rec.record_free_function(path, {
+        "SetBodyType",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param bodyType 'static'|'kinematic'|'dynamic'",
+        "Switch the Chipmunk body type for the entity.",
+        true, false
+    });
+    lua["physics"]["SetBodyType"] = &PhysicsWorld::SetBodyType;
+
+    // ---------- Transform-driven creation ----------
+    rec.record_free_function(path, {
+        "create_physics_for_transform",
+        "---@param R entt.registry &\n"
+        "---@param PM PhysicsManager &\n"
+        "---@param e entt.entity\n"
+        "---@param cfg table @{shape?:string, tag?:string, sensor?:boolean, density?:number}\n"
+        "---@return nil",
+        "Creates cpBody+cpShape from Transform ACTUAL size in the entity's referenced world.",
+        true, false
+    });
+    lua["physics"]["create_physics_for_transform"] =
+        [](entt::registry& R, PhysicsManager& PM, entt::entity e, sol::table cfg) {
             auto get_string = [&](const char* k, const char* def)->std::string {
-                if (auto v = cfg[k]; v.valid() && v.get_type() == sol::type::string) return v.get<std::string>();
+                if (auto v = cfg[k]; v.valid() && v.get_type()==sol::type::string) return v.get<std::string>();
                 return def;
             };
             auto get_bool = [&](const char* k, bool def)->bool {
-                if (auto v = cfg[k]; v.valid() && v.get_type() == sol::type::boolean) return v.get<bool>();
+                if (auto v = cfg[k]; v.valid() && v.get_type()==sol::type::boolean) return v.get<bool>();
                 return def;
             };
             auto get_num = [&](const char* k, float def)->float {
-                if (auto v = cfg[k]; v.valid() && (v.get_type() == sol::type::number)) return v.get<float>();
+                if (auto v = cfg[k]; v.valid() && v.get_type()==sol::type::number) return v.get<float>();
                 return def;
             };
-
-            auto shapeStr = get_string("shape", "rectangle");
+            std::string shapeStr = get_string("shape", "rectangle");
             physics::ColliderShapeType shape = physics::ColliderShapeType::Rectangle;
-            if      (shapeStr == "rectangle" || shapeStr == "Rectangle") shape = physics::ColliderShapeType::Rectangle;
-            else if (shapeStr == "circle"    || shapeStr == "Circle")    shape = physics::ColliderShapeType::Circle;
-            else if (shapeStr == "segment"   || shapeStr == "Segment")   shape = physics::ColliderShapeType::Segment;
-            else if (shapeStr == "polygon"   || shapeStr == "Polygon")   shape = physics::ColliderShapeType::Polygon;
-            else if (shapeStr == "chain"     || shapeStr == "Chain")     shape = physics::ColliderShapeType::Chain;
+            if (shapeStr == "circle" || shapeStr == "Circle")   shape = physics::ColliderShapeType::Circle;
+            else if (shapeStr == "segment" || shapeStr == "Segment") shape = physics::ColliderShapeType::Segment;
+            else if (shapeStr == "polygon" || shapeStr == "Polygon") shape = physics::ColliderShapeType::Polygon;
+            else if (shapeStr == "chain" || shapeStr == "Chain")     shape = physics::ColliderShapeType::Chain;
 
             physics::PhysicsCreateInfo ci;
             ci.shape   = shape;
             ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG.c_str());
             ci.sensor  = get_bool("sensor", false);
             ci.density = get_num("density", 1.0f);
-
             physics::CreatePhysicsForTransform(R, PM, e, ci);
-        },
-        "---@param r entt.registry& @Registry reference\n"
-        "---@param pm PhysicsManager& @Physics manager\n"
+        };
+
+    rec.record_free_function(path, {
+        "create_physics_for_transform",
+        "---@param R entt.registry\n"
+        "---@param PM PhysicsManager\n"
         "---@param e entt.entity\n"
-        "---@param config table @{ shape?:'rectangle'|'circle'|'segment'|'polygon'|'chain', tag?:string, sensor?:boolean, density?:number }\n"
+        "---@param world string @name of physics world\n"
+        "---@param cfg table @{shape?:string, tag?:string, sensor?:boolean, density?:number, inflate_px?:number, set_world_ref?:boolean}\n"
         "---@return nil",
-        "Create a Chipmunk body+shape for entity based on its Transform.ACTUAL size/rotation, "
-        "attach ColliderComponent, tag+filter it, and add to its referenced PhysicsWorld."
-    );
-    
-    rec.bind_function(lua, path, "create_physics_for_transform",
-    [](entt::registry& R,
-       PhysicsManager& PM,
-       entt::entity e,
-       const std::string& world,
-       sol::table cfg)
-    {
-        auto get_string = [&](const char* k, const char* def)->std::string {
-            if (auto v = cfg[k]; v.valid() && v.get_type() == sol::type::string) return v.get<std::string>();
-            return def;
-        };
-        auto get_bool = [&](const char* k, bool def)->bool {
-            if (auto v = cfg[k]; v.valid() && v.get_type() == sol::type::boolean) return v.get<bool>();
-            return def;
-        };
-        auto get_num = [&](const char* k, float def)->float {
-            if (auto v = cfg[k]; v.valid() && v.get_type() == sol::type::number) return v.get<float>();
-            return def;
-        };
+        "Creates physics for an entity in the given world; supports signed inflate in pixels and optional world-ref set.",
+        true, false
+    });
+    lua["physics"]["create_physics_for_transform"] =
+        sol::overload(
+            lua["physics"]["create_physics_for_transform"].get<sol::protected_function>(),
+            [](entt::registry& R, PhysicsManager& PM, entt::entity e, const std::string& world, sol::table cfg) {
+                auto get_string = [&](const char* k, const char* def)->std::string {
+                    if (auto v = cfg[k]; v.valid() && v.get_type()==sol::type::string) return v.get<std::string>();
+                    return def;
+                };
+                auto get_bool = [&](const char* k, bool def)->bool {
+                    if (auto v = cfg[k]; v.valid() && v.get_type()==sol::type::boolean) return v.get<bool>();
+                    return def;
+                };
+                auto get_num = [&](const char* k, float def)->float {
+                    if (auto v = cfg[k]; v.valid() && v.get_type()==sol::type::number) return v.get<float>();
+                    return def;
+                };
 
-        auto shapeStr = get_string("shape", "rectangle");
-        physics::ColliderShapeType shape = physics::ColliderShapeType::Rectangle;
-        if      (shapeStr == "rectangle" || shapeStr == "Rectangle") shape = physics::ColliderShapeType::Rectangle;
-        else if (shapeStr == "circle"    || shapeStr == "Circle")    shape = physics::ColliderShapeType::Circle;
-        else if (shapeStr == "segment"   || shapeStr == "Segment")   shape = physics::ColliderShapeType::Segment;
-        else if (shapeStr == "polygon"   || shapeStr == "Polygon")   shape = physics::ColliderShapeType::Polygon;
-        else if (shapeStr == "chain"     || shapeStr == "Chain")     shape = physics::ColliderShapeType::Chain;
+                std::string shapeStr = get_string("shape", "rectangle");
+                physics::ColliderShapeType shape = physics::ColliderShapeType::Rectangle;
+                if (shapeStr == "circle" || shapeStr == "Circle")        shape = physics::ColliderShapeType::Circle;
+                else if (shapeStr == "segment" || shapeStr == "Segment") shape = physics::ColliderShapeType::Segment;
+                else if (shapeStr == "polygon" || shapeStr == "Polygon") shape = physics::ColliderShapeType::Polygon;
+                else if (shapeStr == "chain" || shapeStr == "Chain")     shape = physics::ColliderShapeType::Chain;
 
-        physics::PhysicsCreateInfo ci;
-        ci.shape   = shape;
-        ci.tag     = get_string("tag", DEFAULT_COLLISION_TAG.c_str());
-        ci.sensor  = get_bool("sensor", false);
-        ci.density = get_num("density", 1.0f);
+                physics::PhysicsCreateInfo ci;
+                ci.shape   = shape;
+                ci.tag     = get_string("tag", physics::DEFAULT_COLLISION_TAG.c_str());
+                ci.sensor  = get_bool("sensor", false);
+                ci.density = get_num("density", 1.0f);
 
-        const float inflate_px = get_num("inflate_px", 0.0f);
+                const float inflate_px = get_num("inflate_px", 0.0f);
+                const bool set_ref     = get_bool("set_world_ref", true);
+                physics::CreatePhysicsForTransform(R, PM, e, ci, world, inflate_px, set_ref);
+            }
+        );
 
-        const bool set_ref = get_bool("set_world_ref", true);
-
-        physics::CreatePhysicsForTransform(R, PM, e, ci, world, inflate_px, set_ref);
-    },
-    "---@param R entt.registry\n"
-    "---@param pm PhysicsManagerUD|PhysicsManager @manager\n"
-    "---@param e entt.entity\n"
-    "---@param world string @name of physics world\n"
-    "---@param cfg table\n"
-    "---@field cfg.shape 'rectangle'|'circle'|'segment'|'polygon'|'chain'|nil\n"
-    "---@field cfg.tag string|nil @Collision tag\n"
-    "---@field cfg.sensor boolean|nil\n"
-    "---@field cfg.density number|nil @reserved\n"
-    "---@field cfg.inflate_px number|nil @signed pixels; positive expands, negative shrinks\n"
-    "---@field cfg.set_world_ref boolean|nil @default true\n"
-    "---@return void",
-    "Create physics for an entity in the given world, with optional signed inflate."
-);
-
-// Get main body from ColliderComponent, add an extra rectangle shape on it.
-rec.bind_function(lua, {"physics"}, "add_shape_to_entity",
-    [](physics::PhysicsWorld& W, entt::entity e, float w, float h, const std::string& tag, bool sensor){
-        auto& col = W.registry->get<ColliderComponent>(e);
-        auto shp = W.AddShape(col.body.get(), w, h, tag); // applies filter & adds to space
-        cpShapeSetSensor(shp.get(), sensor);
-        // Optionally store extra shapes somewhere if you track them explicitly.
-    },
-    "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param w number\n---@param h number\n---@param tag string\n---@param sensor boolean");
-    
-    // Make a free body (dynamic/kinematic/static) not tied to an entity
-    rec.bind_function(lua, {"physics"}, "body_create",
-        [&] (physics::PhysicsWorld& W, const std::string& type, double mass, double moment){
+    // ---------- Body handle helpers (optional handle pool you mentioned) ----------
+    rec.record_free_function(path, {
+        "body_create",
+        "---@param world physics.PhysicsWorld\n---@param type 'dynamic'|'kinematic'|'static'\n---@param mass number\n---@param moment number\n---@return integer @body_handle",
+        "Creates a standalone Chipmunk body, adds it to the space, and returns a registered body handle.",
+        true, false
+    });
+    lua["physics"]["body_create"] =
+        [&](PhysicsWorld& W, const std::string& type, double mass, double moment) {
             std::shared_ptr<cpBody> b;
-            if (type == "dynamic")   b = MakeSharedBody((cpFloat)mass, (cpFloat)moment);
+            if (type == "dynamic")      b = MakeSharedBody((cpFloat)mass, (cpFloat)moment);
             else if (type == "kinematic") b = std::shared_ptr<cpBody>(cpBodyNewKinematic(), cpBodyFree);
-            else /*static*/              b = std::shared_ptr<cpBody>(cpBodyNewStatic(), cpBodyFree);
+            else                          b = std::shared_ptr<cpBody>(cpBodyNewStatic(),   cpBodyFree);
             cpSpaceAddBody(W.space, b.get());
             return W.registerBody(std::move(b));
-        },
-        "---@param world physics.PhysicsWorld\n---@param type 'dynamic'|'kinematic'|'static'\n---@param mass number\n---@param moment number\n---@return integer @body_handle");
+        };
 
-    // Destroy
-    rec.bind_function(lua, {"physics"}, "body_destroy",
-        [&] (physics::PhysicsWorld& W, uint64_t id){
-            if (auto b = W.bodyFrom(id)) { cpSpaceRemoveBody(W.space, b.get()); W.unregisterBody(id); }
-        },
-        "---@param world physics.PhysicsWorld\n---@param body_handle integer");
+    rec.record_free_function(path, {
+        "body_destroy",
+        "---@param world physics.PhysicsWorld\n---@param body_handle integer",
+        "Removes a registered standalone body from the space and unregisters it.",
+        true, false
+    });
+    lua["physics"]["body_destroy"] =
+        [&](PhysicsWorld& W, uint64_t id) {
+            if (auto b = W.bodyFrom(id)) {
+                cpSpaceRemoveBody(W.space, b.get());
+                W.unregisterBody(id);
+            }
+        };
 
-    // Mutators
-    rec.bind_function(lua, {"physics"}, "body_set_position",
-        [&] (physics::PhysicsWorld& W, uint64_t id, double x, double y){
-            if (auto b = W.bodyFrom(id)) cpBodySetPosition(b.get(), cpv((cpFloat)x,(cpFloat)y));
-        },
-        "---@return void");
+    rec.record_free_function(path, {
+        "body_set_position",
+        "---@param world physics.PhysicsWorld\n---@param body_handle integer\n---@param x number\n---@param y number\n---@return nil",
+        "Sets position on a registered standalone body.",
+        true, false
+    });
+    lua["physics"]["body_set_position"] =
+        [&](PhysicsWorld& W, uint64_t id, double x, double y) {
+            if (auto b = W.bodyFrom(id)) cpBodySetPosition(b.get(), cpv((cpFloat)x, (cpFloat)y));
+        };
 
-    rec.bind_function(lua, {"physics"}, "body_apply_force",
-        [&] (physics::PhysicsWorld& W, uint64_t id, double fx, double fy){
+    rec.record_free_function(path, {
+        "body_apply_force",
+        "---@param world physics.PhysicsWorld\n---@param body_handle integer\n---@param fx number\n---@param fy number\n---@return nil",
+        "Applies a force at the body's current position.",
+        true, false
+    });
+    lua["physics"]["body_apply_force"] =
+        [&](PhysicsWorld& W, uint64_t id, double fx, double fy) {
             if (auto b = W.bodyFrom(id)) cpBodyApplyForceAtWorldPoint(b.get(), cpv(fx,fy), cpBodyGetPosition(b.get()));
-        },
-        "");
+        };
 
-    rec.bind_function(lua, {"physics"}, "body_get_entity",
-        [] (uint64_t /*world ignored in helper?*/, void* bodyPtr){
-            return GetEntityFromBody(static_cast<cpBody*>(bodyPtr));
-        },
-        "---@param body lightuserdata @cpBody*\n---@return entt.entity|entt.null");
-        
-    rec.bind_function(lua, {"physics"}, "get_body_handle_for_entity",
-    [&] (physics::PhysicsWorld& W, entt::entity e){
-        auto& col = W.registry->get<ColliderComponent>(e);
-        return W.registerBody(col.body); // shares ownership
-    },
-    "---@return integer @body_handle");
-    
-    // number
-    rec.bind_function(lua, {"physics"}, "arb_set_number",
-        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, double val){
+    rec.record_free_function(path, {
+        "body_get_entity",
+        "---@param body lightuserdata @cpBody*\n---@return entt.entity|entt.null",
+        "Returns the entt.entity stored on body->userData if present.",
+        true, false
+    });
+    lua["physics"]["body_get_entity"] = [](uint64_t /*world*/, void* bodyPtr){
+        return physics::GetEntityFromBody(static_cast<cpBody*>(bodyPtr));
+    };
+
+    rec.record_free_function(path, {
+        "get_body_handle_for_entity",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return integer @body_handle",
+        "Returns a registered body handle for the entity's body (shares ownership).",
+        true, false
+    });
+    lua["physics"]["get_body_handle_for_entity"] =
+        [&](PhysicsWorld& W, entt::entity e){ auto& col = W.registry->get<ColliderComponent>(e); return W.registerBody(col.body); };
+
+    // ---------- Arbiter key-value store helpers ----------
+    rec.record_free_function(path, {
+        "arb_set_number",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value number",
+        "Attach a transient number to an arbiter for the duration of contact.",
+        true, false
+    });
+    lua["physics"]["arb_set_number"] =
+        [](PhysicsWorld& world, void* arbPtr, const std::string& key, double val){
             auto* s = world.ensure_store(static_cast<cpArbiter*>(arbPtr));
             s->nums[key] = val;
-        },
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value number");
+        };
 
-    rec.bind_function(lua, {"physics"}, "arb_get_number",
-        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<double> def){
-            if (auto* s = static_cast<physics::PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
+    rec.record_free_function(path, {
+        "arb_get_number",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param default number|nil\n---@return number",
+        "Get a number previously set on this arbiter (or default/0).",
+        true, false
+    });
+    lua["physics"]["arb_get_number"] =
+        [](PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<double> def){
+            if (auto* s = static_cast<PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
                 if (auto it = s->nums.find(key); it != s->nums.end()) return it->second;
             }
             return def.value_or(0.0);
-        },
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param default number|nil\n---@return number");
+        };
 
-    // bool
-    rec.bind_function(lua, {"physics"}, "arb_set_bool",
-        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, bool v){
+    rec.record_free_function(path, {
+        "arb_set_bool",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value boolean",
+        "Attach a transient boolean to an arbiter.",
+        true, false
+    });
+    lua["physics"]["arb_set_bool"] =
+        [](PhysicsWorld& world, void* arbPtr, const std::string& key, bool v){
             auto* s = world.ensure_store(static_cast<cpArbiter*>(arbPtr));
             s->bools[key] = v;
-        },
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value boolean");
+        };
 
-    rec.bind_function(lua, {"physics"}, "arb_get_bool",
-        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<bool> def){
-            if (auto* s = static_cast<physics::PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
+    rec.record_free_function(path, {
+        "arb_get_bool",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param default boolean|nil\n---@return boolean",
+        "Get a boolean previously set on this arbiter (or default/false).",
+        true, false
+    });
+    lua["physics"]["arb_get_bool"] =
+        [](PhysicsWorld& world, void* arbPtr, const std::string& key, sol::optional<bool> def){
+            if (auto* s = static_cast<PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
                 if (auto it = s->bools.find(key); it != s->bools.end()) return it->second;
             }
             return def.value_or(false);
-        },
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param default boolean|nil\n---@return boolean");
+        };
 
-    // ptr (lightuserdata / entity ids)
-    rec.bind_function(lua, {"physics"}, "arb_set_ptr",
-        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key, void* p){
+    rec.record_free_function(path, {
+        "arb_set_ptr",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value lightuserdata",
+        "Attach a transient pointer (lightuserdata) to an arbiter.",
+        true, false
+    });
+    lua["physics"]["arb_set_ptr"] =
+        [](PhysicsWorld& world, void* arbPtr, const std::string& key, void* p){
             auto* s = world.ensure_store(static_cast<cpArbiter*>(arbPtr));
             s->ptrs[key] = (uintptr_t)p;
-        },
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@param value lightuserdata");
+        };
 
-    rec.bind_function(lua, {"physics"}, "arb_get_ptr",
-        [](physics::PhysicsWorld& world, void* arbPtr, const std::string& key){
+    rec.record_free_function(path, {
+        "arb_get_ptr",
+        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@return lightuserdata|nil",
+        "Get a pointer previously set on this arbiter (or nil).",
+        true, false
+    });
+    lua["physics"]["arb_get_ptr"] =
+        [](PhysicsWorld& world, void* arbPtr, const std::string& key){
             void* out = nullptr;
-            if (auto* s = static_cast<physics::PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
+            if (auto* s = static_cast<PhysicsWorld::ArbiterStore*>(cpArbiterGetUserData(static_cast<cpArbiter*>(arbPtr)))) {
                 if (auto it = s->ptrs.find(key); it != s->ptrs.end()) out = (void*)it->second;
             }
             return out;
-        },
-        "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@return lightuserdata|nil");
+        };
 
-        // Registration API
-        auto t = lua["physics"].get_or_create<sol::table>();
+    // ---------- Lua collision handler registration ----------
+    auto t = lua["physics"].get_or_create<sol::table>();
+
+    rec.record_free_function(path, {
+        "on_pair_presolve",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "Registers a pre-solve callback for the pair (tagA, tagB). Return false to reject contact.",
+        true, false
+    });
     t.set_function("on_pair_presolve",
-        [](PhysicsWorld &W, const std::string& a, const std::string& b, sol::protected_function fn){
-            W.RegisterPairPreSolve(a,b,std::move(fn));
+        [](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn){
+            W.RegisterPairPreSolve(a, b, std::move(fn));
         });
+
+    rec.record_free_function(path, {
+        "on_pair_postsolve",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata)",
+        "Registers a post-solve callback for the pair (tagA, tagB).",
+        true, false
+    });
     t.set_function("on_pair_postsolve",
-        [](PhysicsWorld &W, const std::string& a, const std::string& b, sol::protected_function fn){
-            W.RegisterPairPostSolve(a,b,std::move(fn));
+        [](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn){
+            W.RegisterPairPostSolve(a, b, std::move(fn));
         });
 
+    rec.record_free_function(path, {
+        "on_wildcard_presolve",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "Registers a pre-solve wildcard callback for a single tag (fires for any counterpart).",
+        true, false
+    });
     t.set_function("on_wildcard_presolve",
-        [](PhysicsWorld &W, const std::string& tag, sol::protected_function fn){
-            W.RegisterWildcardPreSolve(tag,std::move(fn));
+        [](PhysicsWorld& W, const std::string& tag, sol::protected_function fn){
+            W.RegisterWildcardPreSolve(tag, std::move(fn));
         });
+
+    rec.record_free_function(path, {
+        "on_wildcard_postsolve",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata)",
+        "Registers a post-solve wildcard callback for a single tag (fires for any counterpart).",
+        true, false
+    });
     t.set_function("on_wildcard_postsolve",
-        [](PhysicsWorld &W, const std::string& tag, sol::protected_function fn){
-            W.RegisterWildcardPostSolve(tag,std::move(fn));
+        [](PhysicsWorld& W, const std::string& tag, sol::protected_function fn){
+            W.RegisterWildcardPostSolve(tag, std::move(fn));
         });
 
-    // Optional clears
+    rec.record_free_function(path, {
+        "clear_pair_handlers",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string",
+        "Clears registered Lua pre/post solve for that pair.",
+        true, false
+    });
     t.set_function("clear_pair_handlers",
-        [](PhysicsWorld &W, const std::string& a, const std::string& b){ W.ClearPairHandlers(a,b); });
+        [](PhysicsWorld& W, const std::string& a, const std::string& b){ W.ClearPairHandlers(a,b); });
+
+    rec.record_free_function(path, {
+        "clear_wildcard_handlers",
+        "---@param world physics.PhysicsWorld\n---@param tag string",
+        "Clears registered Lua pre/post solve for that tag wildcard.",
+        true, false
+    });
     t.set_function("clear_wildcard_handlers",
-        [](PhysicsWorld &W, const std::string& tag){ W.ClearWildcardHandlers(tag); });
-
-    // Arbiter usertype
-    lua.new_usertype<LuaArbiter>("Arbiter",
-        "entities",           &LuaArbiter::entities,
-        "tags",               [](LuaArbiter& A, PhysicsWorld &W){ return A.tags(W); },
-        "normal",             &LuaArbiter::normal,
-        "total_impulse",      &LuaArbiter::total_impulse,
-        "total_impulse_len",  &LuaArbiter::total_impulse_length,
-        "set_friction",       &LuaArbiter::set_friction,
-        "set_elasticity",     &LuaArbiter::set_elasticity,
-        "set_surface_velocity",&LuaArbiter::set_surface_velocity,
-        "ignore",             &LuaArbiter::ignore
-    );
-
+        [](PhysicsWorld& W, const std::string& tag){ W.ClearWildcardHandlers(tag); });
 }
 
 

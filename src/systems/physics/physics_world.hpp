@@ -231,10 +231,21 @@ namespace physics
         std::vector<void *> triggerEnter;   // Trigger (collision with sensor) start
         std::vector<void *> triggerActive;  // Trigger (collision with sensor) active
         std::vector<void *> triggerExit;    // Trigger end
-
+        std::string tag = "default";       // Collision tag for filtering
 
         ColliderComponent(std::shared_ptr<cpBody> body, std::shared_ptr<cpShape> shape, const std::string &tag, bool sensor = false, ColliderShapeType shapeType = ColliderShapeType::Rectangle)
             : body(std::move(body)), shape(std::move(shape)), isSensor(sensor), shapeType(shapeType) {}
+            
+            
+        // NEW: extra shapes in the same body
+        struct SubShape {
+            std::shared_ptr<cpShape> shape;
+            ColliderShapeType        type;
+            std::string              tag;
+            bool                     isSensor = false;
+        };
+        std::vector<SubShape>    extraShapes;
+
     };
     
     struct CollisionTag {
@@ -325,7 +336,6 @@ namespace physics
         void PostUpdate();
 
         // Collision Management
-        void SetCollisionCallbacks();
         void OnCollisionBegin(cpArbiter *arb);
         void OnCollisionEnd(cpArbiter *arb);
         void EnableCollisionBetween(const std::string &tag1, const std::vector<std::string> &tags);
@@ -426,10 +436,20 @@ namespace physics
         std::vector<void *> GetObjectsInArea(float x1, float y1, float x2, float y2);
         void SetGravity(float gravityX, float gravityY);
         void SetMeter(float meter);
+        size_t GetShapeCount(entt::entity e) const;
+        cpBB GetShapeBB(entt::entity e, size_t index) const;
 
         // Collider Management
         std::shared_ptr<cpShape> AddShape(cpBody *body, float width, float height, const std::string &tag);
+        void AddShapeToEntity(entt::entity e,
+                                    const std::string& tag,
+                                    const std::string& shapeType,
+                                    float a, float b, float c, float d,
+                                    bool isSensor,
+                                    const std::vector<cpVect>& points);
         void AddCollider(entt::entity entity, const std::string &tag, const std::string &shapeType, float a, float b, float c, float d, bool isSensor, const std::vector<cpVect> &points = {});
+        bool RemoveShapeAt(entt::entity e, size_t index);
+        void ClearAllShapes(entt::entity e);
         
         cpBool OnPreSolve(cpArbiter* arb);
         void OnPostSolve(cpArbiter* arb);
@@ -670,8 +690,6 @@ namespace physics
     
     inline static std::shared_ptr<PhysicsWorld> InitPhysicsWorld(entt::registry *registry, float meter = 64.0f, float gravityX = 0.0f, float gravityY = 0.0f) {
          auto toReturn = std::make_shared<PhysicsWorld>(registry, meter, gravityX, gravityY);
-         
-         toReturn->SetCollisionCallbacks();
          
             return toReturn;
     }

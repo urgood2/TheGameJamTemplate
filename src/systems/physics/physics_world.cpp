@@ -11,6 +11,33 @@
 #include <vector>
 
 namespace physics {
+  
+template <class Fn>
+static void ForEachShape(ColliderComponent& c, Fn&& fn) {
+  if (c.shape) fn(c.shape.get());
+  for (auto& p : c.extraShapes) if (p.shape) fn(p.shape.get());
+}
+
+template <class Fn>
+static void ForEachShapeConst(const ColliderComponent& c, Fn&& fn) {
+  if (c.shape) fn(c.shape.get());
+  for (auto& p : c.extraShapes) if (p.shape) fn(p.shape.get());
+}
+
+size_t PhysicsWorld::GetShapeCount(entt::entity e) const {
+    const auto& c = registry->get<ColliderComponent>(e);
+    return (c.shape ? 1 : 0) + c.extraShapes.size();
+}
+
+cpBB PhysicsWorld::GetShapeBB(entt::entity e, size_t index) const {
+    const auto& c = registry->get<ColliderComponent>(e);
+    if (index == 0 && c.shape) return cpShapeGetBB(c.shape.get());
+    size_t i = index - (c.shape ? 1 : 0);
+    if (i < c.extraShapes.size()) return cpShapeGetBB(c.extraShapes[i].shape.get());
+    return cpBBNew(0,0,0,0);
+}
+
+
 
 std::shared_ptr<cpSpace> MakeSharedSpace() {
   return std::shared_ptr<cpSpace>(cpSpaceNew(),
@@ -37,8 +64,23 @@ PhysicsWorld::PhysicsWorld(entt::registry *registry, float meter,
 }
 
 PhysicsWorld::~PhysicsWorld() {
-  cpSpaceFree(space);
+  if (space) {
+    registry->view<ColliderComponent>().each([&](auto, auto& c){
+      if (c.shape) cpSpaceRemoveShape(space, c.shape.get());
+      for (auto& s : c.extraShapes) {
+        if (s.shape) cpSpaceRemoveShape(space, s.shape.get());
+      }
+      if (c.body)  cpSpaceRemoveBody(space,  c.body.get());
+    });
+
+    if (mouseJoint) { cpSpaceRemoveConstraint(space, mouseJoint); cpConstraintFree(mouseJoint); mouseJoint = nullptr; }
+    if (controlBody){ cpSpaceRemoveBody(space, controlBody); cpBodyFree(controlBody); controlBody = nullptr; }
+
+    cpSpaceFree(space);
+    space = nullptr;
+  }
 }
+
 
 void PhysicsWorld::Update(float deltaTime) { cpSpaceStep(space, deltaTime); }
 
@@ -64,22 +106,6 @@ void PhysicsWorld::SetGravity(float gravityX, float gravityY) {
 
 void PhysicsWorld::SetMeter(float meter) {
   this->meter = meter;
-}
-
-void PhysicsWorld::SetCollisionCallbacks() {
-  cpCollisionHandler *handler =
-      cpSpaceAddCollisionHandler(space, 1, 1);
-  handler->beginFunc = [](cpArbiter *arb, cpSpace *space,
-                          void *data) -> cpBool {
-    auto world = static_cast<PhysicsWorld *>(data);
-    world->OnCollisionBegin(arb);
-    return cpTrue;
-  };
-  handler->separateFunc = [](cpArbiter *arb, cpSpace *space, void *data) {
-    auto world = static_cast<PhysicsWorld *>(data);
-    world->OnCollisionEnd(arb);
-  };
-  handler->userData = this;
 }
 
 void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
@@ -387,17 +413,13 @@ void PhysicsWorld::OnPostSolve(cpArbiter* arb) {
 }
 
 
-void PhysicsWorld::UpdateColliderTag(entt::entity entity,
-                                     const std::string &newTag) {
-  if (collisionTags.find(newTag) == collisionTags.end()) {
-
-    SPDLOG_DEBUG("Invalid tag: {}", newTag);
-    return;
-  }
-
-  auto &collider = registry->get<ColliderComponent>(entity);
-  ApplyCollisionFilter(collider.shape.get(), newTag);
-  cpShapeSetCollisionType(collider.shape.get(), _tagToCollisionType[newTag]);
+void PhysicsWorld::UpdateColliderTag(entt::entity entity, const std::string &newTag) {
+  if (!collisionTags.contains(newTag)) { SPDLOG_DEBUG("Invalid tag: {}", newTag); return; }
+  auto &c = registry->get<ColliderComponent>(entity);
+  ForEachShape(c, [&](cpShape* s){
+    ApplyCollisionFilter(s, newTag);
+    cpShapeSetCollisionType(s, _tagToCollisionType[newTag]);
+  });
 }
 
 void PhysicsWorld::PrintCollisionTags() {
@@ -424,50 +446,48 @@ while (categoryToTag.contains(category)) category <<= 1;
 }
 
 void PhysicsWorld::RemoveCollisionTag(const std::string &tag) {
-  if (collisionTags.find(tag) == collisionTags.end())
-    return;
+  if (!collisionTags.contains(tag)) return;
 
   int category = collisionTags[tag].category;
-
   collisionTags.erase(tag);
   triggerTags.erase(tag);
   categoryToTag.erase(category);
 
-  registry->view<ColliderComponent>().each(
-      [this, category](auto entity, auto &collider) {
-        const auto filter = cpShapeGetFilter(collider.shape.get());
-
-        if (filter.categories == category) {
-          ApplyCollisionFilter(collider.shape.get(),
-                               "default");
-          cpShapeSetCollisionType(collider.shape.get(), _tagToCollisionType["default"]);
-        }
-      });
+  registry->view<ColliderComponent>().each([&](auto, auto &c) {
+    ForEachShape(c, [&](cpShape* s){
+      const auto f = cpShapeGetFilter(s);
+      if ((int)f.categories == category) {
+        ApplyCollisionFilter(s, "default");
+        cpShapeSetCollisionType(s, _tagToCollisionType["default"]);
+      }
+    });
+  });
 }
 
-void PhysicsWorld::UpdateCollisionMasks(
-    const std::string &tag, const std::vector<std::string> &collidableTags) {
-  if (collisionTags.find(tag) == collisionTags.end())
-    return;
 
+void PhysicsWorld::UpdateCollisionMasks(const std::string &tag,
+                                        const std::vector<std::string> &collidableTags) {
+  if (!collisionTags.contains(tag)) return;
+
+  // rewrite masks for the tag
   collisionTags[tag].masks.clear();
-  for (const auto &collidableTag : collidableTags) {
-    if (collisionTags.find(collidableTag) != collisionTags.end()) {
-      collisionTags[tag].masks.push_back(collisionTags[collidableTag].category);
-    }
+  for (const auto &t : collidableTags) {
+    if (collisionTags.contains(t)) collisionTags[tag].masks.push_back(collisionTags[t].category);
   }
 
-  int targetCategory = collisionTags[tag].category;
-  registry->view<ColliderComponent>().each(
-      [this, targetCategory, &tag](auto entity, auto &collider) {
-        const auto filter = cpShapeGetFilter(collider.shape.get());
+  const int targetCategory = collisionTags[tag].category;
 
-        if (filter.categories == targetCategory) {
-          ApplyCollisionFilter(collider.shape.get(), tag);
-          cpShapeSetCollisionType(collider.shape.get(), _tagToCollisionType[tag]);
-        }
-      });
+  registry->view<ColliderComponent>().each([&](auto, auto &c) {
+    ForEachShape(c, [&](cpShape* s){
+      const auto f = cpShapeGetFilter(s);
+      if ((int)f.categories == targetCategory) {
+        ApplyCollisionFilter(s, tag);
+        cpShapeSetCollisionType(s, _tagToCollisionType[tag]);
+      }
+    });
+  });
 }
+
 
 void PhysicsWorld::ApplyCollisionFilter(cpShape* shape, const std::string& tag) {
   auto it = collisionTags.find(tag);
@@ -551,6 +571,102 @@ std::shared_ptr<cpShape> PhysicsWorld::AddShape(cpBody *body, float width,
   return shape;
 }
 
+auto MakeShapeFor(const std::string& shapeType,
+                  cpBody* body,
+                  float a, float b, float c, float d,
+                  const std::vector<cpVect>& points) -> std::shared_ptr<cpShape>
+{
+    if (shapeType == "rectangle") {
+        return std::shared_ptr<cpShape>(cpBoxShapeNew(body, a, b, 0.0f), cpShapeFree);
+    } else if (shapeType == "circle") {
+        return std::shared_ptr<cpShape>(cpCircleShapeNew(body, a, cpvzero), cpShapeFree);
+    } else if (shapeType == "polygon") {
+        if (!points.empty()) {
+            return std::shared_ptr<cpShape>(cpPolyShapeNew(body, (int)points.size(), points.data(), cpTransformIdentity, 0.0f), cpShapeFree);
+        } else {
+            std::vector<cpVect> verts = {{0,0},{a,0},{a/2,b}};
+            return std::shared_ptr<cpShape>(cpPolyShapeNew(body, (int)verts.size(), verts.data(), cpTransformIdentity, 0.0f), cpShapeFree);
+        }
+    } else if (shapeType == "chain") {
+        const auto& verts = points.empty() ? std::vector<cpVect>{{0,0},{a,b},{c,d}} : points;
+        return std::shared_ptr<cpShape>(cpPolyShapeNew(body, (int)verts.size(), verts.data(), cpTransformIdentity, 1.0f), cpShapeFree);
+    }
+    throw std::invalid_argument("Unsupported shapeType: " + shapeType);
+}
+
+void PhysicsWorld::AddShapeToEntity(entt::entity e,
+                                    const std::string& tag,
+                                    const std::string& shapeType,
+                                    float a, float b, float c, float d,
+                                    bool isSensor,
+                                    const std::vector<cpVect>& points)
+{
+    auto& col = registry->get<ColliderComponent>(e);
+    if (!col.body) {
+        // make a default dynamic body if none exists yet
+        col.body = MakeSharedBody(isSensor ? 0.0f : 1.0f, cpMomentForBox(1.0f, std::max(1.f,a), std::max(1.f,b)));
+        cpBodySetUserData(col.body.get(), reinterpret_cast<void*>(static_cast<uintptr_t>(e)));
+        cpSpaceAddBody(space, col.body.get());
+    }
+
+    auto shape = MakeShapeFor(shapeType, col.body.get(), a,b,c,d, points);
+
+    ApplyCollisionFilter(shape.get(), tag);
+    cpShapeSetCollisionType(shape.get(), _tagToCollisionType[tag]);
+    cpShapeSetSensor(shape.get(), isSensor);
+    cpShapeSetUserData(shape.get(), reinterpret_cast<void*>(static_cast<uintptr_t>(e)));
+
+    cpSpaceAddShape(space, shape.get());
+
+    // if there is no primary yet, use this as primary for back-compat
+    if (!col.shape) {
+        col.shape     = shape;
+        col.shapeType = (shapeType == "circle")    ? ColliderShapeType::Circle
+                     : (shapeType == "polygon")   ? ColliderShapeType::Polygon
+                     : (shapeType == "chain")     ? ColliderShapeType::Chain
+                     : (shapeType == "rectangle") ? ColliderShapeType::Rectangle
+                                                  : col.shapeType;
+        col.tag       = tag;
+        col.isSensor  = isSensor;
+    } else {
+        col.extraShapes.push_back({shape,
+            (shapeType == "circle")    ? ColliderShapeType::Circle
+          : (shapeType == "polygon")   ? ColliderShapeType::Polygon
+          : (shapeType == "chain")     ? ColliderShapeType::Chain
+                                       : ColliderShapeType::Rectangle,
+          tag, isSensor});
+    }
+}
+
+bool PhysicsWorld::RemoveShapeAt(entt::entity e, size_t index) {
+    auto& c = registry->get<ColliderComponent>(e);
+    // index 0 == primary; >=1 index into extraShapes (index-1)
+    if (index == 0) {
+        if (!c.shape) return false;
+        cpSpaceRemoveShape(space, c.shape.get());
+        c.shape.reset();
+        return true;
+    }
+    size_t i = index - 1;
+    if (i >= c.extraShapes.size()) return false;
+    cpSpaceRemoveShape(space, c.extraShapes[i].shape.get());
+    c.extraShapes.erase(c.extraShapes.begin() + i);
+    return true;
+}
+
+void PhysicsWorld::ClearAllShapes(entt::entity e) {
+    auto& c = registry->get<ColliderComponent>(e);
+    if (c.shape) {
+        cpSpaceRemoveShape(space, c.shape.get());
+        c.shape.reset();
+    }
+    for (auto& s : c.extraShapes) {
+        if (s.shape) cpSpaceRemoveShape(space, s.shape.get());
+    }
+    c.extraShapes.clear();
+}
+
+
 entt::entity GetEntityFromBody(cpBody *body) {
   void *data = cpBodyGetUserData(body);
   if (data) {
@@ -572,136 +688,36 @@ void SetEntityToBody(cpBody *body, entt::entity entity) {
 void PhysicsWorld::AddCollider(entt::entity entity, const std::string &tag,
                                const std::string &shapeType, float a, float b,
                                float c, float d, bool isSensor,
-                               const std::vector<cpVect> &points) {
-  auto body =
-      MakeSharedBody(isSensor ? 0.0f : 1.0f, cpMomentForBox(1.0f, a, b));
-  std::shared_ptr<cpShape> shape;
-
-  if (shapeType == "rectangle") {
-    shape = MakeSharedShape(body.get(), a, b);
-  } else if (shapeType == "circle") {
-    shape = std::shared_ptr<cpShape>(cpCircleShapeNew(body.get(), a, cpvzero),
-                                     [](cpShape *s) { cpShapeFree(s); });
-  } else if (shapeType == "polygon") {
-    if (!points.empty()) {
-      shape = std::shared_ptr<cpShape>(cpPolyShapeNew(body.get(), points.size(),
-                                                      points.data(),
-                                                      cpTransformIdentity, 0.0),
-                                       [](cpShape *s) { cpShapeFree(s); });
-    } else {
-      std::vector<cpVect> verts = {{0, 0}, {a, 0}, {a / 2, b}};
-      shape = std::shared_ptr<cpShape>(cpPolyShapeNew(body.get(), verts.size(),
-                                                      verts.data(),
-                                                      cpTransformIdentity, 0.0),
-                                       [](cpShape *s) { cpShapeFree(s); });
-    }
-  } else if (shapeType == "chain") {
-    if (!points.empty()) {
-      shape = std::shared_ptr<cpShape>(cpPolyShapeNew(body.get(), points.size(),
-                                                      points.data(),
-                                                      cpTransformIdentity, 1.0),
-                                       [](cpShape *s) { cpShapeFree(s); });
-    } else {
-      std::vector<cpVect> verts = {{0, 0}, {a, b}, {c, d}};
-      shape = std::shared_ptr<cpShape>(cpPolyShapeNew(body.get(), verts.size(),
-                                                      verts.data(),
-                                                      cpTransformIdentity, 1.0),
-                                       [](cpShape *s) { cpShapeFree(s); });
-    }
-  } else {
-    throw std::invalid_argument("Unsupported shapeType: " + shapeType);
+                               const std::vector<cpVect> &points)
+{
+  if (registry->all_of<ColliderComponent>(entity)) {
+    AddShapeToEntity(entity, tag, shapeType, a,b,c,d, isSensor, points);
+    return;
   }
+
+  // original single-shape path, but now ends identical to the helper:
+  auto body = MakeSharedBody(isSensor ? 0.0f : 1.0f, cpMomentForBox(1.0f, a, b));
+  auto shape = MakeShapeFor(shapeType, body.get(), a,b,c,d, points);
 
   ApplyCollisionFilter(shape.get(), tag);
   cpShapeSetCollisionType(shape.get(), _tagToCollisionType[tag]);
   cpShapeSetSensor(shape.get(), isSensor);
+  registry->emplace<ColliderComponent>(entity, ColliderComponent{
+      body, shape, tag, isSensor,
+      (shapeType == "circle")    ? ColliderShapeType::Circle
+    : (shapeType == "polygon")   ? ColliderShapeType::Polygon
+    : (shapeType == "chain")     ? ColliderShapeType::Chain
+                                 : ColliderShapeType::Rectangle
+  });
 
-  registry->emplace<ColliderComponent>(entity, body, shape, tag, isSensor);
+  cpShapeSetUserData(shape.get(), reinterpret_cast<void *>(static_cast<uintptr_t>(entity)));
+  cpBodySetUserData(body.get(),  reinterpret_cast<void *>(static_cast<uintptr_t>(entity)));
 
-  cpShapeSetUserData(shape.get(),
-                     reinterpret_cast<void *>(static_cast<uintptr_t>(entity)));
-  cpBodySetUserData(body.get(),
-                    reinterpret_cast<void *>(static_cast<uintptr_t>(entity)));
-
-  cpSpaceAddBody(space, body.get());
+  cpSpaceAddBody(space,  body.get());
   cpSpaceAddShape(space, shape.get());
 }
 
-void PhysicsWorld::RenderColliders() {
-  auto view = registry->view<ColliderComponent>();
-  for (auto entity : view) {
-    const auto &collider = view.get<ColliderComponent>(entity);
 
-    if (!collider.debugDraw)
-      continue;
-
-    cpVect position = cpBodyGetPosition(collider.body.get());
-
-    switch (collider.shapeType) {
-    case ColliderShapeType::Circle: {
-      float radius = cpCircleShapeGetRadius(collider.shape.get());
-      cpVect offset = cpCircleShapeGetOffset(collider.shape.get());
-      DrawCircle(position.x + offset.x, position.y + offset.y, radius, RED);
-      break;
-    }
-    case ColliderShapeType::Rectangle: {
-      cpBB bb = cpShapeGetBB(collider.shape.get());
-      DrawRectangle(bb.l, bb.b, bb.r - bb.l, bb.t - bb.b, BLUE);
-      break;
-    }
-    case ColliderShapeType::Polygon: {
-      const int count = cpPolyShapeGetCount(collider.shape.get());
-      std::vector<Vector2> points(count);
-      for (int i = 0; i < count; ++i) {
-        cpVect vert = cpPolyShapeGetVert(collider.shape.get(), i);
-        points[i] = {(float)vert.x + (float)position.x,
-                     (float)vert.y + (float)position.y};
-      }
-      for (int i = 0; i < count; ++i) {
-        const Vector2 &p1 = points[i];
-        const Vector2 &p2 = points[(i + 1) % count];
-        DrawLine(p1.x, p1.y, p2.x, p2.y, GREEN);
-      }
-      break;
-    }
-    case ColliderShapeType::Segment: {
-      cpVect a = cpSegmentShapeGetA(collider.shape.get());
-      cpVect b = cpSegmentShapeGetB(collider.shape.get());
-      DrawLine(a.x, a.y, b.x, b.y, ORANGE);
-      break;
-    }
-    case ColliderShapeType::Chain: {
-      const int count = cpPolyShapeGetCount(collider.shape.get());
-      std::vector<Vector2> points(count);
-      for (int i = 0; i < count; ++i) {
-        cpVect vert = cpPolyShapeGetVert(collider.shape.get(), i);
-        points[i] = {(float)vert.x + (float)position.x,
-                     (float)vert.y + (float)position.y};
-      }
-      for (int i = 0; i < count - 1; ++i) {
-        const Vector2 &p1 = points[i];
-        const Vector2 &p2 = points[i + 1];
-        DrawLine(p1.x, p1.y, p2.x, p2.y, PURPLE);
-      }
-      if (!points.empty()) {
-        DrawLine(points.back().x, points.back().y, points[0].x, points[0].y,
-                 PURPLE);
-      }
-      break;
-    }
-    }
-
-    cpVect velocity = cpBodyGetVelocity(collider.body.get());
-    DrawLine(position.x, position.y, position.x + velocity.x,
-             position.y + velocity.y, YELLOW);
-
-    float angle = cpBodyGetAngle(collider.body.get());
-    DrawLineEx({(float)position.x, (float)position.y},
-               {(float)position.x + 20 * cos(angle),
-                (float)position.y + 20 * sin(angle)},
-               2.0f, ORANGE);
-  }
-}
 
 void PhysicsWorld::Seek(entt::entity entity, float targetX, float targetY,
                         float maxSpeed) {
@@ -1146,13 +1162,13 @@ void PhysicsWorld::SetAngle(entt::entity entity, float angle) {
 }
 
 void PhysicsWorld::SetRestitution(entt::entity entity, float restitution) {
-  auto &collider = registry->get<ColliderComponent>(entity);
-  cpShapeSetElasticity(collider.shape.get(), restitution);
+  auto &c = registry->get<ColliderComponent>(entity);
+  ForEachShape(c, [&](cpShape* s){ cpShapeSetElasticity(s, restitution); });
 }
 
 void PhysicsWorld::SetFriction(entt::entity entity, float friction) {
-  auto &collider = registry->get<ColliderComponent>(entity);
-  cpShapeSetFriction(collider.shape.get(), friction);
+  auto &c = registry->get<ColliderComponent>(entity);
+  ForEachShape(c, [&](cpShape* s){ cpShapeSetFriction(s, friction); });
 }
 
 void PhysicsWorld::ApplyAngularImpulse(entt::entity entity,

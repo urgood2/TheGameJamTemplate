@@ -9,6 +9,7 @@
 #include "raylib.h"
 #include "systems/layer/layer.hpp"
 #include "physics_components.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk_types.h"
 
 namespace physics
 {
@@ -331,6 +332,17 @@ namespace physics
         void DisableCollisionBetween(const std::string &tag1, const std::vector<std::string> &tags);
         void EnableTriggerBetween(const std::string &tag1, const std::vector<std::string> &tags);
         void DisableTriggerBetween(const std::string &tag1, const std::vector<std::string> &tags);
+        void EnsureWildcardInstalled(cpCollisionType t);
+        void EnsurePairInstalled(cpCollisionType ta, cpCollisionType tb);
+        // Pair registration
+        void RegisterPairPreSolve(const std::string& a, const std::string& b, sol::protected_function fn);
+        void RegisterPairPostSolve(const std::string& a, const std::string& b, sol::protected_function fn);
+        // Wildcard registration (per-tag)
+        void RegisterWildcardPreSolve(const std::string& tag, sol::protected_function fn);
+        void RegisterWildcardPostSolve(const std::string& tag, sol::protected_function fn);
+        // Optional unregistration helpers if you want:
+        void ClearPairHandlers(const std::string& a, const std::string& b);
+        void ClearWildcardHandlers(const std::string& tag);
 
         // Collision Tag Management
         std::string GetTagFromCategory(int category);
@@ -419,7 +431,7 @@ namespace physics
         std::shared_ptr<cpShape> AddShape(cpBody *body, float width, float height, const std::string &tag);
         void AddCollider(entt::entity entity, const std::string &tag, const std::string &shapeType, float a, float b, float c, float d, bool isSensor, const std::vector<cpVect> &points = {});
         
-        void OnPreSolve(cpArbiter* arb);
+        cpBool OnPreSolve(cpArbiter* arb);
         void OnPostSolve(cpArbiter* arb);
         void InstallWildcardHandlersForAllTags() ;
 
@@ -486,8 +498,10 @@ namespace physics
         
         // helper for mapping string tags to collisionType integers
         cpCollisionType TypeForTag(const std::string& tag) const {
-            auto it = _tagToCollisionType.find(tag);
-            return (it == _tagToCollisionType.end()) ? 0 : it->second; // 0 => default
+            if (auto it = _tagToCollisionType.find(tag); it != _tagToCollisionType.end()) return it->second;
+            // ensure default exists
+            if (auto it2 = _tagToCollisionType.find("default"); it2 != _tagToCollisionType.end()) return it2->second;
+            return 0; // or assert
         }
         
         
@@ -529,6 +543,96 @@ namespace physics
         }
         
     private:
+    
+/* --------------- collision handling post-solve and pre-solve -------------- */
+        struct LuaPairHandler {
+            sol::protected_function pre_solve;   // optional
+            sol::protected_function post_solve;  // optional
+        };
+
+        struct LuaWildcardHandler {
+            sol::protected_function pre_solve;   // optional
+            sol::protected_function post_solve;  // optional
+        };
+        
+        
+        std::unordered_map<uint64_t, LuaPairHandler>     _luaPairHandlers;
+        std::unordered_map<cpCollisionType, LuaWildcardHandler> _luaWildcardHandlers;
+
+        // Optional: book-keeping to avoid double-install
+        std::unordered_set<uint64_t>        _installedPairs;         // pair handler registered in cpSpace
+        std::unordered_set<cpCollisionType> _installedWildcards;     // wildcard handler registered in cpSpace
+
+        cpCollisionType TypeFromShape(cpShape* s) const {
+            return cpShapeGetCollisionType(s);
+        }
+
+        LuaPairHandler* FindPairHandler(cpArbiter* arb) {
+            cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
+            cpCollisionType ta = TypeFromShape(sa), tb = TypeFromShape(sb);
+            auto it = _luaPairHandlers.find(PairKey(ta, tb));
+            if (it == _luaPairHandlers.end()) return nullptr;
+            return &it->second;
+        }
+
+        LuaWildcardHandler* FindWildcardHandler(cpArbiter* arb) {
+            cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
+            // Either side can carry the wildcard; Chipmunk calls both wildcards if installed.
+            auto ita = _luaWildcardHandlers.find(TypeFromShape(sa));
+            if (ita != _luaWildcardHandlers.end()) return &ita->second;
+            auto itb = _luaWildcardHandlers.find(TypeFromShape(sb));
+            if (itb != _luaWildcardHandlers.end()) return &itb->second;
+            return nullptr;
+        }
+
+        // C callbacks that Chipmunk invokes
+        static cpBool C_PreSolve(cpArbiter* a, cpSpace*, void* d) {
+            auto* W = static_cast<PhysicsWorld*>(d);
+            LuaArbiter lab{a};
+            // Prefer pair handler over wildcard
+            if (auto* ph = W->FindPairHandler(a)) {
+                if (ph->pre_solve.valid()) {
+                    auto r = ph->pre_solve(lab);
+                    if (!r.valid()) return cpTrue;                 // swallow lua errors, keep solving
+                    sol::optional<bool> keep = r;
+                    return keep.value_or(true) ? cpTrue : cpFalse;
+                }
+            }
+            if (auto* wh = W->FindWildcardHandler(a)) {
+                if (wh->pre_solve.valid()) {
+                    auto r = wh->pre_solve(lab);
+                    if (!r.valid()) return cpTrue;
+                    sol::optional<bool> keep = r;
+                    return keep.value_or(true) ? cpTrue : cpFalse;
+                }
+            }
+            return cpTrue;
+        }
+
+        static void C_PostSolve(cpArbiter* a, cpSpace*, void* d) {
+            auto* W = static_cast<PhysicsWorld*>(d);
+            LuaArbiter lab{a};
+
+            if (auto* ph = W->FindPairHandler(a)) {
+                if (ph->post_solve.valid()) {
+                    auto r = ph->post_solve(lab);
+                    (void)r; // ignore result
+                    return;
+                }
+            }
+            if (auto* wh = W->FindWildcardHandler(a)) {
+                if (wh->post_solve.valid()) {
+                    auto r = wh->post_solve(lab);
+                    (void)r;
+                }
+            }
+        }
+
+        
+        
+/* -------------------------- other private members ------------------------- */
+
+    
         std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
         cpCollisionType                                  _nextCollisionType = 1; // Start from 1, as 0 is default in Chipmunk
         
@@ -544,7 +648,6 @@ namespace physics
         void     ProcessGroups();
         
         std::unordered_set<cpCollisionType> _installedWildcardTypes;
-        std::unordered_set<uint64_t>        _installedPairs; // key = min(typeA,typeB)<<32 | max(typeA,typeB)
 
         static inline uint64_t PairKey(cpCollisionType a, cpCollisionType b) {
         if (a > b) std::swap(a,b);

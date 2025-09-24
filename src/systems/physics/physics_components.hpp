@@ -2,8 +2,30 @@
 
 #include "core/globals.hpp"
 #include "util/common_headers.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 
+namespace physics {
+    
+    class PhysicsWorld;  // forward declare
+    
+    // Public POD we expose to Lua
+    struct LuaArbiter {
+        cpArbiter* arb = nullptr;
 
+        // Read
+        std::pair<entt::entity, entt::entity> entities() const;
+        std::pair<std::string, std::string>   tags(PhysicsWorld& W) const;
+        cpVect normal() const;
+        float total_impulse_length() const;
+        cpVect total_impulse() const;
+
+        // Mutate (preSolve only)
+        void set_friction(float f) const;
+        void set_elasticity(float e) const;
+        void set_surface_velocity(float vx, float vy) const;
+        void ignore() const;     // cpArbiterIgnore(arb)
+    };
+}
 
 struct ObjectLayerTag {
     std::string name;

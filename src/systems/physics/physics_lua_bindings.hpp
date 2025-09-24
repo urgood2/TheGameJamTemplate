@@ -571,7 +571,44 @@ rec.bind_function(lua, {"physics"}, "add_shape_to_entity",
         },
         "---@param world physics.PhysicsWorld\n---@param arb lightuserdata @cpArbiter*\n---@param key string\n---@return lightuserdata|nil");
 
+        // Registration API
+        auto t = lua["physics"].get_or_create<sol::table>();
+    t.set_function("on_pair_presolve",
+        [](PhysicsWorld &W, const std::string& a, const std::string& b, sol::protected_function fn){
+            W.RegisterPairPreSolve(a,b,std::move(fn));
+        });
+    t.set_function("on_pair_postsolve",
+        [](PhysicsWorld &W, const std::string& a, const std::string& b, sol::protected_function fn){
+            W.RegisterPairPostSolve(a,b,std::move(fn));
+        });
 
+    t.set_function("on_wildcard_presolve",
+        [](PhysicsWorld &W, const std::string& tag, sol::protected_function fn){
+            W.RegisterWildcardPreSolve(tag,std::move(fn));
+        });
+    t.set_function("on_wildcard_postsolve",
+        [](PhysicsWorld &W, const std::string& tag, sol::protected_function fn){
+            W.RegisterWildcardPostSolve(tag,std::move(fn));
+        });
+
+    // Optional clears
+    t.set_function("clear_pair_handlers",
+        [](PhysicsWorld &W, const std::string& a, const std::string& b){ W.ClearPairHandlers(a,b); });
+    t.set_function("clear_wildcard_handlers",
+        [](PhysicsWorld &W, const std::string& tag){ W.ClearWildcardHandlers(tag); });
+
+    // Arbiter usertype
+    lua.new_usertype<LuaArbiter>("Arbiter",
+        "entities",           &LuaArbiter::entities,
+        "tags",               [](LuaArbiter& A, PhysicsWorld &W){ return A.tags(W); },
+        "normal",             &LuaArbiter::normal,
+        "total_impulse",      &LuaArbiter::total_impulse,
+        "total_impulse_len",  &LuaArbiter::total_impulse_length,
+        "set_friction",       &LuaArbiter::set_friction,
+        "set_elasticity",     &LuaArbiter::set_elasticity,
+        "set_surface_velocity",&LuaArbiter::set_surface_velocity,
+        "ignore",             &LuaArbiter::ignore
+    );
 
 }
 

@@ -272,6 +272,9 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
             [dataA](const CollisionEvent &e) { return e.objectB == dataA; }),
         colliderB.collisionActive.end());
   }
+  
+  // Drop any glue constraints we created for this body pair
+  StickySeparate(arb);
 }
 
 void PhysicsWorld::EnableCollisionBetween(
@@ -523,6 +526,9 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter* arb) {
 }
 
 void PhysicsWorld::OnPostSolve(cpArbiter* arb) {
+  // Sticky glue creation (no-op if the pair isn't configured)
+  StickyPostSolve(arb);
+  
   cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
   cpCollisionType ta = cpShapeGetCollisionType(sa);
   cpCollisionType tb = cpShapeGetCollisionType(sb);
@@ -2218,6 +2224,433 @@ void PhysicsWorld::PlayerVelUpdate(cpBody* body, cpVect gravity, cpFloat damping
   pc.remainingBoost = std::max(0.f, pc.remainingBoost - (float)dt);
   pc.lastJumpHeld = pc.jumpHeld;
 }
+
+SegmentQueryHit PhysicsWorld::SegmentQueryFirst(cpVect start, cpVect end, float radius = 10.0f,
+                                                cpShapeFilter filter = CP_SHAPE_FILTER_ALL) const
+{
+  cpSegmentQueryInfo info{};
+  SegmentQueryHit out;
+
+  if (cpSpaceSegmentQueryFirst(space, start, end, radius, filter, &info)) {
+    out.hit    = true;
+    out.shape  = info.shape;
+    out.point  = info.point;
+    out.normal = info.normal;
+    out.alpha  = info.alpha;
+  } else {
+    out.alpha = 1.0f;
+  }
+  return out;
+}
+
+NearestPointHit PhysicsWorld::PointQueryNearest(cpVect p, float maxDistance = 100.0f,
+                                                cpShapeFilter filter = CP_SHAPE_FILTER_ALL) const
+{
+  cpPointQueryInfo info{};
+  NearestPointHit out;
+
+  cpSpacePointQueryNearest(space, p, maxDistance, filter, &info);
+  if (info.shape) {
+    out.hit      = true;
+    out.shape    = info.shape;
+    out.point    = info.point;
+    out.distance = info.distance; // < 0 ⇒ inside the shape
+  }
+  return out;
+}
+
+// Shatter a polygon cpShape* into fragments. DOES NOT free the original;
+// use your own removal path so ECS/smart pointers stay consistent.
+void PhysicsWorld::ShatterShape(cpShape* shape, float cellSize, cpVect focus)
+{
+    if (!shape) return;
+
+    // Only sensible for polys.
+    if (shape->type != CP_POLY_SHAPE) return;
+
+    cpBody* srcBody = cpShapeGetBody(shape);
+
+    // Collect world-space original polygon (cap to kMaxVoronoiVerts)
+    const int origCount = std::min(cpPolyShapeGetCount(shape), kMaxVoronoiVerts);
+    std::vector<cpVect> ping(origCount), pong(origCount);
+    for (int i = 0; i < origCount; ++i) {
+        ping[i] = cpBodyLocalToWorld(srcBody, cpPolyShapeGetVert(shape, i));
+    }
+
+    // Build Worley grid over the shape's AABB
+    const cpBB bb = cpShapeGetBB(shape);
+    int w = static_cast<int>((bb.r - bb.l) / cellSize) + 1;
+    int h = static_cast<int>((bb.t - bb.b) / cellSize) + 1;
+    WorleyCtx ctx{ static_cast<uint32_t>(rand()), cellSize, w, h, bb };
+
+    // Copy material/filter/collision info for new fragments
+    const cpShapeFilter filter = cpShapeGetFilter(shape);
+    const cpCollisionType ctype = cpShapeGetCollisionType(shape);
+    const cpFloat fric = cpShapeGetFriction(shape);
+    const cpFloat elast = cpShapeGetElasticity(shape);
+    const cpBool sensor = cpShapeGetSensor(shape);
+
+    // For each Worley site inside the polygon, clip and spawn a fragment.
+    for (int i = 0; i < ctx.w; ++i) {
+        for (int j = 0; j < ctx.h; ++j) {
+            cpVect site = WorleyPoint(i, j, ctx);
+            if (cpShapePointQuery(shape, site, nullptr) >= 0.0f) continue;
+
+            // Start from original polygon each time (ping holds current polygon)
+            int count = origCount;
+            // Make working copies because we’ll be overwriting ping/pong
+            std::vector<cpVect> workPing = ping;
+            std::vector<cpVect> workPong(origCount + 8); // some slack for splits
+
+            for (int ii = 0; ii < ctx.w; ++ii) {
+                for (int jj = 0; jj < ctx.h; ++jj) {
+                    if (ii == i && jj == j) continue;
+
+                    const int newCount = ClipCell(shape, site, ii, jj, ctx,
+                                                  workPing.data(), count,
+                                                  workPong.data());
+                    workPing.assign(workPong.begin(), workPong.begin() + newCount);
+                    count = newCount;
+                    if (count < 3) break;
+                }
+                if (count < 3) break;
+            }
+            if (count < 3) continue;
+
+            // Compute mass/centroid/moment
+            const cpVect centroid = cpCentroidForPoly(count, workPing.data());
+            const cpFloat area = cpAreaForPoly(count, workPing.data(), 0.0f);
+            const cpFloat mass = area * kDensity;
+            const cpFloat moment = cpMomentForPoly(mass, count, workPing.data(),
+                                                   cpvneg(centroid), 0.0f);
+
+            // Spawn body + shape
+            cpBody* b = cpSpaceAddBody(space, cpBodyNew(mass, moment));
+            cpBodySetPosition(b, centroid);
+            // inherit linear/angular velocity at the fragment centroid
+            cpBodySetVelocity(b, cpBodyGetVelocityAtWorldPoint(srcBody, centroid));
+            cpBodySetAngularVelocity(b, cpBodyGetAngularVelocity(srcBody));
+
+            // Rebase verts to body-local
+            std::vector<cpVect> local(count);
+            for (int k = 0; k < count; ++k) local[k] = cpvsub(workPing[k], centroid);
+
+            cpShape* s = cpSpaceAddShape(space,
+                cpPolyShapeNew(b, count, local.data(), cpTransformIdentity, 0.0f));
+            cpShapeSetFilter(s, filter);
+            cpShapeSetCollisionType(s, ctype);
+            cpShapeSetFriction(s, fric);
+            cpShapeSetElasticity(s, elast);
+            cpShapeSetSensor(s, sensor);
+
+            // optional: tag/collision masks via your helpers
+            // ApplyCollisionFilter(s, categoryToTag[(int)filter.categories]);
+        }
+    }
+
+    // Now disable/remove the source collider SAFELY.
+    // If this shape belongs to an entity, use your ECS helpers:
+    if (void* ud = cpShapeGetUserData(shape)) {
+        entt::entity e = static_cast<entt::entity>(reinterpret_cast<uintptr_t>(ud));
+        if (registry->valid(e) && registry->all_of<ColliderComponent>(e)) {
+            // Drop *just* the primary shape or remove item that matches 'shape'
+            // (choose whichever semantics you want)
+            // Example: remove primary if it matches, else search extras:
+            auto& c = registry->get<ColliderComponent>(e);
+            bool removed = false;
+            if (c.shape && c.shape.get() == shape) {
+                cpSpaceRemoveShape(space, shape);
+                c.shape.reset();
+                removed = true;
+            } else {
+                for (auto it = c.extraShapes.begin(); it != c.extraShapes.end(); ++it) {
+                    if (it->shape && it->shape.get() == shape) {
+                        cpSpaceRemoveShape(space, shape);
+                        it->shape.reset();
+                        c.extraShapes.erase(it);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+            // If body has no shapes left, you can also remove/sleep it
+            // (up to your engine’s policy).
+            (void)removed;
+        } else {
+            // Fallback: shape not tracked by ECS (rare). Just remove from space.
+            cpSpaceRemoveShape(space, shape);
+        }
+    } else {
+        // No ECS userdata set — remove from space.
+        cpSpaceRemoveShape(space, shape);
+    }
+    // DO NOT cpShapeFree / cpBodyFree here; your engine owns them (smart pointers)!
+}
+
+bool PhysicsWorld::ShatterNearest(float x, float y, float gridDiv /*=5.0f*/)
+{
+    cpPointQueryInfo info{};
+    const cpShape* hit = cpSpacePointQueryNearest(space, cpv(x,y), 0.0f, CP_SHAPE_FILTER_ALL, &info);
+    if (!hit) return false;
+
+    if (hit->type != CP_POLY_SHAPE) return false;
+
+    cpBB bb = cpShapeGetBB(hit);
+    float maxSpan = std::max(bb.r - bb.l, bb.t - bb.b);
+    float cellSize = std::max(maxSpan / gridDiv, 5.0f);
+
+    ShatterShape(const_cast<cpShape*>(hit), cellSize, cpv(x,y));
+    return true;
+}
+
+  bool PhysicsWorld::SliceFirstHit(cpVect A, cpVect B, float density, float minArea)
+  {
+      cpSegmentQueryInfo hit{};
+      const cpShape* h = cpSpaceSegmentQueryFirst(space, A, B, 0.0f, CP_SHAPE_FILTER_ALL, &hit);
+      if (!h) return false;
+
+      if (h->type != CP_POLY_SHAPE) return false;
+
+      // We are going to replace this shape, so we need a non-const handle:
+      cpShape* toCut = const_cast<cpShape*>(h);
+      return slicePolyShape(space, toCut, A, B, density, minArea);
+  }
+
+
+entt::entity PhysicsWorld::AddSmoothSegmentChain(const std::vector<cpVect>& pts,
+                                                 float radius,
+                                                 const std::string& tag)
+{
+    if (pts.size() < 2) return entt::null;
+    if (!collisionTags.contains(tag)) AddCollisionTag(tag);
+    const cpCollisionType type = _tagToCollisionType[tag];
+
+    entt::entity chainEntity = registry->create(); // optional handle
+
+    cpBody* sbody = cpSpaceGetStaticBody(space);
+
+    // Build segments [p[i-1], p[i]] and set neighbors to smooth junctions.
+    for (size_t i = 1; i < pts.size(); ++i) {
+        const cpVect v0 = pts[(i >= 2) ? (i - 2) : 0];
+        const cpVect v1 = pts[i - 1];
+        const cpVect v2 = pts[i];
+        const cpVect v3 = pts[(i + 1 < pts.size()) ? (i + 1) : (pts.size() - 1)];
+
+        cpShape* seg = cpSegmentShapeNew(sbody, v1, v2, radius);
+        ApplyCollisionFilter(seg, tag);
+        cpShapeSetCollisionType(seg, type);
+        cpShapeSetFriction(seg, 1.0f);
+        cpShapeSetElasticity(seg, 0.0f);
+
+        // Key bit: tell Chipmunk about adjacent vertices so normals are smooth.
+        cpSegmentShapeSetNeighbors(seg, v0, v3);
+
+        // Optional: store the owning entity in userData if you want to relate back
+        cpShapeSetUserData(seg, reinterpret_cast<void*>(static_cast<uintptr_t>(chainEntity)));
+
+        cpSpaceAddShape(space, seg);
+    }
+
+    return chainEntity;
+}
+
+entt::entity PhysicsWorld::AddBarSegment(cpVect a, cpVect b,
+                                         float thickness,
+                                         const std::string& tag,
+                                         int32_t group)
+{
+    if (!collisionTags.contains(tag)) AddCollisionTag(tag);
+
+    // Mass/moment for a uniform slender rod about its center (I = m L^2 / 12)
+    const cpVect center = cpvmult(cpvadd(a, b), 0.5f);
+    const cpFloat length = cpvlength(cpvsub(b, a));
+    const cpFloat mass   = std::max<cpFloat>(length / 160.0f, 1e-4f);
+    const cpFloat moment = mass * length * length / 12.0f;
+
+    entt::entity e = registry->create();
+
+    auto body = MakeSharedBody(mass, moment);
+    cpBodySetPosition(body.get(), center);
+    SetEntityToBody(body.get(), e);
+    cpSpaceAddBody(space, body.get());
+
+    // Segment endpoints in *body-local* frame
+    const cpVect la = cpvsub(a, center);
+    const cpVect lb = cpvsub(b, center);
+
+    std::shared_ptr<cpShape> shape(
+        cpSegmentShapeNew(body.get(), la, lb, thickness),
+        cpShapeFree
+    );
+    ApplyCollisionFilter(shape.get(), tag);
+    cpShapeSetCollisionType(shape.get(), _tagToCollisionType[tag]);
+    cpShapeSetFriction(shape.get(), 1.0f);
+    cpShapeSetElasticity(shape.get(), 0.0f);
+    if (group != 0) {
+        cpShapeFilter f = cpShapeGetFilter(shape.get());
+        f.group = group;                // same non-zero group = never collide
+        cpShapeSetFilter(shape.get(), f);
+    }
+    SetEntityToShape(shape.get(), e);
+    cpSpaceAddShape(space, shape.get());
+
+    registry->emplace<ColliderComponent>(
+        e,
+        ColliderComponent{ body, shape, tag, /*isSensor*/false, ColliderShapeType::Rectangle }
+    );
+
+    return e;
+}
+
+
+
+namespace {
+    struct SpringClampData { cpFloat clampAbs; };
+
+    static cpFloat SpringForceFunc(cpConstraint* spring, cpFloat dist)
+    {
+        auto* data = static_cast<SpringClampData*>(cpConstraintGetUserData(spring));
+        const cpFloat clampAbs = data ? data->clampAbs : INFINITY;
+
+        // Same math as the demo, but with a configurable clamp
+        const cpFloat dx = cpfclamp(cpDampedSpringGetRestLength(spring) - dist,
+                                    -clampAbs, clampAbs);
+        return dx * cpDampedSpringGetStiffness(spring);
+    }
+}
+
+cpConstraint* PhysicsWorld::AddClampedDampedSpring(cpBody* a, cpBody* b,
+                                                   cpVect anchorA, cpVect anchorB,
+                                                   cpFloat restLength,
+                                                   cpFloat stiffness,
+                                                   cpFloat damping,
+                                                   cpFloat clampAbs)
+{
+    cpConstraint* s = cpDampedSpringNew(a, b, anchorA, anchorB, restLength, stiffness, damping);
+
+    auto* data = new SpringClampData{ clampAbs };
+    cpConstraintSetUserData(s, data);
+    cpDampedSpringSetSpringForceFunc(s, &SpringForceFunc);
+
+    cpSpaceAddConstraint(space, s);
+    return s;
+}
+
+void PhysicsWorld::FreeSpringUserData(cpConstraint* c)
+{
+    if (!c) return;
+    if (auto* data = static_cast<SpringClampData*>(cpConstraintGetUserData(c))) {
+        delete data;
+        cpConstraintSetUserData(c, nullptr);
+    }
+}
+
+
+void PhysicsWorld::EnableStickyBetween(const std::string& A,
+                                       const std::string& B,
+                                       cpFloat impulseThreshold,
+                                       cpFloat maxForce)
+{
+  if (!collisionTags.contains(A)) AddCollisionTag(A);
+  if (!collisionTags.contains(B)) AddCollisionTag(B);
+
+  cpCollisionType ta = _tagToCollisionType[A];
+  cpCollisionType tb = _tagToCollisionType[B];
+
+  _stickyByPair[PairKey(ta,tb)] = StickyConfig{impulseThreshold, maxForce};
+  InstallStickyPairHandler(ta,tb); // idempotent
+}
+
+void PhysicsWorld::DisableStickyBetween(const std::string& A,
+                                        const std::string& B)
+{
+  if (!collisionTags.contains(A) || !collisionTags.contains(B)) return;
+  _stickyByPair.erase(PairKey(_tagToCollisionType[A], _tagToCollisionType[B]));
+  // (Leaving the handler installed is fine; it will no-op w/o config.)
+}
+
+void PhysicsWorld::InstallStickyPairHandler(cpCollisionType ta, cpCollisionType tb)
+{
+  // If you already add a custom handler for this pair elsewhere, merge these function pointers.
+  cpCollisionHandler* h = cpSpaceAddCollisionHandler(space, ta, tb);
+  h->userData      = this;
+  h->beginFunc     = &PhysicsWorld::C_StickyBegin;
+  h->postSolveFunc = &PhysicsWorld::C_StickyPostSolve;
+  h->separateFunc  = &PhysicsWorld::C_StickySeparate;
+  // Keep your existing begin/separate logging in OnCollisionBegin/End via wildcard if you like;
+  // Sticky’s pair handler runs in addition to wildcard handlers.
+}
+
+cpBool PhysicsWorld::C_StickyBegin(cpArbiter* a, cpSpace* s, void* d){
+  return static_cast<PhysicsWorld*>(d)->StickyBegin(a);
+}
+void PhysicsWorld::C_StickyPostSolve(cpArbiter* a, cpSpace* s, void* d){
+  static_cast<PhysicsWorld*>(d)->StickyPostSolve(a);
+}
+void PhysicsWorld::C_StickySeparate(cpArbiter* a, cpSpace* s, void* d){
+  static_cast<PhysicsWorld*>(d)->StickySeparate(a);
+}
+
+// Always allow contacts to start; glue creation happens in PostSolve (we need the impulse).
+cpBool PhysicsWorld::StickyBegin(cpArbiter* arb){ return cpTrue; }
+
+void PhysicsWorld::StickyPostSolve(cpArbiter* arb)
+{
+    cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
+    cpCollisionType ta = cpShapeGetCollisionType(sa);
+    cpCollisionType tb = cpShapeGetCollisionType(sb);
+
+    auto it = _stickyByPair.find(PairKey(ta, tb));
+    if (it == _stickyByPair.end()) return;
+
+    const StickyConfig cfg = it->second;
+
+    const cpVect J = cpArbiterTotalImpulse(arb);
+    if (cpvlength(J) < cfg.impulseThreshold) return;
+
+    cpBody* ba = cpShapeGetBody(sa);
+    cpBody* bb = cpShapeGetBody(sb);
+    auto key = MakeBodyPair(ba, bb);
+
+    // avoid piling up glue each frame
+    auto &bucket = _stickyJoints[key];
+    if (!bucket.empty()) return;
+
+    cpContactPointSet set = cpArbiterGetContactPointSet(arb);
+    for (int i = 0; i < set.count; ++i) {
+        const cpVect worldP = set.points[i].pointA;   // <- use pointA (world space on A)
+        cpConstraint* j = cpPivotJointNew(ba, bb, worldP);
+        cpConstraintSetMaxBias(j, 0.0f);              // no creep
+        cpConstraintSetMaxForce(j, cfg.maxForce);     // glue strength
+        cpSpaceAddConstraint(space, j);
+        bucket.push_back(j);
+    }
+}
+
+
+void PhysicsWorld::StickySeparate(cpArbiter* arb)
+{
+    cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
+    cpBody* ba = cpShapeGetBody(sa);
+    cpBody* bb = cpShapeGetBody(sb);
+    auto key = MakeBodyPair(ba, bb);
+
+    auto it = _stickyJoints.find(key);
+    if (it == _stickyJoints.end()) return;
+
+    for (cpConstraint* c : it->second) {
+        if (!c) continue;
+        cpSpaceRemoveConstraint(space, c);
+        cpConstraintFree(c);
+    }
+    _stickyJoints.erase(it);
+}
+
+
+
+
+
+
 
 
 

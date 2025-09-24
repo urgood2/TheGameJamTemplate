@@ -13,6 +13,230 @@
 
 namespace physics {
     
+/* ---------------------------- from sticky demo ---------------------------- */
+
+struct StickyConfig {
+  cpFloat impulseThreshold;   // create glue if total impulse >= this
+  cpFloat maxForce;           // joint MaxForce (how strong the glue is)
+};
+
+    
+/* ----------------------------- from slice demo ---------------------------- */
+    // Signed distance of point p to the infinite line through A->B (left side positive).
+    static inline cpFloat signedDistToLine(cpVect p, cpVect A, cpVect B) {
+        // Normal pointing to the left of AB
+        cpVect n = cpvperp(cpvsub(B, A));
+        // Normalize is not required for sign consistency; scale cancels in clipping.
+        return cpvdot(n, cpvsub(p, A));
+    }
+
+    // Clip a world-space convex polygon against half-space (keep side where sdist >= 0).
+    // inPoly: convex poly in world coordinates.
+    // outPoly: result polygon (world coordinates).
+    static void clipHalfSpace(const std::vector<cpVect>& inPoly, std::vector<cpVect>& outPoly, cpVect A, cpVect B) {
+        outPoly.clear();
+        if (inPoly.empty()) return;
+
+        auto sdist = [&](const cpVect& P) { return signedDistToLine(P, A, B); };
+
+        cpVect prev = inPoly.back();
+        cpFloat prevD = sdist(prev);
+
+        for (size_t i = 0; i < inPoly.size(); ++i) {
+            cpVect curr = inPoly[i];
+            cpFloat currD = sdist(curr);
+
+            bool currInside = (currD >= 0.0f);
+            bool prevInside = (prevD >= 0.0f);
+
+            // Edge crosses boundary?
+            if (prevInside != currInside) {
+                // Interpolate intersection between prev and curr where sdist = 0
+                cpFloat t = prevD / (prevD - currD); // safe if prevD != currD due to branch
+                cpVect I = cpvlerp(prev, curr, t);
+                outPoly.push_back(I);
+            }
+            if (currInside) outPoly.push_back(curr);
+
+            prev = curr;
+            prevD = currD;
+        }
+    }
+
+    // Transform body-local polygon vertices to world.
+    static void polyBodyLocalToWorld(const cpBody* body, const cpShape* poly, std::vector<cpVect>& outWorldVerts) {
+        int count = cpPolyShapeGetCount(poly);
+        outWorldVerts.resize(count);
+        for (int i = 0; i < count; ++i) {
+            cpVect lv = cpPolyShapeGetVert(poly, i);
+            outWorldVerts[i] = cpBodyLocalToWorld(body, lv);
+        }
+    }
+
+    // Build a new dynamic rigid piece from world-space polygon verts.
+    // Copies material/filter/collision type from src shape.
+    static cpBody* makePieceFromWorldPoly(cpSpace* space,
+                                        const std::vector<cpVect>& worldVerts,
+                                        const cpShape* src,
+                                        float density /*area * density -> mass*/) {
+        if (worldVerts.size() < 3) return nullptr;
+
+        // Compute area & centroid in world-space, then shift verts to local (centroid) space.
+        cpFloat area = cpAreaForPoly((int)worldVerts.size(), worldVerts.data(), 0.0f);
+        if (area <= 0) return nullptr;
+
+        cpVect centroid = cpCentroidForPoly((int)worldVerts.size(), worldVerts.data());
+        std::vector<cpVect> localVerts(worldVerts.size());
+        for (size_t i = 0; i < worldVerts.size(); ++i) {
+            localVerts[i] = cpvsub(worldVerts[i], centroid);
+        }
+
+        cpFloat mass = area * density;
+        if (mass <= 0) mass = 1.0f;
+
+        cpFloat moment = cpMomentForPoly(mass, (int)localVerts.size(), localVerts.data(), cpvzero, 0.0f);
+
+        cpBody* body = cpSpaceAddBody(space, cpBodyNew(mass, moment));
+        cpBodySetPosition(body, centroid);
+
+        cpShape* piece = cpSpaceAddShape(space, cpPolyShapeNew(body, (int)localVerts.size(), localVerts.data(), cpTransformIdentity, 0.0f));
+
+        // Copy material/filter/collision type from src
+        cpShapeSetElasticity(piece, cpShapeGetElasticity(src));
+        cpShapeSetFriction(piece,    cpShapeGetFriction(src));
+        cpShapeSetFilter(piece,      cpShapeGetFilter(src));
+        cpShapeSetCollisionType(piece, cpShapeGetCollisionType(src));
+
+        // OPTIONAL: set user data so ECS can track this new shape -> entity
+        // cpShapeSetUserData(piece, (void*)(uintptr_t)newEntity);
+
+        return body;
+    }
+
+    // Slice a convex poly shape by line (A->B). Returns true if replaced by 2+ pieces.
+    static bool slicePolyShape(cpSpace* space, cpShape* shape, cpVect A, cpVect B, float density = 1.0f/10000.0f, float minArea = 1.0f) {
+        if (!shape || shape->type != CP_POLY_SHAPE) return false;
+
+        cpBody* srcBody = cpShapeGetBody(shape);
+
+        // Build world-space polygon of the original.
+        std::vector<cpVect> worldPoly;
+        polyBodyLocalToWorld(srcBody, shape, worldPoly);
+
+        // Clip against the two half-spaces (keep-left and keep-right).
+        std::vector<cpVect> left, tmp, right;
+        clipHalfSpace(worldPoly, left, A, B);      // keep left
+        clipHalfSpace(worldPoly, tmp,  B, A);      // keep right: flip line
+        right.swap(tmp);
+
+        auto valid = [&](const std::vector<cpVect>& poly) {
+            if (poly.size() < 3) return false;
+            cpFloat area = cpAreaForPoly((int)poly.size(), poly.data(), 0.0f);
+            return area > minArea;
+        };
+
+        bool madeAny = false;
+        if (valid(left))  { makePieceFromWorldPoly(space, left,  shape, density);  madeAny = true; }
+        if (valid(right)) { makePieceFromWorldPoly(space, right, shape, density);  madeAny = true; }
+
+        if (madeAny) {
+            // Remove and free original
+            cpSpaceRemoveShape(space, shape);
+            cpBody* body = cpShapeGetBody(shape);
+            cpSpaceRemoveBody(space, body);
+            cpShapeFree(shape);
+            cpBodyFree(body);
+        }
+
+        return madeAny;
+    }
+
+    
+/* ---------------------------- from shatter demo --------------------------- */
+
+
+    // tune as you like
+    constexpr int  kMaxVoronoiVerts = 16;
+    constexpr float kDensity = 1.0f/10000.0f;
+
+    static inline cpVect HashVect(uint32_t x, uint32_t y, uint32_t seed) {
+        const float border = 0.05f;
+        uint32_t h = (x*1640531513u ^ y*2654435789u) + seed;
+        float hx = static_cast<float>( h        & 0xFFFF) / 65535.0f;
+        float hy = static_cast<float>((h >> 16) & 0xFFFF) / 65535.0f;
+        return cpv(
+            cpflerp(border, 1.0f - border, hx),
+            cpflerp(border, 1.0f - border, hy)
+        );
+    }
+
+    struct WorleyCtx {
+        uint32_t seed;
+        float cellSize;
+        int w, h;
+        cpBB bb;
+    };
+
+    static inline cpVect WorleyPoint(int i, int j, const WorleyCtx& ctx) {
+        cpVect fv = HashVect(i, j, ctx.seed);
+        float cx = 0.5f*(ctx.bb.l + ctx.bb.r);
+        float cy = 0.5f*(ctx.bb.b + ctx.bb.t);
+        return cpv(
+            cx + ctx.cellSize*(i + fv.x - ctx.w*0.5f),
+            cy + ctx.cellSize*(j + fv.y - ctx.h*0.5f)
+        );
+    }
+
+    // Clip polygon verts by perpendicular bisector between 'center' and Worley cell (i,j).
+    static int ClipCell(const cpShape* srcShape,
+                        cpVect center, int i, int j,
+                        const WorleyCtx& ctx,
+                        const cpVect* verts, int count,
+                        cpVect* out)
+    {
+        cpVect other = WorleyPoint(i, j, ctx);
+
+        // If the other site falls *outside* the source shape, this half-space can’t cut anything;
+        // just pass-through.
+        if (cpShapePointQuery(srcShape, other, nullptr) > 0.0f) {
+            std::memcpy(out, verts, count*sizeof(cpVect));
+            return count;
+        }
+
+        cpVect n = cpvsub(other, center);                   // normal of bisector half-space
+        float dist = cpvdot(n, cpvlerp(center, other, 0.5f)); // point-plane offset
+
+        int outCount = 0;
+        for (int j2 = 0, i2 = count-1; j2 < count; i2 = j2, ++j2) {
+            cpVect a = verts[i2];
+            cpVect b = verts[j2];
+            float ad = cpvdot(a, n) - dist;
+            float bd = cpvdot(b, n) - dist;
+
+            if (ad <= 0.0f) out[outCount++] = a;
+            if (ad * bd < 0.0f) {
+                float t = std::fabs(ad) / (std::fabs(ad) + std::fabs(bd));
+                out[outCount++] = cpvlerp(a, b, t);
+            }
+        }
+        return outCount;
+    }
+    
+/* ---------------------------- query hit result ---------------------------- */
+    struct SegmentQueryHit {
+        bool        hit = false;
+        const cpShape*    shape = nullptr;
+        cpVect      point = cpvzero;   // impact point
+        cpVect      normal = cpvzero;  // surface normal at impact
+        float       alpha = 1.0f;      // fraction along the ray [0..1]
+        };
+
+        struct NearestPointHit {
+        bool        hit = false;
+        const cpShape*    shape = nullptr;
+        cpVect      point = cpvzero;   // closest point on shape
+        float       distance = INFINITY; // signed: <0 means the query point is inside
+        };
     
 /* ---------------------------- one way platform ---------------------------- */
     
@@ -496,6 +720,55 @@ cpConstraint* AddSimpleMotor(entt::entity ea, entt::entity eb, cpFloat rateRadPe
 // Convenience tuning
 void SetConstraintLimits(cpConstraint* c, cpFloat maxForce, cpFloat maxBias);
 
+/* ---------------------------- from sticky demo ---------------------------- */
+
+
+// enable sticky glue between two tags (pair-specific)
+void EnableStickyBetween(const std::string& tagA,
+                         const std::string& tagB,
+                         cpFloat impulseThreshold,
+                         cpFloat maxForce);
+
+// (optional) disable again
+void DisableStickyBetween(const std::string& tagA,
+                          const std::string& tagB);
+
+  // pair key (collision type A,B) → config
+  std::unordered_map<uint64_t, StickyConfig> _stickyByPair;
+
+  // body-pair key → list of joints created by sticky
+  struct BodyPairKey {
+    cpBody* a; cpBody* b;
+    bool operator==(const BodyPairKey& o) const { return a==o.a && b==o.b; }
+  };
+  struct BodyPairKeyHash {
+    size_t operator()(const BodyPairKey& k) const {
+      auto lo = std::min(k.a,k.b), hi = std::max(k.a,k.b);
+      // order-insensitive hash
+      return std::hash<uintptr_t>()(reinterpret_cast<uintptr_t>(lo)) ^
+             (std::hash<uintptr_t>()(reinterpret_cast<uintptr_t>(hi))<<1);
+    }
+  };
+  std::unordered_map<BodyPairKey, std::vector<cpConstraint*>, BodyPairKeyHash> _stickyJoints;
+
+  // helpers
+  static BodyPairKey MakeBodyPair(cpBody* a, cpBody* b) {
+    if (a>b) std::swap(a,b);
+    return BodyPairKey{a,b};
+  }
+
+  // Chipmunk callbacks for sticky pair
+  static cpBool C_StickyBegin(cpArbiter*, cpSpace*, void*);
+  static void   C_StickySeparate(cpArbiter*, cpSpace*, void*);
+  static void   C_StickyPostSolve(cpArbiter*, cpSpace*, void*);
+
+  // instance methods called by the C_… thunks
+  cpBool StickyBegin(cpArbiter* arb);
+  void   StickyPostSolve(cpArbiter* arb);
+  void   StickySeparate(cpArbiter* arb);
+
+  void   InstallStickyPairHandler(cpCollisionType ta, cpCollisionType tb);
+
 
 /* ------------------------ convex hull modification ------------------------ */
 bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/);
@@ -610,7 +883,15 @@ void MakeConstraintBreakable(cpConstraint* c,
                                float maxForce = 3000.0f);
   void AddUprightSpring(entt::entity e, float stiffness = 100.0f,
                         float damping = 10.0f);
+                        
+/* --------------------------------- queries -------------------------------- */
+                        
   entt::entity PointQuery(float x, float y);
+  
+    SegmentQueryHit SegmentQueryFirst(cpVect start, cpVect end, float radius = 10.0f,
+                                                    cpShapeFilter filter = CP_SHAPE_FILTER_ALL) const;
+    NearestPointHit PointQueryNearest(cpVect p, float maxDistance = 100.0f,
+                                                    cpShapeFilter filter = CP_SHAPE_FILTER_ALL) const;
   /// Teleport an entity's body to (x,y).
   void SetBodyPosition(entt::entity e, float x,
                        float y); /// Directly set an entity's linear velocity.
@@ -631,6 +912,16 @@ void MakeConstraintBreakable(cpConstraint* c,
   void SetMeter(float meter);
   size_t GetShapeCount(entt::entity e) const;
   cpBB GetShapeBB(entt::entity e, size_t index) const;
+  
+/* ---------------------------- from shatter demo --------------------------- */
+
+void ShatterShape(cpShape* shape, float cellSize, cpVect focus);
+bool ShatterNearest(float x, float y, float gridDiv /*=5.0f*/);
+
+/* ----------------------------- from slice demo ---------------------------- */
+
+
+
   
 /* ---------------------------- from planet demo ---------------------------- */
 
@@ -695,7 +986,42 @@ entt::entity CreatePlatformerPlayer(cpVect pos, float w=30.f, float h=55.f,
                                                   const std::string& tag="player");
 // Feed input each frame: moveX in [-1,1], jumpHeld = is jump currently held.
 void SetPlatformerInput(entt::entity e, float moveX, bool jumpHeld);
-                                            
+
+
+/* ------------------------ from custom springs demo ------------------------ */
+
+// Create a dynamic “bar” made from a fat segment between world points a–b.
+// `thickness` is the segment radius; `group` (optional) prevents self-collisions among bars with same non-zero group.
+// Returns the new entity.
+entt::entity AddBarSegment(cpVect a, cpVect b,
+                           float thickness,
+                           const std::string& tag,
+                           int32_t group = 0);
+// Create a damped spring with a custom force function that clamps displacement.
+// Force = clamp(restLength - dist, -clamp, +clamp) * stiffness
+cpConstraint* AddClampedDampedSpring(cpBody* a, cpBody* b,
+                                     cpVect anchorA, cpVect anchorB,
+                                     cpFloat restLength,
+                                     cpFloat stiffness,
+                                     cpFloat damping,
+                                     cpFloat clampAbs);
+
+// If you manage constraints’ lifetimes yourself, call this before destroying/removing the constraint to clean userData.
+static void FreeSpringUserData(cpConstraint* c);
+
+/* --------------------------- smooth terrain demo -------------------------- */
+
+
+entt::entity AddSmoothSegmentChain(const std::vector<cpVect>& pts,
+                                   float radius,
+                                   const std::string& tag);
+                            
+
+/* ----------------------------- from slice dmeo ---------------------------- */
+
+bool SliceFirstHit(cpVect A, cpVect B, float density, float minArea);
+
+
 /* ----------------------- from one way platform demo ----------------------- */
 entt::entity AddOneWayPlatform(float x1, float y1,
                                              float x2, float y2,

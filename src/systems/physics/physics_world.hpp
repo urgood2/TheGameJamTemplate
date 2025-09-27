@@ -497,10 +497,18 @@ static inline cpSpaceDebugColor RGBAColor(float r, float g, float b, float a) {
 
 inline static cpSpaceDebugColor ColorForShape(cpShape *shape,
                                               cpDataPointer data) {
+  if (!shape) {
+    return LAColor(0.9f, 1.0f);
+  } 
+  
   if (cpShapeGetSensor(shape)) {
     return LAColor(1.0f, 0.1f);
   } else {
     cpBody *body = cpShapeGetBody(shape);
+    
+    if (!body) {
+      return LAColor(0.7f, 1.0f);
+    } 
 
     if (cpBodyIsSleeping(body)) {
       return RGBAColor(0x58 / 255.0f, 0x6e / 255.0f, 0x75 / 255.0f, 1.0f);

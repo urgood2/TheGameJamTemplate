@@ -51,6 +51,8 @@ cfg.useKinematic = true; // or false for dynamic assist
 
 namespace physics {
     
+    
+    
 /* -------------- Checking entity active state & physics state -------------- */
     
     inline bool is_entity_state_active(entt::registry& R, entt::entity e) {
@@ -123,6 +125,21 @@ namespace physics {
         float density = 1.0f;
     };
     
+    // --- helper ---
+    inline cpFloat ComputeMoment(const PhysicsCreateInfo& ci, cpFloat mass, float w, float h){
+        switch (ci.shape){
+            case physics::ColliderShapeType::Rectangle:
+                return cpMomentForBox(mass, w, h);
+            case physics::ColliderShapeType::Circle: {
+                float r = 0.5f * std::max(w, h);
+                return cpMomentForCircle(mass, 0.0f, r, cpvzero);
+            }
+            default:
+                // Fallback: approximate as box
+                return cpMomentForBox(mass, w, h);
+        }
+    }
+    
     inline void CreatePhysicsForTransform(entt::registry& R,
                                       PhysicsManager& PM,
                                       entt::entity e,
@@ -136,7 +153,9 @@ namespace physics {
     if (!rec) return;
 
     // Body
-    auto body = physics::MakeSharedBody(/*mass*/1.0f, /*moment*/INFINITY);
+    // pick your mass policy; 1.0f is fine for now
+    cpFloat mass = ci.sensor ? 0.1f : 1.0f;
+    auto body = physics::MakeSharedBody(mass, /*moment*/INFINITY);
     physics::SetEntityToBody(body.get(), e);
 
     // Base size from ACTUAL W/H
@@ -150,6 +169,12 @@ namespace physics {
     // Keep original center
     const float cx = T.getActualX() + base_w * 0.5f;
     const float cy = T.getActualY() + base_h * 0.5f;
+    
+    
+    cpFloat moment = ComputeMoment(ci, mass, w, h);
+    // If you must create body first, you can also set after:
+    cpBodySetMass(body.get(), mass);
+    cpBodySetMoment(body.get(), moment);
 
     cpBodySetPosition(body.get(), {cx, cy});
     cpBodySetAngle(body.get(), T.getActualRotation() * DEG2RAD);
@@ -197,66 +222,58 @@ namespace physics {
 
     // Helper: center-based rectangle from Transform ACTUAL size.
     inline void CreatePhysicsForTransform(entt::registry& R,
-                                        PhysicsManager& PM,
-                                        entt::entity e,
-                                        const PhysicsCreateInfo& ci)
-    {
-        auto& T    = R.get<transform::Transform>(e);
-        auto& ref  = R.get<PhysicsWorldRef>(e);
-        auto* rec  = PM.get(ref.name);
-        if (!rec) return;
+                                      PhysicsManager& PM,
+                                      entt::entity e,
+                                      const PhysicsCreateInfo& ci)
+{
+    auto& T    = R.get<transform::Transform>(e);
+    auto& ref  = R.get<PhysicsWorldRef>(e);
+    auto* rec  = PM.get(ref.name);
+    if (!rec) return;
 
-        // Body (dynamic by default; make static/kinematic as you like)
-        auto body = physics::MakeSharedBody(/*mass*/1.0f, /*moment*/INFINITY);
-        physics::SetEntityToBody(body.get(), e);
+    float w = std::max(1.f, T.getActualW());
+    float h = std::max(1.f, T.getActualH());
 
-        // Choose size from ACTUAL W/H (not visual)
-        float w = std::max(1.f, T.getActualW());
-        float h = std::max(1.f, T.getActualH());
+    // MASS & MOMENT (finite!)
+    cpFloat mass   = ci.sensor ? 0.1f : 1.0f;
+    cpFloat moment = ComputeMoment(ci, mass, w, h);
 
-        // Chipmunk expects meters-ish; your PIXELS_PER_PIXEL_UNIT = 1.0f, so we’ll just convert coords.
-        cpBodySetPosition(body.get(), {T.getActualX() + w / 2, T.getActualY() + h / 2});
-        cpBodySetAngle(body.get(), T.getActualRotation() * DEG2RAD);
+    auto body = physics::MakeSharedBody(mass, moment);
+    physics::SetEntityToBody(body.get(), e);
 
-        std::shared_ptr<cpShape> shape;
-        switch (ci.shape) {
-            case physics::ColliderShapeType::Rectangle: {
-            // Box from center
+    cpBodySetPosition(body.get(), {T.getActualX() + w / 2, T.getActualY() + h / 2});
+    cpBodySetAngle(body.get(), T.getActualRotation() * DEG2RAD);
+
+    std::shared_ptr<cpShape> shape;
+    switch (ci.shape) {
+        case physics::ColliderShapeType::Rectangle: {
             cpVect verts[4] = {
                 cpv(-w*0.5f, -h*0.5f), cpv( w*0.5f, -h*0.5f),
                 cpv( w*0.5f,  h*0.5f), cpv(-w*0.5f,  h*0.5f),
             };
             shape.reset(cpPolyShapeNew(body.get(), 4, verts, cpTransformIdentity, 0), cpShapeFree);
-            } break;
-            case physics::ColliderShapeType::Circle: {
+        } break;
+        case physics::ColliderShapeType::Circle: {
             float r = 0.5f * std::max(w, h);
             shape.reset(cpCircleShapeNew(body.get(), r, cpvzero), cpShapeFree);
-            } break;
-            // add Segment/Polygon as needed…
-            default: /* fallback */ {
-            shape = physics::MakeSharedShape(body.get(), w, h); // your helper
-            } break;
-        }
-
-        physics::SetEntityToShape(shape.get(), e);
-        cpShapeSetSensor(shape.get(), ci.sensor);
-        
-        
-
-        // Add to world
-        cpSpaceAddBody(rec->w->space, body.get());
-        cpSpaceAddShape(rec->w->space, shape.get());
-
-        // Store on entity
-        R.emplace_or_replace<physics::ColliderComponent>(e, body, shape, ci.tag, ci.sensor, ci.shape);
-
-        // Apply collision filter via your tag system
-        rec->w->AddCollisionTag(ci.tag);
-        rec->w->ApplyCollisionFilter(shape.get(), ci.tag);
-
-        // Optional: set body type based on your intent
-        // cpBodySetType(body.get(), CP_BODY_TYPE_DYNAMIC / KINEMATIC / STATIC);
+        } break;
+        default: {
+            shape = physics::MakeSharedShape(body.get(), w, h);
+        } break;
     }
+
+    physics::SetEntityToShape(shape.get(), e);
+    cpShapeSetSensor(shape.get(), ci.sensor);
+
+    cpSpaceAddBody (rec->w->space, body.get());
+    cpSpaceAddShape(rec->w->space, shape.get());
+
+    R.emplace_or_replace<physics::ColliderComponent>(e, body, shape, ci.tag, ci.sensor, ci.shape);
+
+    rec->w->AddCollisionTag(ci.tag);
+    rec->w->ApplyCollisionFilter(shape.get(), ci.tag);
+}
+
 
     
     
@@ -278,34 +295,47 @@ namespace physics {
         float doneDistPx = 0.6f;       // when close enough, flip back to AuthoritativePhysics
         float doneSpeed   = 2.0f;      // and nearly stopped
         cpBodyType prevType = CP_BODY_TYPE_DYNAMIC;
+        
+        // rotation sync policy
+        bool pushAngleFromTransform = true;   // when Transform is authoritative or following visual
+        bool pullAngleFromPhysics   = true;   // when Physics is authoritative (optional)
+
+        bool useVisualRotationWhenDragging = true; // during drag, push visual angle instead of actual
+
     };
 
-    inline auto BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W) -> void {
-        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent>(e)) return;
-        auto& T  = R.get<transform::Transform>(e);
-        auto& CC = R.get<physics::ColliderComponent>(e);
+    inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W) {
+        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e)) return;
+        auto& T   = R.get<transform::Transform>(e);
+        auto& CC  = R.get<physics::ColliderComponent>(e);
+        auto& cfg = R.get<PhysicsSyncConfig>(e);
 
         const cpVect p = cpBodyGetPosition(CC.body.get());
         const float a  = (float)cpBodyGetAngle(CC.body.get());
 
-        // raylib coords
-        const Vector2 rl = { (float) p.x - T.getActualW() / 2, (float)  p.y - T.getActualH() / 2};
+        const Vector2 rl = { (float)p.x - T.getActualW() / 2, (float)p.y - T.getActualH() / 2 };
 
-        // Write ACTUAL targets (not visual) so springs smoothly approach
+        // Always position
         T.setActualX(rl.x);
         T.setActualY(rl.y);
-        T.setActualRotation(a * RAD2DEG); // if your angles are degrees
+
+        // Rotation only if allowed
+        if (cfg.pullAngleFromPhysics) {
+            T.setActualRotation(a * RAD2DEG);
+        }
     }
 
-    inline auto TransformToBody(entt::registry& R, entt::entity e, physics::PhysicsWorld& W,
-                                bool zeroVelocity) -> void {
+
+    inline void TransformToBody(entt::registry& R, entt::entity e, physics::PhysicsWorld& W,
+                            bool zeroVelocity, bool useVisualRotation = true)
+    {
         if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent>(e)) return;
         auto& T  = R.get<transform::Transform>(e);
         auto& CC = R.get<physics::ColliderComponent>(e);
 
-        // Use ACTUAL (target) values
         const Vector2 rl = { T.getActualX(), T.getActualY() };
-        const float   a  = T.getActualRotation() * DEG2RAD;
+        const float   rotDeg = useVisualRotation ? T.getVisualR() : T.getActualRotation();
+        const float   a  = rotDeg * DEG2RAD;
 
         const cpVect  cp = { rl.x + T.getActualW() / 2, rl.y + T.getActualH() / 2 };
         cpBodySetPosition(CC.body.get(), cp);
@@ -317,32 +347,42 @@ namespace physics {
             cpBodyActivate(CC.body.get());
         }
     }
+
     
     // Kinematic follow (recommended for exact visual matching + good collisions):
     inline void VisualToBody_Kinematic(entt::registry& R, entt::entity e, physics::PhysicsWorld& W, float dt) {
         auto& T  = R.get<transform::Transform>(e);
         auto& CC = R.get<physics::ColliderComponent>(e);
 
-        // where the sprite actually is this frame:
         Vector2 vpos = { T.getVisualX(), T.getVisualY() };
-        float   vang = T.getVisualR(); // if you want rotation too
+        float   vangDeg = T.getVisualR();                   // visual rotation in degrees
+        float   vangRad = vangDeg * DEG2RAD;
 
         cpBodySetType(CC.body.get(), CP_BODY_TYPE_KINEMATIC);
 
-        // set kinematic velocity to reach visual in ~1 frame
-        cpVect  p  = cpBodyGetPosition(CC.body.get());
+        // linear follow
+        cpVect p = cpBodyGetPosition(CC.body.get());
         Vector2 pr = physics::chipmunkToRaylibCoords(p);
         Vector2 d  = { vpos.x - pr.x, vpos.y - pr.y };
-
         const float invDt = (dt > 0.f) ? (1.f/dt) : 0.f;
         cpVect v = physics::raylibToChipmunkCoords({ d.x * invDt, d.y * invDt });
-
-        // clamp
         float speed = cpvlength(v);
-        if (speed > 0.f && speed > 2400.f) v = cpvmult(v, 2400.f/speed);
-
+        if (speed > 2400.f) v = cpvmult(v, 2400.f/speed);
         cpBodySetVelocity(CC.body.get(), v);
-        cpBodySetAngularVelocity(CC.body.get(), (vang*DEG2RAD - cpBodyGetAngle(CC.body.get())) * invDt);
+
+        // angular follow (wrap-safe)
+        float cur = (float)cpBodyGetAngle(CC.body.get());
+        float diff = vangRad - cur;
+        // normalize to [-pi, pi] to avoid spin-the-long-way
+        while (diff >  CP_PI) diff -= 2.f * CP_PI;
+        while (diff < -CP_PI) diff += 2.f * CP_PI;
+
+        cpBodySetAngularVelocity(CC.body.get(), diff * invDt);
+
+        // For exact pose lock (optional): also set the angle directly
+        // cpBodySetAngle(CC.body.get(), vangRad);
+        //FIXME: testing
+        cpBodySetAngle(CC.body.get(), vangRad);
     }
     
     // Sync with dynamic body, applying impulse to pull toward visual.
@@ -350,40 +390,56 @@ namespace physics {
         auto& T  = R.get<transform::Transform>(e);
         auto& CC = R.get<physics::ColliderComponent>(e);
 
+        // linear PD as you had...
         cpVect  p  = cpBodyGetPosition(CC.body.get());
         cpVect  v  = cpBodyGetVelocity(CC.body.get());
         Vector2 vpos = { T.getVisualX(), T.getVisualY() };
         cpVect  t  = physics::raylibToChipmunkCoords(vpos);
 
         cpVect err = cpvsub(t, p);
-        cpVect dv  = cpvsub(cpvmult(err, 12.0f), v); // simple PD: 12 is a nice “stickiness”
+        cpVect dv  = cpvsub(cpvmult(err, 12.0f), v);
         cpVect imp = cpvmult(dv, cpBodyGetMass(CC.body.get()));
-
         cpBodyApplyImpulseAtLocalPoint(CC.body.get(), imp, cpvzero);
+
+        // angular PD
+        float ang  = (float)cpBodyGetAngle(CC.body.get());
+        float vang = T.getVisualR() * DEG2RAD;
+        float w    = (float)cpBodyGetAngularVelocity(CC.body.get());
+
+        float dAng = vang - ang;
+        while (dAng >  CP_PI) dAng -= 2.f * CP_PI;
+        while (dAng < -CP_PI) dAng += 2.f * CP_PI;
+
+        // simple critically-damped-ish gains
+        const float kp = 12.0f, kd = 2.0f * std::sqrt(kp);
+        float torque = kp * dAng - kd * w;
+
+        cpBodySetTorque(CC.body.get(), torque);
     }
 
 
 /* --- Transform hooks to ensure syncing happens correctly on interaction --- */
 
-    inline auto OnStartDrag(entt::registry& R, entt::entity e) -> void {
+    inline void OnStartDrag(entt::registry& R, entt::entity e) {
         if (!R.valid(e)) return;
 
-        // mark UI state
-        auto& GO = R.get<transform::GameObject>(e);
-        GO.state.isBeingDragged = true;
+        R.get<transform::GameObject>(e).state.isBeingDragged = true;
 
-        // switch body -> KINEMATIC while we drive it
         if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
-            // remember previous type so we can restore on drop
             auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
             cfg.prevType = cpBodyGetType(cc->body.get());
+
             cpBodySetVelocity(cc->body.get(), cpvzero);
             cpBodySetAngularVelocity(cc->body.get(), 0.f);
             cpBodySetType(cc->body.get(), CP_BODY_TYPE_KINEMATIC);
 
-            // while dragging, Transform is authoritative (we push actual -> body each frame)
+            // While dragging: Transform is authoritative and we push its angle.
             cfg.mode = PhysicsSyncMode::AuthoritativeTransform;
-            cfg.teleportOnResync = false;   // we’re continuously syncing; no need to snap later
+            cfg.useVisualRotationWhenDragging = true;
+            cfg.pushAngleFromTransform = true;
+
+            // Prevent physics from overwriting our transform angle during drag.
+            cfg.pullAngleFromPhysics = false;
         }
     }
 
@@ -407,10 +463,12 @@ namespace physics {
             cpBodySetType(cc->body.get(), CP_BODY_TYPE_DYNAMIC);
             // set mass and moment to nonzero
             if (cpBodyGetType(cc->body.get()) == CP_BODY_TYPE_DYNAMIC) {
-                // if (cpBodyGetMass(cc->body.get()) == INFINITY) 
-                cpBodySetMass(cc->body.get(), 1.0f);
-                // if (cpBodyGetMoment(cc->body.get()) == INFINITY) 
-                cpBodySetMoment(cc->body.get(), INFINITY);
+                auto &T = R.get<transform::Transform>(e);
+                float w = T.getActualW(), h = T.getActualH();
+                cpFloat mass = (cpBodyGetMass(cc->body.get()) <= 0.0f) ? 1.0f : cpBodyGetMass(cc->body.get());
+                cpFloat moment = ComputeMoment(PhysicsCreateInfo{cc->shapeType, cc->tag, cc->isSensor, /*density*/1.0f}, mass, w, h);
+                cpBodySetMass(cc->body.get(), mass);
+                cpBodySetMoment(cc->body.get(), moment);
             }
 
             // now let physics be authoritative again; body -> Transform.actual post-step
@@ -424,33 +482,31 @@ namespace physics {
     }
 
 /* ------------------------ transform-dominant phase ------------------------ */
-    inline auto ApplyAuthoritativeTransform(entt::registry& R, PhysicsManager& PM) -> void {
+    inline void ApplyAuthoritativeTransform(entt::registry& R, PhysicsManager& PM) {
         auto view = R.view<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig, PhysicsWorldRef>();
         for (auto e : view) {
             auto& cfg = view.get<PhysicsSyncConfig>(e);
             if (cfg.mode != PhysicsSyncMode::AuthoritativeTransform) continue;
 
             auto& ref = view.get<PhysicsWorldRef>(e);
-            auto* rec = PM.get(ref.name);
-            if (!rec || !PhysicsManager::world_active(*rec)) continue;
-
-            // Push Transform.actual to body (zero vel while being driven)
-            TransformToBody(R, e, *rec->w, /*zeroVelocity=*/true);
+            if (auto* rec = PM.get(ref.name); rec && PhysicsManager::world_active(*rec)) {
+                TransformToBody(R, e, *rec->w, /*zeroVel=*/true, /*useVisualRotation=*/cfg.useVisualRotationWhenDragging && cfg.pushAngleFromTransform);
+            }
         }
     }
+
     
 /* ------------------------ physics-dominant phase ------------------------- */
-    inline auto ApplyAuthoritativePhysics(entt::registry& R, PhysicsManager& PM) -> void {
+    inline void ApplyAuthoritativePhysics(entt::registry& R, PhysicsManager& PM) {
         auto view = R.view<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig, PhysicsWorldRef>();
         for (auto e : view) {
             auto& cfg = view.get<PhysicsSyncConfig>(e);
             if (cfg.mode != PhysicsSyncMode::AuthoritativePhysics) continue;
 
             auto& ref = view.get<PhysicsWorldRef>(e);
-            auto* rec = PM.get(ref.name);
-            if (!rec || !PhysicsManager::world_active(*rec)) continue;
-
-            BodyToTransform(R, e, *rec->w); // sets ACTUAL; visuals interpolate
+            if (auto* rec = PM.get(ref.name); rec && PhysicsManager::world_active(*rec)) {
+                BodyToTransform(R, e, *rec->w);
+            }
         }
     }
     

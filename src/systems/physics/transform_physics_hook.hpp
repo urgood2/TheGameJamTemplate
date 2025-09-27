@@ -480,6 +480,7 @@ namespace physics {
             // and it will auto-return to AuthoritativePhysics on settle.
         }
     }
+    
 
 /* ------------------------ transform-dominant phase ------------------------ */
     inline void ApplyAuthoritativeTransform(entt::registry& R, PhysicsManager& PM) {

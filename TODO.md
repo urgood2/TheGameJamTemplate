@@ -34,6 +34,7 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 ## TODOS fast
 - [ ] how to render arbitrary polygones from physics engine in a nice way?
+- [ ] rotation while dragging still bugged. also need to be able to configure so physics attached to transform can't affect transform rotation, unless we want that. also check that bodies are freed properly and removed from space, debug draw causing issues. transforms bound to physics actually act independent initially before being dragged. this is an issue
 - [ ] gotta test the various bindings of physics world including steering.
 - [ ] update lua bindings & docs for physics world
 

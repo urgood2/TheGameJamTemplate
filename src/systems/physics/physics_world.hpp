@@ -503,30 +503,50 @@ inline static cpSpaceDebugColor ColorForShape(cpShape *shape,
   
   if (cpShapeGetSensor(shape)) {
     return LAColor(1.0f, 0.1f);
-  } else {
-    cpBody *body = cpShapeGetBody(shape);
-    
-    if (!body) {
-      return LAColor(0.7f, 1.0f);
-    } 
+  } 
 
-    if (cpBodyIsSleeping(body)) {
-      return RGBAColor(0x58 / 255.0f, 0x6e / 255.0f, 0x75 / 255.0f, 1.0f);
-    } else if (body->sleeping.idleTime > shape->space->sleepTimeThreshold) {
-      return RGBAColor(0x93 / 255.0f, 0xa1 / 255.0f, 0xa1 / 255.0f, 1.0f);
-    } else {
-      uint32_t val = (uint32_t)shape->hashid;
+  auto Safe = [](float g, float a){ return LAColor(g, a); };
 
-      // scramble the bits up using Robert Jenkins' 32 bit integer hash function
-      val = (val + 0x7ed55d16) + (val << 12);
-      val = (val ^ 0xc761c23c) ^ (val >> 19);
-      val = (val + 0x165667b1) + (val << 5);
-      val = (val + 0xd3a2646c) ^ (val << 9);
-      val = (val + 0xfd7046c5) + (val << 3);
-      val = (val ^ 0xb55a4f09) ^ (val >> 16);
-      return Colors[val & 0x7];
-    }
+  if (!shape) return Safe(0.9f, 1.0f);
+
+  // If shape isn't in a space anymore, bail out.
+  cpSpace* shapeSpace = cpShapeGetSpace(shape);
+  if (!shapeSpace) return Safe(0.7f, 1.0f);
+
+  if (cpShapeGetSensor(shape)) return LAColor(1.0f, 0.1f);
+
+  cpBody* body = cpShapeGetBody(shape);
+  if (!body) return Safe(0.7f, 1.0f);
+
+  // If body isn't in a space, don't query sleep state.
+  if (!cpBodyGetSpace(body)) return Safe(0.7f, 1.0f);
+
+  // Optionally skip sleeping query for non-dynamic bodies
+  if (cpBodyGetType(body) != CP_BODY_TYPE_DYNAMIC) {
+      return Safe(0.8f, 1.0f);
   }
+  
+  if (!body) {
+    return LAColor(0.7f, 1.0f);
+  } 
+
+  if (cpBodyIsSleeping(body)) {
+    return RGBAColor(0x58 / 255.0f, 0x6e / 255.0f, 0x75 / 255.0f, 1.0f);
+  } else if (body->sleeping.idleTime > shape->space->sleepTimeThreshold) {
+    return RGBAColor(0x93 / 255.0f, 0xa1 / 255.0f, 0xa1 / 255.0f, 1.0f);
+  } else {
+    uint32_t val = (uint32_t)shape->hashid;
+
+    // scramble the bits up using Robert Jenkins' 32 bit integer hash function
+    val = (val + 0x7ed55d16) + (val << 12);
+    val = (val ^ 0xc761c23c) ^ (val >> 19);
+    val = (val + 0x165667b1) + (val << 5);
+    val = (val + 0xd3a2646c) ^ (val << 9);
+    val = (val + 0xfd7046c5) + (val << 3);
+    val = (val ^ 0xb55a4f09) ^ (val >> 16);
+    return Colors[val & 0x7];
+  }
+
 }
 
 // Call this function to draw the physics objects for a cpSpace when debugging.

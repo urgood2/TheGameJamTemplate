@@ -3,6 +3,10 @@
 #include "globals.hpp"
 #include "../components/components.hpp"
 #include "../util/utilities.hpp"
+#include "systems/physics/physics_components.hpp"
+#include "systems/physics/physics_manager.hpp"
+#include "systems/physics/physics_world.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "third_party/unify/unify.hpp"
 #include "systems/uuid/uuid.hpp"
 
@@ -512,6 +516,35 @@ namespace init {
         InitAudioDevice();
     }
     
+    // Iterate over all shapes stored in a ColliderComponent (main + extras).
+    template <typename Fn>
+    inline void ForEachShapeConst(const physics::ColliderComponent &cc, Fn &&fn) {
+        if (cc.shape) fn(cc.shape.get());
+        for (auto &extra : cc.extraShapes) {
+            if (extra.shape) fn(extra.shape.get());
+        }
+    }
+    
+    static void onColliderDestroyed(entt::registry& R, entt::entity e) {
+        // This should exist in on_destroy<ColliderComponent>, but guard anyway.
+        auto* c = R.try_get<physics::ColliderComponent>(e);
+        if (!c) return;
+
+        ForEachShapeConst(*c, [&](cpShape* s){
+            if (!s) return;
+            if (cpSpace* sp = cpShapeGetSpace(s)) {
+                cpSpaceRemoveShape(sp, s);
+            }
+        });
+
+        if (c->body) {
+            if (cpSpace* sp = cpBodyGetSpace(c->body.get())) {
+                cpSpaceRemoveBody(sp, c->body.get());
+            }
+        }
+        // Let shared_ptr destructors do the actual cpShapeFree/cpBodyFree later.
+    }
+    
     /**
      * @brief Initializes the game engine by setting up logging, loading JSON data and configuration file values, 
      * initializing the window, GUI, ECS, AI, and world, loading textures, and performing various tests.
@@ -536,7 +569,8 @@ namespace init {
         // load physics manager
         globals::physicsManager = std::make_shared<PhysicsManager>(globals::registry);
         
-        
+        // set up physics component destruction
+        globals::registry.on_destroy<physics::ColliderComponent>().connect<&onColliderDestroyed>();
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);
         

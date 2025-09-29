@@ -52,6 +52,8 @@ std::shared_ptr<cpBody> MakeSharedBody(cpFloat mass, cpFloat moment) {
 
 std::shared_ptr<cpShape> MakeSharedShape(cpBody *body, cpFloat width,
                                          cpFloat height) {
+  assert(body && "MakeSharedShape: body must be non-null");
+
   return std::shared_ptr<cpShape>(cpBoxShapeNew(body, width, height, 0.0),
                                   [](cpShape *shape) { cpShapeFree(shape); });
 }
@@ -85,7 +87,15 @@ PhysicsWorld::~PhysicsWorld() {
 }
 
 
-void PhysicsWorld::Update(float deltaTime) { cpSpaceStep(space, deltaTime); }
+void PhysicsWorld::Update(float deltaTime) { 
+  cpSpaceStep(space, deltaTime); 
+  #ifndef NDEBUG
+  // Sanity check: ensure no shapes have null bodies (which indicates a detach/free mismatch)
+  cpSpaceEachShape(space, +[](cpShape* s, void*){
+      assert(cpShapeGetBody(s) && "Shape has null body (detached/free mismatch)");
+  }, nullptr);
+  #endif
+}
 
 void PhysicsWorld::PostUpdate() {
   collisionEnter.clear();
@@ -1567,6 +1577,8 @@ void PhysicsWorld::StartMouseDrag(float x, float y) {
 
   if (!mouseBody) {
     mouseBody = cpBodyNewStatic();
+    SpaceAddBodySafe(space, mouseBody);
+
   }
   cpBodySetPosition(mouseBody, cpv(x, y));
 
@@ -1581,7 +1593,8 @@ void PhysicsWorld::StartMouseDrag(float x, float y) {
   cpVect anchorB = cpBodyWorldToLocal(c.body.get(), worldPt);
 
   mouseJoint = cpPivotJointNew2(mouseBody, c.body.get(), anchorA, anchorB);
-  cpSpaceAddConstraint(space, mouseJoint);
+  SpaceAddConstraintSafe(space, mouseJoint);
+
 }
 
 void PhysicsWorld::UpdateMouseDrag(float x, float y) {
@@ -1590,10 +1603,10 @@ void PhysicsWorld::UpdateMouseDrag(float x, float y) {
   }
 }
 
+
 void PhysicsWorld::EndMouseDrag() {
   if (mouseJoint) {
-    cpSpaceRemoveConstraint(space, mouseJoint);
-    cpConstraintFree(mouseJoint);
+    SpaceRemoveConstraintSafe(space, mouseJoint, /*freeAfter=*/true);
     mouseJoint = nullptr;
   }
   draggedEntity = entt::null;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "physics_manager.hpp"
+#include "systems/physics/physics_components.hpp"
 #include "systems/transform/transform.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk.h"
 
@@ -51,7 +52,80 @@ cfg.useKinematic = true; // or false for dynamic assist
 
 namespace physics {
     
+    enum class PhysicsSyncMode {
+        AuthoritativePhysics,     // body -> Transform.actual (default)
+        AuthoritativeTransform,   // Transform.actual -> body (drag/teleport)
+        FollowVisual,             // body follows Transform.visual (your springs)
+        FrozenWhileDesynced
+    };
     
+    
+    struct PhysicsSyncConfig {
+        PhysicsSyncMode mode = PhysicsSyncMode::AuthoritativePhysics;
+        // follow visual knobs
+        bool teleportOnResync = true; // when resuming sync after disconnect, teleport to visual
+        bool useKinematic = true;      // kinematic while following visual (collides correctly)
+        float maxSpeed = 2400.f;       // clamp for stability
+        float doneDistPx = 0.6f;       // when close enough, flip back to AuthoritativePhysics
+        float doneSpeed   = 2.0f;      // and nearly stopped
+        cpBodyType prevType = CP_BODY_TYPE_DYNAMIC;
+        
+        // rotation sync policy
+        bool pushAngleFromTransform = true;   // when Transform is authoritative or following visual
+        bool pullAngleFromPhysics   = true;   // when Physics is authoritative (optional)
+
+        bool useVisualRotationWhenDragging = true; // during drag, push visual angle instead of actual
+
+    };
+    
+    inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W) {
+        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e)) return;
+        auto& T   = R.get<transform::Transform>(e);
+        auto& CC  = R.get<physics::ColliderComponent>(e);
+        auto& cfg = R.get<PhysicsSyncConfig>(e);
+
+        const cpVect p = cpBodyGetPosition(CC.body.get());
+        const float a  = (float)cpBodyGetAngle(CC.body.get());
+
+        const Vector2 rl = { (float)p.x - T.getActualW() / 2, (float)p.y - T.getActualH() / 2 };
+
+        // Always position
+        T.setActualX(rl.x);
+        T.setActualY(rl.y);
+
+        // Rotation only if allowed
+        if (cfg.pullAngleFromPhysics) {
+            T.setActualRotation(a * RAD2DEG);
+        }
+    }
+
+
+    inline void TransformToBody(entt::registry& R, entt::entity e, physics::PhysicsWorld& W,
+                            bool zeroVelocity, bool useVisualRotation = true)
+    {
+        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent>(e)) return;
+        auto& T  = R.get<transform::Transform>(e);
+        auto& CC = R.get<physics::ColliderComponent>(e);
+        auto &cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
+
+        const Vector2 rl = { T.getActualX(), T.getActualY() };
+        const float rotDeg = (cfg.pushAngleFromTransform && useVisualRotation) 
+                     ? T.getVisualR() 
+                     : (cfg.pushAngleFromTransform ? T.getActualRotation() 
+                                                   : (float)cpBodyGetAngle(CC.body.get()) * RAD2DEG);
+        cpBodySetAngle(CC.body.get(), rotDeg * DEG2RAD);
+
+        const float   a  = rotDeg * DEG2RAD;
+
+        const cpVect  cp = { rl.x + T.getActualW() / 2, rl.y + T.getActualH() / 2 };
+        cpBodySetPosition(CC.body.get(), cp);
+
+        if (zeroVelocity) {
+            cpBodySetVelocity(CC.body.get(), cpvzero);
+            cpBodySetAngularVelocity(CC.body.get(), 0.0f);
+            cpBodyActivate(CC.body.get());
+        }
+    }
     
 /* -------------- Checking entity active state & physics state -------------- */
     
@@ -206,6 +280,27 @@ namespace physics {
 
     // Store on entity
     R.emplace_or_replace<physics::ColliderComponent>(e, body, shape, ci.tag, ci.sensor, ci.shape);
+    
+    R.emplace_or_replace<PhysicsWorldRef>(e, worldName);
+    
+    // check PhysicsWorldRef
+    auto &physicsWorldRef = R.get<PhysicsWorldRef>(e);
+    if (physicsWorldRef.name != worldName) {
+        SPDLOG_WARN("Entity {} has mismatched PhysicsWorldRef ({} vs {}). Updating to {}.",
+                    (uint32_t)e, physicsWorldRef.name, worldName, worldName);
+        physicsWorldRef.name = worldName;
+    }
+    
+    auto& cfg = R.emplace_or_replace<physics::PhysicsSyncConfig>(e);
+    cfg.mode = physics::PhysicsSyncMode::AuthoritativeTransform;
+    cfg.pushAngleFromTransform = true;   // push rotation on first frame
+    cfg.pullAngleFromPhysics   = false;  // physics should not overwrite our spawn pose this frame
+    
+    // Do the push immediately (safe if not stepping)
+    physics::TransformToBody(R, e, *rec->w, /*zeroVelocity=*/true, /*useVisualRotation=*/true);
+
+
+
 
     // ✅ Also stamp the world ref (constructor computes hash for us)
     if (set_world_ref_on_entity) {
@@ -269,6 +364,24 @@ namespace physics {
     cpSpaceAddShape(rec->w->space, shape.get());
 
     R.emplace_or_replace<physics::ColliderComponent>(e, body, shape, ci.tag, ci.sensor, ci.shape);
+    
+    R.emplace_or_replace<PhysicsWorldRef>(e, ref.name);
+    
+    // check PhysicsWorldRef
+    auto &physicsWorldRef = R.get<PhysicsWorldRef>(e);
+    if (physicsWorldRef.name != ref.name) {
+        SPDLOG_WARN("Entity {} has mismatched PhysicsWorldRef ({} vs {}). Updating to {}.",
+                    (uint32_t)e, physicsWorldRef.name, ref.name, ref.name);
+        physicsWorldRef.name = ref.name;
+    }
+    
+    auto& cfg = R.emplace_or_replace<physics::PhysicsSyncConfig>(e);
+    cfg.mode = physics::PhysicsSyncMode::AuthoritativeTransform;
+    cfg.pushAngleFromTransform = true;   // push rotation on first frame
+    cfg.pullAngleFromPhysics   = false;  // physics should not overwrite our spawn pose this frame
+    
+    // Do the push immediately (safe if not stepping)
+    physics::TransformToBody(R, e, *rec->w, /*zeroVelocity=*/true, /*useVisualRotation=*/true);
 
     rec->w->AddCollisionTag(ci.tag);
     rec->w->ApplyCollisionFilter(shape.get(), ci.tag);
@@ -278,75 +391,9 @@ namespace physics {
     
     
 /* ----------------------- Physics + Transform syncing ---------------------- */
-    enum class PhysicsSyncMode {
-        AuthoritativePhysics,     // body -> Transform.actual (default)
-        AuthoritativeTransform,   // Transform.actual -> body (drag/teleport)
-        FollowVisual,             // body follows Transform.visual (your springs)
-        FrozenWhileDesynced
-    };
     
+
     
-    struct PhysicsSyncConfig {
-        PhysicsSyncMode mode = PhysicsSyncMode::AuthoritativePhysics;
-        // follow visual knobs
-        bool teleportOnResync = true; // when resuming sync after disconnect, teleport to visual
-        bool useKinematic = true;      // kinematic while following visual (collides correctly)
-        float maxSpeed = 2400.f;       // clamp for stability
-        float doneDistPx = 0.6f;       // when close enough, flip back to AuthoritativePhysics
-        float doneSpeed   = 2.0f;      // and nearly stopped
-        cpBodyType prevType = CP_BODY_TYPE_DYNAMIC;
-        
-        // rotation sync policy
-        bool pushAngleFromTransform = true;   // when Transform is authoritative or following visual
-        bool pullAngleFromPhysics   = true;   // when Physics is authoritative (optional)
-
-        bool useVisualRotationWhenDragging = true; // during drag, push visual angle instead of actual
-
-    };
-
-    inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W) {
-        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e)) return;
-        auto& T   = R.get<transform::Transform>(e);
-        auto& CC  = R.get<physics::ColliderComponent>(e);
-        auto& cfg = R.get<PhysicsSyncConfig>(e);
-
-        const cpVect p = cpBodyGetPosition(CC.body.get());
-        const float a  = (float)cpBodyGetAngle(CC.body.get());
-
-        const Vector2 rl = { (float)p.x - T.getActualW() / 2, (float)p.y - T.getActualH() / 2 };
-
-        // Always position
-        T.setActualX(rl.x);
-        T.setActualY(rl.y);
-
-        // Rotation only if allowed
-        if (cfg.pullAngleFromPhysics) {
-            T.setActualRotation(a * RAD2DEG);
-        }
-    }
-
-
-    inline void TransformToBody(entt::registry& R, entt::entity e, physics::PhysicsWorld& W,
-                            bool zeroVelocity, bool useVisualRotation = true)
-    {
-        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent>(e)) return;
-        auto& T  = R.get<transform::Transform>(e);
-        auto& CC = R.get<physics::ColliderComponent>(e);
-
-        const Vector2 rl = { T.getActualX(), T.getActualY() };
-        const float   rotDeg = useVisualRotation ? T.getVisualR() : T.getActualRotation();
-        const float   a  = rotDeg * DEG2RAD;
-
-        const cpVect  cp = { rl.x + T.getActualW() / 2, rl.y + T.getActualH() / 2 };
-        cpBodySetPosition(CC.body.get(), cp);
-        cpBodySetAngle(CC.body.get(), a);
-
-        if (zeroVelocity) {
-            cpBodySetVelocity(CC.body.get(), cpvzero);
-            cpBodySetAngularVelocity(CC.body.get(), 0.0f);
-            cpBodyActivate(CC.body.get());
-        }
-    }
 
     
     // Kinematic follow (recommended for exact visual matching + good collisions):

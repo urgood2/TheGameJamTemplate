@@ -549,6 +549,7 @@ inline static cpSpaceDebugColor ColorForShape(cpShape *shape,
 
 }
 
+
 // Call this function to draw the physics objects for a cpSpace when debugging.
 // NOTE: if using a camera, call this function after beginMode2D(camera)
 inline static void ChipmunkDemoDefaultDrawImpl(cpSpace *space) {
@@ -833,7 +834,65 @@ void DisableStickyBetween(const std::string& tagA,
 
   void   InstallStickyPairHandler(cpCollisionType ta, cpCollisionType tb);
 
+/* ------------------- safe add/remove wrappers for shapes ------------------ */
+  // ---------- Post-step thunks (correct signature) ----------
+  static void PS_AddShape   (cpSpace* sp, void* key, void* data)   { cpSpaceAddShape(sp,   (cpShape*)data); }
+  static void PS_RemoveShape(cpSpace* sp, void* key, void* data)   { cpSpaceRemoveShape(sp,(cpShape*)data); }
+  static void PS_AddBody    (cpSpace* sp, void* key, void* data)   { cpSpaceAddBody(sp,    (cpBody*)data); }
+  static void PS_RemoveBody (cpSpace* sp, void* key, void* data)   { cpSpaceRemoveBody(sp, (cpBody*)data); }
+  static void PS_AddConst   (cpSpace* sp, void* key, void* data)   { cpSpaceAddConstraint(sp,(cpConstraint*)data); }
+  static void PS_RemoveConst(cpSpace* sp, void* key, void* data)   { cpSpaceRemoveConstraint(sp,(cpConstraint*)data); }
 
+  // If you also want to free something after removal, do that in a *second* post-step:
+  static void PS_FreeShape    (cpSpace*, void*, void* data){ cpShapeFree((cpShape*)data); }
+  static void PS_FreeBody     (cpSpace*, void*, void* data){ cpBodyFree((cpBody*)data); }
+  static void PS_FreeConstraint(cpSpace*, void*, void* data){ cpConstraintFree((cpConstraint*)data); }
+
+  // ---------- Safe wrappers ----------
+  inline void SpaceAddShapeSafe(cpSpace* sp, cpShape* s){
+      if (cpSpaceIsLocked(sp)) cpSpaceAddPostStepCallback(sp, PS_AddShape,   s, s);
+      else                     cpSpaceAddShape(sp, s);
+  }
+  inline void SpaceRemoveShapeSafe(cpSpace* sp, cpShape* s, bool freeAfter=false){
+      if (cpSpaceIsLocked(sp)) {
+          cpSpaceAddPostStepCallback(sp, PS_RemoveShape, s, s);
+          if (freeAfter) cpSpaceAddPostStepCallback(sp, PS_FreeShape, s, s);
+      } else {
+          cpSpaceRemoveShape(sp, s);
+          if (freeAfter) cpShapeFree(s);
+      }
+  }
+
+  inline void SpaceAddBodySafe(cpSpace* sp, cpBody* b){
+      if (cpSpaceIsLocked(sp)) cpSpaceAddPostStepCallback(sp, PS_AddBody,    b, b);
+      else                     cpSpaceAddBody(sp, b);
+  }
+  inline void SpaceRemoveBodySafe(cpSpace* sp, cpBody* b, bool freeAfter=false){
+      if (cpSpaceIsLocked(sp)) {
+          cpSpaceAddPostStepCallback(sp, PS_RemoveBody, b, b);
+          if (freeAfter) cpSpaceAddPostStepCallback(sp, PS_FreeBody, b, b);
+      } else {
+          cpSpaceRemoveBody(sp, b);
+          if (freeAfter) cpBodyFree(b);
+      }
+  }
+
+  inline void SpaceAddConstraintSafe(cpSpace* sp, cpConstraint* c){
+      if (cpSpaceIsLocked(sp)) cpSpaceAddPostStepCallback(sp, PS_AddConst,   c, c);
+      else                     cpSpaceAddConstraint(sp, c);
+  }
+  inline void SpaceRemoveConstraintSafe(cpSpace* sp, cpConstraint* c, bool freeAfter=false){
+      if (cpSpaceIsLocked(sp)) {
+          cpSpaceAddPostStepCallback(sp, PS_RemoveConst, c, c);
+          if (freeAfter) cpSpaceAddPostStepCallback(sp, PS_FreeConstraint, c, c);
+      } else {
+          cpSpaceRemoveConstraint(sp, c);
+          if (freeAfter) cpConstraintFree(c);
+      }
+  }
+
+
+  
 /* ------------------------ convex hull modification ------------------------ */
 bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/);
 

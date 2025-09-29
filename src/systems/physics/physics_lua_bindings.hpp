@@ -706,6 +706,138 @@ inline void expose_physics_to_lua(sol::state& lua) {
             ci.density = get_num   ("density", 1.0f);
             physics::CreatePhysicsForTransform(R, PM, e, ci);
         };
+        
+    // PhysicsSyncMode enum (table)
+    physics_table["PhysicsSyncMode"] = lua.create_table_with(
+        "AuthoritativePhysics",   static_cast<int>(physics::PhysicsSyncMode::AuthoritativePhysics),
+        "AuthoritativeTransform", static_cast<int>(physics::PhysicsSyncMode::AuthoritativeTransform),
+        "FollowVisual",           static_cast<int>(physics::PhysicsSyncMode::FollowVisual),
+        "FrozenWhileDesynced",    static_cast<int>(physics::PhysicsSyncMode::FrozenWhileDesynced)
+    );
+    rec.add_type("physics.PhysicsSyncMode").doc =
+        "Enum:\n- AuthoritativePhysics\n- AuthoritativeTransform\n- FollowVisual\n- FrozenWhileDesynced";
+
+    // RotationSyncMode enum (table)
+    physics_table["RotationSyncMode"] = lua.create_table_with(
+        "TransformFixed_PhysicsFollows", static_cast<int>(physics::RotationSyncMode::TransformFixed_PhysicsFollows),
+        "PhysicsFree_TransformFollows",  static_cast<int>(physics::RotationSyncMode::PhysicsFree_TransformFollows)
+    );
+    rec.add_type("physics.RotationSyncMode").doc =
+        "Enum:\n- TransformFixed_PhysicsFollows (lock body rotation; Transform angle is authority)\n"
+        "- PhysicsFree_TransformFollows (body rotates; Transform copies body angle)";
+        
+    rec.record_free_function(path, {
+        "enforce_rotation_policy",
+        "---@param R entt.registry\n---@param e entt.entity\n---@return nil",
+        "Re-applies current RotationSyncMode immediately (locks/unlocks and snaps angle if needed).",
+        true, false
+    });
+    physics_table.set_function("enforce_rotation_policy",
+        [](entt::registry& R, entt::entity e){
+            physics::EnforceRotationPolicy(R, e);
+        }
+    );
+    
+    rec.record_free_function(path, {
+        "use_transform_fixed_rotation",
+        "---@param R entt.registry\n---@param e entt.entity\n---@return nil",
+        "Lock body rotation; Transform’s angle is authority.",
+        true, false
+    });
+    physics_table.set_function("use_transform_fixed_rotation",
+        [](entt::registry& R, entt::entity e){
+            auto& cfg = R.get_or_emplace<physics::PhysicsSyncConfig>(e);
+            cfg.rotMode = physics::RotationSyncMode::TransformFixed_PhysicsFollows;
+            physics::EnforceRotationPolicy(R, e);
+        }
+    );
+
+    rec.record_free_function(path, {
+        "use_physics_free_rotation",
+        "---@param R entt.registry\n---@param e entt.entity\n---@return nil",
+        "Let physics rotate the body; Transform copies body angle.",
+        true, false
+    });
+    physics_table.set_function("use_physics_free_rotation",
+        [](entt::registry& R, entt::entity e){
+            auto& cfg = R.get_or_emplace<physics::PhysicsSyncConfig>(e);
+            cfg.rotMode = physics::RotationSyncMode::PhysicsFree_TransformFollows;
+            physics::EnforceRotationPolicy(R, e);
+        }
+    );
+
+
+    
+    // physics.set_sync_mode(R, e, mode)
+    // mode can be integer (enum) or string ("AuthoritativePhysics", etc.)
+    rec.record_free_function(path, {
+        "set_sync_mode",
+        "---@param R entt.registry\n---@param e entt.entity\n---@param mode integer|string\n---@return nil",
+        "Sets PhysicsSyncConfig.mode on the entity.",
+        true, false
+    });
+    physics_table.set_function("set_sync_mode",
+        [](entt::registry& R, entt::entity e, sol::object modeObj){
+            auto& cfg = R.get_or_emplace<physics::PhysicsSyncConfig>(e);
+            if (modeObj.is<int>()) {
+                cfg.mode = static_cast<physics::PhysicsSyncMode>(modeObj.as<int>());
+            } else if (modeObj.is<std::string>()) {
+                const std::string s = modeObj.as<std::string>();
+                if      (s == "AuthoritativePhysics")   cfg.mode = physics::PhysicsSyncMode::AuthoritativePhysics;
+                else if (s == "AuthoritativeTransform") cfg.mode = physics::PhysicsSyncMode::AuthoritativeTransform;
+                else if (s == "FollowVisual")           cfg.mode = physics::PhysicsSyncMode::FollowVisual;
+                else if (s == "FrozenWhileDesynced")    cfg.mode = physics::PhysicsSyncMode::FrozenWhileDesynced;
+            }
+        }
+    );
+
+    rec.record_free_function(path, {
+        "get_sync_mode",
+        "---@param R entt.registry\n---@param e entt.entity\n---@return integer",
+        "Returns PhysicsSyncConfig.mode (enum int).",
+        true, false
+    });
+    physics_table.set_function("get_sync_mode",
+        [](entt::registry& R, entt::entity e){
+            auto& cfg = R.get_or_emplace<physics::PhysicsSyncConfig>(e);
+            return static_cast<int>(cfg.mode);
+        }
+    );
+
+    // physics.set_rotation_mode(R, e, rotMode)
+    rec.record_free_function(path, {
+        "set_rotation_mode",
+        "---@param R entt.registry\n---@param e entt.entity\n---@param rot_mode integer|string\n---@return nil",
+        "Sets PhysicsSyncConfig.rotMode on the entity.",
+        true, false
+    });
+    physics_table.set_function("set_rotation_mode",
+        [](entt::registry& R, entt::entity e, sol::object modeObj){
+            auto& cfg = R.get_or_emplace<physics::PhysicsSyncConfig>(e);
+            if (modeObj.is<int>()) {
+                cfg.rotMode = static_cast<physics::RotationSyncMode>(modeObj.as<int>());
+            } else if (modeObj.is<std::string>()) {
+                const std::string s = modeObj.as<std::string>();
+                if      (s == "TransformFixed_PhysicsFollows") cfg.rotMode = physics::RotationSyncMode::TransformFixed_PhysicsFollows;
+                else if (s == "PhysicsFree_TransformFollows")  cfg.rotMode = physics::RotationSyncMode::PhysicsFree_TransformFollows;
+            }
+        }
+    );
+
+    rec.record_free_function(path, {
+        "get_rotation_mode",
+        "---@param R entt.registry\n---@param e entt.entity\n---@return integer",
+        "Returns PhysicsSyncConfig.rotMode (enum int).",
+        true, false
+    });
+    physics_table.set_function("get_rotation_mode",
+        [](entt::registry& R, entt::entity e){
+            auto& cfg = R.get_or_emplace<physics::PhysicsSyncConfig>(e);
+            return static_cast<int>(cfg.rotMode);
+        }
+    );
+
+
 
     rec.record_free_function(path, {
         "create_physics_for_transform",

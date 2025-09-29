@@ -85,13 +85,36 @@ function initMainMenu()
     
     physics.update_collision_masks_for(world, "sensor", {"player", "WORLD"})
     
-    physics.on_wildcard_presolve(world, "sensor", function(arb) 
-        log_debug("PRESOLVE SENSOR: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
-    end)
     physics.on_wildcard_presolve(world, "WORLD", function(arb) end)
     physics.on_wildcard_presolve(world, "player", function(arb) end)
     
+    
+    
     world:InstallDefaultBeginHandlersForAllTags()
+    
+    
+    -- sensors have presolve, but not postsolve
+    physics.on_wildcard_presolve(world, "sensor", function(arb)
+        log_debug("PRESOLVE SENSOR") 
+        log_debug("PRESOLVE SENSOR: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+    end)
+    -- this should work
+    physics.on_wildcard_presolve(world, "WORLD", function(arb) 
+        log_debug("PRESOLVE WORLD") 
+        log_debug("PRESOLVE WORLD: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+    end)
+    physics.on_wildcard_postsolve(world, "WORLD", function(arb) 
+        log_debug("POSTSOLVE WORLD")
+        log_debug("POSTSOLVE WORLD: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+    end)
+    physics.on_wildcard_presolve(world, "player", function(arb) 
+        log_debug("PRESOLVE PLAYER")
+        log_debug("PRESOLVE PLAYER: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+    end)
+    physics.on_wildcard_postsolve(world, "player", function(arb) 
+        log_debug("POSTSOLVE PLAYER")
+        log_debug("POSTSOLVE PLAYER: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+    end)
     
     
     world:PrintCollisionTags()

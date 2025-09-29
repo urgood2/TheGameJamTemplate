@@ -1463,6 +1463,10 @@ private:
     if (auto *ph = W->FindPairHandler(a)) {
       if (ph->pre_solve.valid()) {
         auto r = ph->pre_solve(lab);
+        if (!r.valid()) {
+            throw std::runtime_error("Lua pre_solve callback threw an error: " +
+                                    std::string(r.get<sol::error>().what()));
+        }
         if (!r.valid())
           return cpTrue; // swallow lua errors, keep solving
         sol::optional<bool> keep = r;
@@ -1472,6 +1476,10 @@ private:
     if (auto *wh = W->FindWildcardHandler(a)) {
       if (wh->pre_solve.valid()) {
         auto r = wh->pre_solve(lab);
+        if (!r.valid()) {
+            throw std::runtime_error("Lua pre_solve callback threw an error: " +
+                                    std::string(r.get<sol::error>().what()));
+        }
         if (!r.valid())
           return cpTrue;
         sol::optional<bool> keep = r;

@@ -33,19 +33,7 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] now debug triggerenter, not working. also debug post/pre solve.
-- [ ] why does this sometimes say unknown?
-
-```cpp
-SPDLOG_DEBUG("[Begin] A sensor? {}  B sensor? {}  A tag={}  B tag={}",
-            (int)cpShapeGetSensor(shapeA), (int)cpShapeGetSensor(shapeB),
-            GetTagFromCategory(cpShapeGetFilter(shapeA).categories),
-            GetTagFromCategory(cpShapeGetFilter(shapeB).categories));
-```
-```
-[2025-09-29 20:43:43.687] [debug] [physics_world.cpp:1065] [Begin] A sensor? 0  B sensor? 0  A tag=unknown  B tag=WORLD
-[2025-09-29 20:43:43.687] [debug] [physics_world.cpp:132] [Begin] A sensor? 0  B sensor? 0  A tag=unknown  B tag=WORLD
-```
+- [ ] add what arbiter looks like to lua docs
 - [ ] update lua bindings & docs one more time for physics world
 - [ ] gotta test the various bindings of physics world including steering.
 

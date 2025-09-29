@@ -1536,17 +1536,46 @@ inline void expose_physics_to_lua(sol::state& lua) {
             W.EnableCollisionGrouping((cpCollisionType)minT, (cpCollisionType)maxT, threshold, [](cpBody*){/* your C++ lambda already set */});
         });
 
-    // rec.record_free_function(path, {
-    //     "process_groups",
-    //     "---@param world physics.PhysicsWorld\n---@return nil",
-    //     "Runs group processing (invokes removal callbacks for groups over threshold).",
-    //     true, false
-    // });
-    // physics_table.set_function("process_groups",
-    //     [](physics::PhysicsWorld& W){ W.ProcessGroups(); });
+    
+    lua.new_usertype<LuaArbiter>(
+        "Arbiter",
+        // data
+        "ptr", sol::property([](LuaArbiter& a){ return (void*)a.arb; }),
+        // read helpers
+        "entities",   &LuaArbiter::entities,
+        "normal",     sol::property([](sol::this_state s, LuaArbiter& a){
+                            return vec_to_lua(sol::state_view(s), a.normal());
+                        }),
+        "total_impulse", sol::property([](sol::this_state s, LuaArbiter& a){
+                            return vec_to_lua(sol::state_view(s), a.total_impulse());
+                            }),
+        "total_impulse_length", &LuaArbiter::total_impulse_length,
+        "is_first_contact",     &LuaArbiter::is_first_contact,
+        "is_removal",           &LuaArbiter::is_removal,
+        // needs world to resolve tag strings
+        "tags",        &LuaArbiter::tags,
+        // mutators (preSolve only)
+        "set_friction",         &LuaArbiter::set_friction,
+        "set_elasticity",       &LuaArbiter::set_elasticity,
+        "set_surface_velocity", &LuaArbiter::set_surface_velocity,
+        "ignore",               &LuaArbiter::ignore
+    );
 
-}
-
+    rec.add_type("physics.Arbiter").doc =
+        "--- Wrapper over cpArbiter* passed to collision callbacks.\n"
+        "--- Fields/methods:\n"
+        "--- ptr: lightuserdata (arbiter pointer)\n"
+        "--- entities(): returns {entityA, entityB}\n"
+        "--- tags(world): returns {tagA, tagB}\n"
+        "--- normal: {x,y}\n"
+        "--- total_impulse: {x,y}\n"
+        "--- total_impulse_length: number\n"
+        "--- is_first_contact(): boolean\n"
+        "--- is_removal(): boolean\n"
+        "--- set_friction(f), set_elasticity(e), set_surface_velocity(vx,vy), ignore()  (preSolve only)";
+    }
+    
+    
 
 
 

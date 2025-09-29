@@ -4,6 +4,7 @@
 #include "../../third_party/chipmunk/include/chipmunk/cpMarch.h"
 #include "../../third_party/chipmunk/include/chipmunk/cpPolyline.h"
 #include "spdlog/spdlog.h"
+#include "systems/physics/physics_components.hpp"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_unsafe.h"
 #include "util/common_headers.hpp"
 #include <algorithm>
@@ -13,6 +14,52 @@
 #include <vector>
 
 namespace physics {
+  
+  // lua arbiter struct
+  std::pair<entt::entity, entt::entity> LuaArbiter::entities() const {
+      cpShape *sa, *sb;
+      cpArbiterGetShapes(arb, &sa, &sb);
+
+      auto getE = [](cpShape* s) -> entt::entity {
+          if (void* ud = cpShapeGetUserData(s)) {
+              return static_cast<entt::entity>(reinterpret_cast<uintptr_t>(ud));
+          }
+          // Return a valid entt::entity that represents null:
+          return entt::entity{entt::null}; // or: static_cast<entt::entity>(entt::null)
+      };
+
+      return { getE(sa), getE(sb) };
+  }
+
+  std::pair<std::string, std::string> LuaArbiter::tags(PhysicsWorld& W) const {
+      cpShape *sa, *sb;
+      cpArbiterGetShapes(arb, &sa, &sb);
+      auto fA = cpShapeGetFilter(sa);
+      auto fB = cpShapeGetFilter(sb);
+      return { W.GetTagFromCategory(int(fA.categories)),
+              W.GetTagFromCategory(int(fB.categories)) };
+  }
+
+  cpVect LuaArbiter::normal() const { return cpArbiterGetNormal(arb); }
+
+  float LuaArbiter::total_impulse_length() const {
+      cpVect J = cpArbiterTotalImpulse(arb);
+      return cpvlength(J);
+  }
+  cpVect LuaArbiter::total_impulse() const { return cpArbiterTotalImpulse(arb); }
+
+  
+  // --- Flags (read) ---
+  bool LuaArbiter::is_first_contact() const { return cpArbiterIsFirstContact(arb) == cpTrue; }
+  bool LuaArbiter::is_removal()       const { return cpArbiterIsRemoval(arb)       == cpTrue; }
+
+  // --- Mutate (only meaningful in preSolve) ---
+  void LuaArbiter::set_friction(float f) const    { cpArbiterSetFriction(arb, f); }
+  void LuaArbiter::set_elasticity(float e) const  { cpArbiterSetRestitution(arb, e); }
+  void LuaArbiter::set_surface_velocity(float vx, float vy) const { cpArbiterSetSurfaceVelocity(arb, cpv(vx, vy)); }
+  void LuaArbiter::ignore() const                 { cpArbiterIgnore(arb); }
+
+
 
 // --- Debug helpers (place near the top, after includes) ---
 static inline uintptr_t EID(entt::entity e) {
@@ -280,7 +327,9 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
   std::string tagA = GetTagFromCategory(filterA.categories);
   std::string tagB = GetTagFromCategory(filterB.categories);
 
-  std::string key = MakeKey(tagA, tagB);
+  std::string k1 = tagA, k2 = tagB;
+  if (k2 < k1) std::swap(k1, k2);
+  std::string key = MakeKey(k1, k2);
 
   if (isTriggerA || isTriggerB) {
     if (registry->all_of<ColliderComponent>(entityA)) {
@@ -543,8 +592,8 @@ auto PhysicsWorld::WaterPreSolveNative(cpArbiter *arb,
   if (clippedCount < 3)
     return;
 
-  SPDLOG_TRACE("Fluid: area={:.2f} displacedMass={:.3f} centroid=({:.1f},{:.1f}) GM=({:.1f},{:.1f})",
-             area, displacedMass, centroid.x, centroid.y, g.x, g.y);
+  // SPDLOG_TRACE("Fluid: area={:.2f} displacedMass={:.3f} centroid=({:.1f},{:.1f}) GM=({:.1f},{:.1f})",
+  //            area, displacedMass, centroid.x, centroid.y, g.x, g.y);
 
   FluidConfig cfg{0.00014f, 2.0f};
   if (auto it = _fluidByType.find(waterType); it != _fluidByType.end())
@@ -580,6 +629,8 @@ auto PhysicsWorld::WaterPreSolveNative(cpArbiter *arb,
   const float new_w = cpBodyGetAngularVelocity(body) *
                       cpfexp(-w_damping * dt / cpBodyGetMoment(body));
   cpBodySetAngularVelocity(body, new_w);
+  
+  
 }
 
 cpConstraint *PhysicsWorld::MakeBreakableSlideJoint(
@@ -649,12 +700,14 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter *arb) {
   auto key = PairKey(std::min(ta, tb), std::max(ta, tb));
 
   // pair pre-solve?
+  LuaArbiter luaArb{arb};
   if (auto it = _luaPairHandlers.find(key); it != _luaPairHandlers.end()) {
     if (it->second.pre_solve.valid()) {
-      sol::protected_function_result r = it->second.pre_solve(arb);
+      sol::protected_function_result r = it->second.pre_solve(luaArb);
       if (!r.valid()) {
         sol::error err = r;
         SPDLOG_ERROR("pair pre_solve: {}", err.what());
+        throw;
         return cpTrue;
       }
       // allow Lua to return boolean to accept/reject contact
@@ -667,13 +720,14 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter *arb) {
   if (auto wi = _luaWildcardHandlers.find(ta);
       wi != _luaWildcardHandlers.end()) {
     if (wi->second.pre_solve.valid()) {
-      auto r = wi->second.pre_solve(arb);
-      SPDLOG_TRACE("PreSolve Lua: pairKey={} -> returned={}", (unsigned long long)key,
-             (r.return_count()>0 && r.get_type(0)==sol::type::boolean) ? (r.get<bool>()?"true":"false") : "none");
+      auto r = wi->second.pre_solve(luaArb);
+      // SPDLOG_TRACE("PreSolve Lua: pairKey={} -> returned={}", (unsigned long long)key,
+      //        (r.return_count()>0 && r.get_type(0)==sol::type::boolean) ? (r.get<bool>()?"true":"false") : "none");
 
       if (!r.valid()) {
         sol::error err = r;
         SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)ta, err.what());
+        throw;
         return cpTrue;
       }
       if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean)
@@ -687,10 +741,11 @@ cpBool PhysicsWorld::OnPreSolve(cpArbiter *arb) {
       SPDLOG_TRACE("PreSolve Lua: pairKey={} -> returned={}", (unsigned long long)key,
              (r.return_count()>0 && r.get_type(0)==sol::type::boolean) ? (r.get<bool>()?"true":"false") : "none");
 
-      auto r = wi->second.pre_solve(arb);
+      auto r = wi->second.pre_solve(luaArb);
       if (!r.valid()) {
         sol::error err = r;
         SPDLOG_ERROR("wildcard({}) pre_solve: {}", (int)tb, err.what());
+        throw;
         return cpTrue;
       }
       if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean)
@@ -713,13 +768,15 @@ void PhysicsWorld::OnPostSolve(cpArbiter *arb) {
   
   SPDLOG_TRACE("PostSolve: pairKey={} ta={} tb={}", (unsigned long long)key, (int)ta, (int)tb);
 
+  LuaArbiter luaArb{arb};
 
   auto call = [&](sol::protected_function &fn) {
     if (fn.valid()) {
-      auto r = fn(arb);
+      auto r = fn(luaArb);
       if (!r.valid()) {
         sol::error err = r;
         SPDLOG_ERROR("post_solve: {}", err.what());
+        throw;
       }
     }
   };
@@ -821,35 +878,30 @@ void PhysicsWorld::UpdateCollisionMasks(
 
 }
 
-void PhysicsWorld::ApplyCollisionFilter(cpShape *shape,
-                                        const std::string &tag) {
+void PhysicsWorld::ApplyCollisionFilter(cpShape *shape, const std::string &tag) {
   auto it = collisionTags.find(tag);
   if (it == collisionTags.end()) {
     assert(false && "ApplyCollisionFilter: invalid tag");
     return;
   }
-
-  const auto &collisionTag = it->second;
+  const auto &ct = it->second;
 
   cpBitmask maskBits = 0;
-  for (int cat : collisionTag.masks) {
+  for (int cat : ct.masks) {
     maskBits |= static_cast<cpBitmask>(cat);
   }
 
-  if (maskBits == 0) {
-    maskBits = CP_ALL_CATEGORIES;
-    SPDLOG_DEBUG(
-        "Tag '{}' has empty masks; defaulting mask to CP_ALL_CATEGORIES", tag);
-  }
-
-  cpShapeFilter filter = {0, static_cast<cpBitmask>(collisionTag.category),
-                          maskBits};
-
+  // IMPORTANT: do NOT expand empty masks. Empty mask = collides with nothing.
+  cpShapeFilter filter = {
+      /*group*/ 0,
+      /*categories*/ static_cast<cpBitmask>(ct.category),
+      /*mask*/ maskBits // may be 0 on purpose
+  };
   cpShapeSetFilter(shape, filter);
-  
-  SPDLOG_TRACE("ApplyFilter shape={} tag='{}' cat={} mask={:#x}",
-             SID(shape), tag, collisionTag.category, (unsigned)maskBits);
 
+  SPDLOG_TRACE("ApplyFilter shape={} tag='{}' cat={:#x} mask={:#x}",
+               SID(shape), tag,
+               (unsigned)filter.categories, (unsigned)filter.mask);
 }
 
 std::vector<RaycastHit> PhysicsWorld::Raycast(float x1, float y1, float x2,
@@ -1261,14 +1313,17 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
   cpCollisionType ta = cpShapeGetCollisionType(sa);
   cpCollisionType tb = cpShapeGetCollisionType(sb);
   const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
+  
+  LuaArbiter luaArb{arb};
 
   auto call = [&](sol::protected_function &fn) -> std::optional<bool> {
     if (!fn.valid())
       return std::nullopt;
-    sol::protected_function_result r = fn(arb);
+    sol::protected_function_result r = fn(luaArb);
     if (!r.valid()) {
       sol::error err = r;
       SPDLOG_ERROR("begin: {}", err.what());
+      throw;
       return std::nullopt;
     }
     if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean) {
@@ -1317,14 +1372,16 @@ void PhysicsWorld::OnSeparate(cpArbiter *arb) {
   SPDLOG_DEBUG("Separate: sa={} sb={} ta={} tb={} tags=({}, {})",
              SID(sa), SID(sb), (int)ta, (int)tb, TagOf(this, sa), TagOf(this, sb));
 
+  LuaArbiter luaArb{arb};
 
   auto call = [&](sol::protected_function &fn) {
     if (!fn.valid())
       return;
-    auto r = fn(arb);
+    auto r = fn(luaArb);
     if (!r.valid()) {
       sol::error err = r;
       SPDLOG_ERROR("separate: {}", err.what());
+      throw;
     }
   };
 
@@ -1809,7 +1866,7 @@ entt::entity PhysicsWorld::PointQuery(float x, float y) {
   cpShape *hit = cpSpacePointQueryNearest(space, cpv(x, y), 3.0f,
                                           CP_SHAPE_FILTER_ALL, &info);
                                           
-  SPDLOG_TRACE("PointQuery: ({:.1f},{:.1f}) -> {}", x, y, (int)e);
+  // SPDLOG_TRACE("PointQuery: ({:.1f},{:.1f}) -> {}", x, y, (int)e);
   if (!hit)
     return entt::null;
   return static_cast<entt::entity>(
@@ -1959,6 +2016,9 @@ void PhysicsWorld::CreateTilemapColliders(
       cpShape *seg =
           cpSegmentShapeNew(cpSpaceGetStaticBody(space), a, b, segmentRadius);
       cpShapeSetFriction(seg, 1.0f);
+      // Give them a tag/filter/collision type if you want them queryable by tag:
+      ApplyCollisionFilter(seg, "WORLD");
+      cpShapeSetCollisionType(seg, _tagToCollisionType["WORLD"]);
       cpSpaceAddShape(space, seg);
     }
 
@@ -1982,6 +2042,8 @@ void PhysicsWorld::CreateTopDownController(entt::entity entity, float maxBias,
   cpConstraintSetMaxBias(joint, maxBias);
   cpConstraintSetMaxForce(joint, maxForce);
   cpSpaceAddConstraint(space, joint);
+  // add collision tag
+  ApplyCollisionFilter(col.shape.get(), "WORLD");
 }
 
 void PhysicsWorld::EnableCollisionGrouping(

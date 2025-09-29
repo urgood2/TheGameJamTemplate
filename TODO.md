@@ -33,19 +33,9 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] do we have these? also: https://chatgpt.com/share/68da7b5f-9234-800a-8e04-ed0c26830311
-```
-if (cpArbiterIsFirstContact(arb)) {
-  // one-shot setup work
-}
-if (cpArbiterIsRemoval(arb)) {
-  // one-shot teardown work
-}
-
-```
 - [ ] add what arbiter looks like to lua docs
 - [ ] update lua bindings & docs one more time for physics world
-- [ ] gotta test the various bindings of physics world including steering.
+- [ ] gotta test the various bindings of physics world including steering. continue from [Adding colliders]
 
 - test:
 ```lua

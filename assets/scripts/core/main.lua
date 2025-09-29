@@ -44,6 +44,7 @@ function initMainMenu()
     
     -- add tags to the world before creating objects
     world:AddCollisionTag("sensor")
+    world:AddCollisionTag("player")
     
     local player = animation_system.createAnimatedObjectWithTransform(
         "example_char", -- animation ID
@@ -83,10 +84,12 @@ function initMainMenu()
     physics.enable_collision_between(world, "WORLD", {"player", "sensor"})
     physics.enable_collision_between(world, "player", {"WORLD", "sensor"})
     
-    physics.update_collision_masks_for(world, "sensor", {"player", "WORLD"})
+    physics.update_collision_masks_for(world, "player", {"WORLD","sensor"})
+    physics.update_collision_masks_for(world, "WORLD",  {"player","sensor"})
+    physics.update_collision_masks_for(world, "sensor", {"player","WORLD"})
     
-    physics.on_wildcard_presolve(world, "WORLD", function(arb) end)
-    physics.on_wildcard_presolve(world, "player", function(arb) end)
+    -- physics.on_wildcard_presolve(world, "WORLD", function(arb) end)
+    -- physics.on_wildcard_presolve(world, "player", function(arb) end)
     
     
     
@@ -96,24 +99,24 @@ function initMainMenu()
     -- sensors have presolve, but not postsolve
     physics.on_wildcard_presolve(world, "sensor", function(arb)
         log_debug("PRESOLVE SENSOR") 
-        log_debug("PRESOLVE SENSOR: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+        -- log_debug("PRESOLVE SENSOR: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
     end)
-    -- this should work
+    -- arb is a LuaArbiter
     physics.on_wildcard_presolve(world, "WORLD", function(arb) 
         log_debug("PRESOLVE WORLD") 
-        log_debug("PRESOLVE WORLD: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+        -- log_debug("PRESOLVE WORLD: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
     end)
     physics.on_wildcard_postsolve(world, "WORLD", function(arb) 
         log_debug("POSTSOLVE WORLD")
-        log_debug("POSTSOLVE WORLD: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+        -- log_debug("POSTSOLVE WORLD: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
     end)
     physics.on_wildcard_presolve(world, "player", function(arb) 
         log_debug("PRESOLVE PLAYER")
-        log_debug("PRESOLVE PLAYER: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+        -- log_debug("PRESOLVE PLAYER: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
     end)
     physics.on_wildcard_postsolve(world, "player", function(arb) 
         log_debug("POSTSOLVE PLAYER")
-        log_debug("POSTSOLVE PLAYER: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+        -- log_debug("POSTSOLVE PLAYER: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
     end)
     
     

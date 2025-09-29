@@ -5003,6 +5003,24 @@ physics.RotationSyncMode = {
 
 
 ---
+--- --- Wrapper over cpArbiter* passed to collision callbacks.
+--- Fields/methods:
+--- ptr: lightuserdata (arbiter pointer)
+--- entities(): returns {entityA, entityB}
+--- tags(world): returns {tagA, tagB}
+--- normal: {x,y}
+--- total_impulse: {x,y}
+--- total_impulse_length: number
+--- is_first_contact(): boolean
+--- is_removal(): boolean
+--- set_friction(f), set_elasticity(e), set_surface_velocity(vx,vy), ignore()  (preSolve only)
+---
+---@class physics.Arbiter
+physics.Arbiter = {
+}
+
+
+---
 --- Steering behaviors (seek/flee/wander/boids/path) that push forces into Chipmunk bodies.
 ---
 ---@class steering

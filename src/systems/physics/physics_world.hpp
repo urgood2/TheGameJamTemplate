@@ -14,6 +14,33 @@
 
 namespace physics {
   
+  // Public POD we expose to Lua
+  class LuaArbiter {
+    public:
+      cpArbiter* arb = nullptr;
+
+      // --- Read ---
+      std::pair<entt::entity, entt::entity> entities() const;
+      
+
+      std::pair<std::string, std::string> tags(PhysicsWorld& W) const;
+      cpVect normal() const;
+
+      float total_impulse_length() const;
+
+      cpVect total_impulse() const;
+
+      // --- Flags (read) ---
+      bool is_first_contact() const;
+      bool is_removal()       const;
+
+      // --- Mutate (only meaningful in preSolve) ---
+      void set_friction(float f) const;
+      void set_elasticity(float e) const;
+      void set_surface_velocity(float vx, float vy) const;
+      void ignore() const;
+  };
+  
   static inline std::string MakeKey(const std::string& a, const std::string& b){
       return (a <= b) ? (a + ":" + b) : (b + ":" + a);
   }
@@ -1458,7 +1485,7 @@ private:
   // C callbacks that Chipmunk invokes
   static cpBool C_PreSolve(cpArbiter *a, cpSpace *, void *d) {
     auto *W = static_cast<PhysicsWorld *>(d);
-    LuaArbiter lab{a};
+    LuaArbiter lab{}; lab.arb = a;
     // Prefer pair handler over wildcard
     if (auto *ph = W->FindPairHandler(a)) {
       if (ph->pre_solve.valid()) {
@@ -1491,7 +1518,7 @@ private:
 
   static void C_PostSolve(cpArbiter *a, cpSpace *, void *d) {
     auto *W = static_cast<PhysicsWorld *>(d);
-    LuaArbiter lab{a};
+    LuaArbiter lab{}; lab.arb = a;
 
     if (auto *ph = W->FindPairHandler(a)) {
       if (ph->post_solve.valid()) {

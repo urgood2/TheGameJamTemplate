@@ -33,7 +33,6 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] how to render arbitrary polygones from physics engine in a nice way?
 - [ ] gotta test the various bindings of physics world including steering.
 
 - test:
@@ -263,8 +262,7 @@ int main() {
 - [ ] take progressBar9Patch example in ui_definitions.hpp, expose the features to lua, and document for future use.
 - [ ] how to do layer-localized shader effects -> test using Layer.postProcessShaders
 - [ ] lua access to input component, acccessing text & setting callback
-- [ ] expose addNPatchTiling from uiconfig builder to lua, expose.
-- how to make text popup include an image that fades with it? -> add alpha to animation queue comp for starters
+- [ ] expose  from uiconfig builder to lua, expose.
 - [ ] tilemap + test physics integration + above mentioned upgrades + giant tech tree screen (completey different screen, not just window)
 
 

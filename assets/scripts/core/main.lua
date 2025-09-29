@@ -57,13 +57,36 @@ function initMainMenu()
         info
     )
     
-    timer.every(5.0, function()
+    -- test sensors as well
+    
+    local sensor = animation_system.createAnimatedObjectWithTransform(
+        "tile008.png", -- animation ID
+        true,             -- use animation, not sprite identifier, if false
+        400, 300
+    )
+    
+    
+    info = { shape = "circle", tag = "sensor", sensor = true, density = 1.0, inflate_px = -3 } -- default tag is "WORLD"
+    physics.create_physics_for_transform(registry,
+        physics_manager_instance, -- global instance
+        sensor,
+        "world", -- physics world identifier
+        info
+    )
+    
+    world:enable_trigger_between("sensor", {"player", "WORLD"})
+    
+    world:PrintCollisionTags()
+    
+    timer.run(function()
         
         -- check between some test objects
         local ce = physics.GetCollisionEnter(world, "WORLD", "player")
-        local otherWay = physics.GetCollisionEnter(world, "player", "WORLD")
         
         log_debug("Collision enter between WORLD and player: " .. tostring(ce))
+        
+        local sensorCollide = physics.GetCollisionEnter(world, "sensor", "player")
+        log_debug("Collision enter between sensor and player: " .. tostring(sensorCollide))
         
     end)
     

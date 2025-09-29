@@ -4981,6 +4981,28 @@ physics.PhysicsWorld = {
 
 
 ---
+--- Enum:
+- AuthoritativePhysics
+- AuthoritativeTransform
+- FollowVisual
+- FrozenWhileDesynced
+---
+---@class physics.PhysicsSyncMode
+physics.PhysicsSyncMode = {
+}
+
+
+---
+--- Enum:
+- TransformFixed_PhysicsFollows (lock body rotation; Transform angle is authority)
+- PhysicsFree_TransformFollows (body rotates; Transform copies body angle)
+---
+---@class physics.RotationSyncMode
+physics.RotationSyncMode = {
+}
+
+
+---
 --- Steering behaviors (seek/flee/wander/boids/path) that push forces into Chipmunk bodies.
 ---
 ---@class steering
@@ -7389,6 +7411,85 @@ function particle.CreateParticleEmitter(...) end
 function particle.CreateParticle(...) end
 
 ---
+--- Defines ordered collision tags (also initializes trigger tags, categories, and type ids).
+---
+---@param world physics.PhysicsWorld
+---@param tags string[]
+function physics.set_collision_tags(...) end
+
+---
+--- Enables collision between tagA and each tag in tags.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tags string[]
+function physics.enable_collision_between_many(...) end
+
+---
+--- Disables collision between tagA and each tag in tags.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tags string[]
+function physics.disable_collision_between_many(...) end
+
+---
+--- Enable collision for a single pair or a list in one call.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB_or_list string|string[]
+function physics.enable_collision_between(...) end
+
+---
+--- Disable collision for a single pair or a list in one call.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB_or_list string|string[]
+function physics.disable_collision_between(...) end
+
+---
+--- Marks pairs (tagA, tag) as triggers (sensors) so they do not resolve collisions.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tags string[]
+function physics.enable_trigger_between_many(...) end
+
+---
+--- Unmarks triggers for each (tagA, tag).
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tags string[]
+function physics.disable_trigger_between_many(...) end
+
+---
+--- Enable triggers for a single pair or a list in one call.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB_or_list string|string[]
+function physics.enable_trigger_between(...) end
+
+---
+--- Disable triggers for a single pair or a list in one call.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB_or_list string|string[]
+function physics.disable_trigger_between(...) end
+
+---
+--- Rewrites the mask list for one tag and reapplies filters to existing shapes of that category.
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+---@param collidable_tags string[]
+function physics.update_collision_masks_for(...) end
+
+---
 --- Converts a lightuserdata (internally an entity id) to entt.entity.
 ---
 ---@param p lightuserdata
@@ -7791,6 +7892,64 @@ function physics.clear_wildcard_handlers(...) end
 ---@param cfg table @ {shape?:string, tag?:string, sensor?:boolean, density?:number}
 ---@return nil
 function physics.create_physics_for_transform(...) end
+
+---
+--- Re-applies current RotationSyncMode immediately (locks/unlocks and snaps angle if needed).
+---
+---@param R entt.registry
+---@param e entt.entity
+---@return nil
+function physics.enforce_rotation_policy(...) end
+
+---
+--- Lock body rotation; Transform’s angle is authority.
+---
+---@param R entt.registry
+---@param e entt.entity
+---@return nil
+function physics.use_transform_fixed_rotation(...) end
+
+---
+--- Let physics rotate the body; Transform copies body angle.
+---
+---@param R entt.registry
+---@param e entt.entity
+---@return nil
+function physics.use_physics_free_rotation(...) end
+
+---
+--- Sets PhysicsSyncConfig.mode on the entity.
+---
+---@param R entt.registry
+---@param e entt.entity
+---@param mode integer|string
+---@return nil
+function physics.set_sync_mode(...) end
+
+---
+--- Returns PhysicsSyncConfig.mode (enum int).
+---
+---@param R entt.registry
+---@param e entt.entity
+---@return integer
+function physics.get_sync_mode(...) end
+
+---
+--- Sets PhysicsSyncConfig.rotMode on the entity.
+---
+---@param R entt.registry
+---@param e entt.entity
+---@param rot_mode integer|string
+---@return nil
+function physics.set_rotation_mode(...) end
+
+---
+--- Returns PhysicsSyncConfig.rotMode (enum int).
+---
+---@param R entt.registry
+---@param e entt.entity
+---@return integer
+function physics.get_rotation_mode(...) end
 
 ---
 --- Creates physics for an entity in the given world; supports signed inflate in pixels and optional world-ref set.

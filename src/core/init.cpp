@@ -291,20 +291,33 @@ namespace init {
                 for (auto& cp437Sprite : spriteJson.at("frames"))
                 {
                     std::string filename = cp437Sprite.at("filename").get<std::string>();
-                    
-                    
 
-                    // Generate UUID using unify
-                    std::string uuid = uuid::add(filename);
-                    cp437Sprite["auto_generated_uuid"] = uuid;
+                    // Normalize & derive aliases
+                    std::filesystem::path fpath(filename);
+                    const std::string baseName   = fpath.filename().string();                     // "tile008.png"
+                    const std::string parentName = fpath.parent_path().filename().string();       // "32x32_ui_popups"
+                    const std::string parentPlus = parentName.empty() ? baseName                  // "32x32_ui_popups/tile008.png"
+                                                                    : (parentName + "/" + baseName);
 
-                    // Extract frame details
+                    // Register all keys with your UUID system
+                    // 1) whatever was in the JSON (full/relative path as provided)
+                    // 2) parent/filename
+                    // 3) filename only
+                    (void)uuid::add(filename);
+                    if (!parentName.empty()) (void)uuid::add(parentPlus);
+                    (void)uuid::add(baseName);
+
+                    // Store one canonical UUID back into the JSON (keep your existing behavior)
+                    std::string id = uuid::add(filename);          // or choose baseName/parentPlus as the canonical, your call
+                    cp437Sprite["auto_generated_uuid"] = id;
+
+                    // Extract frame details (unchanged)
                     globals::SpriteFrameData data{};
-                    data.frame.x = cp437Sprite.at("frame").at("x").get<int>();
-                    data.frame.y = cp437Sprite.at("frame").at("y").get<int>();
-                    data.frame.width = cp437Sprite.at("frame").at("w").get<int>();
+                    data.frame.x      = cp437Sprite.at("frame").at("x").get<int>();
+                    data.frame.y      = cp437Sprite.at("frame").at("y").get<int>();
+                    data.frame.width  = cp437Sprite.at("frame").at("w").get<int>();
                     data.frame.height = cp437Sprite.at("frame").at("h").get<int>();
-                    data.atlasUUID = atlasUUID;
+                    data.atlasUUID    = atlasUUID;
 
                     globals::spriteDrawFrames[filename] = data;
                 }

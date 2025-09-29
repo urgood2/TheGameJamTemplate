@@ -15,27 +15,29 @@ This doc shows how to drive your Chipmunk2D physics + steering from Lua using th
 3. [Adding colliders](#adding-colliders)
 4. [Multi‑shape API](#multi-shape-api)
 5. [Creating physics from transforms](#creating-physics-from-transforms)
-6. [Physics Manager & Navmesh (`PhysicsManager.*`)](#physics-manager--navmesh-pm)
-7. [Queries: Raycast, AABB & precise](#queries-raycast-aabb--precise)
-8. [Collision/Trigger events (buffered)](#collisiontrigger-events-buffered)
-9. [Arbiter scratch store (key/value)](#arbiter-scratch-store-keyvalue)
-10. [Lua collision handler registration](#lua-collision-handler-registration)
-11. [Body kinematics & material props](#body-kinematics--material-props)
-12. [Fluids / buoyancy sensors](#fluids--buoyancy-sensors)
-13. [One‑way platforms](#one-way-platforms)
-14. [Sticky glue (temporary joints)](#sticky-glue-temporary-joints)
-15. [Controllers: platformer / top‑down / tank](#controllers-platformer--top-down--tank)
-16. [Custom gravity & orbits](#custom-gravity--orbits)
-17. [Shatter & slice](#shatter--slice)
-18. [Static chains / bars / bounds / tilemaps](#static-chains--bars--bounds--tilemaps)
-19. [Contact metrics & neighbors](#contact-metrics--neighbors)
-20. [Mouse drag helper](#mouse-drag-helper)
-21. [Constraints (quick wrappers) & breakables](#constraints-quick-wrappers--breakables)
-22. [Collision grouping (union‑find)](#collision-grouping-union-find)
-23. [Steering: Make an agent & update](#steering-make-an-agent--update)
-24. [Steering behaviors](#steering-behaviors)
-25. [Practical patterns](#practical-patterns)
-26. [Gotchas & FAQs](#gotchas--faqs)
+6. [Physics Sync & Rotation Policy](#physics-sync--rotation-policy)
+7. [Physics Manager & Navmesh (`PhysicsManager.*`)](#physics-manager--navmesh-pm)
+8. [Queries: Raycast, AABB & precise](#queries-raycast-aabb--precise)
+9. [Collision/Trigger events (buffered)](#collisiontrigger-events-buffered)
+10. [Arbiter scratch store (key/value)](#arbiter-scratch-store-keyvalue)
+11. [Lua collision handler registration](#lua-collision-handler-registration)
+12. [Body kinematics & material props](#body-kinematics--material-props)
+13. [Fluids / buoyancy sensors](#fluids--buoyancy-sensors)
+14. [One‑way platforms](#one-way-platforms)
+15. [Sticky glue (temporary joints)](#sticky-glue-temporary-joints)
+16. [Controllers: platformer / top‑down / tank](#controllers-platformer--top-down--tank)
+17. [Custom gravity & orbits](#custom-gravity--orbits)
+18. [Shatter & slice](#shatter--slice)
+19. [Static chains / bars / bounds / tilemaps](#static-chains--bars--bounds--tilemaps)
+20. [Contact metrics & neighbors](#contact-metrics--neighbors)
+21. [Mouse drag helper](#mouse-drag-helper)
+22. [Constraints (quick wrappers) & breakables](#constraints-quick-wrappers--breakables)
+23. [Collision grouping (union‑find)](#collision-grouping-union-find)
+24. [Steering: Make an agent & update](#steering-make-an-agent--update)
+25. [Steering behaviors](#steering-behaviors)
+26. [Practical patterns](#practical-patterns)
+27. [Gotchas & FAQs](#gotchas--faqs)
+28. [Annex: Per‑API Examples (Copy/Paste Ready)](#annex-perapi-examples-copypaste-ready)
 
 ---
 
@@ -62,30 +64,47 @@ local W = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)  -- 64 px = 1 unit, g
 
 * `physics.ColliderShapeType`: `Rectangle | Circle | Polygon | Chain`
 
+* `physics.PhysicsSyncMode` enum table:
+
+  * `AuthoritativePhysics | AuthoritativeTransform | FollowVisual | FrozenWhileDesynced`
+
+* `physics.RotationSyncMode` enum table:
+
+  * `TransformFixed_PhysicsFollows | PhysicsFree_TransformFollows`
+
 ---
 
 ## Collision tags, masks & triggers
 
 ```lua
--- Define the universe of tags (order defines category ids internally)
-W:SetCollisionTags({ "player", "enemy", "projectile", "terrain", "sensor" })
-
--- Enable/disable collision pairs (adds/removes masks)
-W:EnableCollisionBetween("player", {"enemy", "terrain"})
-W:DisableCollisionBetween("player", {"projectile"}) -- player bullets pass through self
-
--- Triggers are separate, for sensor-style overlaps
-W:EnableTriggerBetween("sensor", {"player", "enemy"})
-
--- Add/remove tags at runtime if needed
-W:AddCollisionTag("pickup")
-W:EnableCollisionBetween("player", {"pickup"})
-
 -- Print table for sanity
 W:PrintCollisionTags()
 ```
 
 > **Bulk reapply:** After large changes, `W:UpdateCollisionMasks(tag, collidesWith)` reapplies masks to existing shapes of `tag`.
+
+**Lua-table friendly helpers (same behavior, easier from Lua):**
+
+```lua
+-- Exact wrappers bound in C++
+physics.set_collision_tags(W, {"player","enemy","terrain"})
+physics.enable_collision_between_many(W, "player", {"enemy","terrain"})
+physics.disable_collision_between_many(W, "player", {"projectile"})
+
+-- Single or list (auto-dispatch on arg type)
+physics.enable_collision_between(W, "player", "enemy")
+physics.enable_collision_between(W, "player", {"enemy","terrain"})
+physics.disable_collision_between(W, "player", "projectile")
+
+-- Triggers (sensors)
+physics.enable_trigger_between_many(W, "sensor", {"player","enemy"})
+physics.disable_trigger_between_many(W, "sensor", {"enemy"})
+physics.enable_trigger_between(W, "sensor", "player")
+physics.disable_trigger_between(W, "sensor", {"player","enemy"})
+
+-- Re-write one tag’s mask list and reapply filters
+physics.update_collision_masks_for(W, "player", {"enemy","terrain"})
+```
 
 ---
 
@@ -162,6 +181,40 @@ physics.create_physics_for_transform(registry, PhysicsManager, e, "world_name", 
 ```
 
 `shape`: `rectangle|circle|polygon|chain` (string, case‑insensitive).
+
+---
+
+## Physics Sync & Rotation Policy
+
+> Control who is authoritative (physics vs. transform), and whether rotation is locked or follows physics.
+
+**Enums (tables):**
+
+```lua
+physics.PhysicsSyncMode       -- AuthoritativePhysics | AuthoritativeTransform | FollowVisual | FrozenWhileDesynced
+physics.RotationSyncMode      -- TransformFixed_PhysicsFollows | PhysicsFree_TransformFollows
+```
+
+**Helpers (exact bindings):**
+
+```lua
+-- Immediately re-apply current rotation policy to entity e
+physics.enforce_rotation_policy(registry, e)
+
+-- Two convenience toggles for rotation policy
+physics.use_transform_fixed_rotation(registry, e)      -- lock body; Transform angle is authority
+physics.use_physics_free_rotation(registry, e)         -- body rotates; Transform copies body angle
+
+-- Set/get sync mode (accepts enum int or string)
+physics.set_sync_mode(registry, e, physics.PhysicsSyncMode.AuthoritativePhysics)
+physics.set_sync_mode(registry, e, "FollowVisual")
+local mode = physics.get_sync_mode(registry, e)        -- integer enum value
+
+-- Set/get rotation mode (accepts enum int or string)
+physics.set_rotation_mode(registry, e, physics.RotationSyncMode.TransformFixed_PhysicsFollows)
+physics.set_rotation_mode(registry, e, "PhysicsFree_TransformFollows")
+local rmode = physics.get_rotation_mode(registry, e)   -- integer enum value
+```
 
 ---
 

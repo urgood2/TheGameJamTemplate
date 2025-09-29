@@ -126,6 +126,131 @@ inline void expose_physics_to_lua(sol::state& lua) {
             "Construct with (registry*, meter:number, gravityX:number, gravityY:number). "
             "Call Update(dt) each frame and PostUpdate() after consuming event buffers.";
     }
+    
+    // Call this block inside expose_physics_to_lua(sol::state& lua)
+    {
+        using physics::PhysicsWorld;
+        auto &rec = BindingRecorder::instance();
+        const std::vector<std::string> path = {"physics"};
+        sol::table physics_table = lua["physics"].get_or_create<sol::table>();
+
+        // table -> vector<string>
+        auto tbl_to_strings = [](sol::table t){
+            std::vector<std::string> out; out.reserve(t.size());
+            for (auto &kv : t) if (kv.second.is<std::string>()) out.emplace_back(kv.second.as<std::string>());
+            return out;
+        };
+
+        // ------------------------------
+        // SetCollisionTags (vector<string>)
+        // ------------------------------
+        rec.record_free_function(path, {
+            "set_collision_tags",
+            "---@param world physics.PhysicsWorld\n---@param tags string[]",
+            "Defines ordered collision tags (also initializes trigger tags, categories, and type ids).",
+            true, false
+        });
+        physics_table.set_function("set_collision_tags", [tbl_to_strings](PhysicsWorld &W, sol::table tags){
+            W.SetCollisionTags(tbl_to_strings(tags));
+        });
+
+        // ------------------------------
+        // Enable/Disable Collision Between (tag + list)
+        // ------------------------------
+        rec.record_free_function(path, {
+            "enable_collision_between_many",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "Enables collision between tagA and each tag in tags.", true, false
+        });
+        physics_table.set_function("enable_collision_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
+            W.EnableCollisionBetween(a, tbl_to_strings(tags));
+        });
+
+        rec.record_free_function(path, {
+            "disable_collision_between_many",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "Disables collision between tagA and each tag in tags.", true, false
+        });
+        physics_table.set_function("disable_collision_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
+            W.DisableCollisionBetween(a, tbl_to_strings(tags));
+        });
+
+        // Back-compat single or list (auto-dispatch on arg type)
+        rec.record_free_function(path, {
+            "enable_collision_between",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "Enable collision for a single pair or a list in one call.", true, false
+        });
+        physics_table.set_function("enable_collision_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
+            if (b.is<std::string>()) { W.EnableCollisionBetween(a, std::vector<std::string>{b.as<std::string>()}); return; }
+            if (b.is<sol::table>()) { W.EnableCollisionBetween(a, tbl_to_strings(b.as<sol::table>())); return; }
+        });
+
+        rec.record_free_function(path, {
+            "disable_collision_between",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "Disable collision for a single pair or a list in one call.", true, false
+        });
+        physics_table.set_function("disable_collision_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
+            if (b.is<std::string>()) { W.DisableCollisionBetween(a, std::vector<std::string>{b.as<std::string>()}); return; }
+            if (b.is<sol::table>()) { W.DisableCollisionBetween(a, tbl_to_strings(b.as<sol::table>())); return; }
+        });
+
+        // ------------------------------
+        // Enable/Disable Trigger Between (tag + list)
+        // ------------------------------
+        rec.record_free_function(path, {
+            "enable_trigger_between_many",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "Marks pairs (tagA, tag) as triggers (sensors) so they do not resolve collisions.", true, false
+        });
+        physics_table.set_function("enable_trigger_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
+            W.EnableTriggerBetween(a, tbl_to_strings(tags));
+        });
+
+        rec.record_free_function(path, {
+            "disable_trigger_between_many",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tags string[]",
+            "Unmarks triggers for each (tagA, tag).", true, false
+        });
+        physics_table.set_function("disable_trigger_between_many", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::table tags){
+            W.DisableTriggerBetween(a, tbl_to_strings(tags));
+        });
+
+        // Back-compat single or list (auto-dispatch on arg type)
+        rec.record_free_function(path, {
+            "enable_trigger_between",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "Enable triggers for a single pair or a list in one call.", true, false
+        });
+        physics_table.set_function("enable_trigger_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
+            if (b.is<std::string>()) { W.EnableTriggerBetween(a, std::vector<std::string>{b.as<std::string>()}); return; }
+            if (b.is<sol::table>()) { W.EnableTriggerBetween(a, tbl_to_strings(b.as<sol::table>())); return; }
+        });
+
+        rec.record_free_function(path, {
+            "disable_trigger_between",
+            "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB_or_list string|string[]",
+            "Disable triggers for a single pair or a list in one call.", true, false
+        });
+        physics_table.set_function("disable_trigger_between", [tbl_to_strings](PhysicsWorld &W, const std::string &a, sol::object b){
+            if (b.is<std::string>()) { W.DisableTriggerBetween(a, std::vector<std::string>{b.as<std::string>()}); return; }
+            if (b.is<sol::table>()) { W.DisableTriggerBetween(a, tbl_to_strings(b.as<sol::table>())); return; }
+        });
+
+        // ------------------------------
+        // UpdateCollisionMasks(tag, {collidableTags})
+        // ------------------------------
+        rec.record_free_function(path, {
+            "update_collision_masks_for",
+            "---@param world physics.PhysicsWorld\n---@param tag string\n---@param collidable_tags string[]",
+            "Rewrites the mask list for one tag and reapplies filters to existing shapes of that category.", true, false
+        });
+        physics_table.set_function("update_collision_masks_for", [tbl_to_strings](PhysicsWorld &W, const std::string &tag, sol::table collidable){
+            W.UpdateCollisionMasks(tag, tbl_to_strings(collidable));
+        });
+    }
+
 
     // ---------- Convenience mappers ----------
     static auto to_entity = [](void* p)->entt::entity {

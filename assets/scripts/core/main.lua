@@ -77,7 +77,8 @@ function initMainMenu()
     physics.enable_trigger_between(world, "sensor", {"player", "WORLD"})
     physics.enable_collision_between(world, "WORLD", {"player"})
     physics.on_wildcard_presolve(world, "sensor", function(arb) end)
-    physics.on_wildcard_postsolve(world, "WORLD", function(arb) end)
+    physics.on_wildcard_presolve(world, "WORLD", function(arb) end)
+    physics.on_wildcard_presolve(world, "player", function(arb) end)
     
     world:PrintCollisionTags()
     
@@ -86,15 +87,17 @@ function initMainMenu()
         -- check between some test objects
         local ce = physics.GetCollisionEnter(world, "WORLD", "player")
         
-        if #ce > 0 then
-            log_debug("Collision enter between WORLD and player detected!")
-        end
-    
+        dump(ce)
         
-        local sensorCollide = physics.GetCollisionEnter(world, "sensor", "player")
-        if #sensorCollide > 0 then
-            log_debug("Sensor collision enter between sensor and player detected!")
-        end
+        local test2 = physics.GetCollisionEnter(world, "WORLD", "WORLD")
+        
+        dump(test2)
+        
+        local sensorCollide = physics.GetTriggerEnter(world, "sensor", "player")
+        dump(sensorCollide)
+        
+        local sensorCollide2 = physics.GetTriggerEnter(world, "sensor", "WORLD")
+        dump(sensorCollide2)
         
     end)
     

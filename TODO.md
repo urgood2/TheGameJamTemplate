@@ -34,6 +34,7 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 ## TODOS fast
 - [ ] now debug triggerenter, not working. also debug post/pre solve.
+- [ ] update lua bindings & docs one more time for physics world
 - [ ] gotta test the various bindings of physics world including steering.
 
 - test:

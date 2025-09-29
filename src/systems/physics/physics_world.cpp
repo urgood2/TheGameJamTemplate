@@ -3,6 +3,7 @@
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk.h"
 #include "../../third_party/chipmunk/include/chipmunk/cpMarch.h"
 #include "../../third_party/chipmunk/include/chipmunk/cpPolyline.h"
+#include "spdlog/spdlog.h"
 #include "third_party/chipmunk/include/chipmunk/chipmunk_unsafe.h"
 #include "util/common_headers.hpp"
 #include <algorithm>
@@ -124,6 +125,12 @@ void PhysicsWorld::SetMeter(float meter) {
 void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
   cpShape *shapeA, *shapeB;
   cpArbiterGetShapes(arb, &shapeA, &shapeB);
+  
+  SPDLOG_DEBUG("[Begin] A sensor? {}  B sensor? {}  A tag={}  B tag={}",
+             (int)cpShapeGetSensor(shapeA), (int)cpShapeGetSensor(shapeB),
+             GetTagFromCategory(cpShapeGetFilter(shapeA).categories),
+             GetTagFromCategory(cpShapeGetFilter(shapeB).categories));
+
 
   bool isTriggerA = cpShapeGetSensor(shapeA);
   bool isTriggerB = cpShapeGetSensor(shapeB);
@@ -133,6 +140,14 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
 
   if (!dataA || !dataB)
     return;
+  
+  
+  
+  if (isTriggerA || isTriggerB) {
+    SPDLOG_DEBUG("Trigger begin: {} (trigger={}) <-> {} (trigger={})",
+                 (uintptr_t)dataA, isTriggerA,
+                 (uintptr_t)dataB, isTriggerB);
+  }
 
   entt::entity entityA =
       static_cast<entt::entity>(reinterpret_cast<uintptr_t>(dataA));
@@ -144,17 +159,36 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
 
   std::string tagA = GetTagFromCategory(filterA.categories);
   std::string tagB = GetTagFromCategory(filterB.categories);
+  
+  
+  // Get per-shape tags BEFORE any swapping
+  const std::string aTag = GetTagFromCategory(filterA.categories);
+  const std::string bTag = GetTagFromCategory(filterB.categories);
 
-  std::string key = tagA + ":" + tagB;
+  // Use a sorted key ONLY for map storage
+  std::string k1 = aTag, k2 = bTag;
+  if (k2 < k1) std::swap(k1, k2);
+  const std::string key = MakeKey(k1, k2);
+
+  
+  auto allows = [&](const std::string& tSensor, const std::string& tOther){
+    const auto& v = triggerTags[tSensor].triggers;
+    const int catOther = triggerTags[tOther].category;
+    return std::find(v.begin(), v.end(), catOther) != v.end();
+  };
 
   if (isTriggerA || isTriggerB) {
-    if (isTriggerA)
+    // determine tagA/tagB earlier as you do
+    if (isTriggerA && allows(tagA, tagB)) {
       registry->get<ColliderComponent>(entityA).triggerEnter.push_back(dataB);
-    if (isTriggerB)
+      triggerEnter[key].push_back(dataB);
+      triggerActive[key].push_back(dataB);
+    }
+    if (isTriggerB && allows(tagB, tagA)) {
       registry->get<ColliderComponent>(entityB).triggerEnter.push_back(dataA);
-
-    triggerEnter[key].push_back(dataA);
-    triggerActive[key].push_back(dataA);
+      triggerEnter[key].push_back(dataA);
+      triggerActive[key].push_back(dataA);
+    }
     return;
   }
 
@@ -210,7 +244,8 @@ void PhysicsWorld::OnCollisionEnd(cpArbiter *arb) {
   std::string tagA = GetTagFromCategory(filterA.categories);
   std::string tagB = GetTagFromCategory(filterB.categories);
 
-  std::string key = tagA + ":" + tagB;
+  std::string key = MakeKey(tagA, tagB);
+
 
   if (isTriggerA || isTriggerB) {
     if (registry->all_of<ColliderComponent>(entityA)) {
@@ -305,10 +340,10 @@ void PhysicsWorld::DisableCollisionBetween(
   }
 }
 
-void PhysicsWorld::EnableTriggerBetween(const std::string &tag1,
-                                        const std::vector<std::string> &tags) {
-  for (const auto &tag : tags) {
-    triggerTags[tag1].triggers.push_back(triggerTags[tag].category);
+void PhysicsWorld::EnableTriggerBetween(const std::string& a, const std::vector<std::string>& bs){
+  for (const auto& b : bs) {
+    triggerTags[a].triggers.push_back(triggerTags[b].category);
+    triggerTags[b].triggers.push_back(triggerTags[a].category); // add reverse
   }
 }
 
@@ -325,13 +360,13 @@ void PhysicsWorld::DisableTriggerBetween(const std::string &tag1,
 const std::vector<CollisionEvent> &
 PhysicsWorld::GetCollisionEnter(const std::string &type1,
                                 const std::string &type2) {
-  return collisionEnter[type1 + ":" + type2];
+  return collisionEnter[MakeKey(type1, type2)];
 }
 
 const std::vector<void *> &
 PhysicsWorld::GetTriggerEnter(const std::string &type1,
                               const std::string &type2) {
-  return triggerEnter[type1 + ":" + type2];
+  return triggerEnter[MakeKey(type1, type2)];
 }
 
 void PhysicsWorld::SetCollisionTags(const std::vector<std::string>& tags) {
@@ -351,6 +386,8 @@ void PhysicsWorld::SetCollisionTags(const std::vector<std::string>& tags) {
     _tagToCollisionType[tag] = _nextCollisionType++;
 
     category <<= 1;
+    EnsureWildcardInstalled(_tagToCollisionType[tag]); // add this
+
   }
 }
 
@@ -587,6 +624,9 @@ while (categoryToTag.contains(category)) category <<= 1;
   triggerTags[tag] = {category, {}, {}};
   categoryToTag[category] = tag;
   _tagToCollisionType[tag] = _nextCollisionType++;
+  
+  EnsureWildcardInstalled(_tagToCollisionType[tag]);
+
 }
 
 void PhysicsWorld::RemoveCollisionTag(const std::string &tag) {
@@ -636,7 +676,7 @@ void PhysicsWorld::UpdateCollisionMasks(const std::string &tag,
 void PhysicsWorld::ApplyCollisionFilter(cpShape* shape, const std::string& tag) {
   auto it = collisionTags.find(tag);
   if (it == collisionTags.end()) {
-    SPDLOG_DEBUG("Invalid tag: {}. Tag not applied", tag);
+    assert(false && "ApplyCollisionFilter: invalid tag");
     return;
   }
 
@@ -745,6 +785,7 @@ void PhysicsWorld::AddShapeToEntity(entt::entity e,
                                     bool isSensor,
                                     const std::vector<cpVect>& points)
 {
+  if (!collisionTags.contains(tag)) AddCollisionTag(tag);            // ensure tag exists
     auto& col = registry->get<ColliderComponent>(e);
     if (!col.body) {
         // make a default dynamic body if none exists yet
@@ -987,36 +1028,112 @@ void PhysicsWorld::ClearWildcardHandlers(const std::string& tag) {
 void PhysicsWorld::EnsureWildcardInstalled(cpCollisionType t) {
     if (_installedWildcards.count(t)) return;
     cpCollisionHandler* h = cpSpaceAddWildcardHandler(space, t);
-    h->userData      = this;
-    h->preSolveFunc  = &PhysicsWorld::C_PreSolve;
-    h->postSolveFunc = &PhysicsWorld::C_PostSolve;
-    h->beginFunc     = [](cpArbiter* a, cpSpace* s, void* d)->cpBool {
-        static_cast<PhysicsWorld*>(d)->OnCollisionBegin(a);
-        return cpTrue;
-    };
-    h->separateFunc  = [](cpArbiter* a, cpSpace* s, void* d) {
-        static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a);
-    };
+    h->userData     = this;
+    h->beginFunc    = &PhysicsWorld::C_Begin;     // CHANGED
+    h->preSolveFunc = &PhysicsWorld::C_PreSolve;  // existing
+    h->postSolveFunc= &PhysicsWorld::C_PostSolve; // existing
+    h->separateFunc = &PhysicsWorld::C_Separate;  // CHANGED
     _installedWildcards.insert(t);
 }
 
 void PhysicsWorld::EnsurePairInstalled(cpCollisionType ta, cpCollisionType tb) {
-    uint64_t key = PairKey(ta, tb);
+    const uint64_t key = PairKey(ta, tb);
     if (_installedPairs.count(key)) return;
-
     cpCollisionHandler* h = cpSpaceAddCollisionHandler(space, ta, tb);
-    h->userData      = this;
-    h->preSolveFunc  = &PhysicsWorld::C_PreSolve;
-    h->postSolveFunc = &PhysicsWorld::C_PostSolve;
-    h->beginFunc     = [](cpArbiter* a, cpSpace* s, void* d)->cpBool {
-        static_cast<PhysicsWorld*>(d)->OnCollisionBegin(a);
-        return cpTrue;
-    };
-    h->separateFunc  = [](cpArbiter* a, cpSpace* s, void* d) {
-        static_cast<PhysicsWorld*>(d)->OnCollisionEnd(a);
+    h->userData     = this;
+    h->beginFunc    = &PhysicsWorld::C_Begin;     // CHANGED
+    h->preSolveFunc = &PhysicsWorld::C_PreSolve;  // existing
+    h->postSolveFunc= &PhysicsWorld::C_PostSolve; // existing
+    h->separateFunc = &PhysicsWorld::C_Separate;  // CHANGED
+    _installedPairs.insert(key);
+}
+
+cpBool PhysicsWorld::C_Begin(cpArbiter* a, cpSpace*, void* d) {
+    return static_cast<PhysicsWorld*>(d)->OnBegin(a);
+}
+void PhysicsWorld::C_Separate(cpArbiter* a, cpSpace*, void* d) {
+    static_cast<PhysicsWorld*>(d)->OnSeparate(a);
+}
+
+cpBool PhysicsWorld::OnBegin(cpArbiter* arb) {
+  
+  cpShape *shapeA, *shapeB; cpArbiterGetShapes(arb, &shapeA, &shapeB);
+  
+  SPDLOG_DEBUG("[Begin] A sensor? {}  B sensor? {}  A tag={}  B tag={}",
+            (int)cpShapeGetSensor(shapeA), (int)cpShapeGetSensor(shapeB),
+            GetTagFromCategory(cpShapeGetFilter(shapeA).categories),
+            GetTagFromCategory(cpShapeGetFilter(shapeB).categories));
+
+    // --- Keep your current bookkeeping (triggers, collisionEnter/Active, etc.)
+    // Move your existing OnCollisionBegin(arb) body here (or call it).
+    // NOTE: you can keep the function and call it if you prefer.
+    OnCollisionBegin(arb); // if you keep the old function
+
+    // --- Now run Lua begin handlers (pair first, then wildcards on each side)
+    cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
+    cpCollisionType ta = cpShapeGetCollisionType(sa);
+    cpCollisionType tb = cpShapeGetCollisionType(sb);
+    const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
+    
+    
+
+    auto call = [&](sol::protected_function& fn)->std::optional<bool> {
+        if (!fn.valid()) return std::nullopt;
+        sol::protected_function_result r = fn(arb);
+        if (!r.valid()) {
+            sol::error err = r;
+            SPDLOG_ERROR("begin: {}", err.what());
+            return std::nullopt;
+        }
+        if (r.return_count() > 0 && r.get_type(0) == sol::type::boolean) {
+            return r.get<bool>();
+        }
+        return std::nullopt;
     };
 
-    _installedPairs.insert(key);
+    bool accept = true;
+
+    if (auto it = _luaPairHandlers.find(key); it != _luaPairHandlers.end()) {
+        if (auto v = call(it->second.begin); v.has_value() && v.value() == false) accept = false;
+    }
+    if (auto wi = _luaWildcardHandlers.find(ta); wi != _luaWildcardHandlers.end()) {
+        if (auto v = call(wi->second.begin); v.has_value() && v.value() == false) accept = false;
+    }
+    if (auto wi = _luaWildcardHandlers.find(tb); wi != _luaWildcardHandlers.end()) {
+        if (auto v = call(wi->second.begin); v.has_value() && v.value() == false) accept = false;
+    }
+
+    return accept ? cpTrue : cpFalse;
+}
+
+void PhysicsWorld::OnSeparate(cpArbiter* arb) {
+    // --- Keep your current bookkeeping for exits
+    OnCollisionEnd(arb); // reuse your existing function body
+
+    // --- Lua separate
+    cpShape *sa, *sb; cpArbiterGetShapes(arb, &sa, &sb);
+    cpCollisionType ta = cpShapeGetCollisionType(sa);
+    cpCollisionType tb = cpShapeGetCollisionType(sb);
+    const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
+
+    auto call = [&](sol::protected_function& fn){
+        if (!fn.valid()) return;
+        auto r = fn(arb);
+        if (!r.valid()) {
+            sol::error err = r;
+            SPDLOG_ERROR("separate: {}", err.what());
+        }
+    };
+
+    if (auto it = _luaPairHandlers.find(key); it != _luaPairHandlers.end()) call(it->second.separate);
+    if (auto wi = _luaWildcardHandlers.find(ta); wi != _luaWildcardHandlers.end()) call(wi->second.separate);
+    if (auto wi = _luaWildcardHandlers.find(tb); wi != _luaWildcardHandlers.end()) call(wi->second.separate);
+}
+
+void PhysicsWorld::InstallDefaultBeginHandlersForAllTags() {
+  for (auto& [tag, ct] : collisionTags) {
+    EnsureWildcardInstalled(_tagToCollisionType[tag]); // installs C_Begin → OnBegin
+  }
 }
 
 void PhysicsWorld::ApplyImpulse(entt::entity entity, float impulseX,

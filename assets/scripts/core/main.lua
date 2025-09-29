@@ -42,6 +42,9 @@ function initMainMenu()
     
     local active = PhysicsManager.is_world_active("world")
     
+    -- add tags to the world before creating objects
+    world:AddCollisionTag("sensor")
+    
     local player = animation_system.createAnimatedObjectWithTransform(
         "example_char", -- animation ID
         false,             -- use animation, not sprite identifier, if false
@@ -75,10 +78,20 @@ function initMainMenu()
     )
     
     physics.enable_trigger_between(world, "sensor", {"player", "WORLD"})
-    physics.enable_collision_between(world, "WORLD", {"player"})
-    physics.on_wildcard_presolve(world, "sensor", function(arb) end)
+    
+    physics.enable_collision_between(world, "sensor", {"player", "WORLD"})
+    physics.enable_collision_between(world, "WORLD", {"player", "sensor"})
+    physics.enable_collision_between(world, "player", {"WORLD", "sensor"})
+    
+    physics.update_collision_masks_for(world, "sensor", {"player", "WORLD"})
+    
+    physics.on_wildcard_presolve(world, "sensor", function(arb) 
+        log_debug("PRESOLVE SENSOR: a=" .. tostring(arb.a) .. " b=" .. tostring(arb.b) .. " a_tag=" .. tostring(arb.a_tag) .. " b_tag=" .. tostring(arb.b_tag))
+    end)
     physics.on_wildcard_presolve(world, "WORLD", function(arb) end)
     physics.on_wildcard_presolve(world, "player", function(arb) end)
+    
+    
     
     world:PrintCollisionTags()
     

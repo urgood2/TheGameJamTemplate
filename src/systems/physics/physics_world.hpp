@@ -3,6 +3,7 @@
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk_private.h"
 #include "../../third_party/chipmunk/include/chipmunk/chipmunk_structs.h"
 #include "entt/entt.hpp"
+#include "forward.hpp"
 #include "physics_components.hpp"
 #include "raylib.h"
 #include "systems/layer/layer.hpp"
@@ -12,6 +13,10 @@
 #include <vector>
 
 namespace physics {
+  
+  static inline std::string MakeKey(const std::string& a, const std::string& b){
+      return (a <= b) ? (a + ":" + b) : (b + ":" + a);
+  }
     
 /* ---------------------------- from sticky demo ---------------------------- */
 
@@ -909,6 +914,8 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
                              const std::vector<std::string> &tags);
   void EnsureWildcardInstalled(cpCollisionType t);
   void EnsurePairInstalled(cpCollisionType ta, cpCollisionType tb);
+  
+  void InstallDefaultBeginHandlersForAllTags();
   // Pair registration
   void RegisterPairPreSolve(const std::string &a, const std::string &b,
                             sol::protected_function fn);
@@ -919,6 +926,39 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
                                 sol::protected_function fn);
   void RegisterWildcardPostSolve(const std::string &tag,
                                  sol::protected_function fn);
+  // Static trampolines for Chipmunk callbacks (like C_PreSolve/C_PostSolve you already have)
+  static cpBool C_Begin(cpArbiter* a, cpSpace* s, void* d);
+  static void   C_Separate(cpArbiter* a, cpSpace* s, void* d);
+
+  // Instance handlers
+  cpBool OnBegin(cpArbiter* arb);   // returns cpTrue/False (Lua may veto)
+  void  OnSeparate(cpArbiter* arb); 
+            
+  // --- Pair (A,B) ---
+void RegisterPairBegin(const std::string& a, const std::string& b, sol::protected_function fn) {
+    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
+    auto& H = _luaPairHandlers[PairKey(ta, tb)];
+    H.begin = std::move(fn);
+    EnsurePairInstalled(ta, tb);
+}
+void RegisterPairSeparate(const std::string& a, const std::string& b, sol::protected_function fn) {
+    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
+    auto& H = _luaPairHandlers[PairKey(ta, tb)];
+    H.separate = std::move(fn);
+    EnsurePairInstalled(ta, tb);
+}
+
+// --- Wildcard (any with tag) ---
+void RegisterWildcardBegin(const std::string& tag, sol::protected_function fn) {
+    cpCollisionType t = TypeForTag(tag);
+    _luaWildcardHandlers[t].begin = std::move(fn);
+    EnsureWildcardInstalled(t);
+}
+void RegisterWildcardSeparate(const std::string& tag, sol::protected_function fn) {
+    cpCollisionType t = TypeForTag(tag);
+    _luaWildcardHandlers[t].separate = std::move(fn);
+    EnsureWildcardInstalled(t);
+}
   // Optional unregistration helpers if you want:
   void ClearPairHandlers(const std::string &a, const std::string &b);
   void ClearWildcardHandlers(const std::string &tag);
@@ -1365,13 +1405,17 @@ private:
   /* --------------- collision handling post-solve and pre-solve --------------
    */
   struct LuaPairHandler {
+    sol::protected_function begin;     
     sol::protected_function pre_solve;  // optional
     sol::protected_function post_solve; // optional
+    sol::protected_function separate;   // optional
   };
 
   struct LuaWildcardHandler {
+    sol::protected_function begin;    
     sol::protected_function pre_solve;  // optional
     sol::protected_function post_solve; // optional
+    sol::protected_function separate;   // optional
   };
 
   std::unordered_map<uint64_t, LuaPairHandler> _luaPairHandlers;

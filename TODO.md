@@ -33,6 +33,7 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
+- [ ] getCollisionEnter returns empty table even when there is a collision. why? OnCollisionBegin does not work unless both have userdata. start with that.
 - [ ] gotta test the various bindings of physics world including steering.
 
 - test:

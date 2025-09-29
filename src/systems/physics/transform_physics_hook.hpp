@@ -59,6 +59,11 @@ namespace physics {
         FrozenWhileDesynced
     };
     
+    enum class RotationSyncMode {
+        TransformFixed_PhysicsFollows,   // keep transform angle; force body to it
+        PhysicsFree_TransformFollows     // let body rotate; copy to transform
+    };
+
     
     struct PhysicsSyncConfig {
         PhysicsSyncMode mode = PhysicsSyncMode::AuthoritativePhysics;
@@ -70,6 +75,10 @@ namespace physics {
         float doneSpeed   = 2.0f;      // and nearly stopped
         cpBodyType prevType = CP_BODY_TYPE_DYNAMIC;
         
+        // NEW: rotation authority
+        RotationSyncMode rotMode = RotationSyncMode::PhysicsFree_TransformFollows;
+
+        
         // rotation sync policy
         bool pushAngleFromTransform = true;   // when Transform is authoritative or following visual
         bool pullAngleFromPhysics   = true;   // when Physics is authoritative (optional)
@@ -78,8 +87,11 @@ namespace physics {
 
     };
     
+    void SetBodyRotationLocked(entt::registry& R, entt::entity e, bool lock);
+
     inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W) {
         if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e)) return;
+
         auto& T   = R.get<transform::Transform>(e);
         auto& CC  = R.get<physics::ColliderComponent>(e);
         auto& cfg = R.get<PhysicsSyncConfig>(e);
@@ -87,15 +99,35 @@ namespace physics {
         const cpVect p = cpBodyGetPosition(CC.body.get());
         const float a  = (float)cpBodyGetAngle(CC.body.get());
 
-        const Vector2 rl = { (float)p.x - T.getActualW() / 2, (float)p.y - T.getActualH() / 2 };
-
-        // Always position
+        const Vector2 rl = { (float)p.x - T.getActualW() * 0.5f, (float)p.y - T.getActualH() * 0.5f };
         T.setActualX(rl.x);
         T.setActualY(rl.y);
 
-        // Rotation only if allowed
-        if (cfg.pullAngleFromPhysics) {
+        // ---- ROTATION HANDOFF ----
+        if (cfg.rotMode == RotationSyncMode::PhysicsFree_TransformFollows) {
             T.setActualRotation(a * RAD2DEG);
+        } else {
+            // Transform is authoritative → do NOT pull angle from physics
+            // Ensure body stays aligned next pre-step push.
+        }
+    }
+    
+    inline void EnforceRotationPolicy(entt::registry& R, entt::entity e) {
+        auto& cfg = R.get<PhysicsSyncConfig>(e);
+        auto& CC  = R.get<physics::ColliderComponent>(e);
+        auto& T   = R.get<transform::Transform>(e);
+        cpBody* b = CC.body.get();
+
+        if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
+            // keep body locked and glued to Transform angle
+            SetBodyRotationLocked(R, e, true);
+            cpBodySetAngle(b, T.getActualRotation() * DEG2RAD);
+            cpBodySetAngularVelocity(b, 0.0f);
+            // optional: cpBodySetTorque(b, 0.0f);
+        } else {
+            // ensure rotation is free
+            SetBodyRotationLocked(R, e, false);
+            // Transform angle comes from physics in BodyToTransform()
         }
     }
 
@@ -103,26 +135,44 @@ namespace physics {
     inline void TransformToBody(entt::registry& R, entt::entity e, physics::PhysicsWorld& W,
                             bool zeroVelocity, bool useVisualRotation = true)
     {
-        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent>(e)) return;
-        auto& T  = R.get<transform::Transform>(e);
-        auto& CC = R.get<physics::ColliderComponent>(e);
-        auto &cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
+        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent> (e)) return;
+
+        auto& T   = R.get<transform::Transform>(e);
+        auto& CC  = R.get<physics::ColliderComponent>(e);
+        auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
 
         const Vector2 rl = { T.getActualX(), T.getActualY() };
-        const float rotDeg = (cfg.pushAngleFromTransform && useVisualRotation) 
-                     ? T.getVisualR() 
-                     : (cfg.pushAngleFromTransform ? T.getActualRotation() 
-                                                   : (float)cpBodyGetAngle(CC.body.get()) * RAD2DEG);
-        cpBodySetAngle(CC.body.get(), rotDeg * DEG2RAD);
-
-        const float   a  = rotDeg * DEG2RAD;
-
-        const cpVect  cp = { rl.x + T.getActualW() / 2, rl.y + T.getActualH() / 2 };
+        const cpVect  cp = { rl.x + T.getActualW() * 0.5f, rl.y + T.getActualH() * 0.5f };
         cpBodySetPosition(CC.body.get(), cp);
+
+        // ---- ROTATION HANDOFF ----
+        if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
+            // Authoritative angle is Transform
+            // const float rotDeg = (cfg.pushAngleFromTransform && useVisualRotation)
+            //                 ? T.getVisualR()
+            //                 : (cfg.pushAngleFromTransform ? T.getActualRotation()
+            //                                                 : (float)cpBodyGetAngle(CC.body.get()) * RAD2DEG);
+            const float rotDeg = useVisualRotation
+                            ? T.getVisualR()
+                            : T.getActualRotation();
+            cpBodySetAngle(CC.body.get(), rotDeg * DEG2RAD);
+            cpBodySetAngularVelocity(CC.body.get(), 0.0f);
+            if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
+                SetBodyRotationLocked(R, e, true);
+            }
+        } else { // PhysicsFree_TransformFollows
+            // Don’t stamp angle onto body; ensure rotation is free
+            if (cfg.rotMode == RotationSyncMode::PhysicsFree_TransformFollows) {
+                SetBodyRotationLocked(R, e, false);
+            }
+        }
 
         if (zeroVelocity) {
             cpBodySetVelocity(CC.body.get(), cpvzero);
-            cpBodySetAngularVelocity(CC.body.get(), 0.0f);
+            // leave angular vel alone in PhysicsFree mode
+            if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
+                cpBodySetAngularVelocity(CC.body.get(), 0.0f);
+            }
             cpBodyActivate(CC.body.get());
         }
     }
@@ -296,8 +346,27 @@ namespace physics {
     cfg.pushAngleFromTransform = true;   // push rotation on first frame
     cfg.pullAngleFromPhysics   = false;  // physics should not overwrite our spawn pose this frame
     
-    // Do the push immediately (safe if not stepping)
-    physics::TransformToBody(R, e, *rec->w, /*zeroVelocity=*/true, /*useVisualRotation=*/true);
+    // Choose initial behavior based on rotMode
+    if (cfg.rotMode == physics::RotationSyncMode::PhysicsFree_TransformFollows) {
+        // Start with physics authority so Transform follows the body immediately
+        cfg.mode = physics::PhysicsSyncMode::AuthoritativePhysics;
+        cfg.pushAngleFromTransform = false;
+        cfg.pullAngleFromPhysics   = true;
+
+        // Snap Transform to the freshly created body pose *now*
+        physics::BodyToTransform(R, e, *rec->w);
+        EnforceRotationPolicy(R, e); // ensure finite moment (free rotation) on spawn
+    } else {
+        // Transform-fixed mode: keep your existing push
+        cfg.mode = physics::PhysicsSyncMode::AuthoritativeTransform;
+        cfg.pushAngleFromTransform = true;
+        cfg.pullAngleFromPhysics   = false;
+
+        // Push Transform pose into the body once and lock rotation
+        physics::TransformToBody(R, e, *rec->w, /*zeroVelocity=*/true, /*useVisualRotation=*/true);
+        EnforceRotationPolicy(R, e); // lock rotation (INFINITY moment) on spawn
+    }
+
 
 
 
@@ -380,8 +449,28 @@ namespace physics {
     cfg.pushAngleFromTransform = true;   // push rotation on first frame
     cfg.pullAngleFromPhysics   = false;  // physics should not overwrite our spawn pose this frame
     
-    // Do the push immediately (safe if not stepping)
-    physics::TransformToBody(R, e, *rec->w, /*zeroVelocity=*/true, /*useVisualRotation=*/true);
+    
+    // Choose initial behavior based on rotMode
+    if (cfg.rotMode == physics::RotationSyncMode::PhysicsFree_TransformFollows) {
+        // Start with physics authority so Transform follows the body immediately
+        cfg.mode = physics::PhysicsSyncMode::AuthoritativePhysics;
+        cfg.pushAngleFromTransform = false;
+        cfg.pullAngleFromPhysics   = true;
+
+        // Snap Transform to the freshly created body pose *now*
+        physics::BodyToTransform(R, e, *rec->w);
+        EnforceRotationPolicy(R, e); // ensure finite moment (free rotation) on spawn
+    } else {
+        // Transform-fixed mode: keep your existing push
+        cfg.mode = physics::PhysicsSyncMode::AuthoritativeTransform;
+        cfg.pushAngleFromTransform = true;
+        cfg.pullAngleFromPhysics   = false;
+
+        // Push Transform pose into the body once and lock rotation
+        physics::TransformToBody(R, e, *rec->w, /*zeroVelocity=*/true, /*useVisualRotation=*/true);
+        EnforceRotationPolicy(R, e); // lock rotation (INFINITY moment) on spawn
+    }
+
 
     rec->w->AddCollisionTag(ci.tag);
     rec->w->ApplyCollisionFilter(shape.get(), ci.tag);
@@ -521,6 +610,20 @@ namespace physics {
             // now let physics be authoritative again; body -> Transform.actual post-step
             cfg.mode = PhysicsSyncMode::AuthoritativePhysics;
 
+            // decide the rotation policy after drop
+            if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
+                // keep rotation locked
+                SetBodyRotationLocked(R, e, true);
+                // snap body angle to Transform once so it doesn’t drift
+                auto& T = R.get<transform::Transform>(e);
+                cpBodySetAngle(cc->body.get(), T.getActualRotation() * DEG2RAD);
+                cpBodySetAngularVelocity(cc->body.get(), 0.f);
+            } else {
+                // rotation should be free → ensure finite moment
+                SetBodyRotationLocked(R, e, false);
+            }
+
+
             // optional: if you want one or two frames of visual-follow settle,
             // you could briefly do:
             //   cfg.mode = PhysicsSyncMode::FollowVisual; cfg.useKinematic = false;
@@ -540,7 +643,9 @@ namespace physics {
             if (auto* rec = PM.get(ref.name); rec && PhysicsManager::world_active(*rec)) {
                 TransformToBody(R, e, *rec->w, /*zeroVel=*/true, /*useVisualRotation=*/cfg.useVisualRotationWhenDragging && cfg.pushAngleFromTransform);
             }
+            EnforceRotationPolicy(R, e); // cheap, idempotent
         }
+        
     }
 
     
@@ -555,6 +660,7 @@ namespace physics {
             if (auto* rec = PM.get(ref.name); rec && PhysicsManager::world_active(*rec)) {
                 BodyToTransform(R, e, *rec->w);
             }
+            EnforceRotationPolicy(R, e); // cheap, idempotent
         }
     }
     

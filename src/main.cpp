@@ -396,7 +396,7 @@ auto updateSystems(float dt) -> void
     sound_system::Update(dt); // update sound system
     
     
-physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
     
     globals::physicsManager->stepAll(dt); // step all physics worlds
     

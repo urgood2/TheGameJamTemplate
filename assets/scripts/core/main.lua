@@ -91,6 +91,7 @@ function initMainMenu()
     physics.on_wildcard_presolve(world, "WORLD", function(arb) end)
     physics.on_wildcard_presolve(world, "player", function(arb) end)
     
+    world:InstallDefaultBeginHandlersForAllTags()
     
     
     world:PrintCollisionTags()

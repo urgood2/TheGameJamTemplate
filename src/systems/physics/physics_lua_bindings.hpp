@@ -116,7 +116,8 @@ inline void expose_physics_to_lua(sol::state& lua) {
         "AddCollisionTag",        &PhysicsWorld::AddCollisionTag,
         "RemoveCollisionTag",     &PhysicsWorld::RemoveCollisionTag,
         "UpdateColliderTag",      &PhysicsWorld::UpdateColliderTag,
-        "PrintCollisionTags",     &PhysicsWorld::PrintCollisionTags
+        "PrintCollisionTags",     &PhysicsWorld::PrintCollisionTags,
+        "InstallDefaultBeginHandlersForAllTags", &PhysicsWorld::InstallDefaultBeginHandlersForAllTags
     );
     {
         auto& pw = rec.add_type("physics.PhysicsWorld");

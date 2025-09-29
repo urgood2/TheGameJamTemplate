@@ -964,7 +964,7 @@ void RegisterWildcardSeparate(const std::string& tag, sol::protected_function fn
   void ClearWildcardHandlers(const std::string &tag);
 
   // Collision Tag Management
-  std::string GetTagFromCategory(int category);
+  std::string GetTagFromCategory(int category) const;
   void AddCollisionTag(const std::string &tag);
   void RemoveCollisionTag(const std::string &tag);
   void UpdateCollisionMasks(const std::string &tag,

@@ -65,9 +65,9 @@ function initMainMenu()
     
     physics.AddCollider(world, player, "player", "rectangle", 32, 48, 0, 0, false)
     
-    physics.AddCollider(world, player, "player", "chain", 0,0,0,0, false, {
-    {x=0,y=300}, {x=200,y=320}, {x=400,y=315}, {x=560,y=290}
-    })
+    -- physics.AddCollider(world, player, "player", "chain", 0,0,0,0, false, {
+    -- {x=0,y=300}, {x=200,y=320}, {x=400,y=315}, {x=560,y=290}
+    -- })
     
     local count = physics.get_shape_count(world, player)
     local bb = physics.get_shape_bb(world, player, 0) -- {l,b,r,t}
@@ -78,6 +78,10 @@ function initMainMenu()
     PhysicsManager.rebuild_navmesh("world")
     PhysicsManager.mark_navmesh_dirty("world")
     
+    -- navmesh pathfinding
+    local path = PhysicsManager.find_path("world", 0, 0, 500, 500) -- {x,y}
+    
+    local visionFan = PhysicsManager.vision_fan("world", 500, 500, 500)
     -- call this after creating the physics for the transform.
     -- physics.add_shape_to_entity(world, player, "player", "circle", 16, 0,0,0, false)
     
@@ -163,19 +167,36 @@ function initMainMenu()
         -- log_debug("POSTSOLVE PLAYER: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
     end)
     
+    -- steering
+    steering.make_steerable(registry, player, 140.0, 2000.0, math.pi*2.0, 2.0)
+    
+    steering.set_path(registry, player, { {x=64,y=64}, {x=256,y=256}, {x=512,y=128}, {x=128,y=512}, {x=400,y=400} }, 16 )
+    timer.run(function()
+        local playerT = registry:get(player, Transform)
+        -- steering.seek_point(registry, player, {x=320,y=200}, 1.0, 0.5)
+        -- steering.flee_point(registry, player, {x=playerT.actualX + playerT.actualW/2, y=playerT.actualY + playerT.actualH/2}, 300.0, 1.0)
+        -- steering.wander(registry, player, 20.0, 40.0, 40.0, 0.6)
+        
+        steering.path_follow(registry, player, 1.0, 1.0)
+
+    end)
+    
+    steering.apply_force(registry, player, 800.0, math.rad(60), 5)
+
+    
     -- disable the sensor handlers
     -- physics.clear_wildcard_handlers(world, "sensor")
     
     world:PrintCollisionTags()
     
     -- physics.SetBullet(world, player, true)
-    physics.SetFixedRotation(world, player, true)
+    -- physics.SetFixedRotation(world, player, true)
     
     local ok = physics.shatter_nearest(world, 100, 100, 5) -- Voronoi shatter nearest polygon, only works for poly shapes
     
-    local chain = physics.add_smooth_segment_chain(world, {
-        {x=0,y=320}, {x=200,y=340}, {x=400,y=330}
-        }, 4.0, "WORLD")
+    -- local chain = physics.add_smooth_segment_chain(world, {
+    --     {x=0,y=320}, {x=200,y=340}, {x=400,y=330}
+    --     }, 4.0, "WORLD")
     
     -- timer.every(1.0, function()
     --     -- physics.SetVelocity(world, player, vx, vy)

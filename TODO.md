@@ -6,6 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
+- [ ] get a path from navmesh, use steering to follow it.
 - [ ] use hitFX() from [here](assets/scripts/util/util.lua) to simulate hits to entities with transforms and shader pass component.
 - [ ] use [headless springs](src/systems/spring/spring_lua.md) to animate custom rendered objects, scores, etc.
 - [ ] easier color palette management and color ramping and snapping to nearest color in palette. see [this file](assets/scripts/color/palette.lua). Still have to add to colors.json first.
@@ -33,7 +34,8 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] questions: how to make a shape fixed, disable collision on it, make it movable again? return values for Precise queries need to be outlined better. diff between impulse and force? ApplyTorque does nothing? where is apply angular impulse? EnableInverseSquareGravityToPoint is missing the velocity update func from the example. add better descriptions for the vvarious addJoint and similar methods.AddDampedRotarySpring seems to do nothing. AddUprightSpring gives unsolvable spring error (moment == 0). update doc for enable_collision_grouping()
+- [ ] binding questions: how do I temporarily lock rotation on an entity, while it's moving? how do I make it so I can be notified when path_follow arrives at a destination? how do I know when to unlock?
+- [ ] code questions: how to make a shape fixed, disable collision on it, make it movable again? what is the difference between impulse and force? ApplyTorque seems to do nothing? where is apply angular impulse? EnableInverseSquareGravityToPoint is missing the velocity update func from the example. AddDampedRotarySpring seems to do nothing. AddUprightSpring gives unsolvable spring error (moment == 0). 
 - [ ] seems useless from lua?
 ```lua
 -- Store entity ids on cpShape/cpBody userData (and convert back)
@@ -42,9 +44,7 @@ physics.SetEntityToBody(bodyPtr, e)
 local e2 = physics.GetEntityFromBody(bodyPtr)
 local e3 = physics.entity_from_ptr(lightuserdata_ptr)
 ``` 
-- [ ] update lua bindings & docs one more time for physics world
-
-- [ ] gotta test the various bindings of physics world including steering. continue from [Steering]
+- [ ] DOC UPDATES: update lua bindings & docs one more time for physics world. some navmesh bindings are missing. return values for Precise queries need to be outlined better. add better descriptions for the vvarious addJoint and similar methods. update doc for enable_collision_grouping(). 
 
 - test:
 ```lua

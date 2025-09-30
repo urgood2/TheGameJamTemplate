@@ -7961,6 +7961,14 @@ function physics.set_sync_mode(...) end
 function physics.get_sync_mode(...) end
 
 ---
+--- Sets sensor state on all shapes owned by the entity.
+---
+---@param e entt.entity
+---@param isSensor boolean
+---@return nil
+function physics.set_sensor(...) end
+
+---
 --- Sets PhysicsSyncConfig.rotMode on the entity.
 ---
 ---@param R entt.registry

@@ -35,11 +35,10 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] binding questions: how do I temporarily lock rotation on an entity, while it's moving? how do I make it so I can be notified when path_follow arrives at a destination? how do I know when to unlock? way to shift dynamic/static? set sensor? 
+- [ ] check planet stuff is working.
 - [ ] DOC UPDATES: update lua bindings & docs one more time for physics world. some navmesh bindings are missing. return values for Precise queries need to be outlined better. add better descriptions for the vvarious addJoint and similar methods. update doc for enable_collision_grouping(). 
-- [ ] make a detailed, niche guide for many different ways to use my bindings in gameplay code, for indie games. I want to learn a lot of applications
 
-- test:
+- test item modifiers:
 ```lua
 -- Quick usage examples
 
@@ -109,35 +108,6 @@ local ReactiveBalm = {
 
 ```
 
-
-- [ ] test stuf in physics_docs.md -> physics manager and physics namespace
-- [ ] test actual collision callbacks, also, is this the best way to do this gameplay code wise? can I make it more local to the code?
-```lua
--- one-time
-world:SetCollisionCallbacks()
-
-function update_physics(dt)
-  world:Update(dt)
-
-  -- 1) Physical collision starts between PLAYER and ENEMY
-  for _, ev in ipairs(physics.GetCollisionEnter(world, "PLAYER", "ENEMY")) do
-    -- objectA/objectB are whatever you put into userData (shape/body/entity)
-    local eA = physics.entity_from_ptr(ev.objectA) -- or physics.GetEntityFromBody(ev.objectA)
-    local eB = physics.entity_from_ptr(ev.objectB)
-    -- do gameplay: damage, knockback, play SFX, etc.
-    -- you also have contact geometry: ev.x1,ev.y1, ev.x2,ev.y2, ev.nx,ev.ny
-  end
-
-  -- 2) Trigger zones (e.g., PLAYER entering PICKUP sensor)
-  for _, ptr in ipairs(physics.GetTriggerEnter(world, "PLAYER", "PICKUP")) do
-    local pickup = physics.entity_from_ptr(ptr)
-    -- mark pickup as collected, queue destroy, etc.
-  end
-
-  world:PostUpdate()  -- IMPORTANT: clear/rotate buffers after consuming them
-end
-
-```
 - [ ] test physics world layers
 ```cpp
 world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});
@@ -197,68 +167,6 @@ AS.activate  ("state:dungeon");
 PM.enableStep("overworld", false);
 PM.enableStep("dungeon",   true);
 PM.enableDebugDraw("dungeon", true);
-```
-- [ ] lua bindings for navmesh in [this file](src/third_party/navmesh/source/navmesh_lua_binding.hpp), document and test.
-```cpp
-int main() {
-    using namespace NavMesh;
-
-    // 1) Define obstacles (two simple quads)
-    Polygon boxA;
-    boxA.AddPoint(200, 200);
-    boxA.AddPoint(320, 200);
-    boxA.AddPoint(320, 320);
-    boxA.AddPoint(200, 320);
-
-    Polygon boxB;
-    boxB.AddPoint(500, 120);
-    boxB.AddPoint(620, 120);
-    boxB.AddPoint(620, 260);
-    boxB.AddPoint(500, 260);
-
-    std::vector<Polygon> obstacles{ boxA, boxB };
-
-    // 2) Define source/destination
-    Point src(100, 250);
-    Point dst(700, 250);
-
-    // 3) Create the path finder and feed geometry
-    PathFinder pf;
-
-    // Optional: inflate obstacles outward by N pixels to add a safety margin
-    // Set to 0 if you want raw geometry.
-    const int inflate_pixels = 10;
-    pf.AddPolygons(obstacles, inflate_pixels);
-
-    // 4) Add the “external” points you’ll query between
-    pf.AddExternalPoints({ src, dst });
-
-    // 5) Ask for a path
-    auto path = pf.GetPath(src, dst);
-
-    // 6) Print it (or assert non-empty)
-    if (path.empty()) {
-        std::cout << "No path found.\n";
-        return 0;
-    }
-
-    std::cout << "Path (" << path.size() << " points):\n";
-    for (auto& p : path) {
-        std::cout << p.x << ", " << p.y << "\n";
-    }
-
-    // (Optional) Field-of-view / visibility fan from src
-    ConeOfVision cov;
-    cov.AddPolygons(obstacles);
-    auto vision = cov.GetVision(src, /*radius*/ 200.0f);
-
-    std::cout << "\nVision polyline (" << vision.size() << " points)\n";
-    for (auto& q : vision) {
-        std::cout << q.x << ", " << q.y << "\n";
-    }
-
-    return 0;
-}
 ```
 
 

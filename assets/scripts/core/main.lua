@@ -177,7 +177,7 @@ function initMainMenu()
         -- steering.flee_point(registry, player, {x=playerT.actualX + playerT.actualW/2, y=playerT.actualY + playerT.actualH/2}, 300.0, 1.0)
         -- steering.wander(registry, player, 20.0, 40.0, 40.0, 0.6)
         
-        steering.path_follow(registry, player, 1.0, 1.0)
+        -- steering.path_follow(registry, player, 1.0, 1.0)
         
         -- run every frame for this to work
         -- physics.ApplyTorque(world, player, 1000)
@@ -207,17 +207,20 @@ function initMainMenu()
     --     {x=0,y=320}, {x=200,y=340}, {x=400,y=330}
     --     }, 4.0, "WORLD")
     
-    timer.every(1.0, function()
-        -- physics.SetVelocity(world, player, vx, vy)
-        -- physics.SetAngularVelocity(world, player, 40)           -- radians/sec
-        -- physics.ApplyForce(world, player, 50, 50)
-        -- physics.ApplyImpulse(world, player, 39, 39)
+    -- timer.every(1.0, function()
+    --     -- physics.SetVelocity(world, player, vx, vy)
+    --     -- physics.SetAngularVelocity(world, player, 40)           -- radians/sec
+    --     -- physics.ApplyForce(world, player, 50, 50)
+    --     -- physics.ApplyImpulse(world, player, 39, 39)
         
-        local playerT = registry:get(player, Transform)
-        playerT.actualX = playerT.actualX + 30
-        playerT.actualY = playerT.actualY + 15
+    --     local playerT = registry:get(player, Transform)
+    --     playerT.actualX = playerT.actualX + 30
+    --     playerT.actualY = playerT.actualY + 15
         
-    end)
+    -- end)
+    
+    physics.enable_inverse_square_gravity_to_point(world, player, {x=400,y=240}, 8000)
+
     
     -- local c1 = physics.add_pin_joint(world, player, {x=0,y=0}, sensor, {x=0,y=0})
     -- local c2 = physics.add_slide_joint(world, player, {x=0,y=0}, sensor, {x=32,y=0}, 8.0, 64.0)

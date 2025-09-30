@@ -1036,6 +1036,19 @@ bool PhysicsWorld::RemoveShapeAt(entt::entity e, size_t index) {
   return true;
 }
 
+void SetSensor(entt::entity e, bool isSensor) {
+  auto &c = globals::registry.get<ColliderComponent>(e);
+  if (c.shape) {
+    cpShapeSetSensor(c.shape.get(), isSensor);
+
+  }
+  for (auto &s : c.extraShapes) {
+    if (s.shape)
+      cpShapeSetSensor(s.shape.get(), isSensor);
+  }
+
+}
+
 void PhysicsWorld::ClearAllShapes(entt::entity e) {
   auto &c = registry->get<ColliderComponent>(e);
   if (c.shape) {
@@ -1663,6 +1676,7 @@ void PhysicsWorld::ApplyAngularImpulse(entt::entity entity,
                              currentAngularVelocity + deltaAngularVelocity);
   }
 }
+
 
 void PhysicsWorld::SetAwake(entt::entity entity, bool awake) {
   auto &collider = registry->get<ColliderComponent>(entity);

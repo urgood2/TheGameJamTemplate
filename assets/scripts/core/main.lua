@@ -213,6 +213,10 @@ function initMainMenu()
         -- physics.ApplyForce(world, player, 50, 50)
         -- physics.ApplyImpulse(world, player, 39, 39)
         
+        local playerT = registry:get(player, Transform)
+        playerT.actualX = playerT.actualX + 30
+        playerT.actualY = playerT.actualY + 15
+        
     end)
     
     -- local c1 = physics.add_pin_joint(world, player, {x=0,y=0}, sensor, {x=0,y=0})

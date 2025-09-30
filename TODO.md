@@ -6,6 +6,7 @@
 - [ ] add some kind of screen which shares the amount of points scored with other players -> saves to clipboard or something
 
 ## technical things to apply next time, when I do a game jam.
+- [ ] use set_sync_mode when moving physics synced transforms 
 - [ ] get a path from navmesh, use steering to follow it.
 - [ ] use hitFX() from [here](assets/scripts/util/util.lua) to simulate hits to entities with transforms and shader pass component.
 - [ ] use [headless springs](src/systems/spring/spring_lua.md) to animate custom rendered objects, scores, etc.
@@ -35,14 +36,6 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 ## TODOS fast
 - [ ] binding questions: how do I temporarily lock rotation on an entity, while it's moving? how do I make it so I can be notified when path_follow arrives at a destination? how do I know when to unlock? way to shift dynamic/static? set sensor? 
-- [ ] seems useless from lua?
-```lua
--- Store entity ids on cpShape/cpBody userData (and convert back)
-physics.SetEntityToShape(shapePtr, e)
-physics.SetEntityToBody(bodyPtr, e)
-local e2 = physics.GetEntityFromBody(bodyPtr)
-local e3 = physics.entity_from_ptr(lightuserdata_ptr)
-``` 
 - [ ] DOC UPDATES: update lua bindings & docs one more time for physics world. some navmesh bindings are missing. return values for Precise queries need to be outlined better. add better descriptions for the vvarious addJoint and similar methods. update doc for enable_collision_grouping(). 
 - [ ] make a detailed, niche guide for many different ways to use my bindings in gameplay code, for indie games. I want to learn a lot of applications
 

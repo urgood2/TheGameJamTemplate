@@ -14,6 +14,8 @@
 
 namespace physics {
   
+  extern void SetSensor(entt::entity e, bool isSensor);
+  
   // Public POD we expose to Lua
   class LuaArbiter {
     public:

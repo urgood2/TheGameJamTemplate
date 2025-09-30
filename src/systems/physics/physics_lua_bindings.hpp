@@ -948,6 +948,16 @@ inline void expose_physics_to_lua(sol::state& lua) {
             return static_cast<int>(cfg.mode);
         }
     );
+    
+    physics_table.set_function("set_sensor",
+        [](entt::entity e, bool isSensor) { SetSensor(e, isSensor); });  
+    rec.record_free_function(path, {
+        "set_sensor",
+        "---@param e entt.entity\n---@param isSensor boolean\n---@return nil",
+        "Sets sensor state on all shapes owned by the entity.",
+        true, false
+    });
+        
 
     // physics.set_rotation_mode(R, e, rotMode)
     rec.record_free_function(path, {

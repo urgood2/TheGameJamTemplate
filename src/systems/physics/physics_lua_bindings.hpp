@@ -520,6 +520,14 @@ inline void expose_physics_to_lua(sol::state& lua) {
         true, false
     });
     lua["physics"]["ApplyForce"] = &PhysicsWorld::ApplyForce;
+    
+    rec.record_free_function(path, {
+        "ApplyAngularImpulse",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param angularImpulse number",
+        "Applies an angular impulse to the body's current angular velocity.",
+        true, false
+    });
+    lua["physics"]["ApplyAngularImpulse"] = &PhysicsWorld::ApplyAngularImpulse;
 
     rec.record_free_function(path, {
         "ApplyImpulse",

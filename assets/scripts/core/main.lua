@@ -178,7 +178,16 @@ function initMainMenu()
         -- steering.wander(registry, player, 20.0, 40.0, 40.0, 0.6)
         
         steering.path_follow(registry, player, 1.0, 1.0)
+        
+        -- run every frame for this to work
+        -- physics.ApplyTorque(world, player, 1000)
 
+    end)
+    
+    -- one time impulse (instant rather than integrated)
+    timer.every(5.0, function()
+        
+        physics.ApplyAngularImpulse(world, player, 5000.0)
     end)
     
     steering.apply_force(registry, player, 800.0, math.rad(60), 5)
@@ -198,13 +207,13 @@ function initMainMenu()
     --     {x=0,y=320}, {x=200,y=340}, {x=400,y=330}
     --     }, 4.0, "WORLD")
     
-    -- timer.every(1.0, function()
-    --     -- physics.SetVelocity(world, player, vx, vy)
-    --     -- physics.SetAngularVelocity(world, player, 40)           -- radians/sec
-    --     physics.ApplyForce(world, player, 50, 50)
-    --     physics.ApplyImpulse(world, player, 39, 39)
-    --     physics.ApplyTorque(world, player, 50)
-    -- end)
+    timer.every(1.0, function()
+        -- physics.SetVelocity(world, player, vx, vy)
+        -- physics.SetAngularVelocity(world, player, 40)           -- radians/sec
+        -- physics.ApplyForce(world, player, 50, 50)
+        -- physics.ApplyImpulse(world, player, 39, 39)
+        
+    end)
     
     -- local c1 = physics.add_pin_joint(world, player, {x=0,y=0}, sensor, {x=0,y=0})
     -- local c2 = physics.add_slide_joint(world, player, {x=0,y=0}, sensor, {x=32,y=0}, 8.0, 64.0)

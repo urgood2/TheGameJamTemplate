@@ -7668,6 +7668,14 @@ function physics.SetAngularVelocity(...) end
 function physics.ApplyForce(...) end
 
 ---
+--- Applies an angular impulse to the body's current angular velocity.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param angularImpulse number
+function physics.ApplyAngularImpulse(...) end
+
+---
 --- Applies an impulse at the body's current position.
 ---
 ---@param world physics.PhysicsWorld

@@ -33,9 +33,18 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] add what arbiter looks like to lua docs
+- [ ] questions: how to make a shape fixed, disable collision on it, make it movable again? return values for Precise queries need to be outlined better. diff between impulse and force? ApplyTorque does nothing? where is apply angular impulse? EnableInverseSquareGravityToPoint is missing the velocity update func from the example. add better descriptions for the vvarious addJoint and similar methods.AddDampedRotarySpring seems to do nothing. AddUprightSpring gives unsolvable spring error (moment == 0). update doc for enable_collision_grouping()
+- [ ] seems useless from lua?
+```lua
+-- Store entity ids on cpShape/cpBody userData (and convert back)
+physics.SetEntityToShape(shapePtr, e)
+physics.SetEntityToBody(bodyPtr, e)
+local e2 = physics.GetEntityFromBody(bodyPtr)
+local e3 = physics.entity_from_ptr(lightuserdata_ptr)
+``` 
 - [ ] update lua bindings & docs one more time for physics world
-- [ ] gotta test the various bindings of physics world including steering. continue from [Adding colliders]
+
+- [ ] gotta test the various bindings of physics world including steering. continue from [Steering]
 
 - test:
 ```lua

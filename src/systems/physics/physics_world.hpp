@@ -690,8 +690,8 @@ struct RaycastHit {
 
 // A small node for our union-find structure.
 struct UFNode {
-  UFNode *parent; // If this points to itself, it’s a root.
-  int count;      // Only accurate on root nodes.
+  cpBody* parent;   // parent body KEY, not UFNode*
+  int     size = 1; // union-by-size
 };
 
 class PhysicsWorld {
@@ -1064,6 +1064,26 @@ void MakeConstraintBreakable(cpConstraint* c,
   void EnableCollisionGrouping(cpCollisionType minType, cpCollisionType maxType,
                                int threshold,
                                std::function<void(cpBody *)> onGroupRemoved);
+  std::vector<std::pair<cpCollisionType,cpCollisionType>> _groupingPairs;
+  void EnableCollisionGroupingByTags(const std::vector<std::string>& tags,
+                                   int threshold,
+                                   std::function<void(cpBody*)> onGroupRemoved);
+  void DisableCollisionGrouping() {
+    for (auto [a,b] : _groupingPairs) {
+        auto* h = cpSpaceAddCollisionHandler(space, a, b);
+        h->beginFunc = nullptr;
+        h->preSolveFunc = nullptr;
+        h->postSolveFunc = nullptr;
+        h->separateFunc = nullptr;
+        h->userData = nullptr;
+    }
+    _groupingPairs.clear();
+    _groupNodes.clear();  // clear UF state if it’s per-session
+    _onGroupRemoved = nullptr;
+    _groupThreshold = 0;
+}
+
+
   void AddScreenBounds(float xMin, float yMin, float xMax, float yMax,
                        float thickness = 1.0f,
                        const std::string &collisionTag = DEFAULT_COLLISION_TAG);
@@ -1548,8 +1568,8 @@ private:
   std::function<void(cpBody *)> _onGroupRemoved;
 
   // —— Union-Find helpers ——
+  cpBody* FindRoot(cpBody* b);
   UFNode &MakeNode(cpBody *body);
-  UFNode &FindNode(cpBody *body);
   void UnionBodies(cpBody *a, cpBody *b);
   void ProcessGroups();
 

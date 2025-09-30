@@ -1794,24 +1794,19 @@ void PhysicsWorld::SetMass(entt::entity entity, float mass) {
   cpBodySetMass(collider.body.get(), mass);
 }
 
-void PhysicsWorld::SetBullet(entt::entity entity, bool isBullet) {
-  auto &collider = registry->get<ColliderComponent>(entity);
-
-  if (isBullet) {
-    cpSpaceSetIterations(space, 20);
-
-    cpBodySetVelocityUpdateFunc(
-        collider.body.get(),
-        [](cpBody *body, cpVect gravity, cpFloat damping, cpFloat dt) {
-          cpBodyUpdateVelocity(body, gravity, 1.0f, dt);
-        });
-
-    cpSpaceSetCollisionSlop(space, 0.1);
-  } else {
-    cpSpaceSetIterations(space, 10);
-    cpBodySetVelocityUpdateFunc(collider.body.get(), cpBodyUpdateVelocity);
-    cpSpaceSetCollisionSlop(space, 0.5);
-  }
+void PhysicsWorld::SetBullet(entt::entity e, bool isBullet) {
+    auto &collider = registry->get<ColliderComponent>(e);
+    if (isBullet) {
+        // per-body: remove damping
+        cpBodySetVelocityUpdateFunc(collider.body.get(),
+            [](cpBody* b, cpVect g, cpFloat /*damp*/, cpFloat dt) {
+                cpBodyUpdateVelocity(b, g, 1.0f, dt);
+            });
+        // ++bullet_count;
+    } else {
+        cpBodySetVelocityUpdateFunc(collider.body.get(), cpBodyUpdateVelocity);
+        // bullet_count = std::max(0, bullet_count - 1);
+    }
 }
 
 void PhysicsWorld::SetFixedRotation(entt::entity entity, bool fixedRotation) {
@@ -2075,49 +2070,62 @@ void PhysicsWorld::OnGroupPostSolve(cpArbiter *arb) {
   UnionBodies(bodyA, bodyB);
 }
 
-UFNode &PhysicsWorld::MakeNode(cpBody *body) {
-  auto it = _groupNodes.find(body);
-  if (it == _groupNodes.end()) {
-    UFNode node;
-    node.parent = &node;
-    node.count = 1;
-    auto pair = _groupNodes.emplace(body, node);
-    return pair.first->second;
-  }
-  return it->second;
-}
 
-UFNode &PhysicsWorld::FindNode(cpBody *body) {
-  UFNode &node = MakeNode(body);
 
-  if (node.parent != &node) {
-    cpBody *parentBody = nullptr;
-    for (auto &kv : _groupNodes) {
-      if (&kv.second == node.parent) {
-        parentBody = kv.first;
-        break;
-      }
+UFNode &PhysicsWorld::MakeNode(cpBody *b) {
+    auto [it, inserted] = _groupNodes.emplace(b, UFNode{});
+    if (inserted) {
+        it->second.parent = b;  // self-root by KEY
+        it->second.size   = 1;
     }
-    node.parent = &FindNode(parentBody);
-  }
-  return *node.parent;
+    return it->second;
 }
 
-void PhysicsWorld::UnionBodies(cpBody *a, cpBody *b) {
-  UFNode &na = FindNode(a);
-  UFNode &nb = FindNode(b);
-  if (&na != &nb) {
-    nb.parent = &na;
-    na.count += nb.count;
-  }
+cpBody* PhysicsWorld::FindRoot(cpBody* b) {
+    MakeNode(b);
+    UFNode& n = _groupNodes[b];
+    if (n.parent != b) {
+        n.parent = FindRoot(n.parent); // path compression
+    }
+    return n.parent;
+}
+
+void PhysicsWorld::UnionBodies(cpBody* a, cpBody* b) {
+    cpBody* ra = FindRoot(a);
+    cpBody* rb = FindRoot(b);
+    if (ra == rb) return;
+
+    UFNode &na = _groupNodes[ra], &nb = _groupNodes[rb];
+    // Union by size
+    if (na.size < nb.size) { std::swap(ra, rb); std::swap(na, nb); }
+    nb.parent = ra;
+    na.size  += nb.size;
+
+    // Threshold hook (example policy: trigger on the **root**)
+    if (_groupThreshold > 0 && na.size >= _groupThreshold && _onGroupRemoved) {
+        _onGroupRemoved(ra);     // pass the root body (or iterate members; see below)
+        // Optional: remove the whole component from the map
+        // (requires tracking members per root; see note)
+    }
 }
 
 void PhysicsWorld::ProcessGroups() {
-  for (auto &[body, node] : _groupNodes) {
-    if (node.parent == &node && node.count >= _groupThreshold) {
-      _onGroupRemoved(body);
+    if (_groupThreshold <= 0 || !_onGroupRemoved) return;
+
+    // First collect roots that meet threshold.
+    std::vector<cpBody*> to_remove;
+    to_remove.reserve(_groupNodes.size());
+    for (auto& [body, node] : _groupNodes) {
+        // root test with key, not &node
+        if (node.parent == body && node.size >= _groupThreshold) {
+            to_remove.push_back(body);
+        }
     }
-  }
+
+    // Now invoke the callback(s) without touching the map iterator.
+    for (cpBody* rootBody : to_remove) {
+        _onGroupRemoved(rootBody);
+    }
 }
 
 std::vector<entt::entity> PhysicsWorld::TouchingEntities(entt::entity e) {
@@ -2345,6 +2353,32 @@ entt::entity PhysicsWorld::SpawnPixelBall(float x, float y, float r) {
   // optional: very light mass for fast sim
   SetMass(e, 1.0f);
   return e;
+}
+
+void PhysicsWorld::EnableCollisionGroupingByTags(const std::vector<std::string>& tags,
+                                                 int threshold,
+                                                 std::function<void(cpBody*)> onGroupRemoved) {
+    _groupThreshold = threshold;
+    _onGroupRemoved = std::move(onGroupRemoved);
+
+    // OPTIONAL: keep track if you want to later disable/reset these
+    _groupingPairs.clear();
+
+    for (const auto& tag : tags) {
+        auto it = _tagToCollisionType.find(tag);
+        if (it == _tagToCollisionType.end()) {
+            SPDLOG_WARN("[Grouping] Unknown tag '{}': skipping", tag);
+            continue;
+        }
+        cpCollisionType t = it->second;
+
+        auto* handler = cpSpaceAddCollisionHandler(space, t, t);
+        handler->postSolveFunc = &PhysicsWorld::GroupPostSolveCallback;
+        handler->userData      = this;
+
+        _groupingPairs.emplace_back(t, t); // if you want a disable function later
+        SPDLOG_DEBUG("[Grouping] Enabled grouping for tag '{}' (ctype={})", tag, (uint64_t)t);
+    }
 }
 
 void PhysicsWorld::BuildLogoFromBitmap(const unsigned char *bits, int w, int h,
@@ -2855,15 +2889,15 @@ void PhysicsWorld::ShatterShape(cpShape *shape, float cellSize, cpVect focus) {
 
 bool PhysicsWorld::ShatterNearest(float x, float y, float gridDiv /*=5.0f*/) {
   cpPointQueryInfo info{};
-  const cpShape *hit = cpSpacePointQueryNearest(space, cpv(x, y), 0.0f,
+  const cpShape *hit = cpSpacePointQueryNearest(space, cpv(x, y), 600.f,
                                                 CP_SHAPE_FILTER_ALL, &info);
                                                 
   SPDLOG_DEBUG("ShatterNearest at ({:.1f},{:.1f}) gridDiv={:.1f} hit={}", x,y,gridDiv, (bool)hit);
   if (!hit)
     return false;
 
-  if (hit->type != CP_POLY_SHAPE)
-    return false;
+  // if (hit->type != CP_POLY_SHAPE)
+  //   return false;
 
   cpBB bb = cpShapeGetBB(hit);
   float maxSpan = std::max(bb.r - bb.l, bb.t - bb.b);

@@ -20,6 +20,9 @@ This doc shows how to drive your Chipmunk2D physics + steering from Lua using th
 8. [Queries: Raycast, AABB & precise](#queries-raycast-aabb--precise)
 9. [Collision/Trigger events (buffered)](#collisiontrigger-events-buffered)
 10. [Arbiter scratch store (key/value)](#arbiter-scratch-store-keyvalue)
+
+* [Arbiter object (cpArbiter wrapper)](#arbiter-object-cparbiter-wrapper)
+
 11. [Lua collision handler registration](#lua-collision-handler-registration)
 12. [Body kinematics & material props](#body-kinematics--material-props)
 13. [Fluids / buoyancy sensors](#fluids--buoyancy-sensors)
@@ -45,7 +48,7 @@ This doc shows how to drive your Chipmunk2D physics + steering from Lua using th
 
 ```lua
 -- C++ ctor: PhysicsWorld(entt::registry*, meter, gx, gy)
-local W = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)  -- 64 px = 1 unit, gravity downward
+local world = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)  -- 64 px = 1 unit, gravity downward
 ```
 
 **Type docs**
@@ -72,43 +75,47 @@ local W = physics.PhysicsWorld(registry, 64.0, 0.0, 900.0)  -- 64 px = 1 unit, g
 
   * `TransformFixed_PhysicsFollows | PhysicsFree_TransformFollows`
 
+* `physics.Arbiter` (wrapper over `cpArbiter*`) — see [Arbiter object](#arbiter-object-cparbiter-wrapper).
+
 ---
 
 ## Collision tags, masks & triggers
 
 ```lua
 -- Print table for sanity
-W:PrintCollisionTags()
+world:PrintCollisionTags()
 ```
 
-> **Bulk reapply:** After large changes, `W:UpdateCollisionMasks(tag, collidesWith)` reapplies masks to existing shapes of `tag`.
+> **Bulk reapply:** After large changes, `world:UpdateCollisionMasks(tag, collidesWith)` reapplies masks to existing shapes of `tag`.
 
 **Lua-table friendly helpers (same behavior, easier from Lua):**
 
 ```lua
 -- Exact wrappers bound in C++
-physics.set_collision_tags(W, {"player","enemy","terrain"})
-physics.enable_collision_between_many(W, "player", {"enemy","terrain"})
-physics.disable_collision_between_many(W, "player", {"projectile"})
+physics.set_collision_tags(world, {"player","enemy","terrain"})
+physics.enable_collision_between_many(world, "player", {"enemy","terrain"})
+physics.disable_collision_between_many(world, "player", {"projectile"})
 
 -- Single or list (auto-dispatch on arg type)
-physics.enable_collision_between(W, "player", "enemy")
-physics.enable_collision_between(W, "player", {"enemy","terrain"})
-physics.disable_collision_between(W, "player", "projectile")
+physics.enable_collision_between(world, "player", "enemy")
+physics.enable_collision_between(world, "player", {"enemy","terrain"})
+physics.disable_collision_between(world, "player", "projectile")
 
 -- Triggers (sensors)
-physics.enable_trigger_between_many(W, "sensor", {"player","enemy"})
-physics.disable_trigger_between_many(W, "sensor", {"enemy"})
-physics.enable_trigger_between(W, "sensor", "player")
-physics.disable_trigger_between(W, "sensor", {"player","enemy"})
+physics.enable_trigger_between_many(world, "sensor", {"player","enemy"})
+physics.disable_trigger_between_many(world, "sensor", {"enemy"})
+physics.enable_trigger_between(world, "sensor", "player")
+physics.disable_trigger_between(world, "sensor", {"player","enemy"})
 
 -- Re-write one tag’s mask list and reapply filters
-physics.update_collision_masks_for(W, "player", {"enemy","terrain"})
+physics.update_collision_masks_for(world, "player", {"enemy","terrain"})
 ```
 
 ---
 
 ## Adding colliders
+
+These need to be called **after** you create physics for an entity (e.g., `create_physics_for_transform`).
 
 `physics.AddCollider(world, e, tag, shapeType, a, b, c, d, isSensor, points?)`
 
@@ -124,10 +131,10 @@ physics.update_collision_masks_for(W, "player", {"enemy","terrain"})
 
 ```lua
 -- Dynamic rectangle collider
-physics.AddCollider(W, player, "player", "rectangle", 32, 48, 0, 0, false)
+physics.AddCollider(world, player, "player", "rectangle", 32, 48, 0, 0, false)
 
 -- Static chain from vertices
-physics.AddCollider(W, ground, "terrain", "chain", 0,0,0,0, false, {
+physics.AddCollider(world, ground, "terrain", "chain", 0,0,0,0, false, {
   {x=0,y=300}, {x=200,y=320}, {x=400,y=315}, {x=560,y=290}
 })
 ```
@@ -148,17 +155,17 @@ local e3 = physics.entity_from_ptr(lightuserdata_ptr)
 
 ```lua
 -- Add an extra shape to an existing body (or create body if missing)
-physics.add_shape_to_entity(W, e, "player", "circle", 16, 0,0,0, false)
+physics.add_shape_to_entity(world, e, "player", "circle", 16, 0,0,0, false)
 
 -- Remove by index (0 = primary)
-local removed = physics.remove_shape_at(W, e, 1)
+local removed = physics.remove_shape_at(world, e, 1)
 
 -- Clear all shapes (primary + extras)
-physics.clear_all_shapes(W, e)
+physics.clear_all_shapes(world, e)
 
 -- Count & AABB per shape
-local count = physics.get_shape_count(W, e)
-local bb = physics.get_shape_bb(W, e, 0) -- {l,b,r,t}
+local count = physics.get_shape_count(world, e)
+local bb = physics.get_shape_bb(world, e, 0) -- {l,b,r,t}
 ```
 
 ---
@@ -223,7 +230,7 @@ local rmode = physics.get_rotation_mode(registry, e)   -- integer enum value
 Utilities to register worlds, step/draw centrally, and run navmesh/vision.
 
 ```lua
-PhysicsManager.add_world("world", W)
+PhysicsManager.add_world("world", world)
 PhysicsManager.enable_step("world", true)
 PhysicsManager.enable_debug_draw("world", true)
 PhysicsManager.move_entity_to_world(npc, "dungeon_world")
@@ -249,24 +256,24 @@ PhysicsManager.set_nav_obstacle(groundEntity, true)
 
 ```lua
 -- Segment raycast (nearest-first)
-local hits = physics.Raycast(W, 100, 100, 400, 260)  -- {physics.RaycastHit}
+local hits = physics.Raycast(world, 100, 100, 400, 260)  -- {physics.RaycastHit}
 for _,h in ipairs(hits) do
   -- h.shape (cpShape*), h.point{x,y}, h.normal{x,y}, h.fraction
 end
 
 -- AABB query to entities
-local entities = physics.GetObjectsInArea(W, 0, 0, 256, 256) -- {entt.entity}
+local entities = physics.GetObjectsInArea(world, 0, 0, 256, 256) -- {entt.entity}
 ```
 
 **Precise queries**
 
 ```lua
--- Closest segment hit with optional fat radius
-local q = physics.segment_query_first(W, {x=0,y=0}, {x=300,y=0}, 4.0)
+-- Closest segment hit with optional fat radius (hitscan)
+local q = physics.segment_query_first(world, {x=0,y=0}, {x=300,y=0}, 4.0)
 -- q = { hit=bool, shape=ptr|nil, point={x,y}|nil, normal={x,y}|nil, alpha=number }
 
--- Nearest shape to a point (distance < 0 => inside)
-local n = physics.point_query_nearest(W, {x=mx,y=my}, 128.0)
+-- Nearest shape to a point with max distance (distance < 0 => inside)
+local n = physics.point_query_nearest(world, {x=mx,y=my}, 128.0)
 -- n = { hit=bool, shape=ptr|nil, point={x,y}|nil, distance=number|nil }
 ```
 
@@ -276,18 +283,18 @@ local n = physics.point_query_nearest(W, {x=mx,y=my}, 128.0)
 
 ```lua
 -- Collision begins since last PostUpdate()
-local ce = physics.GetCollisionEnter(W, "player", "enemy")
+local ce = physics.GetCollisionEnter(world, "player", "enemy")
 for _,ev in ipairs(ce) do
   -- ev = { a=entt.entity, b=entt.entity, x1,y1,x2,y2,nx,ny }
 end
 
 -- Trigger begins since last PostUpdate()
-local te = physics.GetTriggerEnter(W, "sensor", "player") -- {entt.entity}
+local te = physics.GetTriggerEnter(world, "sensor", "player") -- {entt.entity}
 ```
 
 **Lifecycle reminder**
 
-Call `W:Update(dt)` each frame. After consuming event buffers, call `W:PostUpdate()`.
+Call `world:Update(dt)` each frame. After consuming event buffers, call `world:PostUpdate()`.
 
 ---
 
@@ -297,16 +304,148 @@ Attach transient data to a Chipmunk arbiter during contact.
 
 ```lua
 -- number
-physics.arb_set_number(W, arbPtr, "damage", 12.5)
-local dmg = physics.arb_get_number(W, arbPtr, "damage", 0.0)
+physics.arb_set_number(world, arbPtr, "damage", 12.5)
+local dmg = physics.arb_get_number(world, arbPtr, "damage", 0.0)
 
 -- boolean
-physics.arb_set_bool(W, arbPtr, "one_way_reject", true)
-local reject = physics.arb_get_bool(W, arbPtr, "one_way_reject", false)
+physics.arb_set_bool(world, arbPtr, "one_way_reject", true)
+local reject = physics.arb_get_bool(world, arbPtr, "one_way_reject", false)
 
 -- pointer (lightuserdata)
-physics.arb_set_ptr(W, arbPtr, "owner", some_ptr)
-local ptr = physics.arb_get_ptr(W, arbPtr)
+physics.arb_set_ptr(world, arbPtr, "owner", some_ptr)
+local ptr = physics.arb_get_ptr(world, arbPtr)
+```
+
+---
+
+## Arbiter object (cpArbiter wrapper)
+
+**Type:** `physics.Arbiter` — a thin wrapper over `cpArbiter*` passed to all collision callbacks.
+
+**Fields / methods** (exactly as bound):
+
+* `ptr: lightuserdata` — raw arbiter pointer.
+* `entities(): { entityA, entityB }` — the two `entt.entity` ids participating in the contact.
+* `tags(world): { tagA, tagB }` — resolves the two collision tags using the given `PhysicsWorld`.
+* `normal: {x, y}` — contact normal from A→B.
+* `total_impulse: {x, y}` — total impulse applied this step.
+* `total_impulse_length(): number` — magnitude of the above.
+* `is_first_contact(): boolean` — true only on the first step the shapes touch.
+* `is_removal(): boolean` — true when contact is being removed.
+* **PreSolve‑only mutators:**
+
+  * `set_friction(f: number)`
+  * `set_elasticity(e: number)`
+  * `set_surface_velocity(vx: number, vy: number)`
+  * `ignore()` — skip this contact pair for the rest of the step.
+
+**Usage examples**
+
+```lua
+physics.on_wildcard_presolve(world, "player", function(arb)
+  -- Gate expensive setup to the first contact frame only
+  if arb:is_first_contact() then
+    local a, b = arb:entities()
+    -- e.g., start a sound or spawn a decal tagged to A/B
+  end
+
+  -- One‑way platform example (flip normal test not shown)
+  if physics.arb_get_bool(world, arb, "reject", false) then
+    return false -- reject this contact
+  end
+
+  -- Tune contact properties dynamically
+  arb:set_friction(0.9)
+  arb:set_elasticity(0.1)
+  arb:set_surface_velocity(0.0, 0.0)
+  return true
+end)
+
+physics.on_pair_postsolve(world, "projectile", "enemy", function(arb)
+  local n = arb.normal            -- {x,y}
+  local J = arb:total_impulse_length()
+  if J > 500.0 then
+    local ta, tb = arb:tags(world)
+    print("HARD HIT:", ta, "→", tb, "impulse=", J)
+  end
+end)
+```
+
+> **Rules of thumb**
+>
+> * Only call mutators in **PreSolve**. Chipmunk ignores these in PostSolve.
+> * Use `is_first_contact()` to do one‑shot setup; `is_removal()` for teardown.
+> * Prefer `arbiter scratch store` (above) for passing flags between Pre/Post.
+
+# Arbiter Caveats & Usage Notes
+
+This section documents important caveats when working with the **`physics.Arbiter`** type in Lua. These details should be understood to avoid runtime errors and misuse.
+
+---
+
+## Lifetime & Scope
+
+* **Valid only inside collision callbacks**: The `Arbiter` wraps a raw `cpArbiter*` from Chipmunk2D. This pointer is only guaranteed valid *during* the callback (`begin`, `preSolve`, `postSolve`, `separate`).
+* **Do not store or cache** the Arbiter object for later use. Once the callback returns, the pointer is no longer safe.
+
+---
+
+## Property Access
+
+* Properties defined via `sol::property` are **fields** in Lua, not methods.
+
+  ```lua
+  local n = arb.normal              -- table {x, y}
+  local imp = arb.total_impulse     -- table {x, y}
+  local len = arb.total_impulse_length -- number
+  ```
+* **Do not call them like functions** (`arb.normal()` ❌). Always access as fields.
+* Methods like `entities()`, `tags(world)`, `is_first_contact()`, etc. still use **colon syntax**:
+
+  ```lua
+  local e1, e2 = arb:entities()
+  local t1, t2 = arb:tags(world)
+  if arb:is_first_contact() then ... end
+  ```
+
+---
+
+## PreSolve Mutators
+
+* The following functions are only valid inside a **`preSolve`** callback:
+
+  * `set_friction(f)`
+  * `set_elasticity(e)`
+  * `set_surface_velocity(vx, vy)`
+  * `ignore()`
+* Using them in `begin`, `postSolve`, or `separate` callbacks is undefined and may crash.
+
+---
+
+## Common Pitfalls
+
+1. **Wrong parameter order in properties**: Ensure bound C++ functions have `(LuaArbiter&, sol::this_state)` order, not reversed. Otherwise you’ll see errors like *"expected userdata, got no value"*.
+2. **Colon vs dot confusion**: Use `:` for methods, `.` for properties.
+3. **Tags require world reference**: `arb:tags(world)` must be passed the `PhysicsWorld` object. Without it, tag resolution fails.
+4. **Do not reuse outside callbacks**: Trying to access `arb.total_impulse` later will throw.
+
+---
+
+## Example Usage
+
+```lua
+physics.on_wildcard_presolve(world, "player", function(arb)
+    if arb:is_first_contact() then
+        print("First contact normal:", arb.normal.x, arb.normal.y)
+    end
+
+    local e1, e2 = arb:entities()
+    local t1, t2 = arb:tags(world)
+    print("Collision between", t1, "and", t2)
+
+    arb:set_friction(0.8)
+    arb:set_elasticity(0.2)
+end)
 ```
 
 ---
@@ -317,15 +456,15 @@ Register Lua callbacks for **pair** or **wildcard** tags.
 
 ```lua
 -- PreSolve: return false to reject contact; nil/true to accept
-physics.on_pair_presolve(W, "player", "enemy", function(arb) return true end)
-physics.on_pair_postsolve(W, "player", "enemy", function(arb) end)
+physics.on_pair_presolve(world, "player", "enemy", function(arb) return true end)
+physics.on_pair_postsolve(world, "player", "enemy", function(arb) end)
 
-physics.on_wildcard_presolve(W, "projectile", function(arb) end)
-physics.on_wildcard_postsolve(W, "projectile", function(arb) end)
+physics.on_wildcard_presolve(world, "projectile", function(arb) end)
+physics.on_wildcard_postsolve(world, "projectile", function(arb) end)
 
 -- Clear handlers
-physics.clear_pair_handlers(W, "player", "enemy")
-physics.clear_wildcard_handlers(W, "projectile")
+physics.clear_pair_handlers(world, "player", "enemy")
+physics.clear_wildcard_handlers(world, "projectile")
 ```
 
 ---
@@ -334,33 +473,33 @@ physics.clear_wildcard_handlers(W, "projectile")
 
 ```lua
 -- Velocities & forces
-physics.SetVelocity(W, e, vx, vy)
-physics.SetAngularVelocity(W, e, av)           -- radians/sec
-physics.ApplyForce(W, e, fx, fy)
-physics.ApplyImpulse(W, e, ix, iy)
-physics.ApplyTorque(W, e, torque)
+physics.SetVelocity(world, e, vx, vy)
+physics.SetAngularVelocity(world, e, av)           -- radians/sec
+physics.ApplyForce(world, e, fx, fy)
+physics.ApplyImpulse(world, e, ix, iy)
+physics.ApplyTorque(world, e, torque)
 
 -- Damping
-physics.SetDamping(W, e, linear)               -- scale velocity by (1-linear)
-physics.SetGlobalDamping(W, 0.02)
+physics.SetDamping(world, e, linear)               -- scale velocity by (1-linear)
+physics.SetGlobalDamping(world, 0.02)
 
 -- Pose
-local p = physics.GetPosition(W, e)            -- {x,y}
-physics.SetPosition(W, e, x, y)
-local a = physics.GetAngle(W, e)               -- radians
-physics.SetAngle(W, e, radians)
+local p = physics.GetPosition(world, e)            -- {x,y}
+physics.SetPosition(world, e, x, y)
+local a = physics.GetAngle(world, e)               -- radians
+physics.SetAngle(world, e, radians)
 
 -- Material across ALL shapes on entity
-physics.SetRestitution(W, e, restitution)
-physics.SetFriction(W, e, friction)
+physics.SetRestitution(world, e, restitution)
+physics.SetFriction(world, e, friction)
 
 -- Body flags
-physics.SetAwake(W, e, true)
-local m = physics.GetMass(W, e)
-physics.SetMass(W, e, new_mass)
-physics.SetBullet(W, e, true)
-physics.SetFixedRotation(W, e, true)
-physics.SetBodyType(W, e, "dynamic")          -- 'static'|'kinematic'|'dynamic'
+physics.SetAwake(world, e, true)
+local m = physics.GetMass(world, e)
+physics.SetMass(world, e, new_mass)
+physics.SetBullet(world, e, true)
+physics.SetFixedRotation(world, e, true)
+physics.SetBodyType(world, e, "dynamic")          -- 'static'|'kinematic'|'dynamic'
 ```
 
 ---
@@ -368,8 +507,8 @@ physics.SetBodyType(W, e, "dynamic")          -- 'static'|'kinematic'|'dynamic'
 ## Fluids / buoyancy sensors
 
 ```lua
-physics.register_fluid_volume(W, "water", 1.0, 2.0)      -- density, drag
-physics.add_fluid_sensor_aabb(W, 0, 0, 640, 160, "water")
+physics.register_fluid_volume(world, "water", 1.0, 2.0)      -- density, drag
+physics.add_fluid_sensor_aabb(world, 0, 0, 640, 160, "water")
 ```
 
 ---
@@ -378,7 +517,7 @@ physics.add_fluid_sensor_aabb(W, 0, 0, 640, 160, "water")
 
 ```lua
 -- Normal defaults to {0,1} (up). Entities pass from backside.
-local plat = physics.add_one_way_platform(W, 100, 200, 400, 200, 6.0, "one_way", {x=0,y=1})
+local plat = physics.add_one_way_platform(world, 100, 200, 400, 200, 6.0, "one_way", {x=0,y=1})
 ```
 
 ---
@@ -386,8 +525,8 @@ local plat = physics.add_one_way_platform(W, 100, 200, 400, 200, 6.0, "one_way",
 ## Sticky glue (temporary joints)
 
 ```lua
-physics.enable_sticky_between(W, "slime", "terrain", 200.0, 5000.0)
-physics.disable_sticky_between(W, "slime", "terrain")
+physics.enable_sticky_between(world, "slime", "terrain", 200.0, 5000.0)
+physics.disable_sticky_between(world, "slime", "terrain")
 ```
 
 ---
@@ -396,16 +535,16 @@ physics.disable_sticky_between(W, "slime", "terrain")
 
 ```lua
 -- Platformer (kinematic-friendly)
-local player = physics.create_platformer_player(W, {x=64,y=64}, 24, 40, "player")
-physics.set_platformer_input(W, player, move_x, jump_held) -- move_x in [-1..1]
+local player = physics.create_platformer_player(world, {x=64,y=64}, 24, 40, "player")
+physics.set_platformer_input(world, player, move_x, jump_held) -- move_x in [-1..1]
 
 -- Top‑down controller (pivot constraint)
-physics.create_topdown_controller(W, e, max_bias, max_force)
+physics.create_topdown_controller(world, e, max_bias, max_force)
 
 -- Tank controller (enable + command + update)
-physics.enable_tank_controller(W, e, 30.0, 30.0, 10000.0, 50000.0, 1.2)
-physics.command_tank_to(W, e, {x=tx, y=ty})
-physics.update_tanks(W, dt)
+physics.enable_tank_controller(world, e, 30.0, 30.0, 10000.0, 50000.0, 1.2)
+physics.command_tank_to(world, e, {x=tx, y=ty})
+physics.update_tanks(world, dt)
 ```
 
 ---
@@ -413,12 +552,12 @@ physics.update_tanks(W, dt)
 ## Custom gravity & orbits
 
 ```lua
-physics.enable_inverse_square_gravity_to_point(W, e, {x=0,y=0}, 20000.0)
-physics.enable_inverse_square_gravity_to_body(W, satellite, planet, 40000.0)
-physics.disable_custom_gravity(W, e)
+physics.enable_inverse_square_gravity_to_point(world, e, {x=0,y=0}, 20000.0)
+physics.enable_inverse_square_gravity_to_body(world, satellite, planet, 40000.0)
+physics.disable_custom_gravity(world, e)
 
-local planet = physics.create_planet(W, 64.0, math.rad(15), "planet", {x=0,y=0})
-local orbiter = physics.spawn_orbiting_box(W, {x=120,y=0}, 8.0, 2.0, 40000.0, {x=0,y=0})
+local planet = physics.create_planet(world, 64.0, math.rad(15), "planet", {x=0,y=0})
+local orbiter = physics.spawn_orbiting_box(world, {x=120,y=0}, 8.0, 2.0, 40000.0, {x=0,y=0})
 ```
 
 ---
@@ -426,8 +565,8 @@ local orbiter = physics.spawn_orbiting_box(W, {x=120,y=0}, 8.0, 2.0, 40000.0, {x
 ## Shatter & slice
 
 ```lua
-local ok = physics.shatter_nearest(W, mx, my, 5) -- Voronoi shatter nearest polygon
-local sliced = physics.slice_first_hit(W, {x=0,y=0}, {x=200,y=0}, 1.0, 50.0)
+local ok = physics.shatter_nearest(world, mx, my, 5) -- Voronoi shatter nearest polygon
+local sliced = physics.slice_first_hit(world, {x=0,y=0}, {x=200,y=0}, 1.0, 50.0)
 ```
 
 ---
@@ -435,16 +574,16 @@ local sliced = physics.slice_first_hit(W, {x=0,y=0}, {x=200,y=0}, 1.0, 50.0)
 ## Static chains / bars / bounds / tilemaps
 
 ```lua
-local chain = physics.add_smooth_segment_chain(W, {
+local chain = physics.add_smooth_segment_chain(world, {
   {x=0,y=320}, {x=200,y=340}, {x=400,y=330}
 }, 4.0, "terrain")
 
-local bar = physics.add_bar_segment(W, {x=0,y=0}, {x=80,y=0}, 3.0, "terrain", 1)
+local bar = physics.add_bar_segment(world, {x=0,y=0}, {x=80,y=0}, 3.0, "terrain", 1)
 
-physics.add_screen_bounds(W, 0,0, 1280,720, 8.0, "world")
+physics.add_screen_bounds(world, 0,0, 1280,720, 8.0, "world")
 
 -- Tilemap colliders from boolean grid grid[x][y]
-physics.create_tilemap_colliders(W, grid, 32.0, 3.0)
+physics.create_tilemap_colliders(world, grid, 32.0, 3.0)
 ```
 
 ---
@@ -452,10 +591,10 @@ physics.create_tilemap_colliders(W, grid, 32.0, 3.0)
 ## Contact metrics & neighbors
 
 ```lua
-local touching = physics.touching_entities(W, e)      -- {entt.entity}
-local totalF = physics.total_force_on(W, e, dt)
-local weight = physics.weight_on(W, e, dt)
-local crush = physics.crush_on(W, e, dt)              -- {touching_count, crush}
+local touching = physics.touching_entities(world, e)      -- {entt.entity}
+local totalF = physics.total_force_on(world, e, dt)
+local weight = physics.weight_on(world, e, dt)
+local crush = physics.crush_on(world, e, dt)              -- {touching_count, crush}
 ```
 
 ---
@@ -463,9 +602,9 @@ local crush = physics.crush_on(W, e, dt)              -- {touching_count, crush}
 ## Mouse drag helper
 
 ```lua
-physics.start_mouse_drag(W, mx, my)
-physics.update_mouse_drag(W, mx, my)
-physics.end_mouse_drag(W)
+physics.start_mouse_drag(world, mx, my)
+physics.update_mouse_drag(world, mx, my)
+physics.end_mouse_drag(world)
 ```
 
 ---
@@ -474,22 +613,22 @@ physics.end_mouse_drag(W)
 
 ```lua
 -- Add constraints
-local c1 = physics.add_pin_joint(W, ea, {x=0,y=0}, eb, {x=0,y=0})
-local c2 = physics.add_slide_joint(W, ea, {x=0,y=0}, eb, {x=32,y=0}, 8.0, 64.0)
-local c3 = physics.add_pivot_joint_world(W, ea, eb, {x=100,y=100})
-local c4 = physics.add_damped_spring(W, ea, {x=0,y=0}, eb, {x=16,y=0}, 24.0, 200.0, 6.0)
-local c5 = physics.add_damped_rotary_spring(W, ea, eb, 0.0, 15000.0, 80.0)
+local c1 = physics.add_pin_joint(world, ea, {x=0,y=0}, eb, {x=0,y=0})
+local c2 = physics.add_slide_joint(world, ea, {x=0,y=0}, eb, {x=32,y=0}, 8.0, 64.0)
+local c3 = physics.add_pivot_joint_world(world, ea, eb, {x=100,y=100})
+local c4 = physics.add_damped_spring(world, ea, {x=0,y=0}, eb, {x=16,y=0}, 24.0, 200.0, 6.0)
+local c5 = physics.add_damped_rotary_spring(world, ea, eb, 0.0, 15000.0, 80.0)
 
 -- Limits
-physics.set_constraint_limits(W, c2, 50000.0, 0.0)   -- pass nil to keep a value
+physics.set_constraint_limits(world, c2, 50000.0, 0.0)   -- pass nil to keep a value
 
 -- Upright helper
-physics.add_upright_spring(W, e, 4000.0, 120.0)
+physics.add_upright_spring(world, e, 4000.0, 120.0)
 
 -- Breakable
-local bc = physics.make_breakable_slide_joint(W, ea, eb, {x=0,y=0}, {x=32,y=0}, 8, 64,
+local bc = physics.make_breakable_slide_joint(world, ea, eb, {x=0,y=0}, {x=32,y=0}, 8, 64,
                                               12000.0, 0.6, true, true, 0.05)
-physics.make_constraint_breakable(W, c3, 15000.0, 0.5, false, 0.0)
+physics.make_constraint_breakable(world, c3, 15000.0, 0.5, false, 0.0)
 ```
 
 ---
@@ -499,7 +638,7 @@ physics.make_constraint_breakable(W, c3, 15000.0, 0.5, false, 0.0)
 ```lua
 -- Group bodies that collide among same‑type contacts; when size >= threshold,
 -- a C++ callback you defined will run.
-physics.enable_collision_grouping(W, 1000, 2000, 6) -- min_type, max_type, threshold
+physics.enable_collision_grouping(world, 1000, 2000, 6) -- min_type, max_type, threshold
 ```
 
 ---
@@ -556,7 +695,7 @@ steering.apply_force(registry, agent, 800.0, math.rad(60), 0.35)
 
 ## Practical patterns
 
-* Call `W:Update(dt)` every frame; consume event buffers; then call `W:PostUpdate()`.
+* Call `world:Update(dt)` every frame; consume event buffers; then call `world:PostUpdate()`.
 * Tag/world setup up-front; mutate masks sparingly mid‑frame (prefer staging + `PostUpdate`).
 * Use the multi‑shape API to compose complex colliders (primary + extras) per entity.
 * Store temporary per‑contact data with `arb_*` getters/setters inside your Pre/PostSolve.
@@ -575,30 +714,30 @@ steering.apply_force(registry, agent, 800.0, math.rad(60), 0.35)
 
 ## Annex: Per‑API Examples (Copy/Paste Ready)
 
-> Minimal snippets that exercise each new API. Assumes you have `registry`, `PhysicsManager`, and a world `W` already created.
+> Minimal snippets that exercise each new API. Assumes you have `registry`, `PhysicsManager`, and a world `world` already created.
 
 ### Multi‑shape composition
 
 ```lua
 -- Primary rectangle
-physics.AddCollider(W, e, "player", "rectangle", 32, 48, 0, 0, false)
+physics.AddCollider(world, e, "player", "rectangle", 32, 48, 0, 0, false)
 -- Add a circular bumper as an extra shape
-physics.add_shape_to_entity(W, e, "player", "circle", 14, 0, 0, 0, false)
-print("shapes:", physics.get_shape_count(W, e))
-local bb0 = physics.get_shape_bb(W, e, 0)
-local bb1 = physics.get_shape_bb(W, e, 1)
+physics.add_shape_to_entity(world, e, "player", "circle", 14, 0, 0, 0, false)
+print("shapes:", physics.get_shape_count(world, e))
+local bb0 = physics.get_shape_bb(world, e, 0)
+local bb1 = physics.get_shape_bb(world, e, 1)
 -- Remove the extra
-physics.remove_shape_at(W, e, 1)
+physics.remove_shape_at(world, e, 1)
 ```
 
 ### Precise queries
 
 ```lua
-local s = physics.segment_query_first(W, {x=0,y=0}, {x=300,y=0}, 6.0)
+local s = physics.segment_query_first(world, {x=0,y=0}, {x=300,y=0}, 6.0)
 if s.hit then
   print("alpha:", s.alpha, "hit shape:", s.shape)
 end
-local n = physics.point_query_nearest(W, {x=mx,y=my}, 128.0)
+local n = physics.point_query_nearest(world, {x=mx,y=my}, 128.0)
 if n.hit then
   print("nearest distance:", n.distance)
 end
@@ -608,15 +747,15 @@ end
 
 ```lua
 -- Reject collisions if we previously marked this arbiter as one-way reject
-physics.on_wildcard_presolve(W, "one_way", function(arb)
-  if physics.arb_get_bool(W, arb, "reject", false) then return false end
+physics.on_wildcard_presolve(world, "one_way", function(arb)
+  if physics.arb_get_bool(world, arb, "reject", false) then return false end
   -- Example: set a damage value to read in PostSolve
-  physics.arb_set_number(W, arb, "damage", 10.0)
+  physics.arb_set_number(world, arb, "damage", 10.0)
   return true
 end)
 
-physics.on_wildcard_postsolve(W, "one_way", function(arb)
-  local dmg = physics.arb_get_number(W, arb, "damage", 0.0)
+physics.on_wildcard_postsolve(world, "one_way", function(arb)
+  local dmg = physics.arb_get_number(world, arb, "damage", 0.0)
   if dmg > 0 then print("applied dmg:", dmg) end
 end)
 ```
@@ -631,122 +770,122 @@ end
 local function pair_post(arb)
   -- collect analytics or spawn particles using arbiter impulses
 end
-physics.on_pair_presolve(W, "player", "enemy", pair_pre)
-physics.on_pair_postsolve(W, "player", "enemy", pair_post)
-physics.on_wildcard_postsolve(W, "projectile", function(arb) end)
+physics.on_pair_presolve(world, "player", "enemy", pair_pre)
+physics.on_pair_postsolve(world, "player", "enemy", pair_post)
+physics.on_wildcard_postsolve(world, "projectile", function(arb) end)
 -- Later, clear:
-physics.clear_pair_handlers(W, "player", "enemy")
-physics.clear_wildcard_handlers(W, "projectile")
+physics.clear_pair_handlers(world, "player", "enemy")
+physics.clear_wildcard_handlers(world, "projectile")
 ```
 
 ### Fluids
 
 ```lua
-physics.register_fluid_volume(W, "water", 1.0, 2.5)
-physics.add_fluid_sensor_aabb(W, 0, 0, 640, 160, "water")
+physics.register_fluid_volume(world, "water", 1.0, 2.5)
+physics.add_fluid_sensor_aabb(world, 0, 0, 640, 160, "water")
 ```
 
 ### One‑way platforms
 
 ```lua
 local normal_up = {x=0,y=1}
-local plat = physics.add_one_way_platform(W, 100, 200, 400, 200, 6.0, "one_way", normal_up)
+local plat = physics.add_one_way_platform(world, 100, 200, 400, 200, 6.0, "one_way", normal_up)
 -- In presolve, you can conditionally reject contact by using arb store (see above)
 ```
 
 ### Sticky glue
 
 ```lua
-physics.enable_sticky_between(W, "slime", "terrain", 250.0, 6000.0)
+physics.enable_sticky_between(world, "slime", "terrain", 250.0, 6000.0)
 -- Disable later:
-physics.disable_sticky_between(W, "slime", "terrain")
+physics.disable_sticky_between(world, "slime", "terrain")
 ```
 
 ### Controllers
 
 ```lua
 -- Platformer
-local player = physics.create_platformer_player(W, {x=64,y=64}, 24, 40, "player")
+local player = physics.create_platformer_player(world, {x=64,y=64}, 24, 40, "player")
 function update(dt)
   local input_x = (right and 1 or 0) + (left and -1 or 0)
-  physics.set_platformer_input(W, player, input_x, jump_held)
-  W:Update(dt); W:PostUpdate()
+  physics.set_platformer_input(world, player, input_x, jump_held)
+  world:Update(dt); world:PostUpdate()
 end
 
 -- Top‑down attach (constraint-based)
-physics.create_topdown_controller(W, e, 1.0, 3000.0)
+physics.create_topdown_controller(world, e, 1.0, 3000.0)
 
 -- Tank
-physics.enable_tank_controller(W, tank, 30.0, 30.0, 10000.0, 50000.0, 1.2)
-physics.command_tank_to(W, tank, {x=tx,y=ty})
-physics.update_tanks(W, dt)
+physics.enable_tank_controller(world, tank, 30.0, 30.0, 10000.0, 50000.0, 1.2)
+physics.command_tank_to(world, tank, {x=tx,y=ty})
+physics.update_tanks(world, dt)
 ```
 
 ### Custom gravity & orbits
 
 ```lua
-local planet = physics.create_planet(W, 64.0, math.rad(10), "planet", {x=0,y=0})
-local orbiter = physics.spawn_orbiting_box(W, {x=120,y=0}, 8.0, 2.0, 30000.0, {x=0,y=0})
-physics.enable_inverse_square_gravity_to_body(W, orbiter, planet, 30000.0)
+local planet = physics.create_planet(world, 64.0, math.rad(10), "planet", {x=0,y=0})
+local orbiter = physics.spawn_orbiting_box(world, {x=120,y=0}, 8.0, 2.0, 30000.0, {x=0,y=0})
+physics.enable_inverse_square_gravity_to_body(world, orbiter, planet, 30000.0)
 ```
 
 ### Shatter & slice
 
 ```lua
-if physics.shatter_nearest(W, mx, my, 6) then
+if physics.shatter_nearest(world, mx, my, 6) then
   print("shattered")
 end
-local sliced = physics.slice_first_hit(W, {x=0,y=0}, {x=200,y=0}, 1.0, 50.0)
+local sliced = physics.slice_first_hit(world, {x=0,y=0}, {x=200,y=0}, 1.0, 50.0)
 ```
 
 ### Static chains / bars / bounds / tilemaps
 
 ```lua
-local chain = physics.add_smooth_segment_chain(W, {
+local chain = physics.add_smooth_segment_chain(world, {
   {x=0,y=320}, {x=200,y=340}, {x=400,y=330}
 }, 4.0, "terrain")
-local bar = physics.add_bar_segment(W, {x=0,y=0}, {x=80,y=0}, 3.0, "terrain", 1)
-physics.add_screen_bounds(W, 0,0, 1280,720, 8.0, "world")
+local bar = physics.add_bar_segment(world, {x=0,y=0}, {x=80,y=0}, 3.0, "terrain", 1)
+physics.add_screen_bounds(world, 0,0, 1280,720, 8.0, "world")
 
 -- Tilemap from boolean grid grid[x][y]
 local grid = {
   [0] = {[0]=true,[1]=true},
   [1] = {[0]=true,[1]=false},
 }
-physics.create_tilemap_colliders(W, grid, 32.0, 3.0)
+physics.create_tilemap_colliders(world, grid, 32.0, 3.0)
 ```
 
 ### Contact metrics & neighbors
 
 ```lua
-local touching = physics.touching_entities(W, e)
+local touching = physics.touching_entities(world, e)
 for _,ee in ipairs(touching) do print("touch:", ee) end
-print("F:", physics.total_force_on(W, e, dt))
-print("weight:", physics.weight_on(W, e, dt))
-local c = physics.crush_on(W, e, dt); print("crush:", c.crush)
+print("F:", physics.total_force_on(world, e, dt))
+print("weight:", physics.weight_on(world, e, dt))
+local c = physics.crush_on(world, e, dt); print("crush:", c.crush)
 ```
 
 ### Mouse drag helper
 
 ```lua
-physics.start_mouse_drag(W, mx, my)
-physics.update_mouse_drag(W, mx, my)
-physics.end_mouse_drag(W)
+physics.start_mouse_drag(world, mx, my)
+physics.update_mouse_drag(world, mx, my)
+physics.end_mouse_drag(world)
 ```
 
 ### Constraints & breakables
 
 ```lua
-local c2 = physics.add_slide_joint(W, ea, {x=0,y=0}, eb, {x=32,y=0}, 8.0, 64.0)
-physics.set_constraint_limits(W, c2, 40000.0, nil)  -- keep maxBias
-local bc = physics.make_breakable_slide_joint(W, ea, eb, {x=0,y=0}, {x=32,y=0}, 8, 64,
+local c2 = physics.add_slide_joint(world, ea, {x=0,y=0}, eb, {x=32,y=0}, 8.0, 64.0)
+physics.set_constraint_limits(world, c2, 40000.0, nil)  -- keep maxBias
+local bc = physics.make_breakable_slide_joint(world, ea, eb, {x=0,y=0}, {x=32,y=0}, 8, 64,
   12000.0, 0.6, true, true, 0.05)
-physics.make_constraint_breakable(W, c2, 15000.0, 0.5, false, 0.0)
+physics.make_constraint_breakable(world, c2, 15000.0, 0.5, false, 0.0)
 ```
 
 ### Collision grouping (union‑find)
 
 ```lua
 -- Group shapes with types in [1000,2000]; when group size >= 6, your C++ callback runs
-physics.enable_collision_grouping(W, 1000, 2000, 6)
+physics.enable_collision_grouping(world, 1000, 2000, 6)
 ```

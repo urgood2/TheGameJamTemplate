@@ -53,6 +53,7 @@ function initMainMenu()
     )
     
     
+    
     local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = -3 } -- default tag is "WORLD"
     physics.create_physics_for_transform(registry,
         physics_manager_instance, -- global instance
@@ -60,6 +61,32 @@ function initMainMenu()
         "world", -- physics world identifier
         info
     )
+    
+    
+    physics.AddCollider(world, player, "player", "rectangle", 32, 48, 0, 0, false)
+    
+    physics.AddCollider(world, player, "player", "chain", 0,0,0,0, false, {
+    {x=0,y=300}, {x=200,y=320}, {x=400,y=315}, {x=560,y=290}
+    })
+    
+    local count = physics.get_shape_count(world, player)
+    local bb = physics.get_shape_bb(world, player, 0) -- {l,b,r,t}
+    
+    -- navmesh testing
+    
+    PhysicsManager.set_nav_obstacle(player, true)
+    PhysicsManager.rebuild_navmesh("world")
+    PhysicsManager.mark_navmesh_dirty("world")
+    
+    -- call this after creating the physics for the transform.
+    -- physics.add_shape_to_entity(world, player, "player", "circle", 16, 0,0,0, false)
+    
+    -- raycast
+    local hits = physics.Raycast(world, 0, 0, 500, 500)  -- {physics.RaycastHit}
+    
+    local fatRaycastHits = physics.segment_query_first(world, {x=0,y=0}, {x=599,y=599}, 10)
+    
+    local n = physics.point_query_nearest(world, {x=500,y=500}, 400.0)
     
     -- test sensors as well
     
@@ -99,7 +126,24 @@ function initMainMenu()
     -- sensors have presolve, but not postsolve
     physics.on_wildcard_presolve(world, "sensor", function(arb)
         log_debug("PRESOLVE SENSOR") 
-        -- log_debug("PRESOLVE SENSOR: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
+        
+        physics.arb_set_number(world, arb.ptr, "damage", 12.5)
+        local reject = physics.arb_get_number(world, arb.ptr, "damage", false)
+        
+        local entities = arb:entities()
+        local ta = arb:tags(world)
+        
+        local impulse = arb.total_impulse
+        local normal = arb.normal
+        local impulseLen = arb:total_impulse_length()
+        local isFirstContact = arb:is_first_contact()
+        local isRemoval = arb:is_removal()
+        
+        arb:set_friction(10)
+        arb:set_elasticity(10)
+        arb:set_surface_velocity(100, 0)
+        -- arb.ignore()
+        
     end)
     -- arb is a LuaArbiter
     physics.on_wildcard_presolve(world, "WORLD", function(arb) 
@@ -119,10 +163,43 @@ function initMainMenu()
         -- log_debug("POSTSOLVE PLAYER: a=" .. tostring(arb.ptr.a) .. " b=" .. tostring(arb.ptr.b) .. " a_tag=" .. tostring(arb.ptr.a_tag) .. " b_tag=" .. tostring(arb.ptr.b_tag))
     end)
     
+    -- disable the sensor handlers
+    -- physics.clear_wildcard_handlers(world, "sensor")
     
     world:PrintCollisionTags()
     
+    -- physics.SetBullet(world, player, true)
+    physics.SetFixedRotation(world, player, true)
+    
+    local ok = physics.shatter_nearest(world, 100, 100, 5) -- Voronoi shatter nearest polygon, only works for poly shapes
+    
+    local chain = physics.add_smooth_segment_chain(world, {
+        {x=0,y=320}, {x=200,y=340}, {x=400,y=330}
+        }, 4.0, "WORLD")
+    
+    -- timer.every(1.0, function()
+    --     -- physics.SetVelocity(world, player, vx, vy)
+    --     -- physics.SetAngularVelocity(world, player, 40)           -- radians/sec
+    --     physics.ApplyForce(world, player, 50, 50)
+    --     physics.ApplyImpulse(world, player, 39, 39)
+    --     physics.ApplyTorque(world, player, 50)
+    -- end)
+    
+    -- local c1 = physics.add_pin_joint(world, player, {x=0,y=0}, sensor, {x=0,y=0})
+    -- local c2 = physics.add_slide_joint(world, player, {x=0,y=0}, sensor, {x=32,y=0}, 8.0, 64.0)
+    -- local c3 = physics.add_pivot_joint_world(world, player, sensor, {x=100,y=100})
+    -- local c4 = physics.add_damped_spring(world, player, {x=0,y=0}, sensor, {x=16,y=0}, 24.0, 200.0, 6.0)
+    -- local c5 = physics.add_damped_rotary_spring(world, player, sensor, 0.0, 15000.0, 80.0)
+    -- physics.add_upright_spring(world, player, 4000.0, 120.0)
+    -- local bc = physics.make_breakable_slide_joint(world, player, sensor, {x=0,y=0}, {x=32,y=0}, 8, 64, 12000.0, 0.6, true, true, 0.05)
+    
     timer.run(function()
+        
+        local touching = physics.touching_entities(world, player)
+        if #touching > 0 then
+            log_debug("Touching entities: ")
+            dump(touching)
+        end
         
         -- check between some test objects
         local ce = physics.GetCollisionEnter(world, "WORLD", "player")
@@ -136,8 +213,16 @@ function initMainMenu()
         local sensorCollide = physics.GetTriggerEnter(world, "sensor", "player")
         dump(sensorCollide)
         
+        if #sensorCollide > 0 then
+            log_debug("Sensor collide with player!")
+        end
+        
         local sensorCollide2 = physics.GetTriggerEnter(world, "sensor", "WORLD")
         dump(sensorCollide2)
+        
+        if #sensorCollide2 > 0 then
+            log_debug("Sensor collide with WORLD!")
+        end
         
     end)
     

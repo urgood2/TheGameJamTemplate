@@ -15,6 +15,17 @@ inline cpVect vec_from_lua(sol::table t) {
     return cpv(t.get_or("x", 0.0f), t.get_or("y", 0.0f));
 }
 
+// helper: convert Lua table -> vector<string>
+static std::vector<std::string> table_to_strings(const sol::table& t) {
+    std::vector<std::string> out;
+    out.reserve(t.size());
+    for (auto& kv : t) {
+        // allow array-style tables: { "player", "enemy", ... }
+        out.emplace_back(kv.second.as<std::string>());
+    }
+    return out;
+}
+
 inline std::vector<cpVect> vecarray_from_lua(sol::table arr) {
     std::vector<cpVect> out;
     for (auto& kv : arr) {
@@ -1531,10 +1542,39 @@ inline void expose_physics_to_lua(sol::state& lua) {
         "Groups bodies that collide with same-type contacts; when a group's count >= threshold, callback in C++ runs.",
         true, false
     });
+    
+    // expose to Lua
     physics_table.set_function("enable_collision_grouping",
-        [](physics::PhysicsWorld& W, uint64_t minT, uint64_t maxT, int threshold){
-            W.EnableCollisionGrouping((cpCollisionType)minT, (cpCollisionType)maxT, threshold, [](cpBody*){/* your C++ lambda already set */});
+        [](physics::PhysicsWorld& W,
+        sol::table lua_tags, int threshold,
+        sol::function lua_cb)
+        {
+            auto tags = table_to_strings(lua_tags);
+
+            // Wrap Lua cb; pass entity id or body ptr — your choice.
+            W.EnableCollisionGroupingByTags(
+                tags, threshold,
+                [&W, lua_cb](cpBody* body) {
+                    if (!lua_cb.valid()) return;
+                    // Prefer entity id:
+                    entt::entity e = GetEntityFromBody(body);   // implement as discussed earlier
+                    lua_cb(static_cast<uint32_t>(e));
+                    // If you want raw body pointer instead:
+                    // lua_cb(reinterpret_cast<void*>(body));
+                }
+            );
         });
+
+    // (Optional) overload without callback (no-op)
+    physics_table.set_function("enable_collision_grouping",
+        [](physics::PhysicsWorld& W, sol::table lua_tags, int threshold) {
+            auto tags = table_to_strings(lua_tags);
+            W.EnableCollisionGroupingByTags(tags, threshold, [](cpBody*) {});
+        });
+
+    // (Optional) disable
+    physics_table.set_function("disable_collision_grouping",
+        [](physics::PhysicsWorld& W){ W.DisableCollisionGrouping(); });
 
     
     lua.new_usertype<LuaArbiter>(
@@ -1543,12 +1583,13 @@ inline void expose_physics_to_lua(sol::state& lua) {
         "ptr", sol::property([](LuaArbiter& a){ return (void*)a.arb; }),
         // read helpers
         "entities",   &LuaArbiter::entities,
-        "normal",     sol::property([](sol::this_state s, LuaArbiter& a){
-                            return vec_to_lua(sol::state_view(s), a.normal());
-                        }),
-        "total_impulse", sol::property([](sol::this_state s, LuaArbiter& a){
-                            return vec_to_lua(sol::state_view(s), a.total_impulse());
-                            }),
+        // NOTE: object first, this_state second
+        "normal", sol::property([](LuaArbiter& a, sol::this_state s){
+            return vec_to_lua(sol::state_view(s), a.normal());
+        }),
+        "total_impulse", sol::property([](LuaArbiter& a, sol::this_state s){
+            return vec_to_lua(sol::state_view(s), a.total_impulse());
+        }),
         "total_impulse_length", &LuaArbiter::total_impulse_length,
         "is_first_contact",     &LuaArbiter::is_first_contact,
         "is_removal",           &LuaArbiter::is_removal,

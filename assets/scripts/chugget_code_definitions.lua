@@ -8165,6 +8165,16 @@ function physics.create_planet(...) end
 function physics.spawn_orbiting_box(...) end
 
 ---
+--- Sets the satellite body's velocity for a circular orbit around the center body.
+---
+---@param world physics.PhysicsWorld
+---@param satellite entt.entity
+---@param center entt.entity
+---@param GM number
+---@return nil
+function physics.set_circular_orbit_velocity(...) end
+
+---
 --- Closest segment hit with optional fat radius.
 ---
 ---@param world physics.PhysicsWorld

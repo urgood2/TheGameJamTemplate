@@ -2365,7 +2365,6 @@ entt::entity PhysicsWorld::AddOneWayPlatform(
 
   return e;
 }
-
 void PhysicsWorld::OnVelocityUpdate(cpBody *body, cpVect gravity,
                                     cpFloat damping, cpFloat dt) {
   auto it = _gravityByBody.find(body);
@@ -2376,21 +2375,44 @@ void PhysicsWorld::OnVelocityUpdate(cpBody *body, cpVect gravity,
   }
 
   const auto &f = it->second;
-  cpVect p = cpBodyGetPosition(body);
-  cpVect c = (f.mode == GravityField::Mode::InverseSquareToBody && f.centerBody)
-                 ? cpBodyGetPosition(f.centerBody)
-                 : f.point;
-  cpVect r = cpvsub(p, c);
-  cpFloat r2 = cpvlengthsq(r);
-  if (r2 < 1e-6f) {
-    cpBodyUpdateVelocity(body, gravity, damping, dt);
-    return;
-  }
-  cpFloat inv_r3 = 1.0f / (r2 * cpfsqrt(r2));
-  cpVect gvec = cpvmult(r, -f.GM * inv_r3);
 
-  cpBodyUpdateVelocity(body, gvec, damping, dt);
+  // keep it awake so tiny pulls accumulate
+  cpBodyActivate(body);
+
+  // positions
+  const cpVect p = cpBodyGetPosition(body);
+  const cpVect c = (f.mode == GravityField::Mode::InverseSquareToBody && f.centerBody)
+                     ? cpBodyGetPosition(f.centerBody)
+                     : f.point;
+
+  // vector from attractor to body
+  const cpVect r  = cpvsub(p, c);
+  const cpFloat r2 = cpvlengthsq(r);
+
+  // Softening radius (OPTION 1): avoids 1/r^2 blow-up near r -> 0
+  const cpFloat eps   = (f.softening > 0.0f) ? f.softening : 20.0f; // world units (e.g., px)
+  const cpFloat eps2  = eps * eps;
+
+  // Compute softened inverse-square acceleration
+  const cpFloat inv   = 1.0f / cpfsqrt(r2 + eps2);
+  const cpFloat inv3  = inv * inv * inv;
+  cpVect a = cpvmult(r, -f.GM * inv3);   // accel vector toward c
+
+  // Acceleration clamp (OPTION 1): cap spikes during close passes
+  const cpFloat a_max = (f.a_max > 0.0f) ? f.a_max : 1000000.0f; // in world-units/s^2
+  const cpFloat amag  = cpvlength(a);
+  if (amag > a_max) {
+    a = cpvmult(a, a_max / (amag + 1e-12f));
+  }
+  
+  
+  // check if this body wants custom damping
+  float localDamping = (f.customDamping > 0.0f ? f.customDamping : damping);
+
+  // Integrate using Chipmunk’s velocity updater (keep your damping as-is)
+  cpBodyUpdateVelocity(body, a, localDamping, dt);
 }
+
 
 void PhysicsWorld::C_VelocityUpdate(cpBody *body, cpVect gravity,
                                     cpFloat damping, cpFloat dt) {
@@ -2452,6 +2474,35 @@ entt::entity PhysicsWorld::CreatePlanet(cpFloat radius,
       e, ColliderComponent{body, std::shared_ptr<cpShape>(ring, cpShapeFree),
                            tag, false, ColliderShapeType::Circle});
   return e;
+}
+
+// Given: satellite body 'b', attractor center 'c', and GM (same units as in your field)
+void PhysicsWorld::SetCircularOrbitVelocity(entt::entity satellite,
+                                            entt::entity center,
+                                            cpFloat GM) {
+  // get collider/body for both
+  auto &sat = registry->get<ColliderComponent>(satellite);
+  auto &cen = registry->get<ColliderComponent>(center);
+
+  cpBody *satBody = sat.body.get();
+  cpBody *cenBody = cen.body.get();
+
+  cpVect p = cpBodyGetPosition(satBody);
+  cpVect c = cpBodyGetPosition(cenBody);
+
+  cpVect rvec = cpvsub(p, c);
+  cpFloat r   = cpvlength(rvec);
+  if (r <= 0.0f) return;
+
+  // circular orbit speed
+  cpFloat vscale = cpfsqrt(GM / r) / r;
+  cpVect v       = cpvmult(cpvperp(rvec), vscale);
+
+  cpBodySetVelocity(satBody, v);
+
+  // cosmetic spin like demo
+  cpBodySetAngularVelocity(satBody, vscale);
+  cpBodySetAngle(satBody, cpfatan2(rvec.y, rvec.x));
 }
 
 entt::entity PhysicsWorld::SpawnOrbitingBox(

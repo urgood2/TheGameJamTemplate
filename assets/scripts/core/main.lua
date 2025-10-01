@@ -219,8 +219,18 @@ function initMainMenu()
         
     -- end)
     
-    physics.enable_inverse_square_gravity_to_point(world, player, {x=400,y=240}, 8000)
-
+    local nodeComp = registry:get(player, GameObject)
+    local gameObjectState = nodeComp.state
+    gameObjectState.hoverEnabled = true
+    gameObjectState.collisionEnabled = true
+    gameObjectState.dragEnabled = true -- allow dragging 
+    
+    -- physics.enable_inverse_square_gravity_to_point(world, sensor, {x=400,y=240}, 100000)
+    physics.enable_inverse_square_gravity_to_body(world, sensor, player, 100000)
+    physics.set_circular_orbit_velocity(world, sensor, player, 100000)
+    
+    -- physics.enable_inverse_square_gravity_to_point(world, sensor, {x=400,y=240}, 100000)
+    -- physics.set_circular_orbit_velocity(world, sensor, player, 555000)
     
     -- local c1 = physics.add_pin_joint(world, player, {x=0,y=0}, sensor, {x=0,y=0})
     -- local c2 = physics.add_slide_joint(world, player, {x=0,y=0}, sensor, {x=32,y=0}, 8.0, 64.0)
@@ -263,9 +273,10 @@ function initMainMenu()
         
     end)
     
-    timer.after(30.0, function()
-        registry:destroy(player)
-    end)
+    -- timer.after(30.0, function()
+    --     -- destroy physics objects like this
+    --     registry:destroy(player)
+    -- end)
     
     
     

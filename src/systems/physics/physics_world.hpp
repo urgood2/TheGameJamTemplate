@@ -1143,6 +1143,9 @@ struct GravityField {
   cpFloat GM{0};          // ‘gravityStrength’ in the demo
   cpVect point{0,0};      // static center (if used)
   cpBody* centerBody{nullptr}; // dynamic center (optional)
+  cpFloat softening{25.0f}; // soften gravity
+  cpFloat a_max{10000000.0f}; // clamp max acceleration
+  cpFloat customDamping{1.0f}; // override body damping (0=no custom damping)
 };
 
 std::unordered_map<cpBody*, GravityField> _gravityByBody;
@@ -1158,7 +1161,9 @@ void DisableCustomGravity(entt::entity e);
 entt::entity CreatePlanet(cpFloat radius, cpFloat spinRadiansPerSec,
                                         const std::string& tag /*= "planet"*/,
                                         cpVect pos /*= {0,0}*/);
-
+void SetCircularOrbitVelocity(entt::entity satellite,
+                                            entt::entity center,
+                                            cpFloat GM);
 entt::entity SpawnOrbitingBox(cpVect startPos, cpFloat halfSize,
                                             cpFloat mass, cpFloat GM,
                                             cpVect gravityCenter /*usually {0,0} or planet pos*/);

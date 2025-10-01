@@ -1242,6 +1242,16 @@ inline void expose_physics_to_lua(sol::state& lua) {
             return W.SpawnOrbitingBox(vec_from_lua(startPos), (float)halfSize, (float)mass,
                                     (float)GM, vec_from_lua(gravityCenter));
         });
+    physics_table.set_function("set_circular_orbit_velocity",
+        [](physics::PhysicsWorld& W, entt::entity satellite, entt::entity center, double GM){
+            W.SetCircularOrbitVelocity(satellite, center, (float)GM);
+        });
+    rec.record_free_function(path, {
+        "set_circular_orbit_velocity",
+        "---@param world physics.PhysicsWorld\n---@param satellite entt.entity\n---@param center entt.entity\n---@param GM number\n---@return nil",
+        "Sets the satellite body's velocity for a circular orbit around the center body.",
+        true, false
+    });
 
     // ---------- Precise queries ----------
     rec.record_free_function(path, {

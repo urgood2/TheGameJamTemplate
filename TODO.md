@@ -35,7 +35,6 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] check planet stuff is working.
 - [ ] DOC UPDATES: update lua bindings & docs one more time for physics world. some navmesh bindings are missing. return values for Precise queries need to be outlined better. add better descriptions for the vvarious addJoint and similar methods. update doc for enable_collision_grouping(). 
 
 - test item modifiers:
@@ -196,6 +195,7 @@ PM.enableDebugDraw("dungeon", true);
 
 
 ## physics LATERS
+- [ ] check planet orbiting code next time. enable_inverse_square_gravity_to_body and enable_inverse_square_gravity_to_point both work, as does set_circular_orbit_velocity
 - [ ] add point cloud manipulation code + render texture updating so we can use it for terrain rendering
 - [ ] Predictive flight path rendering via angrychipmunks demo.
 - [ ] Final updates to physics world for ease of use https://chatgpt.com/share/688a4653-d110-800a-90e1-8506e26f3653

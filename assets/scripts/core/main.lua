@@ -273,10 +273,10 @@ function initMainMenu()
         
     end)
     
-    -- timer.after(30.0, function()
-    --     -- destroy physics objects like this
-    --     registry:destroy(player)
-    -- end)
+    timer.after(30.0, function()
+        -- destroy physics objects like this
+        registry:destroy(player)
+    end)
     
     
     

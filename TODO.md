@@ -35,7 +35,22 @@ HitCircle{ group = main.current.effects, x = self.x, y = self.y, rs = 12, color 
 
 
 ## TODOS fast
-- [ ] DOC UPDATES: update lua bindings & docs one more time for physics world. some navmesh bindings are missing. return values for Precise queries need to be outlined better. add better descriptions for the vvarious addJoint and similar methods. update doc for enable_collision_grouping(). 
+- [ ] check that this can be done from lua:
+```cpp
+// test scene switch / multi-world toggling
+auto& AS = entity_gamestate_management::active_states_instance();
+AS.deactivate("state:overworld");
+AS.activate  ("state:dungeon");
+
+// Optional hard toggles (e.g., pause physics even if state is active)
+PM.enableStep("overworld", false);
+PM.enableStep("dungeon",   true);
+PM.enableDebugDraw("dungeon", true);
+
+// When you spawn things:
+registry.emplace<PhysicsWorldRef>(e, "overworld");
+registry.emplace<entity_gamestate_management::StateTag>(e, "state:overworld");
+```
 
 - test item modifiers:
 ```lua
@@ -107,66 +122,7 @@ local ReactiveBalm = {
 
 ```
 
-- [ ] test physics world layers
-```cpp
-world->SetCollisionTags({"WORLD","PLAYER","ENEMY","PROJECTILE","TRIGGER"});
-SetObjectLayerPhysicsTag(registry, *world, "Walls", "WORLD");
 
-// Example collision matrix:
-SetObjectLayerCollidesWith(registry, *world, "WORLD",      {"PLAYER","ENEMY","PROJECTILE"});
-SetObjectLayerCollidesWith(registry, *world, "PLAYER",     {"WORLD","ENEMY","TRIGGER"});
-SetObjectLayerCollidesWith(registry, *world, "ENEMY",      {"WORLD","PLAYER","TRIGGER"});
-SetObjectLayerCollidesWith(registry, *world, "PROJECTILE", {"WORLD","ENEMY","TRIGGER"});
-SetObjectLayerCollidesWith(registry, *world, "TRIGGER",    {"PLAYER","ENEMY","PROJECTILE"});
-
-```
-- [ ] also test:
-```cpp
-// Construct worlds
-auto overworld = physics::InitPhysicsWorld(&registry, 64.f, 0.f, 0.f);
-auto dungeon   = physics::InitPhysicsWorld(&registry, 64.f, 0.f, 0.f);
-
-PhysicsManager PM{registry};
-PM.add("overworld", overworld, "state:overworld");
-PM.add("dungeon",   dungeon,   "state:dungeon");
-
-// Activate only overworld right now
-entity_gamestate_management::active_states_instance().activate("state:overworld");
-PM.enableStep("overworld", true);
-PM.enableDebugDraw("overworld", true);
-
-PM.enableStep("dungeon", false); // hard off for now
-PM.enableDebugDraw("dungeon", false);
-
-// When you spawn things:
-auto e = registry.create();
-registry.emplace<PhysicsWorldRef>(e, "overworld");
-registry.emplace<entity_gamestate_management::StateTag>(e, "state:overworld");
-// also add ColliderComponent, etc.
-
-// Object layer setup:
-SetObjectLayerPhysicsTag(registry, *overworld, "Walls", "WORLD");
-SetObjectLayerCollidesWith(registry, *overworld, "WORLD", {"PLAYER","ENEMY","PROJECTILE"});
-
-// In your main loop:
-PM.stepAll(dt);
-PM.drawAll();        // draws only worlds that are active + draw_debug==true
-SyncPhysicsToTransform(registry, PM);
-
-``
-
-- [ ] test scene switch / multi-world toggling
-
-```cpp
-auto& AS = entity_gamestate_management::active_states_instance();
-AS.deactivate("state:overworld");
-AS.activate  ("state:dungeon");
-
-// Optional hard toggles (e.g., pause physics even if state is active)
-PM.enableStep("overworld", false);
-PM.enableStep("dungeon",   true);
-PM.enableDebugDraw("dungeon", true);
-```
 
 
 

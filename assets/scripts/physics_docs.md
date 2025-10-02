@@ -229,25 +229,48 @@ local rmode = physics.get_rotation_mode(registry, e)   -- integer enum value
 
 Utilities to register worlds, step/draw centrally, and run navmesh/vision.
 
+> **Binding name note:** Your C++ exposes this as `PhysicsManagerUD` (no constructor). In docs we refer to it as `PhysicsManager` for brevity; use whichever alias you registered.
+
+**World management:**
+
 ```lua
-PhysicsManager.add_world("world", world)
+PhysicsManager.add_world("world", world[, bindsToState])               -- add shared_ptr<PhysicsWorld>
+PhysicsManager.get_world("world")  --> physics.PhysicsWorld|nil
+PhysicsManager.has_world("world")  --> boolean
+PhysicsManager.is_world_active("world") --> boolean
+PhysicsManager.move_entity_to_world(e, "dungeon_world")                 -- moves + updates refs
+```
+
+**Step & draw:**
+
+```lua
 PhysicsManager.enable_step("world", true)
 PhysicsManager.enable_debug_draw("world", true)
-PhysicsManager.move_entity_to_world(npc, "dungeon_world")
-
-local w = PhysicsManager.get_world("world")
-local has = PhysicsManager.has_world("world")
-local active = PhysicsManager.is_world_active("world")
-
 PhysicsManager.step_all(dt)
 PhysicsManager.draw_all()
+```
 
-local cfg = PhysicsManager.get_nav_config("world")
+**Navmesh config & maintenance:**
+
+```lua
+local cfg = PhysicsManager.get_nav_config("world")     -- { default_inflate_px = int }
 cfg.default_inflate_px = 12
-PhysicsManager.set_nav_config("world", cfg)
-PhysicsManager.rebuild_navmesh("world")
-PhysicsManager.mark_navmesh_dirty("world")
-PhysicsManager.set_nav_obstacle(groundEntity, true)
+PhysicsManager.set_nav_config("world", cfg)            -- marks navmesh dirty
+PhysicsManager.mark_navmesh_dirty("world")              -- manual dirty flag
+PhysicsManager.rebuild_navmesh("world")                 -- rebuild now
+PhysicsManager.set_nav_obstacle(entity, true)           -- include/exclude obstacle; auto-dirties world
+```
+
+**Pathfinding & vision:**
+
+```lua
+-- find_path returns an array of {x:int, y:int} (grid coords)
+local pts = PhysicsManager.find_path("world", sx, sy, dx, dy)
+for i,p in ipairs(pts) do print(i, p.x, p.y) end
+
+-- vision_fan returns visible cells within radius from (sx,sy)
+local cells = PhysicsManager.vision_fan("world", sx, sy, radius)
+for _,c in ipairs(cells) do mark_visible(c.x, c.y) end
 ```
 
 ---
@@ -265,16 +288,41 @@ end
 local entities = physics.GetObjectsInArea(world, 0, 0, 256, 256) -- {entt.entity}
 ```
 
-**Precise queries**
+### Precise queries (updated)
 
 ```lua
 -- Closest segment hit with optional fat radius (hitscan)
 local q = physics.segment_query_first(world, {x=0,y=0}, {x=300,y=0}, 4.0)
--- q = { hit=bool, shape=ptr|nil, point={x,y}|nil, normal={x,y}|nil, alpha=number }
+-- q: { hit:boolean, shape:lightuserdata|nil, point={x,y}|nil, normal={x,y}|nil, alpha:number }
 
 -- Nearest shape to a point with max distance (distance < 0 => inside)
 local n = physics.point_query_nearest(world, {x=mx,y=my}, 128.0)
--- n = { hit=bool, shape=ptr|nil, point={x,y}|nil, distance=number|nil }
+-- n: { hit:boolean, shape:lightuserdata|nil, point={x,y}|nil, distance:number|nil }
+```
+
+**Return value details**
+
+* `shape`: `lightuserdata` (`cpShape*`). Use `physics.entity_from_ptr(shape_owner_body_or_shape)` if you store entity IDs on userData.
+* `point`: `{x,y}` **world-space** impact/nearest point; present only when `hit=true`.
+* `normal` *(segment query only)*: contact normal at `point` (unit vector A→B direction by Chipmunk convention).
+* `alpha` *(segment query only)*: fraction ∈ `[0,1]` along the segment from start→finish where the hit occurred.
+* `distance` *(point query only)*: signed distance in world units; **negative** means the query point lies **inside** the shape’s inflation (Chipmunk semantics).
+* If `hit=false`, only boolean fields are set; others are `nil`.
+
+**Usage patterns**
+
+```lua
+local q = physics.segment_query_first(world, A, B, 2.0)
+if q.hit then
+  local impact = q.point
+  local nx,ny = q.normal.x, q.normal.y
+  local t = q.alpha
+end
+
+local n = physics.point_query_nearest(world, {x=mx,y=my}, 64.0)
+if n.hit and n.distance < 0 then
+  -- cursor is inside a shape; distance is penetration depth (neg)
+end
 ```
 
 ---
@@ -428,25 +476,6 @@ This section documents important caveats when working with the **`physics.Arbite
 2. **Colon vs dot confusion**: Use `:` for methods, `.` for properties.
 3. **Tags require world reference**: `arb:tags(world)` must be passed the `PhysicsWorld` object. Without it, tag resolution fails.
 4. **Do not reuse outside callbacks**: Trying to access `arb.total_impulse` later will throw.
-
----
-
-## Example Usage
-
-```lua
-physics.on_wildcard_presolve(world, "player", function(arb)
-    if arb:is_first_contact() then
-        print("First contact normal:", arb.normal.x, arb.normal.y)
-    end
-
-    local e1, e2 = arb:entities()
-    local t1, t2 = arb:tags(world)
-    print("Collision between", t1, "and", t2)
-
-    arb:set_friction(0.8)
-    arb:set_elasticity(0.2)
-end)
-```
 
 ---
 
@@ -609,37 +638,91 @@ physics.end_mouse_drag(world)
 
 ---
 
-## Constraints (quick wrappers) & breakables
+## Constraints (quick wrappers) & breakables (expanded)
+
+**All constructors return `lightuserdata` (`cpConstraint*`). Store it if you plan to tweak or make it breakable later.**
+
+### `add_pin_joint(world, ea, a_local, eb, b_local) -> cpConstraint*`
+
+* Connects bodies at fixed local anchor points (rigid bar of length = distance between anchors at creation).
+* **Use for:** ropes/rods of fixed length, simple links.
+
+### `add_slide_joint(world, ea, a_local, eb, b_local, min_d, max_d) -> cpConstraint*`
+
+* Like a pin joint but allows distance to vary between `min_d..max_d`.
+* **Use for:** telescoping links, bump-stops.
+
+### `add_pivot_joint_world(world, ea, eb, world_anchor) -> cpConstraint*`
+
+* Pivots two bodies about a world-space anchor.
+* **Use for:** doors, wheels with separate axle entities, ragdoll hips.
+
+### `add_damped_spring(world, ea, a_local, eb, b_local, rest, k, damping) -> cpConstraint*`
+
+* Linear spring with stiffness `k` and `damping` between local anchors, rest length `rest`.
+* **Use for:** suspensions, soft links.
+
+### `add_damped_rotary_spring(world, ea, eb, rest_angle, k, damping) -> cpConstraint*`
+
+* Angular spring driving relative angle to `rest_angle`.
+* **Use for:** upright helpers, hinged returns.
+
+### `set_constraint_limits(world, c, max_force|nil, max_bias|nil)`
+
+* Convenience to set `cpConstraint` fields; pass `nil` to leave a field unchanged.
+
+### `add_upright_spring(world, e, stiffness, damping)`
+
+* Adds a rotary spring to keep `e` upright relative to the static frame.
+
+### Breakables
+
+#### `make_breakable_slide_joint(world, ea, eb, a_local, b_local, min_d, max_d, breaking_force, trigger_ratio, collide_bodies, use_fatigue, fatigue_rate) -> cpConstraint*`
+
+* Creates a slide joint that **breaks** when constraint force exceeds `breaking_force * trigger_ratio` and/or accumulates fatigue (`use_fatigue`, `fatigue_rate`).
+
+#### `make_constraint_breakable(world, c, breaking_force, trigger_ratio, use_fatigue, fatigue_rate)`
+
+* Retrofits **any** constraint `c` with the same break logic.
+
+**Example**
 
 ```lua
--- Add constraints
-local c1 = physics.add_pin_joint(world, ea, {x=0,y=0}, eb, {x=0,y=0})
-local c2 = physics.add_slide_joint(world, ea, {x=0,y=0}, eb, {x=32,y=0}, 8.0, 64.0)
-local c3 = physics.add_pivot_joint_world(world, ea, eb, {x=100,y=100})
-local c4 = physics.add_damped_spring(world, ea, {x=0,y=0}, eb, {x=16,y=0}, 24.0, 200.0, 6.0)
-local c5 = physics.add_damped_rotary_spring(world, ea, eb, 0.0, 15000.0, 80.0)
-
--- Limits
-physics.set_constraint_limits(world, c2, 50000.0, 0.0)   -- pass nil to keep a value
-
--- Upright helper
-physics.add_upright_spring(world, e, 4000.0, 120.0)
-
--- Breakable
-local bc = physics.make_breakable_slide_joint(world, ea, eb, {x=0,y=0}, {x=32,y=0}, 8, 64,
-                                              12000.0, 0.6, true, true, 0.05)
-physics.make_constraint_breakable(world, c3, 15000.0, 0.5, false, 0.0)
+local c = physics.add_slide_joint(world, ea, {x=0,y=0}, eb, {x=16,y=0}, 4.0, 24.0)
+physics.set_constraint_limits(world, c, 40000.0, nil)  -- only set maxForce
+physics.make_constraint_breakable(world, c, 15000.0, 0.6, false, 0.0)
 ```
 
 ---
 
-## Collision grouping (union‑find)
+## Collision grouping (union‑find) — **Updated API**
+
+> **Previously:** `enable_collision_grouping(world, min_type, max_type, threshold)` (by numeric types).
+>
+> **Now:** group by **tag list**, with optional Lua callback.
+
+### `enable_collision_grouping(world, tags: string[], threshold: integer, [cb(entity_id)])`
+
+Groups bodies that collide among **same-tag** contacts. When a connected component’s size `>= threshold`, your callback (if provided) is invoked **for each body in that saturated group**. If no callback is provided, grouping still runs but no Lua notification is sent.
 
 ```lua
--- Group bodies that collide among same‑type contacts; when size >= threshold,
--- a C++ callback you defined will run.
-physics.enable_collision_grouping(world, 1000, 2000, 6) -- min_type, max_type, threshold
+-- Invoke with callback (receives entity id)
+physics.enable_collision_grouping(world, {"rock","debris"}, 6, function(e)
+  -- e is entt.entity (uint32)
+  mark_for_cleanup(e)
+end)
+
+-- Or, run without callback
+physics.enable_collision_grouping(world, {"slime"}, 8)
+
+-- Disable when done
+physics.disable_collision_grouping(world)
 ```
+
+**Notes**
+
+* The specific callback payload depends on your binding. In this build it passes the **entity id** for each body in the saturated group (your C++ wraps `cpBody*` → `entt::entity`).
+* Use with buffered events or your own systems to remove/merge groups once reported.
 
 ---
 
@@ -886,6 +969,8 @@ physics.make_constraint_breakable(world, c2, 15000.0, 0.5, false, 0.0)
 ### Collision grouping (union‑find)
 
 ```lua
--- Group shapes with types in [1000,2000]; when group size >= 6, your C++ callback runs
-physics.enable_collision_grouping(world, 1000, 2000, 6)
+-- Group by tag set; when size ≥ threshold, callback gets each entity in the group
+physics.enable_collision_grouping(world, {"rock","debris"}, 6, function(e)
+  print("group saturated member:", e)
+end)
 ```

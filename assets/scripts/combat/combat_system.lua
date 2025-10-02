@@ -768,21 +768,46 @@ end
 function Core.hook(ctx, evname, opts)
   local pr = opts.pr or 0
   local fn = function(ev)
-    if opts.filter and not opts.filter(ev) then return end
-    if opts.condition and not opts.condition(ctx, ev) then return end
+    -- Debug: event received
+    print(("[DEBUG][Hook] %s received: %s"):format(evname, ev and ev.type or tostring(ev)))
+
+    if opts.filter and not opts.filter(ev) then
+      print(("[DEBUG][Hook] %s skipped by filter"):format(evname))
+      return
+    end
+
+    if opts.condition and not opts.condition(ctx, ev) then
+      print(("[DEBUG][Hook] %s skipped by condition"):format(evname))
+      return
+    end
+
     if opts.icd then
       opts._next = opts._next or 0
-      if ctx.time.now < opts._next then return end
+      if ctx.time.now < opts._next then
+        print(("[DEBUG][Hook] %s blocked by ICD until %.2f (now=%.2f)"):format(evname, opts._next, ctx.time.now))
+        return
+      end
       opts._next = ctx.time.now + opts.icd
     end
+
+    print(("[DEBUG][Hook] %s running handler"):format(evname))
     return opts.run(ctx, ev)
   end
+
   ctx.bus:on(evname, fn, pr)
+
   return function()
     local b = ctx.bus.listeners[evname]; if not b then return end
-    for i=#b,1,-1 do if b[i].fn == fn then table.remove(b,i); break end end
+    for i=#b,1,-1 do
+      if b[i].fn == fn then
+        table.remove(b,i)
+        print(("[DEBUG][Hook] %s removed"):format(evname))
+        break
+      end
+    end
   end
 end
+
 
 -- ============================================================================
 -- EventBus
@@ -4854,6 +4879,9 @@ function Demo.run()
   hero.stats:add_base('weapon_min', 12)
   hero.stats:add_base('weapon_max', 18)
   hero.stats:add_base('life_steal_pct', 12)
+  
+  -- give high value to allow hits
+  hero.stats:add_base('offensive_ability', 100)
   hero.stats:recompute()
 
   -- Ogre: tougher target with armor, DA, and fire resistance.
@@ -5035,8 +5063,8 @@ function Demo.run()
   local CinderCharm = {
     id='cinder_charm', slot='amulet',
     mods = {
-      { stat='penetration_fire_pct', add_pct = 20 },
-      { stat='damage_taken_reduction_pct', add_pct = 8 },
+      { stat='penetration_fire_pct', base = 20 }, -- 0 base stat will reset any add_pct values, so we use base.
+      { stat='damage_taken_reduction_pct', base = 8 },
     }
   }
   
@@ -5053,10 +5081,15 @@ function Demo.run()
   local Scorched = Effects.status{
     id = 'scorched', duration = 5, stack = { mode='time_extend' },
     apply = function(e) e.stats:add_add_pct('fire_resist_pct', -10) end,
-    remove= function(e) e.stats:add_add_pct('fire_resist_pct', +10) end,
+    remove= function(e) e.stats:add_add_pct('fire_resist_pct', 10) end
   }
   -- Use it in any effect chain:
-  Effects.seq { Effects.deal_damage{components = { { type = 'fire', amount = 40 } }, tags = { ability = true }}, Scorched }
+  local exampleChain = Effects.seq { Effects.deal_damage{components = { { type = 'fire', amount = 40 } }, tags = { ability = true }}, Scorched }
+  
+  exampleChain(ctx, hero, ogre)
+  util.dump_stats(ogre, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre)
+  Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre)
   
   -- upgrading items
   Items.upgrade(ctx, hero, Flamebrand, {
@@ -5068,13 +5101,16 @@ function Demo.run()
  --test: single unified hook API for ad-hoc gameplay code:
 
   local removeHook = Core.hook(ctx, 'OnHitResolved', {
-        icd = 0.5,
+        icd = 0.5, -- internal cooldown to avoid double-firing on multi-hit attacks. advance time to see it reset.
         filter = function(ev) return ev and ev.did_damage and ev.source == hero end,
         run = function(ctx, ev) Effects.heal{flat=(ev.damage or 0)*0.05}(ctx, ev.source, ev.source) end
   })
   
   -- do some damage to trigger the hook
-  Effects.seq { Effects.deal_damage{components = { { type = 'fire', amount = 40 } }, tags = { ability = true }}, Scorched }
+  local chain = Effects.seq { Effects.deal_damage{components = { { type = 'fire', amount = 40 } }, tags = { ability = true }}, Scorched }
+  chain(ctx, hero, ogre)
+  Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre)
+  Effects.deal_damage { weapon = true, scale_pct = 100 } (ctx, hero, ogre)
   
   util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
   
@@ -5109,7 +5145,13 @@ assert(ItemSystem.equip(ctx, hero, ReactiveBalm))
 util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
 -- do some damage to trigger the proc
-Effects.seq { Effects.deal_damage{components = { { type = 'physical', amount = 120 } }, tags = { ability = true }}, Scorched }
+chain = Effects.seq { Effects.deal_damage{components = { { type = 'physical', amount = 120 } }, tags = { ability = true }}, Scorched }
+
+util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+chain(ctx, ogre, hero)
+
+util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+Effects.deal_damage { weapon = true, scale_pct = 100, reason = "weapon" } (ctx, hero, ogre)
 
 util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 -- -------------------------------- end test -------------------------------- --

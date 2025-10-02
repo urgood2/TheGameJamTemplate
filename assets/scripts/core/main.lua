@@ -1637,6 +1637,7 @@ function main.init()
     
     -- run combat demo
     combat_core.Game.Demo.run_full()
+    combat_core.Game.Demo.run()
 end
 
 function main.update(dt)

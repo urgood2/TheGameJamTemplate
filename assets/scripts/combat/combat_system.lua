@@ -753,8 +753,26 @@ function Core.on(ctx, ev, fn, pr)
   end
 end
 
+local function _event_summary(ev)
+  if type(ev) ~= "table" then return tostring(ev) end
+
+  -- Try some common fields used in your combat events
+  local parts = {}
+  if ev.type        then table.insert(parts, ("type=%s"):format(ev.type)) end
+  if ev.source_name then table.insert(parts, ("src=%s"):format(ev.source_name))
+  elseif ev.source  then table.insert(parts, ("src=%s"):format(tostring(ev.source))) end
+  if ev.target_name then table.insert(parts, ("tgt=%s"):format(ev.target_name))
+  elseif ev.target  then table.insert(parts, ("tgt=%s"):format(tostring(ev.target))) end
+  if ev.damage      then table.insert(parts, ("dmg=%.1f"):format(ev.damage)) end
+  if ev.did_damage ~= nil then
+    table.insert(parts, ("did_dmg=%s"):format(tostring(ev.did_damage)))
+  end
+
+  if #parts == 0 then return "<no fields>" end
+  return table.concat(parts, " ")
+end
 -- One-liner utility
--- DOC: Lightweight conditional event binding with optional internal cooldown.
+-- DOC: Lightweight conditional event binding with optional internal cooldown + rich debug logging.
 --   opts:
 --     pr        : number (priority; lower runs earlier)
 --     filter    : function(ev)->bool (quick predicate on event payload)
@@ -767,9 +785,46 @@ end
 -- RENAME: evname -> event_name           -- improves readability.
 function Core.hook(ctx, evname, opts)
   local pr = opts.pr or 0
+
+  -- Pretty printing helpers for debug logs
+  local function _display_entity(v)
+    if type(v) ~= "table" then return tostring(v) end
+    -- Prefer common identity fields
+    if v.name then return tostring(v.name) end
+    if v.id   then return tostring(v.id)   end
+    if v.label then return tostring(v.label) end
+    -- Fallback to pointer-ish tostring
+    return tostring(v)
+  end
+
+  local function _event_summary(ev)
+    if type(ev) ~= "table" then return tostring(ev) end
+    local parts = {}
+
+    -- generic
+    if ev.type          ~= nil then parts[#parts+1] = ("type=%s"):format(tostring(ev.type)) end
+    if ev.reason        ~= nil then parts[#parts+1] = ("reason=%s"):format(tostring(ev.reason)) end
+    if ev.tag           ~= nil then parts[#parts+1] = ("tag=%s"):format(tostring(ev.tag)) end
+
+    -- common combat fields
+    if ev.source        ~= nil then parts[#parts+1] = ("src=%s"):format(_display_entity(ev.source)) end
+    if ev.target        ~= nil then parts[#parts+1] = ("tgt=%s"):format(_display_entity(ev.target)) end
+    if ev.damage        ~= nil then parts[#parts+1] = ("dmg=%.1f"):format(ev.damage) end
+    if ev.did_damage    ~= nil then parts[#parts+1] = ("did_dmg=%s"):format(tostring(ev.did_damage)) end
+    if ev.crit          ~= nil then parts[#parts+1] = ("crit=%s"):format(tostring(ev.crit)) end
+    if ev.pth           ~= nil then parts[#parts+1] = ("pth=%.1f"):format(ev.pth) end
+
+    -- timing details if present
+    if ev.time          ~= nil then parts[#parts+1] = ("t=%.2f"):format(ev.time) end
+
+    if #parts == 0 then return "<no fields>" end
+    return table.concat(parts, " ")
+  end
+
   local fn = function(ev)
     -- Debug: event received
-    print(("[DEBUG][Hook] %s received: %s"):format(evname, ev and ev.type or tostring(ev)))
+    local now = (ctx and ctx.time and ctx.time.now) or 0
+    print(("[DEBUG][Hook] %s @%.2f received: %s"):format(evname, now, _event_summary(ev)))
 
     if opts.filter and not opts.filter(ev) then
       print(("[DEBUG][Hook] %s skipped by filter"):format(evname))
@@ -783,11 +838,11 @@ function Core.hook(ctx, evname, opts)
 
     if opts.icd then
       opts._next = opts._next or 0
-      if ctx.time.now < opts._next then
-        print(("[DEBUG][Hook] %s blocked by ICD until %.2f (now=%.2f)"):format(evname, opts._next, ctx.time.now))
+      if now < opts._next then
+        print(("[DEBUG][Hook] %s blocked by ICD until %.2f (now=%.2f)"):format(evname, opts._next, now))
         return
       end
-      opts._next = ctx.time.now + opts.icd
+      opts._next = now + opts.icd
     end
 
     print(("[DEBUG][Hook] %s running handler"):format(evname))
@@ -807,6 +862,7 @@ function Core.hook(ctx, evname, opts)
     end
   end
 end
+
 
 
 -- ============================================================================

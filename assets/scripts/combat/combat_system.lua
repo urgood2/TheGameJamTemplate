@@ -5029,8 +5029,90 @@ function Demo.run()
   util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
 
   assert(ItemSystem.equip(ctx, hero, Flamebrand))
+  
+-- -------------------------------- new tests ------------------------------- --
+  
+  local CinderCharm = {
+    id='cinder_charm', slot='amulet',
+    mods = {
+      { stat='penetration_fire_pct', add_pct = 20 },
+      { stat='damage_taken_reduction_pct', add_pct = 8 },
+    }
+  }
+  
+  assert(ItemSystem.equip(ctx, hero, CinderCharm))
+  
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  
+  Effects.modify_stat { id='ice_skin', name='max_cold_resist_cap_pct', add_pct_add=15, duration=6 }
+  
+  Effects.modify_stat { id='boss_hide', name='damage_taken_physical_reduction_pct', add_pct_add=30, duration=10 }
 
   util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  
+  local Scorched = Effects.status{
+    id = 'scorched', duration = 5, stack = { mode='time_extend' },
+    apply = function(e) e.stats:add_add_pct('fire_resist_pct', -10) end,
+    remove= function(e) e.stats:add_add_pct('fire_resist_pct', +10) end,
+  }
+  -- Use it in any effect chain:
+  Effects.seq { Effects.deal_damage{components = { { type = 'fire', amount = 40 } }, tags = { ability = true }}, Scorched }
+  
+  -- upgrading items
+  Items.upgrade(ctx, hero, Flamebrand, {
+    level_up = 1,
+    add_mods = { { stat='fire_modifier_pct', add_pct=5 } }
+  })
+  
+  
+ --test: single unified hook API for ad-hoc gameplay code:
+
+  local removeHook = Core.hook(ctx, 'OnHitResolved', {
+        icd = 0.5,
+        filter = function(ev) return ev and ev.did_damage and ev.source == hero end,
+        run = function(ctx, ev) Effects.heal{flat=(ev.damage or 0)*0.05}(ctx, ev.source, ev.source) end
+  })
+  
+  -- do some damage to trigger the hook
+  Effects.seq { Effects.deal_damage{components = { { type = 'fire', amount = 40 } }, tags = { ability = true }}, Scorched }
+  
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  
+-- call `removeHook()` to remove
+  removeHook()
+  
+  util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+  
+  -- test: (Example proc that keys off reason and damage:)
+  --  > Arbitrary item effects (full freedom) + pass ev into item procs
+
+local ReactiveBalm = {
+  id='reactive_balm', slot='medal',
+  procs = {
+    {
+      trigger = 'OnHitResolved',
+      chance  = 100,
+      filter  = function(ev) return ev and ev.target and ev.did_damage end,
+      effects = function(ctx, wearer, _, ev)
+        if ev.reason == 'weapon' and (ev.damage or 0) > 50 then
+          -- big hits apply an instant heal for 10% of the damage received
+          Effects.heal { flat = (ev.damage or 0) * 0.10 } (ctx, wearer, wearer)
+        end
+      end
+    }
+  }
+}
+
+-- equip balm
+assert(ItemSystem.equip(ctx, hero, ReactiveBalm))
+
+util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+
+-- do some damage to trigger the proc
+Effects.seq { Effects.deal_damage{components = { { type = 'physical', amount = 120 } }, tags = { ability = true }}, Scorched }
+
+util.dump_stats(hero, ctx, { rr = true, dots = true, statuses = true, conv = true, spells = true, tags = true, timers = true })
+-- -------------------------------- end test -------------------------------- --
 
   assert(ItemSystem.equip(ctx, hero, FlamebandPlus))
 

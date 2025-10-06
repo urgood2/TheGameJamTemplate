@@ -1,5 +1,9 @@
 # ✅ TODOs: Organized by Category
 
+# current game design
+- [ ] continue from here: https://chatgpt.com/share/68e3407f-7df8-800a-b351-9b9bd525da80
+
+
 ## game design
 
 - [ ] Apply autochess formula to next game? https://a327ex.com/posts/auto_chess_formula

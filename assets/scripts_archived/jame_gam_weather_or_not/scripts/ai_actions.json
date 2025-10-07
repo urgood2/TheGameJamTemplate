@@ -1,0 +1,34 @@
+{
+    "actions": [
+        {
+            "name": "wander",
+            "preconditions": { "enemyvisible": false, "hungry": false },
+            "postconditions": { "wandered": true },
+            "cost": 1,
+            
+            "script": "actions/wander.lua",
+            "__comment": "file path is under assets/scripts"
+        },
+        {
+            "name": "scout",
+            "preconditions": { "enemyvisible": false, "canfight": true, "hungry": false },
+            "postconditions": { "enemyvisible": true },
+            "cost": 1,
+            "script": "actions/scout.lua"
+        },
+        {
+            "name": "attack",
+            "preconditions": { "enemyvisible": true, "canfight": true },
+            "postconditions": { "enemyalive": false },
+            "cost": 1,
+            "script": "actions/attack.lua"            
+        },
+        {
+            "name": "eat",
+            "preconditions": { "hungry": true },
+            "postconditions": { "hungry": false },
+            "cost":1,
+            "script": "actions/eat.lua"
+        }
+    ]
+}

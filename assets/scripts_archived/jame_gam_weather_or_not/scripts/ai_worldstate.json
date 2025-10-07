@@ -1,0 +1,18 @@
+{
+    "__comment": "This is the worldstate that every ai entity starts with. There should probably be a custom intial state for each entity type.",
+    "initial_state": {
+        "enemyvisible": false,
+        "canfight": true,
+        "hungry": false,
+        "enemyalive": false,
+        "wandered": false
+    },
+    
+    "__comment": "These are the goals that every ai entity starts with. There should probably be a custom intial state for each entity type.",
+    "goal_state": {
+        "enemyalive": false,
+        "hungry": false,
+        "wandered": true
+    }
+    
+}

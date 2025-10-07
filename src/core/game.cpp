@@ -821,53 +821,53 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
     auto init() -> void
     {
         
-        // testing
-        auto textTestDef = static_ui_text_system::getTextFromString("[Hello here's a longer test\nNow test this](id=stringID;color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](id=imageID;color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
+        // // testing
+        // auto textTestDef = static_ui_text_system::getTextFromString("[Hello here's a longer test\nNow test this](id=stringID;color=red;background=gray) \nWorld Test\nYo man this [good](color=pink;background=red) eh? [img](uuid=gear.png;scale=0.8;fg=WHITE;shadow=false)\nYeah this be an [image](id=imageID;color=red;background=gray)\n Here's an animation [anim](uuid=idle_animation;scale=0.8;fg=WHITE;shadow=false)");
         
-        // make new uiroot
+        // // make new uiroot
         
-        auto alertRoot = ui::UIElementTemplateNode::Builder::create()
-            .addType(ui::UITypeEnum::ROOT)
-            .addConfig(
-                ui::UIConfig::Builder::create()
-                    .addPadding(0.f)
-                    .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
-                    .build())
-            .addChild(textTestDef)
-            .build();
+        // auto alertRoot = ui::UIElementTemplateNode::Builder::create()
+        //     .addType(ui::UITypeEnum::ROOT)
+        //     .addConfig(
+        //         ui::UIConfig::Builder::create()
+        //             .addPadding(0.f)
+        //             .addAlign(transform::InheritedProperties::Alignment::HORIZONTAL_CENTER | transform::InheritedProperties::Alignment::VERTICAL_CENTER)
+        //             .build())
+        //     .addChild(textTestDef)
+        //     .build();
             
-        auto testTextBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
+        // auto testTextBox = ui::box::Initialize(globals::registry, {.x = 500, .y = 700}, alertRoot, ui::UIConfig{});
         
-        auto rootUiTextBoxEntity = globals::registry.get<ui::UIBoxComponent>(testTextBox).uiRoot;
+        // auto rootUiTextBoxEntity = globals::registry.get<ui::UIBoxComponent>(testTextBox).uiRoot;
         
         
-        static_ui_text_system::TextUIHandle handle;
+        // static_ui_text_system::TextUIHandle handle;
         
-        auto traverseChildren = [](entt::registry& R, entt::entity e) -> std::vector<entt::entity> {
-            // Replace this with however you enumerate child UI nodes in your ECS.
-            // Example:
-            if (R.valid(e) && R.any_of<transform::GameObject>(e)) {
-                return R.get<transform::GameObject>(e).orderedChildren;
-            }
-            return {};
-        };
+        // auto traverseChildren = [](entt::registry& R, entt::entity e) -> std::vector<entt::entity> {
+        //     // Replace this with however you enumerate child UI nodes in your ECS.
+        //     // Example:
+        //     if (R.valid(e) && R.any_of<transform::GameObject>(e)) {
+        //         return R.get<transform::GameObject>(e).orderedChildren;
+        //     }
+        //     return {};
+        // };
 
         
-        buildIdMapFromRoot(globals::registry, rootUiTextBoxEntity.value(), handle, traverseChildren);
+        // buildIdMapFromRoot(globals::registry, rootUiTextBoxEntity.value(), handle, traverseChildren);
         
-        // Now you can O(1) fetch & mutate:
-        if (auto e = getTextNode(handle, "stringID"); e != entt::null) {
-            auto &cfg = globals::registry.get<ui::UIConfig>(e);
-            cfg.color = util::getColor("LIME");
-            // mark dirty if your layout/text system needs it
-        }
+        // // Now you can O(1) fetch & mutate:
+        // if (auto e = getTextNode(handle, "stringID"); e != entt::null) {
+        //     auto &cfg = globals::registry.get<ui::UIConfig>(e);
+        //     cfg.color = util::getColor("LIME");
+        //     // mark dirty if your layout/text system needs it
+        // }
         
-        // set camera to fill the screen
-        // globals::camera = {0};
-        // globals::camera.zoom = 1;
-        // globals::camera.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-        // globals::camera.rotation = 0;
-        // globals::camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // // set camera to fill the screen
+        // // globals::camera = {0};
+        // // globals::camera.zoom = 1;
+        // // globals::camera.target = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+        // // globals::camera.rotation = 0;
+        // // globals::camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
         
         camera_manager::Create("world_camera", globals::registry);
         auto worldCamera = camera_manager::Get("world_camera");
@@ -909,7 +909,6 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         physicsWorld->AddCollisionTag(physics::DEFAULT_COLLISION_TAG); // default tag
         physicsWorld->AddCollisionTag("player");
-        physicsWorld->EnableCollisionBetween(physics::DEFAULT_COLLISION_TAG, {physics::DEFAULT_COLLISION_TAG, "player"});
         
         // add to physics manager
         globals::physicsManager->add("world", physicsWorld);
@@ -918,19 +917,19 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         globals::physicsManager->enableDebugDraw("world", true);
         globals::physicsManager->enableStep("world", true);
         
-        // make test transform entity
-        entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 100, 100, 100, 100);
-        globals::registry.emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
+        // // make test transform entity
+        // entt::entity testTransformEntity = transform::CreateOrEmplace(&globals::registry, globals::gameWorldContainerEntity, 100, 100, 100, 100);
+        // globals::registry.emplace_or_replace<PhysicsWorldRef>(testTransformEntity, "world");
         
-        auto &gameObjectTest = globals::registry.get<transform::GameObject>(testTransformEntity);
-        gameObjectTest.state.collisionEnabled = true;
-        gameObjectTest.state.dragEnabled = true;
-        gameObjectTest.state.hoverEnabled = true;
+        // auto &gameObjectTest = globals::registry.get<transform::GameObject>(testTransformEntity);
+        // gameObjectTest.state.collisionEnabled = true;
+        // gameObjectTest.state.dragEnabled = true;
+        // gameObjectTest.state.hoverEnabled = true;
         
-        physics::PhysicsCreateInfo info{};
-        info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
+        // physics::PhysicsCreateInfo info{};
+        // info.shape = physics::ColliderShapeType::Rectangle; // can be Circle, Rectangle, Polygon, etc.
         
-        physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
+        // physics::CreatePhysicsForTransform(globals::registry, *globals::physicsManager, testTransformEntity, info);
         
         cpSpaceSetDamping(physicsWorld->space,0.1f); // global damping
         
@@ -939,26 +938,26 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // second entity
         
-        entt::entity testEntity = globals::registry.create();
+        // entt::entity testEntity = globals::registry.create();
         
-        physicsWorld->AddCollider(testEntity, "player" /* default tag */, "rectangle", 50, 50, -1, -1, false);
+        // physicsWorld->AddCollider(testEntity, "player" /* default tag */, "rectangle", 50, 50, -1, -1, false);
         
-        physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
+        // physicsWorld->SetBodyPosition(testEntity, 600.f, 300.f);
 
-        physicsWorld->AddScreenBounds(0, 0, GetScreenWidth(), GetScreenHeight());
+        // physicsWorld->AddScreenBounds(0, 0, GetScreenWidth(), GetScreenHeight());
 
-        physicsWorld->SetDamping(testEntity, 3.5f);
-        physicsWorld->SetAngularDamping(testEntity, 3.0f);
-        physicsWorld->AddUprightSpring(testEntity, 4500.0f, 1500.0f);
-        physicsWorld->SetFriction(testEntity, 0.2f);
-        physicsWorld->CreateTopDownController(testEntity);
+        // physicsWorld->SetDamping(testEntity, 3.5f);
+        // physicsWorld->SetAngularDamping(testEntity, 3.0f);
+        // physicsWorld->AddUprightSpring(testEntity, 4500.0f, 1500.0f);
+        // physicsWorld->SetFriction(testEntity, 0.2f);
+        // physicsWorld->CreateTopDownController(testEntity);
         
         
         // Apply collision filter via your tag system
-        auto rec = globals::physicsManager->get("world");
-        // rec->w->AddCollisionTag("WORLD"); // default tag
-        auto shape = globals::registry.get<physics::ColliderComponent>(testEntity).shape;
-        rec->w->ApplyCollisionFilter(shape.get(), "WORLD" ); // default tag for testing
+        // auto rec = globals::physicsManager->get("world");
+        // // rec->w->AddCollisionTag("WORLD"); // default tag
+        // auto shape = globals::registry.get<physics::ColliderComponent>(testEntity).shape;
+        // rec->w->ApplyCollisionFilter(shape.get(), "WORLD" ); // default tag for testing
         
         // make world collide with world
         // rec->w->EnableCollisionBetween("WORLD", {"WORLD"});
@@ -968,9 +967,9 @@ Texture2D GenerateDensityTexture(BlockSampler* sampler, const Camera2D& camera) 
         
         // try using ldtk
         
-        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("test_features.ldtk"));
-        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_TopDown_example.ldtk"));
-        ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_2D_platformer_example.ldtk"));
+        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("test_features.ldtk"));
+        // // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_TopDown_example.ldtk"));
+        // ldtk_loader::LoadProject(util::getRawAssetPathNoUUID("Typical_2D_platformer_example.ldtk"));
         
 
         // some things I can do:
@@ -1058,14 +1057,14 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //TODO: remove later
         
         // 1) On mouse‐down:
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            // physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
+        // if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        //     // physicsWorld->StartMouseDrag(GetMouseX(), GetMouseY());
             
-            // top down controller movement
-            auto mousePosWorld = camera_manager::Get("world_camera")->GetMouseWorld();
-            cpBodySetPosition(physicsWorld->controlBody, cpv(mousePosWorld.x, mousePosWorld.y));
-            // cpBodySetPosition(controlBody, desiredTouchPos);
-        }
+        //     // top down controller movement
+        //     auto mousePosWorld = camera_manager::Get("world_camera")->GetMouseWorld();
+        //     cpBodySetPosition(physicsWorld->controlBody, cpv(mousePosWorld.x, mousePosWorld.y));
+        //     // cpBodySetPosition(controlBody, desiredTouchPos);
+        // }
             
         // 2) While dragging:
         // if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
@@ -1346,7 +1345,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             // ldtk_loader::DrawAllLayers("World_Level_1");
             
-            ldtk_loader::DrawAllLayers(sprites, "Your_typical_2D_platformer");
+            // ldtk_loader::DrawAllLayers(sprites, "Your_typical_2D_platformer");
             // ldtk_loader::DrawAllLayers("Your_typical_2D_platformer");
         }
         
@@ -1413,8 +1412,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             }
         }
 
-        
-        // debug memory leak
         
         
         // layer::LogAllPoolStats(background);
@@ -1509,13 +1506,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
             camera_manager::End(); // end camera mode for the physics world
             
-            // rect in the center   
-            DrawRectangleLines(
-                GetScreenWidth() / 2 - 100, 
-                GetScreenHeight() / 2 - 100, 
-                200, 200, 
-                RED
-            );
             
             fade_system::draw();
             

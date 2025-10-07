@@ -85,7 +85,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
+                :addColor(palette.snapToColorName("gray"))
                 :addEmboss(2.0)
                 :addMinWidth(500) -- minimum width of the button
                 :addShadow(true)
@@ -125,7 +125,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
+                :addColor(palette.snapToColorName("gray"))
                 :addEmboss(2.0)
                 :addMinWidth(500) -- minimum width of the button
                 :addButtonCallback(function ()
@@ -165,7 +165,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
+                :addColor(palette.snapToColorName("gray"))
                 :addEmboss(2.0)
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
@@ -185,7 +185,7 @@ function initMainMenu()
         :addType(UITypeEnum.INPUT_TEXT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
+                :addColor(palette.snapToColorName("gray"))
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addMinHeight(50) -- minimum height of the input text
@@ -199,7 +199,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
+                :addColor(palette.snapToColorName("gray"))
                 :addEmboss(2.0)
                 :build()
         )
@@ -212,7 +212,7 @@ function initMainMenu()
     :addType(UITypeEnum.SCROLL_PANE)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(util.getColor("mauve_shadow"))
+            :addColor(palette.snapToColorName("yellow"))
             :addShadow(true)
             :addHeight(200)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -246,7 +246,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("taupe_warm"))
+                :addColor(palette.snapToColorName("gray"))
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -270,7 +270,7 @@ function initMainMenu()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(util.getColor("dusty_rose"))
+                :addColor(palette.snapToColorName("green"))
                 :addShadow(true)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
@@ -420,8 +420,8 @@ function main.init()
                 mouseT.visualY, 
                 5, -- count
                 0.5, -- seconds
-                util.getColor("apricot_cream"), -- start color
-                util.getColor("coral_pink"), -- end color
+                palette.snapToColorName("blue"), -- start color
+                palette.snapToColorName("purple"), -- end color
                 "outCubic", -- from util.easing
                 "screen" -- screen space
             )

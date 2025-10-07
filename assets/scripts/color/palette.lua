@@ -202,6 +202,17 @@ function palette.snap(c)
   return nearest_swatch(c).color_user
 end
 
+--- Snap a named source color (resolved via util.getColor) to the nearest swatch.
+--- @param name string  -- source color name (as util.getColor expects)
+--- @return Color       -- Color usertype (snapped to active palette)
+function palette.snapToColorName(name)
+  assert(type(name) == "string" and #name > 0, "snapToColorName: name string required")
+  ensure_active()
+  local src = util.getColor(name)         -- returns Color usertype
+  return palette.snap(src)                -- reuse existing snapping
+end
+
+
 --- Build a ramp between two named swatches; N steps ≥ 2.
 --- Each step is snapped back to the palette (strict output). Returns {Color,...}.
 function palette.ramp_quantized(nameA, nameB, steps)

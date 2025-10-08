@@ -1203,9 +1203,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
         // set up layers (needs to happen every frame)
         
-        layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
-            cmd->color = util::getColor("brick_palette_red_resurrect");
-        });
+        
         
         {
             // ZoneScopedN("game::draw-lua draw main script");
@@ -1524,6 +1522,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         
         
         layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw)
+        
+        layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
+            cmd->color = util::getColor("brick_palette_red_resurrect");
+        });
     }
 
 

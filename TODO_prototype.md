@@ -33,4 +33,4 @@
 
 
 # errors
-- command_buffer.queueDrawDashedRoundedRect gets zero arguments, why?
+- bit of flickering with render commands.

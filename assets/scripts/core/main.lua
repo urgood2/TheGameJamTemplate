@@ -40,19 +40,10 @@ function initMainMenu()
     globalShaderUniforms:set("pixelate_image", "pixelRatio", 0.85)
     
     -- create a timer to increment the phase
-    timer.every(
-        0.1, -- every 0.1 seconds
+    timer.run(
         function()
-            shapeAnimationPhase = shapeAnimationPhase + 0.1
-            if shapeAnimationPhase > math.pi * 2 then
-                shapeAnimationPhase = shapeAnimationPhase - math.pi * 2
-            end
-            globalShaderUniforms:set("shapes_example", "phase", shapeAnimationPhase)
-        end,
-        0, -- infinite repetitions
-        true, -- start immediately
-        nil, -- no "after" callback
-        "shapes_example_phase_increment"
+            shapeAnimationPhase = shapeAnimationPhase + 1
+        end
     )
     
     

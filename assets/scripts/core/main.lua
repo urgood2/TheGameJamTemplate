@@ -21,6 +21,8 @@ GAMESTATE = {
     IN_GAME = 1
 }
 
+local shapeAnimationPhase = 0
+
 local currentGameState = GAMESTATE.MAIN_MENU -- Set the initial game state to IN_GAME
 
 local mainMenuEntities = {
@@ -36,6 +38,22 @@ function initMainMenu()
     
     add_fullscreen_shader("pixelate_image")
     globalShaderUniforms:set("pixelate_image", "pixelRatio", 0.85)
+    
+    -- create a timer to increment the phase
+    timer.every(
+        0.1, -- every 0.1 seconds
+        function()
+            shapeAnimationPhase = shapeAnimationPhase + 0.1
+            if shapeAnimationPhase > math.pi * 2 then
+                shapeAnimationPhase = shapeAnimationPhase - math.pi * 2
+            end
+            globalShaderUniforms:set("shapes_example", "phase", shapeAnimationPhase)
+        end,
+        0, -- infinite repetitions
+        true, -- start immediately
+        nil, -- no "after" callback
+        "shapes_example_phase_increment"
+    )
     
     
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
@@ -367,7 +385,7 @@ function createNewCard(boardEntityID)
     
     -- let's create a couple of cards.
     local card1 = animation_system.createAnimatedObjectWithTransform(
-        "keyboard_bracket_greater.png", -- animation ID
+        "card_back_1.png", -- animation ID
         true             -- use animation, not sprite identifier, if false
     )
     
@@ -412,8 +430,8 @@ function createNewCard(boardEntityID)
     
     animation_system.resizeAnimationObjectsInEntityToFit(
         card1,
-        100,   -- width
-        150    -- height
+        48 * 2,   -- width
+        64 * 2    -- height
     )
     
     return card1
@@ -457,18 +475,19 @@ function initMainGame()
         -- draw board border
         local pad = 20
         command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
-            c.rec = Rectangle{
-                x = area.actualX + pad, y = area.actualY + pad,
-                width  = math.max(0, area.actualW - pad*2),
-                height = math.max(0, area.actualH - pad*2),
-            }
+            c.rec = Rectangle.new(
+                area.actualX,
+                area.actualY,
+                math.max(0, area.actualW),
+                math.max(0, area.actualH)
+            )
             c.radius    = 10
             c.dashLen   = 12
             c.gapLen    = 8
-            c.phase     = (board.borderPhase or 0)
+            c.phase     = (shapeAnimationPhase)
             c.arcSteps  = 14
             c.thickness = 5
-            c.color     = util.getColor("YELLOW")
+            c.color     = palette.snapToColorName("yellow")
         end, z_orders.board, layer.DrawCommandSpace.World)
 
         local cards = self.cards or {}

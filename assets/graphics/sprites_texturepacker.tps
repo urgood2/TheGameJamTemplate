@@ -9678,6 +9678,7 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Back/card_back_1.png</key>
             <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</key>
             <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
             <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
@@ -12279,6 +12280,7 @@
                     <filename>pre-packing-files_globbed/roguelike_ui</filename>
                     <filename>pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy</filename>
                     <filename>pre-packing-files_globbed/raven_fantasy_complete/32x32_ui_popups</filename>
+                    <filename>../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Back/card_back_1.png</filename>
                 </array>
             </struct>
         </map>

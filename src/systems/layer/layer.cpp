@@ -57,6 +57,90 @@ void exposeToLua(sol::state &lua) {
   }
 
   auto &rec = BindingRecorder::instance();
+  
+  
+  // --- Rectangle binding -------------------------------------------------------
+  {
+        // 1) Usertype with constructors and fields
+        auto rectUT = lua.new_usertype<Rectangle>(
+        "Rectangle",
+        sol::no_constructor,
+        "x",      &Rectangle::x,
+        "y",      &Rectangle::y,
+        "width",  &Rectangle::width,
+        "height", &Rectangle::height,
+        // nice for debugging
+        sol::meta_function::to_string, [](const Rectangle& r) {
+            char buf[96];
+            std::snprintf(buf, sizeof(buf), "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)",
+                          r.x, r.y, r.width, r.height);
+            return std::string(buf);
+        }
+    );
+
+    // Attach a static Rectangle.new(...)
+    sol::table rectTbl = lua["Rectangle"];
+    rectTbl.set_function("new", sol::overload(
+        []() {
+            return Rectangle{0.f, 0.f, 0.f, 0.f};
+        },
+        [](float x, float y, float w, float h) {
+            return Rectangle{x, y, w, h};
+        },
+        [](sol::table t) {
+            Rectangle r{};
+            r.x      = t.get_or("x",      0.0f);
+            r.y      = t.get_or("y",      0.0f);
+            r.width  = t.get_or("width",  0.0f);
+            r.height = t.get_or("height", 0.0f);
+            return r;
+        }
+    ));
+
+
+    // 2) Optional utility methods (handy but lightweight)
+    rectUT.set_function("center", [](const Rectangle& r) {
+      return Vector2{ r.x + r.width * 0.5f, r.y + r.height * 0.5f };
+    });
+    rectUT.set_function("contains", [](const Rectangle& r, float px, float py) {
+      return (px >= r.x) && (py >= r.y) && (px <= r.x + r.width) && (py <= r.y + r.height);
+    });
+    rectUT.set_function("area", [](const Rectangle& r) {
+      return r.width * r.height;
+    });
+
+    // 3) Nice __tostring for debugging
+    rectUT[sol::meta_function::to_string] = [](const Rectangle& r) {
+      char buf[128];
+      std::snprintf(buf, sizeof(buf), "Rectangle(x=%.2f, y=%.2f, w=%.2f, h=%.2f)",
+                    r.x, r.y, r.width, r.height);
+      return std::string(buf);
+    };
+
+    // 4) Convenience free-function constructors:
+    //    Rect(x,y,w,h) and Rect{ x=..., y=..., width=..., height=... }
+    lua.set_function("Rect", sol::overload(
+        [](float x, float y, float w, float h) {
+          return Rectangle{ x, y, w, h };
+        },
+        [](sol::table t) {
+          Rectangle r{};
+          r.x      = t.get_or("x",      0.0f);
+          r.y      = t.get_or("y",      0.0f);
+          r.width  = t.get_or("width",  0.0f);
+          r.height = t.get_or("height", 0.0f);
+          return r;
+        }
+    ));
+
+    // 5) (Optional) Recorder entries for your BindingRecorder docs
+    rec.add_type("Rectangle", true).doc = "Raylib Rectangle (x,y,width,height)";
+    rec.record_property("Rectangle", {"x", "number", "Top-left X"});
+    rec.record_property("Rectangle", {"y", "number", "Top-left Y"});
+    rec.record_property("Rectangle", {"width", "number", "Width"});
+    rec.record_property("Rectangle", {"height", "number", "Height"});
+
+  }
 
   rec.add_type("layer").doc = "namespace for rendering & layer operations";
   rec.add_type("layer.LayerOrderComponent", true).doc =
@@ -1264,14 +1348,34 @@ void exposeToLua(sol::state &lua) {
 
 // 3) For each CmdXXX, expose a queueXXX helper
 //    Pattern: queueCmdName(layer, init_fn, z, space)
+// Replace your QUEUE_CMD impl with a guarded one:
 #define QUEUE_CMD(cmd)                                                         \
   cb.set_function(                                                             \
       "queue" #cmd,                                                            \
       [](std::shared_ptr<layer::Layer> lyr, sol::function init, int z,         \
          DrawCommandSpace space = DrawCommandSpace::Screen) {                  \
         return ::layer::QueueCommand<::layer::Cmd##cmd>(                       \
-            lyr, [&](::layer::Cmd##cmd *c) { init(c); }, z, space);            \
+            lyr,                                                               \
+            [&](::layer::Cmd##cmd *c) {                                        \
+              sol::protected_function pf(init);                                \
+              if (pf.valid()) {                                                \
+                sol::protected_function_result r = pf(c);                      \
+                if (!r.valid()) {                                              \
+                  sol::error e = r;                                            \
+                  std::fprintf(stderr, "[queue%s] init error: %s\n",           \
+                               #cmd, e.what());                                \
+                }                                                              \
+              } else {                                                         \
+                std::fprintf(stderr, "[queue%s] init is not a function\n",     \
+                               #cmd);                                          \
+              }                                                                \
+              /* Optional: dump a few fields for sanity */                     \
+              /* std::fprintf(stderr, "[queue%s] dashLen=%.2f gap=%.2f r=%.2f th=%.2f\n", \
+                               #cmd, c->dashLen, c->gapLen, c->radius, c->thickness); */ \
+            },                                                                 \
+            z, space);                                                         \
       });
+
 
   QUEUE_CMD(BeginDrawing)
   QUEUE_CMD(EndDrawing)

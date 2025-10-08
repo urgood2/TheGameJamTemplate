@@ -1609,6 +1609,22 @@ random_utils = {
 
 
 ---
+--- Raylib Rectangle (x,y,width,height)
+---
+---@class Rectangle
+Rectangle = {
+    ---@type number
+    x = nil,  -- Top-left X
+    ---@type number
+    y = nil,  -- Top-left Y
+    ---@type number
+    width = nil,  -- Width
+    ---@type number
+    height = nil  -- Height
+}
+
+
+---
 --- namespace for rendering & layer operations
 ---
 ---@class layer

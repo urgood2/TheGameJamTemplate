@@ -1479,7 +1479,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             cmd->y = y;
         }, 100, drawSpace);
 
-        auto scale = 1.0f;
+        auto scale = 2.0f;
         if (registry->any_of<ui::UIConfig>(e))
         {
             auto &uiConfig = registry->get<ui::UIConfig>(e);
@@ -1548,20 +1548,20 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             }, 100, drawSpace);
         }
 
-        float lineWidth = 1;
+        float lineWidth = 4;
         if (node.state.isBeingFocused)
         {
-            lineWidth = 3;
+            lineWidth = 6;
         }
 
-        Color lineColor = RED;
+        Color lineColor = YELLOW;
         if (node.state.isColliding)
         {
             lineColor = GREEN;
         }
         else
         {
-            lineColor = RED;
+            lineColor = YELLOW;
         }
 
         if (node.state.isBeingFocused)

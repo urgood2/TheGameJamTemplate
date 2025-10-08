@@ -30,3 +30,7 @@
 - Card area with outline & drag and drop
 - Card stacking with validation and stack adding/removal
 - different world state to transition to with survivors movement.
+
+
+# errors
+- command_buffer.queueDrawDashedRoundedRect gets zero arguments, why?

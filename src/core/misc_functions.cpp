@@ -226,19 +226,19 @@ namespace game
         shaders::registerUniformUpdate("crt", [](Shader &shader) { // update iTime every frame
             globalShaderUniforms.set("crt", "iTime", static_cast<float>(GetTime()));
         });
-        globalShaderUniforms.set("crt", "roll_speed", 1.0f);
+        globalShaderUniforms.set("crt", "roll_speed", 1.49f);
         globalShaderUniforms.set("crt", "resolution", Vector2{1280, 700});
-        globalShaderUniforms.set("crt", "noise_amount", -0.02f);
+        globalShaderUniforms.set("crt", "noise_amount", 0.12f);
         globalShaderUniforms.set("crt", "scan_line_amount", -0.17f);
-        globalShaderUniforms.set("crt", "grille_amount", 0.15f);
-        globalShaderUniforms.set("crt", "scan_line_strength", -4.89f);
-        globalShaderUniforms.set("crt", "pixel_strength", -0.14f);
-        globalShaderUniforms.set("crt", "vignette_amount", 0.24f);
+        globalShaderUniforms.set("crt", "grille_amount", 0.37f);
+        globalShaderUniforms.set("crt", "scan_line_strength", -3.78f);
+        globalShaderUniforms.set("crt", "pixel_strength", 0.1f);
+        globalShaderUniforms.set("crt", "vignette_amount", 1.41f);
         globalShaderUniforms.set("crt", "warp_amount", 0.06f);
-        globalShaderUniforms.set("crt", "interference_amount", 0.01f);
-        globalShaderUniforms.set("crt", "roll_line_amount", 0.04f);
-        globalShaderUniforms.set("crt", "grille_size", 0.f);
-        globalShaderUniforms.set("crt", "vignette_intensity", 0.11f);
+        globalShaderUniforms.set("crt", "interference_amount", 1.32f);
+        globalShaderUniforms.set("crt", "roll_line_amount", 0.12f);
+        globalShaderUniforms.set("crt", "grille_size", 0.51f);
+        globalShaderUniforms.set("crt", "vignette_intensity", 0.61f);
         globalShaderUniforms.set("crt", "iTime", 113.47279f);
         globalShaderUniforms.set("crt", "aberation_amount", 0.93f);
 

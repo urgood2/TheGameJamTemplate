@@ -21,7 +21,7 @@ function node:update(dt)
     --     print("end")
     --   end)
     
-    print("tasks active:", task.count_tasks())
+    print("tasks active:", task.count_tasks(self))
 end
 
 -- Called just before the entity is destroyed

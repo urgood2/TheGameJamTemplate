@@ -1200,7 +1200,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
     auto draw(float dt) -> void
     {
         // ZoneScopedN("game::draw"); // custom label
-        layer::Begin(); // clear all commands, we add new ones every frame
 
         // set up layers (needs to happen every frame)
         
@@ -1522,6 +1521,9 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         }
 
         // fade
+        
+        
+        layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw)
     }
 
 

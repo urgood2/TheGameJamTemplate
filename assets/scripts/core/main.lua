@@ -399,7 +399,7 @@ function createNewCard(boardEntityID, isStackable)
         if self.cardStack and #self.cardStack > 0 then
             local baseTransform = registry:get(eid, Transform)
             
-            local stackOffsetY = 10
+            local stackOffsetY = baseTransform.actualH * 0.2 -- offset each card
             
             for i, stackedCardEid in ipairs(self.cardStack) do
                 if stackedCardEid and registry:valid(stackedCardEid) then
@@ -555,6 +555,10 @@ function getScriptTableFromEntityID(eid)
     return scriptComp.self
 end
 
+-- save game state strings
+local planningGameState = "PLANNING"
+local actionGameState = "SURVIVORS"
+
 function initMainGame()
     setTrackVolume("main-menu", 0.0)
     
@@ -581,7 +585,7 @@ function initMainGame()
 
         local area = registry:get(eid, Transform)
 
-        -- draw board border
+        -- -- draw board border
         local pad = 20
         command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
             c.rec = Rectangle.new(

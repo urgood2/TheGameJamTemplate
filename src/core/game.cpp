@@ -1002,6 +1002,24 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
     auto update(float delta) -> void
     {
+        
+        layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
+        
+        layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
+            cmd->color = util::getColor("brick_palette_red_resurrect");
+        });
+        
+        //TODO: testing
+        layer::QueueCommand<layer::CmdDrawCircleFilled>(sprites, [](auto *cmd)
+                                                              {
+                            cmd->x      = 400;
+                            cmd->y      = 400;
+                            cmd->radius = 50;
+                            cmd->color  = BLUE; 
+                                                                
+                        }, 300, layer::DrawCommandSpace::World);
+        
+        
         // physicsWorld->Update(delta);
         // _tileCache->ensureRect(cpBBNew(0, 0, GetScreenWidth(), GetScreenHeight()));
         
@@ -1202,7 +1220,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         // ZoneScopedN("game::draw"); // custom label
 
         // set up layers (needs to happen every frame)
-        
         
         
         {
@@ -1521,11 +1538,6 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         // fade
         
         
-        layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw)
-        
-        layer::QueueCommand<layer::CmdClearBackground>(background, [](auto* cmd) {
-            cmd->color = util::getColor("brick_palette_red_resurrect");
-        });
     }
 
 

@@ -372,7 +372,7 @@ end
 
 local boards = {}
 
-function createNewCard(boardEntityID)
+function createNewCard(boardEntityID, isStackable)
     
     -- let's create a couple of cards.
     local card1 = animation_system.createAnimatedObjectWithTransform(
@@ -382,12 +382,46 @@ function createNewCard(boardEntityID)
     
     -- give a script table
     local cardScript = Node{}    
+    
+    
+    cardScript.isStackable = isStackable or true -- whether this card can be stacked on other cards, default true
+    
+    -- give an update table to align the card's stacks if they exist.
+    cardScript.update = function(self, dt)
+        local eid = self:handle()
+        
+        -- return unless self's root is self.
+        if self.stackRootEntity and self.stackRootEntity ~= eid then
+            return
+        end
+        
+        -- if there is a stack, align the stack
+        if self.cardStack and #self.cardStack > 0 then
+            local baseTransform = registry:get(eid, Transform)
+            
+            local stackOffsetY = 10
+            
+            for i, stackedCardEid in ipairs(self.cardStack) do
+                if stackedCardEid and registry:valid(stackedCardEid) then
+                    local stackedTransform = registry:get(stackedCardEid, Transform)
+                    stackedTransform.actualX = baseTransform.actualX
+                    stackedTransform.actualY = baseTransform.actualY + (i * stackOffsetY)
+                end
+            end
+        end
+        
+    end
+    
+    -- attach ecs must be called after defining the callbacks.
     cardScript:attach_ecs{ create_new = false, existing_entity = card1 }
+    
+    
     
     -- make draggable and set some callbacks in the transform system
     local nodeComp = registry:get(card1, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
+    gameObjectState.triggerOnReleaseEnabled = true
     gameObjectState.collisionEnabled = true
     gameObjectState.dragEnabled = true -- allow dragging the colonist
     nodeComp.methods.onHover = function()
@@ -396,7 +430,93 @@ function createNewCard(boardEntityID)
     nodeComp.methods.onStopHover = function()
     end
     
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        card1,
+        48 * 2,   -- width
+        64 * 2    -- height
+    )
+    
+    
+    nodeComp.methods.onRelease = function(registry, releasedOn, released)
+        log_debug("card", released, "released on", releasedOn)
+        
+        -- when released on top of a card, get the root card of the stack if there is one, and add self to that stack 
+        
+        
+        -- get the card script table
+        local releasedCardScript = getScriptTableFromEntityID(released)
+        if not releasedCardScript then return end
+        
+        -- check stackRootEntity in the table. Also, check that isStackable is true
+        if not releasedCardScript.isStackable then
+            log_debug("released card is not stackable or has no stackRootEntity")
+            return
+        end
+        
+        -- repeated climb tree to find the root entity from the releasedOn
+        while true do
+            if not releasedOn or releasedOn == entt_null or not registry:valid(releasedOn) then
+                break
+            end
+            local releasedOnScript = getScriptTableFromEntityID(releasedOn)
+            if not releasedOnScript then
+                break
+            end
+            if not releasedOnScript.isStackable or not releasedOnScript.stackRootEntity then
+                break
+            end
+            -- climb up the tree
+            releasedOn = releasedOnScript.stackRootEntity
+            break -- we just need to find it once
+        end
+        
+        -- is the root entity a valid entity?
+        local rootEntity = releasedOn or releasedCardScript.stackRootEntity
+        if not rootEntity or rootEntity == entt_null or not registry:valid(rootEntity) then
+            log_debug("released card has no valid stackRootEntity, setting to self")
+            releasedCardScript.stackRootEntity = released
+            rootEntity = released
+        end
+        
+        -- now get the root entity's script
+        local rootCardScript = getScriptTableFromEntityID(rootEntity)
+        if not rootCardScript then
+            log_debug("released card's stackRootEntity has no valid script table, bail")
+            return
+        end
+        
+        -- add self to the root entity's stack, if self is not the root
+        if rootEntity == released then
+            log_debug("released card is the root entity, not stacking on self")
+            return
+        end
+        -- make sure neither card is already in a stack and they're being dropped onto each other by accident. It's weird, but sometimes root can be dropped on a member card.
+        if rootCardScript.cardStack then
+            for _, e in ipairs(rootCardScript.cardStack) do
+                if e == released then
+                    log_debug("released card is already in the root entity's stack, not stacking again")
+                    return
+                end
+            end
+        elseif releasedCardScript.cardStack then
+            for _, e in ipairs(releasedCardScript.cardStack) do
+                if e == rootEntity then
+                    log_debug("root entity is already in the released card's stack, not stacking again")
+                    return
+                end
+            end
+        end
+        rootCardScript.cardStack = rootCardScript.cardStack or {}
+        table.insert(rootCardScript.cardStack, released)
+        
+        -- also store a reference to the root entity in self
+        cardScript.stackRootEntity = rootEntity
+        
+    end
+    
     nodeComp.methods.onDrag = function()
+        
+        if not boardEntityID then return end
         
         local board = boards[boardEntityID]
         -- dunno why, board can be nil
@@ -410,6 +530,8 @@ function createNewCard(boardEntityID)
     
     nodeComp.methods.onStopDrag = function()
         
+        if not boardEntityID then return end
+        
         local board = boards[boardEntityID]
         -- dunno why, board can be nil
         if not board then return end
@@ -419,11 +541,7 @@ function createNewCard(boardEntityID)
         layer_order_system.assignZIndexToEntity(card1, cachedZ)
     end
     
-    animation_system.resizeAnimationObjectsInEntityToFit(
-        card1,
-        48 * 2,   -- width
-        64 * 2    -- height
-    )
+    
     
     return card1
     
@@ -576,6 +694,11 @@ function initMainGame()
     
     local card1 = createNewCard(board:handle())
     local card2 = createNewCard(board:handle())
+    
+    -- add a couple of test cards outside the card area.
+    
+    local outsideCard1 = createNewCard()
+    local outsideCard2 = createNewCard()
     
     local testTable = getScriptTableFromEntityID(card1)
     

@@ -1819,33 +1819,43 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // ——— 3) Sort by your existing layer/tree order ———
         struct OrderInfo {
             bool hasOrder = false;
+            
+            bool isScreen = false;
             entt::entity parentBox = entt::null;
-            int treeOrder  = 0;
-            int layerOrder = 0;
+            int treeOrder  = 0; // higher = front
+            int layerOrder = 0; // higher = front
         };
-        auto getInfo = [&](entt::entity e){
+        auto getInfo = [&](entt::entity e) {
             OrderInfo info;
-            auto &r = globals::registry;
+            auto& r = globals::registry;
             if (!r.valid(e)) return info;
-            if (!r.all_of<transform::GameObject, transform::InheritedProperties>(e))
-                return info;
 
-            // detect UI or world by presence of UIElementComponent
-            auto uiElem = r.try_get<ui::UIElementComponent>(e);
-            bool hasSortComp = r.any_of<transform::TreeOrderComponent, layer::LayerOrderComponent>(e);
-            if (!hasSortComp) return info;
+            info.isScreen = r.any_of<collision::ScreenSpaceCollisionMarker>(e)
+                        || r.any_of<ui::UIElementComponent>(e);
 
-            info.hasOrder = true;
-            if (uiElem) info.parentBox = uiElem->uiBox;
-            if (!r.valid(info.parentBox)) return info;
+            // Prefer entity's own z
+            if (auto loc = r.try_get<layer::LayerOrderComponent>(e))
+                { info.layerOrder = loc->zIndex; info.hasOrder = true; }
 
-            if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
-                info.treeOrder = toc->order;
-            if (auto loc = r.try_get<layer::LayerOrderComponent>(info.parentBox))
-                info.layerOrder = loc->zIndex;
+            // If it's a UI element, allow fallback to its parent box z
+            if (auto uiElem = r.try_get<ui::UIElementComponent>(e)) {
+                info.parentBox = uiElem->uiBox;
+                if (!info.hasOrder && r.valid(info.parentBox)) {
+                    if (auto locp = r.try_get<layer::LayerOrderComponent>(info.parentBox)) {
+                        info.layerOrder = locp->zIndex; info.hasOrder = true;
+                    }
+                }
+                if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
+                    info.treeOrder = toc->order; // higher in front? match your renderer
+            } else {
+                // world objects may also have TreeOrderComponent (use if you render by it)
+                if (auto toc = r.try_get<transform::TreeOrderComponent>(e))
+                    info.treeOrder = toc->order;
+            }
 
             return info;
         };
+
 
         // cache OrderInfo for each hit
         std::unordered_map<entt::entity, OrderInfo> infoMap;
@@ -1855,23 +1865,22 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
 
         // final sort
-        std::sort(hits.begin(), hits.end(),
-            [&](entt::entity a, entt::entity b) {
-                auto &ia = infoMap[a];
-                auto &ib = infoMap[b];
+        std::sort(hits.begin(), hits.end(), [&](entt::entity a, entt::entity b){
+            const auto& ia = infoMap[a];
+            const auto& ib = infoMap[b];
 
-                // entities without any sorting info go last
-                if (ia.hasOrder != ib.hasOrder)
-                    return ia.hasOrder;
+            // 1) Screen (UI) over World
+            if (ia.isScreen != ib.isScreen) return ia.isScreen; // true first
 
-                // then by layerOrder
-                if (ia.layerOrder != ib.layerOrder)
-                    return ia.layerOrder < ib.layerOrder;
+            // 2) Higher z in front
+            if (ia.layerOrder != ib.layerOrder) return ia.layerOrder > ib.layerOrder;
 
-                // then by treeOrder
-                return ia.treeOrder < ib.treeOrder;
-            }
-        );
+            // 3) Higher tree order in front (match your renderer’s rule)
+            if (ia.treeOrder != ib.treeOrder)   return ia.treeOrder > ib.treeOrder;
+
+            // 4) Stable tiebreaker: entity id
+            return (uint32_t)a > (uint32_t)b;
+        });
 
         return hits;
     }

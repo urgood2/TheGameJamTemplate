@@ -33,4 +33,6 @@
 
 
 # errors
-- bit of flickering with render commands.
+- use entity state to make transition seamless between planning and action phases. start work on action phase with basic movements + physics.
+- make card areas that can accept new cards, transferring card away from existing card area if need be. also make ones that will accept only one card (trigger slot)
+- add basic triggers, actions, and modifiers and hook them up to gameplay.

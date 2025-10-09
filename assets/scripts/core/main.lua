@@ -509,6 +509,21 @@ function createNewCard(boardEntityID, isStackable)
         rootCardScript.cardStack = rootCardScript.cardStack or {}
         table.insert(rootCardScript.cardStack, released)
         
+        -- after adding to the stack, update the z-orders from bottom up.
+        local baseZ = z_orders.card
+        
+        -- give root entity the base z order
+        layer_order_system.assignZIndexToEntity(rootEntity, baseZ)
+        
+        -- now for every card in the stack, give it a z order above the root
+        for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
+            if stackedCardEid and registry:valid(stackedCardEid) then
+                local stackedTransform = registry:get(stackedCardEid, Transform)
+                local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
+                layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
+            end
+        end
+        
         -- also store a reference to the root entity in self
         cardScript.stackRootEntity = rootEntity
         

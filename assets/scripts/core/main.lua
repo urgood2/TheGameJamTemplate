@@ -591,7 +591,37 @@ function initMainGame()
     board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
     board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
     
-    
+    timer.run(
+        function()
+            -- for each board
+            for key, boardScript in pairs(boards) do
+                local self = boardScript
+                local eid = self:handle()
+                if not eid or not registry:valid(eid) then return end
+
+                local area = registry:get(eid, Transform)
+
+                -- -- draw board border
+                local pad = 20
+                command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
+                    c.rec = Rectangle.new(
+                        area.actualX,
+                        area.actualY,
+                        math.max(0, area.actualW),
+                        math.max(0, area.actualH)
+                    )
+                    c.radius    = 10
+                    c.dashLen   = 12
+                    c.gapLen    = 8
+                    c.phase     = (shapeAnimationPhase)
+                    c.arcSteps  = 14
+                    c.thickness = 5
+                    c.color     = palette.snapToColorName("yellow")
+                end, z_orders.board, layer.DrawCommandSpace.World)
+
+            end
+        end
+    )
     
     -- replace update function
     board.update = function(self, dt)
@@ -718,6 +748,8 @@ function initMainGame()
     
     local outsideCard1 = createNewCard()
     local outsideCard2 = createNewCard()
+    local outsideCard3 = createNewCard()
+    local outsideCard4 = createNewCard()
     
     local testTable = getScriptTableFromEntityID(card1)
     

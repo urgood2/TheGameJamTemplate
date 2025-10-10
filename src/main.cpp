@@ -1,4 +1,5 @@
 #include "systems/input/input_functions.hpp"
+#include "systems/layer/layer.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
 #define RAYGUI_IMPLEMENTATION // needed to use raygui
 
@@ -387,6 +388,8 @@ int main(void)
 /// @return
 auto updateSystems(float dt) -> void
 {
+    // clear layers
+    layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
     // // ZoneScopedN("UpdateSystems"); // custom label
     updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
     fade_system::update(dt); // update fade system

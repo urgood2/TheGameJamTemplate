@@ -6,6 +6,7 @@ This document explains the Lua bindings you exposed for **entity state tagging**
 >
 > * `add_state_tag`, `remove_state_tag`, and `clear_state_tags` operate on an entity’s **`StateTag` component** in your ECS.
 > * `active_states` is a single global **`ActiveStates`** instance with simple on/off flags you can query from anywhere in Lua.
+> * Global wrappers `activate_state`, `deactivate_state`, `clear_states`, and `is_state_active` call into the same singleton for convenience.
 
 ---
 
@@ -20,6 +21,7 @@ This document explains the Lua bindings you exposed for **entity state tagging**
 4. [Examples](#examples)
 5. [Gotchas & Notes](#gotchas--notes)
 6. [FAQ](#faq)
+7. [Changelog](#changelog)
 
 ---
 
@@ -32,12 +34,17 @@ add_state_tag(entity, "IN_COMBAT")
 -- Later, clear the tag
 clear_state_tags(entity)
 
--- Flip global flags (process-level)
-active_states:activate("paused")
-if active_states:is_active("paused") then
+-- Flip global flags (process-level), two equivalent ways:
+active_states:activate("paused")                 -- instance method
+activate_state("paused")                         -- global wrapper
+
+if is_state_active("paused") then                -- wrapper
   -- game paused logic
 end
-active_states:deactivate("paused")
+
+active_states:deactivate("paused")               -- instance method
+-- or
+deactivate_state("paused")                       -- wrapper
 ```
 
 ---
@@ -46,41 +53,49 @@ active_states:deactivate("paused")
 
 ### Free Functions
 
-#### `add_state_tag(entity, name)`
+> These are global wrappers that forward to the singleton returned by `active_states_instance()` on the C++ side.
+
+#### `activate_state(name)`
 
 ```lua
----@param entity Entity   # The entity to tag
----@param name string     # The name of the state tag
+---@param name string
 ---@return nil
 ```
 
-Adds or **replaces** a `StateTag` component on `entity` with the given `name`.
-
-*Behavior*: Internally uses `registry.emplace_or_replace<StateTag>(e, name)`.
+Activates (enables) the given state name globally.
 
 ---
 
-#### `remove_state_tag(entity)`
+#### `deactivate_state(name)`
 
 ```lua
----@param entity Entity   # The entity from which to remove its state tag
+---@param name string
 ---@return nil
 ```
 
-Removes the `StateTag` component from `entity` (no-op if absent).
+Deactivates (disables) the given state name globally.
 
 ---
 
-#### `clear_state_tags(entity)`
+#### `clear_states()`
 
 ```lua
----@param entity Entity   # The entity whose state tags you want to clear
 ---@return nil
 ```
 
-Clears any `StateTag` component(s) from `entity`. (Your binding checks the presence of `StateTag` and removes it.)
+Clears **all** currently active global states.
 
-> **Note**: The current binding models a **single** `StateTag` component per entity (i.e., a single string). If you need **multiple** tags on one entity, see [Gotchas & Notes](#gotchas--notes).
+---
+
+#### `is_state_active(x)`
+
+```lua
+---@overload fun(tag: StateTag): boolean
+---@overload fun(name: string): boolean
+---@return boolean
+```
+
+Checks whether a given state (by **tag** or by **name**) is currently active. Returns `true` if the state exists in the global set.
 
 ---
 
@@ -120,14 +135,17 @@ Marks the given state as **inactive**.
 
 Clears **all** active states.
 
-##### `active_states:is_active(name)`
+##### `active_states:is_active(name_or_tag)`
 
 ```lua
----@param name string
+---@overload fun(tag: StateTag): boolean
+---@overload fun(name: string): boolean
 ---@return boolean  -- true if currently active
 ```
 
-Returns whether `name` is currently active.
+Returns whether the given state is currently active.
+
+> **Note:** Your C++ binding uses `sol::overload` to accept either a `StateTag` or a `string` name. Both are documented here.
 
 ---
 
@@ -136,12 +154,12 @@ Returns whether `name` is currently active.
 ### 1) Entity‑local vs Global switches
 
 * Use **entity tags** (`StateTag`) for *per‑entity* logic (e.g., an entity is `SLEEPING`, `IN_COMBAT`, `UI_ONLY`).
-* Use **`active_states`** for *global toggles* (e.g., `paused`, `debug_overlay`, `photo_mode`).
+* Use **`active_states`** (or the global wrappers) for *global toggles* (e.g., `paused`, `debug_overlay`, `photo_mode`).
 
 ### 2) Conditional systems
 
 ```lua
-if active_states:is_active("debug_overlay") then
+if is_state_active("debug_overlay") then
   draw_debug_overlay()
 end
 
@@ -189,7 +207,7 @@ end
 add_state_tag(enemy, "IN_COMBAT")
 
 function update_enemy(enemy, dt)
-  if active_states:is_active("paused") then return end
+  if is_state_active("paused") then return end
   if has_tag(enemy, "IN_COMBAT") then
     enemy_ai_tick(enemy, dt)
   end
@@ -200,10 +218,10 @@ end
 
 ```lua
 function toggle_photo_mode()
-  if active_states:is_active("photo_mode") then
-    active_states:deactivate("photo_mode")
+  if is_state_active("photo_mode") then
+    deactivate_state("photo_mode")
   else
-    active_states:activate("photo_mode")
+    activate_state("photo_mode")
   end
 end
 ```
@@ -212,19 +230,19 @@ end
 
 ```lua
 -- Entering a cutscene
-active_states:activate("cutscene")
+activate_state("cutscene")
 -- Tag the player as UI-only so input systems treat them differently
 add_state_tag(player, "UI_ONLY")
 
 -- Leaving the cutscene
-active_states:deactivate("cutscene")
+deactivate_state("cutscene")
 clear_state_tags(player)
 ```
 
 ### D) Pause overlay
 
 ```lua
-if active_states:is_active("paused") then
+if is_state_active("paused") then
   draw_pause_menu()
 else
   run_gameplay(dt)
@@ -246,13 +264,24 @@ end
    * mirror changes in a Lua table as shown in [Usage Patterns](#usage-patterns).
 
 3. **Global vs per-world**
-   `active_states` is a single global instance shared across all scripts. If you need world‑scoped state sets (e.g., separate editor vs runtime), expose additional instances or namespaced tables.
+   `active_states` is a single global instance shared across all scripts. If you need world‑scoped state sets (e.g., separate editor vs runtime), expose additional instances or namespaced tables, or rely on the free‑function wrappers mapped to different registries.
 
 4. **Threading / coroutines**
    If you flip `active_states` inside coroutines, keep in mind any systems reading it should be consistent within a frame. Prefer flipping at frame boundaries or centralize state changes.
 
 5. **Determinism**
    For replay/lockstep, log and replay `active_states` transitions and entity tag changes to keep simulation deterministic.
+
+6. **Stable hashing vs std::hash**
+   Your C++ uses `std::hash<std::string>` for `StateTag.hash` and the set. This is implementation‑defined and not stable across runs/versions. If you ever serialize/persist these, switch to a **stable hash** (e.g., FNV‑1a/xxHash) or store names directly.
+
+7. **Binding safety note (C++)**
+   Ensure you store **a reference** to the singleton when exposing to Lua:
+
+   ```cpp
+   ActiveStates &active_states = active_states_instance();
+   lua["active_states"] = &active_states; // do not take & of a temporary copy
+   ```
 
 ---
 
@@ -267,11 +296,12 @@ end
 **Q: Is there a way to query all entities with a given tag from Lua?**
 *A:* Not exposed here. You can add a C++ side query (`view<StateTag>`) and bind a function like `find_entities_with_tag(name)` if needed.
 
-**Q: What about enums instead of strings?**
-*A:* Strings are flexible but slower and error‑prone. For performance, consider hashed IDs or enums mapped through a registry.
+**Q: Should I call wrappers or instance methods?**
+*A:* Functionally equivalent. Use the style that keeps your Lua code cleaner. Wrappers are slightly terser for global toggles.
 
 ---
 
-### Changelog
+## Changelog
 
+* **v1.1** — Added documentation for global wrappers (`activate_state`, `deactivate_state`, `clear_states`, `is_state_active`) and overload notes; clarified hashing and binding safety.
 * **v1.0** — Initial documentation matching the provided bindings.

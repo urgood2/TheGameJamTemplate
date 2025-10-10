@@ -375,12 +375,6 @@ boards = {}
 
 
 
-
-
--- save game state strings
-planningGameState = "PLANNING"
-actionGameState = "SURVIVORS"
-
 function initMainGame()
     setTrackVolume("main-menu", 0.0)
     

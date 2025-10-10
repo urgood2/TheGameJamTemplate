@@ -512,6 +512,42 @@ function pauseGame(...) end
 function unpauseGame(...) end
 
 ---
+--- Activates the given named state globally, using the shared ActiveStates instance.
+---
+---@param name string
+---@return nil
+Activates (enables) the given state name globally.
+Equivalent to `active_states:activate(name)` on the singleton instance.
+function activate_state(...) end
+
+---
+--- Deactivates the given named state globally, using the shared ActiveStates instance.
+---
+---@param name string
+---@return nil
+Deactivates (disables) the given state name globally.
+Equivalent to `active_states:deactivate(name)` on the singleton instance.
+function deactivate_state(...) end
+
+---
+--- Clears all currently active global states in the shared ActiveStates instance.
+---
+---@return nil
+Clears **all** currently active global states.
+Equivalent to `active_states:clear()` on the singleton instance.
+function clear_states(...) end
+
+---
+--- Checks whether a state tag or state name is active in the global ActiveStates instance.
+---
+---@overload fun(tag: StateTag): boolean
+---@overload fun(name: string): boolean
+---@return boolean
+Checks whether a given state (by tag or name) is currently active.
+Returns `true` if the state exists in the global ActiveStates set.
+function is_state_active(...) end
+
+---
 --- Adds or replaces a StateTag component on the specified entity.
 ---
 ---@param entity Entity             # The entity to tag

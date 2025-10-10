@@ -83,6 +83,17 @@ inline void assignDefaultStateTag(entt::entity entity) {
     globals::registry.emplace_or_replace<StateTag>(entity, DEFAULT_STATE_TAG);
 }
 
+inline void activate_state(std::string_view s)   { active_states_instance().activate(std::string{s}); }
+inline void deactivate_state(std::string_view s) { active_states_instance().deactivate(std::string{s}); }
+inline void clear_states()                       { active_states_instance().clear(); }
+inline bool is_state_active(const StateTag &t)   { return active_states_instance().is_active(t); }
+
+// Convenience overload so Lua/docs can pass a name instead of a StateTag
+inline bool is_state_active_name(std::string_view s) {
+    StateTag tag{std::string{s}};
+    return active_states_instance().is_active(tag);
+}
+
 //-----------------------------------------------------------------------------
 // Systems: Utilities to filter views based on ActiveStates
 //-----------------------------------------------------------------------------
@@ -130,7 +141,55 @@ inline void exposeToLua(sol::state &lua) {
     // Make the global active_states instance available to Lua
     lua["active_states"] = &active_states;
     
+    lua.set_function("activate_state",   &activate_state);
+    lua.set_function("deactivate_state", &deactivate_state);
+    lua.set_function("clear_states",     &clear_states);
+    lua.set_function("is_state_active",  sol::overload(
+        &is_state_active,        // StateTag&
+        &is_state_active_name    // string name
+    ));
+
     auto &rec = BindingRecorder::instance();
+    
+    rec.record_free_function({}, {
+        "activate_state",
+        "---@param name string\n"
+        "---@return nil\n"
+        "Activates (enables) the given state name globally.\n"
+        "Equivalent to `active_states:activate(name)` on the singleton instance.",
+        "Activates the given named state globally, using the shared ActiveStates instance.",
+        true, false
+    });
+
+    rec.record_free_function({}, {
+        "deactivate_state",
+        "---@param name string\n"
+        "---@return nil\n"
+        "Deactivates (disables) the given state name globally.\n"
+        "Equivalent to `active_states:deactivate(name)` on the singleton instance.",
+        "Deactivates the given named state globally, using the shared ActiveStates instance.",
+        true, false
+    });
+
+    rec.record_free_function({}, {
+        "clear_states",
+        "---@return nil\n"
+        "Clears **all** currently active global states.\n"
+        "Equivalent to `active_states:clear()` on the singleton instance.",
+        "Clears all currently active global states in the shared ActiveStates instance.",
+        true, false
+    });
+
+    rec.record_free_function({}, {
+        "is_state_active",
+        "---@overload fun(tag: StateTag): boolean\n"
+        "---@overload fun(name: string): boolean\n"
+        "---@return boolean\n"
+        "Checks whether a given state (by tag or name) is currently active.\n"
+        "Returns `true` if the state exists in the global ActiveStates set.",
+        "Checks whether a state tag or state name is active in the global ActiveStates instance.",
+        true, false
+    });
     
     // free functions
     rec.record_free_function({}, { "add_state_tag",

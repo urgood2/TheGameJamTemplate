@@ -6,7 +6,14 @@
 local z_orders = require("core.z_orders")
 local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior script
 local palette = require("color.palette")
+local TimerChain = require("core.timer_chain")
 
+
+
+
+-- save game state strings
+PLANNING_STATE = "PLANNING"
+ACTION_STATE = "SURVIVORS"
 
 function createNewCard(boardEntityID, isStackable)
     
@@ -394,4 +401,18 @@ function initGameArea()
     end)
     
     
+    add_state_tag(board:handle(), PLANNING_STATE)
+    add_state_tag(card1, PLANNING_STATE)
+    add_state_tag(card2, PLANNING_STATE)
+    
+    add_state_tag(outsideCard1, ACTION_STATE)
+    add_state_tag(outsideCard2, ACTION_STATE)
+    add_state_tag(outsideCard3, ACTION_STATE)
+    add_state_tag(outsideCard4, ACTION_STATE)
+    
+    TimerChain:new("statesTestingChain")
+        :after(5.0, function() activate_state(PLANNING_STATE) end)
+        :wait(5)
+        :after(5.0, function() activate_state(ACTION_STATE) end)
+        :start()
 end

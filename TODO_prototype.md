@@ -33,10 +33,9 @@
 - Card stacking with validation and stack adding/removal
     - action modifiers can stack on top of actions.
     - actions can't stack on top of other actions.
-- different world state to transition to with survivors movement.
 
 
 # errors
-- stacks need debugging.
+- stacks need debugging. stack only on bottom card. also deal with card movement error when dragging stacked cards which are not the bottom card.
 - make card areas that can accept new cards, transferring card away from existing card area if need be. also make ones that will accept only one card (trigger slot)
 - add basic triggers, actions, and modifiers and hook them up to gameplay.

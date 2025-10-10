@@ -1010,6 +1010,20 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         
         auto worldCamera = camera_manager::Get("world_camera");
         
+        // mouse wheel for zoom
+        if (GetMouseWheelMove() > 0) {
+            // globals::camera.zoom += 0.1f;
+            worldCamera->SetActualZoom(worldCamera->GetActualZoom() + 0.1f);
+            if (worldCamera->GetActualZoom() > 3.0f)
+                worldCamera->SetActualZoom(3.0f);
+        }
+        else if (GetMouseWheelMove() < 0) {
+            // globals::camera.zoom -= 0.1f;
+            worldCamera->SetActualZoom(worldCamera->GetActualZoom() - 0.1f);
+            if (worldCamera->GetActualZoom() < 0.2f)
+                worldCamera->SetActualZoom(0.2f);
+        }
+        
         // pan camera based on arrow keys
         if (IsKeyDown(KEY_LEFT)) {
             // globals::camera.target.x -= 200.0f * delta;
@@ -1043,10 +1057,10 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // spring::pull(worldCamera->GetSpringRotation(), 100);
         }
         
-        if (IsKeyDown(KEY_S)) {
-            // shake camera
-            worldCamera->Shake(10, 2.0f);
-        }
+        // if (IsKeyDown(KEY_S)) {
+        //     // shake camera
+        //     worldCamera->Shake(10, 2.0f);
+        // }
         
         // random chance to set camera target to random location
         // if (Random::get<int>(0, 100) < 5) {

@@ -94,6 +94,13 @@ namespace scripting
         for (auto entity : view)
         {
             auto &script = view.get<ScriptComponent>(entity);
+            
+            // filter entity by active game state.
+            if (registry.any_of<entity_gamestate_management::StateTag>(entity)
+                &&                 
+                !entity_gamestate_management::active_states_instance().is_active(globals::registry.get<entity_gamestate_management::StateTag>(entity)))
+                    continue; // skip updating on inactive entities
+            
             // 1. Run normal update
             if (script.hooks.update.valid()) {
                 sol::protected_function_result result = script.hooks.update(script.self, delta_time);

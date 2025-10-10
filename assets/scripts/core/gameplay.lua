@@ -23,6 +23,9 @@ function createNewCard(boardEntityID, isStackable)
         true             -- use animation, not sprite identifier, if false
     )
     
+    -- give card state tag
+    add_state_tag(card1, PLANNING_STATE)
+    
     -- give a script table
     local cardScript = Node{}    
     
@@ -215,6 +218,9 @@ end
 
 function initGameArea()
     
+    -- activate planning state.
+    activate_state(PLANNING_STATE)
+    
     -- let's create a card board
     
     -- first create a generic scriptable entity.
@@ -223,6 +229,7 @@ function initGameArea()
     board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
     board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
     
+    -- board draw function
     timer.run(
         function()
             -- for each board
@@ -255,7 +262,7 @@ function initGameArea()
         end
     )
     
-    -- replace update function
+    -- replace update function for card organization logic
     board.update = function(self, dt)
         local eid = self:handle()
         if not eid or not registry:valid(eid) then return end
@@ -402,17 +409,83 @@ function initGameArea()
     
     
     add_state_tag(board:handle(), PLANNING_STATE)
-    add_state_tag(card1, PLANNING_STATE)
-    add_state_tag(card2, PLANNING_STATE)
     
-    add_state_tag(outsideCard1, ACTION_STATE)
-    add_state_tag(outsideCard2, ACTION_STATE)
-    add_state_tag(outsideCard3, ACTION_STATE)
-    add_state_tag(outsideCard4, ACTION_STATE)
+    -- TimerChain:new("statesTestingChain")
+    --     :after(5.0, function() activate_state(PLANNING_STATE) end)
+    --     :wait(5)
+    --     :after(5.0, function() activate_state(ACTION_STATE) end)
+    --     :start()
+end
+
+survivorEntity = nil
+function initActionPhase()
+    log_debug("Action phase started!")
+
+    -- activate action state
+    activate_state(ACTION_STATE)
     
-    TimerChain:new("statesTestingChain")
-        :after(5.0, function() activate_state(PLANNING_STATE) end)
-        :wait(5)
-        :after(5.0, function() activate_state(ACTION_STATE) end)
-        :start()
+    -- 3856-TheRoguelike_1_10_alpha_649.png
+    survivorEntity = animation_system.createAnimatedObjectWithTransform(
+        "3856-TheRoguelike_1_10_alpha_649.png", -- animation ID
+        true             -- use animation, not sprite identifier, if false
+    )
+    
+    -- give survivor a script and hook up
+    local survivorScript = Node{}
+    -- TODO: add update method here if needed
+    survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
+    
+    -- give a state tag to the survivor entity
+    add_state_tag(survivorEntity, ACTION_STATE)
+    
+    -- lets move the survivor based on input.
+    -- input binding test
+    input.bind("survivor_left", { device="keyboard", key=KeyboardKey.KEY_A, trigger="Pressed", context="gameplay" })
+    input.bind("survivor_right", { device="keyboard", key=KeyboardKey.KEY_D, trigger="Pressed", context="gameplay" })
+    input.bind("survivor_up", { device="keyboard", key=KeyboardKey.KEY_W, trigger="Pressed", context="gameplay" })
+    input.bind("survivor_down", { device="keyboard", key=KeyboardKey.KEY_S, trigger="Pressed", context="gameplay" })
+    
+    -- create input timer. this must run every frame.
+    timer.run(
+        function()
+            if not survivorEntity or survivorEntity == entt_null or not registry:valid(survivorEntity) then
+                return
+            end
+            
+            local speed = 200 -- pixels per second
+            local dx, dy = 0, 0
+            if input.action_down("survivor_left") then
+                dx = dx - 1
+            end
+            if input.action_down("survivor_right") then
+                dx = dx + 1
+            end
+            if input.action_down("survivor_up") then
+                dy = dy - 1
+            end
+            if input.action_down("survivor_down") then
+                dy = dy + 1
+            end
+            -- normalize direction vector
+            if dx ~= 0 or dy ~= 0 then
+                local len = math.sqrt(dx * dx + dy * dy)
+                dx = dx / len
+                dy = dy / len
+            end
+            
+            local t = registry:get(survivorEntity, Transform)
+            if t then
+                t.actualX = t.actualX + dx * speed * GetFrameTime()
+                t.actualY = t.actualY + dy * speed * GetFrameTime()
+            end
+            
+        end,
+        nil, -- no after
+        "survivorEntityMovementTimer" -- timer tag
+    )
+    
+    input.set_context("gameplay") -- set the input context to gameplay
+    
+    
+    
 end

@@ -198,7 +198,7 @@ namespace globals {
     std::map<std::string, Color> colorsMap{};
 
     
-    float BASE_SHADOW_EXAGGERATION = 3.0f; 
+    float BASE_SHADOW_EXAGGERATION = 1.8f; 
 
     //TODO: document
     std::optional<int> REFRESH_FRAME_MASTER_CACHE{}; // used for transform calculations

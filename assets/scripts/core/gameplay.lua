@@ -489,3 +489,58 @@ function initActionPhase()
     
     
 end
+
+planningUIEntities = {
+    start_action_button_box = nil
+}
+
+function initPlanningUI() 
+   
+    -- simple button to start action phase.
+    local startButtonText = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.start_action_phase") end,  -- initial text
+        15.0,                                 -- font size
+        "color=fuchsia"                       -- animation spec
+    )
+    local startButtonTemplate = UIElementTemplateNodeBuilder.create()
+        :addType(UITypeEnum.HORIZONTAL_CONTAINER)
+        :addConfig(
+            UIConfigBuilder.create()
+                :addColor(palette.snapToColorName("gray"))
+                :addEmboss(2.0)
+                :addHover(true) -- needed for button effect
+                :addButtonCallback(function ()
+                    playSoundEffect("effects", "button-click") -- play button click sound
+                end)
+                :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+                :addInitFunc(function(registry, entity)
+                    -- something init-related here
+                end)
+                :build()
+        )
+        :addChild(startButtonText)
+        :build()
+        
+    local startMenuRoot = UIElementTemplateNodeBuilder.create()
+    :addType(UITypeEnum.SCROLL_PANE)
+    :addConfig(
+        UIConfigBuilder.create()
+            :addColor(palette.snapToColorName("yellow"))
+            :addPadding(0)
+            :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
+            :addInitFunc(function(registry, entity)
+                -- something init-related here
+            end)
+            :build()
+    )
+    :addChild(startButtonTemplate)
+    :build()
+    
+    -- new uibox for the main menu
+    planningUIEntities.start_action_button_box =  ui.box.Initialize({x = 350, y = globals.screenHeight()}, startMenuRoot)
+    
+    -- center the ui box X-axi
+    local buttonTransform = registry:get(planningUIEntities.start_action_button_box, Transform)
+    buttonTransform.actualX = globals.screenWidth() / 2 - buttonTransform.actualW / 2
+    buttonTransform.actualY = globals.screenHeight() - buttonTransform.actualH - 10
+end

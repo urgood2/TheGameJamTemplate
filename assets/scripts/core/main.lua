@@ -383,14 +383,7 @@ function initMainGame()
     
     initGameArea()
     initActionPhase()
-    
-    
-    TimerChain:new("testChain")
-        :after(5, function() deactivate_state(PLANNING_STATE) end)
-        :after(5, function() deactivate_state(ACTION_STATE) end)
-        :after(5, function() activate_state(PLANNING_STATE) end)
-        :after(5, function() activate_state(ACTION_STATE) end)
-        :start()
+    initPlanningUI()
     
 end
 

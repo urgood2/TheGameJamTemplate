@@ -1,5 +1,10 @@
 {
 	"ui": {
+		"start_action_phase": "Start Action Phase",
+		
+		
+		
+		
 		"tutorial_duplicate": "Hey there! Let me teach you the ropes with\na quick tutorial. Drag & drop a colonist\ninto the window on the left side to\nduplicate it. This will spawn clones,\neach with a specific function.",
 		"tutorial_game_goal": "Your goal is to survive the acid rains and\nradioactive snows by using the clones you\ncreate. You must keep colonists alive, and\nkeep your gold balance above 0, to keep\nplaying. You may want to build some colonist\nhomes to help with gold production.",
 		"tutorial_advanced": "As you progress, you will be able to buy\nrelics from the end-of-day shop.\nThey will help your colonists survive the\nharsh weather. Note that the weather will\nonly get worse as you progress.",

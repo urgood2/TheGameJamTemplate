@@ -68,7 +68,7 @@ namespace globals {
     Font font{}, smallerFont{}, translationFont{};
 
     // screen dimensions
-    int screenWidth{1440}, screenHeight{900};
+    int screenWidth{1280}, screenHeight{800};
     int gameWorldViewportWidth{800}, gameWorldViewportHeight{500};
 
     int worldWidth{}, worldHeight{}; // world dimensions

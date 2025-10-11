@@ -15,11 +15,187 @@ local TimerChain = require("core.timer_chain")
 PLANNING_STATE = "PLANNING"
 ACTION_STATE = "SURVIVORS"
 
+function addCardToBoard(cardEntityID, boardEntityID)
+    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
+    if not boardEntityID or boardEntityID == entt_null or not registry:valid(boardEntityID) then return end
+    local board = boards[boardEntityID]
+    if not board then return end
+    board.cards = board.cards or {}
+    table.insert(board.cards, cardEntityID)
+    log_debug("Added card", cardEntityID, "to board", boardEntityID)
+end
+
+function removeCardFromBoard(cardEntityID, boardEntityID)
+    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
+    if not boardEntityID or boardEntityID == entt_null or not registry:valid(boardEntityID) then return end
+    local board = boards[boardEntityID]
+    if not board then return end
+    board.cards = board.cards or {}
+    for i, eid in ipairs(board.cards) do
+        if eid == cardEntityID then
+            table.remove(board.cards, i)
+            break
+        end
+    end
+end
+
+function createNewBoard(x, y, w, h) 
+   
+    local board = Node{}
+    board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
+    board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
+    board.cards = {} -- no starting cards
+    board.update = function(self, dt)
+        local eid = self:handle()
+        if not eid or not registry:valid(eid) then return end
+
+        local area = registry:get(eid, Transform)
+
+        local cards = self.cards or {}
+        local n = #cards
+        if n == 0 then return end
+
+        -- probe card size
+        local cardW, cardH = 100, 140
+        for _, cardEid in ipairs(cards) do
+            if cardEid and registry:valid(cardEid) and cardEid ~= entt_null then
+                local ct = registry:get(cardEid, Transform)
+                if ct and ct.actualW and ct.actualH and ct.actualW > 0 and ct.actualH > 0 then
+                    cardW, cardH = ct.actualW, ct.actualH
+                    break
+                end
+            end
+        end
+
+        -- layout
+        local padding = 20
+        local availW = math.max(0, area.actualW - padding * 2)
+        local minGap = 12
+
+        local spacing, groupW
+        if n == 1 then
+            spacing = 0
+            groupW  = cardW
+        else
+            local fitSpacing = (availW - cardW) / (n - 1)
+            spacing = math.max(minGap, fitSpacing)
+            groupW  = cardW + spacing * (n - 1)
+            if groupW > availW then
+                spacing = math.max(0, fitSpacing)
+                groupW  = cardW + spacing * (n - 1)
+            end
+        end
+
+        local startX  = area.actualX + padding + (availW - groupW) * 0.5
+        local centerY = area.actualY + area.actualH * 0.5
+
+        -- z-order cache (per card)
+        self.z_order_cache_per_card = self.z_order_cache_per_card or {}
+        local baseZ = z_orders.card
+        
+        -- sort the cards by actualX
+        table.sort(cards, function(a, b)
+            if not (a and registry:valid(a) and a ~= entt_null) then return false end
+            if not (b and registry:valid(b) and b ~= entt_null) then return true  end
+
+            local at = registry:get(a, Transform)
+            local bt = registry:get(b, Transform)
+            if not (at and bt) then return false end
+
+            local aCenterX = at.actualX + at.actualW * 0.5
+            local bCenterX = bt.actualX + bt.actualW * 0.5
+
+            if aCenterX == bCenterX then
+                return a < b   -- compare raw entity ids
+            end
+            return aCenterX < bCenterX
+        end)
+
+
+        for i, cardEid in ipairs(cards) do
+            if cardEid and registry:valid(cardEid) and cardEid ~= entt_null then
+                local ct = registry:get(cardEid, Transform)
+                if ct then
+                    ct.actualX = math.floor(startX + (i - 1) * spacing + 0.5)
+                    ct.actualY = math.floor(centerY - ct.actualH * 0.5 + 0.5)
+                end
+                
+                -- don't overwrite zIndex if the card is being dragged
+                local zi = baseZ + (i - 1)
+                self.z_order_cache_per_card[cardEid] = zi
+                
+                -- assign zIndex via LayerOrder system
+                layer_order_system.assignZIndexToEntity(cardEid, zi)
+                
+                local cardGameObject = registry:get(cardEid, GameObject)
+                if cardGameObject and cardGameObject.state and cardGameObject.state.isBeingDragged then
+                    --overwrite
+                    layer_order_system.assignZIndexToEntity(cardEid, self.z_orders.top)
+                end
+                
+        
+            end
+        end
+    end
+    board:attach_ecs{ create_new = true }
+    transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), x, y, w, h, board:handle())
+    boards[board:handle()] = board
+    add_state_tag(board:handle(), PLANNING_STATE)
+    
+    -- get the game object for board and make it onReleaseEnabled
+    local boardGameObject = registry:get(board:handle(), GameObject)
+    if boardGameObject then
+        boardGameObject.state.hoverEnabled = true
+        boardGameObject.state.triggerOnReleaseEnabled = true
+        boardGameObject.state.collisionEnabled = true   
+    end
+    -- give onRelease method to the board
+    boardGameObject.methods.onRelease = function(registry, releasedOn, released)
+        log_debug("Entity", released, "released on", releasedOn)
+        
+        -- when released on top of a board, add self to that board's card list
+        
+        -- is the released entity a card?
+        local releasedCardScript = getScriptTableFromEntityID(released)
+        if not releasedCardScript then return end
+        
+        -- check that it isn't already in this board
+        for _, eid in ipairs(board.cards) do
+            if eid == released then
+                log_debug("released card is already in this board, not adding again")
+                return   
+            end
+        end
+        
+        -- remove it from any existing board it may be in
+        for boardEid, boardScript in pairs(boards) do
+            if boardScript and boardScript.cards then
+                for i, eid in ipairs(boardScript.cards) do
+                    if eid == released then
+                        table.remove(boardScript.cards, i)
+                    end
+                end
+            end
+        end
+        
+        -- add it to this board
+        addCardToBoard(released, board:handle())
+    end
+    
+    return board:handle()
+end
+
 function createNewCard(boardEntityID, isStackable)
+    
+    local randomPool = {
+        "action_card_placeholder.png",
+        "mod_card_placeholder.png",
+        "trigger_card_placeholder.png",
+    }
     
     -- let's create a couple of cards.
     local card1 = animation_system.createAnimatedObjectWithTransform(
-        "card_back_1.png", -- animation ID
+        lume.randomchoice(randomPool), -- animation ID
         true             -- use animation, not sprite identifier, if false
     )
     
@@ -82,9 +258,12 @@ function createNewCard(boardEntityID, isStackable)
         64 * 2    -- height
     )
     
-    
+    -- NOTE: onRelease is called for when mouse is released ON TOP OF this node.
     nodeComp.methods.onRelease = function(registry, releasedOn, released)
         log_debug("card", released, "released on", releasedOn)
+        
+        
+        
         
         -- when released on top of a card, get the root card of the stack if there is one, and add self to that stack 
         
@@ -216,20 +395,20 @@ function getScriptTableFromEntityID(eid)
     return scriptComp.self
 end
 
+
+
 function initGameArea()
     
-    -- activate planning state.
+    -- activate planning state to draw/update planning entities
     activate_state(PLANNING_STATE)
     
     -- let's create a card board
     
     -- first create a generic scriptable entity.
-    local board = Node{}
+    local boardID = createNewBoard(100, 350, 600, 200)
+    local board = boards[boardID]
     
-    board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
-    board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
-    
-    -- board draw function
+    -- board draw function, for all baords
     timer.run(
         function()
             -- for each board
@@ -255,150 +434,72 @@ function initGameArea()
                     c.phase     = (shapeAnimationPhase)
                     c.arcSteps  = 14
                     c.thickness = 5
-                    c.color     = palette.snapToColorName("yellow")
+                    c.color     = self.borderColor or palette.snapToColorName("yellow")
+                    
                 end, z_orders.board, layer.DrawCommandSpace.World)
 
             end
         end
     )
     
-    -- replace update function for card organization logic
-    board.update = function(self, dt)
-        local eid = self:handle()
-        if not eid or not registry:valid(eid) then return end
-
-        local area = registry:get(eid, Transform)
-
-        -- -- draw board border
-        local pad = 20
-        command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
-            c.rec = Rectangle.new(
-                area.actualX,
-                area.actualY,
-                math.max(0, area.actualW),
-                math.max(0, area.actualH)
-            )
-            c.radius    = 10
-            c.dashLen   = 12
-            c.gapLen    = 8
-            c.phase     = (shapeAnimationPhase)
-            c.arcSteps  = 14
-            c.thickness = 5
-            c.color     = palette.snapToColorName("yellow")
-        end, z_orders.board, layer.DrawCommandSpace.World)
-
-        local cards = self.cards or {}
-        local n = #cards
-        if n == 0 then return end
-
-        -- probe card size
-        local cardW, cardH = 100, 140
-        for _, cardEid in ipairs(cards) do
-            if cardEid and registry:valid(cardEid) and cardEid ~= entt_null then
-                local ct = registry:get(cardEid, Transform)
-                if ct and ct.actualW and ct.actualH and ct.actualW > 0 and ct.actualH > 0 then
-                    cardW, cardH = ct.actualW, ct.actualH
-                    break
-                end
-            end
-        end
-
-        -- layout
-        local padding = 20
-        local availW = math.max(0, area.actualW - padding * 2)
-        local minGap = 12
-
-        local spacing, groupW
-        if n == 1 then
-            spacing = 0
-            groupW  = cardW
-        else
-            local fitSpacing = (availW - cardW) / (n - 1)
-            spacing = math.max(minGap, fitSpacing)
-            groupW  = cardW + spacing * (n - 1)
-            if groupW > availW then
-                spacing = math.max(0, fitSpacing)
-                groupW  = cardW + spacing * (n - 1)
-            end
-        end
-
-        local startX  = area.actualX + padding + (availW - groupW) * 0.5
-        local centerY = area.actualY + area.actualH * 0.5
-
-        -- z-order cache (per card)
-        self.z_order_cache_per_card = self.z_order_cache_per_card or {}
-        local baseZ = z_orders.card
-        
-        -- sort the cards by actualX
-        table.sort(cards, function(a, b)
-            if not (a and registry:valid(a) and a ~= entt_null) then return false end
-            if not (b and registry:valid(b) and b ~= entt_null) then return true  end
-
-            local at = registry:get(a, Transform)
-            local bt = registry:get(b, Transform)
-            if not (at and bt) then return false end
-
-            local aCenterX = at.actualX + at.actualW * 0.5
-            local bCenterX = bt.actualX + bt.actualW * 0.5
-
-            if aCenterX == bCenterX then
-                return a < b   -- compare raw entity ids
-            end
-            return aCenterX < bCenterX
-        end)
-
-
-        for i, cardEid in ipairs(cards) do
-            if cardEid and registry:valid(cardEid) and cardEid ~= entt_null then
-                local ct = registry:get(cardEid, Transform)
-                if ct then
-                    ct.actualX = math.floor(startX + (i - 1) * spacing + 0.5)
-                    ct.actualY = math.floor(centerY - ct.actualH * 0.5 + 0.5)
-                end
-                
-                -- don't overwrite zIndex if the card is being dragged
-                local zi = baseZ + (i - 1)
-                self.z_order_cache_per_card[cardEid] = zi
-                
-                -- assign zIndex via LayerOrder system
-                layer_order_system.assignZIndexToEntity(cardEid, zi)
-                
-                local cardGameObject = registry:get(cardEid, GameObject)
-                if cardGameObject and cardGameObject.state and cardGameObject.state.isBeingDragged then
-                    --overwrite
-                    layer_order_system.assignZIndexToEntity(cardEid, self.z_orders.top)
-                end
-                
-        
-            end
-        end
-    end
-
-
-    
-    -- attach ecs and load update function
-    board:attach_ecs{ create_new = true }
-    
-    
+    -- add a couple of starting cards to the board
     local card1 = createNewCard(board:handle())
     local card2 = createNewCard(board:handle())
-    
-    -- add a couple of test cards outside the card area.
-    
-    local outsideCard1 = createNewCard()
-    local outsideCard2 = createNewCard()
-    local outsideCard3 = createNewCard()
-    local outsideCard4 = createNewCard()
     
     local testTable = getScriptTableFromEntityID(card1)
     
     board.cards = { card1, card2 } -- give a couple of starting cards. These are the entity ids.
     
-    -- store in boards table
-    boards[board:handle()] = board
+    -- give a text label above the board
+    board.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.action_mod_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(board.textEntity, "world")
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, board.textEntity, InheritedPropertiesType.PermanentAttachment, board:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(board.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
     
-    -- give a transform comp (automatically in world space)
-    transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), 0, 0, 600, 200, board:handle())
+    -- FIXME: onrelease for world container doesn't work.
+    local containerGameObject = registry:get(globals.gameWorldContainerEntity(), GameObject)
+    if containerGameObject then
+        -- containerGameObject.state.hoverEnabled = true
+        containerGameObject.state.triggerOnReleaseEnabled = true
+        containerGameObject.state.collisionEnabled = true
+    end
+    -- make world container very deep so it is always at the back
+    layer_order_system.assignZIndexToEntity(globals.gameWorldContainerEntity(), -10000)
+    -- make onRelease method for container
+    containerGameObject.methods.onRelease = function(registry, releasedOn, released)
+        log_debug("Entity", released, "released on", releasedOn)
+        
+        -- when released on top of the world container, remove from any existing board it may be in
+        
+        -- is the released entity a card?
+        local releasedCardScript = getScriptTableFromEntityID(released)
+        if not releasedCardScript then return end
+        
+        -- remove it from any existing board it may be in
+        for boardEid, boardScript in pairs(boards) do
+            if boardScript and boardScript.cards then
+                for i, eid in ipairs(boardScript.cards) do
+                    if eid == released then
+                        table.remove(boardScript.cards, i)
+                    end
+                end
+            end
+        end
+        
+    end
     
     
     -- timer to test adding new cards
@@ -415,6 +516,105 @@ function initGameArea()
     --     :wait(5)
     --     :after(5.0, function() activate_state(ACTION_STATE) end)
     --     :start()
+    
+    
+    -- let's make another board, for triggers.
+    local triggerBoardID = createNewBoard(100, 100, 200, 200)
+    local triggerBoard = boards[triggerBoardID]
+    triggerBoard.borderColor = palette.snapToColorName("cyan")
+    triggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.trigger_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=cyan"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(triggerBoard.textEntity, "world")
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, triggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, triggerBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(triggerBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    
+    -- another board for removing cards from boards.
+    local removeBoardID = createNewBoard(350, 100, 200, 200)
+    local removeBoard = boards[removeBoardID]
+    removeBoard.borderColor = palette.snapToColorName("red")
+    removeBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.remove_card_area")  end,  -- initial text
+        20.0,                                 -- font size
+        "color=red"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(removeBoard.textEntity, "world")
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, removeBoard.textEntity, InheritedPropertiesType.PermanentAttachment, removeBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(removeBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    -- add a different onRelease method
+    local removeBoardGameObject = registry:get(removeBoard:handle(), GameObject)
+    if removeBoardGameObject then
+        removeBoardGameObject.methods.onRelease = function(registry, releasedOn, released)
+            log_debug("Entity", released, "released on", releasedOn)  
+            
+            -- just remove from all boards and change its location to somewhere else
+            -- is the released entity a card?
+            local releasedCardScript = getScriptTableFromEntityID(released)
+            if not releasedCardScript then return end   
+            -- remove it from any existing board it may be in
+            for boardEid, boardScript in pairs(boards) do
+                if boardScript and boardScript.cards then
+                    for i, eid in ipairs(boardScript.cards) do
+                        if eid == released then
+                            table.remove(boardScript.cards, i)
+                        end
+                    end
+                end
+            end
+            -- move it somewhere elsewhere
+            local t = registry:get(released, Transform)
+            if t then
+                t.actualY = t.visualY
+                t.actualX = t.visualX + 500
+            end
+            
+        end
+    end
+    
+    -- add another area, call it "Augment Action Card"
+    local augmentBoardID = createNewBoard(800, 350, 200, 200)
+    local augmentBoard = boards[augmentBoardID]
+    augmentBoard.borderColor = palette.snapToColorName("apricot_cream")
+    augmentBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.augment_action_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=apricot_cream;wiggle"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(augmentBoard.textEntity, "world")
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, augmentBoard.textEntity, InheritedPropertiesType.PermanentAttachment, augmentBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(augmentBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
 end
 
 survivorEntity = nil

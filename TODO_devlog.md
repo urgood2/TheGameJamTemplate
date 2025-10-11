@@ -9,3 +9,12 @@
   - Tested entity state switching between planning and action phases. Seems to work fine.
   - Tweaked BASE_SHADOW_EXAGGERATION to 1.8 from 3
   
+- 10/11/2025
+  - Fixed bug in transform system where offset in AssignRole was not being applied correctly.
+  - Added border color property to CardArea component to allow different colored borders for different card areas.
+  - Added "Trigger Card" and "Action/Modifier Cards" labels above the respective card areas.
+  - Moved trigger card area to y=150 to make space for the new label.
+  - Updated TODO_prototype.md with more specific tasks and notes.
+  - Added basic trigger, action, and modifier cards to the game (visual placeholders).
+  - Implemented basic drag-and-drop functionality for cards between different card areas.
+  

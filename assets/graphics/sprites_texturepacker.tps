@@ -173,6 +173,35 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">../../../../../Downloads/action_card_placeholder.png</key>
+            <key type="filename">../../../../../Downloads/mod_card_placeholder.png</key>
+            <key type="filename">../../../../../Downloads/trigger_card_placeholder.png</key>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Back/card_back_1.png</key>
+            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_2.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_3.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_4.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_5.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_6.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_7.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_8.png</key>
+            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_9.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>12,16,24,32</rect>
+                <key>scale9Paddings</key>
+                <rect>12,16,24,32</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">../../../../../Downloads/musicnote1.png</key>
             <key type="filename">../../../../../Downloads/musicnote2.png</key>
             <key type="filename">../../../../../Downloads/musicnote3.png</key>
@@ -9678,32 +9707,6 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Back/card_back_1.png</key>
-            <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Cards/Characters/Sylvie, the Verdant Guardian/verdant_guardian.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_0.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_1.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_2.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_3.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_4.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_5.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_6.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_7.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_8.png</key>
-            <key type="filename">pre-packing-files_globbed/Buff n Debuff P3 01_9.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>12,16,24,32</rect>
-                <key>scale9Paddings</key>
-                <rect>12,16,24,32</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
             <key type="filename">../../../../TexturePackerRepo/assets/downloaded assets/Kenney Game Assets All-in-1 2.0.0/2D assets/Game Icons/PNG/White/1x/locked.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -12281,6 +12284,9 @@
                     <filename>pre-packing-files_globbed/raven_fantasy_complete/32x32_raven_fantasy</filename>
                     <filename>pre-packing-files_globbed/raven_fantasy_complete/32x32_ui_popups</filename>
                     <filename>../../../../TexturePackerRepo/assets/downloaded assets/Full Version - Cards/Back/card_back_1.png</filename>
+                    <filename>../../../../../Downloads/action_card_placeholder.png</filename>
+                    <filename>../../../../../Downloads/mod_card_placeholder.png</filename>
+                    <filename>../../../../../Downloads/trigger_card_placeholder.png</filename>
                 </array>
             </struct>
         </map>

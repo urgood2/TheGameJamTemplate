@@ -1071,7 +1071,9 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         if (offset)
         {
             // SPDLOG_DEBUG("AssignRole called for entity {} with offset x: {}, y: {}", static_cast<int>(e), offset->x, offset->y);
-            role.offset = offset.value();
+            // role.offset = offset.value();
+            //TODO testing
+            role.flags->extraAlignmentFinetuningOffset = offset.value();
         }
 
         role.master = parent;
@@ -2004,7 +2006,12 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         auto &transform = registry->get<Transform>(e);
         auto &role = registry->get<InheritedProperties>(e);
         auto &node = registry->get<GameObject>(e);
-
+        
+        if (registry->valid(node.container) == false || node.container == entt::null)
+        {
+            // SPDLOG_DEBUG("Entity {} has no valid container. Click offset not set.", static_cast<int>(e));
+            return;
+        }
         auto &containerTransform = registry->get<Transform>(node.container);
 
         tempOffsetPoint.x = point.x;

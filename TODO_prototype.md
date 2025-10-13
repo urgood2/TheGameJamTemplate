@@ -26,9 +26,6 @@
     
     
 # programming side
-
-- Card area with outline & drag and drop
-    - How do we unstack cards? Dragging sufficiently far away from stack? -> implement simplest way
 - Card stacking with validation and stack adding/removal
     - action modifiers can stack on top of actions.
     - actions can't stack on top of other actions.
@@ -38,5 +35,8 @@
 
 # errors
 - card areas don't shift cards reliably when there are lots of cards in an area, and cards are dragged around inside.
-- stacks need debugging. stack only on bottom card. also deal with card movement error when dragging stacked cards which are not the bottom card.
-- Hover can't be enabled on world container, it overrides everything. need a way to make it so cards can still be removed from a card area somehow.
+
+
+# design questions
+- should trigger slots only have one trigger, or multiple?
+- what properties do triggers have? delay between activations? chance to activate?

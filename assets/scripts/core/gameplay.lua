@@ -9,6 +9,41 @@ local palette = require("color.palette")
 local TimerChain = require("core.timer_chain")
 
 
+--  let's make some card data
+local action_card_defs = {
+    {
+        id = "fire_basic_bolt", -- at target, or in direction if no target
+    },
+    {
+        id = "leave_spike_hazard",
+    },
+    {
+        id = "temporary_strength_bonus"
+    }
+    
+}
+local trigger_card_defs = {
+    {
+        id = "every_N_seconds"
+    },
+    {
+        id = "on_pickup"
+    },
+    {
+        id = "on_distance_moved"
+    }
+}
+local modifier_card_defs = {
+    {
+        id = "double_effect"
+    },
+    {
+        id = "summon_minion_wandering"
+    },
+    {
+        id = "projectile_pierces_twice"
+    }
+}
 
 
 -- save game state strings
@@ -216,13 +251,34 @@ function createNewBoard(x, y, w, h)
 end
 
 function addCardToStack(rootCardScript, cardScriptToAdd)
-    if not rootCardScript or not rootCardScript.cardStack then return end
+    if not rootCardScript or not rootCardScript.cardStack then return false end
     for _, cardEid in ipairs(rootCardScript.cardStack) do
         if cardEid == cardScriptToAdd:handle() then
             log_debug("card is already in the stack, not adding again")
-            return
+            return false
         end
     end
+    
+    -- only let action mods stack on top of actions
+    if rootCardScript.category == "action" and cardScriptToAdd.category ~= "modifier" then
+        log_debug("can only stack modifier cards on top of action cards")
+        return false
+    end
+    
+    -- don't let mods stack on other mods or triggers
+    if rootCardScript.category == "modifier" then
+        log_debug("cannot stack on top of modifier cards")
+        return false
+    end
+    
+    -- don't let actions stack on other actions or triggers
+    if rootCardScript.category == "trigger" then
+        log_debug("cannot stack on top of trigger cards")
+        return false
+    end
+    
+    
+    
     table.insert(rootCardScript.cardStack, cardScriptToAdd:handle())
     -- also store a reference to the root entity in self
     cardScriptToAdd.stackRootEntity = rootCardScript:handle()
@@ -258,7 +314,261 @@ function removeCardFromStack(rootCardScript, cardScriptToRemove)
     end
 end
 
-function createNewCard(boardEntityID, isStackable)
+-- category can be "action", "trigger", "modifier"
+function createNewCard(category, id, x, y) 
+    
+    local imageToUse = nil
+    if category == "action" then
+        imageToUse = "action_card_placeholder.png"
+    elseif category == "trigger" then
+        imageToUse = "trigger_card_placeholder.png"
+    elseif category == "modifier" then
+        imageToUse = "mod_card_placeholder.png"
+    else
+        log_debug("Invalid category for createNewCard:", category)
+        return nil
+    end
+    
+    local card = animation_system.createAnimatedObjectWithTransform(
+        imageToUse, -- animation ID
+        true             -- use animation, not sprite identifier, if false
+    )
+    
+    -- give card state tag
+    add_state_tag(card, PLANNING_STATE)
+    
+    -- give a script table
+    local cardScript = Node{}    
+    
+    cardScript.isStackable = isStackable or true -- whether this card can be stacked on other cards, default true
+    
+    -- save category and id
+    cardScript.category = category
+    cardScript.id = id or "unknown"
+    
+    -- give an update table to align the card's stacks if they exist.
+    cardScript.update = function(self, dt)
+        local eid = self:handle()
+        
+        -- return unless self's root is self.
+        if self.stackRootEntity and self.stackRootEntity ~= eid then
+            return
+        end
+        
+        -- if there is a stack, align the stack
+        if self.cardStack and #self.cardStack > 0 then
+            local baseTransform = registry:get(eid, Transform)
+            
+            local stackOffsetY = baseTransform.actualH * 0.2 -- offset each card
+            
+            for i, stackedCardEid in ipairs(self.cardStack) do
+                if stackedCardEid and registry:valid(stackedCardEid) then
+                    local stackedTransform = registry:get(stackedCardEid, Transform)
+                    stackedTransform.actualX = baseTransform.actualX
+                    stackedTransform.actualY = baseTransform.actualY + (i * stackOffsetY)
+                end
+            end
+        end
+        
+    end
+    
+    -- attach ecs must be called after defining the callbacks.
+    cardScript:attach_ecs{ create_new = false, existing_entity = card }
+    
+    -- let's give the card a label (temporary) for testing
+    cardScript.labelEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return (id or "unknown") end,  -- initial text
+        20.0,                                 -- font size
+        "color=blue_sky"                       -- animation spec
+    ).config.object
+    
+    -- make the text world space
+    transform.set_space(cardScript.labelEntity, "world")
+    
+    -- set text z order
+    layer_order_system.assignZIndexToEntity(cardScript.labelEntity, z_orders.card_text)
+    
+    -- let's anchor to top of the card
+    transform.AssignRole(registry, cardScript.labelEntity, InheritedPropertiesType.PermanentAttachment, cardScript:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak
+        -- Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(cardScript.labelEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP | AlignmentFlag.HORIZONTAL_CENTER 
+    
+    -- make draggable and set some callbacks in the transform system
+    local nodeComp = registry:get(card, GameObject)
+    local gameObjectState = nodeComp.state
+    gameObjectState.hoverEnabled = true
+    gameObjectState.triggerOnReleaseEnabled = true
+    gameObjectState.collisionEnabled = true
+    gameObjectState.dragEnabled = true -- allow dragging the colonist
+    
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        card,
+        48 * 2,   -- width
+        64 * 2    -- height
+    )
+    
+    -- NOTE: onRelease is called for when mouse is released ON TOP OF this node.
+    nodeComp.methods.onRelease = function(registry, releasedOn, released)
+        log_debug("card", released, "released on", releasedOn)
+        
+        -- when released on top of a card, get the root card of the stack if there is one, and add self to that stack 
+        
+        
+        -- get the card script table
+        local releasedCardScript = getScriptTableFromEntityID(released)
+        local releasedOnCardScript = getScriptTableFromEntityID(releasedOn)
+        if not releasedCardScript then return end
+        if not releasedOnCardScript then return end
+        
+        -- check stackRootEntity in the table. Also, check that isStackable is true
+        if not releasedCardScript.isStackable then
+            log_debug("released card is not stackable or has no stackRootEntity")
+            return
+        end
+        
+        -- check that the released entity is not already a stack root
+        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released and releasedCardScript.cardStack and #releasedCardScript.cardStack > 0 then
+            log_debug("released card is already a stack root, not stacking on self")
+            return
+        end
+        
+        -- if the released card is already part of a stack, remove it first
+        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity ~= releasedCardScript:handle() then
+            local currentRootCardScript = getScriptTableFromEntityID(releasedCardScript.stackRootEntity)
+            if currentRootCardScript then
+                removeCardFromStack(currentRootCardScript, releasedCardScript)
+            end
+        end
+        
+        local rootCardScript = nil
+        
+        -- if the card released on has no root, then make it the root.
+        if not releasedOnCardScript.stackRootEntity then
+            rootCardScript = releasedOnCardScript
+            releasedOnCardScript.stackRootEntity = releasedOnCardScript:handle()
+            releasedOnCardScript.cardStack = releasedOnCardScript.cardStack or {}
+            releasedCardScript.stackRootEntity = releasedOnCardScript:handle()
+        else 
+            -- if it has a root, use that instead.
+            rootCardScript = getScriptTableFromEntityID(releasedOnCardScript.stackRootEntity)
+        end
+        
+        if not rootCardScript then
+            log_debug("could not find root card script")
+            return
+        end
+        
+        -- add self to the root entity's stack, if self is not the root
+        if rootCardScript:handle() == released then
+            log_debug("released card is the root entity, not stacking on self")
+            return
+        end
+        
+        -- make sure neither card is already in a stack and they're being dropped onto each other by accident. It's weird, but sometimes root can be dropped on a member card.
+        if rootCardScript.cardStack then
+            for _, e in ipairs(rootCardScript.cardStack) do
+                if e == released then
+                    log_debug("released card is already in the root entity's stack, not stacking again")
+                    return
+                end
+            end
+        elseif releasedCardScript.isStackChild then
+            log_debug("released card is already a child in another stack, not stacking again")
+            return
+        end
+        local result = addCardToStack(rootCardScript, releasedCardScript)
+        
+        if not result then
+            log_debug("failed to add card to stack due to validation")
+            -- return to previous position
+            local t = registry:get(released, Transform)
+            if t and cardScript.startingPosition then
+                t.actualX = cardScript.startingPosition.x
+                t.actualY = cardScript.startingPosition.y
+            else
+                log_debug("could not snap back to starting position, missing transform or startingPosition")
+                -- just bump it down a bit
+                if t then
+                    t.actualY = t.actualY + 70
+                end
+            end
+            return
+        end
+        
+        -- after adding to the stack, update the z-orders from bottom up.
+        local baseZ = z_orders.card
+        
+        -- give root entity the base z order
+        layer_order_system.assignZIndexToEntity(rootCardScript:handle(), baseZ)
+        
+        -- now for every card in the stack, give it a z order above the root
+        for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
+            if stackedCardEid and registry:valid(stackedCardEid) then
+                local stackedTransform = registry:get(stackedCardEid, Transform)
+                local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
+                layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
+            end
+        end
+        
+    end
+    
+    nodeComp.methods.onDrag = function()
+        
+        if not boardEntityID then 
+            layer_order_system.assignZIndexToEntity(card, z_orders.top_card)
+            return 
+        end
+        
+        local board = boards[boardEntityID]
+        -- dunno why, board can be nil
+        if not board then return end
+        -- set z order to top so it can be seen
+        cardScript.isDragging = true
+        
+        log_debug("dragging card, bringing to top z:", board.z_orders.top)
+        layer_order_system.assignZIndexToEntity(card, board.z_orders.top)
+    end
+    
+    nodeComp.methods.onStopDrag = function()
+        
+        if not boardEntityID then 
+            layer_order_system.assignZIndexToEntity(card, z_orders.card)
+            return 
+        end
+        
+        local board = boards[boardEntityID]
+        -- dunno why, board can be nil
+        if not board then return end
+        -- reset z order to cached value
+        cardScript.isDragging = false
+        local cachedZ = board.z_order_cache_per_card and board.z_order_cache_per_card[card1] or board.z_orders.card
+        layer_order_system.assignZIndexToEntity(card, cachedZ)
+        
+        
+        -- is it part of a stack?
+        if cardScript.stackRootEntity and cardScript.stackRootEntity == card then
+            resetCardStackZOrder(cardScript:handle())
+        end
+    end
+    
+    
+    -- if x and y are given, set position
+    if x and y then
+        local t = registry:get(card, Transform)
+        if t then
+            t.actualX = x
+            t.actualY = y
+        end
+    end
+end
+
+function createNewTestCard(boardEntityID, isStackable)
     
     local randomPool = {
         "action_card_placeholder.png",
@@ -351,7 +661,7 @@ function createNewCard(boardEntityID, isStackable)
         end
         
         -- check that the released entity is not already a stack root
-        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released then
+        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released and releasedCardScript.cardStack and #releasedCardScript.cardStack > 0 then
             log_debug("released card is already a stack root, not stacking on self")
             return
         end
@@ -426,6 +736,14 @@ function createNewCard(boardEntityID, isStackable)
         
         log_debug("dragging card, bringing to top z:", board.z_orders.top)
         layer_order_system.assignZIndexToEntity(card1, board.z_orders.top)
+        
+        -- save the starting position in case we need to snap back
+        if not cardScript.startingPosition then
+            local t = registry:get(card1, Transform)
+            if t then
+                cardScript.startingPosition = { x = t.actualX, y = t.actualY }
+            end
+        end
     end
     
     nodeComp.methods.onStopDrag = function()
@@ -464,6 +782,21 @@ function initGameArea()
     
     -- activate planning state to draw/update planning entities
     activate_state(PLANNING_STATE)
+    
+    
+    -- make a few test cards around 600, 300
+    local x = 700
+    local y = 200
+    local offset = 50
+    createNewCard("action", "fire_basic_bolt", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("action", "leave_spike_hazard", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("action", "temporary_strength_bonus", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("trigger", "every_N_seconds", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("trigger", "on_pickup", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("trigger", "on_distance_moved", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     
     -- let's create a card board
     
@@ -506,8 +839,8 @@ function initGameArea()
     )
     
     -- add a couple of starting cards to the board
-    local card1 = createNewCard(board:handle())
-    local card2 = createNewCard(board:handle())
+    local card1 = createNewTestCard(board:handle())
+    local card2 = createNewTestCard(board:handle())
     
     local testTable = getScriptTableFromEntityID(card1)
     
@@ -566,10 +899,10 @@ function initGameArea()
     
     
     -- timer to test adding new cards
-    timer.every(5.0, function()
-        local newCard = createNewCard()
-        table.insert(board.cards, newCard)
-    end)
+    -- timer.every(5.0, function()
+    --     local newCard = createNewTestCard()
+    --     table.insert(board.cards, newCard)
+    -- end)
     
     
     add_state_tag(board:handle(), PLANNING_STATE)

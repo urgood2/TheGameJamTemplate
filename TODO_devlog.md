@@ -18,3 +18,9 @@
   - Added basic trigger, action, and modifier cards to the game (visual placeholders).
   - Implemented basic drag-and-drop functionality for cards between different card areas.
   
+10/12/2025
+  - nothing, too busy with checking work for weekend
+  
+10/13/2025
+  - Card stacks can be moved to and from card areas and behave like normal cards.
+  - Card stacks can be unstacked by dragging the root card into the "free card" field.

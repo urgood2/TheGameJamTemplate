@@ -1231,6 +1231,19 @@ namespace particle
                 Color(), 
                 Color(unsigned char, unsigned char, unsigned char, unsigned char)
             >(),
+            // add .new() method
+            "new", sol::factories([](sol::optional<unsigned char> r, sol::optional<unsigned char> g, sol::optional<unsigned char> b, sol::optional<unsigned char> a) {
+                return Color{
+                    r.value_or(255),
+                    g.value_or(255),
+                    b.value_or(255),
+                    a.value_or(255)
+                };
+            }),
+            
+            // setAlpha method that changes alpha and returns self
+            "setAlpha", [](Color &c, unsigned char a) { c.a = a; return c; },
+            
             // fields
             "r", &Color::r,
             "g", &Color::g,

@@ -2406,7 +2406,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             "visualR",  &Transform::getVisualR,
             "visualRWithMotion", &Transform::getVisualRWithDynamicMotionAndXLeaning,
             "scale",    sol::property(&Transform::getActualScale, &Transform::setActualScale),
-            "visualS",  &Transform::getVisualScale,
+            "visualS",  sol::property(&Transform::getVisualScale, &Transform::setVisualScale),
             "visualSWithMotion", &Transform::getVisualScaleWithHoverAndDynamicMotionReflected,
             "xSpring", &Transform::getXSpring,
             "ySpring", &Transform::getYSpring,

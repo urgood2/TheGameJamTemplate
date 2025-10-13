@@ -7,7 +7,7 @@ local z_orders = require("core.z_orders")
 local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior script
 local palette = require("color.palette")
 local TimerChain = require("core.timer_chain")
-
+local Easing = require("util.easing")
 
 --  let's make some card data
 local action_card_defs = {
@@ -49,6 +49,10 @@ local modifier_card_defs = {
 -- save game state strings
 PLANNING_STATE = "PLANNING"
 ACTION_STATE = "SURVIVORS"
+
+survivorEntity = nil
+boards = {}
+trigger_board_id = nil
 
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
@@ -344,7 +348,7 @@ function createNewCard(category, id, x, y)
     
     -- save category and id
     cardScript.category = category
-    cardScript.id = id or "unknown"
+    cardScript.cardID = id or "unknown"
     
     -- give an update table to align the card's stacks if they exist.
     cardScript.update = function(self, dt)
@@ -568,6 +572,7 @@ function createNewCard(category, id, x, y)
     end
 end
 
+-- deprecated, use createNewCard instead
 function createNewTestCard(boardEntityID, isStackable)
     
     local randomPool = {
@@ -777,7 +782,111 @@ function getScriptTableFromEntityID(eid)
 end
 
 
+function startTriggerNSecondsTimer()
+    
+    -- this timer should make the card pulse and jiggle + particles. Then it will go through the action board and execute all actions that are on it in sequence.
+    
+    -- for now, just do 3 seconds
+    
+    local outCubic = Easing.outQuart.f -- the easing function, not the derivative
+    
+    -- utility: linear interpolation
+    local function lerp(a, b, t)
+        return a + (b - a) * t
+    end
+    
+    timer.every(
+        3.0,
+        function()
+            log_debug("every N seconds trigger fired")
+            -- pulse and jiggle the card
+            if not trigger_board_id or trigger_board_id == entt_null or not registry:valid(trigger_board_id) then return end
+            local triggerBoard = boards[trigger_board_id]
+            if not triggerBoard or not triggerBoard.cards or #triggerBoard.cards == 0 then return end
+            
+            local triggerCardEid = triggerBoard.cards[1]
+            if not triggerCardEid or triggerCardEid == entt_null or not registry:valid(triggerCardEid) then return end
+            local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
+            if not triggerCardScript then return end
+            
+            -- pulse animation
+            local cardTransform = registry:get(triggerCardEid, Transform)
+            cardTransform.visualS = 1.5
+            
+            -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
+            local pulseObject = Node{}
+            pulseObject.lifetime = 0.7
+            pulseObject.age = 0.0
+            pulseObject.update = function(self, dt)
+                self.age = self.age + dt
+                
+                -- make scale & alpha based on age
+                local alpha = 1.0 - outCubic(math.min(1.0, self.age / self.lifetime))
+                local scale = 1.0 + 0.5 * outCubic(math.min(1.0, self.age / self.lifetime))
+                
+                -- choose your start/end colors (any names or explicit RGBA)
+                local fromColor = palette.snapToColorName("yellow")
+                local toColor   = palette.snapToColorName("black")
 
+                -- interpolate per channel
+                local r = lerp(fromColor.r, toColor.r, e)
+                local g = lerp(fromColor.g, toColor.g, e)
+                local b = lerp(fromColor.b, toColor.b, e)
+                local a = lerp(fromColor.a or 255, toColor.a or 255, e)
+                
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    local t = registry:get(triggerCardEid, Transform)
+                    c.x = t.actualX + t.actualW * 0.5
+                    c.y = t.actualY + t.actualH * 0.5
+                    c.w = t.actualW * scale
+                    c.h = t.actualH * scale
+                    c.rx = 15
+                    c.ry = 15
+                    c.color = Color.new(r, g, b, a)
+                    
+                end, z_orders.card - 1, layer.DrawCommandSpace.World)
+            end
+            pulseObject
+                :attach_ecs{ create_new = true }
+                :destroy_when(function(self, eid) return self.age >= self.lifetime end)
+        end,
+        0, -- infinite repetitions
+        false, -- don't start immediately
+        nil, -- no after callback
+        "every_N_seconds_trigger"
+    )
+end
+function setUpLogicTimers()
+    
+    -- check the trigger board 
+    timer.run(
+        function()
+            
+            -- does the trigger board exist and have a card?
+            if not trigger_board_id or trigger_board_id == entt_null or not registry:valid(trigger_board_id) then return end
+            
+            local triggerBoard = boards[trigger_board_id]
+            if not triggerBoard or not triggerBoard.cards or #triggerBoard.cards == 0 then return end
+            
+            -- if the card is every N seconds, check that the right timer is running. if not, start one.
+            local triggerCardEid = triggerBoard.cards[1]
+            if not triggerCardEid or triggerCardEid == entt_null or not registry:valid(triggerCardEid) then return end
+            local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
+            if not triggerCardScript then return end
+            
+            if triggerCardScript.cardID == "every_N_seconds" then
+                -- check if the timer is running
+                if timer.get_timer_and_delay("every_N_seconds_trigger") then
+                    -- timer is running, do nothing
+                else
+                    startTriggerNSecondsTimer()
+                end
+            end
+        end
+    )
+end
+
+-- initialize the game area for planning phase, where you combine cards and stuff.
 function initGameArea()
     
     -- activate planning state to draw/update planning entities
@@ -792,15 +901,13 @@ function initGameArea()
     createNewCard("action", "leave_spike_hazard", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     createNewCard("action", "temporary_strength_bonus", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     createNewCard("trigger", "every_N_seconds", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("trigger", "on_pickup", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("trigger", "on_distance_moved", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    -- createNewCard("trigger", "on_pickup", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    -- createNewCard("trigger", "on_distance_moved", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    -- createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    -- createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    -- createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     
     -- let's create a card board
-    
-    -- first create a generic scriptable entity.
     local boardID = createNewBoard(100, 350, 600, 200)
     local board = boards[boardID]
     
@@ -916,6 +1023,7 @@ function initGameArea()
     
     -- let's make another board, for triggers.
     local triggerBoardID = createNewBoard(100, 100, 200, 200)
+    trigger_board_id = triggerBoardID -- save in global
     local triggerBoard = boards[triggerBoardID]
     triggerBoard.borderColor = palette.snapToColorName("cyan")
     triggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
@@ -1048,9 +1156,11 @@ function initGameArea()
     local roleComp = registry:get(augmentBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP
     
+    
+    -- let's set up an update timer for triggers.
+    setUpLogicTimers()
 end
 
-survivorEntity = nil
 function initActionPhase()
     log_debug("Action phase started!")
 

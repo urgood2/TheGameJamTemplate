@@ -13,6 +13,7 @@
 #include "core/globals.hpp"
 
 #include "core/init.hpp"
+#include "spdlog/spdlog.h"
 #include "systems/camera/camera_manager.hpp"
 #include "systems/collision/broad_phase.hpp"
 #include "systems/layer/layer_optimized.hpp"
@@ -5104,6 +5105,9 @@ void rectangle(float x, float y, float w, float h, std::optional<float> rx,
   const bool doStroke = lineWidth.has_value();
   const bool doFill = color.has_value() && !doStroke;
   Color C = color.value_or(defaultColor());
+  
+  //pprint color value
+  SPDLOG_DEBUG("rectangle color: {} {} {} {}", C.r, C.g, C.b, C.a);
 
   if (rx.has_value() || ry.has_value()) {
     // Raylib uses [0..1] roundness proportion of min(width,height).

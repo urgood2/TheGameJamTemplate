@@ -815,14 +815,17 @@ function startTriggerNSecondsTimer()
             
             -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
             local pulseObject = Node{}
-            pulseObject.lifetime = 0.7
+            pulseObject.lifetime = 0.3
             pulseObject.age = 0.0
             pulseObject.update = function(self, dt)
+                local addedScaleAmount = 0.3
+                
                 self.age = self.age + dt
                 
                 -- make scale & alpha based on age
                 local alpha = 1.0 - outCubic(math.min(1.0, self.age / self.lifetime))
-                local scale = 1.0 + 0.5 * outCubic(math.min(1.0, self.age / self.lifetime))
+                local scale = 1.0 + addedScaleAmount * outCubic(math.min(1.0, self.age / self.lifetime))
+                local e = math.min(1.0, self.age / self.lifetime) -- 0 to 1 over lifetime
                 
                 -- choose your start/end colors (any names or explicit RGBA)
                 local fromColor = palette.snapToColorName("yellow")
@@ -834,6 +837,12 @@ function startTriggerNSecondsTimer()
                 local b = lerp(fromColor.b, toColor.b, e)
                 local a = lerp(fromColor.a or 255, toColor.a or 255, e)
                 
+                -- make sure they're integers
+                r = math.floor(r + 0.5)
+                g = math.floor(g + 0.5)
+                b = math.floor(b + 0.5)
+                a = math.floor(a + 0.5)
+                
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     local t = registry:get(triggerCardEid, Transform)
                     c.x = t.actualX + t.actualW * 0.5
@@ -842,7 +851,7 @@ function startTriggerNSecondsTimer()
                     c.h = t.actualH * scale
                     c.rx = 15
                     c.ry = 15
-                    c.color = Color.new(r, g, b, a)
+                    c.color = Col(r, g, b, a)
                     
                 end, z_orders.card - 1, layer.DrawCommandSpace.World)
             end

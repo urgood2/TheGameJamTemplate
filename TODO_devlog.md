@@ -24,3 +24,6 @@
 10/13/2025
   - Card stacks can be moved to and from card areas and behave like normal cards.
   - Card stacks can be unstacked by dragging the root card into the "free card" field.
+  - Timer trigger now pulses when placed in the trigger slot.
+  - Added some basic triggers and actions and modifiers as data.
+  - Only modifiers can stack on top of actions now.

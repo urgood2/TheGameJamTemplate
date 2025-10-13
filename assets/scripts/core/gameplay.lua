@@ -39,6 +39,24 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
     end
 end
 
+function resetCardStackZOrder(rootCardEntityID)
+    local rootCardScript = getScriptTableFromEntityID(rootCardEntityID)
+    if not rootCardScript or not rootCardScript.cardStack then return end
+    local baseZ = z_orders.card
+    
+    -- give root entity the base z order
+    layer_order_system.assignZIndexToEntity(rootCardScript:handle(), baseZ)
+    
+    -- now for every card in the stack, give it a z order above the root
+    for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
+        if stackedCardEid and registry:valid(stackedCardEid) then
+            local stackedTransform = registry:get(stackedCardEid, Transform)
+            local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
+            layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
+        end
+    end
+end
+
 function createNewBoard(x, y, w, h) 
    
     local board = Node{}
@@ -167,6 +185,13 @@ function createNewBoard(x, y, w, h)
             end
         end
         
+        -- TODO: check it isn't part of a stack. if it is, add to the board only if it's the root entity of the stack.
+        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity ~= released then
+            log_debug("released card is part of a stack, and is not the root. not adding to board")
+            return
+        end
+        
+        
         -- remove it from any existing board it may be in
         for boardEid, boardScript in pairs(boards) do
             if boardScript and boardScript.cards then
@@ -180,9 +205,57 @@ function createNewBoard(x, y, w, h)
         
         -- add it to this board
         addCardToBoard(released, board:handle())
+        
+        -- if this card was part of a stack, reset the z-orders of the stack
+        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released then
+            resetCardStackZOrder(releasedCardScript:handle())
+        end
     end
     
     return board:handle()
+end
+
+function addCardToStack(rootCardScript, cardScriptToAdd)
+    if not rootCardScript or not rootCardScript.cardStack then return end
+    for _, cardEid in ipairs(rootCardScript.cardStack) do
+        if cardEid == cardScriptToAdd:handle() then
+            log_debug("card is already in the stack, not adding again")
+            return
+        end
+    end
+    table.insert(rootCardScript.cardStack, cardScriptToAdd:handle())
+    -- also store a reference to the root entity in self
+    cardScriptToAdd.stackRootEntity = rootCardScript:handle()
+    -- mark as stack child
+    cardScriptToAdd.isStackChild = true    
+end
+
+function removeCardFromStack(rootCardScript, cardScriptToRemove)
+    if not rootCardScript or not rootCardScript.cardStack then return end
+    
+    -- is the card the root of a stack? then remove all children
+    if rootCardScript.stackRootEntity == rootCardScript:handle() then
+        for _, cardEid in ipairs(rootCardScript.cardStack) do
+            local childCardScript = getScriptTableFromEntityID(cardEid)
+            if childCardScript then
+                childCardScript.stackRootEntity = nil
+                childCardScript.isStackChild = false 
+            end
+        end
+        rootCardScript.cardStack = {}
+        return
+    end
+    
+    for i, cardEid in ipairs(rootCardScript.cardStack) do
+        if cardEid == cardScriptToRemove:handle() then
+            table.remove(rootCardScript.cardStack, i)
+            -- also clear the reference to the root entity in self
+            cardScriptToRemove.stackRootEntity = nil
+            -- unmark as stack child
+            cardScriptToRemove.isStackChild = false 
+            return
+        end
+    end
 end
 
 function createNewCard(boardEntityID, isStackable)
@@ -262,15 +335,14 @@ function createNewCard(boardEntityID, isStackable)
     nodeComp.methods.onRelease = function(registry, releasedOn, released)
         log_debug("card", released, "released on", releasedOn)
         
-        
-        
-        
         -- when released on top of a card, get the root card of the stack if there is one, and add self to that stack 
         
         
         -- get the card script table
         local releasedCardScript = getScriptTableFromEntityID(released)
+        local releasedOnCardScript = getScriptTableFromEntityID(releasedOn)
         if not releasedCardScript then return end
+        if not releasedOnCardScript then return end
         
         -- check stackRootEntity in the table. Also, check that isStackable is true
         if not releasedCardScript.isStackable then
@@ -278,43 +350,36 @@ function createNewCard(boardEntityID, isStackable)
             return
         end
         
-        -- repeated climb tree to find the root entity from the releasedOn
-        while true do
-            if not releasedOn or releasedOn == entt_null or not registry:valid(releasedOn) then
-                break
-            end
-            local releasedOnScript = getScriptTableFromEntityID(releasedOn)
-            if not releasedOnScript then
-                break
-            end
-            if not releasedOnScript.isStackable or not releasedOnScript.stackRootEntity then
-                break
-            end
-            -- climb up the tree
-            releasedOn = releasedOnScript.stackRootEntity
-            break -- we just need to find it once
+        -- check that the released entity is not already a stack root
+        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released then
+            log_debug("released card is already a stack root, not stacking on self")
+            return
         end
         
-        -- is the root entity a valid entity?
-        local rootEntity = releasedOn or releasedCardScript.stackRootEntity
-        if not rootEntity or rootEntity == entt_null or not registry:valid(rootEntity) then
-            log_debug("released card has no valid stackRootEntity, setting to self")
-            releasedCardScript.stackRootEntity = released
-            rootEntity = released
+        local rootCardScript = nil
+        
+        -- if the card released on has no root, then make it the root.
+        if not releasedOnCardScript.stackRootEntity then
+            rootCardScript = releasedOnCardScript
+            releasedOnCardScript.stackRootEntity = releasedOnCardScript:handle()
+            releasedOnCardScript.cardStack = releasedOnCardScript.cardStack or {}
+            releasedCardScript.stackRootEntity = releasedOnCardScript:handle()
+        else 
+            -- if it has a root, use that instead.
+            rootCardScript = getScriptTableFromEntityID(releasedOnCardScript.stackRootEntity)
         end
         
-        -- now get the root entity's script
-        local rootCardScript = getScriptTableFromEntityID(rootEntity)
         if not rootCardScript then
-            log_debug("released card's stackRootEntity has no valid script table, bail")
+            log_debug("could not find root card script")
             return
         end
         
         -- add self to the root entity's stack, if self is not the root
-        if rootEntity == released then
+        if rootCardScript:handle() == released then
             log_debug("released card is the root entity, not stacking on self")
             return
         end
+        
         -- make sure neither card is already in a stack and they're being dropped onto each other by accident. It's weird, but sometimes root can be dropped on a member card.
         if rootCardScript.cardStack then
             for _, e in ipairs(rootCardScript.cardStack) do
@@ -323,22 +388,17 @@ function createNewCard(boardEntityID, isStackable)
                     return
                 end
             end
-        elseif releasedCardScript.cardStack then
-            for _, e in ipairs(releasedCardScript.cardStack) do
-                if e == rootEntity then
-                    log_debug("root entity is already in the released card's stack, not stacking again")
-                    return
-                end
-            end
+        elseif releasedCardScript.isStackChild then
+            log_debug("released card is already a child in another stack, not stacking again")
+            return
         end
-        rootCardScript.cardStack = rootCardScript.cardStack or {}
-        table.insert(rootCardScript.cardStack, released)
+        addCardToStack(rootCardScript, releasedCardScript)
         
         -- after adding to the stack, update the z-orders from bottom up.
         local baseZ = z_orders.card
         
         -- give root entity the base z order
-        layer_order_system.assignZIndexToEntity(rootEntity, baseZ)
+        layer_order_system.assignZIndexToEntity(rootCardScript:handle(), baseZ)
         
         -- now for every card in the stack, give it a z order above the root
         for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
@@ -349,14 +409,14 @@ function createNewCard(boardEntityID, isStackable)
             end
         end
         
-        -- also store a reference to the root entity in self
-        cardScript.stackRootEntity = rootEntity
-        
     end
     
     nodeComp.methods.onDrag = function()
         
-        if not boardEntityID then return end
+        if not boardEntityID then 
+            layer_order_system.assignZIndexToEntity(card1, z_orders.top_card)
+            return 
+        end
         
         local board = boards[boardEntityID]
         -- dunno why, board can be nil
@@ -370,7 +430,10 @@ function createNewCard(boardEntityID, isStackable)
     
     nodeComp.methods.onStopDrag = function()
         
-        if not boardEntityID then return end
+        if not boardEntityID then 
+            layer_order_system.assignZIndexToEntity(card1, z_orders.card)
+            return 
+        end
         
         local board = boards[boardEntityID]
         -- dunno why, board can be nil
@@ -573,12 +636,14 @@ function initGameArea()
             -- is the released entity a card?
             local releasedCardScript = getScriptTableFromEntityID(released)
             if not releasedCardScript then return end   
+            local isInBoard = false
             -- remove it from any existing board it may be in
             for boardEid, boardScript in pairs(boards) do
                 if boardScript and boardScript.cards then
                     for i, eid in ipairs(boardScript.cards) do
                         if eid == released then
                             table.remove(boardScript.cards, i)
+                            isInBoard = true
                         end
                     end
                 end
@@ -588,6 +653,41 @@ function initGameArea()
             if t then
                 t.actualY = t.visualY
                 t.actualX = t.visualX + 500
+            end
+            -- is the card part of a stack? if it was previously part of a board, just call reset Z order.
+            if releasedCardScript.stackRootEntity and isInBoard then
+                resetCardStackZOrder(releasedCardScript.stackRootEntity)
+            end
+            
+            -- if the card is the root of a stack, and it wasn't part of a board, remove all children from the stack
+            if releasedCardScript.stackRootEntity and not isInBoard then
+                -- remove the children and add them to a table.
+                local rootCardScript = getScriptTableFromEntityID(releasedCardScript.stackRootEntity)
+                local removedCards = {}
+                if rootCardScript then
+                    for _, childEid in ipairs(rootCardScript.cardStack) do
+                        local childCardScript = getScriptTableFromEntityID(childEid)
+                        removeCardFromStack(rootCardScript, childCardScript)
+                        table.insert(removedCards, childCardScript)
+                    end
+                end
+                
+                -- for each child, set a new position, varying slighty at random from the root card
+                local delay = 0.3
+                local locationOffset = 100
+                for i, childCardScript in ipairs(removedCards) do
+                    timer.after(delay * (i - 1), function()
+                        if childCardScript and childCardScript:handle() and registry:valid(childCardScript:handle()) then
+                            local t = registry:get(releasedCardScript:handle(), Transform)
+                            local ct = registry:get(childCardScript:handle(), Transform)
+                            if t and ct then
+                                ct.actualX = t.actualX + lume.random(-locationOffset, locationOffset)
+                                ct.actualY = t.actualY + lume.random(-locationOffset, locationOffset)
+                            end
+                        end
+                    end)
+                end
+                        
             end
             
         end

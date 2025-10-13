@@ -11,7 +11,7 @@ function node:init(args) end
 
 -- Called every frame by script_system_update()
 function node:update(dt)
-    print('node [#' .. self.id() .. '] update()', transform)
+    -- print('node [#' .. self.id() .. '] update()', transform)
     -- local transform = self.owner:get(self.id(), Transform)
     
     -- coroutine task example
@@ -21,7 +21,7 @@ function node:update(dt)
     --     print("end")
     --   end)
     
-    print("tasks active:", task.count_tasks(self))
+    -- print("tasks active:", task.count_tasks(self))
 end
 
 -- Called just before the entity is destroyed

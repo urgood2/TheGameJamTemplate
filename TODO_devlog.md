@@ -30,7 +30,10 @@
   - Actions pulse when triggered.
 
 10/14/2025
-  - Added trap action (stationary AoE damage zone).
   - Added SFX for triggers & cards.
   - Added shoot bullet action.
+  - Added strength bonus action.
+  - Added trap action (stationary AoE damage zone).
+  - Added basic enemies that spawn randomly in and move toward the player.
+  - Added the "double_effect" modifier that makes actions happen twice.
   

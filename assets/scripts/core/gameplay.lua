@@ -949,7 +949,7 @@ function spawnRandomTrapHazard()
     hazardTransform.visualY = hazardY
     
     -- jiggle
-    transform.InjectDynamicMotionDefault(hazard)
+    hazardTransform.visualS = 1.5
     
     -- give physics & node        
     local info = { shape = "rectangle", tag = "spike_hazard", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
@@ -1611,6 +1611,11 @@ function initActionPhase()
                 true             -- use animation, not sprite identifier, if false
             )
             
+            -- set it to a random position
+            local enemyTransform = registry:get(enemyEntity, Transform)
+            enemyTransform.actualX = math.random(50, globals.screenWidth() * 2 - 50)
+            enemyTransform.actualY = math.random(50, globals.screenHeight() * 2 - 50)
+            
             -- give it physics
             local info = { shape = "rectangle", tag = "enemy", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
             physics.create_physics_for_transform(registry,
@@ -1636,7 +1641,7 @@ function initActionPhase()
                 
                 steering.seek_point(registry, enemyEntity, playerLocation, 1.0, 0.5)
                 -- steering.flee_point(registry, player, {x=playerT.actualX + playerT.actualW/2, y=playerT.actualY + playerT.actualH/2}, 300.0, 1.0)
-                steering.wander(registry, enemyEntity, 60.0, 300.0, 40.0, 2.5)
+                steering.wander(registry, enemyEntity, 20.0, 150.0, 40.0, 0.5)
                 
                 -- steering.path_follow(registry, player, 1.0, 1.0)
                 

@@ -26,7 +26,10 @@
     
     
 # programming side
+- link up the combat stat system with the traps and strength bonus action.
+- make some basic enemies that wander toward player.
 - add basic triggers, actions, and modifiers and hook them up to gameplay.
+- mods projectile_pierces_twice and summon_minion_wandering not implemented. why is minion wandering a mod?
 
 # errors
 - card areas don't shift cards reliably when there are lots of cards in an area, and cards are dragged around inside -> probably a bug in the card area shifting logic.
@@ -36,6 +39,7 @@
 # design questions
 - should trigger slots only have one trigger, or multiple?
 - what properties do triggers have? delay between activations? chance to activate?
+- should there be limits to how many actions and modifiers you can add to a card or area?
 
 # ui/ux questions
 - should remove area only appear when player drags a card?

@@ -1507,16 +1507,16 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             // -- draw physics world
             
-            camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
-            
-            
-            
-            physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
-            physicsWorld->DebugDrawContacts();
-            
+            if (globals::drawDebugInfo) {
+                camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
+                
+                
+                physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
+                physicsWorld->DebugDrawContacts();
+                
 
-            camera_manager::End(); // end camera mode for the physics world
-            
+                camera_manager::End(); // end camera mode for the physics world
+            }
             
             fade_system::draw();
             

@@ -10,6 +10,7 @@ local z_orders = {
   
   -- game scene
   projectiles = 10,
+  player_vfx = 20,
 }
 
 return z_orders

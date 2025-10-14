@@ -857,6 +857,181 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
 end
 
 
+function spawnRandomBullet() 
+    
+    
+    local playerTransform = registry:get(survivorEntity, Transform)
+    
+    local node = Node{}
+    node.lifetime = 2.0
+    node.age = 0.0
+    node.update = function(self, dt)
+        self.age = self.age + dt
+        
+        -- draw a circle
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            local t = registry:get(self:handle(), Transform)
+            c.x = t.actualX + t.actualW * 0.5
+            c.y = t.actualY + t.actualH * 0.5
+            c.rx = t.actualW * 0.5
+            c.ry = t.actualH * 0.5
+            c.color = palette.snapToColorName("red")
+        end, z_orders.projectiles, layer.DrawCommandSpace.World)
+    end
+    node:attach_ecs{ create_new = true }
+    node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
+    
+    --TODO: auto-target nearest enemy in range. For now, random direction.
+    
+    -- give transform
+    local centerX = playerTransform.actualX + playerTransform.actualW * 0.5
+    local centerY = playerTransform.actualY + playerTransform.actualH * 0.5
+    transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), centerX, centerY, 16, 16, node:handle())
+    
+    -- give physics.
+    
+    local world = PhysicsManager.get_world("world")
+
+    local info = { shape = "circle", tag = "bullet", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+    physics.create_physics_for_transform(registry,
+        physics_manager_instance, -- global instance
+        node:handle(), -- entity id
+        "world", -- physics world identifier
+        info
+    )
+    
+    -- ignore damping
+    physics.SetBullet(world, node:handle(), true)
+    
+    -- give a random velocity
+    local angle = math.random() * math.pi * 2.0
+    local speed = 300.0
+    local vx = math.cos(angle) * speed
+    local vy = math.sin(angle) * speed
+    physics.SetVelocity(world, node:handle(), vx, vy)
+end
+
+function spawnRandomTrapHazard()
+    
+    local playerTransform = registry:get(survivorEntity, Transform)
+    
+    -- make animated object
+    local hazard = animation_system.createAnimatedObjectWithTransform(
+        "b3997.png", -- animation ID
+        true             -- use animation, not sprite identifier, if false
+    )
+    
+    -- give state tag
+    add_state_tag(hazard, ACTION_STATE)
+    
+    -- resize
+    animation_system.resizeAnimationObjectsInEntityToFit(
+        hazard,
+        32 * 2,   -- width
+        32 * 2    -- height
+    )
+    
+    -- position it in front of the player, at a random offset
+    local offsetDistance = 80.0
+    local angle = (math.random() * 0.5 - 0.25) * math.pi -- random angle between -45 and +45 degrees
+    local offsetX = math.cos(angle) * offsetDistance
+    local offsetY = math.sin(angle) * offsetDistance
+    local playerCenterX = playerTransform.actualX + playerTransform.actualW * 0.5
+    local playerCenterY = playerTransform.actualY + playerTransform.actualH * 0.5
+    local hazardX = playerCenterX + offsetX - 32 -- center the hazard
+    local hazardY = playerCenterY + offsetY - 32
+    
+    -- snap visual to actual
+    local hazardTransform = registry:get(hazard, Transform)
+    hazardTransform.actualX = hazardX
+    hazardTransform.actualY = hazardY
+    hazardTransform.visualX = hazardX
+    hazardTransform.visualY = hazardY
+    
+    -- jiggle
+    transform.InjectDynamicMotionDefault(hazard)
+    
+    -- give physics & node        
+    local info = { shape = "rectangle", tag = "spike_hazard", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+    physics.create_physics_for_transform(registry,
+        physics_manager_instance, -- global instance
+        hazard, -- entity id
+        "world", -- physics world identifier
+        info
+    )
+    
+    
+    local node = Node{}
+    node.lifetime = 8.0 --TODO: base lifetime on some kind of stat, maybe?
+    node.age = 0.0
+    node.update = function(self, dt)
+        self.age = self.age + dt    
+    end
+    
+    node:attach_ecs{ create_new = false, existing_entity = hazard }
+    node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
+end
+
+function applyPlayerStrengthBonus()
+    
+    playSoundEffect("effects", "strength_bonus", 0.9 + math.random() * 0.2)
+    
+    local playerTransform = registry:get(survivorEntity, Transform)
+    
+    -- make a node
+    local node = Node{}
+    node.lifetime = 1.0 -- lasts for 10 seconds
+    node.age = 0.0
+    node.update = function(self, dt)
+        self.age = self.age + dt
+        
+        local tweenProgress = math.min(1.0, self.age / self.lifetime)
+        
+        -- draw a series of vertical lines on the player that move up and lengthen over time, cubically.
+        
+        local numlines = 5
+        local baseHeight = playerTransform.actualH * 0.3
+        local addedHeight = playerTransform.actualH * 0.7
+        
+        local startColor = palette.snapToColorName("white")
+        local endColor = palette.snapToColorName("red")
+        
+        local t = registry:get(survivorEntity, Transform)
+        local centerX = t.actualX + t.actualW * 0.5
+        local baseY = t.actualY + t.actualH
+        
+        for i = 1, numlines do
+            local lineProgress = (i - 1) / (numlines - 1)
+            local x = centerX + (lineProgress - 0.5) * t.actualW * 0.8
+            local h = baseHeight + addedHeight * Easing.outExpo.f(tweenProgress) * (0.5 + 0.5 * lineProgress)
+            
+            -- interpolate color
+            local r = lerp(startColor.r, endColor.r, tweenProgress)
+            local g = lerp(startColor.g, endColor.g, tweenProgress)
+            local b = lerp(startColor.b, endColor.b, tweenProgress)
+            local a = lerp(startColor.a or 255, endColor.a or 255, tweenProgress)
+            
+            -- make sure they're integers
+            r = math.floor(r + 0.5)
+            g = math.floor(g + 0.5)
+            b = math.floor(b + 0.5)
+            a = math.floor(a + 0.5)
+            
+            -- draw the lines
+            command_buffer.queueDrawLine(layers.sprites, function(c)
+                    c.x1 = x
+                    c.y1 = baseY
+                    c.x2 = x
+                    c.y2 = baseY - h
+                    c.color = Col(r, g, b, a)
+                    c.lineWidth = 2
+                end, z_orders.player_vfx, layer.DrawCommandSpace.World)
+        end
+    end
+    node:attach_ecs{ create_new = true }
+    node:destroy_when(function(self, eid) return self.age >= self.lifetime end)
+end
+
 function fireActionCardWithModifiers(cardEntityID, executionIndex)
     if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
     local cardScript = getScriptTableFromEntityID(cardEntityID)
@@ -867,129 +1042,72 @@ function fireActionCardWithModifiers(cardEntityID, executionIndex)
     
     log_debug("Firing action card:", cardScript.cardID)
     
-    -- for now, we'll handle bolt, spike hazard, and strength bonus
-    
     
     local pitchIncrement = 0.1;
     
     -- play a sound
     playSoundEffect("effects", "card_activate", 0.9 + pitchIncrement * (executionIndex or 0))
     
+    
+    
+    -- first, let's see if the card has any modifiers stacked on it, and log them
+    
+    local modsTable = {}
+    
+    if cardScript.cardStack and #cardScript.cardStack > 0 then
+        log_debug("Card has", #cardScript.cardStack, "modifiers stacked on it:")
+        for i, modEid in ipairs(cardScript.cardStack) do
+            local modCardScript = getScriptTableFromEntityID(modEid)
+            if modCardScript then
+                log_debug(" - modifier", i, ":", modCardScript.cardID)
+                table.insert(modsTable, modCardScript.cardID)
+            end
+        end
+    end
+    
+    
+    -- for now, we'll handle bolt, spike hazard, and strength bonus
+    
+    
+    
     -- let's see what the card ID is and do something based on that
     if cardScript.cardID == "fire_basic_bolt" then
         -- create a basic bolt projectile in a random direction.
         
-        local node = Node{}
-        node.lifetime = 2.0
-        node.age = 0.0
-        node.update = function(self, dt)
-            self.age = self.age + dt
-            
-            -- draw a circle
-            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-                local t = registry:get(self:handle(), Transform)
-                c.x = t.actualX + t.actualW * 0.5
-                c.y = t.actualY + t.actualH * 0.5
-                c.rx = t.actualW * 0.5
-                c.ry = t.actualH * 0.5
-                c.color = palette.snapToColorName("red")
-            end, z_orders.projectiles, layer.DrawCommandSpace.World)
+        -- play sound once, doesn't make sense to play multiple times
+        playSoundEffect("effects", "fire_bolt", 0.9 + math.random() * 0.2)
+    
+        spawnRandomBullet()
+        
+        -- if mods contains double_effect, do it again
+        if lume.find(modsTable, "double_effect") then
+            spawnRandomBullet()
         end
-        node:attach_ecs{ create_new = true }
-        node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
-        
-        --TODO: auto-target nearest enemy in range. For now, random direction.
-        
-        -- give transform
-        local centerX = playerTransform.actualX + playerTransform.actualW * 0.5
-        local centerY = playerTransform.actualY + playerTransform.actualH * 0.5
-        transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), centerX, centerY, 16, 16, node:handle())
-        
-        -- give physics.
-        
-        local world = PhysicsManager.get_world("world")
-
-        local info = { shape = "circle", tag = "bullet", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
-        physics.create_physics_for_transform(registry,
-            physics_manager_instance, -- global instance
-            node:handle(), -- entity id
-            "world", -- physics world identifier
-            info
-        )
-        
-        -- ignore damping
-        physics.SetBullet(world, node:handle(), true)
-        
-        -- give a random velocity
-        local angle = math.random() * math.pi * 2.0
-        local speed = 300.0
-        local vx = math.cos(angle) * speed
-        local vy = math.sin(angle) * speed
-        physics.SetVelocity(world, node:handle(), vx, vy)
-        
         
     elseif cardScript.cardID == "leave_spike_hazard" then
         -- create a spike hazard at a random position in front of the player
         
-        -- make animated object
-        local hazard = animation_system.createAnimatedObjectWithTransform(
-            "b3997.png", -- animation ID
-            true             -- use animation, not sprite identifier, if false
-        )
+        playSoundEffect("effects", "place_trap", 0.9 + math.random() * 0.2)
         
-        -- give state tag
-        add_state_tag(hazard, ACTION_STATE)
+        spawnRandomTrapHazard()
         
-        -- resize
-        animation_system.resizeAnimationObjectsInEntityToFit(
-            hazard,
-            32 * 2,   -- width
-            32 * 2    -- height
-        )
-        
-        -- position it in front of the player, at a random offset
-        local offsetDistance = 80.0
-        local angle = (math.random() * 0.5 - 0.25) * math.pi -- random angle between -45 and +45 degrees
-        local offsetX = math.cos(angle) * offsetDistance
-        local offsetY = math.sin(angle) * offsetDistance
-        local playerCenterX = playerTransform.actualX + playerTransform.actualW * 0.5
-        local playerCenterY = playerTransform.actualY + playerTransform.actualH * 0.5
-        local hazardX = playerCenterX + offsetX - 32 -- center the hazard
-        local hazardY = playerCenterY + offsetY - 32
-        
-        -- snap visual to actual
-        local hazardTransform = registry:get(hazard, Transform)
-        hazardTransform.actualX = hazardX
-        hazardTransform.actualY = hazardY
-        hazardTransform.visualX = hazardX
-        hazardTransform.visualY = hazardY
-        
-        -- jiggle
-        transform.InjectDynamicMotionDefault(hazard)
-        
-        -- give physics & node        
-        local info = { shape = "rectangle", tag = "spike_hazard", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
-        physics.create_physics_for_transform(registry,
-            physics_manager_instance, -- global instance
-            hazard, -- entity id
-            "world", -- physics world identifier
-            info
-        )
-        
-        
-        local node = Node{}
-        node.lifetime = 8.0 --TODO: base lifetime on some kind of stat, maybe?
-        node.age = 0.0
-        node.update = function(self, dt)
-            self.age = self.age + dt    
+        -- if mods contains double_effect, do it again
+        if lume.find(modsTable, "double_effect") then
+            spawnRandomTrapHazard()
         end
         
-        node:attach_ecs{ create_new = false, existing_entity = hazard }
-        node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
-        
-    elseif cardScript.cardID == "strength_bonus" then
+    elseif cardScript.cardID == "temporary_strength_bonus" then
         -- for now, just log it
         log_debug("Strength bonus activated! (no effect yet)")
+        
+        applyPlayerStrengthBonus()
+        
+        -- if mods contains double_effect, wait a bit, then do it again.
+        if lume.find(modsTable, "double_effect") then
+            timer.after(1.1, function()
+                applyPlayerStrengthBonus()
+            end)
+        end
         
     else
         log_debug("Unknown action card ID:", cardScript.cardID)
@@ -1408,6 +1526,14 @@ function initActionPhase()
     -- give survivor a script and hook up
     local survivorScript = Node{}
     -- TODO: add update method here if needed
+    survivorScript.update = function(self, dt)
+        local t = registry:get(self:handle(), Transform)
+        if t then
+            -- make sure visual matches actual, so there's no lag and vfx always stays on the player
+            t.visualX = t.actualX
+            t.visualY = t.actualY
+        end
+    end
     survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
     
     -- give survivor physics.

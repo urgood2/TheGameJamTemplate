@@ -28,3 +28,9 @@
   - Added some basic triggers and actions and modifiers as data.
   - Only modifiers can stack on top of actions now.
   - Actions pulse when triggered.
+
+10/14/2025
+  - Added trap action (stationary AoE damage zone).
+  - Added SFX for triggers & cards.
+  - Added shoot bullet action.
+  

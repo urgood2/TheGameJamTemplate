@@ -216,6 +216,9 @@ end
 --- Build a ramp between two named swatches; N steps ≥ 2.
 --- Each step is snapped back to the palette (strict output). Returns {Color,...}.
 function palette.ramp_quantized(nameA, nameB, steps)
+  if (steps or 0) < 2 then 
+    return { palette.snapToColorName(nameA), palette.snapToColorName(nameB) }
+  end
   assert(steps and steps>=2, "steps >= 2 required")
   local A = palette.snapToColorName(nameA)
   local B = palette.snapToColorName(nameB)

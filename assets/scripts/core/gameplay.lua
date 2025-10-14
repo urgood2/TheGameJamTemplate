@@ -1516,6 +1516,7 @@ function initActionPhase()
     world:AddCollisionTag("player")
     world:AddCollisionTag("bullet")
     world:AddCollisionTag("trap")
+    world:AddCollisionTag("enemy")
     
     -- 3856-TheRoguelike_1_10_alpha_649.png
     survivorEntity = animation_system.createAnimatedObjectWithTransform(
@@ -1600,6 +1601,56 @@ function initActionPhase()
     input.set_context("gameplay") -- set the input context to gameplay
     
     
+    -- lets make a timer that, if action state is active, spawn an enemy every few seconds
+    timer.every(5.0, function()
+        if is_state_active(ACTION_STATE) then
+            
+            -- animation entity
+            local enemyEntity = animation_system.createAnimatedObjectWithTransform(
+                "b453.png", -- animation ID
+                true             -- use animation, not sprite identifier, if false
+            )
+            
+            -- give it physics
+            local info = { shape = "rectangle", tag = "enemy", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+            physics.create_physics_for_transform(registry,
+                physics_manager_instance, -- global instance
+                enemyEntity, -- entity id
+                "world", -- physics world identifier
+                info
+            )
+            
+            -- make it steerable
+            -- steering
+            steering.make_steerable(registry, enemyEntity, 140.0, 2000.0, math.pi*2.0, 2.0)
+            
+            timer.run(function()
+                local t = registry:get(enemyEntity, Transform)
+                
+                local playerLocation = {x=0,y=0}
+                local playerT = registry:get(survivorEntity, Transform)
+                if playerT then
+                    playerLocation.x = playerT.actualX + playerT.actualW/2
+                    playerLocation.y = playerT.actualY + playerT.actualH/2
+                end
+                
+                steering.seek_point(registry, enemyEntity, playerLocation, 1.0, 0.5)
+                -- steering.flee_point(registry, player, {x=playerT.actualX + playerT.actualW/2, y=playerT.actualY + playerT.actualH/2}, 300.0, 1.0)
+                steering.wander(registry, enemyEntity, 60.0, 300.0, 40.0, 2.5)
+                
+                -- steering.path_follow(registry, player, 1.0, 1.0)
+                
+                -- run every frame for this to work
+                -- physics.ApplyTorque(world, player, 1000)
+
+            end)
+            
+            
+            
+        end
+    end,
+    nil,
+    "spawnEnemyTimer")
     
 end
 

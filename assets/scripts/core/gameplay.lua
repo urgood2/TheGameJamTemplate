@@ -898,7 +898,7 @@ function fireActionCardWithModifiers(cardEntityID, executionIndex)
         node:attach_ecs{ create_new = true }
         node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
         
-        
+        --TODO: auto-target nearest enemy in range. For now, random direction.
         
         -- give transform
         local centerX = playerTransform.actualX + playerTransform.actualW * 0.5
@@ -906,12 +906,9 @@ function fireActionCardWithModifiers(cardEntityID, executionIndex)
         transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), centerX, centerY, 16, 16, node:handle())
         
         -- give physics.
-        --TODO: move this to init.
-        local world = PhysicsManager.get_world("world")
-        world:AddCollisionTag("sensor")
-        world:AddCollisionTag("player")
-        world:AddCollisionTag("bullet")
         
+        local world = PhysicsManager.get_world("world")
+
         local info = { shape = "circle", tag = "bullet", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
         physics.create_physics_for_transform(registry,
             physics_manager_instance, -- global instance
@@ -933,6 +930,62 @@ function fireActionCardWithModifiers(cardEntityID, executionIndex)
         
     elseif cardScript.cardID == "leave_spike_hazard" then
         -- create a spike hazard at a random position in front of the player
+        
+        -- make animated object
+        local hazard = animation_system.createAnimatedObjectWithTransform(
+            "b3997.png", -- animation ID
+            true             -- use animation, not sprite identifier, if false
+        )
+        
+        -- give state tag
+        add_state_tag(hazard, ACTION_STATE)
+        
+        -- resize
+        animation_system.resizeAnimationObjectsInEntityToFit(
+            hazard,
+            32 * 2,   -- width
+            32 * 2    -- height
+        )
+        
+        -- position it in front of the player, at a random offset
+        local offsetDistance = 80.0
+        local angle = (math.random() * 0.5 - 0.25) * math.pi -- random angle between -45 and +45 degrees
+        local offsetX = math.cos(angle) * offsetDistance
+        local offsetY = math.sin(angle) * offsetDistance
+        local playerCenterX = playerTransform.actualX + playerTransform.actualW * 0.5
+        local playerCenterY = playerTransform.actualY + playerTransform.actualH * 0.5
+        local hazardX = playerCenterX + offsetX - 32 -- center the hazard
+        local hazardY = playerCenterY + offsetY - 32
+        
+        -- snap visual to actual
+        local hazardTransform = registry:get(hazard, Transform)
+        hazardTransform.actualX = hazardX
+        hazardTransform.actualY = hazardY
+        hazardTransform.visualX = hazardX
+        hazardTransform.visualY = hazardY
+        
+        -- jiggle
+        transform.InjectDynamicMotionDefault(hazard)
+        
+        -- give physics & node        
+        local info = { shape = "rectangle", tag = "spike_hazard", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+        physics.create_physics_for_transform(registry,
+            physics_manager_instance, -- global instance
+            hazard, -- entity id
+            "world", -- physics world identifier
+            info
+        )
+        
+        
+        local node = Node{}
+        node.lifetime = 8.0 --TODO: base lifetime on some kind of stat, maybe?
+        node.age = 0.0
+        node.update = function(self, dt)
+            self.age = self.age + dt    
+        end
+        
+        node:attach_ecs{ create_new = false, existing_entity = hazard }
+        node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
         
     elseif cardScript.cardID == "strength_bonus" then
         -- for now, just log it
@@ -1340,6 +1393,12 @@ function initActionPhase()
     -- activate action state
     activate_state(ACTION_STATE)
     
+    local world = PhysicsManager.get_world("world")
+    world:AddCollisionTag("sensor")
+    world:AddCollisionTag("player")
+    world:AddCollisionTag("bullet")
+    world:AddCollisionTag("trap")
+    
     -- 3856-TheRoguelike_1_10_alpha_649.png
     survivorEntity = animation_system.createAnimatedObjectWithTransform(
         "3856-TheRoguelike_1_10_alpha_649.png", -- animation ID
@@ -1350,6 +1409,18 @@ function initActionPhase()
     local survivorScript = Node{}
     -- TODO: add update method here if needed
     survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
+    
+    -- give survivor physics.
+    local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"
+    physics.create_physics_for_transform(registry,
+        physics_manager_instance, -- global instance
+        survivorEntity, -- entity id
+        "world", -- physics world identifier
+        info
+    )
+    
+    -- allow transform manipuation to alter physics body
+    physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
     
     -- give a state tag to the survivor entity
     add_state_tag(survivorEntity, ACTION_STATE)

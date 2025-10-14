@@ -281,7 +281,6 @@ namespace physics {
     cpFloat mass = ci.sensor ? 0.1f : 1.0f;
     auto body = physics::MakeSharedBody(mass, /*moment*/INFINITY);
     physics::SetEntityToBody(body.get(), e);
-
     // Base size from ACTUAL W/H
     float base_w = std::max(1.f, T.getActualW());
     float base_h = std::max(1.f, T.getActualH());
@@ -290,10 +289,9 @@ namespace physics {
     const float w = std::max(1.f, base_w + 2.f * inflate_px);
     const float h = std::max(1.f, base_h + 2.f * inflate_px);
 
-    // Keep original center
-    const float cx = T.getActualX() + base_w * 0.5f;
-    const float cy = T.getActualY() + base_h * 0.5f;
-    
+    // Adjust center so inflated shape stays centered on original
+    const float cx = T.getActualX() + (base_w * 0.5f) - (inflate_px);
+    const float cy = T.getActualY() + (base_h * 0.5f) - (inflate_px);
     
     cpFloat moment = ComputeMoment(ci, mass, w, h);
     // If you must create body first, you can also set after:
@@ -405,6 +403,7 @@ namespace physics {
     auto body = physics::MakeSharedBody(mass, moment);
     physics::SetEntityToBody(body.get(), e);
 
+    
     cpBodySetPosition(body.get(), {T.getActualX() + w / 2, T.getActualY() + h / 2});
     cpBodySetAngle(body.get(), T.getActualRotation() * DEG2RAD);
 

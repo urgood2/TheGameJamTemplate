@@ -3,34 +3,25 @@
 
     "music": 
     {
-        "main-menu": "Main Menu Theme.wav",
-        "snow-ambiance": "Snow Ambience.wav",
-        "regular-ambiance": "Regular Ambience.wav",
-        "rain-ambiance": "Rain Ambience.wav",
-        "fair_weather": "Difficulty 1 Fair Weather.wav",
-        "acid_rain": "Difficulty 3 Acid Rain.wav",
-        "radioactive_snow": "Difficulty 4 Radioactive Snow.wav"
+        "space-ambiance": "AMBIENCE_SciFi_Space_Hangar_05_loop_stereo.wav"
     },
     "music_volume": 0.5,
     "categories": {
         "effects": {
             "sounds": {
-                "button-click": "UI_Click_Snappy_mono.wav" ,
-                "building-placed": "Building Place.wav",  
-                "building-plop": "Building Plop.wav",      
-                "damage-tick": "Damage Tick.wav",    
-                "dig-sound": "Dig Sound.wav",
-                "drop-duplicate": "Dropped into Duplicate Window.wav",
-                "duplicate": "Duplicate.wav",
-                "end-of-day": "End of Day.wav",
-                "gold-gain": "Gold Gain.wav",
-                "pick-up": "Pick Up.wav",
-                "shop-buy": "Shop Buy.wav",
-                "cannot-buy": "NOTIFICATION_Subtle_07_mono.wav",
-                "heal": "MAGIC_SPELL_Spawn_mono.wav",
-                "money-to-cash-pile": "CASH_REGISTER_Cha-ching_04_mono.wav",
-                "dodge": "FABRIC_Movement_Fast_01_mono.wav",
-                "die": "MONSTER_Breath_01_mono.wav"
+                "button-click": "UI_Click_Snappy_mono.wav",
+                
+                "card_activate": "CHURCH_BELL_03_mono.wav",
+                
+                "trigger_activate": "SNAP_Clean_mono.wav",
+                
+                "card_pick_up": "CARDS_Deal_02_RR1_mono.wav",
+                "card_put_down_1": "CARDS_Deal_01_RR1_mono.wav",
+                "card_put_down_2": "CARDS_Deal_01_RR2_mono.wav",
+                "card_put_down_3": "CARDS_Deal_01_RR3_mono.wav",
+                "card_put_down_4": "CARDS_Deal_01_RR4_mono.wav",
+                
+                "remove_area_triggered": "GORE_Deep_Short_Splat_02_mono.wav"
             },
             "volume": 0.3
         },

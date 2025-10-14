@@ -5107,7 +5107,7 @@ void rectangle(float x, float y, float w, float h, std::optional<float> rx,
   Color C = color.value_or(defaultColor());
   
   //pprint color value
-  SPDLOG_DEBUG("rectangle color: {} {} {} {}", C.r, C.g, C.b, C.a);
+  // SPDLOG_DEBUG("rectangle color: {} {} {} {}", C.r, C.g, C.b, C.a);
 
   if (rx.has_value() || ry.has_value()) {
     // Raylib uses [0..1] roundness proportion of min(width,height).

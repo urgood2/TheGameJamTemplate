@@ -8,6 +8,7 @@ local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior 
 local palette = require("color.palette")
 local TimerChain = require("core.timer_chain")
 local Easing = require("util.easing")
+local CombatSystem = require("combat.combat_system")
 
 --  let's make some card data
 local action_card_defs = {
@@ -53,6 +54,7 @@ ACTION_STATE = "SURVIVORS"
 survivorEntity = nil
 boards = {}
 trigger_board_id = nil
+action_board_id = nil
 
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
@@ -522,7 +524,12 @@ function createNewCard(category, id, x, y)
         
     end
     
+    
     nodeComp.methods.onDrag = function()
+        
+        
+        -- sound
+        -- playSoundEffect("effects", "card_pick_up", 1.0)
         
         if not boardEntityID then 
             layer_order_system.assignZIndexToEntity(card, z_orders.top_card)
@@ -535,11 +542,22 @@ function createNewCard(category, id, x, y)
         -- set z order to top so it can be seen
         cardScript.isDragging = true
         
+        
         log_debug("dragging card, bringing to top z:", board.z_orders.top)
         layer_order_system.assignZIndexToEntity(card, board.z_orders.top)
     end
     
     nodeComp.methods.onStopDrag = function()
+        
+        
+        -- sound
+        local putDownSounds = {
+            "card_put_down_1",
+            "card_put_down_2",
+            "card_put_down_3",
+            "card_put_down_4"
+        }
+        playSoundEffect("effects", lume.randomchoice(putDownSounds), 0.9 + math.random() * 0.2)
         
         if not boardEntityID then 
             layer_order_system.assignZIndexToEntity(card, z_orders.card)
@@ -559,6 +577,7 @@ function createNewCard(category, id, x, y)
         if cardScript.stackRootEntity and cardScript.stackRootEntity == card then
             resetCardStackZOrder(cardScript:handle())
         end
+        
     end
     
     
@@ -781,7 +800,120 @@ function getScriptTableFromEntityID(eid)
     return scriptComp.self
 end
 
+-- utility: linear interpolation
+local function lerp(a, b, t)
+    return a + (b - a) * t
+end
 
+function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
+    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
+    local cardTransform = registry:get(cardEntityID, Transform)
+    if not cardTransform then return end
+    
+    -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
+    local pulseObject = Node{}
+    pulseObject.lifetime = 0.3
+    pulseObject.age = 0.0
+    pulseObject.update = function(self, dt)
+        local addedScaleAmount = 0.3
+        
+        self.age = self.age + dt
+        
+        -- make scale & alpha based on age
+        local alpha = 1.0 - Easing.outQuart.f(math.min(1.0, self.age / self.lifetime))
+        local scale = 1.0 + addedScaleAmount * Easing.outQuart.f(math.min(1.0, self.age / self.lifetime))
+        local e = math.min(1.0, self.age / self.lifetime)
+        
+        local fromColor = startColor or palette.snapToColorName("yellow")
+        local toColor   = endColor or palette.snapToColorName("black")
+        
+        -- interpolate per channel
+        local r = lerp(fromColor.r, toColor.r, e)
+        local g = lerp(fromColor.g, toColor.g, e)
+        local b = lerp(fromColor.b, toColor.b, e)
+        local a = lerp(fromColor.a or 255, toColor.a or 255, e)
+        
+        -- make sure they're integers
+        r = math.floor(r + 0.5)
+        g = math.floor(g + 0.5)
+        b = math.floor(b + 0.5)
+        a = math.floor(a + 0.5)
+        
+        command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+            local t = registry:get(cardEntityID, Transform)
+            c.x = t.actualX + t.actualW * 0.5
+            c.y = t.actualY + t.actualH * 0.5
+            c.w = t.actualW * scale
+            c.h = t.actualH * scale
+            c.rx = 15
+            c.ry = 15
+            c.color = Col(r, g, b, a)
+            
+        end, z_orders.card - 1, layer.DrawCommandSpace.World)
+    end
+    pulseObject
+        :attach_ecs{ create_new = true }
+        :destroy_when(function(self, eid) return self.age >= self.lifetime end)
+end
+
+
+function fireActionCardWithModifiers(cardEntityID, executionIndex)
+    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
+    local cardScript = getScriptTableFromEntityID(cardEntityID)
+    if not cardScript then return end
+    
+    log_debug("Firing action card:", cardScript.cardID)
+    
+    -- for now, we'll handle bolt, spike hazard, and strength bonus
+    
+    
+    local pitchIncrement = 0.1;
+    
+    -- play a sound
+    playSoundEffect("effects", "card_activate", 0.9 + pitchIncrement * (executionIndex or 0))
+end
+
+-- TODO: handle things like cooldown, modifiers that change the effect, etc
+function fireActionCardsInBoard(boardEntityID)
+    if not boardEntityID or boardEntityID == entt_null or not registry:valid(boardEntityID) then return end
+    local board = boards[boardEntityID]
+    if not board or not board.cards or #board.cards == 0 then return end
+    
+    -- for now, just log the card ids in order
+    local cooldownBetweenActions = 0.5 -- seconds
+    local runningDelay = 0.3
+    local pulseColorRampTable = palette.ramp_quantized("blue", "white", #board.cards)
+    local index = 1
+    for _, cardEid in ipairs(board.cards) do
+        if cardEid and cardEid ~= entt_null and registry:valid(cardEid) then
+            local cardScript = getScriptTableFromEntityID(cardEid)
+            if cardScript then
+                
+                timer.after(
+                    runningDelay,
+                    function()
+                        -- log_debug("Firing action card:", cardScript.cardID)
+                        
+                        -- pulse and jiggle
+                        local cardTransform = registry:get(cardEid, Transform)
+                        if cardTransform then
+                            cardTransform.visualS = 2.0
+                            addPulseEffectBehindCard(cardEid, pulseColorRampTable[index], palette.snapToColorName("black"))    
+                        end
+                        
+                        -- actually execute the logic of the card
+                        fireActionCardWithModifiers(cardEid, index)
+                        
+                    end
+                )
+                
+                runningDelay = runningDelay + cooldownBetweenActions
+                
+            end
+        end
+        index = index + 1
+    end
+end
 function startTriggerNSecondsTimer()
     
     -- this timer should make the card pulse and jiggle + particles. Then it will go through the action board and execute all actions that are on it in sequence.
@@ -790,10 +922,7 @@ function startTriggerNSecondsTimer()
     
     local outCubic = Easing.outQuart.f -- the easing function, not the derivative
     
-    -- utility: linear interpolation
-    local function lerp(a, b, t)
-        return a + (b - a) * t
-    end
+    
     
     timer.every(
         3.0,
@@ -813,51 +942,14 @@ function startTriggerNSecondsTimer()
             local cardTransform = registry:get(triggerCardEid, Transform)
             cardTransform.visualS = 1.5
             
-            -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
-            local pulseObject = Node{}
-            pulseObject.lifetime = 0.3
-            pulseObject.age = 0.0
-            pulseObject.update = function(self, dt)
-                local addedScaleAmount = 0.3
-                
-                self.age = self.age + dt
-                
-                -- make scale & alpha based on age
-                local alpha = 1.0 - outCubic(math.min(1.0, self.age / self.lifetime))
-                local scale = 1.0 + addedScaleAmount * outCubic(math.min(1.0, self.age / self.lifetime))
-                local e = math.min(1.0, self.age / self.lifetime) -- 0 to 1 over lifetime
-                
-                -- choose your start/end colors (any names or explicit RGBA)
-                local fromColor = palette.snapToColorName("yellow")
-                local toColor   = palette.snapToColorName("black")
-
-                -- interpolate per channel
-                local r = lerp(fromColor.r, toColor.r, e)
-                local g = lerp(fromColor.g, toColor.g, e)
-                local b = lerp(fromColor.b, toColor.b, e)
-                local a = lerp(fromColor.a or 255, toColor.a or 255, e)
-                
-                -- make sure they're integers
-                r = math.floor(r + 0.5)
-                g = math.floor(g + 0.5)
-                b = math.floor(b + 0.5)
-                a = math.floor(a + 0.5)
-                
-                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    local t = registry:get(triggerCardEid, Transform)
-                    c.x = t.actualX + t.actualW * 0.5
-                    c.y = t.actualY + t.actualH * 0.5
-                    c.w = t.actualW * scale
-                    c.h = t.actualH * scale
-                    c.rx = 15
-                    c.ry = 15
-                    c.color = Col(r, g, b, a)
-                    
-                end, z_orders.card - 1, layer.DrawCommandSpace.World)
-            end
-            pulseObject
-                :attach_ecs{ create_new = true }
-                :destroy_when(function(self, eid) return self.age >= self.lifetime end)
+            -- play sound
+            playSoundEffect("effects", "trigger_activate", 1.0)
+            
+            addPulseEffectBehindCard(triggerCardEid, palette.snapToColorName("yellow"), palette.snapToColorName("black"))
+            
+            -- start chain of action cards in the action board
+            if not action_board_id or action_board_id == entt_null or not registry:valid(action_board_id) then return end
+            fireActionCardsInBoard(action_board_id) 
         end,
         0, -- infinite repetitions
         false, -- don't start immediately
@@ -912,9 +1004,9 @@ function initGameArea()
     createNewCard("trigger", "every_N_seconds", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     -- createNewCard("trigger", "on_pickup", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     -- createNewCard("trigger", "on_distance_moved", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    -- createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    -- createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    -- createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     
     -- let's create a card board
     local boardID = createNewBoard(100, 350, 600, 200)
@@ -954,13 +1046,12 @@ function initGameArea()
         end
     )
     
-    -- add a couple of starting cards to the board
-    local card1 = createNewTestCard(board:handle())
-    local card2 = createNewTestCard(board:handle())
-    
     local testTable = getScriptTableFromEntityID(card1)
     
-    board.cards = { card1, card2 } -- give a couple of starting cards. These are the entity ids.
+    board.cards = {  } -- cards are entity ids.
+    
+    -- store the board in separate global for easy access
+    action_board_id = boardID -- save in global
     
     -- give a text label above the board
     board.textEntity = ui.definitions.getNewDynamicTextEntry(
@@ -1109,6 +1200,9 @@ function initGameArea()
                 resetCardStackZOrder(releasedCardScript.stackRootEntity)
             end
             
+            -- play sound
+            playSoundEffect("effects", "remove_area_triggered", 0.9 + math.random() * 0.2)
+            
             -- if the card is the root of a stack, and it wasn't part of a board, remove all children from the stack
             if releasedCardScript.stackRootEntity and not isInBoard then
                 -- remove the children and add them to a table.
@@ -1144,26 +1238,26 @@ function initGameArea()
     end
     
     -- add another area, call it "Augment Action Card"
-    local augmentBoardID = createNewBoard(800, 350, 200, 200)
-    local augmentBoard = boards[augmentBoardID]
-    augmentBoard.borderColor = palette.snapToColorName("apricot_cream")
-    augmentBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return localization.get("ui.augment_action_area") end,  -- initial text
-        20.0,                                 -- font size
-        "color=apricot_cream;wiggle"                       -- animation spec
-    ).config.object
-    -- make the text world space
-    transform.set_space(augmentBoard.textEntity, "world")
-    -- let's anchor to top of the trigger board
-    transform.AssignRole(registry, augmentBoard.textEntity, InheritedPropertiesType.PermanentAttachment, augmentBoard:handle(),
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak,
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak,
-        Vec2(0, -10) -- offset it a bit upwards
-    );
-    local roleComp = registry:get(augmentBoard.textEntity, InheritedProperties)
-    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    -- local augmentBoardID = createNewBoard(800, 350, 200, 200)
+    -- local augmentBoard = boards[augmentBoardID]
+    -- augmentBoard.borderColor = palette.snapToColorName("apricot_cream")
+    -- augmentBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+    --     function() return localization.get("ui.augment_action_area") end,  -- initial text
+    --     20.0,                                 -- font size
+    --     "color=apricot_cream;wiggle"                       -- animation spec
+    -- ).config.object
+    -- -- make the text world space
+    -- transform.set_space(augmentBoard.textEntity, "world")
+    -- -- let's anchor to top of the trigger board
+    -- transform.AssignRole(registry, augmentBoard.textEntity, InheritedPropertiesType.PermanentAttachment, augmentBoard:handle(),
+    --     InheritedPropertiesSync.Strong,
+    --     InheritedPropertiesSync.Weak,
+    --     InheritedPropertiesSync.Strong,
+    --     InheritedPropertiesSync.Weak,
+    --     Vec2(0, -10) -- offset it a bit upwards
+    -- );
+    -- local roleComp = registry:get(augmentBoard.textEntity, InheritedProperties)
+    -- roleComp.flags = AlignmentFlag.VERTICAL_TOP
     
     
     -- let's set up an update timer for triggers.

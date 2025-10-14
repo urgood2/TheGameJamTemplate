@@ -38,7 +38,7 @@ local palette = {}
 
 -- Keep handle to the usertype constructor provided by C++ binding
 --   Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-local ColorCtor = Color
+local ColorCtor = Col
 
 -- Internal state -------------------------------------------------------------
 local _active = {
@@ -217,8 +217,8 @@ end
 --- Each step is snapped back to the palette (strict output). Returns {Color,...}.
 function palette.ramp_quantized(nameA, nameB, steps)
   assert(steps and steps>=2, "steps >= 2 required")
-  local A = palette.color(nameA)
-  local B = palette.color(nameB)
+  local A = palette.snapToColorName(nameA)
+  local B = palette.snapToColorName(nameB)
   local _, Argb = to_user_and_rgb(A)
   local _, Brgb = to_user_and_rgb(B)
 

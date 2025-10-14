@@ -14,9 +14,12 @@ modifier_card_defs
         id = "reduce trigger interval after this action"
         id = "duplicate action, but both are weakened."
         id = "enhance + damage or + duration"
-    
+
+# Non-stat values:
+- player level.
     
 # programming side
+- maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
 - link up the combat stat system with the traps and strength bonus action.
 - make some basic enemies that wander toward player.
 - add basic triggers, actions, and modifiers and hook them up to gameplay.

@@ -862,6 +862,9 @@ function fireActionCardWithModifiers(cardEntityID, executionIndex)
     local cardScript = getScriptTableFromEntityID(cardEntityID)
     if not cardScript then return end
     
+    local playerScript = getScriptTableFromEntityID(survivorEntity)
+    local playerTransform = registry:get(survivorEntity, Transform)
+    
     log_debug("Firing action card:", cardScript.cardID)
     
     -- for now, we'll handle bolt, spike hazard, and strength bonus
@@ -871,6 +874,73 @@ function fireActionCardWithModifiers(cardEntityID, executionIndex)
     
     -- play a sound
     playSoundEffect("effects", "card_activate", 0.9 + pitchIncrement * (executionIndex or 0))
+    
+    -- let's see what the card ID is and do something based on that
+    if cardScript.cardID == "fire_basic_bolt" then
+        -- create a basic bolt projectile in a random direction.
+        
+        local node = Node{}
+        node.lifetime = 2.0
+        node.age = 0.0
+        node.update = function(self, dt)
+            self.age = self.age + dt
+            
+            -- draw a circle
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                local t = registry:get(self:handle(), Transform)
+                c.x = t.actualX + t.actualW * 0.5
+                c.y = t.actualY + t.actualH * 0.5
+                c.rx = t.actualW * 0.5
+                c.ry = t.actualH * 0.5
+                c.color = palette.snapToColorName("red")
+            end, z_orders.projectiles, layer.DrawCommandSpace.World)
+        end
+        node:attach_ecs{ create_new = true }
+        node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
+        
+        
+        
+        -- give transform
+        local centerX = playerTransform.actualX + playerTransform.actualW * 0.5
+        local centerY = playerTransform.actualY + playerTransform.actualH * 0.5
+        transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), centerX, centerY, 16, 16, node:handle())
+        
+        -- give physics.
+        --TODO: move this to init.
+        local world = PhysicsManager.get_world("world")
+        world:AddCollisionTag("sensor")
+        world:AddCollisionTag("player")
+        world:AddCollisionTag("bullet")
+        
+        local info = { shape = "circle", tag = "bullet", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+        physics.create_physics_for_transform(registry,
+            physics_manager_instance, -- global instance
+            node:handle(), -- entity id
+            "world", -- physics world identifier
+            info
+        )
+        
+        -- ignore damping
+        physics.SetBullet(world, node:handle(), true)
+        
+        -- give a random velocity
+        local angle = math.random() * math.pi * 2.0
+        local speed = 300.0
+        local vx = math.cos(angle) * speed
+        local vy = math.sin(angle) * speed
+        physics.SetVelocity(world, node:handle(), vx, vy)
+        
+        
+    elseif cardScript.cardID == "leave_spike_hazard" then
+        -- create a spike hazard at a random position in front of the player
+        
+    elseif cardScript.cardID == "strength_bonus" then
+        -- for now, just log it
+        log_debug("Strength bonus activated! (no effect yet)")
+        
+    else
+        log_debug("Unknown action card ID:", cardScript.cardID)
+    end
 end
 
 -- TODO: handle things like cooldown, modifiers that change the effect, etc

@@ -19,6 +19,46 @@ modifier_card_defs
 - player level.
     
 # programming side
+- Fix layout so it's trigger + action slots in a line, with multiple lines.
+- Move free somewhere accessible but not in the way.
+- implement a shop sooner rather than later. it should offer action cards first of all. actino cards can be leveled up by buying, and two of the same actino level can be combined to make a stronger version. 
+- add new stats with 
+```lua
+add_basic(defs, 'projectile_count')
+-- modify
+player.stats:add_base('projectile_count', 1)
+-- derived stats
+player.stats:on_recompute(function(S)
+  local p = S:get_raw('physique').base
+  local c = S:get_raw('cunning').base
+  local s = S:get_raw('spirit').base
+
+  S:derived_add_base('health', 100 + p * 10)
+  S:derived_add_base('energy', 50 + s * 5)
+  S:derived_add_base('offensive_ability', c * 2)
+end)
+-- set cooldowns (arbitrary)
+if ctx.time:is_ready(player.timers, "attack") then
+  shoot_projectile(player)
+  ctx.time:set_cooldown(player.timers, "attack", 0.5) -- attack every 0.5s
+end
+-- access a stat:
+local count = math.floor(player.stats:get('projectile_count'))
+for i = 1, count do
+  shoot_projectile(player)
+end
+-- custom leveliing logic:
+player.level = 1
+player.xp = 0
+
+player.stats:on_recompute(function(S)
+  local lvl = player.level
+  S:derived_add_mul_pct('health', lvl * 5)
+  S:derived_add_mul_pct('attack_speed', lvl * 3)
+end)
+```
+
+- implement level-ups. just grant +5 to a chosen stat.
 - maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
 - link up the combat stat system with the traps and strength bonus action.
 - make some basic enemies that wander toward player.
@@ -39,6 +79,7 @@ modifier_card_defs
 - should trigger slots only have one trigger, or multiple?
 - what properties do triggers have? delay between activations? chance to activate?
 - should there be limits to how many actions and modifiers you can add to a card or area?
+- better actions, like varied weapons in survivors such as area attacks, melee, etc.
 
 # ui/ux questions
 - should remove area only appear when player drags a card?

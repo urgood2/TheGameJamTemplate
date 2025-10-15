@@ -51,6 +51,7 @@ function initMainMenu()
     globals.currentGameState = GAMESTATE.MAIN_MENU -- Set the game state to MAIN_MENU
     setCategoryVolume("effects", 0.2)
     playMusic("space-ambiance", true) 
+    setTrackVolume("space-ambiance", 0.3)
     -- create start game button
     
     
@@ -401,6 +402,9 @@ end
   
 -- Main function to initialize the game. Called at the start of the game.
 function main.init()
+    log_debug("Game initializing...") -- Debug message to indicate the game is initializing
+    math.randomseed(12345)
+    
     -- register color palette "RESURRECT-64"
     palette.register{
         names   = {"Blackberry", "Dark Lavender", "Muted Plum", "Dusty Rose", "Warm Taupe", "Shadow Mauve", "Slate Purple", "Soft Steel", "Pale Mint", "White", "Dark Crimson", "Fiery Red", "Tomato Red", "Apricot", "Burgundy", "Coral Red", "Tangerine", "Goldenrod", "Sunflower", "Mulberry", "Chestnut", "Rust", "Amber", "Marigold", "Espresso", "Olive Drab", "Moss Green", "Chartreuse", "Lemon Chiffon", "Deep Teal", "Jade Green", "Seafoam Green", "Mint Green", "Lime", "Charcoal", "Forest Slate", "Verdigris", "Sage", "Olive Mist", "Teal Blue", "Cyan Green", "Turquoise", "Aqua", "Pale Aqua", "Midnight Blue", "Indigo", "Royal Blue", "Sky Blue", "Baby Blue", "Plum", "Violet", "Purple Orchid", "Lavender", "Pink Blush", "Wine", "Rosewood", "Blush Pink", "Coral Pink", "Deep Magenta", "Raspberry", "Fuchsia", "Pastel Pink", "Peach", "Apricot Cream" }

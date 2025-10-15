@@ -1505,9 +1505,117 @@ function initGameArea()
     setUpLogicTimers()
 end
 
+local ctx = nil
+function initCombatSystem()
+
+    -- init combat system.
+    
+    local combatBus       = CombatSystem.Core.EventBus.new()
+    local combatTime      = CombatSystem.Core.Time.new()
+    local combatStatDefs, DAMAGE_TYPES = CombatSystem.Core.StatDef.make()
+    local combatBundle    = CombatSystem.Game.Combat.new(CombatSystem.Core.RR, DAMAGE_TYPES)  -- carries RR + DAMAGE_TYPES; stored on ctx.combat
+
+    function make_actor(name, defs, attach)
+        -- Creates a fresh Stats instance, applies attribute derivations via `attach`,
+        -- and snapshots initial HP/Energy as both current and max. The actor also
+        -- carries helpers for pet creation (so PetsAndSets.spawn_pet can reuse them).
+        local s = CombatSystem.Core.Stats.new(defs)
+        attach(s)
+        s:recompute()
+        local hp = s:get('health')
+        local en = s:get('energy')
+
+        return {
+            name             = name,
+            stats            = s,
+            hp               = hp,
+            max_health       = hp,
+            energy           = en,
+            max_energy       = en,
+            gear_conversions = {},
+            tags             = {},
+            timers           = {},
+
+            -- add these so spawn_pet can reuse them
+            _defs            = defs,
+            _attach          = attach,
+            _make_actor      = make_actor,
+        }
+    end
+        
+    ctx = {
+        _make_actor    = make_actor, -- Factory for creating actors
+        debug          = true,       -- verbose debug prints across systems
+        bus            = combatBus,        -- shared event bus for this arena
+        time           = combatTime,       -- shared clock for statuses/DoTs/cooldowns
+        combat         = combatBundle      -- optional bundle for RR+damage types, if needed
+    }
+    
+    -- add side-aware accessors to ctx
+    -- Used by targeters and AI; these close over 'ctx' (safe here).
+    ctx.get_enemies_of = function(a) return a.side == 1 and ctx.side2 or ctx.side1 end
+    ctx.get_allies_of  = function(a) return a.side == 1 and ctx.side1 or ctx.side2 end
+    
+    --TODO: probably make separate enemy creation functions for each enemy type.
+    
+    -- Hero baseline: some OA/Cunning/Spirit, crit damage, CDR, cost reduction, and atk/cast speed.
+    local hero = make_actor('Hero', combatStatDefs, CombatSystem.Game.Content.attach_attribute_derivations)
+    hero.side = 1
+    hero.level_curve = 'fast_start'
+    hero.stats:add_base('physique', 16)
+    hero.stats:add_base('cunning', 18)
+    hero.stats:add_base('spirit', 12)
+    hero.stats:add_base('weapon_min', 18)
+    hero.stats:add_base('weapon_max', 25)
+    hero.stats:add_base('life_steal_pct', 10)
+    hero.stats:add_base('crit_damage_pct', 50) -- +50% crit damage
+    hero.stats:add_base('cooldown_reduction', 20)
+    hero.stats:add_base('skill_energy_cost_reduction', 15)
+    hero.stats:add_base('attack_speed', 1.0)
+    hero.stats:add_base('cast_speed', 1.0)
+    hero.stats:recompute()
+
+    -- Ogre: tougher target with defense layers and reactive behaviors (reflect/retaliation/block).
+    local ogre = make_actor('Ogre', combatStatDefs, CombatSystem.Game.Content.attach_attribute_derivations)
+    ogre.side = 2
+    ogre.stats:add_base('health', 400)
+    ogre.stats:add_base('defensive_ability', 95)
+    ogre.stats:add_base('armor', 50)
+    ogre.stats:add_base('armor_absorption_bonus_pct', 20)
+    ogre.stats:add_base('fire_resist_pct', 40)
+    ogre.stats:add_base('dodge_chance_pct', 10)
+    -- ogre.stats:add_base('deflect_chance_pct', 8) -- (deflection not currently used)
+    ogre.stats:add_base('reflect_damage_pct', 5)
+    ogre.stats:add_base('retaliation_fire', 8)
+    ogre.stats:add_base('retaliation_fire_modifier_pct', 25)
+    ogre.stats:add_base('block_chance_pct', 30)
+    ogre.stats:add_base('block_amount', 60)
+    ogre.stats:add_base('block_recovery_reduction_pct', 25)
+    ogre.stats:add_base('damage_taken_reduction_pct',2000) -- stress test: massive DR → negative damage (healing)
+    ogre.stats:recompute()
+
+    ctx.side1 = { hero }
+    ctx.side2 = { ogre }
+    
+    -- attach defs/derivations to ctx for easy access later for pets
+    ctx._defs       = combatStatDefs
+    ctx._attach     = CombatSystem.Game.Content.attach_attribute_derivations
+    ctx._make_actor = make_actor
+    
+    
+    -- update combat system every frame
+    timer.run(
+        function()
+            ctx.time:tick(GetFrameTime())
+        end
+    )
+end
+
 function initActionPhase()
     log_debug("Action phase started!")
-
+    
+    initCombatSystem()
+    
     -- activate action state
     activate_state(ACTION_STATE)
     

@@ -92,3 +92,48 @@ OnDeath
 OnExperienceGained
 OnLevelUp
 OnStatusRemoved
+
+
+# hooking actions with stats.
+Specific actions could scale something based on a stat.
+    - fire_basic_bolt: scales with cunning for damage, spirit for burn duration
+
+
+# Upgrades for stats
+- Leveling up -> choose either physique, cunning, or spirit to level up.
+- Artifacts can give conditional bonuses: 
+    - on trigger, do X
+    - if stat > X, do Y
+    - if condition, do X or boost stat by Y
+    - if set piece bonus, do X
+- Artifacts can give scaling conversions:
+    - X% of physique additionally counts toward cunning
+- Gain an artifact that boosts:
+    - health_regen
+    - health/energy
+    - energy_regen
+    - offensive_ability
+    - defensive_ability
+    - armor
+    - armor_absorption_bonus_pct
+    - physical_modifier_pct
+    - fire_modifier_pct
+    - burn_duration_pct
+    - life_steal_pct
+    - crit_damage_pct
+    - cooldown_reduction
+    - skill_energy_cost_reduction
+    - attack_speed
+    - cast_speed
+    - fire_resist_pct
+    - dodge_chance_pct
+    - reflect_damage_pct
+    - retaliation_fire
+    - retaliation_fire_modifier_pct
+    - block_chance_pct
+    - block_amount
+    - block_recovery_reduction_pct
+    - damage_taken_reduction_pct
+    - healing_received_pct
+    - modify_stat – Temporary buff/debuff (+X%, duration)
+    

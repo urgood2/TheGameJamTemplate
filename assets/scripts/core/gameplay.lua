@@ -1611,8 +1611,17 @@ function initCombatSystem()
     )
 end
 
+local lastFrame = -1
+
 -- call every frame
 function debugUI()
+    
+    -- guard against multiple calls per frame. TODO: find a better way to do this. this looks horrendous.
+    local frame = ImGui.GetFrameCount()
+    if frame == lastFrame then return end
+    lastFrame = frame
+
+    
     -- open a window (returns shouldDraw)
     local shouldDraw = ImGui.Begin("My Window")
     if shouldDraw then

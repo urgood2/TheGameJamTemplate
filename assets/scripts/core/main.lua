@@ -386,6 +386,13 @@ function initMainGame()
     initActionPhase()
     initPlanningUI()
     
+    -- run debug ui every frame.
+    timer.run(
+        function()
+            debugUI()
+        end
+    )
+    
 end
 
 function changeGameState(newState)
@@ -476,9 +483,6 @@ function main.update(dt)
     if (currentGameState == GAMESTATE.MAIN_MENU) then
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
-    
-    -- show debug ui.
-    debugUI()
     
 end
 

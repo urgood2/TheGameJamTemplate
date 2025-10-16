@@ -126,6 +126,9 @@ PhysicsWorld::PhysicsWorld(entt::registry *registry, float meter,
                            float gravityX, float gravityY) {
   space = cpSpaceNew();
   cpSpaceSetUserData(space, this);
+  
+  cpSpaceSetCollisionSlop(space, 0.0f);
+
 
   cpSpaceSetGravity(space, cpv(gravityX, gravityY));
   cpSpaceSetIterations(space, 10);

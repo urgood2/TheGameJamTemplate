@@ -76,6 +76,7 @@ end)
 - need a way to nudge colliders inward (or just center them) for better fit for player.
 - Make it so when transform is authoritative rotation syncs always to transform rotation. Also, sometimes drag and drop stops working for cards, maybe because physics and transform? The collider seems to become inaccurate.
 - Make a timer setting that ensures something gets called every render frame.
+- reduced collision slop acts oddly when combined with steerig, which seems to override slop.
 
 # design questions
 - should trigger slots only have one trigger, or multiple?

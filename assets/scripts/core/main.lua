@@ -477,6 +477,9 @@ function main.update(dt)
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
     
+    -- show debug ui.
+    debugUI()
+    
 end
 
 function main.draw(dt)

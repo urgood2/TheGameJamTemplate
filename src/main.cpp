@@ -1,6 +1,9 @@
 #include "systems/input/input_functions.hpp"
 #include "systems/layer/layer.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
+#include "third_party/rlImGui/imgui.h"
+#include "third_party/rlImGui/imgui_internal.h"
+#include "third_party/rlImGui/rlImGui.h"
 #define RAYGUI_IMPLEMENTATION // needed to use raygui
 
 #define _WIN32_WINNT 0x0600
@@ -246,7 +249,18 @@ void RunGameLoop()
     while (!WindowShouldClose())
     {
 #endif
+        // layer::Push(&worldCamera->cam);  // moving stuff from render loop here so we can allow imgui to be used in update loop.
+        BeginDrawing();
+        
 
+#ifndef __EMSCRIPTEN__
+                // ZoneScopedN("Debug UI");
+        // rlImGuiBeginDelta(GetFrameTime()); // Required: starts ImGui frame
+        rlImGuiBegin(); // Required: starts ImGui frame
+        
+    
+        // we run this every frame, it can't be done in the update loop witout causing problems.
+#endif
         using namespace main_loop;
 
         // Smooth deltaTime over the last few frames
@@ -302,13 +316,18 @@ void RunGameLoop()
             frameCounter = 0;
             fpsLastTime = now;
         }
+        
+#ifndef __EMSCRIPTEN__
+        rlImGuiEnd();
+#endif
+        EndDrawing(); // end drawing for this frame
 
 #ifdef __EMSCRIPTEN__
         // Under Emscripten, stop the browser loop if window is closed
         // if (WindowShouldClose())
         //     emscripten_cancel_main_loop();
-#else
-    }
+#else 
+    } // end while (!WindowShouldClose())
 #endif
 }
 int main(void)

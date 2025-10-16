@@ -1396,7 +1396,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
             
             
-            layer::Push(&worldCamera->cam);
+            // layer::Push(&worldCamera->cam);  
 
             
             // 4. Render bg main, then sprite flash to the screen (if this was a different type of shader which could be overlapped, you could do that too)
@@ -1436,7 +1436,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
         {
             // ZoneScopedN("Final Output Draw to screen");
-            BeginDrawing();
+            // BeginDrawing();
 
             // clear screen
             ClearBackground(BLACK);
@@ -1492,12 +1492,9 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             {
 #ifndef __EMSCRIPTEN__
                 // ZoneScopedN("Debug UI");
-                rlImGuiBegin(); // Required: starts ImGui frame
-
                 shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
                 ShowDebugUI();
-
-                rlImGuiEnd(); // Required: renders ImGui on top of Raylib
+                
 #endif
             }
             
@@ -1523,13 +1520,11 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
 
             {
                 // ZoneScopedN("EndDrawing call");
-                EndDrawing();
+                // EndDrawing();
             }
 
-            layer::Pop();
+            // layer::Pop();
 
-
-            layer::End();
         }
 
         // fade

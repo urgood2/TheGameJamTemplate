@@ -36,4 +36,6 @@
   - Added trap action (stationary AoE damage zone).
   - Added basic enemies that spawn randomly in and move toward the player.
   - Added the "double_effect" modifier that makes actions happen twice.
-  
+
+10/16/2025
+  - Got sidetracked with fixing ImGui integration with lua. It was a bit involved since I had to make sure that imgui could be called anywhere, even in the update loop, rather than just in the render loop.

@@ -1611,6 +1611,29 @@ function initCombatSystem()
     )
 end
 
+-- call every frame
+function debugUI()
+    -- open a window (returns shouldDraw)
+    local shouldDraw = ImGui.Begin("My Window")
+    if shouldDraw then
+        if ImGui.Button("Goto Planning Phase") then
+            print("Button 1 pressed")
+        end
+        if ImGui.Button("Goto Action Phase") then
+            print("Button 2 pressed")
+        end
+        if ImGui.Button("Goto Shop Phase") then
+            print("Button 3 pressed")
+        end
+    end
+    ImGui.End()
+end
+
+
+function initShopPhase()
+    
+    
+end
 function initActionPhase()
     log_debug("Action phase started!")
     

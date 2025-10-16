@@ -482,7 +482,10 @@ void rlImGuiBegin(void)
 void rlImGuiBeginDelta(float deltaTime)
 {
     ImGui::SetCurrentContext(GlobalContext);
-    ImGuiNewFrame(deltaTime);
+    if (GetFrameTime() <= 0) // zero frame time fallback.
+        ImGuiNewFrame(1.0f / 60.0f);
+    else
+        ImGuiNewFrame(GetFrameTime());
     ImGui_ImplRaylib_ProcessEvents();
     ImGui::NewFrame();
 }

@@ -21,7 +21,6 @@ modifier_card_defs
 # programming side
 - Fix layout so it's trigger + action slots in a line, with multiple lines.
 - Move free somewhere accessible but not in the way.
-- implement a shop sooner rather than later. it should offer action cards first of all. actino cards can be leveled up by buying, and two of the same actino level can be combined to make a stronger version. 
 - add new stats with 
 ```lua
 add_basic(defs, 'projectile_count')
@@ -68,9 +67,10 @@ end)
 - think up and  apply card upgrades. e.g., bolt -> takes on an element -> pierces 3 times -> explodes on impact. We  need an upgrade resource, and an area where upgrades can be applied.
 - make a general big area where cards can be kept. make cards not overlap unless they are stacked. (use colliders? how to disable when dragging so stacking still works?)
 - make an arena to pan to when action phase starts, it traps enemies and player inside, ideally within the same screen area. lock camera movement, then make it follow the player slightly like in snkrx.
-- also need a shop, and currency.
+- also need currency.
 
 # errors
+- drag & drop not working properly...
 - card areas don't shift cards reliably when there are lots of cards in an area, and cards are dragged around inside -> probably a bug in the card area shifting logic.
 - stacking cards misbehave in terms of z-order. Sometimes they move when clicked when they shouldn't.
 - need a way to nudge colliders inward (or just center them) for better fit for player.

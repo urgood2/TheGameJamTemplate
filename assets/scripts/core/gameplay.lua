@@ -917,6 +917,10 @@ function spawnRandomBullet()
     -- give bullet state
     add_state_tag(node:handle(), ACTION_STATE)
     
+    -- collision mask
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"bullet"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"bullet"})
+    
     -- ignore damping
     physics.SetBullet(world, node:handle(), true)
     
@@ -1260,15 +1264,53 @@ function initPlanningPhase()
     local x = 700
     local y = 200
     local offset = 50
-    createNewCard("action", "fire_basic_bolt", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("action", "leave_spike_hazard", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("action", "temporary_strength_bonus", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("trigger", "every_N_seconds", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    local testCard1 = createNewCard("action", "fire_basic_bolt", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    local testCard2 = createNewCard("action", "leave_spike_hazard", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    local testCard3 = createNewCard("action", "temporary_strength_bonus", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    local testCard4 = createNewCard("trigger", "every_N_seconds", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     -- createNewCard("trigger", "on_pickup", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     -- createNewCard("trigger", "on_distance_moved", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    local testCard5 =createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    local testCard6 = createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    local testCard7 = createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    
+    -- let's give each card a physics entity which we will remove after 5 seconds.
+    --TODO: buggy try again later.
+    
+    -- local cardsToChange = { testCard1, testCard2, testCard3, testCard4, testCard5, testCard6, testCard7 }
+    -- for _, card in ipairs(cardsToChange) do
+    --     if card and card ~= entt_null and registry:valid(card) then
+    --         local info = { shape = "rectangle", tag = "card", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+    --         physics.create_physics_for_transform(registry,
+    --             physics_manager_instance, -- global instance
+    --             card, -- entity id
+    --             "world", -- physics world identifier
+    --             info
+    --         )
+    --         -- remove physics after a few seconds
+    --         timer.after(2.0, function()
+    --             if card and card ~= entt_null and registry:valid(card) then
+    --                 -- physics.clear_all_shapes(PhysicsManager.get_world("world"), card)
+                    
+    --                 -- make transform autoritative
+    --                 physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+                    
+    --                 -- get card transform, set rotation to 0
+    --                 local t = registry:get(card, Transform)
+    --                 if t then
+    --                     t.actualR = 0
+    --                 end
+    --             end
+    --         end)
+    --     end
+    -- end
+    
+    
+    -- physics.enable_collision_between_many(PhysicsManager.get_world("world"), "card", {"card"})
+    -- physics.update_collision_masks_for(PhysicsManager.get_world("world"), "card", {"card"})
+    
+    
+    PhysicsManager.get_world("world"):InstallDefaultBeginHandlersForAllTags()
     
     -- let's create a card board
     local boardID = createNewBoard(100, 350, 600, 200)
@@ -1762,6 +1804,7 @@ function initActionPhase()
     world:AddCollisionTag("bullet")
     world:AddCollisionTag("trap")
     world:AddCollisionTag("enemy")
+    world:AddCollisionTag("card")
     
     -- 3856-TheRoguelike_1_10_alpha_649.png
     survivorEntity = animation_system.createAnimatedObjectWithTransform(
@@ -1899,6 +1942,8 @@ function initActionPhase()
                 info
             )
             
+            physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
+            
             -- make it steerable
             -- steering
             steering.make_steerable(registry, enemyEntity, 140.0, 2000.0, math.pi*2.0, 2.0)
@@ -1989,4 +2034,7 @@ function initPlanningUI()
     
     -- ggive entire box the planning state
     ui.box.AssignStateTagsToUIBox(planningUIEntities.start_action_button_box, PLANNING_STATE)
+    
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
 end

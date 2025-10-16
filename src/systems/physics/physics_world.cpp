@@ -404,7 +404,25 @@ void PhysicsWorld::EnableCollisionBetween(
     masks.push_back(collisionTags[tag].category);
   }
   SPDLOG_DEBUG("Collision {} '{}' <-> {}", "enable", tag1, fmt::join(tags, ", "));
+  
+  auto pushFiltersFor = [&](const std::string &tag) {
+    if (!collisionTags.contains(tag)) return;
+    const int targetCategory = collisionTags[tag].category;
 
+    registry->view<ColliderComponent>().each([&](auto, auto &c) {
+        ForEachShape(c, [&](cpShape *s) {
+            const auto f = cpShapeGetFilter(s);
+            if ((int)f.categories == targetCategory) {
+                ApplyCollisionFilter(s, tag);
+                cpShapeSetCollisionType(s, _tagToCollisionType[tag]);
+            }
+        });
+    });
+};
+
+pushFiltersFor(tag1);
+for (const auto &t : tags)
+    pushFiltersFor(t);
 }
 
 void PhysicsWorld::DisableCollisionBetween(

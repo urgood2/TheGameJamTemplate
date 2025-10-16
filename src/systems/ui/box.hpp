@@ -25,6 +25,7 @@
 namespace ui {
 
     namespace box {
+        auto AssignStateTagsToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &stateName) -> void;
         void AddTemplateToUIBox(entt::registry &registry,
                             entt::entity uiBoxEntity,
                             UIElementTemplateNode &templateDef,

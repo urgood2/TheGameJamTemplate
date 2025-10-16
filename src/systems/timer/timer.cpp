@@ -224,7 +224,8 @@ wrap_timer_action(sol::function action) {
             {"EVERY",      timer::TimerType::EVERY},
             {"EVERY_STEP", timer::TimerType::EVERY_STEP},
             {"FOR",        timer::TimerType::FOR},
-            {"TWEEN",      timer::TimerType::TWEEN}
+            {"TWEEN",      timer::TimerType::TWEEN},
+            {"EVERY_RENDER_FRAME_ONLY", timer::TimerType::EVERY_RENDER_FRAME_ONLY}
         });
         // Recorder: Enum definition as a documented class with properties
         auto& timerType = rec.add_type("timer.TimerType");
@@ -236,6 +237,7 @@ wrap_timer_action(sol::function action) {
         rec.record_property("timer.TimerType", {"EVERY_STEP", std::to_string(static_cast<int>(timer::TimerType::EVERY_STEP)), "Runs repeatedly every N frames."});
         rec.record_property("timer.TimerType", {"FOR",        std::to_string(static_cast<int>(timer::TimerType::FOR)), "Runs every frame for a duration."});
         rec.record_property("timer.TimerType", {"TWEEN",      std::to_string(static_cast<int>(timer::TimerType::TWEEN)), "Interpolates a value over a duration."});
+        rec.record_property("timer.TimerType", {"EVERY_RENDER_FRAME_ONLY", std::to_string(static_cast<int>(timer::TimerType::EVERY_RENDER_FRAME_ONLY)), "Runs every render frame, ignoring time scaling."});
 
         // 4) Core control/query
         t.set_function("cancel",            &timer::TimerSystem::cancel_timer);
@@ -349,6 +351,31 @@ wrap_timer_action(sol::function action) {
                 std::string group = maybeGroup.value_or("");
                 timer::TimerSystem::timer_run(actionWrapper, afterWrapper, tag, group);
             });
+        // timer_run_every_render_frame(action, after, tag)
+        t.set_function("run_every_render_frame", [clone_to_main](sol::function action,
+                                                         sol::function after,
+                                                         sol::optional<std::string> maybeTag,
+                                                         sol::optional<std::string> maybeGroup)
+        {
+            auto actionWrapper = wrap_timer_action(clone_to_main(action));
+            auto afterWrapper = wrap_noarg_callback(std::move(after));
+            std::string tag = maybeTag.value_or("");
+            std::string group = maybeGroup.value_or("");
+
+            timer::TimerSystem::timer_run_every_render_frame(actionWrapper, afterWrapper, tag, group);
+        });
+        rec.record_free_function({"timer"}, {
+            "run_every_render_frame",
+            "---@param action fun(dt:number)\n"
+            "---@param after? fun()\n"
+            "---@param tag? string\n"
+            "---@param group? string\n"
+            "---@return integer # timerHandle",
+            "Creates a timer that runs once every rendered frame (unaffected by fixed timestep updates).",
+            true,
+            false
+        });
+
         // timer_after(delay, action, tag)
         t.set_function("after",
             [clone_to_main](std::variant<float,std::pair<float,float>> delay,
@@ -1355,6 +1382,24 @@ wrap_timer_action(sol::function action) {
             // Debug: Notify the timer was added
             // SPDLOG_DEBUG("Added 'run' timer with tag: {}", final_tag);
         }
+        
+        // Timer Run Every Render Frame: Calls an action every render frame until canceled, then potentially calls an after action
+        void timer_run_every_render_frame(const std::function<void(std::optional<float>)> &action,
+                                  const std::function<void()> &after,
+                                  const std::string &tag,
+                                  const std::string &group)
+        {
+            std::string final_tag = tag.empty() ? random_uid() : tag;
+
+            Timer timer;
+            timer.type = TimerType::EVERY_RENDER_FRAME_ONLY;
+            timer.action = action;
+            timer.after = after;
+            timer.timer = 0.0f;
+
+            add_timer(final_tag, std::move(timer), group);
+        }
+
 
         // Timer After: Calls an action after a delay
         void timer_after(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, const std::string &tag, const std::string& group)

@@ -2872,7 +2872,8 @@ timer.TimerType = {
     EVERY = 3,  -- Runs repeatedly at an interval.
     EVERY_STEP = 4,  -- Runs repeatedly every N frames.
     FOR = 5,  -- Runs every frame for a duration.
-    TWEEN = 6  -- Interpolates a value over a duration.
+    TWEEN = 6,  -- Interpolates a value over a duration.
+    EVERY_RENDER_FRAME_ONLY = 7  -- Runs every render frame, ignoring time scaling.
 }
 
 
@@ -9121,6 +9122,16 @@ function timer.get_timer_and_delay(...) end
 function timer.update(...) end
 
 ---
+--- Creates a timer that runs once every rendered frame (unaffected by fixed timestep updates).
+---
+---@param action fun(dt:number)
+---@param after? fun()
+---@param tag? string
+---@param group? string
+---@return integer # timerHandle
+function timer.run_every_render_frame(...) end
+
+---
 --- Creates a timer that runs an action once immediately.
 ---
 ---@param action fun()
@@ -9617,6 +9628,15 @@ function ui.box.handleAlignment(...) end
 ---@param uiElementParent Entity
 ---@return nil
 function ui.box.BuildUIElementTree(...) end
+
+---
+--- Assigns state tags to all elements in a UI box.
+---
+---@param registry registry
+---@param uiBox Entity
+---@param stateName string
+---@return nil
+function ui.box.AssignStateTagsToUIBox(...) end
 
 ---
 --- Initializes a new UI box from a definition.

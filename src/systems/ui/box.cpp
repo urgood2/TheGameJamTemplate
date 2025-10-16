@@ -2024,6 +2024,70 @@ namespace ui
         }
     }
     
+    // Assign the given state tag to all elements in the given UI box (including owned objects)
+    auto box::AssignStateTagsToUIBox(entt::registry &registry, entt::entity uiBox, const std::string &stateName) -> void
+    {
+        using namespace entity_gamestate_management;
+
+        struct StackEntry {
+            entt::entity uiElement{entt::null};
+        };
+
+        // 1) Read root info
+        if (!registry.valid(uiBox)) return;
+        auto const *uiBoxComp = registry.try_get<UIBoxComponent>(uiBox);
+        if (!uiBoxComp) return;
+
+        entt::entity root = uiBoxComp->uiRoot.value_or(entt::null);
+        if (root == entt::null) return;
+
+        // 2) Prepare DFS stack
+        std::stack<StackEntry> stack;
+        stack.push({root});
+
+        // SPDLOG_DEBUG("=== Begin AssignStateTagsToUIBox (state='{}') ===", stateName);
+
+        // 3) DFS traversal (same as AssignLayerOrderComponents)
+        while (!stack.empty())
+        {
+            auto e = stack.top().uiElement;
+            stack.pop();
+            if (!registry.valid(e))
+                continue;
+
+            // 4) Apply the given state tag to this element
+            registry.emplace_or_replace<StateTag>(e, stateName);
+
+            // 5) If this element owns an object, give it the same tag
+            if (auto cfg = registry.try_get<UIConfig>(e))
+            {
+                if (cfg->object)
+                {
+                    entt::entity obj = cfg->object.value();
+                    if (registry.valid(obj))
+                    {
+                        registry.emplace_or_replace<StateTag>(obj, stateName);
+                    }
+                }
+            }
+
+            // 6) Push children (reverse for visual order consistency)
+            if (auto node = registry.try_get<transform::GameObject>(e))
+            {
+                for (auto it = node->orderedChildren.rbegin();
+                    it != node->orderedChildren.rend();
+                    ++it)
+                {
+                    if (registry.valid(*it))
+                        stack.push({*it});
+                }
+            }
+        }
+
+        // SPDLOG_DEBUG("=== Done AssignStateTagsToUIBox for box {} (state='{}') ===",
+        //              static_cast<int>(uiBox), stateName);
+    }
+    
     
     /**
      * @brief Finds the end index of a subtree in a draw order list.

@@ -382,12 +382,13 @@ function initMainGame()
     log_debug("Initializing main game...") -- Debug message to indicate the game is starting
     currentGameState = GAMESTATE.IN_GAME -- Set the game state to IN_GAME
     
-    initGameArea()
+    initPlanningPhase()
     initActionPhase()
     initPlanningUI()
+    initShopPhase()
     
     -- run debug ui every frame.
-    timer.run(
+    timer.run_every_render_frame(
         function()
             debugUI()
         end

@@ -74,6 +74,7 @@ end)
 - card areas don't shift cards reliably when there are lots of cards in an area, and cards are dragged around inside -> probably a bug in the card area shifting logic.
 - stacking cards misbehave in terms of z-order. Sometimes they move when clicked when they shouldn't.
 - need a way to nudge colliders inward (or just center them) for better fit for player.
+- Make a timer setting that ensures something gets called every render frame.
 
 # design questions
 - should trigger slots only have one trigger, or multiple?

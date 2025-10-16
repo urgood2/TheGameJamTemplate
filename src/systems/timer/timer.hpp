@@ -54,7 +54,8 @@ namespace timer
         EVERY,
         EVERY_STEP,
         FOR,
-        TWEEN
+        TWEEN,
+        EVERY_RENDER_FRAME_ONLY
     };
 
     struct Timer
@@ -363,6 +364,23 @@ namespace timer
                 timers[tag].paused = false;
             }
         }
+        
+        inline void update_render_timers(float dt)
+        {
+            inUpdate = true;
+            std::vector<std::string> toRemove;
+
+            for (auto &[tag, timer] : timers)
+            {
+                if (timer.type == TimerType::EVERY_RENDER_FRAME_ONLY)
+                {
+                    timer.action(dt);
+                }
+            }
+
+            inUpdate = false;
+        }
+
 
         inline void update_timers(float dt)
         {
@@ -520,6 +538,10 @@ namespace timer
         // ------------------------------------------------
 
         extern void timer_run(const std::function<void(std::optional<float>)> &action, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);
+        extern void timer_run_every_render_frame(const std::function<void(std::optional<float>)> &action,
+                                  const std::function<void()> &after = []() {},
+                                  const std::string &tag = "",
+                                  const std::string& group=default_group_tag);
         extern void timer_after(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, const std::string &tag = "", const std::string& group=default_group_tag);
         extern void timer_cooldown(std::variant<float, std::pair<float, float>> delay, const std::function<bool()> &condition, const std::function<void(std::optional<float>)> &action, int times = 0, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);
         extern void timer_every(std::variant<float, std::pair<float, float>> delay, const std::function<void(std::optional<float>)> &action, int times = 0, bool immediate = false, const std::function<void()> &after = []() {}, const std::string &tag = "", const std::string& group=default_group_tag);

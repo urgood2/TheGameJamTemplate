@@ -39,3 +39,5 @@
 
 10/16/2025
   - Got sidetracked with fixing ImGui integration with lua. It was a bit involved since I had to make sure that imgui could be called anywhere, even in the update loop, rather than just in the render loop.
+  - changed player velocity setting to use physics.SetVelocity instead of changing transform directly. 
+  - Made three clear game states and enabled switching between them. Have to figure out a way to display the cards active while in the action phase.

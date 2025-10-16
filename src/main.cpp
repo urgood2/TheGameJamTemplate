@@ -306,6 +306,10 @@ void RunGameLoop()
 
         // Render
         MainLoopRenderAbstraction(deltaTime);
+        
+        // render-time-only timers
+        timer::TimerSystem::update_render_timers(deltaTime);
+
 
         // Update FPS counter (accurate version)
         frameCounter++;

@@ -50,6 +50,7 @@ local modifier_card_defs = {
 -- save game state strings
 PLANNING_STATE = "PLANNING"
 ACTION_STATE = "SURVIVORS"
+SHOP_STATE = "SHOP"
 
 survivorEntity = nil
 boards = {}
@@ -107,12 +108,19 @@ function createNewBoard(x, y, w, h)
     board.update = function(self, dt)
         local eid = self:handle()
         if not eid or not registry:valid(eid) then return end
+        
+        
+        --TODO: debuggin, is shop board updating?
+        if (self.gameStates and self.gameStates[1] == SHOP_STATE) then
+            log_debug("shop board updating")
+        end
 
         local area = registry:get(eid, Transform)
 
         local cards = self.cards or {}
         local n = #cards
         if n == 0 then return end
+        
 
         -- probe card size
         local cardW, cardH = 100, 140
@@ -321,7 +329,8 @@ function removeCardFromStack(rootCardScript, cardScriptToRemove)
 end
 
 -- category can be "action", "trigger", "modifier"
-function createNewCard(category, id, x, y) 
+-- retursn the entity ID of the created card
+function createNewCard(category, id, x, y, gameStateToApply) 
     
     local imageToUse = nil
     if category == "action" then
@@ -341,7 +350,7 @@ function createNewCard(category, id, x, y)
     )
     
     -- give card state tag
-    add_state_tag(card, PLANNING_STATE)
+    add_state_tag(card, gameStateToApply or PLANNING_STATE)
     
     -- give a script table
     local cardScript = Node{}    
@@ -390,6 +399,9 @@ function createNewCard(category, id, x, y)
     
     -- make the text world space
     transform.set_space(cardScript.labelEntity, "world")
+    
+    -- text state
+    add_state_tag(cardScript.labelEntity, gameStateToApply or PLANNING_STATE)
     
     -- set text z order
     layer_order_system.assignZIndexToEntity(cardScript.labelEntity, z_orders.card_text)
@@ -589,6 +601,8 @@ function createNewCard(category, id, x, y)
             t.actualY = y
         end
     end
+    
+    return cardScript:handle()
 end
 
 -- deprecated, use createNewCard instead
@@ -900,6 +914,9 @@ function spawnRandomBullet()
         info
     )
     
+    -- give bullet state
+    add_state_tag(node:handle(), ACTION_STATE)
+    
     -- ignore damping
     physics.SetBullet(world, node:handle(), true)
     
@@ -1168,6 +1185,10 @@ function startTriggerNSecondsTimer()
     timer.every(
         3.0,
         function()
+            
+            -- only in action state
+            if not is_state_active(ACTION_STATE) then return end
+            
             log_debug("every N seconds trigger fired")
             -- pulse and jiggle the card
             if not trigger_board_id or trigger_board_id == entt_null or not registry:valid(trigger_board_id) then return end
@@ -1229,7 +1250,7 @@ function setUpLogicTimers()
 end
 
 -- initialize the game area for planning phase, where you combine cards and stuff.
-function initGameArea()
+function initPlanningPhase()
     
     -- activate planning state to draw/update planning entities
     activate_state(PLANNING_STATE)
@@ -1254,18 +1275,32 @@ function initGameArea()
     local board = boards[boardID]
     
     -- board draw function, for all baords
-    timer.run(
-        function()
-            -- for each board
-            for key, boardScript in pairs(boards) do
-                local self = boardScript
-                local eid = self:handle()
-                if not eid or not registry:valid(eid) then return end
+    timer.run(function()
+        for key, boardScript in pairs(boards) do
+            local self = boardScript
+            local eid = self:handle()
+            if not (eid and registry:valid(eid)) then
+                goto continue
+            end
 
+            local draw = true
+            if type(self.gameStates) == "table" and next(self.gameStates) ~= nil then
+                draw = false
+                for _, state in pairs(self.gameStates) do
+                    if is_state_active(state) then
+                        draw = true
+                        break
+                    end
+                end
+            else
+                -- draw only in planning state by default
+                if not is_state_active(PLANNING_STATE) then
+                    draw = false
+                end
+            end
+
+            if draw then
                 local area = registry:get(eid, Transform)
-
-                -- -- draw board border
-                local pad = 20
                 command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
                     c.rec = Rectangle.new(
                         area.actualX,
@@ -1276,16 +1311,16 @@ function initGameArea()
                     c.radius    = 10
                     c.dashLen   = 12
                     c.gapLen    = 8
-                    c.phase     = (shapeAnimationPhase)
+                    c.phase     = shapeAnimationPhase
                     c.arcSteps  = 14
                     c.thickness = 5
                     c.color     = self.borderColor or palette.snapToColorName("yellow")
-                    
                 end, z_orders.board, layer.DrawCommandSpace.World)
-
             end
+
+            ::continue::
         end
-    )
+    end)
     
     local testTable = getScriptTableFromEntityID(card1)
     
@@ -1313,44 +1348,8 @@ function initGameArea()
     local roleComp = registry:get(board.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP
     
-    -- FIXME: onrelease for world container doesn't work.
-    local containerGameObject = registry:get(globals.gameWorldContainerEntity(), GameObject)
-    if containerGameObject then
-        -- containerGameObject.state.hoverEnabled = true
-        containerGameObject.state.triggerOnReleaseEnabled = true
-        containerGameObject.state.collisionEnabled = true
-    end
-    -- make world container very deep so it is always at the back
-    layer_order_system.assignZIndexToEntity(globals.gameWorldContainerEntity(), -10000)
-    -- make onRelease method for container
-    containerGameObject.methods.onRelease = function(registry, releasedOn, released)
-        log_debug("Entity", released, "released on", releasedOn)
-        
-        -- when released on top of the world container, remove from any existing board it may be in
-        
-        -- is the released entity a card?
-        local releasedCardScript = getScriptTableFromEntityID(released)
-        if not releasedCardScript then return end
-        
-        -- remove it from any existing board it may be in
-        for boardEid, boardScript in pairs(boards) do
-            if boardScript and boardScript.cards then
-                for i, eid in ipairs(boardScript.cards) do
-                    if eid == released then
-                        table.remove(boardScript.cards, i)
-                    end
-                end
-            end
-        end
-        
-    end
-    
-    
-    -- timer to test adding new cards
-    -- timer.every(5.0, function()
-    --     local newCard = createNewTestCard()
-    --     table.insert(board.cards, newCard)
-    -- end)
+    -- give text state
+    add_state_tag(board.textEntity, PLANNING_STATE)
     
     
     add_state_tag(board:handle(), PLANNING_STATE)
@@ -1374,6 +1373,8 @@ function initGameArea()
     ).config.object
     -- make the text world space
     transform.set_space(triggerBoard.textEntity, "world")
+    -- tex state
+    add_state_tag(triggerBoard.textEntity, PLANNING_STATE)
     -- let's anchor to top of the trigger board
     transform.AssignRole(registry, triggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, triggerBoard:handle(),
         InheritedPropertiesSync.Strong,
@@ -1397,6 +1398,7 @@ function initGameArea()
     ).config.object
     -- make the text world space
     transform.set_space(removeBoard.textEntity, "world")
+    add_state_tag(removeBoard.textEntity, PLANNING_STATE)
     -- let's anchor to top of the trigger board
     transform.AssignRole(registry, removeBoard.textEntity, InheritedPropertiesType.PermanentAttachment, removeBoard:handle(),
         InheritedPropertiesSync.Strong,
@@ -1611,36 +1613,139 @@ function initCombatSystem()
     )
 end
 
+function startActionPhase()
+    clear_states() -- disable all states.
+    
+    activate_state(ACTION_STATE)
+    activate_state("default_state") -- just for defaults, keep them open
+end
+
+function startPlanningPhase()
+    
+    clear_states() -- disable all states.
+    
+    activate_state(PLANNING_STATE)
+    activate_state("default_state") -- just for defaults, keep them open
+end
+
+function startShopPhase()
+    
+    clear_states() -- disable all states.
+    
+    activate_state(SHOP_STATE)
+    activate_state("default_state") -- just for defaults, keep them open
+end
+
 local lastFrame = -1
 
 -- call every frame
 function debugUI()
     
-    -- guard against multiple calls per frame. TODO: find a better way to do this. this looks horrendous.
-    local frame = ImGui.GetFrameCount()
-    if frame == lastFrame then return end
-    lastFrame = frame
 
     
     -- open a window (returns shouldDraw)
-    local shouldDraw = ImGui.Begin("My Window")
+    local shouldDraw = ImGui.Begin("Quick access")
     if shouldDraw then
         if ImGui.Button("Goto Planning Phase") then
-            print("Button 1 pressed")
+            startPlanningPhase()
         end
         if ImGui.Button("Goto Action Phase") then
-            print("Button 2 pressed")
+            startActionPhase()
         end
         if ImGui.Button("Goto Shop Phase") then
-            print("Button 3 pressed")
+            startShopPhase()
         end
     end
     ImGui.End()
 end
 
+cardsSoldInShop = {}
 
 function initShopPhase()
     
+    -- let's make a large board for shopping
+    local shopBoardID = createNewBoard(100, 100, 800, 400)
+    local shopBoard = boards[shopBoardID]
+    shopBoard.borderColor = palette.snapToColorName("apricot_cream")
+    
+    -- give a text label above the board    
+    shopBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.shop_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
+    ).config.object
+    
+    -- make the text world space
+    transform.set_space(shopBoard.textEntity, "world")
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, shopBoard.textEntity, InheritedPropertiesType.PermanentAttachment, shopBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(shopBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    -- give the text & board state
+    add_state_tag(shopBoard.textEntity, SHOP_STATE)
+    add_state_tag(shopBoard:handle(), SHOP_STATE)
+    shopBoard.gameStates = { SHOP_STATE } -- store in board as well
+    
+    -- let's populate the shop with some cards
+    local testCard1 = createNewCard("action", "fire_basic_bolt", 200, 200, SHOP_STATE)
+    local testCard2 = createNewCard("action", "leave_spike_hazard",
+        400, 200, SHOP_STATE)
+    local testCard3 = createNewCard("action", "temporary_strength_bonus",
+        600, 200, SHOP_STATE)
+        
+    -- add them to the board.
+    addCardToBoard(testCard1, shopBoard:handle())
+    addCardToBoard(testCard2, shopBoard:handle())
+    addCardToBoard(testCard3, shopBoard:handle())
+    
+    -- let's add a (buy) board below.
+    local buyBoardID = createNewBoard(100, 550, 800, 150)
+    local buyBoard = boards[buyBoardID]
+    buyBoard.borderColor = palette.snapToColorName("green")
+    buyBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.buy_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=green"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(buyBoard.textEntity, "world")
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, buyBoard.textEntity, InheritedPropertiesType.PermanentAttachment, buyBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,   
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(buyBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP 
+    -- give the text & board state
+    add_state_tag(buyBoard.textEntity, SHOP_STATE)
+    add_state_tag(buyBoard:handle(), SHOP_STATE)
+    buyBoard.gameStates = { SHOP_STATE } -- store in board as well
+    
+    buyBoard.cards = {} -- cards are entity ids.
+    
+    -- add a different onRelease method
+    local buyBoardGameObject = registry:get(buyBoard:handle(), GameObject)
+    if buyBoardGameObject then
+        buyBoardGameObject.methods.onRelease = function(registry, releasedOn, released)
+            log_debug("Entity", released, "released on", releasedOn)
+            -- when released on top of the buy board, if it's a card in the shop, move it to the buy board.
+            -- is the released entity a card?
+            local releasedCardScript = getScriptTableFromEntityID(released)
+            if not releasedCardScript then return end   
+            
+            --TODO: buy logic.
+        end
+    end
     
 end
 function initActionPhase()
@@ -1687,7 +1792,7 @@ function initActionPhase()
     )
     
     -- allow transform manipuation to alter physics body
-    physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
+    -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
     
     -- give a state tag to the survivor entity
     add_state_tag(survivorEntity, ACTION_STATE)
@@ -1707,31 +1812,57 @@ function initActionPhase()
             end
             
             local speed = 200 -- pixels per second
-            local dx, dy = 0, 0
+            -- local dx, dy = 0, 0
+            -- if input.action_down("survivor_left") then
+            --     dx = dx - 1
+            -- end
+            -- if input.action_down("survivor_right") then
+            --     dx = dx + 1
+            -- end
+            -- if input.action_down("survivor_up") then
+            --     dy = dy - 1
+            -- end
+            -- if input.action_down("survivor_down") then
+            --     dy = dy + 1
+            -- end
+            -- -- normalize direction vector
+            -- if dx ~= 0 or dy ~= 0 then
+            --     local len = math.sqrt(dx * dx + dy * dy)
+            --     dx = dx / len
+            --     dy = dy / len
+            -- end
+            
+            -- local t = registry:get(survivorEntity, Transform)
+            -- if t then
+            --     t.actualX = t.actualX + dx * speed * GetFrameTime()
+            --     t.actualY = t.actualY + dy * speed * GetFrameTime()
+            -- end
+            
+            local isMoving = false
+            local moveDir = {x=0, y=0}
             if input.action_down("survivor_left") then
-                dx = dx - 1
+                moveDir.x = -1
+                isMoving = true
             end
             if input.action_down("survivor_right") then
-                dx = dx + 1
+                moveDir.x = 1
+                isMoving = true
             end
             if input.action_down("survivor_up") then
-                dy = dy - 1
+                moveDir.y = -1
+                isMoving = true
             end
             if input.action_down("survivor_down") then
-                dy = dy + 1
+                moveDir.y = 1
+                isMoving = true
             end
-            -- normalize direction vector
-            if dx ~= 0 or dy ~= 0 then
-                local len = math.sqrt(dx * dx + dy * dy)
-                dx = dx / len
-                dy = dy / len
+            -- normalize
+            local len = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
+            if len > 0 then
+                moveDir.x = moveDir.x / len
+                moveDir.y = moveDir.y / len
             end
-            
-            local t = registry:get(survivorEntity, Transform)
-            if t then
-                t.actualX = t.actualX + dx * speed * GetFrameTime()
-                t.actualY = t.actualY + dy * speed * GetFrameTime()
-            end
+            physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * speed, moveDir.y * speed)
             
         end,
         nil, -- no after
@@ -1750,6 +1881,9 @@ function initActionPhase()
                 "b453.png", -- animation ID
                 true             -- use animation, not sprite identifier, if false
             )
+            
+            -- give state
+            add_state_tag(enemyEntity, ACTION_STATE)
             
             -- set it to a random position
             local enemyTransform = registry:get(enemyEntity, Transform)
@@ -1852,4 +1986,7 @@ function initPlanningUI()
     local buttonTransform = registry:get(planningUIEntities.start_action_button_box, Transform)
     buttonTransform.actualX = globals.screenWidth() / 2 - buttonTransform.actualW / 2
     buttonTransform.actualY = globals.screenHeight() - buttonTransform.actualH - 10
+    
+    -- ggive entire box the planning state
+    ui.box.AssignStateTagsToUIBox(planningUIEntities.start_action_button_box, PLANNING_STATE)
 end

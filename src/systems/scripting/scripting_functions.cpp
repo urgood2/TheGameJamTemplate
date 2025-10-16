@@ -5,6 +5,7 @@
 #include "core/globals.hpp"
 #include "raylib.h"
 #include "sol/sol.hpp"
+#include "sol_ImGui.h"
 #include "../ai/ai_system.hpp"
 #include "../event/event_system.hpp"
 #include "../tutorial/tutorial_system_v2.hpp"
@@ -452,7 +453,8 @@ namespace scripting {
         // Also expose your globalShaderUniforms so Lua can call
         //   globalShaderUniforms.set(shaderName, uniformName, value)
 
-        
+        // expose imgui to lua
+        sol_ImGui::Init(stateToInit);
         
         // ------------------------------------------------------
         // input functions

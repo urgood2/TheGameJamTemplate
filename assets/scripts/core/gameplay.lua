@@ -1277,37 +1277,38 @@ function initPlanningPhase()
     -- let's give each card a physics entity which we will remove after 5 seconds.
     --TODO: buggy try again later.
     
-    -- local cardsToChange = { testCard1, testCard2, testCard3, testCard4, testCard5, testCard6, testCard7 }
-    -- for _, card in ipairs(cardsToChange) do
-    --     if card and card ~= entt_null and registry:valid(card) then
-    --         local info = { shape = "rectangle", tag = "card", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
-    --         physics.create_physics_for_transform(registry,
-    --             physics_manager_instance, -- global instance
-    --             card, -- entity id
-    --             "world", -- physics world identifier
-    --             info
-    --         )
-    --         -- remove physics after a few seconds
-    --         timer.after(2.0, function()
-    --             if card and card ~= entt_null and registry:valid(card) then
-    --                 -- physics.clear_all_shapes(PhysicsManager.get_world("world"), card)
+    local cardsToChange = { testCard1, testCard2, testCard3, testCard4, testCard5, testCard6, testCard7 }
+    for _, card in ipairs(cardsToChange) do
+        if card and card ~= entt_null and registry:valid(card) then
+            local info = { shape = "rectangle", tag = "card", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
+            physics.create_physics_for_transform(registry,
+                physics_manager_instance, -- global instance
+                card, -- entity id
+                "world", -- physics world identifier
+                info
+            )
+            -- remove physics after a few seconds
+            timer.after(2.0, function()
+                if card and card ~= entt_null and registry:valid(card) then
+                    -- physics.clear_all_shapes(PhysicsManager.get_world("world"), card)
                     
-    --                 -- make transform autoritative
-    --                 physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+                    -- make transform autoritative
+                    physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+                    physics.use_transform_fixed_rotation(registry, card)
                     
-    --                 -- get card transform, set rotation to 0
-    --                 local t = registry:get(card, Transform)
-    --                 if t then
-    --                     t.actualR = 0
-    --                 end
-    --             end
-    --         end)
-    --     end
-    -- end
+                    -- get card transform, set rotation to 0
+                    local t = registry:get(card, Transform)
+                    if t then
+                        t.actualR = 0
+                    end
+                end
+            end)
+        end
+    end
     
     
-    -- physics.enable_collision_between_many(PhysicsManager.get_world("world"), "card", {"card"})
-    -- physics.update_collision_masks_for(PhysicsManager.get_world("world"), "card", {"card"})
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "card", {"card"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "card", {"card"})
     
     
     PhysicsManager.get_world("world"):InstallDefaultBeginHandlersForAllTags()

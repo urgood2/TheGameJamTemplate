@@ -556,79 +556,75 @@ namespace physics {
 /* --- Transform hooks to ensure syncing happens correctly on interaction --- */
 
     inline void OnStartDrag(entt::registry& R, entt::entity e) {
-        if (!R.valid(e)) return;
+    if (!R.valid(e)) return;
 
-        R.get<transform::GameObject>(e).state.isBeingDragged = true;
+    auto& GO = R.get<transform::GameObject>(e);
+    GO.state.isBeingDragged = true;
 
-        if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
-            auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
-            cfg.prevType = cpBodyGetType(cc->body.get());
+    if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
+        auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
 
-            cpBodySetVelocity(cc->body.get(), cpvzero);
-            cpBodySetAngularVelocity(cc->body.get(), 0.f);
-            cpBodySetType(cc->body.get(), CP_BODY_TYPE_KINEMATIC);
+        // Remember original type so we can restore later
+        cfg.prevType = cpBodyGetType(cc->body.get());
 
-            // While dragging: Transform is authoritative and we push its angle.
-            cfg.mode = PhysicsSyncMode::AuthoritativeTransform;
-            cfg.useVisualRotationWhenDragging = true;
-            cfg.pushAngleFromTransform = true;
+        // Stop all motion and freeze rotation
+        cpBodySetVelocity(cc->body.get(), cpvzero);
+        cpBodySetAngularVelocity(cc->body.get(), 0.f);
 
-            // Prevent physics from overwriting our transform angle during drag.
-            cfg.pullAngleFromPhysics = false;
-        }
+        // Make body kinematic for precise cursor control
+        cpBodySetType(cc->body.get(), CP_BODY_TYPE_KINEMATIC);
+
+        // Transform is authoritative while dragging
+        cfg.mode = PhysicsSyncMode::AuthoritativeTransform;
+        cfg.useVisualRotationWhenDragging = true;
+        cfg.pushAngleFromTransform = true;
+        cfg.pullAngleFromPhysics = false;
+
+        // Optional: lock rotation if TransformFixed
+        SetBodyRotationLocked(R, e,
+            cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows);
     }
+}
 
-    inline auto OnDrop(entt::registry& R, entt::entity e) -> void {
-        if (!R.valid(e)) return;
 
-        auto& GO = R.get<transform::GameObject>(e);
-        GO.state.isBeingDragged = false;
+    inline void OnDrop(entt::registry& R, entt::entity e) {
+    if (!R.valid(e)) return;
 
-        // return control to physics
-        if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
-            auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
+    auto& GO = R.get<transform::GameObject>(e);
+    GO.state.isBeingDragged = false;
 
-            // stop any residual kinematic velocity before switching back
-            cpBodySetVelocity(cc->body.get(), cpvzero);
-            cpBodySetAngularVelocity(cc->body.get(), 0.f);
+    if (auto* cc = R.try_get<physics::ColliderComponent>(e)) {
+        auto& cfg = R.get_or_emplace<PhysicsSyncConfig>(e);
 
-            // restore whatever the body type was pre-drag (usually DYNAMIC)
-            // cpBodySetType(cc->body.get(), cfg.prevType);
-            // FIXME: TESTING:
-            cpBodySetType(cc->body.get(), CP_BODY_TYPE_DYNAMIC);
-            // set mass and moment to nonzero
-            if (cpBodyGetType(cc->body.get()) == CP_BODY_TYPE_DYNAMIC) {
-                auto &T = R.get<transform::Transform>(e);
-                float w = T.getActualW(), h = T.getActualH();
-                cpFloat mass = (cpBodyGetMass(cc->body.get()) <= 0.0f) ? 1.0f : cpBodyGetMass(cc->body.get());
-                cpFloat moment = ComputeMoment(PhysicsCreateInfo{cc->shapeType, cc->tag, cc->isSensor, /*density*/1.0f}, mass, w, h);
-                cpBodySetMass(cc->body.get(), mass);
-                cpBodySetMoment(cc->body.get(), moment);
-            }
+        // Stop residual velocity from kinematic dragging
+        cpBodySetVelocity(cc->body.get(), cpvzero);
+        cpBodySetAngularVelocity(cc->body.get(), 0.f);
 
-            // now let physics be authoritative again; body -> Transform.actual post-step
+        // Restore the previous body type (don’t hardcode to dynamic)
+        cpBodySetType(cc->body.get(), cfg.prevType);
+
+        // If we were frozen or static, don't hand control to physics immediately
+        if (cfg.prevType == CP_BODY_TYPE_DYNAMIC) {
+            // Soft settle: follow visual for a few frames before re-entering physics
+            cfg.mode = PhysicsSyncMode::FollowVisual;
+            cfg.useKinematic = true;  // use kinematic follow for clean interpolation
+        } else {
+            // e.g. static or sensor — just restore
             cfg.mode = PhysicsSyncMode::AuthoritativePhysics;
+        }
 
-            // decide the rotation policy after drop
-            if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
-                // keep rotation locked
-                SetBodyRotationLocked(R, e, true);
-                // snap body angle to Transform once so it doesn’t drift
-                auto& T = R.get<transform::Transform>(e);
-                cpBodySetAngle(cc->body.get(), T.getActualRotation() * DEG2RAD);
-                cpBodySetAngularVelocity(cc->body.get(), 0.f);
-            } else {
-                // rotation should be free → ensure finite moment
-                SetBodyRotationLocked(R, e, false);
-            }
-
-
-            // optional: if you want one or two frames of visual-follow settle,
-            // you could briefly do:
-            //   cfg.mode = PhysicsSyncMode::FollowVisual; cfg.useKinematic = false;
-            // and it will auto-return to AuthoritativePhysics on settle.
+        // Rotation policy restoration
+        if (cfg.rotMode == RotationSyncMode::TransformFixed_PhysicsFollows) {
+            SetBodyRotationLocked(R, e, true);
+            auto& T = R.get<transform::Transform>(e);
+            cpBodySetAngle(cc->body.get(), T.getActualRotation() * DEG2RAD);
+            cpBodySetAngularVelocity(cc->body.get(), 0.f);
+        } else {
+            SetBodyRotationLocked(R, e, false);
         }
     }
+}
+
     
 
 /* ------------------------ transform-dominant phase ------------------------ */

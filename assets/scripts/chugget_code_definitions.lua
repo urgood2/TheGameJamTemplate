@@ -8150,6 +8150,15 @@ function physics.create_topdown_controller(...) end
 function physics.enable_tank_controller(...) end
 
 ---
+--- Removes physics body and shapes from the entity; optionally removes PhysicsComponent too.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@param remove_component boolean|nil
+---@return nil
+function physics.remove_physics(...) end
+
+---
 --- Sets the tank's target point.
 ---
 ---@param world physics.PhysicsWorld

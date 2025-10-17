@@ -439,6 +439,39 @@ void PhysicsWorld::DisableCollisionBetween(
   SPDLOG_DEBUG("Collision {} '{}' x {}", "disable", tag1, fmt::join(tags, ", "));
 }
 
+void PhysicsWorld::RemovePhysics(entt::entity e, bool removeComponent) {
+    if (!registry->all_of<ColliderComponent>(e))
+        return;
+
+    auto &c = registry->get<ColliderComponent>(e);
+
+    // Remove all shapes from the space
+    if (c.shape) {
+        cpSpaceRemoveShape(space, c.shape.get());
+        c.shape.reset();
+    }
+
+    for (auto &s : c.extraShapes) {
+        if (s.shape)
+            cpSpaceRemoveShape(space, s.shape.get());
+    }
+    c.extraShapes.clear();
+
+    // Remove the body from the space
+    if (c.body) {
+        cpSpaceRemoveBody(space, c.body.get());
+        c.body.reset();
+    }
+
+    SPDLOG_DEBUG("RemovePhysics: entity={} physics removed", (uint32_t)e);
+
+    // Optionally remove the component entirely
+    if (removeComponent) {
+        registry->remove<ColliderComponent>(e);
+    }
+}
+
+
 void PhysicsWorld::EnableTriggerBetween(const std::string &a,
                                         const std::vector<std::string> &bs) {
   for (const auto &b : bs) {

@@ -57,26 +57,26 @@ player.stats:on_recompute(function(S)
 end)
 ```
 
+- make an arena to pan to when action phase starts, it traps enemies and player inside, ideally within the same screen area. lock camera movement, then make it follow the player slightly like in snkrx.
+- link up the combat stat system with the traps and strength bonus action.
+- Collision between player and enemies.
 - implement level-ups. just grant +5 to a chosen stat.
 - maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
-- link up the combat stat system with the traps and strength bonus action.
-- make some basic enemies that wander toward player.
 - add basic triggers, actions, and modifiers and hook them up to gameplay.
 - mods projectile_pierces_twice and summon_minion_wandering not implemented. why is minion wandering a mod?
 - apply card tag synergies: mobility, defense, hazard, brute
 - think up and  apply card upgrades. e.g., bolt -> takes on an element -> pierces 3 times -> explodes on impact. We  need an upgrade resource, and an area where upgrades can be applied.
 - make a general big area where cards can be kept. make cards not overlap unless they are stacked. (use colliders? how to disable when dragging so stacking still works?)
-- make an arena to pan to when action phase starts, it traps enemies and player inside, ideally within the same screen area. lock camera movement, then make it follow the player slightly like in snkrx.
 - also need currency.
 
 # errors
-- drag & drop not working properly...
+- z orders are not correct when cards overlap for the first time?
 - card areas don't shift cards reliably when there are lots of cards in an area, and cards are dragged around inside -> probably a bug in the card area shifting logic.
 - stacking cards misbehave in terms of z-order. Sometimes they move when clicked when they shouldn't.
 - need a way to nudge colliders inward (or just center them) for better fit for player.
 - Make it so when transform is authoritative rotation syncs always to transform rotation. Also, sometimes drag and drop stops working for cards, maybe because physics and transform? The collider seems to become inaccurate.
 - Make a timer setting that ensures something gets called every render frame.
-- reduced collision slop acts oddly when combined with steerig, which seems to override slop.
+- drag & drop with physics bodies & transforms doesn't always work. objects will sometimes become unreactive or the collision shapes for transform change position. not sure why. only solution I've found is to complete remove physics afterward: physics.remove_physics(PhysicsManager.get_world("world"), card, true)
 
 # design questions
 - should trigger slots only have one trigger, or multiple?

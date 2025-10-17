@@ -770,6 +770,8 @@ public:
     CrushMetrics CrushOn(entt::entity e, float dt) ;
     std::vector<entt::entity> TouchingEntities(entt::entity e);
 
+/* complete physics removal */
+  void RemovePhysics(entt::entity e, bool removeComponent);
 
 /* -------------------------------- tank demo ------------------------------- */
 

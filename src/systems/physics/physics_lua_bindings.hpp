@@ -1164,6 +1164,16 @@ inline void expose_physics_to_lua(sol::state& lua) {
                 (float)gearF.value_or(50000.0),
                 (float)gearB.value_or(1.2));
         });
+        
+    physics_table.set_function("remove_physics", [&](physics::PhysicsWorld& W, entt::entity e, bool remove_component) {
+        W.RemovePhysics(e, remove_component);
+    });
+    rec.record_free_function(path, {
+        "remove_physics",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@param remove_component boolean|nil\n---@return nil",
+        "Removes physics body and shapes from the entity; optionally removes PhysicsComponent too.",
+        true, false
+    });
 
     rec.record_free_function(path, {
         "command_tank_to",

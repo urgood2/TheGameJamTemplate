@@ -590,6 +590,9 @@ function createNewCard(category, id, x, y, gameStateToApply)
             resetCardStackZOrder(cardScript:handle())
         end
         
+        -- make it transform authoritative again
+        physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+        
     end
     
     
@@ -1262,7 +1265,7 @@ function initPlanningPhase()
     
     -- make a few test cards around 600, 300
     local x = 700
-    local y = 200
+    local y = 650
     local offset = 50
     local testCard1 = createNewCard("action", "fire_basic_bolt", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     local testCard2 = createNewCard("action", "leave_spike_hazard", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
@@ -1278,37 +1281,81 @@ function initPlanningPhase()
     --TODO: buggy try again later.
     
     local cardsToChange = { testCard1, testCard2, testCard3, testCard4, testCard5, testCard6, testCard7 }
+    
     for _, card in ipairs(cardsToChange) do
         if card and card ~= entt_null and registry:valid(card) then
-            local info = { shape = "rectangle", tag = "card", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"
-            physics.create_physics_for_transform(registry,
-                physics_manager_instance, -- global instance
-                card, -- entity id
-                "world", -- physics world identifier
-                info
-            )
+            -- set the location of each card to an offscreen pos
+            local t = registry:get(card, Transform)
+            if t then
+                t.actualX = -500
+                t.actualY = -500
+                t.visualX = t.actualX
+                t.visualY = t.actualY
+            end
+        end
+    end
+    
+    local cardDelay = 2.0 -- start 2 seconds after game init
+    for _, card in ipairs(cardsToChange) do
+        if card and card ~= entt_null and registry:valid(card) then
+            timer.after(cardDelay, function()
+                local t = registry:get(card, Transform)
+                
+                -- slide it into place at x, y (offset random)
+                local targetX = x + lume.random(-offset, offset)
+                local targetY = y + lume.random(-offset, offset)
+                t.actualX = targetX
+                t.actualY = targetY
+                
+                -- play sound with randomized pitch
+                playSoundEffect("effects", "card_deal", 0.7 + math.random() * 0.3)
+                
+                -- give physics
+                local info = { shape = "rectangle", tag = "card", sensor = false, density = 1.0, inflate_px = 15 } -- inflate so cards will not stick to each other when dealt.
+                physics.create_physics_for_transform(registry,
+                    physics_manager_instance, -- global instance
+                    card, -- entity id
+                    "world", -- physics world identifier
+                    info
+                )
+                
+                -- collision mask so cards collide with each other
+                physics.enable_collision_between_many(PhysicsManager.get_world("world"), "card", {"card"})
+                physics.update_collision_masks_for(PhysicsManager.get_world("world"), "card", {"card"})
+                
+                
+                physics.use_transform_fixed_rotation(registry, card)
+                    
+            end)
+            cardDelay = cardDelay + 0.1
+        end
+    end
+    
+    for _, card in ipairs(cardsToChange) do
+        if card and card ~= entt_null and registry:valid(card) then
             -- remove physics after a few seconds
-            timer.after(2.0, function()
+            timer.after(7.0, function()
                 if card and card ~= entt_null and registry:valid(card) then
                     -- physics.clear_all_shapes(PhysicsManager.get_world("world"), card)
                     
+                        
                     -- make transform autoritative
                     physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
-                    physics.use_transform_fixed_rotation(registry, card)
                     
                     -- get card transform, set rotation to 0
                     local t = registry:get(card, Transform)
                     if t then
                         t.actualR = 0
                     end
+                    
+                    -- remove phyics entirely.
+                    physics.remove_physics(PhysicsManager.get_world("world"), card, true)
                 end
             end)
         end
     end
     
     
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "card", {"card"})
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "card", {"card"})
     
     
     PhysicsManager.get_world("world"):InstallDefaultBeginHandlersForAllTags()
@@ -1933,6 +1980,10 @@ function initActionPhase()
             local enemyTransform = registry:get(enemyEntity, Transform)
             enemyTransform.actualX = math.random(50, globals.screenWidth() * 2 - 50)
             enemyTransform.actualY = math.random(50, globals.screenHeight() * 2 - 50)
+            
+            -- snap
+            enemyTransform.visualX = enemyTransform.actualX
+            enemyTransform.visualY = enemyTransform.actualY
             
             -- give it physics
             local info = { shape = "rectangle", tag = "enemy", sensor = false, density = 1.0, inflate_px = -4 } -- default tag is "WORLD"

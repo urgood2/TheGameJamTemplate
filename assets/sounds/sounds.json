@@ -21,6 +21,8 @@
                 "card_put_down_3": "CARDS_Deal_01_RR3_mono.wav",
                 "card_put_down_4": "CARDS_Deal_01_RR4_mono.wav",
                 
+                "card_deal": "CARDS_Deal_01_RR4_mono.wav",
+                
                 "remove_area_triggered": "GORE_Deep_Short_Splat_02_mono.wav",
                 
                 "fire_bolt": "AXE_Chop_Tree_Subtle_01_RR2_mono.wav",

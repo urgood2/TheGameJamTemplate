@@ -19,10 +19,7 @@ modifier_card_defs
 - player level.
     
 # programming side
-- visually display the quadtree area for debugging. separate physics and transform debug draws. figure out why buttons on the bottom don't work.
-- redo layout for card areas and add a couple more for testing.
-- Fix layout so it's trigger + action slots in a line, with multiple lines.
-- Move free somewhere accessible but not in the way.
+- make dashed lines be used only when a trigger + action is valid and active.
 - add new stats with 
 ```lua
 add_basic(defs, 'projectile_count')

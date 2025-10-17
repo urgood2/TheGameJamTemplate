@@ -46,6 +46,9 @@ local modifier_card_defs = {
     }
 }
 
+-- card sizes
+local cardW, cardH = 80, 112
+
 
 -- save game state strings
 PLANNING_STATE = "PLANNING"
@@ -54,6 +57,7 @@ SHOP_STATE = "SHOP"
 
 survivorEntity = nil
 boards = {}
+trigger_board_id_to_action_board_id = {} -- map trigger boards to action boards
 trigger_board_id = nil
 action_board_id = nil
 
@@ -427,8 +431,8 @@ function createNewCard(category, id, x, y, gameStateToApply)
     
     animation_system.resizeAnimationObjectsInEntityToFit(
         card,
-        48 * 2,   -- width
-        64 * 2    -- height
+        cardW,   -- width
+        cardH    -- height
     )
     
     -- NOTE: onRelease is called for when mouse is released ON TOP OF this node.
@@ -1278,8 +1282,6 @@ function initPlanningPhase()
     local testCard7 = createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     
     -- let's give each card a physics entity which we will remove after 5 seconds.
-    --TODO: buggy try again later.
-    
     local cardsToChange = { testCard1, testCard2, testCard3, testCard4, testCard5, testCard6, testCard7 }
     
     for _, card in ipairs(cardsToChange) do
@@ -1356,13 +1358,9 @@ function initPlanningPhase()
     end
     
     
-    
-    
     PhysicsManager.get_world("world"):InstallDefaultBeginHandlersForAllTags()
     
-    -- let's create a card board
-    local boardID = createNewBoard(100, 350, 600, 200)
-    local board = boards[boardID]
+
     
     -- board draw function, for all baords
     timer.run(function()
@@ -1414,6 +1412,23 @@ function initPlanningPhase()
     
     local testTable = getScriptTableFromEntityID(card1)
     
+    local boardHeight = 150
+    local actionBoardWidth = 600
+    local triggerBoardWidth = 150
+    
+    local boardPadding = 50
+    
+    local runningYValue = boardPadding
+    local leftAlignValueTriggerBoardX = boardPadding
+    local leftAlignValueActionBoardX = leftAlignValueTriggerBoardX + triggerBoardWidth + boardPadding
+    local leftAlignValueRemoveBoardX = leftAlignValueActionBoardX + actionBoardWidth + boardPadding
+-- -------------------------------------------------------------------------- --
+--                   create a set of trigger + action board                   --
+-- -------------------------------------------------------------------------- -
+
+    -- let's create a card board
+    local boardID = createNewBoard(leftAlignValueActionBoardX, runningYValue, actionBoardWidth, boardHeight)
+    local board = boards[boardID]
     board.cards = {  } -- cards are entity ids.
     
     -- store the board in separate global for easy access
@@ -1440,20 +1455,12 @@ function initPlanningPhase()
     
     -- give text state
     add_state_tag(board.textEntity, PLANNING_STATE)
-    
-    
     add_state_tag(board:handle(), PLANNING_STATE)
     
-    -- TimerChain:new("statesTestingChain")
-    --     :after(5.0, function() activate_state(PLANNING_STATE) end)
-    --     :wait(5)
-    --     :after(5.0, function() activate_state(ACTION_STATE) end)
-    --     :start()
-    
-    
     -- let's make another board, for triggers.
-    local triggerBoardID = createNewBoard(100, 100, 200, 200)
+    local triggerBoardID = createNewBoard(leftAlignValueTriggerBoardX, runningYValue, triggerBoardWidth, boardHeight)
     trigger_board_id = triggerBoardID -- save in global
+    
     local triggerBoard = boards[triggerBoardID]
     triggerBoard.borderColor = palette.snapToColorName("cyan")
     triggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
@@ -1476,9 +1483,191 @@ function initPlanningPhase()
     local roleComp = registry:get(triggerBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP
     
+    -- now map
+    trigger_board_id_to_action_board_id[triggerBoardID] = boardID
+    
+    -- next row
+    runningYValue = runningYValue + boardHeight + boardPadding
+
+
+-- -------------------------------------------------------------------------- --
+--                          now make another 4 pairs                          --
+-- -------------------------------------------------------------------------- 
+    
+    local secondTriggerBoardID = createNewBoard(leftAlignValueTriggerBoardX, runningYValue, triggerBoardWidth, boardHeight)
+    local secondTriggerBoard = boards[secondTriggerBoardID]
+    secondTriggerBoard.borderColor = palette.snapToColorName("cyan")
+    secondTriggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.trigger_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=cyan"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(secondTriggerBoard.textEntity, "world")
+    -- tex state
+    add_state_tag(secondTriggerBoard.textEntity, PLANNING_STATE)
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, secondTriggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, secondTriggerBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(secondTriggerBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    local secondActionBoardID = createNewBoard(leftAlignValueActionBoardX, runningYValue, actionBoardWidth, boardHeight)
+    local secondActionBoard = boards[secondActionBoardID]
+    secondActionBoard.cards = {  } -- cards are entity ids.
+    
+    -- map
+    trigger_board_id_to_action_board_id[secondTriggerBoardID] = secondActionBoardID
+    
+    -- give a text label above the board
+    secondActionBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.action_mod_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(secondActionBoard.textEntity, "world")
+    -- give text state
+    add_state_tag(secondActionBoard.textEntity, PLANNING_STATE)
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, secondActionBoard.textEntity, InheritedPropertiesType.PermanentAttachment, secondActionBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(secondActionBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    -- next row
+    runningYValue = runningYValue + boardHeight + boardPadding
+    
+    
+-- ---------------------------------- row 3 --------------------------------- 
+    
+    local thirdTriggerBoardID = createNewBoard(leftAlignValueTriggerBoardX, runningYValue, triggerBoardWidth, boardHeight)
+    local thirdTriggerBoard = boards[thirdTriggerBoardID]
+    thirdTriggerBoard.borderColor = palette.snapToColorName("cyan")
+    thirdTriggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.trigger_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=cyan"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(thirdTriggerBoard.textEntity, "world")
+    -- tex state
+    add_state_tag(thirdTriggerBoard.textEntity, PLANNING_STATE)
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, thirdTriggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, thirdTriggerBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(thirdTriggerBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    local thirdActionBoardID = createNewBoard(leftAlignValueActionBoardX, runningYValue, actionBoardWidth, boardHeight)
+    local thirdActionBoard = boards[thirdActionBoardID]
+    thirdActionBoard.cards = {  } -- cards are entity ids.
+    
+    -- map
+    trigger_board_id_to_action_board_id[thirdTriggerBoardID] = thirdActionBoardID
+    
+    -- give a text label above the board
+    thirdActionBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.action_mod_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(thirdActionBoard.textEntity, "world")
+    -- give text state
+    add_state_tag(thirdActionBoard.textEntity, PLANNING_STATE)
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, thirdActionBoard.textEntity, InheritedPropertiesType.PermanentAttachment, thirdActionBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(thirdActionBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    -- next row
+    runningYValue = runningYValue + boardHeight + boardPadding
+    
+-- ---------------------------------- row 4 ---------------------------------
+
+    local fourthTriggerBoardID = createNewBoard(leftAlignValueTriggerBoardX, runningYValue, triggerBoardWidth, boardHeight)
+    local fourthTriggerBoard = boards[fourthTriggerBoardID]
+    fourthTriggerBoard.borderColor = palette.snapToColorName("cyan")
+    fourthTriggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.trigger_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=cyan"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(fourthTriggerBoard.textEntity, "world")
+    -- tex state
+    add_state_tag(fourthTriggerBoard.textEntity, PLANNING_STATE)
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, fourthTriggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, fourthTriggerBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(fourthTriggerBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP
+    
+    local fourthActionBoardID = createNewBoard(leftAlignValueActionBoardX, runningYValue, actionBoardWidth, boardHeight)
+    local fourthActionBoard = boards[fourthActionBoardID]
+    fourthActionBoard.cards = {  } -- cards are entity ids.
+    
+    -- map
+    trigger_board_id_to_action_board_id[fourthTriggerBoardID] = fourthActionBoardID
+    
+    -- give a text label above the board
+    fourthActionBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
+        function() return localization.get("ui.action_mod_area") end,  -- initial text
+        20.0,                                 -- font size
+        "color=apricot_cream"                       -- animation spec
+    ).config.object
+    -- make the text world space
+    transform.set_space(fourthActionBoard.textEntity, "world")
+    -- give text state
+    add_state_tag(fourthActionBoard.textEntity, PLANNING_STATE)
+    -- let's anchor to top of the trigger board
+    transform.AssignRole(registry, fourthActionBoard.textEntity, InheritedPropertiesType.RoleInheritor, fourthActionBoard:handle(),
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        InheritedPropertiesSync.Strong,
+        InheritedPropertiesSync.Weak,
+        Vec2(0, -10) -- offset it a bit upwards
+    );
+    local roleComp = registry:get(fourthActionBoard.textEntity, InheritedProperties)
+    roleComp.flags = AlignmentFlag.VERTICAL_TOP 
+    
+    -- next row
+    runningYValue = runningYValue + boardHeight + boardPadding
+
+
+-- -------------------------------------------------------------------------- --
+--                           make remove card board                           --
+-- --------------------------------------------------------------------------
     
     -- another board for removing cards from boards.
-    local removeBoardID = createNewBoard(350, 100, 200, 200)
+    local removeBoardID = createNewBoard(leftAlignValueRemoveBoardX, boardPadding, triggerBoardWidth, boardHeight)
     local removeBoard = boards[removeBoardID]
     removeBoard.borderColor = palette.snapToColorName("red")
     removeBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
@@ -1525,8 +1714,8 @@ function initPlanningPhase()
             -- move it somewhere elsewhere
             local t = registry:get(released, Transform)
             if t then
-                t.actualY = t.visualY
-                t.actualX = t.visualX + 500
+                t.actualY = t.visualY + 400
+                t.actualX = t.visualX
             end
             -- is the card part of a stack? if it was previously part of a board, just call reset Z order.
             if releasedCardScript.stackRootEntity and isInBoard then

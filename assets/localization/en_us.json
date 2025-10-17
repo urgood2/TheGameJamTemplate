@@ -1,11 +1,11 @@
 {
 	"ui": {
 		"start_action_phase": "Start Action Phase",
-		"trigger_area": "Trigger Card",
-		"action_mod_area": "Action/Modifier Cards",
-		"remove_card_area": "Free Card",
+		"trigger_area": "Trigger",
+		"action_mod_area": "Actions",
+		"remove_card_area": "Free/Unstack",
 		"augment_action_area": "Augment Action Card",
-		"shop_area": "Shop Area",
+		"shop_area": "Shop",
 		"buy_area": "Buy Card",
 		
 		

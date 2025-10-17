@@ -46,3 +46,6 @@
   - Patched a fix for card dealing, making them not overlap.
   - Added a deal card sound.
   - Noted some bugs.
+  - Refactored some code, redid the layout to allow multiple triggers.
+  - Fixed a collision bug.
+  - Got every trigger slot working.

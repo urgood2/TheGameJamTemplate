@@ -55,8 +55,6 @@ player.stats:on_recompute(function(S)
   S:derived_add_mul_pct('attack_speed', lvl * 3)
 end)
 ```
-
-- make an arena to pan to when action phase starts, it traps enemies and player inside, ideally within the same screen area. lock camera movement, then make it follow the player slightly like in snkrx.
 - link up the combat stat system with the traps and strength bonus action.
 - Collision between player and enemies.
 - implement level-ups. just grant +5 to a chosen stat.
@@ -65,7 +63,6 @@ end)
 - mods projectile_pierces_twice and summon_minion_wandering not implemented. why is minion wandering a mod?
 - apply card tag synergies: mobility, defense, hazard, brute
 - think up and  apply card upgrades. e.g., bolt -> takes on an element -> pierces 3 times -> explodes on impact. We  need an upgrade resource, and an area where upgrades can be applied.
-- make a general big area where cards can be kept. make cards not overlap unless they are stacked. (use colliders? how to disable when dragging so stacking still works?)
 - also need currency.
 
 # errors

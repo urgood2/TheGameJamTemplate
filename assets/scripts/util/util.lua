@@ -11,7 +11,7 @@ local task = require("task/task")
 --   - after    (func?): optional callback after the move finishes
 function camera_smooth_pan_to(camName, tx, ty, opts)
     opts = opts or {}
-    local increments = opts.increments or 5
+    local increments = opts.increments or 2
     local interval   = opts.interval   or 0.01
     local tag        = opts.tag        or ("cam_step_" .. camName)
 

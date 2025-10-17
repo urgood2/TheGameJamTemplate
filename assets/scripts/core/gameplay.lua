@@ -1183,7 +1183,7 @@ function fireActionCardsInBoard(boardEntityID)
         index = index + 1
     end
 end
-function startTriggerNSecondsTimer()
+function startTriggerNSecondsTimer(trigger_board_id, action_board_id, timer_name)
     
     -- this timer should make the card pulse and jiggle + particles. Then it will go through the action board and execute all actions that are on it in sequence.
     
@@ -1192,12 +1192,12 @@ function startTriggerNSecondsTimer()
     local outCubic = Easing.outQuart.f -- the easing function, not the derivative
     
     
-    
+    log_debug("startTriggerNSecondsTimer called for trigger board:", trigger_board_id, "and action board:", action_board_id)
     timer.every(
         3.0,
         function()
             
-            -- only in action state
+            -- onlly in action state
             if not is_state_active(ACTION_STATE) then return end
             
             log_debug("every N seconds trigger fired")
@@ -1227,7 +1227,7 @@ function startTriggerNSecondsTimer()
         0, -- infinite repetitions
         false, -- don't start immediately
         nil, -- no after callback
-        "every_N_seconds_trigger"
+        timer_name -- name of the timer (so we can check if it exists later
     )
 end
 function setUpLogicTimers()
@@ -1236,26 +1236,26 @@ function setUpLogicTimers()
     timer.run(
         function()
             
-            -- does the trigger board exist and have a card?
-            if not trigger_board_id or trigger_board_id == entt_null or not registry:valid(trigger_board_id) then return end
-            
-            local triggerBoard = boards[trigger_board_id]
-            if not triggerBoard or not triggerBoard.cards or #triggerBoard.cards == 0 then return end
-            
-            -- if the card is every N seconds, check that the right timer is running. if not, start one.
-            local triggerCardEid = triggerBoard.cards[1]
-            if not triggerCardEid or triggerCardEid == entt_null or not registry:valid(triggerCardEid) then return end
-            local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
-            if not triggerCardScript then return end
-            
-            if triggerCardScript.cardID == "every_N_seconds" then
-                -- check if the timer is running
-                if timer.get_timer_and_delay("every_N_seconds_trigger") then
-                    -- timer is running, do nothing
-                else
-                    startTriggerNSecondsTimer()
+            for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
+                if triggerBoardID and triggerBoardID ~= entt_null and registry:valid(triggerBoardID) then
+                    local triggerBoard = boards[triggerBoardID]
+                    log_debug("checking trigger board:", triggerBoardID, "contains", triggerBoard and triggerBoard.cards and #triggerBoard.cards or 0, "cards")
+                    if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
+                        local triggerCardEid = triggerBoard.cards[1]
+                        if triggerCardEid and triggerCardEid ~= entt_null and registry:valid(triggerCardEid) then
+                            local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
+                            if triggerCardScript and triggerCardScript.cardID == "every_N_seconds" then
+                                local timerName = "every_N_seconds_trigger_" .. tostring(triggerBoardID)
+                                if not timer.get_timer_and_delay(timerName) then
+                                    startTriggerNSecondsTimer(triggerBoardID, actionBoardID, timerName)
+                                end   
+                                    
+                            end
+                        end
+                    end
                 end
             end
+            
         end
     )
 end
@@ -1268,8 +1268,8 @@ function initPlanningPhase()
     
     
     -- make a few test cards around 600, 300
-    local x = 700
-    local y = 650
+    local x = 950
+    local y = 600
     local offset = 50
     local testCard1 = createNewCard("action", "fire_basic_bolt", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
     local testCard2 = createNewCard("action", "leave_spike_hazard", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
@@ -2216,6 +2216,29 @@ function initActionPhase()
     end,
     nil,
     "spawnEnemyTimer")
+    
+    -- timer to pan camera to follow player
+    timer.every(0.1, function()
+        if is_state_active(ACTION_STATE) then
+            local targetX, targetY = 0, 0
+            local t = registry:get(survivorEntity, Transform)
+            if t then
+                targetX = t.actualX + t.actualW/2
+                targetY = t.actualY + t.actualH/2
+            end
+            camera_smooth_pan_to("world_camera", targetX, targetY) -- pan to the target smoothly
+        else
+            local cam = camera.Get("world_camera")
+            local c = cam:GetActualTarget()
+            
+            -- if not already at halfway point in screen, then move it there
+            if math.abs(c.x - globals.screenWidth()/2) > 5 or math.abs(c.y - globals.screenHeight()/2) > 5 then
+                camera_smooth_pan_to("world_camera", globals.screenWidth()/2, globals.screenHeight()/2) -- pan to the target smoothly
+            end
+        end
+    end,
+    nil,
+    "cameraPanToPlayerTimer")
     
 end
 

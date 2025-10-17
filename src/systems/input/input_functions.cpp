@@ -1786,9 +1786,6 @@ namespace input
         // Use quadtree broad-phase + precise collision check
         auto entitiesAtCursor = transform::FindAllEntitiesAtPoint(cursor_trans, &camera_manager::Get("world_camera")->cam);
 
-        // Clear previous collision state
-        state.nodes_at_cursor.clear();
-        state.collision_list.clear();
         // remove component from all entities
         registry.view<CollisionAtCursorFlag>().each([&registry](entt::entity e)
                                                     { registry.remove<CollisionAtCursorFlag>(e); });

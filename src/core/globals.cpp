@@ -41,7 +41,7 @@ namespace globals {
 
     float globalUIScaleFactor =1.f; // scale factor for UI elements
 
-    bool drawDebugInfo = false; // set to true to allow debug drawing of transforms
+    bool drawDebugInfo = false, drawPhysicsDebug = false; // set to true to allow debug drawing of transforms
     
     const float UI_PROGRESS_BAR_INSET_PIXELS = 4.0f; // inset for progress bar fill (the portion that fills the bar)
 
@@ -100,8 +100,8 @@ namespace globals {
     };
     
     
-    quadtree::Box<float> uiBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the ui space bounds for the quadtree
-    quadtree::Box<float> worldBounds{0, 0, (float)globals::screenWidth, (float)globals::screenHeight}; // Define the world bounds for the quadtree
+    quadtree::Box<float> uiBounds{-(float)globals::screenWidth, -(float)globals::screenHeight, (float)globals::screenWidth * 3, (float)globals::screenHeight * 3}; // Define the ui space bounds for the quadtree
+    quadtree::Box<float> worldBounds{-(float)globals::screenWidth, -(float)globals::screenHeight, (float)globals::screenWidth *3, (float)globals::screenHeight * 3}; // Define the world space bounds for the quadtree
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeWorld(worldBounds, getBoxWorld);
     quadtree::Quadtree<entt::entity, decltype(getBoxWorld)> quadtreeUI(worldBounds, getBoxWorld);
 

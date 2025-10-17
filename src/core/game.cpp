@@ -1275,7 +1275,9 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
                     continue; // skip inactive entities
                 transform::DrawBoundingBoxAndDebugInfo(&globals::registry, e, sprites);
             }
-    
+            
+            
+            
 
         {
             // ZoneScopedN("AnimatedSprite Draw");
@@ -1500,16 +1502,40 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             
 
             // Display UPS and FPS
-            // DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
+            // 
+            
+            // draw rectangles indicating quad tree dimensions
+            if (globals::drawDebugInfo) {
+                DrawText(fmt::format("UPS: {} FPS: {}", main_loop::mainLoop.renderedUPS, GetFPS()).c_str(), 10, 10, 20, RED);
+                
+            }
             
             // -- draw physics world
             
             if (globals::drawDebugInfo) {
+                camera_manager::Begin(worldCamera->cam); // begin camera mode
+                DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(GREEN, 0.1f));
+                DrawText("Screen bounds", 5, 35, 20, GREEN);
+                
+                // bounds for ui quad tree
+                DrawRectangle(globals::uiBounds.left, globals::uiBounds.top, globals::uiBounds.width, globals::uiBounds.height, Fade(BLUE, 0.1f));
+                DrawText("UI QuadTree bounds", globals::uiBounds.left + 5, globals::uiBounds.top + 20, 20, BLUE);
+                
+                // bounds for world quad tree
+                DrawRectangle(globals::worldBounds.left, globals::worldBounds.top, globals::worldBounds.width, globals::worldBounds.height, Fade(RED, 0.1f));
+                DrawText("World QuadTree bounds", globals::worldBounds.left + 300, globals::worldBounds.top + 20, 20, RED);
+                
+                camera_manager::End(); // end camera mode 
+            }
+            
+            if (globals::drawPhysicsDebug) {
                 camera_manager::Begin(worldCamera->cam); // begin camera mode for the physics world
                 
                 
                 physics::ChipmunkDemoDefaultDrawImpl(physicsWorld->space);
                 physicsWorld->DebugDrawContacts();
+                
+                
                 
 
                 camera_manager::End(); // end camera mode for the physics world

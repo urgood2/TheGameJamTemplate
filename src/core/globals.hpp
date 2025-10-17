@@ -106,7 +106,7 @@ namespace globals
 
     extern float globalUIScaleFactor; // scale factor for UI elements
     
-    extern bool drawDebugInfo; // set to true to allow debug drawing of transforms
+    extern bool drawDebugInfo, drawPhysicsDebug; // set to true to allow debug drawing of transforms
     
     extern const float UI_PROGRESS_BAR_INSET_PIXELS; // inset for progress bar fill (the portion that fills the bar)
     

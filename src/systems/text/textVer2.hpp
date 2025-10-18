@@ -13,6 +13,7 @@
 
 #include "core/globals.hpp"
 #include "util/common_headers.hpp"
+#include "systems/main_loop_enhancement/main_loop.hpp"
 
 //TODO: some error-checking to ensure that all tags are enclosed
 
@@ -208,7 +209,7 @@ namespace TextSystem
                 // set created time
                 if (text_.createdTime == -1)
                 {
-                    text_.createdTime = GetTime();
+                    text_.createdTime = main_loop::getTime();
                 }
                 return text_;
             }

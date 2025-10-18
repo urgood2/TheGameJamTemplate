@@ -504,6 +504,18 @@ inline void expose_physics_to_lua(sol::state& lua) {
         true, false
     });
     lua["physics"]["SetVelocity"] = &PhysicsWorld::SetVelocity;
+    
+    //cpVect PhysicsWorld::GetVelocity(entt::entity entity)
+    rec.record_free_function(path, {
+        "GetVelocity",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n---@return {x:number,y:number}",
+        "Returns the body's linear velocity.",
+        true, false
+    });
+    lua["physics"]["GetVelocity"] = [](PhysicsWorld& W, entt::entity e, sol::this_state s) {
+        auto v = W.GetVelocity(e);
+        return vec_to_lua(sol::state_view(s), v);
+    };
 
     rec.record_free_function(path, {
         "SetAngularVelocity",
@@ -748,7 +760,51 @@ inline void expose_physics_to_lua(sol::state& lua) {
             return out;
         });
 
-    // ---------- Lua collision handler registration ----------
+    // ---------- Lua collision handler registration (new ones) ----------
+    rec.record_free_function(path, {
+        "on_pair_begin",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "Registers a begin callback for the pair (tagA, tagB). Return false to reject contact.",
+        true, false
+    });
+    physics_table.set_function("on_pair_begin",
+        [](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {
+            W.RegisterPairBegin(a, b, std::move(fn));
+        });
+
+    rec.record_free_function(path, {
+        "on_pair_separate",
+        "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata)",
+        "Registers a separate callback for the pair (tagA, tagB).",
+        true, false
+    });
+    physics_table.set_function("on_pair_separate",
+        [](PhysicsWorld& W, const std::string& a, const std::string& b, sol::protected_function fn) {
+            W.RegisterPairSeparate(a, b, std::move(fn));
+        });
+
+    rec.record_free_function(path, {
+        "on_wildcard_begin",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata):boolean|nil",
+        "Registers a begin wildcard callback for a single tag (fires for any counterpart).",
+        true, false
+    });
+    physics_table.set_function("on_wildcard_begin",
+        [](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {
+            W.RegisterWildcardBegin(tag, std::move(fn));
+        });
+
+    rec.record_free_function(path, {
+        "on_wildcard_separate",
+        "---@param world physics.PhysicsWorld\n---@param tag string\n---@param fn fun(arb:lightuserdata)",
+        "Registers a separate wildcard callback for a single tag (fires for any counterpart).",
+        true, false
+    });
+    physics_table.set_function("on_wildcard_separate",
+        [](PhysicsWorld& W, const std::string& tag, sol::protected_function fn) {
+            W.RegisterWildcardSeparate(tag, std::move(fn));
+        });
+
     rec.record_free_function(path, {
         "on_pair_presolve",
         "---@param world physics.PhysicsWorld\n---@param tagA string\n---@param tagB string\n---@param fn fun(arb:lightuserdata):boolean|nil",

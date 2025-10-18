@@ -49,3 +49,9 @@
   - Refactored some code, redid the layout to allow multiple triggers.
   - Fixed a collision bug.
   - Got every trigger slot working.
+  - Got camera to follow player.
+  
+10/18/2025
+  - Tested slowing time.
+  - Added animatino for death.
+  - Added animation for shooting projectiles.

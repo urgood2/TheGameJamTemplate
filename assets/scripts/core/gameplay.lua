@@ -877,9 +877,75 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
         :destroy_when(function(self, eid) return self.age >= self.lifetime end)
 end
 
+function slowTime(duration, targetTimeScale)
+    main_loop.data.timescale = targetTimeScale or 0.2 -- slow to 20%, then over X seconds, tween back to 1.0
+    timer.tween(
+        duration or 1.0, -- duration in seconds
+        function() return main_loop.data.timescale end, -- getter
+        function(v) main_loop.data.timescale = v end, -- setter
+        1.0 -- target value
+    )
+end
+
+function killPlayer()
+    -- slow time using main_loop.data.timeScale
+    
+    
+    main_loop.data.timescale = 0.15 -- slow to 15%, then over X seconds, tween back to 1.0
+    timer.tween(
+        1.0, -- duration in seconds
+        function() return main_loop.data.timescale end, -- getter
+        function(v) main_loop.data.timescale = v end, -- setter
+        1.0 -- target value
+    )
+    
+    -- destroy the entity, get particles flying.
+    
+    timer.after(0.01, function()
+        local transform = registry:get(survivorEntity, Transform)
+        
+        -- create a note that draws a red circle where the player was and removes itself after 0.1 second
+        local deathCircle = Node{}
+        deathCircle.lifetime = 0.1
+        deathCircle.age = 0.0
+        local playerX = transform.actualX + transform.actualW * 0.5
+        local playerY = transform.actualY + transform.actualH * 0.5
+        local playerW = transform.actualW
+        local playerH = transform.actualH
+        deathCircle.update = function(self, dt)
+            self.age = self.age + dt
+            command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+                local t = registry:get(survivorEntity, Transform)
+                c.x = playerX
+                c.y = playerY
+                c.rx = playerW * 0.5 * (1.0 + self.age * 5.0)
+                c.ry = playerH * 0.5 * (1.0 + self.age * 5.0)
+                c.color = palette.snapToColorName("red")
+            end, z_orders.player_vfx, layer.DrawCommandSpace.World)
+        end
+        deathCircle:attach_ecs{ create_new = true }
+        deathCircle:destroy_when(function(self, eid) return self.age >= self.lifetime end)
+        
+        spawnCircularBurstParticles(
+            transform.visualX + transform.actualW * 0.5,
+            transform.visualY + transform.actualH * 0.5,
+            8, -- count
+            0.9, -- seconds
+            palette.snapToColorName("blue"), -- start color
+            palette.snapToColorName("red"), -- end color
+            "outCubic", -- from util.easing
+            "world" -- screen space
+        )
+        
+        registry:destroy(survivorEntity)
+    end)
+    
+    
+end
 
 function spawnRandomBullet() 
     
+    local bulletSize = 10
     
     local playerTransform = registry:get(survivorEntity, Transform)
     
@@ -902,12 +968,10 @@ function spawnRandomBullet()
     node:attach_ecs{ create_new = true }
     node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
     
-    --TODO: auto-target nearest enemy in range. For now, random direction.
-    
     -- give transform
-    local centerX = playerTransform.actualX + playerTransform.actualW * 0.5
-    local centerY = playerTransform.actualY + playerTransform.actualH * 0.5
-    transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), centerX, centerY, 16, 16, node:handle())
+    local centerX = playerTransform.actualX + playerTransform.actualW * 0.5 - bulletSize * 0.5
+    local centerY = playerTransform.actualY + playerTransform.actualH * 0.5 - bulletSize * 0.5
+    transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), centerX, centerY, bulletSize, bulletSize, node:handle())
     
     -- give physics.
     
@@ -926,17 +990,52 @@ function spawnRandomBullet()
     
     -- collision mask
     physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"bullet"})
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "bullet", {"enemy"})
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"bullet"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "bullet", {"enemy"})
     
     -- ignore damping
     physics.SetBullet(world, node:handle(), true)
     
-    -- give a random velocity
-    local angle = math.random() * math.pi * 2.0
+    -- Fire in the direction the player is currently moving.
+    local v = physics.GetVelocity(world, survivorEntity)
+    local vx = v.x
+    local vy = v.y
     local speed = 300.0
-    local vx = math.cos(angle) * speed
-    local vy = math.sin(angle) * speed
+
+    -- If the player is standing still, default to forward or random.
+    if vx == 0 and vy == 0 then
+        local angle = math.random() * math.pi * 2.0
+        vx = math.cos(angle)
+        vy = math.sin(angle)
+    end
+
+    -- Normalize
+    local mag = math.sqrt(vx * vx + vy * vy)
+    if mag > 0 then
+        vx, vy = vx / mag * speed, vy / mag * speed
+    end
+
     physics.SetVelocity(world, node:handle(), vx, vy)
+    
+    -- make a new node that discards after 0.1 seconds to mark bullet firing
+    local fireMarkNode = Node{}
+    fireMarkNode.lifetime = 0.1
+    fireMarkNode.age = 0.0
+    fireMarkNode.update = function(self, dt)
+        self.age = self.age + dt
+        -- draw a small flash at the bullet position
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            local t = registry:get(node:handle(), Transform)
+            c.x = t.actualX + t.actualW * 0.5
+            c.y = t.actualY + t.actualH * 0.5
+            c.rx = t.actualW * 1.5
+            c.ry = t.actualH * 1.5
+            c.color = palette.snapToColorName("yellow")
+        end, z_orders.projectiles, layer.DrawCommandSpace.World)
+    end
+    fireMarkNode:attach_ecs{ create_new = true }
+    fireMarkNode:destroy_when(function(self, eid) return self.age >= self.lifetime end)
 end
 
 function spawnRandomTrapHazard()
@@ -1192,7 +1291,7 @@ function startTriggerNSecondsTimer(trigger_board_id, action_board_id, timer_name
     local outCubic = Easing.outQuart.f -- the easing function, not the derivative
     
     
-    log_debug("startTriggerNSecondsTimer called for trigger board:", trigger_board_id, "and action board:", action_board_id)
+    -- log_debug("startTriggerNSecondsTimer called for trigger board:", trigger_board_id, "and action board:", action_board_id)
     timer.every(
         3.0,
         function()
@@ -1200,7 +1299,7 @@ function startTriggerNSecondsTimer(trigger_board_id, action_board_id, timer_name
             -- onlly in action state
             if not is_state_active(ACTION_STATE) then return end
             
-            log_debug("every N seconds trigger fired")
+            -- log_debug("every N seconds trigger fired")
             -- pulse and jiggle the card
             if not trigger_board_id or trigger_board_id == entt_null or not registry:valid(trigger_board_id) then return end
             local triggerBoard = boards[trigger_board_id]
@@ -1239,7 +1338,7 @@ function setUpLogicTimers()
             for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
                 if triggerBoardID and triggerBoardID ~= entt_null and registry:valid(triggerBoardID) then
                     local triggerBoard = boards[triggerBoardID]
-                    log_debug("checking trigger board:", triggerBoardID, "contains", triggerBoard and triggerBoard.cards and #triggerBoard.cards or 0, "cards")
+                    -- log_debug("checking trigger board:", triggerBoardID, "contains", triggerBoard and triggerBoard.cards and #triggerBoard.cards or 0, "cards")
                     if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
                         local triggerCardEid = triggerBoard.cards[1]
                         if triggerCardEid and triggerCardEid ~= entt_null and registry:valid(triggerCardEid) then
@@ -1897,6 +1996,7 @@ function startActionPhase()
     
     activate_state(ACTION_STATE)
     activate_state("default_state") -- just for defaults, keep them open
+    
 end
 
 function startPlanningPhase()
@@ -2071,6 +2171,12 @@ function initActionPhase()
         info
     )
     
+    -- make it collide with enemies.
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
+    
+    -- give survivor collision callback, namely begin.
+    
+    
     -- allow transform manipuation to alter physics body
     -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
     
@@ -2189,6 +2295,43 @@ function initActionPhase()
             -- steering
             steering.make_steerable(registry, enemyEntity, 140.0, 2000.0, math.pi*2.0, 2.0)
             
+            -- make circle marker for enemy appearance, tween it down to 0 scale and then remove it
+            local spawnMarkerNode = Node{}
+            spawnMarkerNode.scale = 1.0
+            local enemyX = enemyTransform.actualX + enemyTransform.actualW/2
+            local enemyY = enemyTransform.actualY + enemyTransform.actualH/2
+            spawnMarkerNode.update = function(self, dt)
+                
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    local t = registry:get(cardEntityID, Transform)
+                    c.x = t.actualX + t.actualW * 0.5
+                    c.y = t.actualY + t.actualH * 0.5
+                    c.w = t.actualW * scale
+                    c.h = t.actualH * scale
+                    c.rx = 15
+                    c.ry = 15
+                    c.color = Col(r, g, b, a)
+                    
+                end, z_orders.card - 1, layer.DrawCommandSpace.World)
+                
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x = enemyX
+                    c.y = enemyY
+                    c.w = 64 * self.scale
+                    c.h = 64 * self.scale
+                    c.rx = 32
+                    c.ry = 32
+                    c.color = Col(1.0, 0.0, 0.0, 0.5)
+                    
+                end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+            end
+            spawnMarkerNode:attach_ecs{}
+            -- tween down
+            -- local h5 = timer.tween(1.2, camera, { x = 320, y = 180, zoom = 1.25 }, nil, nil, "cam_move", "camera")
+            timer.tween(0.2, spawnMarkerNode, { scale = 0.0 }, nil, function()
+                registry:destroy(spawnMarkerNode:handle())
+            end)
+            
             timer.run(function()
                 local t = registry:get(enemyEntity, Transform)
                 
@@ -2225,8 +2368,9 @@ function initActionPhase()
             if t then
                 targetX = t.actualX + t.actualW/2
                 targetY = t.actualY + t.actualH/2
+                camera_smooth_pan_to("world_camera", targetX, targetY) -- pan to the target smoothly
             end
-            camera_smooth_pan_to("world_camera", targetX, targetY) -- pan to the target smoothly
+            
         else
             local cam = camera.Get("world_camera")
             local c = cam:GetActualTarget()

@@ -2333,7 +2333,7 @@ namespace ui
                 // visibility window
                 float alphaFrac = 0.f;
                 if (scr.showUntilT > 0.0) {
-                    const double now = GetTime();
+                    const double now = main_loop::getTime();
                     const double remain = scr.showUntilT - now;
                     if (remain > 0.0) {
                         const double tail = std::min<double>(0.25, scr.showSeconds);

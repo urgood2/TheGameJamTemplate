@@ -24,7 +24,7 @@ namespace game
         // register frame‐time‐dependent uniforms
         shaders::registerUniformUpdate("custom_polychrome", [](Shader &sh) {
             // if you ever need to animate waveSpeed or time, update here
-            globalShaderUniforms.set("custom_polychrome", "time",    (float)GetTime());
+            globalShaderUniforms.set("custom_polychrome", "time",    (float)main_loop::getTime());
         });
 
         // one‐time defaults
@@ -65,7 +65,7 @@ namespace game
 
         // every frame, drive the time
         shaders::registerUniformUpdate("random_displacement_anim", [](Shader &shader) {
-            globalShaderUniforms.set("random_displacement_anim", "iTime", (float)GetTime());
+            globalShaderUniforms.set("random_displacement_anim", "iTime", (float)main_loop::getTime());
         });
 
         
@@ -123,7 +123,7 @@ namespace game
         // outer space
 
         shaders::registerUniformUpdate("outer_space_donuts_bg", [](Shader &shader) { // update iTime every frame
-            globalShaderUniforms.set("outer_space_donuts_bg", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("outer_space_donuts_bg", "iTime", static_cast<float>(main_loop::getTime()));
         });
         // One-time setup
         globalShaderUniforms.set("outer_space_donuts_bg", "iResolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
@@ -142,7 +142,7 @@ namespace game
         
         // flash shader
         shaders::registerUniformUpdate("flash", [](Shader &shader) { // update iTime every frame
-            globalShaderUniforms.set("flash", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("flash", "iTime", static_cast<float>(main_loop::getTime()));
         });
 
         // screen transition
@@ -157,7 +157,7 @@ namespace game
 
         /*
 
-            iTime	float	0.0 → ∞	Elapsed time in seconds. Drives animation. Use GetTime() or delta accumulation.
+            iTime	float	0.0 → ∞	Elapsed time in seconds. Drives animation. Use main_loop::getTime() or delta accumulation.
             texelSize	vec2	1.0 / screenSize	Inverse of resolution. E.g., vec2(1.0/1280.0, 1.0/720.0).
             polar_coordinates	bool	0 or 1	Whether to enable polar swirl distortion. 1 = ON.
             polar_center	vec2	0.0–1.0	Normalized UV center of polar distortion. (0.5, 0.5) = screen center.
@@ -188,7 +188,7 @@ namespace game
         globalShaderUniforms.set("balatro_background", "colour_2", Vector4{0.029411793f, 1.0f, 0.0f, 1.0f});
         globalShaderUniforms.set("balatro_background", "colour_3", Vector4{1.0f, 1.0f, 1.0f, 1.0f});
         shaders::registerUniformUpdate("balatro_background", [](Shader &shader) { // update iTime every frame
-            globalShaderUniforms.set("balatro_background", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("balatro_background", "iTime", static_cast<float>(main_loop::getTime()));
 
             /*
                 spin rotation:
@@ -200,14 +200,14 @@ namespace game
                 Negative	Reverses swirl direction
                 Fractional	Works fine – adds minor shifting
             */
-            globalShaderUniforms.set("balatro_background", "spin_rotation", static_cast<float>(sin(GetTime() * 0.01f) * 13.0f));
+            globalShaderUniforms.set("balatro_background", "spin_rotation", static_cast<float>(sin(main_loop::getTime() * 0.01f) * 13.0f));
         });
 
         // crt
 
         /*
             resolution	vec2	Typically {320, 180} to {1920, 1080}	Target screen resolution, required for scaling effects and sampling.
-            iTime	float	0.0 → ∞	Time in seconds. Use GetTime(). Drives rolling lines, noise, chromatic aberration.
+            iTime	float	0.0 → ∞	Time in seconds. Use main_loop::getTime(). Drives rolling lines, noise, chromatic aberration.
             scan_line_amount	float	0.0 – 1.0	Strength of horizontal scanlines. 0.0 = off, 1.0 = full effect.
             scan_line_strength	float	-12.0 – -1.0	How sharp the scanlines are. More negative = thinner/darker.
             pixel_strength	float	-4.0 – 0.0	How much pixel sampling blur is applied. 0.0 = sharp, -4.0 = blurry.
@@ -224,7 +224,7 @@ namespace game
         */
         globalShaderUniforms.set("crt", "resolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
         shaders::registerUniformUpdate("crt", [](Shader &shader) { // update iTime every frame
-            globalShaderUniforms.set("crt", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("crt", "iTime", static_cast<float>(main_loop::getTime()));
         });
         globalShaderUniforms.set("crt", "roll_speed", 1.49f);
         globalShaderUniforms.set("crt", "resolution", Vector2{1280, 700});
@@ -254,7 +254,7 @@ namespace game
         // glitch
         globalShaderUniforms.set("glitch", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
         shaders::registerUniformUpdate("glitch", [](Shader &shader) { // update iTime every frame
-            globalShaderUniforms.set("glitch", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("glitch", "iTime", static_cast<float>(main_loop::getTime()));
         });
         globalShaderUniforms.set("glitch", "shake_power", 0.03f);
         globalShaderUniforms.set("glitch", "shake_rate", 0.2f);
@@ -264,7 +264,7 @@ namespace game
 
         // wind
         shaders::registerUniformUpdate("wind", [](Shader &shader) { // update iTime every frame
-            globalShaderUniforms.set("wind", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("wind", "iTime", static_cast<float>(main_loop::getTime()));
         });
         globalShaderUniforms.set("wind", "speed", 1.0f);
         globalShaderUniforms.set("wind", "minStrength", 0.05f);
@@ -279,7 +279,7 @@ namespace game
         // pseudo 3d skew
     shaders::registerUniformUpdate("3d_skew", [](Shader &shader)
                                        {
-        globalShaderUniforms.set("3d_skew", "iTime", static_cast<float>(GetTime()));
+        globalShaderUniforms.set("3d_skew", "iTime", static_cast<float>(main_loop::getTime()));
         globalShaderUniforms.set("3d_skew", "mouse_screen_pos", GetMousePosition());
         globalShaderUniforms.set("3d_skew", "resolution", Vector2{
             static_cast<float>(GetScreenWidth()),
@@ -314,8 +314,8 @@ namespace game
         shaders::registerUniformUpdate("squish", [](Shader &shader)
                                        {
         // occilate x and y
-        globalShaderUniforms.set("squish", "squish_x", (float) sin(GetTime() * 0.5f) * 0.1f);
-        globalShaderUniforms.set("squish", "squish_Y", (float) cos(GetTime() * 0.2f) * 0.1f); });
+        globalShaderUniforms.set("squish", "squish_x", (float) sin(main_loop::getTime() * 0.5f) * 0.1f);
+        globalShaderUniforms.set("squish", "squish_Y", (float) cos(main_loop::getTime() * 0.2f) * 0.1f); });
 
         // peaches background
         std::vector<Color> myPalette = {
@@ -328,11 +328,11 @@ namespace game
 
         globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
         shaders::registerUniformUpdate("peaches_background", [](Shader &shader)
-                                       { globalShaderUniforms.set("peaches_background", "iTime", (float)GetTime()); });
+                                       { globalShaderUniforms.set("peaches_background", "iTime", (float)main_loop::getTime()); });
         globalShaderUniforms.set("peaches_background", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});
 
         // === Peaches Background Shader Uniforms ===
-        globalShaderUniforms.set("peaches_background", "iTime", static_cast<float>(GetTime())); // Real-time updated
+        globalShaderUniforms.set("peaches_background", "iTime", static_cast<float>(main_loop::getTime())); // Real-time updated
         globalShaderUniforms.set("peaches_background", "resolution", Vector2{1440.0f, 900.0f}); // Your screen size
 
         // === Blob Settings ===
@@ -374,7 +374,7 @@ namespace game
 
         // foil
         // Time-related
-        globalShaderUniforms.set("foil", "time", (float)GetTime()); // or animated time
+        globalShaderUniforms.set("foil", "time", (float)main_loop::getTime()); // or animated time
         // Dissolve factor (0.0 to 1.0)
         globalShaderUniforms.set("foil", "dissolve", 0.0f); // animate this for dissolve effect
         // Foil animation vector (e.g. shimmer intensity/direction)
@@ -411,14 +411,14 @@ namespace game
 
         // Time update
         shaders::registerUniformUpdate("holo", [](Shader &shader)
-                                       { globalShaderUniforms.set("holo", "time", (float)GetTime()); });
+                                       { globalShaderUniforms.set("holo", "time", (float)main_loop::getTime()); });
 
         // Texture details
         globalShaderUniforms.set("polychrome", "texture_details", Vector4{0.0f, 0.0f, 64.0f, 64.0f}); // offsetX, offsetY, texWidth, texHeight
         globalShaderUniforms.set("polychrome", "image_details", Vector2{64.0f, 64.0f});               // actual size in pixels
 
         // Animation + effect tuning
-        globalShaderUniforms.set("polychrome", "time", (float)GetTime());
+        globalShaderUniforms.set("polychrome", "time", (float)main_loop::getTime());
         globalShaderUniforms.set("polychrome", "dissolve", 0.0f);                // 0.0 to 1.0
         globalShaderUniforms.set("polychrome", "polychrome", Vector2{0.1, 0.1}); // tweak for effect, hue_modulation, animation speed
 
@@ -445,7 +445,7 @@ namespace game
 
         // Time uniform updater
         shaders::registerUniformUpdate("negative_shine", [](Shader &shader)
-                                       { globalShaderUniforms.set("negative_shine", "time", (float)GetTime()); });
+                                       { globalShaderUniforms.set("negative_shine", "time", (float)main_loop::getTime()); });
 
         // Texture layout details
         globalShaderUniforms.set("negative", "texture_details", Vector4{0.0f, 0.0f, 64.0f, 64.0f}); // offsetX, offsetY, texWidth, texHeight
@@ -457,7 +457,7 @@ namespace game
         // Dissolve and timing
         globalShaderUniforms.set("negative", "dissolve", 0.0f); // 0.0 = off, 1.0 = fully dissolved
         shaders::registerUniformUpdate("negative", [](Shader &shader)
-                                       { globalShaderUniforms.set("negative", "time", (float)GetTime()); });
+                                       { globalShaderUniforms.set("negative", "time", (float)main_loop::getTime()); });
 
         // Edge burn colors
         globalShaderUniforms.set("negative", "burn_colour_1", ColorNormalize(RED));    // Primary burn color
@@ -473,14 +473,14 @@ namespace game
         globalShaderUniforms.set("spectrum_circle", "iResolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
 
         shaders::registerUniformUpdate("spectrum_circle", [](Shader &shader) {
-            globalShaderUniforms.set("spectrum_circle", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("spectrum_circle", "iTime", static_cast<float>(main_loop::getTime()));
         });
         globalShaderUniforms.set("spectrum_circle", "uCenter",   Vector2{200, 150});  // relative to uRectPos
         globalShaderUniforms.set("spectrum_circle", "uRadius",   30.0f);
         
         // spectrum line
         shaders::registerUniformUpdate("spectrum_line_background", [](Shader &shader) {
-            globalShaderUniforms.set("spectrum_line_background", "iTime", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("spectrum_line_background", "iTime", static_cast<float>(main_loop::getTime()));
             globalShaderUniforms.set("spectrum_line_background", "iResolution", Vector2{static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())});
         });
         
@@ -507,7 +507,7 @@ namespace game
 
         // Optional live updates
         shaders::registerUniformUpdate("voucher_sheen", [](Shader &shader) {
-            globalShaderUniforms.set("voucher_sheen", "time", static_cast<float>(GetTime()));
+            globalShaderUniforms.set("voucher_sheen", "time", static_cast<float>(main_loop::getTime()));
         });
 
     }

@@ -932,7 +932,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         if (!selfTransform.dynamicMotion) // LATER: handle no updating if dynamicMotion is not active? Selective disabling for children, for example
             return;
 
-        if (dynamicMotion->endTime < GetTime())
+        if (dynamicMotion->endTime < main_loop::getTime())
         {
             // SPDLOG_DEBUG("Dynamic motion ended");
             dynamicMotion = std::nullopt;
@@ -940,15 +940,15 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
 
         auto amplitude = dynamicMotion->scaleAmount;
-        auto oscillation = sin(51.2 * (GetTime() - dynamicMotion->startTime));
-        float easing = pow(std::max(0.0, ((dynamicMotion->endTime - GetTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.8f);
+        auto oscillation = sin(51.2 * (main_loop::getTime() - dynamicMotion->startTime));
+        float easing = pow(std::max(0.0f, ((dynamicMotion->endTime - main_loop::getTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.8f);
 
         dynamicMotion->scale = amplitude * oscillation * easing;
 
         amplitude = dynamicMotion->rotationAmount;
-        oscillation = sin(46.3 * (GetTime() - dynamicMotion->startTime));
+        oscillation = sin(46.3 * (main_loop::getTime() - dynamicMotion->startTime));
         // Use a higher exponent for rotation, making it even snappier
-        easing = pow(std::max(0.0, ((dynamicMotion->endTime - GetTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.1f);
+        easing = pow(std::max(0.0f, ((dynamicMotion->endTime - main_loop::getTime()) / (dynamicMotion->endTime - dynamicMotion->startTime))), 2.1f);
         dynamicMotion->rotation = amplitude * oscillation * easing;
     }
      
@@ -979,7 +979,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         // SPDLOG_DEBUG("Injecting dynamic motion for entity {} with amount: {}, rotationAmount: {}", static_cast<int>(e), amount, rotationAmount);
         AssertThat(amount >= 0 && amount <= 1, Is().EqualTo(true));
         
-        float startTime = GetTime();
+        float startTime = main_loop::getTime();
         float endTime = startTime + 0.4f; // 0.4 seconds
 
         auto &selfTransform = registry->get<Transform>(e);

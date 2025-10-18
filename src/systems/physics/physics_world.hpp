@@ -947,6 +947,12 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
   void EnsurePairInstalled(cpCollisionType ta, cpCollisionType tb);
   
   void InstallDefaultBeginHandlersForAllTags();
+  
+  void RegisterPairBegin(const std::string& a, const std::string& b, sol::protected_function fn);
+  void RegisterPairSeparate(const std::string& a, const std::string& b, sol::protected_function fn);
+  void RegisterWildcardBegin(const std::string& tag, sol::protected_function fn);
+  void RegisterWildcardSeparate(const std::string& tag, sol::protected_function fn);
+
   // Pair registration
   void RegisterPairPreSolve(const std::string &a, const std::string &b,
                             sol::protected_function fn);
@@ -965,31 +971,6 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
   cpBool OnBegin(cpArbiter* arb);   // returns cpTrue/False (Lua may veto)
   void  OnSeparate(cpArbiter* arb); 
             
-  // --- Pair (A,B) ---
-void RegisterPairBegin(const std::string& a, const std::string& b, sol::protected_function fn) {
-    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-    auto& H = _luaPairHandlers[PairKey(ta, tb)];
-    H.begin = std::move(fn);
-    EnsurePairInstalled(ta, tb);
-}
-void RegisterPairSeparate(const std::string& a, const std::string& b, sol::protected_function fn) {
-    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
-    auto& H = _luaPairHandlers[PairKey(ta, tb)];
-    H.separate = std::move(fn);
-    EnsurePairInstalled(ta, tb);
-}
-
-// --- Wildcard (any with tag) ---
-void RegisterWildcardBegin(const std::string& tag, sol::protected_function fn) {
-    cpCollisionType t = TypeForTag(tag);
-    _luaWildcardHandlers[t].begin = std::move(fn);
-    EnsureWildcardInstalled(t);
-}
-void RegisterWildcardSeparate(const std::string& tag, sol::protected_function fn) {
-    cpCollisionType t = TypeForTag(tag);
-    _luaWildcardHandlers[t].separate = std::move(fn);
-    EnsureWildcardInstalled(t);
-}
   // Optional unregistration helpers if you want:
   void ClearPairHandlers(const std::string &a, const std::string &b);
   void ClearWildcardHandlers(const std::string &tag);
@@ -1355,6 +1336,7 @@ entt::entity AddOneWayPlatform(float x1, float y1,
   void SetDamping(entt::entity entity, float damping);
   void SetGlobalDamping(float damping);
   void SetVelocity(entt::entity entity, float velocityX, float velocityY);
+  cpVect GetVelocity(entt::entity entity) ;
   void SetAngularVelocity(entt::entity entity, float angularVelocity);
   void SetAngularDamping(entt::entity entity, float angularDamping);
   void SetRestitution(entt::entity entity, float restitution);

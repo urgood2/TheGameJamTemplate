@@ -5472,6 +5472,28 @@ function GameCamera:Update(...) end
 
 
 ---
+--- Holds timing, frame rate, and delta-time state for the main game loop.
+---
+---@class MainLoopData
+MainLoopData = {
+    smoothedDeltaTime = float,  -- Smoothed delta time for the current frame.
+    realtimeTimer = float,  -- Real-time timer since game start (unscaled).
+    totaltimeTimer = float,  -- Total accumulated in-game time excluding pauses.
+    timescale = float,  -- Scaling factor applied to delta time (1.0 = normal speed).
+    rate = float,  -- Fixed timestep in seconds (default 1/60).
+    lag = float,  -- Accumulated lag between fixed updates.
+    maxFrameSkip = float,  -- Maximum number of fixed updates processed per frame.
+    frame = int,  -- Frame counter since start of the game.
+    framerate = float,  -- Target rendering frame rate.
+    sleepTime = float,  -- Sleep duration per frame to prevent CPU hogging.
+    updates = int,  -- Number of logic updates in the current second.
+    renderedUPS = int,  -- Smoothed updates per second (running average).
+    renderedFPS = int,  -- Smoothed frames per second (running average).
+    updateTimer = float  -- Timer used to compute UPS over time.
+}
+
+
+---
 --- 
 ---
 ---@class InputState
@@ -7704,6 +7726,14 @@ function physics.get_shape_bb(...) end
 function physics.SetVelocity(...) end
 
 ---
+--- Returns the body's linear velocity.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return {x:number,y:number}
+function physics.GetVelocity(...) end
+
+---
 --- Sets angular velocity on the entity's body.
 ---
 ---@param world physics.PhysicsWorld
@@ -7912,6 +7942,40 @@ function physics.arb_set_ptr(...) end
 ---@param key string
 ---@return lightuserdata|nil
 function physics.arb_get_ptr(...) end
+
+---
+--- Registers a begin callback for the pair (tagA, tagB). Return false to reject contact.
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB string
+---@param fn fun(arb:lightuserdata):boolean|nil
+function physics.on_pair_begin(...) end
+
+---
+--- Registers a separate callback for the pair (tagA, tagB).
+---
+---@param world physics.PhysicsWorld
+---@param tagA string
+---@param tagB string
+---@param fn fun(arb:lightuserdata)
+function physics.on_pair_separate(...) end
+
+---
+--- Registers a begin wildcard callback for a single tag (fires for any counterpart).
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+---@param fn fun(arb:lightuserdata):boolean|nil
+function physics.on_wildcard_begin(...) end
+
+---
+--- Registers a separate wildcard callback for a single tag (fires for any counterpart).
+---
+---@param world physics.PhysicsWorld
+---@param tag string
+---@param fn fun(arb:lightuserdata)
+function physics.on_wildcard_separate(...) end
 
 ---
 --- Registers a pre-solve callback for the pair (tagA, tagB). Return false to reject contact.

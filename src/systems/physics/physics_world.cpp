@@ -208,10 +208,10 @@ void PhysicsWorld::OnCollisionBegin(cpArbiter *arb) {
   cpShape *shapeA, *shapeB;
   cpArbiterGetShapes(arb, &shapeA, &shapeB);
 
-  SPDLOG_DEBUG("[Begin] A sensor? {}  B sensor? {}  A tag={}  B tag={}",
-               (int)cpShapeGetSensor(shapeA), (int)cpShapeGetSensor(shapeB),
-               GetTagFromCategory(cpShapeGetFilter(shapeA).categories),
-               GetTagFromCategory(cpShapeGetFilter(shapeB).categories));
+  // SPDLOG_DEBUG("[Begin] A sensor? {}  B sensor? {}  A tag={}  B tag={}",
+  //              (int)cpShapeGetSensor(shapeA), (int)cpShapeGetSensor(shapeB),
+  //              GetTagFromCategory(cpShapeGetFilter(shapeA).categories),
+  //              GetTagFromCategory(cpShapeGetFilter(shapeB).categories));
 
   bool isTriggerA = cpShapeGetSensor(shapeA);
   bool isTriggerB = cpShapeGetSensor(shapeB);
@@ -1255,6 +1255,36 @@ void PhysicsWorld::ApplyForce(entt::entity entity, float forceX, float forceY) {
                                cpBodyGetPosition(collider.body.get()));
 }
 
+void PhysicsWorld::RegisterPairBegin(const std::string& a,
+                                     const std::string& b,
+                                     sol::protected_function fn) {
+    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
+    _luaPairHandlers[PairKey(ta, tb)].begin = std::move(fn);
+    EnsurePairInstalled(ta, tb);
+}
+
+void PhysicsWorld::RegisterPairSeparate(const std::string& a,
+                                        const std::string& b,
+                                        sol::protected_function fn) {
+    cpCollisionType ta = TypeForTag(a), tb = TypeForTag(b);
+    _luaPairHandlers[PairKey(ta, tb)].separate = std::move(fn);
+    EnsurePairInstalled(ta, tb);
+}
+
+void PhysicsWorld::RegisterWildcardBegin(const std::string& tag,
+                                         sol::protected_function fn) {
+    cpCollisionType t = TypeForTag(tag);
+    _luaWildcardHandlers[t].begin = std::move(fn);
+    EnsureWildcardInstalled(t);
+}
+
+void PhysicsWorld::RegisterWildcardSeparate(const std::string& tag,
+                                            sol::protected_function fn) {
+    cpCollisionType t = TypeForTag(tag);
+    _luaWildcardHandlers[t].separate = std::move(fn);
+    EnsureWildcardInstalled(t);
+}
+
 void PhysicsWorld::RegisterPairPreSolve(const std::string &a,
                                         const std::string &b,
                                         sol::protected_function fn) {
@@ -1376,11 +1406,11 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
       accept = false;
   }
   
-  SPDLOG_DEBUG("Begin: sa={} sb={} ta={} tb={} tags=({}, {}) sensors=({}, {}) accept={}",
-             SID(sa), SID(sb), (int)ta, (int)tb,
-             TagOf(this, sa), TagOf(this, sb),
-             (int)cpShapeGetSensor(sa), (int)cpShapeGetSensor(sb),
-             accept);
+  // SPDLOG_DEBUG("Begin: sa={} sb={} ta={} tb={} tags=({}, {}) sensors=({}, {}) accept={}",
+  //            SID(sa), SID(sb), (int)ta, (int)tb,
+  //            TagOf(this, sa), TagOf(this, sb),
+  //            (int)cpShapeGetSensor(sa), (int)cpShapeGetSensor(sb),
+  //            accept);
 
   return accept ? cpTrue : cpFalse;
 }
@@ -1394,8 +1424,8 @@ void PhysicsWorld::OnSeparate(cpArbiter *arb) {
   cpCollisionType tb = cpShapeGetCollisionType(sb);
   const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
   
-  SPDLOG_DEBUG("Separate: sa={} sb={} ta={} tb={} tags=({}, {})",
-             SID(sa), SID(sb), (int)ta, (int)tb, TagOf(this, sa), TagOf(this, sb));
+  // SPDLOG_DEBUG("Separate: sa={} sb={} ta={} tb={} tags=({}, {})",
+  //            SID(sa), SID(sb), (int)ta, (int)tb, TagOf(this, sa), TagOf(this, sb));
 
   LuaArbiter luaArb{arb};
 
@@ -1448,6 +1478,11 @@ void PhysicsWorld::SetVelocity(entt::entity entity, float velocityX,
                                float velocityY) {
   auto &collider = registry->get<ColliderComponent>(entity);
   cpBodySetVelocity(collider.body.get(), cpv(velocityX, velocityY));
+}
+
+cpVect PhysicsWorld::GetVelocity(entt::entity entity) {
+  auto &collider = registry->get<ColliderComponent>(entity);
+  return cpBodyGetVelocity(collider.body.get());
 }
 
 void PhysicsWorld::Align(entt::entity entity,

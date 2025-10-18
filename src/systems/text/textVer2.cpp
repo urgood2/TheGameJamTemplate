@@ -1719,7 +1719,7 @@ namespace TextSystem
                                         );
                                     if (fired) {
                                         // update text created time to ensure pop-in animation is not blocked
-                                        text.createdTime = GetTime();
+                                        text.createdTime = main_loop::getTime();
                                     }
                                     break;
                                 }
@@ -1730,7 +1730,7 @@ namespace TextSystem
                                     );
                                     if (fired) {
                                         // update text created time to ensure pop-in animation is not blocked
-                                        text.createdTime = GetTime();
+                                        text.createdTime = main_loop::getTime();
                                     }
                                     else {
                                         // if not fired, block everything until they press
@@ -1764,7 +1764,7 @@ namespace TextSystem
                                         fired = true;
                                         
                                         // update text created time to ensure pop-in animation is not blocked
-                                        text.createdTime = GetTime();
+                                        text.createdTime = main_loop::getTime();
                                     }
                                     break;
                                 }
@@ -1784,7 +1784,7 @@ namespace TextSystem
                 // Apply Pop-in Animation
                 if (character.pop_in && character.pop_in < 1.0f)
                 {
-                    float elapsedTime = GetTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
+                    float elapsedTime = main_loop::getTime() - text.createdTime - character.pop_in_delay.value_or(0.05f);
                     if (elapsedTime > 0)
                     {
                         character.pop_in = std::min(1.0f, elapsedTime / 0.5f);                  // 0.5s duration

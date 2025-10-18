@@ -287,7 +287,7 @@ namespace input
 
                     if (scr.offset != scr.prevOffset) {
                         // make bars visible for a bit
-                        scr.showUntilT = GetTime() + scr.showSeconds;
+                        scr.showUntilT = main_loop::getTime() + scr.showSeconds;
 
                         // push displacement to children (your existing pattern)
                         ui::box::TraverseUITreeBottomUp(

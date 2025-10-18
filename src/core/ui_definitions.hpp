@@ -499,7 +499,7 @@ namespace ui_defs
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
             
             // set value based on sin of time, 0 < value < 1
-            progressValueExample = (std::sin(GetTime()) + 1.f) / 2.f;
+            progressValueExample = (std::sin(main_loop::getTime()) + 1.f) / 2.f;
             
         });
         auto progressBar = ui::UIElementTemplateNode::Builder::create()
@@ -533,7 +533,7 @@ namespace ui_defs
         timer::TimerSystem::timer_every(0.1f, [](std::optional<float> f) {
             
             // set value based on sin of time, 0 < value < 1
-            progressValueExample9Patch = (std::sin(GetTime()) + 1.f) / 2.f;
+            progressValueExample9Patch = (std::sin(main_loop::getTime()) + 1.f) / 2.f;
             
         });
         

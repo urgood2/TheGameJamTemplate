@@ -179,7 +179,7 @@ namespace ui
     std::vector<Vector2> util::GetChosenTriangleFromRect(float x, float y, float w, float h, bool vert)
     {
         float scale = 2.0f;
-        float time = GetTime(); // Raylib's timer equivalent of G.TIMERS.REAL
+        float time = main_loop::getTime(); // Raylib's timer equivalent of G.TIMERS.REAL
 
         if (vert)
         {

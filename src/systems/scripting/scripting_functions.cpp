@@ -456,6 +456,9 @@ namespace scripting {
         // expose imgui to lua
         sol_ImGui::Init(stateToInit);
         
+        // main loop settings
+        main_loop::exposeToLua(stateToInit);
+        
         // ------------------------------------------------------
         // input functions
         // ------------------------------------------------------
@@ -577,7 +580,7 @@ namespace scripting {
         
         lua["GetTime"] = []() -> float {
             // Get the time elapsed since the last frame
-            return GetTime();
+            return main_loop::getTime();
         };
         
         lua["GetScreenWidth"] = []() -> int {

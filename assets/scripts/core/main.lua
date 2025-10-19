@@ -452,6 +452,8 @@ function main.init()
                 "outCubic", -- from util.easing
                 "screen" -- screen space
             )
+            
+            slowTime(5, 0.2) -- slow time to 50% for 0.2 seconds
         end
         
     end)

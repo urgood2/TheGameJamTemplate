@@ -2302,7 +2302,6 @@ function initActionPhase()
             local enemyY = enemyTransform.actualY + enemyTransform.actualH/2
             spawnMarkerNode.update = function(self, dt)
                 
-                end, z_orders.card - 1, layer.DrawCommandSpace.World)
                 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x = enemyX
@@ -2311,7 +2310,7 @@ function initActionPhase()
                     c.h = 64 * self.scale
                     c.rx = 32
                     c.ry = 32
-                    c.color = Col(1.0, 0.0, 0.0, 0.5)
+                    c.color = Col(255, 255, 255, 255)
                     
                 end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
             end

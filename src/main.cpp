@@ -227,75 +227,65 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 // The main game loop callback / blocking loop
 void RunGameLoop()
 {
-    // SPDLOG_DEBUG("RunGameLoop called");
-    // Store the initial time
+    // ---------- Initialization ----------
     float lastFrameTime = GetTime();
 
-    // Parameters for smoothing deltaTime
+    // Optional frame smoothing (helps even out jitter in GetFrameTime)
     const int frameSmoothingCount = 10;
     std::deque<float> frameTimes;
 
-    // Maximum updates per frame to avoid overcompensation
+    // Safety: limit how many fixed updates can run per frame
     const int maxUpdatesPerFrame = 5;
 
-    // Accurate FPS counter using real time
+    // FPS tracking
     int frameCounter = 0;
     double fpsLastTime = GetTime();
 
-    bool firstFrame = true;
-
 #ifndef __EMSCRIPTEN__
-    // On desktop, spin until window closes:
     while (!WindowShouldClose())
     {
 #endif
-        // layer::Push(&worldCamera->cam);  // moving stuff from render loop here so we can allow imgui to be used in update loop.
         BeginDrawing();
-        
 
 #ifndef __EMSCRIPTEN__
-                // ZoneScopedN("Debug UI");
-        // rlImGuiBeginDelta(GetFrameTime()); // Required: starts ImGui frame
-        rlImGuiBegin(); // Required: starts ImGui frame
-        
-    
-        // we run this every frame, it can't be done in the update loop witout causing problems.
+        rlImGuiBegin(); // Begin ImGui each frame (desktop only)
 #endif
+
         using namespace main_loop;
 
-        // Smooth deltaTime over the last few frames
-        float rawDeltaTime = std::max(GetFrameTime() * mainLoop.timescale, 0.001f); // minimum delta time of 1ms
+        // ---------- Step 1: Measure REAL frame time ----------
+        float rawDeltaTime = std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
+
+        // Optional smoothing
         frameTimes.push_back(rawDeltaTime);
         if (frameTimes.size() > frameSmoothingCount)
-        {
             frameTimes.pop_front();
-        }
+
         float deltaTime = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
 
-        // save delta time for use in systems
-        mainLoop.smoothedDeltaTime = deltaTime;
-
-        // accumulate timers
+        // ---------- Step 2: Accumulate time ----------
         mainLoop.realtimeTimer += deltaTime;
-        if (!globals::isGamePaused) {
+        if (!globals::isGamePaused)
             mainLoop.totaltimeTimer += deltaTime;
-        }
 
-        // Accumulate lag for fixed timestep updates, capping it to avoid excessive updates
+        // Accumulate lag for fixed-step updates (real time, not scaled)
         mainLoop.lag = std::min(mainLoop.lag + deltaTime, mainLoop.rate * mainLoop.maxFrameSkip);
 
-        // Perform fixed-timestep updates
+        // ---------- Step 3: Fixed updates ----------
         int updatesPerformed = 0;
         while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
         {
-            MainLoopFixedUpdateAbstraction(mainLoop.rate);
+            // Pass scaled time into your update logic
+            float scaledStep = mainLoop.rate * mainLoop.timescale;
+            MainLoopFixedUpdateAbstraction(scaledStep);
+
             mainLoop.lag -= mainLoop.rate;
             mainLoop.updates++;
             updatesPerformed++;
-            mainLoop.frame++; // increment frame counter
+            mainLoop.frame++;
         }
 
-        // Update the UPS (updates per second) counter
+        // ---------- Step 4: Update UPS counter ----------
         mainLoop.updateTimer += deltaTime;
         if (mainLoop.updateTimer >= 1.0f)
         {
@@ -304,14 +294,17 @@ void RunGameLoop()
             mainLoop.updateTimer = 0.0f;
         }
 
-        // Render
-        MainLoopRenderAbstraction(deltaTime);
-        
-        // render-time-only timers
-        timer::TimerSystem::update_render_timers(deltaTime);
+        // ---------- Step 5: Rendering ----------
+        // Optional interpolation factor (use for smooth rendering)
+        float alpha = mainLoop.lag / mainLoop.rate;
 
+        // Pass alpha or deltaTime as appropriate to your renderer
+        MainLoopRenderAbstraction(alpha);
 
-        // Update FPS counter (accurate version)
+        // Render-time timers (if you use time-scaled effects here, apply timescale manually)
+        timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
+
+        // ---------- Step 6: FPS counter ----------
         frameCounter++;
         double now = GetTime();
         if (now - fpsLastTime >= 1.0)
@@ -320,18 +313,16 @@ void RunGameLoop()
             frameCounter = 0;
             fpsLastTime = now;
         }
-        
+
 #ifndef __EMSCRIPTEN__
         rlImGuiEnd();
 #endif
-        EndDrawing(); // end drawing for this frame
+        EndDrawing();
 
 #ifdef __EMSCRIPTEN__
-        // Under Emscripten, stop the browser loop if window is closed
-        // if (WindowShouldClose())
-        //     emscripten_cancel_main_loop();
-#else 
-    } // end while (!WindowShouldClose())
+        // (No while loop on web)
+#else
+    } // while (!WindowShouldClose())
 #endif
 }
 int main(void)

@@ -57,6 +57,8 @@
 #include "systems/composable_mechanics/bootstrap.hpp"
 #include "systems/composable_mechanics/ability.hpp"
 
+#include "systems/scripting/lua_hot_reload.hpp"
+
 using std::pair;
 
 #define SPINE_USE_STD_FUNCTION
@@ -1496,6 +1498,8 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
                 // ZoneScopedN("Debug UI");
                 shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
                 ShowDebugUI();
+                lua_hot_reload::draw_imgui(ai_system::masterStateLua);
+
                 
 #endif
             }

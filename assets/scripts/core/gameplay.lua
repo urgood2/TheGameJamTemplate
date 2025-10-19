@@ -2175,7 +2175,7 @@ function initActionPhase()
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
     
     -- give survivor collision callback, namely begin.
-    
+    -- modifying a file.
     
     -- allow transform manipuation to alter physics body
     -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
@@ -2302,16 +2302,6 @@ function initActionPhase()
             local enemyY = enemyTransform.actualY + enemyTransform.actualH/2
             spawnMarkerNode.update = function(self, dt)
                 
-                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-                    local t = registry:get(cardEntityID, Transform)
-                    c.x = t.actualX + t.actualW * 0.5
-                    c.y = t.actualY + t.actualH * 0.5
-                    c.w = t.actualW * scale
-                    c.h = t.actualH * scale
-                    c.rx = 15
-                    c.ry = 15
-                    c.color = Col(r, g, b, a)
-                    
                 end, z_orders.card - 1, layer.DrawCommandSpace.World)
                 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)

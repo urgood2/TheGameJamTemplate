@@ -37,6 +37,8 @@
 #include "systems/text/static_ui_text.hpp"
 #include "util/utilities.hpp"
 
+#include "lua_hot_reload.hpp"
+
 #include "meta_helper.hpp"
 #include "registry_bond.hpp"
 #include "scripting_system.hpp"
@@ -488,7 +490,8 @@ namespace scripting {
         
         // read all the script files and load them into the lua state
         for (auto &filename : scriptFilesToRead) {
-            stateToInit.script_file(filename);
+            // stateToInit.script_file(filename);
+            lua_hot_reload::track(filename);
             
             auto code_valid_result = stateToInit.script_file(filename, [](lua_State*, sol::protected_function_result pfr) {
                 // pfr will contain things that went wrong, for either loading or executing the script

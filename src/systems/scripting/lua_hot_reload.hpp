@@ -142,6 +142,15 @@ namespace lua_hot_reload {
                     ImGui::PopID();
                 }
             }
+            
+            if (ImGui::Begin("Lua Hot Reload")) {
+                // existing reload stuff...
+
+                ImGui::Separator();
+                if (ImGui::Button("🔁 Reload Game from Scratch")) {
+                    game::ReloadGame();
+                }
+            }
         }
         ImGui::End();
     }

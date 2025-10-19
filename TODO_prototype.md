@@ -19,6 +19,7 @@ modifier_card_defs
 - player level.
     
 # programming side
+- reInitializeGame - finish implementing this and test.
 - use begin() callback to detect collision between player and enemies, then show an effect + slow time.
 - make dashed lines be used only when a trigger + action is valid and active.
 - add new stats with 

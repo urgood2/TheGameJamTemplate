@@ -55,3 +55,9 @@
   - Tested slowing time.
   - Added animatino for death.
   - Added animation for shooting projectiles.
+  
+10/19/2025
+  - Fixed main loop bug that caused stutter when slowing time.
+  - Added lua script hot reloading system with ImGui interface.
+  - Added "Reload Game from Scratch" button to lua hot reload ImGui window.
+  - Need to finish reInitializeGame function to reset game state when reloading.

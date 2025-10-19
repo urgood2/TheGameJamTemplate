@@ -325,6 +325,19 @@ void RunGameLoop()
     } // while (!WindowShouldClose())
 #endif
 }
+
+// contains what needs to be done to re-initialize main after a reset, includes init methods from main.cpp that go beyond baseline init
+void reInitializeGame()
+{
+    globals::registry.clear();
+    // TODO: clear all timers
+    // TODO: remove physics world & clear manager
+    // TODO: clear layers if necessary
+   
+    input::Init(globals::inputState);
+    game::init();
+}
+
 int main(void)
 {
 

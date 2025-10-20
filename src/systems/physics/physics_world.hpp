@@ -699,6 +699,11 @@ struct UFNode {
 class PhysicsWorld {
 public:
 
+
+  std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
+  cpCollisionType _nextCollisionType =
+      1; // Start from 1, as 0 is default in Chipmunk
+      
   // General Members
   entt::registry *registry;
   cpBB worldBounds = cpBBNew(-3000, -3000, 3000, 3000); // default world AABB
@@ -1592,9 +1597,6 @@ private:
   /* -------------------------- other private members -------------------------
    */
 
-  std::unordered_map<std::string, cpCollisionType> _tagToCollisionType;
-  cpCollisionType _nextCollisionType =
-      1; // Start from 1, as 0 is default in Chipmunk
 
   // —— Union-Find state ——
   std::unordered_map<cpBody *, UFNode> _groupNodes;

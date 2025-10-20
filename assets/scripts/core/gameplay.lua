@@ -2189,7 +2189,6 @@ function initActionPhase()
     physics.enable_collision_between_many(PhysicsManager.get_world("world"), "WORLD", {"player"})
     physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"WORLD"})
     
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"WORLD"})
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", {"player"})
     
@@ -2197,7 +2196,7 @@ function initActionPhase()
     -- make walls after defining collision relationships, tesitng because of bug.
     physics.add_screen_bounds(PhysicsManager.get_world("world"), 
         SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
-        10, 
+        30, 
         "WORLD"
     )
     
@@ -2207,6 +2206,12 @@ function initActionPhase()
     -- give shader pipeline comp for later use
     local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
 
+    
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"}) -- enemy>player and enemy>enemy
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"enemy"}) -- player>enemy
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
+    
     
     -- give survivor collision callback, namely begin.
     -- modifying a file.
@@ -2357,6 +2362,8 @@ function initActionPhase()
                 info
             )
             
+            -- 
+            
             physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
             physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
             
@@ -2444,7 +2451,7 @@ function initActionPhase()
     
     
     -- blanket collision update
-    physics.reapply_all_filters(PhysicsManager.get_world("world"))
+    -- physics.reapply_all_filters(PhysicsManager.get_world("world"))
     
 end
 
@@ -2505,6 +2512,6 @@ function initPlanningUI()
     -- ggive entire box the planning state
     ui.box.AssignStateTagsToUIBox(planningUIEntities.start_action_button_box, PLANNING_STATE)
     
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
+    
     
 end

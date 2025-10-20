@@ -838,21 +838,7 @@ void PhysicsWorld::PrintCollisionTags() {
   }
 }
 
-void PhysicsWorld::AddCollisionTag(const std::string &tag) {
-  if (collisionTags.find(tag) != collisionTags.end())
-    return;
 
-  int category = 1;
-  while (categoryToTag.contains(category))
-    category <<= 1;
-
-  collisionTags[tag] = {category, {}, {}};
-  triggerTags[tag] = {category, {}, {}};
-  categoryToTag[category] = tag;
-  _tagToCollisionType[tag] = _nextCollisionType++;
-
-  EnsureWildcardInstalled(_tagToCollisionType[tag]);
-}
 
 void PhysicsWorld::RemoveCollisionTag(const std::string &tag) {
   if (!collisionTags.contains(tag))
@@ -926,8 +912,6 @@ void PhysicsWorld::ReapplyAllFilters() {
   });
 }
 
-
-
 void PhysicsWorld::ApplyCollisionFilter(cpShape *shape, const std::string &tag) {
   auto it = collisionTags.find(tag);
   if (it == collisionTags.end()) {
@@ -942,15 +926,25 @@ void PhysicsWorld::ApplyCollisionFilter(cpShape *shape, const std::string &tag) 
   }
 
   cpShapeFilter filter = {
- 0,
- static_cast<cpBitmask>(ct.category),
- maskBits
+      0,
+      static_cast<cpBitmask>(ct.category),
+      maskBits
   };
   cpShapeSetFilter(shape, filter);
 
-  SPDLOG_TRACE("ApplyFilter shape={} tag='{}' cat={:#x} mask={:#x}",
+  // ✅ ALSO set the Chipmunk collision type here:
+  if (auto typeIt = _tagToCollisionType.find(tag);
+      typeIt != _tagToCollisionType.end()) {
+      cpShapeSetCollisionType(shape, typeIt->second);
+  } else {
+      SPDLOG_WARN("ApplyCollisionFilter: tag '{}' has no collisionType, defaulting to 0", tag);
+      cpShapeSetCollisionType(shape, 0);
+  }
+
+  SPDLOG_TRACE("ApplyFilter shape={} tag='{}' cat={:#x} mask={:#x} type={}",
                SID(shape), tag,
-               (unsigned)filter.categories, (unsigned)filter.mask);
+               (unsigned)filter.categories, (unsigned)filter.mask,
+               (int)cpShapeGetCollisionType(shape));
 }
 
 std::vector<RaycastHit> PhysicsWorld::Raycast(float x1, float y1, float x2,
@@ -1282,6 +1276,53 @@ void PhysicsWorld::ApplyForce(entt::entity entity, float forceX, float forceY) {
                                cpBodyGetPosition(collider.body.get()));
 }
 
+void PhysicsWorld::AddCollisionTag(const std::string &tag) {
+    // Already exists? nothing to do.
+    if (collisionTags.contains(tag))
+        return;
+
+    // --- 1. Allocate unique category bit ---
+    int category = 1;
+    while (categoryToTag.contains(category)) {
+        category <<= 1;
+        if (category == 0) {
+            SPDLOG_ERROR("AddCollisionTag: ran out of category bits!");
+            category = 1; // fallback
+            break;
+        }
+    }
+
+    // --- 2. Allocate a new unique collisionType ---
+    if (_nextCollisionType == 0)
+        _nextCollisionType = 1; // reserve 0 for default/invalid
+    cpCollisionType newType = _nextCollisionType++;
+
+    // --- 3. Store mappings ---
+    CollisionTag ct;
+    ct.category = category;
+    collisionTags[tag] = ct;
+    triggerTags[tag] = ct;
+
+    categoryToTag[category] = tag;
+    _tagToCollisionType[tag] = newType;
+    
+    // optional: retroactively apply type/filter to any existing shapes with this tag
+    registry->view<ColliderComponent>().each([&](auto, auto &c) {
+        if (c.tag != tag) return;
+        ForEachShape(c, [&](cpShape *s) {
+            ApplyCollisionFilter(s, tag);
+        });
+    });
+
+    // --- 4. Install wildcard handler (if you use wildcard behavior) ---
+    EnsureWildcardInstalled(newType);
+
+    SPDLOG_INFO("AddCollisionTag: '{}' -> category={:#x}, type={}",
+                tag, category, (int)newType);
+                
+                
+}
+
 void PhysicsWorld::RegisterPairBegin(const std::string& a, const std::string& b, sol::protected_function fn) {
     cpCollisionType ta = TypeForTag(a);
     cpCollisionType tb = TypeForTag(b);
@@ -1289,6 +1330,7 @@ void PhysicsWorld::RegisterPairBegin(const std::string& a, const std::string& b,
     const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
     _luaPairHandlers[key].begin = std::move(fn);
     EnsurePairInstalled(ta, tb);
+    SPDLOG_INFO("[REGISTER BEGIN] '{}'={} '{}'={} key={}", a, (int)ta, b, (int)tb, key);
 }
 
 
@@ -1391,6 +1433,7 @@ void PhysicsWorld::C_Separate(cpArbiter *a, cpSpace *, void *d) {
 }
 
 cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
+  
 
   cpShape *shapeA, *shapeB;
   cpArbiterGetShapes(arb, &shapeA, &shapeB);
@@ -1402,6 +1445,8 @@ cpBool PhysicsWorld::OnBegin(cpArbiter *arb) {
   cpCollisionType ta = cpShapeGetCollisionType(sa);
   cpCollisionType tb = cpShapeGetCollisionType(sb);
   const uint64_t key = PairKey(std::min(ta, tb), std::max(ta, tb));
+  
+  SPDLOG_INFO("[ON_BEGIN] ta={} tb={} key={}", (int)ta, (int)tb, key);
   
   LuaArbiter luaArb{arb};
 

@@ -7657,6 +7657,12 @@ function physics.disable_trigger_between(...) end
 function physics.update_collision_masks_for(...) end
 
 ---
+--- Re-applies collision filters to all shapes based on their current tags.
+---
+---@param world physics.PhysicsWorld
+function physics.reapply_all_filters(...) end
+
+---
 --- Converts a lightuserdata (internally an entity id) to entt.entity.
 ---
 ---@param p lightuserdata

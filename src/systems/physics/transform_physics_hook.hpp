@@ -473,6 +473,17 @@ namespace physics {
 
     rec->w->AddCollisionTag(ci.tag);
     rec->w->ApplyCollisionFilter(shape.get(), ci.tag);
+    
+    if (auto it = rec->w->_tagToCollisionType.find(ci.tag);
+    it != rec->w->_tagToCollisionType.end())
+    {
+        cpShapeSetCollisionType(shape.get(), it->second);
+    }
+    else
+    {
+        SPDLOG_WARN("CreatePhysicsForTransform: tag '{}' has no collisionType, defaulting to 0", ci.tag);
+    }
+
 }
 
 

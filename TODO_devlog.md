@@ -69,3 +69,5 @@
   - Added camera shake on hit, with slow & flash.
   - Added walls.
   - Debugging and tesing for collision detection with walls & enemies.
+  - Got gradient rounded rect rendering working. Took way too long imo to debug this.
+  

@@ -2503,6 +2503,21 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         rec.record_property("AlignmentFlag", {"VERTICAL_CENTER", std::to_string(InheritedProperties::Alignment::VERTICAL_CENTER), "Align vertical centers."});
         rec.record_property("AlignmentFlag", {"VERTICAL_BOTTOM", std::to_string(InheritedProperties::Alignment::VERTICAL_BOTTOM), "Align bottom edges."});
         rec.record_property("AlignmentFlag", {"ALIGN_TO_INNER_EDGES", std::to_string(InheritedProperties::Alignment::ALIGN_TO_INNER_EDGES), "Align to inner instead of outer edges."});
+        
+        auto& renderImmediate = rec.add_type("RenderImmediateCallback");
+        renderImmediate.doc = "Optional Lua-defined immediate draw override for entities. Allows custom drawing inside the entity's transform, optionally disabling the default sprite rendering.";
+
+        rec.record_property("RenderImmediateCallback", {"fn", "Lua function (width:number, height:number)", "The Lua drawing function. Called centered on the entity transform."});
+        rec.record_property("RenderImmediateCallback", {"disableSpriteRendering", "boolean", "If true, disables the default sprite or animation rendering for this entity."});
+
+        sol::table entity_tbl = lua.create_named_table("entity");
+        entity_tbl.set_function("set_draw_override",
+            sol::as_function([](entt::entity e, sol::protected_function fn, bool disableSprite) {
+                transform::RenderImmediateCallback cb;
+                cb.fn = std::move(fn);
+                cb.disableSpriteRendering = disableSprite;
+                globals::registry.emplace_or_replace<transform::RenderImmediateCallback>(e, std::move(cb));
+            }));
 
         // 2c) Alignment struct
         lua.new_usertype<InheritedProperties::Alignment>("Alignment",

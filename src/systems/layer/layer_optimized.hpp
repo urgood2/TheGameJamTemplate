@@ -621,6 +621,8 @@ namespace layer
     extern void ExecuteDrawDashedCircle(std::shared_ptr<layer::Layer> layer, CmdDrawDashedCircle* c);
     extern void ExecuteDrawDashedRoundedRect(std::shared_ptr<layer::Layer> layer, CmdDrawDashedRoundedRect* c);
     extern void ExecuteDrawDashedLine(std::shared_ptr<layer::Layer> layer, CmdDrawDashedLine* c);
+    extern void ExecuteDrawGradientRectCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectCentered* c) ;
+    extern void ExecuteDrawGradientRectRoundedCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectRoundedCentered* c) ;
 
 
     // ===========================

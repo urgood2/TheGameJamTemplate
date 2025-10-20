@@ -29,6 +29,12 @@ namespace transform
         int layerOrder;               // zIndex of the parent box
     };
     
+    // used to replace traditional sprite rendering with a custom function from lua.
+    struct RenderImmediateCallback {
+        sol::protected_function fn;
+        bool disableSpriteRendering{true}; // disables normal image draw when true
+    };
+    
     
     // for ui elements, helps with collision ordering
     struct TreeOrderComponent {

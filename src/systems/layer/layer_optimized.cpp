@@ -269,6 +269,7 @@ namespace layer
         DashedLine(c->start.x, c->start.y, c->end.x, c->end.y, c->dashLength, c->gapLength, c->color, c->thickness);
     }
     
+    
     // -------------------------------------------------------------------------------------
     // Command Registration Functions
     // -------------------------------------------------------------------------------------

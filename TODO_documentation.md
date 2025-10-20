@@ -1,4 +1,26 @@
 # Documentation
+- [ ] entity render override (replaces sprites but gets the shader functionality too)
+```cpp
+entity.set_draw_override(survivorEntity, function(w, h)
+    -- immediate render version of the same thing.
+    command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
+        local survivorT = registry:get(survivorEntity, Transform)
+
+        c.cx = 0 -- self centered
+        c.cy = 0
+        c.width = w
+        c.height = h
+        c.roundness = 0.5
+        c.segments = 8
+        c.topLeft = palette.snapToColorName("apricot_cream")
+        c.topRight = palette.snapToColorName("green")
+        c.bottomRight = palette.snapToColorName("green")
+        c.bottomLeft = palette.snapToColorName("apricot_cream")
+            
+        end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+    end, true) -- true disables sprite rendering
+
+```
 - [ ] Col() method for creating new colors
 - [ ] use uiboxcopmonent's onBoxResize callback to make ui elements responsive to box size changes and update alignment respective to the screen for instance
 - [ ] use optional watch field and abort hook to make goap actions interruptible/reactive to specific worldstate changes, refer to [this file](assets/scripts/ai/actions/dig_for_gold.lua)

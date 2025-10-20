@@ -2217,6 +2217,24 @@ function initActionPhase()
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
     
+    -- entity.set_draw_override(survivorEntity, function(w, h)
+    --     -- immediate render version of the same thing.
+    --     command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
+    --         local survivorT = registry:get(survivorEntity, Transform)
+    
+    --         c.cx = 0 -- self centered
+    --         c.cy = 0
+    --         c.width = w
+    --         c.height = h
+    --         c.roundness = 0.5
+    --         c.segments = 8
+    --         c.topLeft = palette.snapToColorName("apricot_cream")
+    --         c.topRight = palette.snapToColorName("green")
+    --         c.bottomRight = palette.snapToColorName("green")
+    --         c.bottomLeft = palette.snapToColorName("apricot_cream")
+                
+    --         end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+    --     end, true) -- true disables sprite rendering
     
     -- give survivor collision callback, namely begin.
     -- modifying a file.

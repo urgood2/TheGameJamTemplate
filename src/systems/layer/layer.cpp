@@ -1515,6 +1515,97 @@ void exposeToLua(sol::state &lua) {
 
 #undef QUEUE_CMD
 
+  // -----------------------------------------------------------------------------
+// Immediate versions (execute immediately instead of queuing)
+// -----------------------------------------------------------------------------
+#define EXEC_CMD(execFunc, cmdName)                                            \
+  cb.set_function(                                                            \
+      "execute" #cmdName,                                                     \
+      [](std::shared_ptr<layer::Layer> lyr, sol::function init) {             \
+        ::layer::Cmd##cmdName c{};                                            \
+        sol::protected_function pf(init);                                     \
+        if (pf.valid()) {                                                     \
+          sol::protected_function_result r = pf(&c);                          \
+          if (!r.valid()) {                                                   \
+            sol::error e = r;                                                 \
+            std::fprintf(stderr, "[execute%s] init error: %s\n", #cmdName, e.what()); \
+          }                                                                   \
+        }                                                                     \
+        ::layer::execFunc(lyr, &c);                                           \
+      });
+
+      // Circle & primitives
+  EXEC_CMD(ExecuteCircle, DrawCircleFilled)
+  EXEC_CMD(ExecuteCircleLine, DrawCircleLine)
+  EXEC_CMD(ExecuteRectangle, DrawRectangle)
+  EXEC_CMD(ExecuteRectanglePro, DrawRectanglePro)
+  EXEC_CMD(ExecuteRectangleLinesPro, DrawRectangleLinesPro)
+  EXEC_CMD(ExecuteLine, DrawLine)
+  EXEC_CMD(ExecuteDashedLine, DrawDashedLine)
+  EXEC_CMD(ExecuteText, DrawText)
+  EXEC_CMD(ExecuteTextCentered, DrawTextCentered)
+  EXEC_CMD(ExecuteTextPro, TextPro)
+  EXEC_CMD(ExecuteDrawImage, DrawImage)
+  EXEC_CMD(ExecuteTexturePro, TexturePro)
+  EXEC_CMD(ExecuteDrawEntityAnimation, DrawEntityAnimation)
+  EXEC_CMD(ExecuteDrawTransformEntityAnimation, DrawTransformEntityAnimation)
+  EXEC_CMD(ExecuteDrawTransformEntityAnimationPipeline, DrawTransformEntityAnimationPipeline)
+  EXEC_CMD(ExecuteSetShader, SetShader)
+  EXEC_CMD(ExecuteResetShader, ResetShader)
+  EXEC_CMD(ExecuteSetBlendMode, SetBlendMode)
+  EXEC_CMD(ExecuteUnsetBlendMode, UnsetBlendMode)
+  EXEC_CMD(ExecuteSendUniformFloat, SendUniformFloat)
+  EXEC_CMD(ExecuteSendUniformInt, SendUniformInt)
+  EXEC_CMD(ExecuteSendUniformVec2, SendUniformVec2)
+  EXEC_CMD(ExecuteSendUniformVec3, SendUniformVec3)
+  EXEC_CMD(ExecuteSendUniformVec4, SendUniformVec4)
+  EXEC_CMD(ExecuteSendUniformFloatArray, SendUniformFloatArray)
+  EXEC_CMD(ExecuteSendUniformIntArray, SendUniformIntArray)
+  EXEC_CMD(ExecuteVertex, Vertex)
+  EXEC_CMD(ExecuteBeginOpenGLMode, BeginOpenGLMode)
+  EXEC_CMD(ExecuteEndOpenGLMode, EndOpenGLMode)
+  EXEC_CMD(ExecuteSetColor, SetColor)
+  EXEC_CMD(ExecuteSetLineWidth, SetLineWidth)
+  EXEC_CMD(ExecuteSetTexture, SetTexture)
+  EXEC_CMD(ExecuteRenderRectVerticesFilledLayer, RenderRectVerticesFilledLayer)
+  EXEC_CMD(ExecuteRenderRectVerticesOutlineLayer, RenderRectVerticesOutlineLayer)
+  EXEC_CMD(ExecutePolygon, DrawPolygon)
+  EXEC_CMD(ExecuteRenderNPatchRect, RenderNPatchRect)
+  EXEC_CMD(ExecuteTriangle, DrawTriangle)
+
+  // Transform & stencil
+  EXEC_CMD(ExecuteTranslate, Translate)
+  EXEC_CMD(ExecuteScale, Scale)
+  EXEC_CMD(ExecuteRotate, Rotate)
+  EXEC_CMD(ExecuteAddPush, AddPush)
+  EXEC_CMD(ExecuteAddPop, AddPop)
+  EXEC_CMD(ExecutePushMatrix, PushMatrix)
+  EXEC_CMD(ExecutePopMatrix, PopMatrix)
+
+  EXEC_CMD(ExecuteClearStencilBuffer, ClearStencilBuffer)
+  EXEC_CMD(ExecuteBeginStencilMode, BeginStencilMode)
+  EXEC_CMD(ExecuteEndStencilMode, EndStencilMode)
+  EXEC_CMD(ExecuteBeginStencilMask, BeginStencilMask)
+  EXEC_CMD(ExecuteEndStencilMask, EndStencilMask)
+
+  // Advanced primitives
+  EXEC_CMD(ExecuteDrawCenteredEllipse, DrawCenteredEllipse)
+  EXEC_CMD(ExecuteDrawRoundedLine, DrawRoundedLine)
+  EXEC_CMD(ExecuteDrawPolyline, DrawPolyline)
+  EXEC_CMD(ExecuteDrawArc, DrawArc)
+  EXEC_CMD(ExecuteDrawTriangleEquilateral, DrawTriangleEquilateral)
+  EXEC_CMD(ExecuteDrawCenteredFilledRoundedRect, DrawCenteredFilledRoundedRect)
+  EXEC_CMD(ExecuteDrawSpriteCentered, DrawSpriteCentered)
+  EXEC_CMD(ExecuteDrawSpriteTopLeft, DrawSpriteTopLeft)
+  EXEC_CMD(ExecuteDrawDashedCircle, DrawDashedCircle)
+  EXEC_CMD(ExecuteDrawDashedRoundedRect, DrawDashedRoundedRect)
+  EXEC_CMD(ExecuteDrawDashedLine, DrawDashedLine)
+  EXEC_CMD(ExecuteDrawGradientRectCentered, DrawGradientRectCentered)
+  EXEC_CMD(ExecuteDrawGradientRectRoundedCentered, DrawGradientRectRoundedCentered)
+
+  #undef EXEC_CMD
+
+
   struct CmdBeginStencilMode {
     bool dummy = false; // Placeholder
   };
@@ -3290,66 +3381,315 @@ void DrawGradientRectCentered(
     rlEnd();
 }
 
+void DrawRectangleRoundedGradientH(Rectangle rec, float roundnessLeft, float roundnessRight, int segments, Color left, Color right)
+{
+    // Neither side is rounded
+    if ((roundnessLeft <= 0.0f && roundnessRight <= 0.0f) || (rec.width < 1) || (rec.height < 1 ))
+    {
+        DrawRectangleGradientEx(rec, left, left, right, right);
+        return;
+    }
+
+    if (roundnessLeft  >= 1.0f) roundnessLeft  = 1.0f;
+    if (roundnessRight >= 1.0f) roundnessRight = 1.0f;
+
+    // Calculate corner radius both from right and left
+    float recSize = rec.width > rec.height ? rec.height : rec.width;
+    float radiusLeft  = (recSize*roundnessLeft)/2;
+    float radiusRight = (recSize*roundnessRight)/2;
+
+    if (radiusLeft <= 0.0f) radiusLeft = 0.0f;
+    if (radiusRight <= 0.0f) radiusRight = 0.0f;
+
+    if (radiusRight <= 0.0f && radiusLeft <= 0.0f) return;
+
+    float stepLength = 90.0f/(float)segments;
+
+    /*
+    Diagram Copied here for reference, original at 'DrawRectangleRounded()' source code
+
+          P0____________________P1
+          /|                    |\
+         /1|          2         |3\
+     P7 /__|____________________|__\ P2
+       |   |P8                P9|   |
+       | 8 |          9         | 4 |
+       | __|____________________|__ |
+     P6 \  |P11              P10|  / P3
+         \7|          6         |5/
+          \|____________________|/
+          P5                    P4
+    */
+
+    // Coordinates of the 12 points also apdated from `DrawRectangleRounded`
+    const Vector2 point[12] = {
+        // PO, P1, P2
+        {(float)rec.x + radiusLeft, rec.y}, {(float)(rec.x + rec.width) - radiusRight, rec.y}, { rec.x + rec.width, (float)rec.y + radiusRight },
+        // P3, P4
+        {rec.x + rec.width, (float)(rec.y + rec.height) - radiusRight}, {(float)(rec.x + rec.width) - radiusRight, rec.y + rec.height},
+        // P5, P6, P7
+        {(float)rec.x + radiusLeft, rec.y + rec.height}, { rec.x, (float)(rec.y + rec.height) - radiusLeft}, {rec.x, (float)rec.y + radiusLeft},
+        // P8, P9
+        {(float)rec.x + radiusLeft, (float)rec.y + radiusLeft}, {(float)(rec.x + rec.width) - radiusRight, (float)rec.y + radiusRight},
+        // P10, P11
+        {(float)(rec.x + rec.width) - radiusRight, (float)(rec.y + rec.height) - radiusRight}, {(float)rec.x + radiusLeft, (float)(rec.y + rec.height) - radiusLeft}
+    };
+
+    const Vector2 centers[4] = { point[8], point[9], point[10], point[11] };
+    const float angles[4] = { 180.0f, 270.0f, 0.0f, 90.0f };
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+    rlSetTexture(GetShapesTexture().id);
+    Rectangle shapeRect = GetShapesTextureRectangle();
+
+    rlBegin(RL_QUADS);
+        // Draw all the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
+        for (int k = 0; k < 4; ++k)
+        {
+            Color color;
+            float radius;
+            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
+            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
+            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
+            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
+            float angle = angles[k];
+            const Vector2 center = centers[k];
+
+            for (int i = 0; i < segments/2; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength*2))*radius, center.y + sinf(DEG2RAD*(angle + stepLength*2))*radius);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+
+                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+
+                angle += (stepLength*2);
+            }
+
+            // End one even segments
+            if ( segments % 2)
+            {
+                rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+
+                rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+
+                rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+                rlVertex2f(center.x, center.y);
+            }
+        }
+
+        // Here we use the 'Diagram' to guide ourselves to which point receives what color
+        // By choosing the color correctly associated with a pointe the gradient effect
+        // will naturally come from OpenGL interpolation
+
+        // [2] Upper Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[0].x, point[0].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[1].x, point[1].y);
+
+        // [4] Left Rectangle
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[2].x, point[2].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[3].x, point[3].y);
+
+        // [6] Bottom Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[5].x, point[5].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[4].x, point[4].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+
+        // [8] left Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[7].x, point[7].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[6].x, point[6].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+
+        // [9] Middle Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlTexCoord2f(shapeRect.x/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[8].x, point[8].y);
+        rlTexCoord2f(shapeRect.x/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[11].x, point[11].y);
+
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, (shapeRect.y + shapeRect.height)/texShapes.height);
+        rlVertex2f(point[10].x, point[10].y);
+        rlTexCoord2f((shapeRect.x + shapeRect.width)/texShapes.width, shapeRect.y/texShapes.height);
+        rlVertex2f(point[9].x, point[9].y);
+
+    rlEnd();
+    rlSetTexture(0);
+#else
+
+    // Here we use the 'Diagram' to guide ourselves to which point receives what color
+    // By choosing the color correctly associated with a pointe the gradient effect
+    // will naturally come from OpenGL interpolation
+    // But this time instead of Quad, we think in triangles
+
+    rlBegin(RL_TRIANGLES);
+        // Draw all of the 4 corners: [1] Upper Left Corner, [3] Upper Right Corner, [5] Lower Right Corner, [7] Lower Left Corner
+        for (int k = 0; k < 4; ++k)
+        {
+            Color color = { 0 };
+            float radius = 0.0f;
+            if (k == 0) color = left,  radius = radiusLeft;     // [1] Upper Left Corner
+            if (k == 1) color = right, radius = radiusRight;    // [3] Upper Right Corner
+            if (k == 2) color = right, radius = radiusRight;    // [5] Lower Right Corner
+            if (k == 3) color = left,  radius = radiusLeft;     // [7] Lower Left Corner
+
+            float angle = angles[k];
+            const Vector2 center = centers[k];
+
+            for (int i = 0; i < segments; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+                rlVertex2f(center.x, center.y);
+                rlVertex2f(center.x + cosf(DEG2RAD*(angle + stepLength))*radius, center.y + sinf(DEG2RAD*(angle + stepLength))*radius);
+                rlVertex2f(center.x + cosf(DEG2RAD*angle)*radius, center.y + sinf(DEG2RAD*angle)*radius);
+                angle += stepLength;
+            }
+        }
+
+        // [2] Upper Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[0].x, point[0].y);
+        rlVertex2f(point[8].x, point[8].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[1].x, point[1].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[0].x, point[0].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+
+        // [4] Right Rectangle
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[10].x, point[10].y);
+        rlVertex2f(point[3].x, point[3].y);
+        rlVertex2f(point[2].x, point[2].y);
+        rlVertex2f(point[9].x, point[9].y);
+        rlVertex2f(point[3].x, point[3].y);
+
+        // [6] Bottom Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[11].x, point[11].y);
+        rlVertex2f(point[5].x, point[5].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[4].x, point[4].y);
+        rlVertex2f(point[10].x, point[10].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[11].x, point[11].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[4].x, point[4].y);
+
+        // [8] Left Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[7].x, point[7].y);
+        rlVertex2f(point[6].x, point[6].y);
+        rlVertex2f(point[11].x, point[11].y);
+        rlVertex2f(point[8].x, point[8].y);
+        rlVertex2f(point[7].x, point[7].y);
+        rlVertex2f(point[11].x, point[11].y);
+
+        // [9] Middle Rectangle
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[8].x, point[8].y);
+        rlVertex2f(point[11].x, point[11].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[10].x, point[10].y);
+        rlVertex2f(point[9].x, point[9].y);
+        rlColor4ub(left.r, left.g, left.b, left.a);
+        rlVertex2f(point[8].x, point[8].y);
+        rlColor4ub(right.r, right.g, right.b, right.a);
+        rlVertex2f(point[10].x, point[10].y);
+    rlEnd();
+#endif
+}
+
+
+
+
 
 void DrawGradientRectRoundedCentered(
     float cx, float cy,
     float width, float height,
     float roundness,
     int segments,
-    Color topLeft, Color topRight,
-    Color bottomRight, Color bottomLeft)
+    Color top,
+    Color bottom,
+    Color, Color) // unused last two color params, for signature compatibility
 {
-    float x = cx - width / 2.0f;
-    float y = cy - height / 2.0f;
+    if (width <= 0.0f || height <= 0.0f) return;
 
-    if (roundness <= 0.0f) {
-        DrawGradientRectCentered(cx, cy, width, height, topLeft, topRight, bottomRight, bottomLeft);
-        return;
-    }
-
-    if (roundness > 1.0f) roundness = 1.0f;
-    float radius = fminf(width, height) * roundness / 2.0f;
-    float step = 90.0f / (float)segments;
-
-    Vector2 centers[4] = {
-        {x + radius, y + radius},                     // TL
-        {x + width - radius, y + radius},             // TR
-        {x + width - radius, y + height - radius},    // BR
-        {x + radius, y + height - radius}             // BL
+    Rectangle rec = {
+        cx - width * 0.5f,
+        cy - height * 0.5f,
+        width,
+        height
     };
 
-    Color corners[4] = { topLeft, topRight, bottomRight, bottomLeft };
+    rlPushMatrix();
 
-    rlBegin(RL_TRIANGLES);
-    for (int c = 0; c < 4; ++c) {
-        float angleStart = 180 + 90 * c;
-        const Vector2 center = centers[c];
-        Color color = corners[c];
-        for (int i = 0; i < segments; i++) {
-            float a0 = DEG2RAD * (angleStart + step * i);
-            float a1 = DEG2RAD * (angleStart + step * (i + 1));
+    // Move to center of rectangle before rotation
+    rlTranslatef(cx, cy, 0.0f);
 
-            rlColor4ub(color.r, color.g, color.b, color.a);
-            rlVertex2f(center.x, center.y);
-            rlVertex2f(center.x + cosf(a0) * radius, center.y + sinf(a0) * radius);
-            rlVertex2f(center.x + cosf(a1) * radius, center.y + sinf(a1) * radius);
-        }
-    }
-    rlEnd();
+    // Rotate -90° CCW so horizontal gradient becomes vertical (top→bottom)
+    rlRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 
-    // center quad (gradient interpolation)
-    rlBegin(RL_QUADS);
-        rlColor4ub(topLeft.r, topLeft.g, topLeft.b, topLeft.a);
-        rlVertex2f(x + radius, y);
-        rlColor4ub(topRight.r, topRight.g, topRight.b, topRight.a);
-        rlVertex2f(x + width - radius, y);
-        rlColor4ub(bottomRight.r, bottomRight.g, bottomRight.b, bottomRight.a);
-        rlVertex2f(x + width - radius, y + height);
-        rlColor4ub(bottomLeft.r, bottomLeft.g, bottomLeft.b, bottomLeft.a);
-        rlVertex2f(x + radius, y + height);
-    rlEnd();
+    // Adjust rectangle to rotated coordinate system (centered again)
+    Rectangle rotated = {
+        -height * 0.5f,  // new x (since rotated)
+        -width * 0.5f,   // new y
+        height,          // swapped width/height
+        width
+    };
+
+    // Reuse existing horizontal version safely
+    DrawRectangleRoundedGradientH(rotated, roundness, roundness, segments, top, bottom);
+
+    rlPopMatrix();
 }
-
 
 void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr,
                                    const Rectangle outerRec,
@@ -3696,19 +4036,57 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   Vector2 drawOffset = { pad, pad };
 
   bool usedLocalCallback = false;
+  
+  // DrawCircle(0, 0, 100, RED); // debug point at local origin
+
+  // 🟡 NEW: check for RenderImmediateCallback (Lua override)
+  bool usedImmediateCallback = false;
+  if (registry.any_of<transform::RenderImmediateCallback>(e)) {
+    const auto& cb = registry.get<transform::RenderImmediateCallback>(e);
+    if (cb.fn.valid()) {
+        rlPushMatrix();
+
+        // Move to padded draw area
+        rlTranslatef(drawOffset.x, drawOffset.y, 0);
+
+        // Center the local origin inside the image region
+        rlTranslatef(baseWidth * 0.5f, baseHeight * 0.5f, 0);
+
+        // Optional: flip Y if you still need upright drawing later
+        // rlTranslatef(0, baseHeight, 0);
+        // rlScalef(1, -1, 1);
+
+        // Now (0,0) is at the image center
+        // DrawCircle(0, 0, 100, RED); // should render centered
+        // DrawGradientRectRoundedCentered(
+        //     0, 0,
+        //     baseWidth, baseHeight,
+        //     0.2f, 16,
+        //     RED, BLUE,
+        //     GREEN, YELLOW);
+        cb.fn(baseWidth, baseHeight);  // run Lua callback here if desired
+        rlPopMatrix();
+
+        usedImmediateCallback = true;
+        if (cb.disableSpriteRendering)
+            usedLocalCallback = true;
+    }
+  }
+
   if (registry.any_of<transform::RenderLocalCallback>(e)) {
     const auto &cb = registry.get<transform::RenderLocalCallback>(e);
     if (cb.fn && !cb.afterPipeline) {
-      // Shift origin so callback sees (0,0) == top-left of *content* (inside pad)
       Translate(drawOffset.x, drawOffset.y);
-      cb.fn(baseWidth, baseHeight, /*isShadow=*/false);           // user draws shapes/sprites at local coords
+      cb.fn(baseWidth, baseHeight, /*isShadow=*/false);
+      
+      DrawCircle(0, 0, 100, RED); // debug point at local origin
       Translate(-drawOffset.x, -drawOffset.y);
       usedLocalCallback = true;
     }
   }
 
-  if (!usedLocalCallback) {
-    // Your original path (background/foreground sprite):
+  // existing sprite drawing logic only runs if no callback replaced it
+  if (!usedLocalCallback && !usedImmediateCallback) {
     if (drawBackground) {
       layer::RectanglePro(drawOffset.x, drawOffset.y, {baseWidth, baseHeight}, {0,0}, 0, bgColor);
     }
@@ -3717,8 +4095,8 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
       if (animationFrame) {
         layer::TexturePro(*spriteAtlas,
                           {animationFrame->x, animationFrame->y,
-                          animationFrame->width * xFlipModifier,
-                          animationFrame->height * -yFlipModifier},
+                           animationFrame->width * xFlipModifier,
+                           animationFrame->height * -yFlipModifier},
                           drawOffset.x, drawOffset.y,
                           {baseWidth * xFlipModifier, baseHeight * yFlipModifier},
                           {0, 0}, 0, fgColor);
@@ -3734,6 +4112,7 @@ auto DrawTransformEntityWithAnimationWithPipeline(entt::registry &registry,
   }
 
   render_stack_switch_internal::Pop(); // done with id 6
+
 
   // 🟡 Save base sprite result
   // RenderTexture2D baseSpriteRender =

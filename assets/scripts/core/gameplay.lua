@@ -2182,7 +2182,7 @@ function initActionPhase()
     survivorTransform.visualY = survivorTransform.actualY
     
     -- give survivor physics.
-    local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"
+    local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = -5 } -- default tag is "WORLD"
     physics.create_physics_for_transform(registry,
         physics_manager_instance, -- global instance
         survivorEntity, -- entity id

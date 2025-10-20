@@ -19,8 +19,8 @@ modifier_card_defs
 - player level.
     
 # programming side
-- reInitializeGame - finish implementing this and test.
-- peformance enhancements to physics.
+- Add card 3d rotation for when initially dropped?
+- exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
 - make dashed lines be used only when a trigger + action is valid and active.
 - add new stats with 

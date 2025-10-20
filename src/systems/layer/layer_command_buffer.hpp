@@ -66,6 +66,8 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawRectangleLinesPro>() { return DrawCommandType::RectangleLinesPro; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawLine>() { return DrawCommandType::Line; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawDashedLine>() { return DrawCommandType::DashedLine; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawGradientRectCentered>() { return DrawCommandType::DrawGradientRectCentered; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdDrawGradientRectRoundedCentered>() { return DrawCommandType::DrawGradientRectRoundedCentered; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawText>() { return DrawCommandType::Text; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawTextCentered>() { return DrawCommandType::DrawTextCentered; }
         template<> inline DrawCommandType GetDrawCommandType<CmdTextPro>() { return DrawCommandType::TextPro; }

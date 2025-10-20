@@ -1,3 +1,4 @@
+#include "systems/ai/ai_system.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/layer/layer.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
@@ -255,6 +256,7 @@ void RunGameLoop()
 
         // ---------- Step 1: Measure REAL frame time ----------
         float rawDeltaTime = std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
+        mainLoop.rawDeltaTime = rawDeltaTime;
 
         // Optional smoothing
         frameTimes.push_back(rawDeltaTime);
@@ -326,17 +328,7 @@ void RunGameLoop()
 #endif
 }
 
-// contains what needs to be done to re-initialize main after a reset, includes init methods from main.cpp that go beyond baseline init
-void reInitializeGame()
-{
-    globals::registry.clear();
-    // TODO: clear all timers
-    // TODO: remove physics world & clear manager
-    // TODO: clear layers if necessary
-   
-    input::Init(globals::inputState);
-    game::init();
-}
+
 
 int main(void)
 {
@@ -423,7 +415,7 @@ auto updateSystems(float dt) -> void
     
     input::Update(globals::registry, globals::inputState, dt);
     globals::updateGlobalVariables();
-    sound_system::Update(dt); // update sound system
+    sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
     
     
     physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);

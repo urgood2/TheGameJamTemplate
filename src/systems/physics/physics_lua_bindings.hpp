@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/globals.hpp"
 #include "physics_manager.hpp"
 #include "physics_world.hpp"
 #include "systems/physics/transform_physics_hook.hpp"
@@ -260,6 +261,16 @@ inline void expose_physics_to_lua(sol::state& lua) {
         });
         physics_table.set_function("update_collision_masks_for", [tbl_to_strings](PhysicsWorld &W, const std::string &tag, sol::table collidable){
             W.UpdateCollisionMasks(tag, tbl_to_strings(collidable));
+        });
+        
+        // ReapplyAllFilters()
+        rec.record_free_function(path, {
+            "reapply_all_filters",
+            "---@param world physics.PhysicsWorld",
+            "Re-applies collision filters to all shapes based on their current tags.", true, false
+        });
+        physics_table.set_function("reapply_all_filters", [](PhysicsWorld &W){
+            W.ReapplyAllFilters();
         });
     }
 
@@ -759,6 +770,16 @@ inline void expose_physics_to_lua(sol::state& lua) {
             }
             return out;
         });
+        
+    rec.record_free_function(path, {
+        "clear_all_worlds",
+        "---@return nil",
+        "Clears all PhysicsWorld instances and their data (for shutdown) using the global physics manager.",
+        false, false
+    });
+    physics_table.set_function("clear_all_worlds", []() {
+        globals::physicsManager->clearAllWorlds();
+    });
 
     // ---------- Lua collision handler registration (new ones) ----------
     rec.record_free_function(path, {
@@ -1415,6 +1436,17 @@ inline void expose_physics_to_lua(sol::state& lua) {
         [](physics::PhysicsWorld& W, double xMin, double yMin, double xMax, double yMax,
         double thickness, const std::string& tag){
             W.AddScreenBounds((float)xMin,(float)yMin,(float)xMax,(float)yMax,(float)thickness, tag);
+        });
+        
+    rec.record_free_function(path, {
+        "cull_entities_outside_bounds",
+        "---@param world physics.PhysicsWorld\n---@param xMin number\n---@param yMin number\n---@param xMax number\n---@param yMax number\n---@return nil",
+        "Destroys entities with bodies completely outside the given AABB.",
+        true, false
+    });
+    physics_table.set_function("cull_entities_outside_bounds",
+        [](physics::PhysicsWorld& W, double xMin, double yMin, double xMax, double yMax){
+            W.CullOutOfBoundsEntities((float)xMin,(float)yMin,(float)xMax,(float)yMax);
         });
 
     // Optional: tilemap colliders from bool grid (arr[x][y] = true)

@@ -15,7 +15,7 @@ out vec4 finalColor;
 void main()
 {
     // Calculate flashing intensity using a sine wave
-    float flashIntensity = 0.5 + 0.5 * sin(iTime * 5.0);  // Adjusted to range between 0.0 and 1.0
+    float flashIntensity = 0.5 + 0.5 * sin(iTime * 40.0);  // Adjusted to range between 0.0 and 1.0
 
     // Sample the texture color
     vec4 texelColor = texture(texture0, fragTexCoord);

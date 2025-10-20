@@ -79,6 +79,26 @@ namespace layer
         layer::DrawDashedLine(c->start, c->end, c->dashLength, c->gapLength, c->phase, c->thickness, c->color);
     }
     
+    void ExecuteDrawGradientRectCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectCentered* c) {
+        layer::DrawGradientRectCentered(
+            c->cx, c->cy,
+            c->width, c->height,
+            c->topLeft, c->topRight,
+            c->bottomRight, c->bottomLeft
+        );
+    }
+    
+    void ExecuteDrawGradientRectRoundedCentered(std::shared_ptr<layer::Layer> layer, CmdDrawGradientRectRoundedCentered* c) {
+        layer::DrawGradientRectRoundedCentered(
+            c->cx, c->cy,
+            c->width, c->height,
+            c->roundness,
+            c->segments,
+            c->topLeft, c->topRight,
+            c->bottomRight, c->bottomLeft
+        );
+    }
+    
     void ExecuteText(std::shared_ptr<layer::Layer> layer, CmdDrawText* c) {
         Text(c->text, c->font, c->x, c->y, c->color, c->fontSize);
     }
@@ -291,6 +311,8 @@ namespace layer
         RegisterRenderer<CmdDrawRectangleLinesPro>(DrawCommandType::RectangleLinesPro, ExecuteRectangleLinesPro);
         RegisterRenderer<CmdDrawLine>(DrawCommandType::Line, ExecuteLine);
         RegisterRenderer<CmdDrawDashedLine>(DrawCommandType::DashedLine, ExecuteDashedLine);
+        RegisterRenderer<CmdDrawGradientRectCentered>(DrawCommandType::DrawGradientRectCentered, ExecuteDrawGradientRectCentered);
+        RegisterRenderer<CmdDrawGradientRectRoundedCentered>(DrawCommandType::DrawGradientRectRoundedCentered, ExecuteDrawGradientRectRoundedCentered);
         RegisterRenderer<CmdDrawText>(DrawCommandType::Text, ExecuteText);
         RegisterRenderer<CmdDrawTextCentered>(DrawCommandType::DrawTextCentered, ExecuteTextCentered);
         RegisterRenderer<CmdTextPro>(DrawCommandType::TextPro, ExecuteTextPro);

@@ -30,6 +30,8 @@ namespace game {
                         name),
             fullscreenShaders.end());
     }
+    
+    extern void reInitializeGame();
 
     extern void unload();
 

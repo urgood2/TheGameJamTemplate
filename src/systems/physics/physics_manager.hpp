@@ -56,6 +56,10 @@ public:
         if (auto* n = nav_of(name)) n->dirty = true;
     }
     
+    void clearAllWorlds() {
+        worlds.clear();
+    }
+    
     void rebuildNavmeshFor(const std::string& worldName) {
         auto* rec = get(worldName);
         if (!rec || !rec->nav) return;

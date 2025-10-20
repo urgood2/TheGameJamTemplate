@@ -249,6 +249,14 @@ wrap_timer_action(sol::function action) {
         t.set_function("get_for_elapsed",   &timer::TimerSystem::timer_get_for_elapsed_time);
         t.set_function("get_timer_and_delay",&timer::TimerSystem::timer_get_timer_and_delay);
         
+        t.set_function("clear_all", &timer::TimerSystem::clear_all_timers);
+        rec.record_free_function({"timer"}, {
+            "clear_all",
+            "---@return nil",
+            "Clears ALL active timers from the system.",
+            true, false
+        });
+        
         // Recorder: control/query functions
         rec.record_free_function({"timer"}, {
             "cancel",

@@ -405,6 +405,25 @@ namespace game
     } // namespace luaqt
 
     
+/* --------------------------- reload game helper --------------------------- */
+
+    // contains what needs to be done to re-initialize main after a reset, includes init methods from main.cpp that go beyond baseline init
+    void reInitializeGame()
+    {
+        // clear lua state and re-load
+        ai_system::masterStateLua = sol::state(); // reset lua state
+        ai_system::init();
+        
+        // clear registry, timers, physics worlds, layers
+        globals::registry.clear();
+        timer::TimerSystem::clear_all_timers();
+        globals::physicsManager->clearAllWorlds();
+        layer::UnloadAllLayers();
+    
+        input::Init(globals::inputState);
+        game::init();
+    }
+    
 /* ---------------- helpers for culling scroll pane elements ---------------- */
     static inline bool rectsOverlap(const Rectangle& a, const Rectangle& b) {
         return !(a.x > b.x + b.width  || a.x + a.width  < b.x ||

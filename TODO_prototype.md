@@ -20,7 +20,8 @@ modifier_card_defs
     
 # programming side
 - reInitializeGame - finish implementing this and test.
-- use begin() callback to detect collision between player and enemies, then show an effect + slow time.
+- peformance enhancements to physics.
+- behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
 - make dashed lines be used only when a trigger + action is valid and active.
 - add new stats with 
 ```lua
@@ -58,7 +59,6 @@ player.stats:on_recompute(function(S)
 end)
 ```
 - link up the combat stat system with the traps and strength bonus action.
-- Collision between player and enemies.
 - implement level-ups. just grant +5 to a chosen stat.
 - maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
 - add basic triggers, actions, and modifiers and hook them up to gameplay.

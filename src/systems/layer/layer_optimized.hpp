@@ -115,6 +115,8 @@ namespace layer
         DrawDashedCircle,
         DrawDashedRoundedRect,
         DrawDashedLine,
+        DrawGradientRectCentered,
+        DrawGradientRectRoundedCentered,
         
         Count // <--- always last
     };
@@ -502,6 +504,20 @@ namespace layer
         float phase;
         float thickness;
         Color color;
+    };
+    
+    struct CmdDrawGradientRectCentered {
+        float cx, cy;
+        float width, height;
+        Color topLeft, topRight, bottomRight, bottomLeft;
+    };
+    
+    struct CmdDrawGradientRectRoundedCentered {
+        float cx, cy;
+        float width, height;
+        float roundness;
+        int segments;
+        Color topLeft, topRight, bottomRight, bottomLeft;
     };
 
     // ===========================

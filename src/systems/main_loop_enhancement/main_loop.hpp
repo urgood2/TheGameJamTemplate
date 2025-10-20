@@ -9,6 +9,7 @@ namespace main_loop
 {
     struct Data
     {
+        float rawDeltaTime = 0.0f;      // Raw delta time for the current frame.
         float smoothedDeltaTime = 0.0f; // Smoothed delta time for the current frame.
         float realtimeTimer = 0.0f;    // Realtime timer since start of game
         float totaltimeTimer = 0.0f;   // Total time since start of game, excluding pauses

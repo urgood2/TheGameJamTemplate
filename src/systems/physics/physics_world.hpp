@@ -698,8 +698,10 @@ struct UFNode {
 
 class PhysicsWorld {
 public:
+
   // General Members
   entt::registry *registry;
+  cpBB worldBounds = cpBBNew(-3000, -3000, 3000, 3000); // default world AABB
   cpSpace *space;
   float meter; // REVIEW: unused
   // Internal state for mouse dragging
@@ -758,6 +760,46 @@ public:
   // Update and Post-Update
   void Update(float deltaTime);
   void PostUpdate();
+  
+  // culling
+  void CullOutOfBoundsEntities(float left, float bottom, float right, float top)
+  {
+      cpBB bounds = cpBBNew(left, bottom, right, top);
+
+      // 1. Collect all entities whose shapes are inside the given bounds
+      std::vector<entt::entity> inside;
+      cpSpaceBBQuery(
+          space,
+          bounds,
+          CP_SHAPE_FILTER_ALL,
+          [](cpShape* shape, void* data) {
+              auto* insideVec = static_cast<std::vector<entt::entity>*>(data);
+              if (void* ud = cpShapeGetUserData(shape)) {
+                  entt::entity e = static_cast<entt::entity>(reinterpret_cast<uintptr_t>(ud));
+                  if (e != entt::null)
+                      insideVec->push_back(e);
+              }
+          },
+          &inside
+      );
+
+      // 2. Build a quick lookup of entities still inside
+      std::unordered_set<entt::entity> insideSet(inside.begin(), inside.end());
+
+      // 3. Loop through all physics-enabled entities
+      auto view = registry->view<physics::ColliderComponent>();
+      for (auto e : view) {
+          auto& cc = view.get<physics::ColliderComponent>(e);
+          if (!cc.body || !cc.isDynamic)
+              continue;
+
+          if (!insideSet.contains(e)) {
+              RemovePhysics(e, /*removeComponent=*/true);
+              
+              registry->destroy(e); //  destroy the entity as well
+          }
+      }
+  }
   
   
 /* -------------------------- weights and crushing -------------------------- */
@@ -976,6 +1018,7 @@ bool ConvexAddPoint(entt::entity e, cpVect worldPoint, float tolerance /*=2.0f*/
   void ClearWildcardHandlers(const std::string &tag);
 
   // Collision Tag Management
+  void ReapplyAllFilters();
   std::string GetTagFromCategory(int category) const;
   void AddCollisionTag(const std::string &tag);
   void RemoveCollisionTag(const std::string &tag);

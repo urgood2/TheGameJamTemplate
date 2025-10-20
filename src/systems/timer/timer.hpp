@@ -532,6 +532,12 @@ namespace timer
             }
             pendingCancels.clear();
         }
+        
+        inline void clear_all_timers()
+        {
+            timers.clear();
+            groups.clear();
+        }
 
         // ------------------------------------------------
         // Timer creation functions

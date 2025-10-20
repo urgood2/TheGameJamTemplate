@@ -1457,7 +1457,7 @@ function initPlanningPhase()
     end
     
     
-    PhysicsManager.get_world("world"):InstallDefaultBeginHandlersForAllTags()
+    -- PhysicsManager.get_world("world"):InstallDefaultBeginHandlersForAllTags()
     
 
     
@@ -2127,10 +2127,16 @@ function initShopPhase()
     end
     
 end
+
+SCREEN_BOUND_LEFT = 0
+SCREEN_BOUND_TOP = 0
+SCREEN_BOUND_RIGHT = 1280
+SCREEN_BOUND_BOTTOM = 720
 function initActionPhase()
     log_debug("Action phase started!")
     
     initCombatSystem()
+    
     
     -- activate action state
     activate_state(ACTION_STATE)
@@ -2139,6 +2145,7 @@ function initActionPhase()
     world:AddCollisionTag("sensor")
     world:AddCollisionTag("player")
     world:AddCollisionTag("bullet")
+    world:AddCollisionTag("WORLD")
     world:AddCollisionTag("trap")
     world:AddCollisionTag("enemy")
     world:AddCollisionTag("card")
@@ -2162,6 +2169,13 @@ function initActionPhase()
     end
     survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
     
+    -- relocate to the center of the screen
+    local survivorTransform = registry:get(survivorEntity, Transform)
+    survivorTransform.actualX = globals.screenWidth() / 2
+    survivorTransform.actualY = globals.screenHeight() / 2
+    survivorTransform.visualX = survivorTransform.actualX   
+    survivorTransform.visualY = survivorTransform.actualY
+    
     -- give survivor physics.
     local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"
     physics.create_physics_for_transform(registry,
@@ -2171,11 +2185,65 @@ function initActionPhase()
         info
     )
     
-    -- make it collide with enemies.
+    -- make it collide with enemies & walls
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "WORLD", {"player"})
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"WORLD"})
+    
     physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"WORLD"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", {"player"})
+    
+    
+    -- make walls after defining collision relationships, tesitng because of bug.
+    physics.add_screen_bounds(PhysicsManager.get_world("world"), 
+        SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
+        10, 
+        "WORLD"
+    )
+    
+    -- give player fixed rotation.
+    physics.use_transform_fixed_rotation(registry, survivorEntity)
+    
+    -- give shader pipeline comp for later use
+    local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+
     
     -- give survivor collision callback, namely begin.
     -- modifying a file.
+    physics.on_pair_begin(world, "player", "enemy", function(arb) 
+        
+        log_debug("Survivor hit an enemy!")
+        -- play sound
+        
+        playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
+        slowTime(1.5, 0.1) -- slow time for 2 seconds, to 20% speed
+        
+        timer.after(0.5, function()
+            playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
+        end)
+        
+        -- TODO: make player take damage, play hit effect, etc.
+        
+        local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+        shaderPipelineComp:addPass("flash")
+        
+        -- shake camera
+        local cam = camera.Get("world_camera")
+        if cam then
+            cam:Shake(10.0, 0.35, 30.0)
+        end
+        
+        -- remove after a short delay
+        timer.after(1.0, function()
+            local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+            if shaderPipelineComp then
+                shaderPipelineComp:removePass("flash")
+            end
+        end)
+        
+        return false -- reject collision 
+    end)
+
     
     -- allow transform manipuation to alter physics body
     -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
@@ -2271,10 +2339,10 @@ function initActionPhase()
             -- give state
             add_state_tag(enemyEntity, ACTION_STATE)
             
-            -- set it to a random position
+            -- set it to a random position, within the screen bounds.
             local enemyTransform = registry:get(enemyEntity, Transform)
-            enemyTransform.actualX = math.random(50, globals.screenWidth() * 2 - 50)
-            enemyTransform.actualY = math.random(50, globals.screenHeight() * 2 - 50)
+            enemyTransform.actualX =   lume.random(SCREEN_BOUND_LEFT + 50, SCREEN_BOUND_RIGHT - 50)
+            enemyTransform.actualY =   lume.random(SCREEN_BOUND_TOP + 50, SCREEN_BOUND_BOTTOM - 50)
             
             -- snap
             enemyTransform.visualX = enemyTransform.actualX
@@ -2290,6 +2358,7 @@ function initActionPhase()
             )
             
             physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
+            physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
             
             -- make it steerable
             -- steering
@@ -2373,6 +2442,10 @@ function initActionPhase()
     nil,
     "cameraPanToPlayerTimer")
     
+    
+    -- blanket collision update
+    physics.reapply_all_filters(PhysicsManager.get_world("world"))
+    
 end
 
 planningUIEntities = {
@@ -2433,5 +2506,5 @@ function initPlanningUI()
     ui.box.AssignStateTagsToUIBox(planningUIEntities.start_action_button_box, PLANNING_STATE)
     
     physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
+    
 end

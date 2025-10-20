@@ -615,7 +615,6 @@ namespace init {
     // This includes initializing the Lua state shared by all systems and calling name_gen::init().
     auto initSystems() -> void {
         ai_system::init();
-        graphics::init();
         shaders::loadShadersFromJSON("shaders/shaders.json");
         sound_system::LoadFromJSON(util::getRawAssetPathNoUUID("sounds/sounds.json"));
     }

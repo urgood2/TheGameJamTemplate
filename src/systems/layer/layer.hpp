@@ -317,6 +317,21 @@ namespace layer
         float pad = 0.0f);
         
 
+    void DrawGradientRectCentered(
+    float cx, float cy,
+    float width, float height,
+    Color topLeft, Color topRight,
+    Color bottomRight, Color bottomLeft);
+
+
+    void DrawGradientRectRoundedCentered(
+        float cx, float cy,
+        float width, float height,
+        float roundness,
+        int segments,
+        Color topLeft, Color topRight,
+        Color bottomRight, Color bottomLeft);
+        
 void DrawDashedLine(const Vector2 &start,
                     const Vector2 &end,
                     float dashLength,

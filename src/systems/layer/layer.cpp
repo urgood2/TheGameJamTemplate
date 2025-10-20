@@ -435,7 +435,10 @@ void exposeToLua(sol::state &lua) {
       layer::DrawCommandType::RectangleLinesPro, "DrawLine",
       layer::DrawCommandType::Line, "DrawDashedLine",
       layer::DrawCommandType::DashedLine, "DrawText",
-      layer::DrawCommandType::Text, "DrawTextCentered",
+      layer::DrawCommandType::Text, 
+      
+      
+      "DrawTextCentered",
       layer::DrawCommandType::DrawTextCentered, "TextPro",
       layer::DrawCommandType::TextPro, "DrawImage",
       layer::DrawCommandType::DrawImage, "TexturePro",
@@ -467,7 +470,11 @@ void exposeToLua(sol::state &lua) {
       layer::DrawCommandType::RenderRectVerticlesOutlineLayer, "DrawPolygon",
       layer::DrawCommandType::Polygon, "RenderNPatchRect",
       layer::DrawCommandType::RenderNPatchRect, "DrawTriangle",
-      layer::DrawCommandType::Triangle);
+      layer::DrawCommandType::Triangle, 
+      "DrawGradientRectCentered",
+      layer::DrawCommandType::DrawGradientRectCentered,
+      "DrawGradientRectRoundedCentered",
+      layer::DrawCommandType::DrawGradientRectRoundedCentered);
 
   // 1b) EmmyLua docs via BindingRecorder
   rec.add_type("layer.DrawCommandType").doc =
@@ -573,6 +580,12 @@ void exposeToLua(sol::state &lua) {
                       {"RenderNPatchRect", "44", "Draw a 9-patch rectangle"});
   rec.record_property("layer.DrawCommandType",
                       {"DrawTriangle", "45", "Draw a triangle"});
+  rec.record_property("layer.DrawCommandType",
+                      {"DrawGradientRectCentered", "46",
+                       "Draw a gradient rectangle centered"});
+  rec.record_property("layer.DrawCommandType",
+                      {"DrawGradientRectRoundedCentered", "47",
+                       "Draw a rounded gradient rectangle centered"});
 
 // Helper macro to reduce boilerplate
 #define BIND_CMD(name, ...)                                                    \
@@ -800,7 +813,26 @@ void exposeToLua(sol::state &lua) {
            &layer::CmdDrawDashedLine::phase, "thickness",
            &layer::CmdDrawDashedLine::thickness, "color",
            &layer::CmdDrawDashedLine::color)
-
+  BIND_CMD(DrawGradientRectCentered, "cx",
+           &layer::CmdDrawGradientRectCentered::cx, "cy",
+           &layer::CmdDrawGradientRectCentered::cy, "width",
+           &layer::CmdDrawGradientRectCentered::width, "height",
+           &layer::CmdDrawGradientRectCentered::height, "topLeft",
+           &layer::CmdDrawGradientRectCentered::topLeft, "topRight",
+           &layer::CmdDrawGradientRectCentered::topRight, "bottomRight",
+           &layer::CmdDrawGradientRectCentered::bottomRight, "bottomLeft",
+           &layer::CmdDrawGradientRectCentered::bottomLeft)
+  BIND_CMD(DrawGradientRectRoundedCentered, "cx",
+           &layer::CmdDrawGradientRectRoundedCentered::cx, "cy",
+           &layer::CmdDrawGradientRectRoundedCentered::cy, "width",
+           &layer::CmdDrawGradientRectRoundedCentered::width, "height",
+           &layer::CmdDrawGradientRectRoundedCentered::height, "roundness",
+           &layer::CmdDrawGradientRectRoundedCentered::roundness, "segments",
+           &layer::CmdDrawGradientRectRoundedCentered::segments, "topLeft",
+           &layer::CmdDrawGradientRectRoundedCentered::topLeft, "topRight",
+           &layer::CmdDrawGradientRectRoundedCentered::topRight, "bottomRight",
+           &layer::CmdDrawGradientRectRoundedCentered::bottomRight, "bottomLeft",
+           &layer::CmdDrawGradientRectRoundedCentered::bottomLeft)
 #undef BIND_CMD
 
   rec.add_type("layer.CmdBeginDrawing", true);
@@ -982,6 +1014,45 @@ void exposeToLua(sol::state &lua) {
                       {"thickness", "number", "Thickness of the dashes"});
   rec.record_property("layer.CmdDrawDashedRoundedRect",
                       {"color", "Color", "Color of the dashes"});
+                      
+  rec.add_type("layer.CmdDrawGradientRectCentered", true);
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"cx", "number", "Center X"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"cy", "number", "Center Y"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"width", "number", "Width"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"height", "number", "Height"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"topLeft", "Color", "Top-left color"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"topRight", "Color", "Top-right color"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"bottomRight", "Color", "Bottom-right color"});
+  rec.record_property("layer.CmdDrawGradientRectCentered",
+                      {"bottomLeft", "Color", "Bottom-left color"});
+  rec.add_type("layer.CmdDrawGradientRectRoundedCentered", true);
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"cx", "number", "Center X"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"cy", "number", "Center Y"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"width", "number", "Width"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"height", "number", "Height"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"roundness", "number", "Corner roundness"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"segments", "number", "Number of segments for corners"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"topLeft", "Color", "Top-left color"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"topRight", "Color", "Top-right color"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"bottomRight", "Color", "Bottom-right color"});
+  rec.record_property("layer.CmdDrawGradientRectRoundedCentered",
+                      {"bottomLeft", "Color", "Bottom-left color"});
   rec.add_type("layer.CmdDrawDashedLine", true);
   rec.record_property("layer.CmdDrawDashedLine",
                       {"start", "Vector2", "Start position"});
@@ -1439,6 +1510,8 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(DrawDashedCircle)
   QUEUE_CMD(DrawDashedRoundedRect)
   QUEUE_CMD(DrawDashedLine)
+  QUEUE_CMD(DrawGradientRectCentered)
+  QUEUE_CMD(DrawGradientRectRoundedCentered)
 
 #undef QUEUE_CMD
 
@@ -1687,6 +1760,34 @@ void exposeToLua(sol::state &lua) {
         ---@return void)",
           .doc =
               R"(Queues a CmdDrawDashedLine into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+        
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueDrawGradientRectCentered",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdDrawGradientRectCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
+          .is_static = true,
+          .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueDrawGradientRectRoundedCentered",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdDrawGradientRectRoundedCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
 
@@ -3163,6 +3264,92 @@ void AddRenderRectVerticesFilledLayer(std::shared_ptr<Layer> layerPtr,
   AddDrawCommand(layerPtr, "render_rect_vertices_filled_layer",
                  {outerRec, progressOrFullBackground, cacheEntity, color}, z);
 }
+
+
+void DrawGradientRectCentered(
+    float cx, float cy,
+    float width, float height,
+    Color topLeft, Color topRight,
+    Color bottomRight, Color bottomLeft)
+{
+    float x = cx - width / 2.0f;
+    float y = cy - height / 2.0f;
+
+    rlBegin(RL_QUADS);
+        rlColor4ub(topLeft.r, topLeft.g, topLeft.b, topLeft.a);
+        rlVertex2f(x, y);
+
+        rlColor4ub(topRight.r, topRight.g, topRight.b, topRight.a);
+        rlVertex2f(x + width, y);
+
+        rlColor4ub(bottomRight.r, bottomRight.g, bottomRight.b, bottomRight.a);
+        rlVertex2f(x + width, y + height);
+
+        rlColor4ub(bottomLeft.r, bottomLeft.g, bottomLeft.b, bottomLeft.a);
+        rlVertex2f(x, y + height);
+    rlEnd();
+}
+
+
+void DrawGradientRectRoundedCentered(
+    float cx, float cy,
+    float width, float height,
+    float roundness,
+    int segments,
+    Color topLeft, Color topRight,
+    Color bottomRight, Color bottomLeft)
+{
+    float x = cx - width / 2.0f;
+    float y = cy - height / 2.0f;
+
+    if (roundness <= 0.0f) {
+        DrawGradientRectCentered(cx, cy, width, height, topLeft, topRight, bottomRight, bottomLeft);
+        return;
+    }
+
+    if (roundness > 1.0f) roundness = 1.0f;
+    float radius = fminf(width, height) * roundness / 2.0f;
+    float step = 90.0f / (float)segments;
+
+    Vector2 centers[4] = {
+        {x + radius, y + radius},                     // TL
+        {x + width - radius, y + radius},             // TR
+        {x + width - radius, y + height - radius},    // BR
+        {x + radius, y + height - radius}             // BL
+    };
+
+    Color corners[4] = { topLeft, topRight, bottomRight, bottomLeft };
+
+    rlBegin(RL_TRIANGLES);
+    for (int c = 0; c < 4; ++c) {
+        float angleStart = 180 + 90 * c;
+        const Vector2 center = centers[c];
+        Color color = corners[c];
+        for (int i = 0; i < segments; i++) {
+            float a0 = DEG2RAD * (angleStart + step * i);
+            float a1 = DEG2RAD * (angleStart + step * (i + 1));
+
+            rlColor4ub(color.r, color.g, color.b, color.a);
+            rlVertex2f(center.x, center.y);
+            rlVertex2f(center.x + cosf(a0) * radius, center.y + sinf(a0) * radius);
+            rlVertex2f(center.x + cosf(a1) * radius, center.y + sinf(a1) * radius);
+        }
+    }
+    rlEnd();
+
+    // center quad (gradient interpolation)
+    rlBegin(RL_QUADS);
+        rlColor4ub(topLeft.r, topLeft.g, topLeft.b, topLeft.a);
+        rlVertex2f(x + radius, y);
+        rlColor4ub(topRight.r, topRight.g, topRight.b, topRight.a);
+        rlVertex2f(x + width - radius, y);
+        rlColor4ub(bottomRight.r, bottomRight.g, bottomRight.b, bottomRight.a);
+        rlVertex2f(x + width - radius, y + height);
+        rlColor4ub(bottomLeft.r, bottomLeft.g, bottomLeft.b, bottomLeft.a);
+        rlVertex2f(x + radius, y + height);
+    rlEnd();
+}
+
 
 void RenderRectVerticesFilledLayer(std::shared_ptr<layer::Layer> layerPtr,
                                    const Rectangle outerRec,

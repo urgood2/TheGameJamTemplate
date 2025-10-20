@@ -1753,7 +1753,9 @@ layer.DrawCommandType = {
     RenderRectVerticesOutlineLayer = 42,  -- Draw outlined rects from vertex list
     DrawPolygon = 43,  -- Draw a polygon
     RenderNPatchRect = 44,  -- Draw a 9-patch rectangle
-    DrawTriangle = 45  -- Draw a triangle
+    DrawTriangle = 45,  -- Draw a triangle
+    DrawGradientRectCentered = 46,  -- Draw a gradient rectangle centered
+    DrawGradientRectRoundedCentered = 47  -- Draw a rounded gradient rectangle centered
 }
 
 
@@ -2076,6 +2078,58 @@ layer.CmdDrawDashedRoundedRect = {
     thickness = nil,  -- Thickness of the dashes
     ---@type Color
     color = nil  -- Color of the dashes
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawGradientRectCentered
+layer.CmdDrawGradientRectCentered = {
+    ---@type number
+    cx = nil,  -- Center X
+    ---@type number
+    cy = nil,  -- Center Y
+    ---@type number
+    width = nil,  -- Width
+    ---@type number
+    height = nil,  -- Height
+    ---@type Color
+    topLeft = nil,  -- Top-left color
+    ---@type Color
+    topRight = nil,  -- Top-right color
+    ---@type Color
+    bottomRight = nil,  -- Bottom-right color
+    ---@type Color
+    bottomLeft = nil  -- Bottom-left color
+}
+
+
+---
+--- 
+---
+---@class layer.CmdDrawGradientRectRoundedCentered
+layer.CmdDrawGradientRectRoundedCentered = {
+    ---@type number
+    cx = nil,  -- Center X
+    ---@type number
+    cy = nil,  -- Center Y
+    ---@type number
+    width = nil,  -- Width
+    ---@type number
+    height = nil,  -- Height
+    ---@type number
+    roundness = nil,  -- Corner roundness
+    ---@type number
+    segments = nil,  -- Number of segments for corners
+    ---@type Color
+    topLeft = nil,  -- Top-left color
+    ---@type Color
+    topRight = nil,  -- Top-right color
+    ---@type Color
+    bottomRight = nil,  -- Bottom-right color
+    ---@type Color
+    bottomLeft = nil  -- Bottom-left color
 }
 
 
@@ -6838,6 +6892,26 @@ function layer.queueDrawDashedRoundedRect(...) end
 function layer.queueDrawDashedLine(...) end
 
 ---
+--- Queues a CmdDrawGradientRectCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawGradientRectCentered(...) end
+
+---
+--- Queues a CmdDrawGradientRectRoundedCentered into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdDrawGradientRectRoundedCentered) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueDrawGradientRectRoundedCentered(...) end
+
+---
 --- Queues a CmdEndDrawing into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
 ---
 ---@param layer Layer # Target layer to queue into
@@ -7944,6 +8018,12 @@ function physics.arb_set_ptr(...) end
 function physics.arb_get_ptr(...) end
 
 ---
+--- Clears all PhysicsWorld instances and their data (for shutdown) using the global physics manager.
+---
+---@return nil
+function physics.clear_all_worlds(...) end
+
+---
 --- Registers a begin callback for the pair (tagA, tagB). Return false to reject contact.
 ---
 ---@param world physics.PhysicsWorld
@@ -8374,6 +8454,17 @@ function physics.add_bar_segment(...) end
 ---@param tag string
 ---@return nil
 function physics.add_screen_bounds(...) end
+
+---
+--- Destroys entities with bodies completely outside the given AABB.
+---
+---@param world physics.PhysicsWorld
+---@param xMin number
+---@param yMin number
+---@param xMax number
+---@param yMax number
+---@return nil
+function physics.cull_entities_outside_bounds(...) end
 
 ---
 --- Generates static segments following the outline of solid cells.
@@ -9131,6 +9222,12 @@ function steering.apply_force(...) end
 ---@param radians number @direction in radians
 ---@param seconds number @duration seconds
 function steering.apply_impulse(...) end
+
+---
+--- Clears ALL active timers from the system.
+---
+---@return nil
+function timer.clear_all(...) end
 
 ---
 --- Cancels and destroys an active timer.

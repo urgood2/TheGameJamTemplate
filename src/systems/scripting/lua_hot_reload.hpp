@@ -7,6 +7,7 @@
 #include "spdlog/spdlog.h"
 #include "third_party/rlImGui/imgui.h"
 #include "types.hpp"
+#include "core/game.hpp"
 
 namespace lua_hot_reload {
 
@@ -142,14 +143,10 @@ namespace lua_hot_reload {
                     ImGui::PopID();
                 }
             }
-            
-            if (ImGui::Begin("Lua Hot Reload")) {
-                // existing reload stuff...
-
-                ImGui::Separator();
-                if (ImGui::Button("🔁 Reload Game from Scratch")) {
-                    game::ReloadGame();
-                }
+        
+            ImGui::Separator();
+            if (ImGui::Button("🔁 Reload Game from Scratch")) {
+                game::reInitializeGame();
             }
         }
         ImGui::End();

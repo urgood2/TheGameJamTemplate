@@ -61,3 +61,11 @@
   - Added lua script hot reloading system with ImGui interface.
   - Added "Reload Game from Scratch" button to lua hot reload ImGui window.
   - Need to finish reInitializeGame function to reset game state when reloading.
+  
+10/20/2025 
+  - Added gradient rectangle drawing commands to layer system, for things like rotating highlights, loot drop indicators, etc.
+  - Finished implementing reInitializeGame function to reset game state.
+  - player-enemy collision detection working.
+  - Added camera shake on hit, with slow & flash.
+  - Added walls.
+  - Debugging and tesing for collision detection with walls & enemies.

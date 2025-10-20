@@ -47,6 +47,7 @@ namespace sound_system {
     void QueueMusic(const std::string& musicName, bool loop = false);
     void SetTrackVolume(const std::string& name, float vol);
     float GetTrackVolume(const std::string& name);
+    void ResetSoundSystem();
     
     // Fading and pausing
     auto FadeInMusic (const std::string &musicName, float duration) -> void;

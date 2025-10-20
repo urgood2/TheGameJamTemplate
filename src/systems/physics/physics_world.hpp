@@ -766,6 +766,16 @@ public:
   void Update(float deltaTime);
   void PostUpdate();
   
+  
+  
+  void ClearLuaRefs() {
+      for (auto& [key, handler] : _luaPairHandlers)
+          handler.ClearLuaRefs();
+      _luaPairHandlers.clear();
+  }
+
+  
+  
   // culling
   void CullOutOfBoundsEntities(float left, float bottom, float right, float top)
   {
@@ -1495,6 +1505,17 @@ private:
     sol::protected_function pre_solve;  // optional
     sol::protected_function post_solve; // optional
     sol::protected_function separate;   // optional
+    
+    void ClearLuaRefs() {
+      begin.reset();
+      pre_solve.reset();
+      post_solve.reset();
+      separate.reset();
+        begin = sol::lua_nil;
+        pre_solve = sol::lua_nil;
+        post_solve = sol::lua_nil;
+        separate = sol::lua_nil;
+    }
   };
 
   struct LuaWildcardHandler {
@@ -1632,6 +1653,7 @@ InitPhysicsWorld(entt::registry *registry, float meter = 64.0f,
 
   return toReturn;
 }
+
 
 /* ---------------------------- Collision layers ---------------------------- */
 // Set all entities in an object layer to use a given physics tag and re-apply

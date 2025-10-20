@@ -77,6 +77,14 @@ namespace sound_system {
             "Plays a sound effect with custom pitch (no Lua callback).",
             true, false
         });
+        
+        lua.set_function("resetSoundSystem", &ResetSoundSystem);
+        rec.record_free_function({}, {
+            "resetSoundSystem", 
+            "---@return nil", 
+            "Resets the entire sound system, stopping all sounds and clearing loaded music (not sfx).", 
+            true, false
+        });
 
         lua.set_function("playMusic", &PlayMusic);
         rec.record_free_function({}, {
@@ -458,7 +466,20 @@ namespace sound_system {
             PlayMusic(nextName, nextLoop);
         }
     }
-
+    
+    // for resetting game state, rather than unloading completely
+    void ResetSoundSystem() {
+        // Clear active music streams
+        for (auto &me : activeMusic) {
+            UnloadMusicStream(me.stream);
+        }
+        activeMusic.clear();
+        // Clear sound callbacks
+        soundCallbacks.clear();
+        // Clear music queue
+        std::queue<std::pair<std::string,bool>> emptyQueue;
+        std::swap(musicQueue, emptyQueue);
+    }
 
     // Unload all active streams on shutdown
     void Unload() {

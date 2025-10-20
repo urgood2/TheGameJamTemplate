@@ -145,7 +145,7 @@ namespace lua_hot_reload {
             }
         
             ImGui::Separator();
-            if (ImGui::Button("🔁 Reload Game from Scratch")) {
+            if (ImGui::Button("Reload Game (& files) from Scratch")) {
                 game::reInitializeGame();
             }
         }

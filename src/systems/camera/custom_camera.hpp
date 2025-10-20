@@ -251,14 +251,15 @@ public:
         });
     }
     
-    // destructor: cleans up spring entities
+    // destructor: cleans up spring entities, if not already destroyed.
     ~GameCamera() {
-        registry.destroy(springTargetX);
-        registry.destroy(springTargetY);
-        registry.destroy(springZoom);
-        registry.destroy(springRot);
-        registry.destroy(springOffsetX);
-        registry.destroy(springOffsetY);
+        
+        if (registry.valid(springTargetX)) registry.destroy(springTargetX);
+        if (registry.valid(springTargetY)) registry.destroy(springTargetY);
+        if (registry.valid(springZoom))    registry.destroy(springZoom);
+        if (registry.valid(springRot))     registry.destroy(springRot);
+        if (registry.valid(springOffsetX)) registry.destroy(springOffsetX);
+        if (registry.valid(springOffsetY)) registry.destroy(springOffsetY);
     }
 
     // --- Public API ---

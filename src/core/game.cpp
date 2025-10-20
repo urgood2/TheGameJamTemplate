@@ -58,6 +58,7 @@
 #include "systems/composable_mechanics/ability.hpp"
 
 #include "systems/scripting/lua_hot_reload.hpp"
+#include "types.hpp"
 
 using std::pair;
 
@@ -406,19 +407,42 @@ namespace game
 
     
 /* --------------------------- reload game helper --------------------------- */
+    void resetLuaRefs()
+    {
+        luaMainInitFunc.reset();
+        luaMainUpdateFunc.reset();
+        luaMainDrawFunc.reset();
+        
+        luaMainDrawFunc = sol::lua_nil;
+        luaMainUpdateFunc = sol::lua_nil;
+        luaMainInitFunc = sol::lua_nil;
+    }
 
     // contains what needs to be done to re-initialize main after a reset, includes init methods from main.cpp that go beyond baseline init
     void reInitializeGame()
     {
+        
+        timer::TimerSystem::clear_all_timers();
+        
+        globals::registry.view<transform::Transform>().each([](auto entity, auto &t){
+            transform::RemoveEntity(&globals::registry, entity);
+        });
+        
+        globals::registry.clear();
+        
+        // clear registry, timers, physics worlds, layers
+        globals::physicsManager->clearAllWorlds();
+        layer::UnloadAllLayers();
+        
         // clear lua state and re-load
+        resetLuaRefs();
         ai_system::masterStateLua = sol::state(); // reset lua state
         ai_system::init();
         
-        // clear registry, timers, physics worlds, layers
-        globals::registry.clear();
-        timer::TimerSystem::clear_all_timers();
-        globals::physicsManager->clearAllWorlds();
-        layer::UnloadAllLayers();
+        globals::quadtreeUI.clear();
+        globals::quadtreeWorld.clear();
+        
+        sound_system::ResetSoundSystem();
     
         input::Init(globals::inputState);
         game::init();

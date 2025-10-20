@@ -1997,6 +1997,7 @@ function startActionPhase()
     activate_state(ACTION_STATE)
     activate_state("default_state") -- just for defaults, keep them open
     
+    PhysicsManager.enable_step("world", true)
 end
 
 function startPlanningPhase()
@@ -2005,6 +2006,8 @@ function startPlanningPhase()
     
     activate_state(PLANNING_STATE)
     activate_state("default_state") -- just for defaults, keep them open
+    
+    PhysicsManager.enable_step("world", false)
 end
 
 function startShopPhase()
@@ -2013,6 +2016,8 @@ function startShopPhase()
     
     activate_state(SHOP_STATE)
     activate_state("default_state") -- just for defaults, keep them open
+    
+    PhysicsManager.enable_step("world", false)
 end
 
 local lastFrame = -1
@@ -2223,7 +2228,7 @@ function initActionPhase()
         playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
         slowTime(1.5, 0.1) -- slow time for 2 seconds, to 20% speed
         
-        timer.after(0.5, function()
+        timer.after(0.3, function()
             playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
         end)
         

@@ -2363,6 +2363,10 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
 
     auto RemoveEntity(entt::registry *registry, entt::entity e) -> void
     {
+        if (registry->valid(e) == false || e == entt::null)
+        {
+            return;
+        }
         auto &node = registry->get<GameObject>(e);
         auto &role = registry->get<InheritedProperties>(e);
 

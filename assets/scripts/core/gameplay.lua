@@ -9,6 +9,7 @@ local palette = require("color.palette")
 local TimerChain = require("core.timer_chain")
 local Easing = require("util.easing")
 local CombatSystem = require("combat.combat_system")
+require ("core.card_eval_order_test")
 
 --  let's make some card data
 local action_card_defs = {
@@ -2138,6 +2139,10 @@ SCREEN_BOUND_TOP = 0
 SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
 function initActionPhase()
+    
+    --TODO: testing
+    testWands()
+    
     log_debug("Action phase started!")
     
     initCombatSystem()

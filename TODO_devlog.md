@@ -71,3 +71,5 @@
   - Debugging and tesing for collision detection with walls & enemies.
   - Got gradient rounded rect rendering working. Took way too long imo to debug this.
   
+10/21/2025
+  - Found a lot of potential and answers to my own design questions in Noita's wand system. I'm going to try to yoink it and adapt it to my game.

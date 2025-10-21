@@ -180,12 +180,11 @@ local cardsToTest = {
 }
 
 -- Simulate Noita-like cast block division, with trigger/timer behavior
--- Simulate Noita-like cast block division with cast-block–aware payload building
 local function simulate_wand(wand, card_pool)
-    print("=== Simulating " .. wand.id .. " ===")
+    print("\n=== Simulating " .. wand.id .. " ===")
 
     ----------------------------------------------------------------------
-    -- Lookup helpers
+    -- Lookup helper
     ----------------------------------------------------------------------
     local function get_card_by_id(id)
         for _, c in ipairs(card_pool) do
@@ -195,11 +194,12 @@ local function simulate_wand(wand, card_pool)
     end
 
     ----------------------------------------------------------------------
-    -- Build deck (loop around if needed)
+    -- Build deck (limited to pool size)
     ----------------------------------------------------------------------
     local deck = {}
-    for i = 1, wand.total_card_slots do
-        table.insert(deck, card_pool[(i % #card_pool) + 1].id)
+    local max_cards = math.min(wand.total_card_slots, #card_pool)
+    for i = 1, max_cards do
+        table.insert(deck, card_pool[i].id)
     end
 
     if wand.shuffle then
@@ -210,16 +210,21 @@ local function simulate_wand(wand, card_pool)
         end
     end
 
+    print("Deck: {" .. table.concat(deck, ",\n\t") .. "}")
+    print(string.rep("-", 60))
+
     ----------------------------------------------------------------------
-    -- Helper: build one valid cast block (modifier + action, etc.)
+    -- Recursive builder for a single valid cast block
     ----------------------------------------------------------------------
     local function build_one_cast_block(start_index)
         local block = {}
         local i = start_index
         local safety = 0
-        local required_actions = 1       -- how many actions are still needed to close this block
+        local required_actions = 1
+        local total_cast_delay = 0
+        local total_recharge = 0
 
-        while required_actions > 0 and safety < #deck * 4 do  -- safety multiplier for wrap-around
+        while required_actions > 0 and safety < #deck * 4 do
             safety = safety + 1
             local idx = ((i - 1) % #deck) + 1
             local cid = deck[idx]
@@ -229,16 +234,16 @@ local function simulate_wand(wand, card_pool)
 
             if card then
                 if card.type == "modifier" then
-                    -- modifiers don’t close anything, they just apply to the next action
-                    -- add more required actions if multicast
                     if card.multicast_count and card.multicast_count > 1 then
                         required_actions = required_actions + (card.multicast_count - 1)
                     end
-                    
+
                 elseif card.type == "action" then
                     required_actions = required_actions - 1
+                    total_cast_delay = total_cast_delay + (card.cast_delay or 0)
+                    total_recharge = total_recharge + (card.recharge_time or 0)
 
-                    -- if action has timer or trigger, build its nested payload block
+                    -- handle nested triggers
                     if card.timer_ms or card.trigger_on_collision then
                         local payload_block, new_i = build_one_cast_block(i)
                         if card.timer_ms then
@@ -249,98 +254,99 @@ local function simulate_wand(wand, card_pool)
                         end
                         i = new_i
                     end
-                elseif card.type == "modifier" and card.multicast_count and card.multicast_count > 1 then
-                    -- multicast is treated as a modifier that expands required actions
-                    local multicast_n = card.multicast_count
-                    for n = 1, multicast_n do
-                        local sub_block, new_i = build_one_cast_block(i)
-                        table.insert(block, sub_block)
-                        i = new_i
-                    end
-                    required_actions = required_actions - 1 -- multicast still satisfies one "action" slot
                 end
             end
         end
 
-        return block, i
+        return block, i, total_cast_delay, total_recharge
     end
 
     ----------------------------------------------------------------------
-    -- Recursive evaluator
+    -- Pretty print (recursive)
     ----------------------------------------------------------------------
-    local function build_blocks(start_index, cards, blocks)
-        local i = start_index
-        local pending_mods = {}
+    local function describe_card(cid)
+        local c = get_card_by_id(cid)
+        if not c then return cid end
 
-        while i <= #cards do
-            local card_id = cards[i]
-            local card = get_card_by_id(card_id)
-            if not card then
-                i = i + 1
+        local desc = cid
+        if c.type == "modifier" then
+            local n = c.multicast_count or 1
+            desc = string.format("%s (modifier ×%d)", cid, n)
+        elseif c.type == "action" then
+            desc = string.format("%s (action)", cid)
+            if c.timer_ms then
+                desc = desc .. string.format(", delayed trigger +%dms", c.timer_ms)
+            elseif c.trigger_on_collision then
+                desc = desc .. " (collision trigger)"
+            end
+        end
 
-            elseif card.type == "modifier" then
-                table.insert(pending_mods, card_id)
-                i = i + 1
+        local total_delay = (wand.cast_delay or 0) + (c.cast_delay or 0)
+        desc = string.format("%s — cast_delay +%dms (total %dms)",
+            desc, c.cast_delay or 0, total_delay)
+        return desc
+    end
 
-            elseif card.type == "action" then
-                -- normal block
-                local block = {}
-                for _, m in ipairs(pending_mods) do table.insert(block, m) end
-                pending_mods = {}
-                table.insert(block, card_id)
-                table.insert(blocks, block)
-                i = i + 1
+    local function print_block(block, depth, label)
+        local indent = string.rep("  ", depth)
+        if label then print(indent .. label) end
 
-                -- check trigger/timer
-                if card.timer_ms or card.trigger_on_collision then
-                    local payload_block, new_index = build_one_cast_block(i)
-                    if #payload_block > 0 then
-                        if card.timer_ms then
-                            table.insert(blocks, { delay = card.timer_ms, cards = payload_block })
-                            -- build_blocks(1, payload_block, blocks)
-                        end
-                        if card.trigger_on_collision then
-                            table.insert(blocks, { collision = true, cards = payload_block })
-                            -- build_blocks(1, payload_block, blocks)
-                        end
-                    end
-                    i = new_index
-                end
+        for _, entry in ipairs(block) do
+            if type(entry) == "table" and entry.cards then
+                local tag = entry.delay and
+                    (string.format("Delayed (%dms) Parallel Block:", entry.delay)) or
+                    (entry.collision and "On-Collision Parallel Block:")
+                print_block(entry.cards, depth + 1, tag)
+            elseif type(entry) == "table" and not entry.cards then
+                print_block(entry, depth + 1)
             else
-                i = i + 1
+                print(indent .. "  • " .. describe_card(entry))
             end
         end
     end
 
     ----------------------------------------------------------------------
-    -- Run
+    -- Main execution
     ----------------------------------------------------------------------
     local blocks = {}
-    build_blocks(1, deck, blocks)
+    local i = 1
+    local total_cast_delay = 0
+    local total_recharge_time = 0
+
+    while i <= #deck do
+        local block, new_i, c_delay, c_recharge = build_one_cast_block(i)
+
+        -- prepend always-cast cards
+        if #wand.always_cast_cards > 0 then
+            local full_block = {}
+            for _, ac in ipairs(wand.always_cast_cards) do table.insert(full_block, ac) end
+            for _, c in ipairs(block) do table.insert(full_block, c) end
+            block = full_block
+        end
+
+        table.insert(blocks, block)
+        total_cast_delay = total_cast_delay + (wand.cast_delay or 0) + c_delay
+        total_recharge_time = total_recharge_time + (wand.recharge_time or 0) + c_recharge
+        i = new_i
+    end
 
     ----------------------------------------------------------------------
-    -- Output
+    -- Print results
     ----------------------------------------------------------------------
     for idx, block in ipairs(blocks) do
-        if block.cards then
-            if block.delay then
-                print(string.format("Cast Block %d (delayed %d ms):", idx, block.delay))
-            elseif block.collision then
-                print(string.format("Cast Block %d (on collision):", idx))
-            else
-                print(string.format("Cast Block %d:", idx))
-            end
-            for _, cid in ipairs(block.cards) do
-                print("  *", cid)
-            end
-        else
-            print(string.format("Cast Block %d:", idx))
-            for _, cid in ipairs(block) do
-                print("  *", cid)
-            end
-        end
+        print(string.format("Cast Block %d:", idx))
+        print_block(block, 1)
+        print("")
     end
+
+    print(string.rep("-", 60))
+    print(string.format("Wand '%s' Execution Complete", wand.id))
+    print(string.format("→ Total Cast Delay: %d ms", total_cast_delay))
+    print(string.format("→ Total Recharge Time: %d ms", total_recharge_time))
+    print(string.rep("=", 60))
 end
+
+
 
 function testWands() 
     

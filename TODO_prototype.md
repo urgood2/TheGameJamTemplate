@@ -19,6 +19,42 @@ modifier_card_defs
 - player level.
     
 # programming side
+- give 3 set trigger slots, triggers can't be taken away or moved.
+- make a set of basic action + mod + trigger cards to play with.
+- implement card evaluation order using actual cards to see how it behaves.
+  - Trigger: every X pixels traveled.
+  - Trigger: on enemy hit.
+  - Trigger: on dash.
+  - Action: fire basic bolt.
+  - Action: add mana to trigger.
+  - Action: ball that bounces 3 times. 
+  - Action: ball that bounces 3 times. On hit, cast another spell.
+  - Action: leave spike hazard. after X seconds, cast another spell.
+  - Action: flying cross projectile.
+  - Action: bolt that teleports you to target location on hit.
+  - Action: summon minion that wanders around and attacks enemies.
+  
+  - Modifier: double spell.
+  - Modifier: triple spell.
+  - Modifier: myriad spell.
+  - Modifier: make next spell crit.
+  - Modifier: greatly increase size, but at the cost of speed.
+  - Modifier: basic projectile. after a timer, launch another spell.
+  - Modifier: Immunity to projectiles for 2 seconds + add 1 card to current cast block.
+  - Modifier: heal player for X on hit.
+  - Modifier: cast a random modifier spell.
+  - Modifier: auto-aim. aim for nearest enemy.
+  - Modifier: homing projectile.
+  - Modifier: explosive projectile.
+  - Modifier: projectile travel slower, but phases in and out.
+  - Modifier: long-distance cast.
+  - Modifier: teleporting cast (cast from nearest enemy)
+  - Modifier: blood to damage (sacrifice health to increase damage of cast block)
+  - Modifier: wand refresh (recharge wand immediately- no cooldown)
+  -
+- make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.
+
+
 - Add card 3d rotation for when initially dropped?
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.

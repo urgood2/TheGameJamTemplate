@@ -388,342 +388,329 @@ local function simulate_wand(wand, card_pool)
     -- Continue from here with cast simulation, block building, etc.
     ----------------------------------------------------------------------
 
+    ----------------------------------------------------------------------
+    -- Build one cast block (Noita-style)
+    ----------------------------------------------------------------------
+    ----------------------------------------------------------------------
+-- Helper: deep copy modifiers (used for inheritance)
 ----------------------------------------------------------------------
--- Build one cast block (Noita-style)
-----------------------------------------------------------------------
-local function build_cast_block(start_index, depth, inherited_modifiers, visited_cards, sub_block_override, suppress_always_casts)
-    ------------------------------------------------------------------
-    -- Setup / Initialization
-    ------------------------------------------------------------------
-    depth = depth or 1
-    visited_cards = visited_cards or {}
-
-    local indent = string.rep("  ", depth - 1)
-    local block = {
-        cards = {},
-        children = {},
-        applied_modifiers = {},
-        remaining_modifiers = {},
-        total_cast_delay = 0,
-        total_recharge = 0,
-        target_override = sub_block_override,
-    }
-
-    ------------------------------------------------------------------
-    -- 1. Merge inherited + global modifiers
-    ------------------------------------------------------------------
-    local modifiers = {}
-
-    -- Copy inherited modifiers (if any)
-    if inherited_modifiers then
-        for _, m in ipairs(inherited_modifiers) do
-            table.insert(modifiers, {
-                card = m.card,
-                remaining = m.remaining,
-                persistent_until_chain_end = m.persistent_until_chain_end or false
-            })
-        end
+local function copy_modifiers(source)
+    local result = {}
+    for _, m in ipairs(source or {}) do
+        table.insert(result, {
+            card = m.card,
+            remaining = m.remaining,
+            persistent_until_chain_end = m.persistent_until_chain_end or false
+        })
     end
+    return result
+end
 
-    -- Merge in global active modifiers
+
+----------------------------------------------------------------------
+-- Helper: merge inherited + global modifiers
+----------------------------------------------------------------------
+local function merge_modifiers(inherited_modifiers)
+    local merged = copy_modifiers(inherited_modifiers)
+
     for _, m in ipairs(global_active_modifiers) do
-        table.insert(modifiers, { card = m.card, remaining = m.remaining })
+        table.insert(merged, { card = m.card, remaining = m.remaining })
     end
+    return merged
+end
 
-    -- Record applied modifiers
-    for _, m in ipairs(modifiers) do
-        table.insert(block.applied_modifiers, { card = m.card, remaining = m.remaining })
+
+----------------------------------------------------------------------
+-- Helper: apply modifiers after an action executes
+----------------------------------------------------------------------
+local function apply_modifiers(indent, modifiers, card)
+    for j = #modifiers, 1, -1 do
+        local m = modifiers[j]
+        print(string.format("%s     ↳ under modifier '%s' (%d left)",
+            indent, readable_card_id(m.card), m.remaining - 1))
+
+        m.remaining = m.remaining - 1
+        if m.remaining <= 0 then
+            print(string.format("%s     🔸 [MOD EXHAUSTED] '%s' (persists=%s)",
+                indent, readable_card_id(m.card),
+                tostring(m.persistent_until_chain_end)))
+            if not m.persistent_until_chain_end then
+                table.remove(modifiers, j)
+            end
+        end
     end
+end
 
-    ------------------------------------------------------------------
-    -- 2. Setup casting parameters
-    ------------------------------------------------------------------
-    local actions_collected = 0
-    local i = start_index
-    local safety = 0
 
-    local target_actions = block.target_override or wand.cast_block_size or 1
+----------------------------------------------------------------------
+-- Helper: spawn sub-cast (timer or trigger)
+----------------------------------------------------------------------
+local function spawn_sub_cast(i, depth, indent, trigger_card, modifiers, visited_cards)
+    local label = trigger_card.timer_ms
+        and string.format("+%dms timer", trigger_card.timer_ms)
+        or "on collision"
 
-    ------------------------------------------------------------------
-    -- 3. Always-cast execution (skipped in sub-block recursion)
-    ------------------------------------------------------------------
-    if not suppress_always_casts and wand.always_cast_cards and #wand.always_cast_cards > 0 then
-        print(string.format("%s  🔸 [ALWAYS CAST EXEC] running %d always-cast cards at start",
-            indent, #wand.always_cast_cards))
+    print(string.format("%s     ↳ Spawning sub-cast (%s)", indent, label))
+    print(string.format("%s     └─── [RECURSION TREE] Enter sub-cast (Depth %d → %d)",
+        indent, depth, depth + 1))
 
-        for _, always_id in ipairs(wand.always_cast_cards) do
-            local acard = card_lookup[always_id]
-            if not acard then
-                print(string.format("%s    ⚠️ Missing always-cast card '%s'", indent, always_id))
-            else
-                print(string.format("%s    • Executing always-cast '%s'", indent, readable_card_id(acard)))
-
-                ------------------------------------------------------
-                -- Modifier type (acts as multicast / expansion)
-                ------------------------------------------------------
-                if acard.type == "modifier" then
-                    local mod = {
-                        card = acard,
-                        remaining = acard.multicast_count or 1,
-                        persistent_until_chain_end = true,
-                    }
-
-                    print(string.format("%s      🔹 [ALWAYS MOD OPEN] '%s' ×%d",
-                        indent, readable_card_id(acard), mod.remaining))
-
-                    table.insert(modifiers, mod)
-                    table.insert(block.applied_modifiers, { card = acard, remaining = mod.remaining })
-
-                    -- Expand cast size if multicast
-                    if (acard.multicast_count or 1) > 1 then
-                        local extra = (acard.multicast_count - 1)
-                        target_actions = target_actions + extra
-                        print(string.format("%s     ⏩ Expanded block target to %d due to multicast (%+d)",
-                            indent, target_actions, extra))
-                    end
-
-                ------------------------------------------------------
-                -- Action type (executes once immediately)
-                ------------------------------------------------------
-                elseif acard.type == "action" then
-                    print(string.format("%s      🔹 [ALWAYS ACTION] '%s'", indent, readable_card_id(acard)))
-                    table.insert(block.cards, acard)
-
-                    block.total_cast_delay = block.total_cast_delay + (acard.cast_delay or 0)
-                    block.total_recharge   = block.total_recharge   + (acard.recharge_time or 0)
-
-                    -- Apply modifiers
-                    for j = #modifiers, 1, -1 do
-                        local m = modifiers[j]
-                        print(string.format("%s     ↳ under modifier '%s' (%d left)",
-                            indent, readable_card_id(m.card), m.remaining - 1))
-
-                        m.remaining = m.remaining - 1
-                        if m.remaining <= 0 then
-                            print(string.format("%s     🔸 [MOD EXHAUSTED] '%s' (persists=%s)",
-                                indent, readable_card_id(m.card),
-                                tostring(m.persistent_until_chain_end)))
-                            if not m.persistent_until_chain_end then
-                                table.remove(modifiers, j)
-                            end
-                        end
-                    end
-
-                    -- Handle trigger/timer sub-block
-                    if (acard.timer_ms or acard.trigger_on_collision) then
-                        local label = acard.timer_ms
-                            and string.format("+%dms timer", acard.timer_ms)
-                            or "on collision"
-
-                        print(string.format("%s     ↳ Spawning sub-cast (%s)", indent, label))
-                        print(string.format("%s     └─── [RECURSION TREE] Enter sub-cast (Depth %d → %d)",
-                            indent, depth, depth + 1))
-
-                        -- Copy modifiers (remove duplicates from global always)
-                        local inherited_copy = {}
-                        for _, m in ipairs(modifiers) do
-                            table.insert(inherited_copy, {
-                                card = m.card,
-                                remaining = m.remaining,
-                                persistent_until_chain_end = m.persistent_until_chain_end
-                            })
-                        end
-                        for _, m in ipairs(global_always_modifiers) do
-                            for im_idx = #inherited_copy, 1, -1 do
-                                if inherited_copy[im_idx].card == m.card then
-                                    table.remove(inherited_copy, im_idx)
-                                    break
-                                end
-                            end
-                        end
-
-                        local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1, true)
-                        i = new_i
-
-                        table.insert(block.children, {
-                            trigger = acard,
-                            delay = acard.timer_ms,
-                            collision = acard.trigger_on_collision,
-                            block = sub_block,
-                            recursion_depth = depth + 1,
-                        })
-
-                        print(string.format("%s     └─── [RECURSION TREE] Exit sub-cast (Back to Depth %d)", indent, depth))
-                        print(string.format("%s     🔚 Ending block after trigger '%s' (no further actions in this block)",
-                            indent, readable_card_id(acard)))
-                        break
-                    end
-                end
+    -- Inherit modifiers (minus global duplicates)
+    local inherited_copy = copy_modifiers(modifiers)
+    for _, m in ipairs(global_always_modifiers) do
+        for idx = #inherited_copy, 1, -1 do
+            if inherited_copy[idx].card == m.card then
+                table.remove(inherited_copy, idx)
+                break
             end
         end
     end
 
-    ------------------------------------------------------------------
-    -- 4. Begin deck evaluation loop
-    ------------------------------------------------------------------
-    print(string.format("%s[Depth %d] ➤ Building cast block starting at %d (target %d actions)",
-        indent, depth, start_index, target_actions))
+    -- Recurse
+    local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1, true)
+    print(string.format("%s     └─── [RECURSION TREE] Exit sub-cast (Back to Depth %d)", indent, depth))
+    print(string.format("%s     🔚 Ending block after trigger '%s' (no further actions in this block)",
+        indent, readable_card_id(trigger_card)))
 
-    while actions_collected < target_actions and safety < #deck * 4 do
-        safety = safety + 1
-        local idx = ((i - 1) % #deck) + 1
-        local card = deck[idx]
-        if not card then break end
-        i = i + 1
+    return sub_block, new_i
+end
 
-        --------------------------------------------------------------
-        -- Visit limiter
-        --------------------------------------------------------------
-        local count = visited_cards[card] or 0
-        if count > 0 then
-            local limit = card.revisit_limit or 0
-            if limit == 0 then
-                print(string.format("%s  ⚠️ Card '%s' already used %d×; halting (no revisit).",
-                    indent, readable_card_id(card), count))
-                break
-            elseif limit > 0 and count >= limit then
-                print(string.format("%s  ⚠️ Card '%s' revisit limit reached (%d).",
-                    indent, readable_card_id(card), limit))
-                break
-            else
-                print(string.format("%s  ↻ Revisiting card '%s' (%d/%s)",
-                    indent, readable_card_id(card), count + 1,
-                    (limit == -1 and "∞" or tostring(limit))))
-            end
-        end
-        visited_cards[card] = count + 1
 
-        -- Recursion depth limit
-        if card.allow_recursion and card.recursion_depth and depth > card.recursion_depth then
-            print(string.format("%s  ⚠️ Card '%s' recursion depth limit reached (%d).",
-                indent, readable_card_id(card), card.recursion_depth))
-            break
+----------------------------------------------------------------------
+-- Helper: handle always-cast cards (run before deck)
+----------------------------------------------------------------------
+local function handle_always_casts(indent, depth, block, modifiers, visited_cards, i, target_actions)
+    if not wand.always_cast_cards or #wand.always_cast_cards == 0 then
+        return i, target_actions
+    end
+
+    print(string.format("%s  🔸 [ALWAYS CAST EXEC] running %d always-cast cards at start",
+        indent, #wand.always_cast_cards))
+
+    for _, always_id in ipairs(wand.always_cast_cards) do
+        local acard = card_lookup[always_id]
+        if not acard then
+            print(string.format("%s    ⚠️ Missing always-cast card '%s'", indent, always_id))
+            goto continue
         end
 
-        --------------------------------------------------------------
-        -- Type-specific behavior
-        --------------------------------------------------------------
-        if card.type == "modifier" then
-            ----------------------------------------------------------
-            -- Modifier card
-            ----------------------------------------------------------
+        print(string.format("%s    • Executing always-cast '%s'", indent, readable_card_id(acard)))
+
+        if acard.type == "modifier" then
+            -- Modifier adds multicast
             local mod = {
-                card = card,
-                remaining = card.multicast_count or 1,
+                card = acard,
+                remaining = acard.multicast_count or 1,
                 persistent_until_chain_end = true,
             }
 
-            print(string.format("%s  🔹 [MOD OPEN] '%s' ×%d",
-                indent, readable_card_id(card), mod.remaining))
+            print(string.format("%s      🔹 [ALWAYS MOD OPEN] '%s' ×%d",
+                indent, readable_card_id(acard), mod.remaining))
 
             table.insert(modifiers, mod)
-            table.insert(block.applied_modifiers, { card = card, remaining = mod.remaining })
+            table.insert(block.applied_modifiers, { card = acard, remaining = mod.remaining })
 
-            if (card.multicast_count or 1) > 1 then
-                local extra = (card.multicast_count - 1)
+            -- Expand target size if multicast
+            if (acard.multicast_count or 1) > 1 then
+                local extra = (acard.multicast_count - 1)
                 target_actions = target_actions + extra
                 print(string.format("%s     ⏩ Expanded block target to %d due to multicast (%+d)",
                     indent, target_actions, extra))
             end
 
-        elseif card.type == "action" then
-            ----------------------------------------------------------
-            -- Action card
-            ----------------------------------------------------------
-            actions_collected = actions_collected + 1
-            table.insert(block.cards, card)
+        elseif acard.type == "action" then
+            print(string.format("%s      🔹 [ALWAYS ACTION] '%s'", indent, readable_card_id(acard)))
+            table.insert(block.cards, acard)
 
-            block.total_cast_delay = block.total_cast_delay + (card.cast_delay or 0)
-            block.total_recharge   = block.total_recharge   + (card.recharge_time or 0)
+            block.total_cast_delay = block.total_cast_delay + (acard.cast_delay or 0)
+            block.total_recharge   = block.total_recharge   + (acard.recharge_time or 0)
 
-            print(string.format("%s  🔹 Action '%s' (%d/%d actions filled)",
-                indent, readable_card_id(card), actions_collected, target_actions))
+            apply_modifiers(indent, modifiers, acard)
 
-            -- Apply modifiers
-            for j = #modifiers, 1, -1 do
-                local m = modifiers[j]
-                print(string.format("%s     ↳ under modifier '%s' (%d left)",
-                    indent, readable_card_id(m.card), m.remaining - 1))
-                m.remaining = m.remaining - 1
-                if m.remaining <= 0 then
-                    print(string.format("%s     🔸 [MOD EXHAUSTED] '%s' (persists=%s)",
-                        indent, readable_card_id(m.card),
-                        tostring(m.persistent_until_chain_end)))
-                    if not m.persistent_until_chain_end then
-                        table.remove(modifiers, j)
-                    end
-                end
-            end
-
-            -- Handle triggers/timers recursively
-            if (card.timer_ms or card.trigger_on_collision) then
-                local label = card.timer_ms
-                    and string.format("+%dms timer", card.timer_ms)
-                    or "on collision"
-
-                print(string.format("%s     ↳ Spawning sub-cast (%s)", indent, label))
-                print(string.format("%s     └─── [RECURSION TREE] Enter sub-cast (Depth %d → %d)",
-                    indent, depth, depth + 1))
-
-                local inherited_copy = {}
-                for _, m in ipairs(modifiers) do
-                    table.insert(inherited_copy, {
-                        card = m.card,
-                        remaining = m.remaining,
-                        persistent_until_chain_end = m.persistent_until_chain_end
-                    })
-                end
-                for _, m in ipairs(global_always_modifiers) do
-                    for im_idx = #inherited_copy, 1, -1 do
-                        if inherited_copy[im_idx].card == m.card then
-                            table.remove(inherited_copy, im_idx)
-                            break
-                        end
-                    end
-                end
-
-                local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1)
-                i = new_i
-
+            if (acard.timer_ms or acard.trigger_on_collision) then
+                local sub_block
+                sub_block, i = spawn_sub_cast(i, depth, indent, acard, modifiers, visited_cards)
                 table.insert(block.children, {
-                    trigger = card,
-                    delay = card.timer_ms,
-                    collision = card.trigger_on_collision,
+                    trigger = acard,
+                    delay = acard.timer_ms,
+                    collision = acard.trigger_on_collision,
                     block = sub_block,
                     recursion_depth = depth + 1,
                 })
-
-                print(string.format("%s     └─── [RECURSION TREE] Exit sub-cast (Back to Depth %d)", indent, depth))
-                print(string.format("%s     🔚 Ending block after trigger '%s' (no further actions in this block)",
-                    indent, readable_card_id(card)))
-                goto continue
+                break
             end
         end
 
-        if actions_collected < target_actions then
-            print(string.format("%s    ...still need %d more actions to fill block...",
-                indent, target_actions - actions_collected))
-        end
         ::continue::
     end
+    return i, target_actions
+end
 
-    ------------------------------------------------------------------
-    -- 5. Close remaining modifiers
-    ------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- Helper: process a single card during deck evaluation
+----------------------------------------------------------------------
+local function process_card(indent, card, modifiers, block, depth, i, visited_cards, target_actions, actions_collected)
+    if card.type == "modifier" then
+        local mod = {
+            card = card,
+            remaining = card.multicast_count or 1,
+            persistent_until_chain_end = true,
+        }
+
+        print(string.format("%s  🔹 [MOD OPEN] '%s' ×%d",
+            indent, readable_card_id(card), mod.remaining))
+
+        table.insert(modifiers, mod)
+        table.insert(block.applied_modifiers, { card = card, remaining = mod.remaining })
+
+        if (card.multicast_count or 1) > 1 then
+            local extra = (card.multicast_count - 1)
+            target_actions = target_actions + extra
+            print(string.format("%s     ⏩ Expanded block target to %d due to multicast (%+d)",
+                indent, target_actions, extra))
+        end
+
+    elseif card.type == "action" then
+        actions_collected = actions_collected + 1
+        table.insert(block.cards, card)
+        block.total_cast_delay = block.total_cast_delay + (card.cast_delay or 0)
+        block.total_recharge   = block.total_recharge   + (card.recharge_time or 0)
+
+        print(string.format("%s  🔹 Action '%s' (%d/%d actions filled)",
+            indent, readable_card_id(card), actions_collected, target_actions))
+
+        apply_modifiers(indent, modifiers, card)
+
+        if (card.timer_ms or card.trigger_on_collision) then
+            local sub_block
+            sub_block, i = spawn_sub_cast(i, depth, indent, card, modifiers, visited_cards)
+            table.insert(block.children, {
+                trigger = card,
+                delay = card.timer_ms,
+                collision = card.trigger_on_collision,
+                block = sub_block,
+                recursion_depth = depth + 1,
+            })
+            return i, target_actions, actions_collected, true
+        end
+    end
+
+    return i, target_actions, actions_collected, false
+end
+
+
+----------------------------------------------------------------------
+-- Helper: record remaining modifiers at the end
+----------------------------------------------------------------------
+local function finalize_modifiers(indent, block, modifiers)
     for _, m in ipairs(modifiers) do
         table.insert(block.remaining_modifiers, { card = m.card, remaining = m.remaining })
         print(string.format("%s  🔸 [FORCE CLOSE MOD] '%s' (%d unfilled)",
             indent, readable_card_id(m.card), m.remaining))
     end
-
-    ------------------------------------------------------------------
-    -- 6. Summary and return
-    ------------------------------------------------------------------
-    print(string.format("%s  ✅ Finished block (%d/%d actions) at depth %d",
-        indent, #block.cards, target_actions, depth))
-
-    return block, i, block.total_cast_delay, block.total_recharge
 end
+
+
+    ----------------------------------------------------------------------
+    -- Main: build_cast_block
+    ----------------------------------------------------------------------
+    function build_cast_block(start_index, depth, inherited_modifiers, visited_cards, sub_block_override, suppress_always_casts)
+        depth = depth or 1
+        visited_cards = visited_cards or {}
+        local indent = string.rep("  ", depth - 1)
+
+        local block = {
+            cards = {},
+            children = {},
+            applied_modifiers = {},
+            remaining_modifiers = {},
+            total_cast_delay = 0,
+            total_recharge = 0,
+            target_override = sub_block_override,
+        }
+
+        ------------------------------------------------------------
+        -- Merge modifiers
+        ------------------------------------------------------------
+        local modifiers = merge_modifiers(inherited_modifiers)
+        for _, m in ipairs(modifiers) do
+            table.insert(block.applied_modifiers, { card = m.card, remaining = m.remaining })
+        end
+
+        ------------------------------------------------------------
+        -- Setup casting parameters
+        ------------------------------------------------------------
+        local actions_collected = 0
+        local i = start_index
+        local safety = 0
+        local target_actions = block.target_override or wand.cast_block_size or 1
+
+        ------------------------------------------------------------
+        -- Handle always-casts
+        ------------------------------------------------------------
+        if not suppress_always_casts then
+            i, target_actions = handle_always_casts(indent, depth, block, modifiers, visited_cards, i, target_actions)
+        end
+
+        ------------------------------------------------------------
+        -- Begin deck evaluation loop
+        ------------------------------------------------------------
+        print(string.format("%s[Depth %d] ➤ Building cast block starting at %d (target %d actions)",
+            indent, depth, start_index, target_actions))
+
+        while actions_collected < target_actions and safety < #deck * 4 do
+            safety = safety + 1
+            local idx = ((i - 1) % #deck) + 1
+            local card = deck[idx]
+            if not card then break end
+            i = i + 1
+
+            -- Visit / recursion guards
+            local count = visited_cards[card] or 0
+            if count > 0 then
+                local limit = card.revisit_limit or 0
+                if limit == 0 then
+                    print(string.format("%s  ⚠️ Card '%s' already used %d×; halting (no revisit).", indent, readable_card_id(card), count))
+                    break
+                elseif limit > 0 and count >= limit then
+                    print(string.format("%s  ⚠️ Card '%s' revisit limit reached (%d).", indent, readable_card_id(card), limit))
+                    break
+                else
+                    print(string.format("%s  ↻ Revisiting card '%s' (%d/%s)",
+                        indent, readable_card_id(card), count + 1,
+                        (limit == -1 and "∞" or tostring(limit))))
+                end
+            end
+            visited_cards[card] = count + 1
+
+            if card.allow_recursion and card.recursion_depth and depth > card.recursion_depth then
+                print(string.format("%s  ⚠️ Card '%s' recursion depth limit reached (%d).",
+                    indent, readable_card_id(card), card.recursion_depth))
+                break
+            end
+
+            -- Process card
+            local sub_ended
+            i, target_actions, actions_collected, sub_ended =
+                process_card(indent, card, modifiers, block, depth, i, visited_cards, target_actions, actions_collected)
+
+            if sub_ended then break end
+
+            if actions_collected < target_actions then
+                print(string.format("%s    ...still need %d more actions to fill block...",
+                    indent, target_actions - actions_collected))
+            end
+        end
+
+        ------------------------------------------------------------
+        -- Finalize
+        ------------------------------------------------------------
+        finalize_modifiers(indent, block, modifiers)
+        print(string.format("%s  ✅ Finished block (%d/%d actions) at depth %d",
+            indent, #block.cards, target_actions, depth))
+
+        return block, i, block.total_cast_delay, block.total_recharge
+    end
 
 
 

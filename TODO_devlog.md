@@ -80,3 +80,4 @@
   - Added card weight property to influence evaluation order.
   - Updated card evaluation test script with weights for different card types.
   - Removed card stacking behavior for now.
+  - Recursion & always cast flexibility added. Seems to be working as intended.

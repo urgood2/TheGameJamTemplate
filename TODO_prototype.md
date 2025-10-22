@@ -20,6 +20,7 @@ modifier_card_defs
     
 # programming side
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
+- TODO: ignore trigger & tim
 - give 3 set trigger slots, triggers can't be taken away or moved.
 - make a set of basic action + mod + trigger cards to play with.
 - implement card evaluation order using actual cards to see how it behaves.

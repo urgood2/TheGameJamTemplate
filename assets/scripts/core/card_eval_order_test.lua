@@ -59,7 +59,7 @@ local triggersToTest = {
         spread_angle = 10,                           -- degrees of random spread
         shuffle = false,                             -- shuffle cards before each full rotation
         total_card_slots = 5,                        -- total number of card slots
-        always_cast_cards = { "TEST_MULTICAST" }, -- always include this modifier card in each cast block
+        always_cast_cards = { "TEST_PROJECTILE_TRIGGER" }, -- always include this modifier card in each cast block
     },
 
     -- no shuffle, no always cast cards.
@@ -324,7 +324,7 @@ local function simulate_wand(wand, card_pool)
     ----------------------------------------------------------------------
 -- Build one cast block (Noita-style)
 ----------------------------------------------------------------------
-local function build_cast_block(start_index, depth, inherited_modifiers, visited_cards, sub_block_override)
+local function build_cast_block(start_index, depth, inherited_modifiers, visited_cards, sub_block_override, suppress_always_casts)
     depth = depth or 1
     visited_cards = visited_cards or {} -- shared revisit tracker across recursion
 
@@ -380,9 +380,9 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
     
     
     ------------------------------------------------------------
-    -- 2. Execute always-cast cards at block start (evaluate normally)
+    -- 2. Execute always-cast cards at block start (evaluate normally), if this is not a sub-block caused by a trigger/timer on always cast
     ------------------------------------------------------------
-    if wand.always_cast_cards and #wand.always_cast_cards > 0 then
+    if not suppress_always_casts and wand.always_cast_cards and #wand.always_cast_cards > 0 then
         print(string.format("%s  🔸 [ALWAYS CAST EXEC] running %d always-cast cards at start",
             indent, #wand.always_cast_cards))
 
@@ -432,9 +432,9 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
                         end
                     end
 
-                    if (card.timer_ms or card.trigger_on_collision) then
-                        local label = card.timer_ms
-                            and string.format("+%dms timer", card.timer_ms)
+                    if (acard.timer_ms or acard.trigger_on_collision) then
+                        local label = acard.timer_ms
+                            and string.format("+%dms timer", acard.timer_ms)
                             or "on collision"
                         print(string.format("%s     ↳ Spawning sub-cast (%s)", indent, label))
                         print(string.format("%s     └─── [RECURSION TREE] Enter sub-cast (Depth %d → %d)",
@@ -458,12 +458,12 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
                             end
                         end
 
-                        local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1)
+                        local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1, true) -- suppress always casts in sub-block, to avoid infinite loops
                         i = new_i
                         table.insert(block.children, {
-                            trigger = card,
-                            delay = card.timer_ms,
-                            collision = card.trigger_on_collision,
+                            trigger = acard,
+                            delay = acard.timer_ms,
+                            collision = acard.trigger_on_collision,
                             block = sub_block,
                             recursion_depth = depth + 1,
                         })
@@ -471,7 +471,7 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
                         print(string.format("%s     └─── [RECURSION TREE] Exit sub-cast (Back to Depth %d)",
                             indent, depth))
                         print(string.format("%s     🔚 Ending block after trigger '%s' (no further actions in this block)",
-                            indent, readable_card_id(card)))
+                            indent, readable_card_id(acard)))
                         break
                     end
                 end

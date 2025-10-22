@@ -714,13 +714,14 @@ end
 
 
 
-
-
     ----------------------------------------------------------------------
-    -- Pretty printer
+    -- Pretty printer helpers
     ----------------------------------------------------------------------
+
+    -- Describes a single card, including type, modifiers, and delays
     local function describe_card(c)
         local desc = readable_card_id(c)
+
         if c.type == "modifier" then
             desc = desc .. string.format(" (modifier ×%d)", c.multicast_count or 1)
         elseif c.type == "action" then
@@ -731,85 +732,113 @@ end
                 desc = desc .. " (collision trigger)"
             end
         end
-        local total_delay = ((wand.cast_delay or 0) + (c.cast_delay or 0)) * overload_ratio
+
+        local base_delay = wand.cast_delay or 0
+        local total_delay = (base_delay + (c.cast_delay or 0)) * overload_ratio
+
         return string.format("%s — cast_delay +%dms (total %.1fms w/ overload)",
             desc, c.cast_delay or 0, total_delay)
     end
 
+
+    -- Prints a list of modifiers with consistent formatting
+    local function print_modifiers(indent, modifiers, header, suffix)
+        if modifiers and #modifiers > 0 then
+            print(indent .. string.format("  %s %d", header, #modifiers))
+            for _, m in ipairs(modifiers) do
+                print(string.format("%s    • '%s' (%d %s)",
+                    indent, m.card.card_id, m.remaining, suffix))
+            end
+        end
+    end
+
+
+    -- Finds a child block triggered by a specific card (if any)
+    local function find_child_for_card(block, card)
+        for _, child in ipairs(block.children or {}) do
+            if child.trigger == card then
+                return child
+            end
+        end
+        return nil
+    end
+
+
+    -- Recursively prints a block and its children
     local function print_block(block, depth, label)
         local indent = string.rep("  ", depth)
         if label then print(indent .. label) end
 
-        if block.applied_modifiers and #block.applied_modifiers > 0 then
-            print(indent .. string.format("  🧩 Applied modifiers at block start: %d", #block.applied_modifiers))
-            for _, m in ipairs(block.applied_modifiers) do
-                print(string.format("%s    • '%s' (%d left at start)",
-                    indent, m.card.card_id, m.remaining))
-            end
-        end
+        -- Modifiers (start and end state)
+        print_modifiers(indent, block.applied_modifiers,  "🧩 Applied modifiers at block start:", "left at start")
+        print_modifiers(indent, block.remaining_modifiers, "🌀 Remaining modifiers after cast:", "left after")
 
-        if block.remaining_modifiers and #block.remaining_modifiers > 0 then
-            print(indent .. string.format("  🌀 Remaining modifiers after cast: %d", #block.remaining_modifiers))
-            for _, m in ipairs(block.remaining_modifiers) do
-                print(string.format("%s    • '%s' (%d left after)",
-                    indent, m.card.card_id, m.remaining))
-            end
-        end
-
+        -- Cards and sub-blocks
         for _, c in ipairs(block.cards) do
             print(indent .. "  • " .. describe_card(c))
-            for _, child in ipairs(block.children or {}) do
-                if child.trigger == c then
-                    local lbl = child.delay
-                        and string.format("⏱ After %dms:", child.delay)
-                        or "⚡ On Collision:"
-                    print(indent .. "  " .. lbl)
-                    print_block(child.block, depth + 1)
-                end
+
+            local child = find_child_for_card(block, c)
+            if child then
+                local lbl = child.delay
+                    and string.format("⏱ After %dms:", child.delay)
+                    or "⚡ On Collision:"
+                print(indent .. "  " .. lbl)
+                print_block(child.block, depth + 1)
             end
         end
     end
 
-    ----------------------------------------------------------------------
-    -- Main execution pass
-    ----------------------------------------------------------------------
-    local blocks = {}
-    local total_cast_delay, total_recharge_time = 0, 0
-    local i = 1
 
-    while i <= #deck do
-        local block, next_i, c_delay, c_recharge = build_cast_block(i)
-        table.insert(blocks, block)
-        total_cast_delay = total_cast_delay + ((wand.cast_delay or 0) + c_delay) * overload_ratio
-        total_recharge_time = total_recharge_time + ((wand.recharge_time or 0) + c_recharge) * overload_ratio
-        i = next_i
+    ----------------------------------------------------------------------
+    -- Summary printer
+    ----------------------------------------------------------------------
+
+    local function print_execution_summary(blocks, wand, total_cast_delay, total_recharge_time)
+        local line = string.rep("-", 60)
+        print(line)
+
+        for idx, block in ipairs(blocks) do
+            print(string.format("Cast Block %d:", idx))
+            print_block(block, 1)
+            print("")
+        end
+
+        print(line)
+        print(string.format("Wand '%s' Execution Complete", wand.id))
+        print(string.format("→ Total Cast Delay: %.1f ms", total_cast_delay))
+        print(string.format("→ Total Recharge Time: %.1f ms", total_recharge_time))
+        print(string.rep("=", 60))
     end
 
+
     ----------------------------------------------------------------------
-    -- Print final results
+    -- Execution driver
     ----------------------------------------------------------------------
-    print(string.rep("-", 60))
-    for idx, block in ipairs(blocks) do
-        print(string.format("Cast Block %d:", idx))
-        print_block(block, 1)
-        print("")
+
+    local function execute_wand(deck)
+        local blocks = {}
+        local total_cast_delay, total_recharge_time = 0, 0
+        local i = 1
+
+        local base_cast_delay = wand.cast_delay or 0
+        local base_recharge_time = wand.recharge_time or 0
+
+        while i <= #deck do
+            local block, next_i, c_delay, c_recharge = build_cast_block(i)
+            table.insert(blocks, block)
+
+            total_cast_delay = total_cast_delay + (base_cast_delay + c_delay) * overload_ratio
+            total_recharge_time = total_recharge_time + (base_recharge_time + c_recharge) * overload_ratio
+
+            i = next_i
+        end
+
+        print_execution_summary(blocks, wand, total_cast_delay, total_recharge_time)
     end
 
-    print(string.rep("-", 60))
-    print(string.format("Wand '%s' Execution Complete", wand.id))
-    print(string.format("→ Total Cast Delay: %.1f ms", total_cast_delay))
-    print(string.format("→ Total Recharge Time: %.1f ms", total_recharge_time))
-    print(string.rep("=", 60))
+
+    execute_wand(deck)
 end
-
-
-
--- local function create_card_from_template(template)
---     local card = Node {}
---     card:attach_ecs { create_new = true }
---     apply_card_properties(card, template)
---     return card
--- end
 
 function testWands()
     

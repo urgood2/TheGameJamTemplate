@@ -302,7 +302,7 @@ local function simulate_wand(wand, card_pool)
     ----------------------------------------------------------------------
 -- Build one cast block (Noita-style)
 ----------------------------------------------------------------------
-local function build_cast_block(start_index, depth, inherited_modifiers, visited_cards)
+local function build_cast_block(start_index, depth, inherited_modifiers, visited_cards, sub_block_override)
     depth = depth or 1
     visited_cards = visited_cards or {}  -- shared revisit tracker across recursion
 
@@ -314,6 +314,7 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
         children = {},
         applied_modifiers = {},
         remaining_modifiers = {},
+        target_override = sub_block_override,
     }
 
     ------------------------------------------------------------
@@ -329,6 +330,7 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
             })
         end
     end
+    
 
     for _, m in ipairs(global_active_modifiers) do
         table.insert(modifiers, { card = m.card, remaining = m.remaining })
@@ -443,7 +445,7 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
             --------------------------------------------------------
             -- Recursive sub-cast (timer/trigger)
             --------------------------------------------------------
-            if (card.timer_ms or card.trigger_on_collision) and i <= #deck then
+            if (card.timer_ms or card.trigger_on_collision) then
                 local label = card.timer_ms
                     and string.format("+%dms timer", card.timer_ms)
                     or "on collision"
@@ -461,8 +463,7 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
                 end
 
                 -- 🩵 Sub-blocks from timer/trigger cards use target=1
-                local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards)
-                sub_block.target_override = 1
+                local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1) 
                 i = new_i
 
                 table.insert(block.children, {
@@ -498,6 +499,7 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
 
     print(string.format("%s  ✅ Finished block (%d/%d actions)",
         indent, #block.cards, target_actions))
+        
     return block, i, block.total_cast_delay, block.total_recharge
 end
 

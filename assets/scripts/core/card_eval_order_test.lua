@@ -155,9 +155,9 @@ local TEST_DAMAGE_BOOST = {
     speed_modifier = 0,
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
-    multicast_count = 1, -- modifies 1 card
-    weight = 1,
-    revisit_limit = 2, -- can be revisited in the same cast block
+    multicast_count = 1, -- modifies 1 next card
+    weight = 1, -- like max mana, but encumbrance based, slows down wand if too high
+    revisit_limit = 2, -- can be revisited in the same cast block (recursion)
 }
 
 -- modifier card that modifies 2 cards

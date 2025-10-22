@@ -1,5 +1,20 @@
 local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior script
 
+--[[
+================================================================================
+NOITA-STYLE WAND CASTING SYSTEM
+================================================================================
+This system simulates Noita's wand mechanics with:
+- Trigger slots (wands) with configurable properties
+- Action cards (projectiles with various behaviors)
+- Modifier cards (damage boosts, multicasts, etc.)
+- Always-cast mechanics
+- Recursive cast blocks (timers/collision triggers)
+- Weight-based overload penalties
+================================================================================
+]]
+
+
 -- testing out how noita wand-like eval order would work for cards.
 
 -- trigger slots have:
@@ -42,6 +57,193 @@ local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior 
 -- 4. handling of max uses for cards.
 -- 5. cast delay and recharge time from cards should add to the trigger's base cast delay and recharge time.
 
+
+
+--------------------------------------------------------------------------------
+-- CARD DEFINITIONS
+--------------------------------------------------------------------------------
+
+local CardTemplates = {}
+
+-- Action Cards
+CardTemplates.TEST_PROJECTILE = {
+    id = "TEST_PROJECTILE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 5,
+    damage = 10,
+    damage_type = "physical",
+    radius_of_effect = 0,
+    spread_angle = 5,
+    projectile_speed = 500,
+    lifetime = 2000,
+    cast_delay = 100,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    weight = 1,
+}
+
+CardTemplates.TEST_PROJECTILE_TIMER = {
+    id = "TEST_PROJECTILE_TIMER",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 8,
+    damage = 15,
+    damage_type = "physical",
+    radius_of_effect = 0,
+    spread_angle = 3,
+    projectile_speed = 400,
+    lifetime = 3000,
+    cast_delay = 150,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    timer_ms = 1000,
+    weight = 2,
+}
+
+CardTemplates.TEST_PROJECTILE_TRIGGER = {
+    id = "TEST_PROJECTILE_TRIGGER",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 10,
+    damage = 20,
+    damage_type = "physical",
+    radius_of_effect = 0,
+    spread_angle = 2,
+    projectile_speed = 600,
+    lifetime = 2500,
+    cast_delay = 200,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    trigger_on_collision = true,
+    weight = 2,
+}
+
+-- Modifier Cards
+CardTemplates.TEST_DAMAGE_BOOST = {
+    id = "TEST_DAMAGE_BOOST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 3,
+    damage_modifier = 5,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 1,
+    weight = 1,
+    revisit_limit = 2,
+}
+
+CardTemplates.TEST_MULTICAST_2 = {
+    id = "TEST_MULTICAST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 7,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 2,
+    weight = 2,
+}
+
+--------------------------------------------------------------------------------
+-- WAND (TRIGGER) DEFINITIONS
+--------------------------------------------------------------------------------
+
+local WandTemplates = {
+    -- Wand with shuffle and always-cast modifier
+    {
+        id = "TEST_WAND_1",
+        type = "trigger",
+        max_uses = -1,
+        mana_max = 50,
+        mana_recharge_rate = 5,
+        cast_block_size = 2,
+        cast_delay = 200,
+        recharge_time = 1000,
+        spread_angle = 10,
+        shuffle = false,
+        total_card_slots = 5,
+        always_cast_cards = { "TEST_PROJECTILE_TRIGGER" },
+    },
+    
+    -- Simple wand with no shuffle or always-cast
+    {
+        id = "TEST_WAND_2",
+        type = "trigger",
+        max_uses = -1,
+        mana_max = 30,
+        mana_recharge_rate = 10,
+        cast_block_size = 1,
+        cast_delay = 100,
+        recharge_time = 500,
+        spread_angle = 5,
+        shuffle = false,
+        total_card_slots = 10,
+        always_cast_cards = {},
+    },
+}
+
+--------------------------------------------------------------------------------
+-- UTILITY FUNCTIONS
+--------------------------------------------------------------------------------
+
+--- Copies card properties from a template to an object
+--- @param obj table Destination object
+--- @param card_table table Card template
+--- @param card_type string|nil Optional type filter
+--- @return table The modified object
+local function apply_card_properties(obj, card_table, card_type)
+    if card_type and card_table.type ~= card_type then
+        return obj
+    end
+
+    for k, v in pairs(card_table) do
+        if k ~= "id" and k ~= "handle" then
+            local vtype = type(v)
+            if vtype == "number" or vtype == "boolean" or vtype == "string" or vtype == "table" then
+                if obj[k] == nil then
+                    obj[k] = v
+                end
+            end
+        end
+    end
+
+    if not obj.card_id then
+        obj.card_id = card_table.id
+    end
+
+    return obj
+end
+
+--- Creates a card instance from a template
+--- @param template table Card template
+--- @return table Card instance
+local function create_card_from_template(template)
+    local card = Node {}
+    card:attach_ecs { create_new = true }
+    apply_card_properties(card, template)
+    return card
+end
+
+--- Returns a human-readable card identifier
+--- @param card table Card instance
+--- @return string Formatted card ID
+local function readable_card_id(card)
+    return card.card_id .. ":" .. card:handle()
+end
 
 
 local triggersToTest = {
@@ -458,7 +660,7 @@ local function build_cast_block(start_index, depth, inherited_modifiers, visited
                             end
                         end
 
-                        local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1, true) -- suppress always casts in sub-block, to avoid infinite loops
+                        local sub_block, new_i = build_cast_block(i, depth + 1, inherited_copy, visited_cards, 1, true) -- suppress always casts in sub-block, 
                         i = new_i
                         table.insert(block.children, {
                             trigger = acard,
@@ -722,31 +924,17 @@ end
 
 
 
-local function create_card_from_template(template)
-    local card = Node {}
-    card:attach_ecs { create_new = true }
-    apply_card_properties(card, template)
-    return card
-end
+-- local function create_card_from_template(template)
+--     local card = Node {}
+--     card:attach_ecs { create_new = true }
+--     apply_card_properties(card, template)
+--     return card
+-- end
 
 function testWands()
-    -- local card_pool = {
-    --     create_card_from_template(TEST_PROJECTILE),
-    --     create_card_from_template(TEST_PROJECTILE_TIMER),
-    --     create_card_from_template(TEST_PROJECTILE_TRIGGER),
-    --     create_card_from_template(TEST_DAMAGE_BOOST),
-    --     create_card_from_template(TEST_MULTICAST_2),
-    -- }
-
-    -- local card_pool = {
-    --     create_card_from_template(TEST_PROJECTILE),
-    --     create_card_from_template(TEST_DAMAGE_BOOST),
-    --     create_card_from_template(TEST_PROJECTILE_TIMER),
-    --     create_card_from_template(TEST_PROJECTILE_TRIGGER),
-    --     create_card_from_template(TEST_DAMAGE_BOOST),
-    --     create_card_from_template(TEST_MULTICAST_2),
-    -- }
-
+    
+    
+        
     -- local card_pool = {
     --     create_card_from_template(TEST_PROJECTILE),
     --     create_card_from_template(TEST_PROJECTILE),
@@ -756,24 +944,28 @@ function testWands()
     --     create_card_from_template(TEST_PROJECTILE_TRIGGER),
     --     create_card_from_template(TEST_DAMAGE_BOOST),
     --     create_card_from_template(TEST_MULTICAST_2),
-    -- }
+    --     create_card_from_template(TEST_MULTICAST_2),
+    --     create_card_from_template(TEST_MULTICAST_2),
+    --     create_card_from_template(TEST_MULTICAST_2),
 
+    -- }
+    
     local card_pool = {
-        create_card_from_template(TEST_PROJECTILE),
-        create_card_from_template(TEST_PROJECTILE),
-        create_card_from_template(TEST_PROJECTILE),
-        create_card_from_template(TEST_DAMAGE_BOOST),
-        create_card_from_template(TEST_PROJECTILE_TIMER),
-        create_card_from_template(TEST_PROJECTILE_TRIGGER),
-        create_card_from_template(TEST_DAMAGE_BOOST),
-        create_card_from_template(TEST_MULTICAST_2),
-        create_card_from_template(TEST_MULTICAST_2),
-        create_card_from_template(TEST_MULTICAST_2),
-        create_card_from_template(TEST_MULTICAST_2),
-
+        create_card_from_template(CardTemplates.TEST_PROJECTILE),
+        create_card_from_template(CardTemplates.TEST_PROJECTILE),
+        create_card_from_template(CardTemplates.TEST_PROJECTILE),
+        create_card_from_template(CardTemplates.TEST_DAMAGE_BOOST),
+        create_card_from_template(CardTemplates.TEST_PROJECTILE_TIMER),
+        create_card_from_template(CardTemplates.TEST_PROJECTILE_TRIGGER),
+        create_card_from_template(CardTemplates.TEST_DAMAGE_BOOST),
+        create_card_from_template(CardTemplates.TEST_MULTICAST_2),
+        create_card_from_template(CardTemplates.TEST_MULTICAST_2),
+        create_card_from_template(CardTemplates.TEST_MULTICAST_2),
+        create_card_from_template(CardTemplates.TEST_MULTICAST_2),
     }
+    
+    
+    simulate_wand(WandTemplates[2], card_pool) -- wand with no shuffle, no always cast, no shuffle, cast block size 1
 
-    simulate_wand(triggersToTest[2], card_pool) -- wand with no shuffle, no always cast, no shuffle, cast block size 1
-
-    simulate_wand(triggersToTest[1], card_pool) -- wand with shuffle and always cast modifier, cast block size 2
+    simulate_wand(WandTemplates[1], card_pool) -- wand with shuffle and always cast modifier, cast block size 2
 end

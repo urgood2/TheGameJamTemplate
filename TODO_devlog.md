@@ -74,3 +74,9 @@
 10/21/2025
   - Found a lot of potential and answers to my own design questions in Noita's wand system. I'm going to try to yoink it and adapt it to my game.
   - Prototyped a basic wand evaluation algorithm using Noita's wand system as reference.
+  
+10/22/2025
+  - Continued prototyping wand evaluation system.
+  - Added card weight property to influence evaluation order.
+  - Updated card evaluation test script with weights for different card types.
+  - Removed card stacking behavior for now.

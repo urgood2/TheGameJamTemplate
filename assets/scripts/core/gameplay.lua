@@ -437,109 +437,110 @@ function createNewCard(category, id, x, y, gameStateToApply)
     )
     
     -- NOTE: onRelease is called for when mouse is released ON TOP OF this node.
-    nodeComp.methods.onRelease = function(registry, releasedOn, released)
-        log_debug("card", released, "released on", releasedOn)
+    -- TODO: removing card stacking behavior for now.
+    -- nodeComp.methods.onRelease = function(registry, releasedOn, released)
+    --     log_debug("card", released, "released on", releasedOn)
         
-        -- when released on top of a card, get the root card of the stack if there is one, and add self to that stack 
+    --     -- when released on top of a card, get the root card of the stack if there is one, and add self to that stack 
         
         
-        -- get the card script table
-        local releasedCardScript = getScriptTableFromEntityID(released)
-        local releasedOnCardScript = getScriptTableFromEntityID(releasedOn)
-        if not releasedCardScript then return end
-        if not releasedOnCardScript then return end
+    --     -- get the card script table
+    --     local releasedCardScript = getScriptTableFromEntityID(released)
+    --     local releasedOnCardScript = getScriptTableFromEntityID(releasedOn)
+    --     if not releasedCardScript then return end
+    --     if not releasedOnCardScript then return end
         
-        -- check stackRootEntity in the table. Also, check that isStackable is true
-        if not releasedCardScript.isStackable then
-            log_debug("released card is not stackable or has no stackRootEntity")
-            return
-        end
+    --     -- check stackRootEntity in the table. Also, check that isStackable is true
+    --     if not releasedCardScript.isStackable then
+    --         log_debug("released card is not stackable or has no stackRootEntity")
+    --         return
+    --     end
         
-        -- check that the released entity is not already a stack root
-        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released and releasedCardScript.cardStack and #releasedCardScript.cardStack > 0 then
-            log_debug("released card is already a stack root, not stacking on self")
-            return
-        end
+    --     -- check that the released entity is not already a stack root
+    --     if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released and releasedCardScript.cardStack and #releasedCardScript.cardStack > 0 then
+    --         log_debug("released card is already a stack root, not stacking on self")
+    --         return
+    --     end
         
-        -- if the released card is already part of a stack, remove it first
-        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity ~= releasedCardScript:handle() then
-            local currentRootCardScript = getScriptTableFromEntityID(releasedCardScript.stackRootEntity)
-            if currentRootCardScript then
-                removeCardFromStack(currentRootCardScript, releasedCardScript)
-            end
-        end
+    --     -- if the released card is already part of a stack, remove it first
+    --     if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity ~= releasedCardScript:handle() then
+    --         local currentRootCardScript = getScriptTableFromEntityID(releasedCardScript.stackRootEntity)
+    --         if currentRootCardScript then
+    --             removeCardFromStack(currentRootCardScript, releasedCardScript)
+    --         end
+    --     end
         
-        local rootCardScript = nil
+    --     local rootCardScript = nil
         
-        -- if the card released on has no root, then make it the root.
-        if not releasedOnCardScript.stackRootEntity then
-            rootCardScript = releasedOnCardScript
-            releasedOnCardScript.stackRootEntity = releasedOnCardScript:handle()
-            releasedOnCardScript.cardStack = releasedOnCardScript.cardStack or {}
-            releasedCardScript.stackRootEntity = releasedOnCardScript:handle()
-        else 
-            -- if it has a root, use that instead.
-            rootCardScript = getScriptTableFromEntityID(releasedOnCardScript.stackRootEntity)
-        end
+    --     -- if the card released on has no root, then make it the root.
+    --     if not releasedOnCardScript.stackRootEntity then
+    --         rootCardScript = releasedOnCardScript
+    --         releasedOnCardScript.stackRootEntity = releasedOnCardScript:handle()
+    --         releasedOnCardScript.cardStack = releasedOnCardScript.cardStack or {}
+    --         releasedCardScript.stackRootEntity = releasedOnCardScript:handle()
+    --     else 
+    --         -- if it has a root, use that instead.
+    --         rootCardScript = getScriptTableFromEntityID(releasedOnCardScript.stackRootEntity)
+    --     end
         
-        if not rootCardScript then
-            log_debug("could not find root card script")
-            return
-        end
+    --     if not rootCardScript then
+    --         log_debug("could not find root card script")
+    --         return
+    --     end
         
-        -- add self to the root entity's stack, if self is not the root
-        if rootCardScript:handle() == released then
-            log_debug("released card is the root entity, not stacking on self")
-            return
-        end
+    --     -- add self to the root entity's stack, if self is not the root
+    --     if rootCardScript:handle() == released then
+    --         log_debug("released card is the root entity, not stacking on self")
+    --         return
+    --     end
         
-        -- make sure neither card is already in a stack and they're being dropped onto each other by accident. It's weird, but sometimes root can be dropped on a member card.
-        if rootCardScript.cardStack then
-            for _, e in ipairs(rootCardScript.cardStack) do
-                if e == released then
-                    log_debug("released card is already in the root entity's stack, not stacking again")
-                    return
-                end
-            end
-        elseif releasedCardScript.isStackChild then
-            log_debug("released card is already a child in another stack, not stacking again")
-            return
-        end
-        local result = addCardToStack(rootCardScript, releasedCardScript)
+    --     -- make sure neither card is already in a stack and they're being dropped onto each other by accident. It's weird, but sometimes root can be dropped on a member card.
+    --     if rootCardScript.cardStack then
+    --         for _, e in ipairs(rootCardScript.cardStack) do
+    --             if e == released then
+    --                 log_debug("released card is already in the root entity's stack, not stacking again")
+    --                 return
+    --             end
+    --         end
+    --     elseif releasedCardScript.isStackChild then
+    --         log_debug("released card is already a child in another stack, not stacking again")
+    --         return
+    --     end
+    --     local result = addCardToStack(rootCardScript, releasedCardScript)
         
-        if not result then
-            log_debug("failed to add card to stack due to validation")
-            -- return to previous position
-            local t = registry:get(released, Transform)
-            if t and cardScript.startingPosition then
-                t.actualX = cardScript.startingPosition.x
-                t.actualY = cardScript.startingPosition.y
-            else
-                log_debug("could not snap back to starting position, missing transform or startingPosition")
-                -- just bump it down a bit
-                if t then
-                    t.actualY = t.actualY + 70
-                end
-            end
-            return
-        end
+    --     if not result then
+    --         log_debug("failed to add card to stack due to validation")
+    --         -- return to previous position
+    --         local t = registry:get(released, Transform)
+    --         if t and cardScript.startingPosition then
+    --             t.actualX = cardScript.startingPosition.x
+    --             t.actualY = cardScript.startingPosition.y
+    --         else
+    --             log_debug("could not snap back to starting position, missing transform or startingPosition")
+    --             -- just bump it down a bit
+    --             if t then
+    --                 t.actualY = t.actualY + 70
+    --             end
+    --         end
+    --         return
+    --     end
         
-        -- after adding to the stack, update the z-orders from bottom up.
-        local baseZ = z_orders.card
+    --     -- after adding to the stack, update the z-orders from bottom up.
+    --     local baseZ = z_orders.card
         
-        -- give root entity the base z order
-        layer_order_system.assignZIndexToEntity(rootCardScript:handle(), baseZ)
+    --     -- give root entity the base z order
+    --     layer_order_system.assignZIndexToEntity(rootCardScript:handle(), baseZ)
         
-        -- now for every card in the stack, give it a z order above the root
-        for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
-            if stackedCardEid and registry:valid(stackedCardEid) then
-                local stackedTransform = registry:get(stackedCardEid, Transform)
-                local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
-                layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
-            end
-        end
+    --     -- now for every card in the stack, give it a z order above the root
+    --     for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
+    --         if stackedCardEid and registry:valid(stackedCardEid) then
+    --             local stackedTransform = registry:get(stackedCardEid, Transform)
+    --             local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
+    --             layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
+    --         end
+    --     end
         
-    end
+    -- end
     
     
     nodeComp.methods.onDrag = function()

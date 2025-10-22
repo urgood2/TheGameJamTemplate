@@ -98,6 +98,7 @@ local TEST_PROJECTILE = {
     speed_modifier = 0,
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
+    weight = 1,
 }
 
 -- action card with timer
@@ -119,6 +120,7 @@ local TEST_PROJECTILE_TIMER = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     timer_ms = 1000, -- spawns a new cast block after 1 second
+    weight = 2,
 }
 
 -- action card with trigger
@@ -140,6 +142,7 @@ local TEST_PROJECTILE_TRIGGER = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     trigger_on_collision = true, -- spawns a new cast block on collision
+    weight = 2,
 }
 
 -- modifier card that modifies 1 card
@@ -154,6 +157,7 @@ local TEST_DAMAGE_BOOST = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     multicast_count = 1, -- modifies 1 card
+    weight = 1,
 }
 
 -- modifier card that modifies 2 cards
@@ -168,6 +172,7 @@ local TEST_MULTICAST_2 = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     multicast_count = 2, -- modifies 2 cards
+    weight = 2,
 }
 
 -- optional table referencing them all, if you still want cardsToTest
@@ -214,52 +219,134 @@ local function simulate_wand(wand, card_pool)
     print(string.rep("-", 60))
 
     ----------------------------------------------------------------------
+    -- 🟡 New: Calculate total weight and overload ratio
+    ----------------------------------------------------------------------
+    local total_weight = 0
+    for _, c in ipairs(card_pool) do
+        total_weight = total_weight + (c.weight or 1)
+    end
+
+    local overload_ratio = 1.0
+    if wand.mana_max and total_weight > wand.mana_max then
+        local excess = total_weight - wand.mana_max
+        overload_ratio = 1.0 + (excess / wand.mana_max) * 0.5
+        print(string.format("⚠️ Wand overloaded: weight %.1f / %.1f → +%.0f%% cast/recharge delay",
+            total_weight, wand.mana_max, (overload_ratio - 1.0) * 100))
+    else
+        print(string.format("✅ Wand within weight limit: weight %.1f / %.1f", total_weight, wand.mana_max or total_weight))
+    end
+    print(string.rep("-", 60))
+
+    ----------------------------------------------------------------------
     -- Recursive builder for a single valid cast block
     ----------------------------------------------------------------------
-    local function build_one_cast_block(start_index)
-        local block = {}
-        local i = start_index
-        local safety = 0
-        local required_actions = 1
-        local total_cast_delay = 0
-        local total_recharge = 0
+    local function build_one_cast_block(start_index, depth, parent_open_cards)
+    depth = (depth or 0) + 1
 
-        while required_actions > 0 and safety < #deck * 4 do
-            safety = safety + 1
-            local idx = ((i - 1) % #deck) + 1
-            local cid = deck[idx]
-            local card = get_card_by_id(cid)
-            table.insert(block, cid)
-            i = i + 1
+    -- Create a per-block copy of open cards (local scope only)
+    local open_cards = {}
+    if parent_open_cards then
+        for k, v in pairs(parent_open_cards) do
+            open_cards[k] = v
+        end
+    end
 
-            if card then
-                if card.type == "modifier" then
-                    if card.multicast_count and card.multicast_count > 1 then
-                        required_actions = required_actions + (card.multicast_count - 1)
-                    end
+    local indent = string.rep("  ", depth - 1)
+    print(string.format("%s[Depth %d] ➤ Building cast block starting at index %d", indent, depth, start_index))
 
-                elseif card.type == "action" then
-                    required_actions = required_actions - 1
-                    total_cast_delay = total_cast_delay + (card.cast_delay or 0)
-                    total_recharge = total_recharge + (card.recharge_time or 0)
+    local block, i, safety = {}, start_index, 0
+    local required_actions, total_cast_delay, total_recharge = 1, 0, 0
+    local modifier_stack = {}
 
-                    -- handle nested triggers
-                    if card.timer_ms or card.trigger_on_collision then
-                        local payload_block, new_i = build_one_cast_block(i)
-                        if card.timer_ms then
-                            table.insert(block, { delay = card.timer_ms, cards = payload_block })
-                        end
-                        if card.trigger_on_collision then
-                            table.insert(block, { collision = true, cards = payload_block })
-                        end
-                        i = new_i
-                    end
+    while required_actions > 0 and safety < #deck * 4 do
+        safety = safety + 1
+        local idx = ((i - 1) % #deck) + 1
+        local cid = deck[idx]
+        local card = get_card_by_id(cid)
+        i = i + 1
+        if not card then goto continue end
+
+        ----------------------------------------------------------------------
+        -- 🚫 Prevent recursion into already-open cards (within this block only)
+        ----------------------------------------------------------------------
+        if open_cards[cid] then
+            print(string.format("%s[Depth %d] ⛔ '%s' already used in this block — halting block.", indent, depth, cid))
+            break
+        end
+
+        open_cards[cid] = true
+        table.insert(block, cid)
+
+        ----------------------------------------------------------------------
+        -- 🔹 Log card open
+        ----------------------------------------------------------------------
+        if card.type == "modifier" then
+            print(string.format("%s[Depth %d] 🔹 [MOD OPEN] '%s' (modifier ×%d)",
+                indent, depth, cid, card.multicast_count or 1))
+            table.insert(modifier_stack, { id = cid, remaining = card.multicast_count or 1 })
+        else
+            print(string.format("%s[Depth %d] 🔹 Open '%s' (%s)", indent, depth, cid, card.type))
+        end
+
+        ----------------------------------------------------------------------
+        -- 🧩 Core action/modifier behavior
+        ----------------------------------------------------------------------
+        if card.type == "modifier" and card.multicast_count and card.multicast_count > 1 then
+            required_actions = required_actions + (card.multicast_count - 1)
+        elseif card.type == "action" then
+            required_actions = required_actions - 1
+            total_cast_delay = total_cast_delay + (card.cast_delay or 0)
+            total_recharge = total_recharge + (card.recharge_time or 0)
+
+            -- handle active modifiers wrapping actions
+            if #modifier_stack > 0 then
+                local top = modifier_stack[#modifier_stack]
+                top.remaining = top.remaining - 1
+                print(string.format("%s[Depth %d]   ↳ '%s' inside modifier '%s' (%d left)",
+                    indent, depth, cid, top.id, top.remaining))
+                if top.remaining <= 0 then
+                    print(string.format("%s[Depth %d] 🔸 [MOD CLOSE] '%s'", indent, depth, top.id))
+                    table.remove(modifier_stack)
                 end
+            end
+
+            ------------------------------------------------------------------
+            -- ✅ Safe recursion: payload gets a *fresh* open_cards snapshot
+            ------------------------------------------------------------------
+            if card.timer_ms or card.trigger_on_collision then
+                print(string.format("%s[Depth %d] ↳ Building payload for '%s'", indent, depth, cid))
+                -- payload uses its own isolated open_cards, copied from this block
+                local payload_block, new_i = build_one_cast_block(i, depth, open_cards)
+                i = new_i
+                if card.timer_ms then
+                    table.insert(block, { delay = card.timer_ms, cards = payload_block })
+                elseif card.trigger_on_collision then
+                    table.insert(block, { collision = true, cards = payload_block })
+                end
+                print(string.format("%s[Depth %d] ↩ Finished payload for '%s'", indent, depth, cid))
             end
         end
 
-        return block, i, total_cast_delay, total_recharge
+        ----------------------------------------------------------------------
+        -- 🔸 Normal close logging
+        ----------------------------------------------------------------------
+        print(string.format("%s[Depth %d] 🔸 Close '%s'", indent, depth, cid))
+        ::continue::
     end
+
+    -- Force close unfilled modifiers
+    for _, mod in ipairs(modifier_stack) do
+        print(string.format("%s[Depth %d] 🔸 [FORCE CLOSE MOD] '%s' (%d unfilled)",
+            indent, depth, mod.id, mod.remaining))
+    end
+
+    print(string.format("%s[Depth %d] ✅ Finished block (%d cards)", indent, depth, #block))
+    return block, i, total_cast_delay, total_recharge
+end
+
+
+
+
 
     ----------------------------------------------------------------------
     -- Pretty print (recursive)
@@ -281,8 +368,8 @@ local function simulate_wand(wand, card_pool)
             end
         end
 
-        local total_delay = (wand.cast_delay or 0) + (c.cast_delay or 0)
-        desc = string.format("%s — cast_delay +%dms (total %dms)",
+        local total_delay = ((wand.cast_delay or 0) + (c.cast_delay or 0)) * overload_ratio
+        desc = string.format("%s — cast_delay +%dms (total %.1fms with overload)",
             desc, c.cast_delay or 0, total_delay)
         return desc
     end
@@ -314,6 +401,7 @@ local function simulate_wand(wand, card_pool)
     local total_recharge_time = 0
 
     while i <= #deck do
+        local open_cards = {} -- reset between top-level blocks
         local block, new_i, c_delay, c_recharge = build_one_cast_block(i)
 
         -- prepend always-cast cards
@@ -325,8 +413,8 @@ local function simulate_wand(wand, card_pool)
         end
 
         table.insert(blocks, block)
-        total_cast_delay = total_cast_delay + (wand.cast_delay or 0) + c_delay
-        total_recharge_time = total_recharge_time + (wand.recharge_time or 0) + c_recharge
+        total_cast_delay = total_cast_delay + ((wand.cast_delay or 0) + c_delay) * overload_ratio
+        total_recharge_time = total_recharge_time + ((wand.recharge_time or 0) + c_recharge) * overload_ratio
         i = new_i
     end
 
@@ -341,10 +429,11 @@ local function simulate_wand(wand, card_pool)
 
     print(string.rep("-", 60))
     print(string.format("Wand '%s' Execution Complete", wand.id))
-    print(string.format("→ Total Cast Delay: %d ms", total_cast_delay))
-    print(string.format("→ Total Recharge Time: %d ms", total_recharge_time))
+    print(string.format("→ Total Cast Delay: %.1f ms", total_cast_delay))
+    print(string.format("→ Total Recharge Time: %.1f ms", total_recharge_time))
     print(string.rep("=", 60))
 end
+
 
 
 
@@ -353,6 +442,8 @@ function testWands()
     local card_pool = {TEST_DAMAGE_BOOST, TEST_PROJECTILE, TEST_PROJECTILE_TIMER,  TEST_MULTICAST_2, TEST_PROJECTILE_TRIGGER, TEST_PROJECTILE}
     
     simulate_wand(triggersToTest[2], card_pool) -- wand with no shuffle, no always cast, no shuffle, cast block size 1 
+    
+    simulate_wand(triggersToTest[1], card_pool) -- wand with shuffle and always cast modifier, cast block size 2
 end
 
 

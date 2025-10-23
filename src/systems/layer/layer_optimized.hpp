@@ -60,6 +60,7 @@ namespace layer
         AddPop,
         PushMatrix,
         PopMatrix,
+        PushObjectTransformsToMatrix,
         Circle,
         CircleLine,
         Rectangle,
@@ -183,6 +184,10 @@ namespace layer
     };
     struct CmdPopMatrix {
         bool dummy = false; // Placeholder
+    };
+    
+    struct CmdPushObjectTransformsToMatrix {
+        entt::entity entity;
     };
 
     struct CmdDrawCircleFilled {
@@ -567,6 +572,7 @@ namespace layer
     extern void ExecuteAddPop(std::shared_ptr<layer::Layer> layer, CmdAddPop* c);
     extern void ExecutePushMatrix(std::shared_ptr<layer::Layer> layer, CmdPushMatrix* c);
     extern void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c);
+    extern void ExecutePushObjectTransformsToMatrix(std::shared_ptr<layer::Layer> layer, CmdPushObjectTransformsToMatrix* c);
     extern void ExecuteCircle(std::shared_ptr<layer::Layer> layer, CmdDrawCircleFilled* c);
     extern void ExecuteCircleLine(std::shared_ptr<layer::Layer> layer, CmdDrawCircleLine* c);
     extern void ExecuteRectangle(std::shared_ptr<layer::Layer> layer, CmdDrawRectangle* c);

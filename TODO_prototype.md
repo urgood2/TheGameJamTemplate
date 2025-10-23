@@ -41,11 +41,8 @@ Converts encumbrance into damage
     
 # programming side
 - Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
-- 22:12 adjustment to ui - single trigger on the screen, with buttons on the left to swap between. Bigger cards & font
+- show active wand stats on the screen, indicate this is a wand somehow.
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
-- TODO: ignore trigger & tim
-- give 3 set trigger slots, triggers can't be taken away or moved.
-- make a set of basic action + mod + trigger cards to play with.
 - implement card evaluation order using actual cards to see how it behaves.
   - Trigger: every X pixels traveled.
   - Trigger: on enemy hit.

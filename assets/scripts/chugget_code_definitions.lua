@@ -1723,6 +1723,7 @@ layer.DrawCommandType = {
     AddPush = 6,  -- Push transform matrix
     AddPop = 7,  -- Pop transform matrix
     PushMatrix = 8,  -- Explicit push matrix command
+    PushObjectTransformsToMatrix = 100,  -- Push object's transform to matrix stack
     PopMatrix = 9,  -- Explicit pop matrix command
     DrawCircle = 10,  -- Draw a filled circle
     DrawRectangle = 11,  -- Draw a filled rectangle
@@ -2226,6 +2227,16 @@ layer.CmdAddPop = {
 layer.CmdPushMatrix = {
     ---@type false
     dummy = nil  -- Unused field
+}
+
+
+---
+--- 
+---
+---@class layer.CmdPushObjectTransformsToMatrix
+layer.CmdPushObjectTransformsToMatrix = {
+    ---@type Entity
+    entity = nil  -- Entity to get transforms from
 }
 
 
@@ -2895,6 +2906,14 @@ function shaders.ShaderUniformComponent:getSet(...) end
 ---@param shaderName string # The name of the shader configuration to apply.
 ---@param entity Entity # The entity to source dynamic uniform values from.
 function shaders.ShaderUniformComponent:applyToShaderForEntity(...) end
+
+
+---
+--- Structure containing font data for localization.
+---
+---@class FontData
+FontData = {
+}
 
 
 ---
@@ -6481,6 +6500,12 @@ function collision.setCollisionMask(...) end
 function collision.resetCollisionCategory(...) end
 
 ---
+--- Pushes the transform components of an entity onto the layer's matrix stack as draw commands.
+---
+function(registry: Registry, e: Entity, layer: Layer, zOrder: number): void
+function command_buffer.pushEntityTransformsToMatrix(...) end
+
+---
 --- Bind an action to a device code with a trigger.
 ---
 ---@param action string
@@ -6565,6 +6590,22 @@ function layer.CreateLayer(...) end
 ---@param height integer
 ---@return layer.Layer
 function layer.CreateLayerWithSize(...) end
+
+---
+--- Applies scaling transformation to the current layer, immeidately (does not queue).
+---
+---@param x number # Scale factor in X direction
+---@param y number # Scale factor in Y direction
+---@return nil
+function layer.ExecuteScale(...) end
+
+---
+--- Applies translation transformation to the current layer, immeidately (does not queue).
+---
+---@param x number # Translation in X direction
+---@param y number # Translation in Y direction
+---@return nil
+function layer.ExecuteTranslate(...) end
 
 ---
 --- Removes a layer and unloads its canvases.
@@ -7016,6 +7057,16 @@ function layer.queueAddPush(...) end
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queueAddPop(...) end
+
+---
+--- Queues a CmdPushObjectTransformsToMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix()
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queuePushObjectTransformsToMatrix(...) end
 
 ---
 --- Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.
@@ -7504,6 +7555,13 @@ function localization.getRaw(...) end
 ---
 ---@return FontData # A handle to the font data for the current language.
 function localization.getFontData(...) end
+
+---
+--- Gets the font data for the current language.
+---
+---@return FontData # The font for the current language.
+
+function localization.getFont(...) end
 
 ---
 --- Loads font data from the specified path.

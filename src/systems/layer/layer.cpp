@@ -249,6 +249,24 @@ void exposeToLua(sol::state &lua) {
                     "---@param height integer\n"
                     "---@return layer.Layer",
                     "Creates a layer with a main canvas of a specified size.");
+                    
+  rec.bind_function(lua, {"layer"}, "ExecuteScale",
+    &layer::Scale,
+    "---@param x number # Scale factor in X direction\n"
+    "---@param y number # Scale factor in Y direction\n"
+    "---@return nil",
+    "Applies scaling transformation to the current layer, immeidately (does not queue)."
+  );
+  
+  rec.bind_function(lua, {"layer"}, "ExecuteTranslate",
+    &layer::Translate,
+    "---@param x number # Translation in X direction\n"
+    "---@param y number # Translation in Y direction\n"
+    "---@return nil",
+    "Applies translation transformation to the current layer, immeidately (does not queue)."
+  );
+  
+
 
   rec.bind_function(lua, {"layer"}, "RemoveLayerFromCanvas",
                     &layer::RemoveLayerFromCanvas,
@@ -428,7 +446,10 @@ void exposeToLua(sol::state &lua) {
       "Rotate", layer::DrawCommandType::Rotate, "AddPush",
       layer::DrawCommandType::AddPush, "AddPop", layer::DrawCommandType::AddPop,
       "PushMatrix", layer::DrawCommandType::PushMatrix, "PopMatrix",
-      layer::DrawCommandType::PopMatrix, "DrawCircle",
+      layer::DrawCommandType::PopMatrix, 
+      "PushObjectTransformsToMatrix",
+      layer::DrawCommandType::PushObjectTransformsToMatrix,
+      "DrawCircle",
       layer::DrawCommandType::Circle, "DrawRectangle",
       layer::DrawCommandType::Rectangle, "DrawRectanglePro",
       layer::DrawCommandType::RectanglePro, "DrawRectangleLinesPro",
@@ -498,6 +519,10 @@ void exposeToLua(sol::state &lua) {
                       {"AddPop", "7", "Pop transform matrix"});
   rec.record_property("layer.DrawCommandType",
                       {"PushMatrix", "8", "Explicit push matrix command"});
+  rec.record_property(
+      "layer.DrawCommandType",
+      {"PushObjectTransformsToMatrix", "100",
+       "Push object's transform to matrix stack"});
   rec.record_property("layer.DrawCommandType",
                       {"PopMatrix", "9", "Explicit pop matrix command"});
   rec.record_property("layer.DrawCommandType",
@@ -608,6 +633,8 @@ void exposeToLua(sol::state &lua) {
   BIND_CMD(AddPop, "dummy", &layer::CmdAddPop::dummy)
   BIND_CMD(PushMatrix, "dummy", &layer::CmdPushMatrix::dummy)
   BIND_CMD(PopMatrix, "dummy", &layer::CmdPopMatrix::dummy)
+  BIND_CMD(PushObjectTransformsToMatrix,
+           "entity", &layer::CmdPushObjectTransformsToMatrix::entity)
   BIND_CMD(DrawCircleFilled, "x", &layer::CmdDrawCircleFilled::x, "y",
            &layer::CmdDrawCircleFilled::y, "radius",
            &layer::CmdDrawCircleFilled::radius, "color",
@@ -1088,6 +1115,11 @@ void exposeToLua(sol::state &lua) {
   rec.record_property("layer.CmdPushMatrix",
                       {"dummy", "false", "Unused field"});
 
+  rec.add_type("layer.CmdPushObjectTransformsToMatrix", true);
+  rec.record_property("layer.CmdPushObjectTransformsToMatrix",
+                      {"entity", "Entity", "Entity to get transforms from"});
+                      
+                      
   rec.add_type("layer.CmdPopMatrix", true);
   rec.record_property("layer.CmdPopMatrix", {"dummy", "false", "Unused field"});
 
@@ -1403,7 +1435,22 @@ void exposeToLua(sol::state &lua) {
     cb = lua.create_table();
     layerTbl["command_buffer"] = cb;
   }
-
+  
+  
+                                  
+  cb.set_function(
+      "pushEntityTransformsToMatrix",
+      [](entt::registry &registry, entt::entity e,
+         std::shared_ptr<layer::Layer> layer, int zOrder) {
+        return pushEntityTransformsToMatrix(registry, e, layer, zOrder);
+      });
+  
+  rec.record_free_function({"command_buffer"}, {
+      "pushEntityTransformsToMatrix",
+      "function(registry: Registry, e: Entity, layer: Layer, zOrder: number): void",
+      "Pushes the transform components of an entity onto the layer's matrix stack as draw commands."
+  });
+      
   // 1) Make a DrawCommandSpace table
   sol::table drawSpace = layerTbl.create_named(
       "DrawCommandSpace", "World", DrawCommandSpace::World, "Screen",
@@ -1459,6 +1506,7 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(AddPop)
   QUEUE_CMD(PushMatrix)
   QUEUE_CMD(PopMatrix)
+  QUEUE_CMD(PushObjectTransformsToMatrix)
   QUEUE_CMD(DrawCircleFilled)
   QUEUE_CMD(DrawRectangle)
   QUEUE_CMD(DrawRectanglePro)
@@ -1581,7 +1629,7 @@ void exposeToLua(sol::state &lua) {
   EXEC_CMD(ExecuteAddPop, AddPop)
   EXEC_CMD(ExecutePushMatrix, PushMatrix)
   EXEC_CMD(ExecutePopMatrix, PopMatrix)
-
+  EXEC_CMD(ExecutePushObjectTransformsToMatrix, PushObjectTransformsToMatrix)
   EXEC_CMD(ExecuteClearStencilBuffer, ClearStencilBuffer)
   EXEC_CMD(ExecuteBeginStencilMode, BeginStencilMode)
   EXEC_CMD(ExecuteEndStencilMode, EndStencilMode)
@@ -2007,6 +2055,20 @@ void exposeToLua(sol::state &lua) {
               R"(Queues a CmdAddPop into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.)",
           .is_static = true,
           .is_overload = false});
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queuePushObjectTransformsToMatrix",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdPushObjectTransformsToMatrix) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdPushObjectTransformsToMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix())",
+          .is_static = true,
+          .is_overload = false}); 
 
   rec.record_free_function(
       {"layer"},
@@ -5040,6 +5102,60 @@ auto DrawEntityWithAnimation(entt::registry &registry, entt::entity e, int x,
     layer::RectanglePro(x, y, {renderWidth, renderHeight}, {0, 0}, 0,
                         {fgColor.r, fgColor.g, fgColor.b, fgColor.a});
   }
+}
+
+// Pushes the transform commands for an entity's transform component onto the
+// layer's command queue. remember to pair with a CmdPopMatrix!
+auto pushEntityTransformsToMatrix(entt::registry &registry,
+                                  entt::entity e,
+                                  std::shared_ptr<layer::Layer> layer,
+                                  int zOrder) -> void
+{
+    // Determine whether the entity renders in world or screen space.
+    bool isScreenSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+    layer::DrawCommandSpace drawSpace =
+        isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
+
+    // Retrieve the transform (and any needed springs)
+    auto &entityTransform = registry.get<transform::Transform>(e);
+
+    // --- Push Matrix ---
+    layer::QueueCommand<layer::CmdPushMatrix>(layer,
+        [](layer::CmdPushMatrix *cmd) {}, zOrder, drawSpace);
+
+    // --- Apply Translation: move to entity center ---
+    layer::QueueCommand<layer::CmdTranslate>(layer,
+        [x = entityTransform.getVisualX() + entityTransform.getVisualW() * 0.5f,
+         y = entityTransform.getVisualY() + entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        },
+        zOrder, drawSpace);
+
+    // --- Apply Scaling ---
+    layer::QueueCommand<layer::CmdScale>(layer,
+        [scaleX = entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+         scaleY = entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected()](layer::CmdScale *cmd) {
+            cmd->scaleX = scaleX;
+            cmd->scaleY = scaleY;
+        },
+        zOrder, drawSpace);
+
+    // --- Apply Rotation ---
+    layer::QueueCommand<layer::CmdRotate>(layer,
+        [rotation = entityTransform.getVisualR() + entityTransform.rotationOffset](layer::CmdRotate *cmd) {
+            cmd->angle = rotation;
+        },
+        zOrder, drawSpace);
+
+    // --- Translate back to local origin ---
+    layer::QueueCommand<layer::CmdTranslate>(layer,
+        [x = -entityTransform.getVisualW() * 0.5f,
+         y = -entityTransform.getVisualH() * 0.5f](layer::CmdTranslate *cmd) {
+            cmd->x = x;
+            cmd->y = y;
+        },
+        zOrder, drawSpace);
 }
 
 void Circle(float x, float y, float radius, const Color &color) {

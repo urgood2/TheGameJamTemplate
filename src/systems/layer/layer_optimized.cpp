@@ -47,6 +47,10 @@ namespace layer
         PushMatrix();
     }
     
+    void ExecutePushObjectTransformsToMatrix(std::shared_ptr<layer::Layer> layer, CmdPushObjectTransformsToMatrix* c) {
+        layer::pushEntityTransformsToMatrix(globals::registry, c->entity, layer);
+    }
+    
     void ExecutePopMatrix(std::shared_ptr<layer::Layer> layer, CmdPopMatrix* c) {
         PopMatrix();
     }
@@ -305,6 +309,7 @@ namespace layer
         RegisterRenderer<CmdAddPop>(DrawCommandType::AddPop, ExecuteAddPop);
         RegisterRenderer<CmdPushMatrix>(DrawCommandType::PushMatrix, ExecutePushMatrix);
         RegisterRenderer<CmdPopMatrix>(DrawCommandType::PopMatrix, ExecutePopMatrix);
+        RegisterRenderer<CmdPushObjectTransformsToMatrix>(DrawCommandType::PushObjectTransformsToMatrix, ExecutePushObjectTransformsToMatrix);
         RegisterRenderer<CmdDrawCircleFilled>(DrawCommandType::Circle, ExecuteCircle);
         RegisterRenderer<CmdDrawCircleLine>(DrawCommandType::CircleLine, ExecuteCircleLine);
         RegisterRenderer<CmdDrawRectangle>(DrawCommandType::Rectangle, ExecuteRectangle);

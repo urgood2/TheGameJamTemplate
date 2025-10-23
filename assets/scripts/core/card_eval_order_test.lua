@@ -84,6 +84,7 @@ CardTemplates.TEST_PROJECTILE = {
     lifetime_modifier = 0,
     critical_hit_chance_modifier = 0,
     weight = 1,
+    test_label = "TEST\nprojectile",
 }
 
 CardTemplates.TEST_PROJECTILE_TIMER = {
@@ -105,6 +106,7 @@ CardTemplates.TEST_PROJECTILE_TIMER = {
     critical_hit_chance_modifier = 0,
     timer_ms = 1000,
     weight = 2,
+    test_label = "TEST\nprojectile\ntimer",
 }
 
 CardTemplates.TEST_PROJECTILE_TRIGGER = {
@@ -126,6 +128,7 @@ CardTemplates.TEST_PROJECTILE_TRIGGER = {
     critical_hit_chance_modifier = 0,
     trigger_on_collision = true,
     weight = 2,
+    test_label = "TEST\nprojectile\ntrigger",
 }
 
 -- Modifier Cards
@@ -142,6 +145,7 @@ CardTemplates.TEST_DAMAGE_BOOST = {
     multicast_count = 1,
     weight = 1,
     revisit_limit = 2,
+    test_label = "TEST\ndamage\nboost",
 }
 
 CardTemplates.TEST_MULTICAST_2 = {
@@ -156,7 +160,462 @@ CardTemplates.TEST_MULTICAST_2 = {
     critical_hit_chance_modifier = 0,
     multicast_count = 2,
     weight = 2,
+    test_label = "TEST\nmulticast",
 }
+
+-- Action Cards
+CardTemplates.ACTION_BASIC_PROJECTILE = {
+    id = "ACTION_BASIC_PROJECTILE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 5,
+    damage = 10,
+    damage_type = "physical",
+    radius_of_effect = 0,
+    spread_angle = 5,
+    projectile_speed = 500,
+    lifetime = 2000,
+    cast_delay = 100,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    weight = 1,
+    test_label = "ACTION\nbasic\nprojectile",
+}
+
+CardTemplates.ACTION_FAST_ACCURATE_PROJECTILE = {
+    id = "ACTION_FAST_ACCURATE_PROJECTILE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 6,
+    damage = 8,
+    damage_type = "physical",
+    radius_of_effect = 0,
+    spread_angle = 1,
+    projectile_speed = 800,
+    lifetime = 1800,
+    cast_delay = 80,
+    recharge_time = 0,
+    spread_modifier = -4,
+    speed_modifier = 3,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 5,
+    weight = 1,
+    test_label = "ACTION\nfast\naccurate\nprojectile",
+}
+
+CardTemplates.ACTION_SLOW_ORB = {
+    id = "ACTION_SLOW_ORB",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 8,
+    damage = 20,
+    damage_type = "magic",
+    radius_of_effect = 0,
+    spread_angle = 6,
+    projectile_speed = 250,
+    lifetime = 4000,
+    cast_delay = 150,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = -2,
+    lifetime_modifier = 1,
+    critical_hit_chance_modifier = 0,
+    weight = 2,
+    test_label = "ACTION\nslow\norb",
+}
+
+CardTemplates.ACTION_EXPLOSIVE_FIRE_PROJECTILE = {
+    id = "ACTION_EXPLOSIVE_FIRE_PROJECTILE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 15,
+    damage = 35,
+    damage_type = "fire",
+    radius_of_effect = 60,
+    spread_angle = 3,
+    projectile_speed = 400,
+    lifetime = 2000,
+    cast_delay = 200,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    weight = 3,
+    test_label = "ACTION\nexplosive\nfire\nprojectile",
+}
+
+CardTemplates.ACTION_RICOCHET_PROJECTILE = {
+    id = "ACTION_RICOCHET_PROJECTILE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 10,
+    damage = 15,
+    damage_type = "physical",
+    radius_of_effect = 0,
+    spread_angle = 2,
+    projectile_speed = 500,
+    lifetime = 2500,
+    cast_delay = 120,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    ricochet_count = 3,
+    weight = 2,
+    test_label = "ACTION\nricochet\nprojectile",
+}
+
+CardTemplates.ACTION_HEAVY_OBJECT_PROJECTILE = {
+    id = "ACTION_HEAVY_OBJECT_PROJECTILE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 12,
+    damage = 25,
+    damage_type = "physical",
+    radius_of_effect = 0,
+    spread_angle = 4,
+    projectile_speed = 200,
+    lifetime = 3000,
+    cast_delay = 150,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = -3,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    gravity_affected = true,
+    weight = 2,
+    test_label = "ACTION\nheavy\nobject\nprojectile",
+}
+
+CardTemplates.ACTION_VACUUM_PROJECTILE = {
+    id = "ACTION_VACUUM_PROJECTILE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 18,
+    damage = 10,
+    damage_type = "void",
+    radius_of_effect = 100,
+    spread_angle = 0,
+    projectile_speed = 300,
+    lifetime = 2500,
+    cast_delay = 200,
+    recharge_time = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    suction_strength = 10,
+    weight = 3,
+    test_label = "ACTION\nvacuum\nprojectile",
+}
+
+-- Modifier Cards
+CardTemplates.MOD_SEEKING = {
+    id = "MOD_SEEKING",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 6,
+    damage_modifier = 0,
+    seek_strength = 8,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 1,
+    weight = 2,
+    revisit_limit = 2,
+    test_label = "MOD\nseeking",
+}
+
+CardTemplates.MOD_SPEED_UP = {
+    id = "MOD_SPEED_UP",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 4,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 3,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 1,
+    weight = 1,
+    revisit_limit = 2,
+    test_label = "MOD\nspeed\nup",
+}
+
+CardTemplates.MOD_SPEED_DOWN = {
+    id = "MOD_SPEED_DOWN",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 3,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = -2,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 1,
+    weight = 1,
+    revisit_limit = 2,
+    test_label = "MOD\nspeed\ndown",
+}
+
+CardTemplates.MOD_REDUCE_SPREAD = {
+    id = "MOD_REDUCE_SPREAD",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 4,
+    damage_modifier = 0,
+    spread_modifier = -4,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 1,
+    weight = 1,
+    revisit_limit = 2,
+    test_label = "MOD\nreduce\nspread",
+}
+
+CardTemplates.MOD_DAMAGE_UP = {
+    id = "MOD_DAMAGE_UP",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 6,
+    damage_modifier = 10,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 5,
+    multicast_count = 1,
+    weight = 2,
+    revisit_limit = 2,
+    test_label = "MOD\ndamage\nup",
+}
+
+CardTemplates.MOD_SHORT_LIFETIME = {
+    id = "MOD_SHORT_LIFETIME",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 2,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = -1,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 1,
+    weight = 1,
+    revisit_limit = 2,
+    test_label = "MOD\nshort\nlifetime",
+}
+
+CardTemplates.MOD_TRIGGER_ON_HIT = {
+    id = "MOD_TRIGGER_ON_HIT",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 8,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    trigger_on_collision = true,
+    multicast_count = 1,
+    weight = 2,
+    revisit_limit = 1,
+    test_label = "MOD\ntrigger\non\nhit",
+}
+
+CardTemplates.MOD_TRIGGER_TIMER = {
+    id = "MOD_TRIGGER_TIMER",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 8,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    timer_ms = 1000,
+    multicast_count = 1,
+    weight = 2,
+    revisit_limit = 1,
+    test_label = "MOD\ntrigger\ntimer",
+}
+
+CardTemplates.MOD_TRIGGER_ON_DEATH = {
+    id = "MOD_TRIGGER_ON_DEATH",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 9,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    trigger_on_death = true,
+    multicast_count = 1,
+    weight = 2,
+    revisit_limit = 1,
+    test_label = "MOD\ntrigger\non\ndeath",
+}
+
+-- Multicasts
+CardTemplates.MULTI_DOUBLE_CAST = {
+    id = "MULTI_DOUBLE_CAST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 10,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 2,
+    weight = 2,
+    test_label = "MULTI\ndouble\ncast",
+}
+
+CardTemplates.MULTI_TRIPLE_CAST = {
+    id = "MULTI_TRIPLE_CAST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 15,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 3,
+    weight = 3,
+    test_label = "MULTI\ntriple\ncast",
+}
+
+CardTemplates.MULTI_CIRCLE_FIVE_CAST = {
+    id = "MULTI_CIRCLE_FIVE_CAST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 20,
+    damage_modifier = 0,
+    spread_modifier = 0,
+    speed_modifier = 0,
+    lifetime_modifier = 0,
+    critical_hit_chance_modifier = 0,
+    multicast_count = 5,
+    circular_pattern = true,
+    weight = 4,
+    test_label = "MULTI\ncircle\nfive\ncast",
+}
+
+-- Utility Cards
+CardTemplates.UTIL_TELEPORT_TO_IMPACT = {
+    id = "UTIL_TELEPORT_TO_IMPACT",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 10,
+    cast_delay = 0,
+    recharge_time = 0,
+    teleport_to_impact = true,
+    weight = 3,
+    test_label = "UTIL\nteleport\nto\nimpact",
+}
+
+CardTemplates.UTIL_HEAL_AREA = {
+    id = "UTIL_HEAL_AREA",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 12,
+    heal_amount = 25,
+    radius_of_effect = 80,
+    cast_delay = 100,
+    recharge_time = 0,
+    weight = 2,
+    test_label = "UTIL\nheal\narea",
+}
+
+CardTemplates.UTIL_SHIELD_BUBBLE = {
+    id = "UTIL_SHIELD_BUBBLE",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 15,
+    shield_strength = 50,
+    radius_of_effect = 60,
+    cast_delay = 150,
+    recharge_time = 0,
+    weight = 3,
+    test_label = "UTIL\nshield\nbubble",
+}
+
+CardTemplates.UTIL_SUMMON_ALLY = {
+    id = "UTIL_SUMMON_ALLY",
+    type = "action",
+    max_uses = 3,
+    mana_cost = 20,
+    summon_entity = "ally_basic",
+    cast_delay = 200,
+    recharge_time = 0,
+    weight = 4,
+    test_label = "UTIL\nsummon\nally",
+}
+
+-- Meta / Super Recasts
+CardTemplates.META_RECAST_FIRST = {
+    id = "META_RECAST_FIRST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 10,
+    recast_first_spell = true,
+    multicast_count = 1,
+    weight = 3,
+    test_label = "META\nrecast\nfirst",
+}
+
+CardTemplates.META_APPLY_ALL_MODS_NEXT = {
+    id = "META_APPLY_ALL_MODS_NEXT",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 12,
+    apply_all_mods_next = true,
+    multicast_count = 1,
+    weight = 3,
+    test_label = "META\napply\nall\nmods\nnext",
+}
+
+CardTemplates.META_CAST_ALL_AT_ONCE = {
+    id = "META_CAST_ALL_AT_ONCE",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 25,
+    cast_all_spells = true,
+    multicast_count = 999,
+    weight = 5,
+    test_label = "META\ncast\nall\nat\nonce",
+}
+
+CardTemplates.META_CONVERT_WEIGHT_TO_DAMAGE = {
+    id = "META_CONVERT_WEIGHT_TO_DAMAGE",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 10,
+    convert_weight_to_damage = true,
+    multicast_count = 1,
+    weight = 3,
+    test_label = "META\nconvert\nweight\nto\ndamage",
+}
+
+-- triggers that go inside wands.
+CardTemplates.TEST_TRIGGER_EVERY_N_SECONDS = {
+    id = "every_N_seconds",
+    type = "trigger", -- ignored by evaluation algo
+    max_uses = -1,
+    mana_cost = 0,
+    weight = 0,
+    test_label = "TRIGGER\nevery\nN\nseconds",
+}
+
 
 --------------------------------------------------------------------------------
 -- WAND (TRIGGER) DEFINITIONS
@@ -177,6 +636,7 @@ local WandTemplates = {
         shuffle = false,
         total_card_slots = 5,
         always_cast_cards = { "TEST_PROJECTILE_TRIGGER" },
+        
     },
 
     -- Simple wand with no shuffle or always-cast
@@ -867,3 +1327,16 @@ function testWands()
 
     simulate_wand(WandTemplates[1], card_pool) -- wand with shuffle and always cast modifier, cast block size 2
 end
+
+-- return the various features of this file
+return {
+    wand_defs = WandTemplates,
+    card_defs = CardTemplates,
+    testWands = testWands,
+    
+    -- functions that might be useful
+    apply_card_properties = apply_card_properties,
+    create_card_from_template = create_card_from_template,
+    readable_card_id = readable_card_id,
+    simulate_wand = simulate_wand,
+}

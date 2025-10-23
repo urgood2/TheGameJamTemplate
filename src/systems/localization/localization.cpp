@@ -176,6 +176,33 @@ namespace localization
         // 1) Bind the functions and record their metadata simultaneously.
         // The get_or_create_table logic is now handled inside bind_function.
 
+        struct FontData
+    {
+        Font font{};
+        float fontLoadedSize = 32.f;       // the size of the font when loaded
+        float fontScale = 1.0f;            // the scale of the font when rendered
+        float spacing = 1.0f;              // the horizontal spacing for the font
+        Vector2 fontRenderOffset = {2, 0}; // the offset of the font when rendered, applied to ensure text is centered correctly in ui, it is multiplied by scale when applied
+        // <— store your codepoint list if you ever need it later
+        std::vector<int> codepoints;
+    };
+        // bind fontdata type.
+        lua.new_usertype<Font>("Font",
+            "baseSize", &Font::baseSize,
+            "texture", &Font::texture,
+            "recs", &Font::recs
+        );
+        
+        lua.new_usertype<FontData>("FontData",
+            "font", &FontData::font,
+            "fontLoadedSize", &FontData::fontLoadedSize,
+            "fontScale", &FontData::fontScale,
+            "spacing", &FontData::spacing,
+            "fontRenderOffset", &FontData::fontRenderOffset,
+            "codepoints", &FontData::codepoints
+        );
+        rec.add_type("FontData").doc = "Structure containing font data for localization.";
+        
         rec.add_type("localization").doc = "namespace for localization functions";
 
         // loadLanguage
@@ -272,6 +299,13 @@ namespace localization
         rec.bind_function(lua, path, "getFontData", &localization::getFontData,
             "---@return FontData # A handle to the font data for the current language.",
             "Retrieves font data associated with the current language."
+        );
+        
+        rec.bind_function(lua, path, "getFont", []() -> Font {
+            return localization::getFontData().font;
+        },
+            "---@return FontData # The font for the current language.\n",
+            "Gets the font data for the current language."
         );
 
         // loadFontData

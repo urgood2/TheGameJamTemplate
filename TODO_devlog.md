@@ -81,3 +81,9 @@
   - Updated card evaluation test script with weights for different card types.
   - Removed card stacking behavior for now.
   - Recursion & always cast flexibility added. Seems to be working as intended.
+  
+10/23/2025
+  - Changed ui to facilitate wand building.
+  - Chose which cards to implement for a vertical slice.
+  - Tinkered with rendering a bit to clearly show debug info.
+  - Need to now link up wand evaluation with gameplay.

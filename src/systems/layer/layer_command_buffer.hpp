@@ -3,6 +3,7 @@
 #include <typeindex>
 #include <unordered_map>
 
+#include "systems/layer/layer_optimized.hpp"
 #include "util/common_headers.hpp"
 // #include "layer_optimized.hpp"
 #include "systems/layer/layer_command_buffer_data.hpp"
@@ -58,6 +59,7 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdAddPush>() { return DrawCommandType::AddPush; }
         template<> inline DrawCommandType GetDrawCommandType<CmdAddPop>() { return DrawCommandType::AddPop; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPushMatrix>() { return DrawCommandType::PushMatrix; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdPushObjectTransformsToMatrix>() { return DrawCommandType::PushObjectTransformsToMatrix; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPopMatrix>() { return DrawCommandType::PopMatrix; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleFilled>() { return DrawCommandType::Circle; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleLine>() { return DrawCommandType::CircleLine; }
@@ -294,6 +296,7 @@ namespace layer
             CmdAddPop,
             CmdPushMatrix,
             CmdPopMatrix,
+            CmdPushObjectTransformsToMatrix,
             CmdDrawCircleFilled,
             CmdDrawCircleLine,
             CmdDrawRectangle,

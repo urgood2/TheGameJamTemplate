@@ -33,6 +33,7 @@ namespace layer
                     DELETE_COMMAND(layer, AddPush, CmdAddPush)
                     DELETE_COMMAND(layer, AddPop, CmdAddPop)
                     DELETE_COMMAND(layer, PushMatrix, CmdPushMatrix)
+                    DELETE_COMMAND(layer, PushObjectTransformsToMatrix, CmdPushObjectTransformsToMatrix)
                     DELETE_COMMAND(layer, PopMatrix, CmdPopMatrix)
                     DELETE_COMMAND(layer, Circle, CmdDrawCircleFilled)
                     DELETE_COMMAND(layer, CircleLine, CmdDrawCircleLine)

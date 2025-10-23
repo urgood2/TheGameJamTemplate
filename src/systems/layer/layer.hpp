@@ -222,6 +222,11 @@ namespace layer
     auto DrawTransformEntityWithAnimation(entt::registry &registry, entt::entity e) -> void;
     auto DrawTransformEntityWithAnimationWithPipeline(entt::registry& registry, entt::entity e) -> void;
     void RenderNPatchRect(Texture2D sourceTexture, NPatchInfo info, Rectangle dest, Vector2 origin, float rotation, Color tint);
+    
+    auto pushEntityTransformsToMatrix(entt::registry &registry,
+                                  entt::entity e,
+                                  std::shared_ptr<layer::Layer> layer,
+                                  int zOrder = 0) -> void;
 
     // Command helpers - These functions add draw commands to the specified layer
     void AddBeginDrawing(std::shared_ptr<Layer> layer);

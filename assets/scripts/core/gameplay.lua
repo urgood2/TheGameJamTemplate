@@ -10,6 +10,7 @@ local TimerChain = require("core.timer_chain")
 local Easing = require("util.easing")
 local CombatSystem = require("combat.combat_system")
 require ("core.card_eval_order_test")
+local WandEngine = require("core.card_eval_order_test")
 
 --  let's make some card data
 local action_card_defs = {
@@ -191,6 +192,12 @@ function createNewBoard(x, y, w, h)
                 if ct then
                     ct.actualX = math.floor(startX + (i - 1) * spacing + 0.5)
                     ct.actualY = math.floor(centerY - ct.actualH * 0.5 + 0.5)
+                    
+                    -- if card is selected, bump it up a bit
+                    local cardScript = getScriptTableFromEntityID(cardEid)
+                    if cardScript and cardScript.selected then
+                        ct.actualY = ct.actualY - ct.actualH * 0.7
+                    end
                 end
                 
                 -- don't overwrite zIndex if the card is being dragged
@@ -336,19 +343,19 @@ end
 
 -- category can be "action", "trigger", "modifier"
 -- retursn the entity ID of the created card
-function createNewCard(category, id, x, y, gameStateToApply) 
+function createNewCard(id, x, y, gameStateToApply) 
     
-    local imageToUse = nil
-    if category == "action" then
-        imageToUse = "action_card_placeholder.png"
-    elseif category == "trigger" then
-        imageToUse = "trigger_card_placeholder.png"
-    elseif category == "modifier" then
-        imageToUse = "mod_card_placeholder.png"
-    else
-        log_debug("Invalid category for createNewCard:", category)
-        return nil
-    end
+    local imageToUse = "trigger_card_placeholder.png"
+    -- if category == "action" then
+    --     imageToUse = "action_card_placeholder.png"
+    -- elseif category == "trigger" then
+    --     imageToUse = "trigger_card_placeholder.png"
+    -- elseif category == "modifier" then
+    --     imageToUse = "mod_card_placeholder.png"
+    -- else
+    --     log_debug("Invalid category for createNewCard:", category)
+    --     return nil
+    -- end
     
     local card = animation_system.createAnimatedObjectWithTransform(
         imageToUse, -- animation ID
@@ -361,67 +368,69 @@ function createNewCard(category, id, x, y, gameStateToApply)
     -- give a script table
     local cardScript = Node{}    
     
-    cardScript.isStackable = isStackable or true -- whether this card can be stacked on other cards, default true
+    -- cardScript.isStackable = isStackable or false -- whether this card can be stacked on other cards, default true
     
     -- save category and id
     cardScript.category = category
     cardScript.cardID = id or "unknown"
     
+    -- copy over card definition data if it exists
+    WandEngine.apply_card_properties(cardScript, WandEngine.card_defs[id] or {})
+    
     -- give an update table to align the card's stacks if they exist.
     cardScript.update = function(self, dt)
         local eid = self:handle()
         
-        -- return unless self's root is self.
-        if self.stackRootEntity and self.stackRootEntity ~= eid then
-            return
-        end
         
-        -- if there is a stack, align the stack
-        if self.cardStack and #self.cardStack > 0 then
-            local baseTransform = registry:get(eid, Transform)
-            
-            local stackOffsetY = baseTransform.actualH * 0.2 -- offset each card
-            
-            for i, stackedCardEid in ipairs(self.cardStack) do
-                if stackedCardEid and registry:valid(stackedCardEid) then
-                    local stackedTransform = registry:get(stackedCardEid, Transform)
-                    stackedTransform.actualX = baseTransform.actualX
-                    stackedTransform.actualY = baseTransform.actualY + (i * stackOffsetY)
-                end
-            end
-        end
+        -- command_buffer.queuePushObjectTransformsToMatrix(layers.sprites, function (c)
+        --     c.entity = eid
+        -- end, z_orders.card_text, layer.DrawCommandSpace.World)
+        
+        -- draw debug label.
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            local cardScript = getScriptTableFromEntityID(eid)
+            local t = registry:get(eid, Transform)
+            c.text = cardScript.test_label or "unknown"
+            c.font = localization.getFont()
+            c.x = t.visualX
+            c.y = t.visualY
+            c.color = palette.snapToColorName("BLACK")
+            c.fontSize = 25.0
+        end, z_orders.card_text, layer.DrawCommandSpace.World)
+        
+        -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
         
     end
     
     -- attach ecs must be called after defining the callbacks.
     cardScript:attach_ecs{ create_new = false, existing_entity = card }
     
-    -- let's give the card a label (temporary) for testing
-    cardScript.labelEntity = ui.definitions.getNewDynamicTextEntry(
-        function() return (id or "unknown") end,  -- initial text
-        20.0,                                 -- font size
-        "color=blue_sky"                       -- animation spec
-    ).config.object
+    -- -- let's give the card a label (temporary) for testing
+    -- cardScript.labelEntity = ui.definitions.getNewDynamicTextEntry(
+    --     function() return (cardScript.test_label or "unknown") end,  -- initial text
+    --     20.0,                                 -- font size
+    --     "color=red"                       -- animation spec
+    -- ).config.object
     
-    -- make the text world space
-    transform.set_space(cardScript.labelEntity, "world")
+    -- -- make the text world space
+    -- transform.set_space(cardScript.labelEntity, "world")
     
-    -- text state
-    add_state_tag(cardScript.labelEntity, gameStateToApply or PLANNING_STATE)
+    -- -- text state
+    -- add_state_tag(cardScript.labelEntity, gameStateToApply or PLANNING_STATE)
     
-    -- set text z order
-    layer_order_system.assignZIndexToEntity(cardScript.labelEntity, z_orders.card_text)
+    -- -- set text z order
+    -- layer_order_system.assignZIndexToEntity(cardScript.labelEntity, z_orders.card_text)
     
-    -- let's anchor to top of the card
-    transform.AssignRole(registry, cardScript.labelEntity, InheritedPropertiesType.PermanentAttachment, cardScript:handle(),
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak,
-        InheritedPropertiesSync.Strong,
-        InheritedPropertiesSync.Weak
-        -- Vec2(0, -10) -- offset it a bit upwards
-    );
-    local roleComp = registry:get(cardScript.labelEntity, InheritedProperties)
-    roleComp.flags = AlignmentFlag.VERTICAL_TOP | AlignmentFlag.HORIZONTAL_CENTER 
+    -- -- let's anchor to top of the card
+    -- transform.AssignRole(registry, cardScript.labelEntity, InheritedPropertiesType.PermanentAttachment, cardScript:handle(),
+    --     InheritedPropertiesSync.Strong,
+    --     InheritedPropertiesSync.Weak,
+    --     InheritedPropertiesSync.Strong,
+    --     InheritedPropertiesSync.Weak
+    --     -- Vec2(0, -10) -- offset it a bit upwards
+    -- );
+    -- local roleComp = registry:get(cardScript.labelEntity, InheritedProperties)
+    -- roleComp.flags = AlignmentFlag.VERTICAL_CENTER | AlignmentFlag.HORIZONTAL_CENTER 
     
     -- make draggable and set some callbacks in the transform system
     local nodeComp = registry:get(card, GameObject)
@@ -429,6 +438,7 @@ function createNewCard(category, id, x, y, gameStateToApply)
     gameObjectState.hoverEnabled = true
     -- gameObjectState.triggerOnReleaseEnabled = true
     gameObjectState.collisionEnabled = true
+    gameObjectState.clickEnabled = true
     gameObjectState.dragEnabled = true -- allow dragging the colonist
     
     animation_system.resizeAnimationObjectsInEntityToFit(
@@ -437,26 +447,42 @@ function createNewCard(category, id, x, y, gameStateToApply)
         cardH    -- height
     )
     
-    registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
+    -- registry:emplace(card, shader_pipeline.ShaderPipelineComponent)
     
-    entity.set_draw_override(card, function(w, h)
-    -- immediate render version of the same thing.
-    command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
-        local survivorT = registry:get(survivorEntity, Transform)
+    -- entity.set_draw_override(card, function(w, h)
+    -- -- immediate render version of the same thing.
+    --     command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
+    --         local survivorT = registry:get(card, Transform)
 
-        c.cx = 0 -- self centered
-        c.cy = 0
-        c.width = w
-        c.height = h
-        c.roundness = 0.5
-        c.segments = 8
-        c.topLeft = palette.snapToColorName("white")
-        c.topRight = palette.snapToColorName("gray")
-        -- c.bottomRight = palette.snapToColorName("green")
-        -- c.bottomLeft = palette.snapToColorName("apricot_cream")
-            
-        end, z_orders.card, layer.DrawCommandSpace.World)
-    end, true) -- true disables sprite rendering
+    --         c.cx = 0 -- self centered
+    --         c.cy = 0
+    --         c.width = w
+    --         c.height = h
+    --         c.roundness = 0.5
+    --         c.segments = 8
+    --         c.topLeft = palette.snapToColorName("white")
+    --         c.topRight = palette.snapToColorName("gray")
+    --         -- c.bottomRight = palette.snapToColorName("green")
+    --         -- c.bottomLeft = palette.snapToColorName("apricot_cream")
+                
+    --         end, z_orders.card, layer.DrawCommandSpace.World)
+        
+    --     -- layer.ExecuteScale(1.0, -1.0) -- flip y axis for text rendering
+    --     -- layer.ExecuteTranslate(0, -h) -- translate down by height
+    --     -- let's draw some text.
+    --     --TODO: fix. text flips over for some reason.
+    --     -- command_buffer.executeDrawTextPro(layers.sprites, function(t)
+    --     --     local cardScript = getScriptTableFromEntityID(card)
+    --     --     t.text = cardScript.test_label or "unknown"
+    --     --     t.font = localization.getFont()
+    --     --     t.x = 0
+    --     --     t.y = 0
+    --     --     t.color = palette.snapToColorName("red")
+    --     --     t.fontSize = 25.0
+    --     -- end)
+        
+    --     -- layer.ExecuteScale(1.0, -1.0) -- re-flip y axis
+    -- end, true) -- true disables sprite rendering
 
     
     -- NOTE: onRelease is called for when mouse is released ON TOP OF this node.
@@ -564,6 +590,13 @@ function createNewCard(category, id, x, y, gameStateToApply)
     --     end
         
     -- end
+    
+    nodeComp.methods.onClick = function(registry, clickedEntity)
+        if not cardScript.selected then
+            cardScript.selected = false
+        end
+        cardScript.selected = not cardScript.selected
+    end
     
     
     nodeComp.methods.onDrag = function()
@@ -1394,23 +1427,19 @@ function initPlanningPhase()
     cardW = globals.screenWidth() * 0.10
     cardH = cardW * (64 / 48) -- default card aspect ratio is 48:64
     
-    -- make a few test cards around 600, 300
-    local x = 950
-    local y = 600
-    local offset = 50
-    local testCard1 = createNewCard("action", "fire_basic_bolt", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    local testCard2 = createNewCard("action", "leave_spike_hazard", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    local testCard3 = createNewCard("action", "temporary_strength_bonus", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    local testCard4 = createNewCard("trigger", "every_N_seconds", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    -- createNewCard("trigger", "on_pickup", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    -- createNewCard("trigger", "on_distance_moved", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    local testCard5 =createNewCard("modifier", "double_effect", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    local testCard6 = createNewCard("modifier", "summon_minion_wandering", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
-    local testCard7 = createNewCard("modifier", "projectile_pierces_twice", lume.random(x - offset, x + offset), lume.random(y - offset, y + offset))
+    -- make entire roster of cards
+    local catalog = WandEngine.card_defs
     
-    -- let's give each card a physics entity which we will remove after 5 seconds.
-    local cardsToChange = { testCard1, testCard2, testCard3, testCard4, testCard5, testCard6, testCard7 }
+    local cardsToChange = { }
     
+    for cardID, cardDef in pairs(catalog) do
+        local card = createNewCard(cardID, 4000, 4000, PLANNING_STATE) -- offscreen for now
+        
+        table.insert(cardsToChange, card)
+    end
+    
+    
+    -- deal the cards out with dely & sound.
     for _, card in ipairs(cardsToChange) do
         if card and card ~= entt_null and registry:valid(card) then
             -- set the location of each card to an offscreen pos
@@ -1639,7 +1668,11 @@ function initPlanningPhase()
     -- next row
     runningYValue = runningYValue + boardHeight + boardPadding
 
+    
+    -- make a trigger card and add it to the trigger board.
+    local triggerCard = createNewCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE) -- offscreen for now
 
+    addCardToBoard(triggerCard, triggerBoardID)
 -- -------------------------------------------------------------------------- --
 --       make a large board at bottom that will serve as the inventory.       --
 -- -------------------------------------------------------------------------- 
@@ -2169,11 +2202,9 @@ function initShopPhase()
     shopBoard.gameStates = { SHOP_STATE } -- store in board as well
     
     -- let's populate the shop with some cards
-    local testCard1 = createNewCard("action", "fire_basic_bolt", 200, 200, SHOP_STATE)
-    local testCard2 = createNewCard("action", "leave_spike_hazard",
-        400, 200, SHOP_STATE)
-    local testCard3 = createNewCard("action", "temporary_strength_bonus",
-        600, 200, SHOP_STATE)
+    local testCard1 = createNewCard(WandEngine.card_defs.ACTION_BASIC_PROJECTILE, 0, 0, SHOP_STATE)
+    local testCard2 = createNewCard(WandEngine.card_defs.ACTION_FIREBALL, 0, 0, SHOP_STATE)
+    local testCard3 = createNewCard(WandEngine.card_defs.ACTION_FAST_ACCURATE_PROJECTILE, 0, 0, SHOP_STATE)
         
     -- add them to the board.
     addCardToBoard(testCard1, shopBoard:handle())

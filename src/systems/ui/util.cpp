@@ -397,7 +397,7 @@ namespace ui
     // location is implicitly 0, 0
     void util::emplaceOrReplaceNewRectangleCache(entt::registry &registry, entt::entity entity, int width, int height, float lineThickness, const int &type, std::optional<float> progress)
     {
-        // ZoneScopedN("ui::util::emplaceOrReplaceNewRectangleCache");
+        ZoneScopedN("ui::util::emplaceOrReplaceNewRectangleCache");
         auto &cache = registry.emplace_or_replace<RoundedRectangleVerticesCache>(entity);
         auto &node = registry.get<transform::GameObject>(entity);
 
@@ -561,7 +561,7 @@ namespace ui
     
     void util::DrawNPatchUIElement(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress, const int &zIndex)
     {
-        // ZoneScopedN("ui::util::DrawNPatchUIElement");
+        ZoneScopedN("ui::util::DrawNPatchUIElement");
         ::util::Profiler profiler("DrawNPatchUIElement");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
@@ -698,7 +698,7 @@ namespace ui
 
     void util::DrawNPatchUIElementImmediate(std::shared_ptr<layer::Layer> layerPtr, entt::registry &registry, entt::entity entity, const Color &colorOverride, float parallaxModifier, std::optional<float> progress)
     {
-        // ZoneScopedN("ui::util::DrawNPatchUIElement");
+        ZoneScopedN("ui::util::DrawNPatchUIElement");
         ::util::Profiler profiler("DrawNPatchUIElement");
         auto &transform = registry.get<transform::Transform>(entity);
         auto *uiConfig = registry.try_get<ui::UIConfig>(entity);
@@ -870,7 +870,7 @@ namespace ui
         if (progress.value_or(1.0f) <= 0.0f)
         return;
         
-        // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
+        ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
         
         if (node.state.visible == false)
             return;
@@ -881,7 +881,7 @@ namespace ui
         bool needClipRegen = false;
         
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle cache checks");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle cache checks");
             // 1) If width/height/renderTypeFlags/lineThickness/shadow changed → rebuild full geometry
             if (!rectCache
                 || (rectCache->innerVerticesProgressReflected.empty() && rectCache->outerVerticesProgressReflected.empty()) 
@@ -903,14 +903,14 @@ namespace ui
         // comparisons to detect if the cache is usable
         if (needFullRegen)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle full regen");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle full regen");
             //  regenerate full cache
             emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
             rectCache = globals::registry.try_get<RoundedRectangleVerticesCache>(entity);
         }
         else if (needClipRegen)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle clip regen");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle clip regen");
             // regenerate clipped vertices
             rectCache->progress = progress;
             if (progress && progress.value() < 1.0f) {
@@ -955,7 +955,7 @@ namespace ui
 
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && uiConfig->shadow)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow fill");
             
             
             
@@ -998,7 +998,7 @@ namespace ui
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE && uiConfig->outlineShadow)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow outline");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow outline");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = -shadowOffsetX * parallaxModifier, y = -shadowOffsetY * parallaxModifier](layer::CmdTranslate *cmd) {
@@ -1040,7 +1040,7 @@ namespace ui
         // then emboss (y+ emboss value)
         if (type & RoundedRectangleVerticesCache_TYPE_EMBOSS)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss fill");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
             if (!uiConfig->emboss)
@@ -1078,7 +1078,7 @@ namespace ui
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss outline");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss outline");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
             if (!uiConfig->emboss)
@@ -1128,7 +1128,7 @@ namespace ui
         // then fill
         if (type & RoundedRectangleVerticesCache_TYPE_FILL)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle fill");
             // FIXME: testing with commenting out
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             
@@ -1167,7 +1167,7 @@ namespace ui
         // fill progress, if there is any
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && rectCache->innerVerticesProgressReflected.size() > 0 && rectCache->outerVerticesProgressReflected.size() > 0 && progress.has_value())
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
@@ -1240,7 +1240,7 @@ namespace ui
         // and ... or outline
         if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle outline");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle outline");
             layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
 
             // layer::QueueCommand<layer::CmdTranslate>(layerPtr, [x = actualX, y = actualY](layer::CmdTranslate *cmd) {
@@ -1285,7 +1285,7 @@ namespace ui
         if (progress.value_or(1.0f) <= 0.0f)
         return;
         
-        // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
+        ZoneScopedN("ui::util::DrawSteppedRoundedRectangle");
         
         if (node.state.visible == false)
            return;
@@ -1294,7 +1294,7 @@ namespace ui
         bool needClipRegen = false;
         
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle cache checks");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle cache checks");
             // 1) If width/height/renderTypeFlags/lineThickness/shadow changed → rebuild full geometry
             if (!rectCache
                 || (rectCache->innerVerticesProgressReflected.empty() && rectCache->outerVerticesProgressReflected.empty()) 
@@ -1316,14 +1316,14 @@ namespace ui
         // comparisons to detect if the cache is usable
         if (needFullRegen)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle full regen");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle full regen");
             //  regenerate full cache
             emplaceOrReplaceNewRectangleCache(registry, entity, visualW, visualH, uiConfig->outlineThickness.value_or(1.0f), type, progress.value_or(1.0f));
             rectCache = globals::registry.try_get<RoundedRectangleVerticesCache>(entity);
         }
         else if (needClipRegen)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle clip regen");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle clip regen");
             // regenerate clipped vertices
             rectCache->progress = progress;
             if (progress && progress.value() < 1.0f) {
@@ -1368,7 +1368,7 @@ namespace ui
 
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && uiConfig->shadow)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow fill");
             
             
             
@@ -1404,7 +1404,7 @@ namespace ui
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE && uiConfig->outlineShadow)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow outline");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle shadow outline");
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
             
@@ -1431,7 +1431,7 @@ namespace ui
         // then emboss (y+ emboss value)
         if (type & RoundedRectangleVerticesCache_TYPE_EMBOSS)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss fill");
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
 
@@ -1471,7 +1471,7 @@ namespace ui
         }
         else if (type & RoundedRectangleVerticesCache_TYPE_LINE_EMBOSS)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss outline");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle emboss outline");
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
 
@@ -1509,7 +1509,7 @@ namespace ui
         // then fill
         if (type & RoundedRectangleVerticesCache_TYPE_FILL)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle fill");
             // FIXME: testing with commenting out
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
@@ -1547,7 +1547,7 @@ namespace ui
         // fill progress, if there is any
         if (type & RoundedRectangleVerticesCache_TYPE_FILL && rectCache->innerVerticesProgressReflected.size() > 0 && rectCache->outerVerticesProgressReflected.size() > 0 && progress.has_value())
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle progress fill");
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
 
@@ -1628,7 +1628,7 @@ namespace ui
         // and ... or outline
         if (type & RoundedRectangleVerticesCache_TYPE_OUTLINE)
         {
-            // ZoneScopedN("ui::util::DrawSteppedRoundedRectangle outline");
+            ZoneScopedN("ui::util::DrawSteppedRoundedRectangle outline");
             // layer::QueueCommand<layer::CmdPushMatrix>(layerPtr, [](layer::CmdPushMatrix *cmd) {}, zIndex);
             layer::PushMatrix();
 

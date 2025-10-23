@@ -246,7 +246,7 @@ namespace input
 
     auto Update(entt::registry &registry, InputState &inputState, float dt) -> void
     {
-        // ZoneScopedN("Input system update");
+        ZoneScopedN("Input system update");
 
         auto inputCategory = UpdateGamepadAxisInput(inputState, registry, dt);
         auto &transform = registry.get<transform::Transform>(globals::cursor);

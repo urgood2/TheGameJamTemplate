@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Debug)
 
 # enable tracy (disable for web)
-option( TRACY_ENABLE "" OFF)
+option( TRACY_ENABLE "" ON)
 add_definitions(-DTRACY_NO_CRASH_HANDLER)
 
 #set opengl version

@@ -6,7 +6,7 @@
 #include "graphics.hpp"
 #include "globals.hpp"
 
-// #include "third_party/tracy-master/public/tracy/Tracy.hpp"
+#include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 #include "../components/components.hpp"
 #include "../components/graphics.hpp"
@@ -1160,7 +1160,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //         globals::registry.emplace_or_replace<ui::ObjectAttachedToUITag>(e);
         //     });
         
-        // ZoneScopedN("game::update"); // custom label
+        ZoneScopedN("game::update"); // custom label
         if (gameStarted == false)
             gameStarted = true;
 
@@ -1185,7 +1185,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         shaders::updateAllShaderUniforms();
         
         {
-            // ZoneScopedN("TextSystem::Update");
+            ZoneScopedN("TextSystem::Update");
             auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>();
             for (auto e : textView)
             {
@@ -1203,7 +1203,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //     ui::box::Move(globals::registry, e, f);
         // }
         {
-            // ZoneScopedN("Collison quadtree populate Update");
+            ZoneScopedN("Collison quadtree populate Update");
             initAndResolveCollisionEveryFrame();
         }
         
@@ -1219,7 +1219,7 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             //                                  transform::GameObject,
             //                                  transform::Transform>();
 
-            // ZoneScopedN("UIElement Update");
+            ZoneScopedN("UIElement Update");
             // static auto uiElementGroup = globals::registry.group
 
             ui::globalUIGroup.each([delta](entt::entity e, ui::UIElementComponent &uiElement, ui::UIConfig &uiConfig, ui::UIState &uiState, transform::GameObject &node, transform::Transform &transform) {
@@ -1575,13 +1575,13 @@ void DrawGradientRectRoundedCentered(
 
     auto draw(float dt) -> void
     {
-        // ZoneScopedN("game::draw"); // custom label
+        ZoneScopedN("game::draw"); // custom label
 
         // set up layers (needs to happen every frame)
         
         
         {
-            // ZoneScopedN("game::draw-lua draw main script");
+            ZoneScopedN("game::draw-lua draw main script");
             // update lua main script
             sol::protected_function_result result = luaMainDrawFunc(dt);
             if (!result.valid()) {
@@ -1595,7 +1595,7 @@ void DrawGradientRectRoundedCentered(
 
 
         {
-            // ZoneScopedN("game::draw-UIElement Draw");
+            ZoneScopedN("game::draw-UIElement Draw");
             // debug draw ui elements (draw ui boxes, will auto-propogate to children)
             // auto viewUI = globals::registry.view<ui::UIBoxComponent>();
             // for (auto e : viewUI)
@@ -1614,7 +1614,7 @@ void DrawGradientRectRoundedCentered(
 
         // dynamic text
         {
-            // ZoneScopedN("Dynamic Text Draw");
+            ZoneScopedN("Dynamic Text Draw");
             auto textView = globals::registry.view<TextSystem::Text, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : textView)
             {
@@ -1641,7 +1641,7 @@ void DrawGradientRectRoundedCentered(
             
 
         {
-            // ZoneScopedN("AnimatedSprite Draw");
+            ZoneScopedN("AnimatedSprite Draw");
             auto spriteView = globals::registry.view<AnimationQueueComponent, entity_gamestate_management::StateTag>(entt::exclude<ui::ObjectAttachedToUITag>);
             for (auto e : spriteView)
             {
@@ -1704,12 +1704,12 @@ void DrawGradientRectRoundedCentered(
         // uiProfiler.Stop();
         
         {
-            // ZoneScopedN("Particle Draw");
+            ZoneScopedN("Particle Draw");
             particle::DrawParticles(globals::registry, sprites);
         }
         
         {
-            // ZoneScopedN("Tilemap draw");
+            ZoneScopedN("Tilemap draw");
             
             // ldtk_loader::DrawAllLayers("Everything");
             // ldtk_loader::DrawAllLayers("Background_image");
@@ -1726,27 +1726,27 @@ void DrawGradientRectRoundedCentered(
         
 
         {
-            // ZoneScopedN("LayerCommandsToCanvas Draw");
+            ZoneScopedN("LayerCommandsToCanvas Draw");
             {
-                // ZoneScopedN("background layer commands");
+                ZoneScopedN("background layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(background, "main", &worldCamera->cam);  // render the background layer commands to its main canvas
             }
             
             
             
             {
-                // ZoneScopedN("sprites layer commands");
+                ZoneScopedN("sprites layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(sprites, "main", &worldCamera->cam);     // render the sprite layer commands to its main canvas
             }
             
             {
                 
-                // ZoneScopedN("ui layer commands");
+                ZoneScopedN("ui layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(ui_layer, "main", nullptr);    // render the ui layer commands to its main canvas
             }
             
             {
-                // ZoneScopedN("final output layer commands");
+                ZoneScopedN("final output layer commands");
                 layer::DrawLayerCommandsToSpecificCanvasApplyAllShaders(finalOutput, "main", nullptr); // render the final output layer commands to its main canvas
             }
             
@@ -1768,7 +1768,7 @@ void DrawGradientRectRoundedCentered(
             // layer::DrawCanvasOntoOtherLayer(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE); // render the background layer main canvas to the screen
             
             {
-                // ZoneScopedN("Draw canvases to other canvases with shaders");
+                ZoneScopedN("Draw canvases to other canvases with shaders");
                 // layer::DrawCanvasOntoOtherLayerWithShader(background, "main", finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "outer_space_donuts_bg"); // render the background layer main canvas to the screen
 
                 
@@ -1798,14 +1798,14 @@ void DrawGradientRectRoundedCentered(
         // layer::DrawCanvasToCurrentRenderTargetWithTransform(sprites, "flash", 0, 0, 0, 1, 1, WHITE);   // render the sprite layer flash canvas to the screen
 
         {
-            // ZoneScopedN("Final Output Draw to screen");
+            ZoneScopedN("Final Output Draw to screen");
             // BeginDrawing();
 
             // clear screen
             ClearBackground(BLACK);
             
             { // build final output layer
-                // ZoneScopedN("Draw canvas to render target (screen)");
+                ZoneScopedN("Draw canvas to render target (screen)");
                 layer::DrawCanvasToCurrentRenderTargetWithTransform(finalOutput, "main", 0, 0, 0, 1, 1, WHITE, "crt"); // render the final output layer main canvas to the screen
                 
                 
@@ -1854,7 +1854,7 @@ void DrawGradientRectRoundedCentered(
             
             {
 #ifndef __EMSCRIPTEN__
-                // ZoneScopedN("Debug UI");
+                ZoneScopedN("Debug UI");
                 shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
                 ShowDebugUI();
                 lua_hot_reload::draw_imgui(ai_system::masterStateLua);
@@ -1909,7 +1909,7 @@ void DrawGradientRectRoundedCentered(
             
 
             {
-                // ZoneScopedN("EndDrawing call");
+                ZoneScopedN("EndDrawing call");
                 // EndDrawing();
             }
 

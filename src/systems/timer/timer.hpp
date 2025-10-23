@@ -17,7 +17,7 @@
 #include "sol/sol.hpp"
 
 
-// #include "third_party/tracy-master/public/tracy/Tracy.hpp"
+#include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 
 // TODO: probably use a separate random isntance instead of default one
@@ -386,7 +386,7 @@ namespace timer
         {
             inUpdate = true;
 
-            // ZoneScopedN("Update Timers"); // custom label
+            ZoneScopedN("Update Timers"); // custom label
             for (auto it = timers.begin(); it != timers.end();)
             {
                 Timer &timer = it->second;

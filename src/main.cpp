@@ -13,7 +13,7 @@
 #include "entt/entt.hpp" // ECS
 // #include "tweeny.h"      // tweening library
 
-// #include "third_party/tracy-master/public/tracy/Tracy.hpp"
+#include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
@@ -131,7 +131,7 @@ void mainMenuStateGameLoop(float dt)
 
 void MainLoopFixedUpdateAbstraction(float dt)
 {
-    // // ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
+    ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
     
     updateSystems(dt);
 
@@ -409,7 +409,7 @@ auto updateSystems(float dt) -> void
 {
     // clear layers
     layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
-    // // ZoneScopedN("UpdateSystems"); // custom label
+    ZoneScopedN("UpdateSystems"); // custom label
     updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
     fade_system::update(dt); // update fade system
     

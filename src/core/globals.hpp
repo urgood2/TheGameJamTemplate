@@ -98,6 +98,8 @@ class PhysicsManager;
 
 namespace globals
 {
+    extern bool useImGUI; // set to true to use imGUI for debugging
+    
     extern std::shared_ptr<PhysicsManager> physicsManager; // physics manager instance
     
     extern std::unordered_map<entt::entity, transform::SpringCacheBundle> g_springCache;

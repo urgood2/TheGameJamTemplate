@@ -245,12 +245,19 @@ void RunGameLoop()
 #ifndef __EMSCRIPTEN__
     while (!WindowShouldClose())
     {
+        ZoneScopedN("RunGameLoop"); // custom label
 #endif
-        BeginDrawing();
+        {
+            ZoneScopedN("BeginDrawing/rlImGuiBegin call");
+            BeginDrawing();
+        
 
 #ifndef __EMSCRIPTEN__
-        rlImGuiBegin(); // Begin ImGui each frame (desktop only)
+
+        if (globals::useImGUI)
+            rlImGuiBegin(); // Begin ImGui each frame (desktop only)
 #endif
+        }
 
         using namespace main_loop;
 
@@ -315,11 +322,16 @@ void RunGameLoop()
             frameCounter = 0;
             fpsLastTime = now;
         }
+        
+        {
+            ZoneScopedN("EndDrawing/rlImGuiEnd call");
 
 #ifndef __EMSCRIPTEN__
-        rlImGuiEnd();
+        if (globals::useImGUI)
+            rlImGuiEnd();
 #endif
-        EndDrawing();
+            EndDrawing();
+        }
 
 #ifdef __EMSCRIPTEN__
         // (No while loop on web)
@@ -407,36 +419,71 @@ int main(void)
 /// @return
 auto updateSystems(float dt) -> void
 {
-    // clear layers
-    layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
     ZoneScopedN("UpdateSystems"); // custom label
-    updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
-    fade_system::update(dt); // update fade system
     
-    input::Update(globals::registry, globals::inputState, dt);
-    globals::updateGlobalVariables();
-    sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
+    // clear layers
+    {
+        ZoneScopedN("layer::Begin");
+        layer::Begin(); // clear all commands so we begin fresh next frame, and also let draw commands from update loop to show up when rendering (update is called before draw). we do this in update rather than draw since draw will execute more often than update.
+    }
     
+    {
+        ZoneScopedN("Input System Update");
+        updateTimers(dt); // these are used by event queue system (TODO: replace with mainloop abstraction)
+        fade_system::update(dt); // update fade system
+    }
     
-    physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    {
+        ZoneScopedN("Input System Update");
+        input::Update(globals::registry, globals::inputState, dt);
+    }
     
-    globals::physicsManager->stepAll(dt); // step all physics worlds
+    {
+        ZoneScopedN("Global Variables Update & sound");
+        globals::updateGlobalVariables();
+        sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
+    }
     
-    physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    {
+        ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
+        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    }
+    
+    {
+        ZoneScopedN("Physics Step All Worlds");
+        globals::physicsManager->stepAll(dt); // step all physics worlds
+    }
+    
+    {
+        ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
+        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    }
     
     // systems
+    
     shaders::update(dt);
     timer::TimerSystem::update_timers(dt);
     spring::updateAllSprings(globals::registry, dt);
     animation_system::update(dt);
     transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
     
-
-    // update event queue
-    timer::EventQueueSystem::EventManager::update(dt);
+    {
+        ZoneScopedN("EventQueueSystem::EventManager::update");
+        // update event queue
+        timer::EventQueueSystem::EventManager::update(dt);
+    }
     
-    scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
-    ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
+    {
+        ZoneScopedN("scripting::monobehavior_system::update");
+        scripting::monobehavior_system::update(globals::registry, dt); // update all monobehavior scripts in the registry
+    }
+    {
+        ZoneScopedN("AI System Update");
+        ai_system::masterScheduler.update(static_cast<ai_system::fsec>(dt)); // update the AI system scheduler
+    }
     
-    ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
+    {
+        ZoneScopedN("ai_system::updateHumanAI");
+        ai_system::updateHumanAI(dt); // update the GOAP AI system for creatures
+    }
 }

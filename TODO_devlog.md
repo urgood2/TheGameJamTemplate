@@ -87,3 +87,4 @@
   - Chose which cards to implement for a vertical slice.
   - Tinkered with rendering a bit to clearly show debug info.
   - Need to now link up wand evaluation with gameplay.
+  - Did some profiling. Removing imgui and making sure I don't give every lua object an update method that runs every frame seems to help performance a lot.

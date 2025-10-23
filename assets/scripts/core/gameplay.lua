@@ -59,6 +59,7 @@ SHOP_STATE = "SHOP"
 
 survivorEntity = nil
 boards = {}
+cards = {}
 inventory_board_id = nil
 trigger_board_id_to_action_board_id = {} -- map trigger boards to action boards
 trigger_board_id = nil
@@ -379,33 +380,74 @@ function createNewCard(id, x, y, gameStateToApply)
     -- copy over card definition data if it exists
     WandEngine.apply_card_properties(cardScript, WandEngine.card_defs[id] or {})
     
+    
     -- give an update table to align the card's stacks if they exist.
-    cardScript.update = function(self, dt)
-        local eid = self:handle()
+    -- cardScript.update = function(self, dt)
+    --     local eid = self:handle()
+    
+
         
+    --     -- command_buffer.queuePushObjectTransformsToMatrix(layers.sprites, function (c)
+    --     --     c.entity = eid
+    --     -- end, z_orders.card_text, layer.DrawCommandSpace.World)
         
-        -- command_buffer.queuePushObjectTransformsToMatrix(layers.sprites, function (c)
-        --     c.entity = eid
-        -- end, z_orders.card_text, layer.DrawCommandSpace.World)
+    --     -- draw debug label.
+    --     command_buffer.queueDrawText(layers.sprites, function(c)
+    --         local cardScript = getScriptTableFromEntityID(eid)
+    --         local t = registry:get(eid, Transform)
+    --         c.text = cardScript.test_label or "unknown"
+    --         c.font = localization.getFont()
+    --         c.x = t.visualX
+    --         c.y = t.visualY
+    --         c.color = palette.snapToColorName("BLACK")
+    --         c.fontSize = 25.0
+    --     end, z_orders.card_text, layer.DrawCommandSpace.World)
         
-        -- draw debug label.
-        command_buffer.queueDrawText(layers.sprites, function(c)
-            local cardScript = getScriptTableFromEntityID(eid)
-            local t = registry:get(eid, Transform)
-            c.text = cardScript.test_label or "unknown"
-            c.font = localization.getFont()
-            c.x = t.visualX
-            c.y = t.visualY
-            c.color = palette.snapToColorName("BLACK")
-            c.fontSize = 25.0
-        end, z_orders.card_text, layer.DrawCommandSpace.World)
+    --     -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
         
-        -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
-        
-    end
+    -- end
     
     -- attach ecs must be called after defining the callbacks.
     cardScript:attach_ecs{ create_new = false, existing_entity = card }
+    
+    -- add to cards table
+    cards[cardScript:handle()] = cardScript
+    
+    -- if card update timer doens't exist, add it.
+    if not timer.get_timer_and_delay("card_render_timer") then
+        
+        timer.run(function ()
+            
+            -- loop through cards.
+            for eid, cardScript in pairs(cards) do
+                if eid and registry:valid(eid) then
+                    local t = registry:get(eid, Transform)
+                    if t then
+                        
+                        -- command_buffer.queuePushObjectTransformsToMatrix(layers.sprites, function (c)
+                        --     c.entity = eid
+                        -- end, z_orders.card_text, layer.DrawCommandSpace.World)
+                        
+                        -- draw debug label.
+                        command_buffer.queueDrawText(layers.sprites, function(c)
+                            c.text = cardScript.test_label or "unknown"
+                            c.font = localization.getFont()
+                            c.x = t.visualX + t.visualW * 0.1
+                            c.y = t.visualY + 10
+                            c.color = palette.snapToColorName("RED")
+                            c.fontSize = 20.0
+                        end, z_orders.card_text, layer.DrawCommandSpace.World)
+                        
+                        -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
+                    end
+                end
+            end
+            
+        end,
+        nil, -- no onComplete
+        "card_render_timer" -- tag
+        )
+    end
     
     -- -- let's give the card a label (temporary) for testing
     -- cardScript.labelEntity = ui.definitions.getNewDynamicTextEntry(

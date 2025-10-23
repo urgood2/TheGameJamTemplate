@@ -388,11 +388,11 @@ function initMainGame()
     initShopPhase()
     
     -- run debug ui every frame.
-    timer.run_every_render_frame(
-        function()
-            debugUI()
-        end
-    )
+    -- timer.run_every_render_frame(
+    --     function()
+    --         debugUI()
+    --     end
+    -- )
     
 end
 

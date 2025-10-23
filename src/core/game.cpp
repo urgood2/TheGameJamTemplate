@@ -1854,10 +1854,12 @@ void DrawGradientRectRoundedCentered(
             
             {
 #ifndef __EMSCRIPTEN__
+            if (globals::useImGUI) {
                 ZoneScopedN("Debug UI");
                 shaders::ShowShaderEditorUI(globals::globalShaderUniforms);
                 ShowDebugUI();
                 lua_hot_reload::draw_imgui(ai_system::masterStateLua);
+            }
 
                 
 #endif

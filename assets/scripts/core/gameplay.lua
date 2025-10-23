@@ -193,10 +193,12 @@ function createNewBoard(x, y, w, h)
                     ct.actualX = math.floor(startX + (i - 1) * spacing + 0.5)
                     ct.actualY = math.floor(centerY - ct.actualH * 0.5 + 0.5)
                     
-                    -- if card is selected, bump it up a bit
-                    local cardScript = getScriptTableFromEntityID(cardEid)
-                    if cardScript and cardScript.selected then
-                        ct.actualY = ct.actualY - ct.actualH * 0.7
+                    -- if card is selected, bump it up a bit, but only in inventory
+                    if eid == inventory_board_id then
+                        local cardScript = getScriptTableFromEntityID(cardEid)
+                        if cardScript and cardScript.selected then
+                            ct.actualY = ct.actualY - ct.actualH * 0.7
+                        end
                     end
                 end
                 

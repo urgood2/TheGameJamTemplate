@@ -40,8 +40,9 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- show active wand stats on the screen, indicate this is a wand somehow. Also, popup tooltips for the cards when hovering over them.
 - Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
-- show active wand stats on the screen, indicate this is a wand somehow.
+
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
 - implement card evaluation order using actual cards to see how it behaves.
   - Trigger: every X pixels traveled.

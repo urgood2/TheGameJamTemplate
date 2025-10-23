@@ -1,24 +1,47 @@
-local action_card_defs = 
-        id = "fire_basic_bolt"
-        id = "leave_spike_hazard",
-        id = "temporary_strength_bonus"
-trigger_card_defs
-        id = "every_N_seconds"
-        id = "on_pickup"
-        id = "on_distance_moved"
-modifier_card_defs 
-        id = "double_effect"
-        id = "summon_minion_wandering"
-        id = "projectile_pierces_twice"
-        id = "summons_targtes_detonate"
-        id = "reduce trigger interval after this action"
-        id = "duplicate action, but both are weakened."
-        id = "enhance + damage or + duration"
+- Projectiles
+Basic test projectile
+Fast, accurate projectile
+Slow orb with medium damage
+Explosive fire projectile
+Ricochets off surfaces
+Heavy gravity-affected object projectile
+Sucks in other projectiles & creatures
+
+- Modifiers
+Seeks enemies
+Increases projectile speed
+Decreases projectile speed
+Reduces spread angle
+Increases projectile damage
+Shortens projectile lifetime
+Casts next spell on hit (Add trigger)
+Casts next spell after delay (Add timer)
+Triggers next spell on projectile death
+
+- Multicasts
+Casts next two spells at the same time
+Casts next three spells
+Casts next five projectiles in circular formation
+
+- Utilities
+Moves caster to impact point
+Creates healing area at current location
+Creates a shield bubble at current location
+Summons an ally entity
+
+- Super recasts & meta
+Recasts first spell in wand
+Applies all modifiers in wand to next projectile
+Casts all spells in wand at once
+Converts encumbrance into damage
+
 
 # Non-stat values:
 - player level.
     
 # programming side
+- Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
+- 22:12 adjustment to ui - single trigger on the screen, with buttons on the left to swap between. Bigger cards & font
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
 - TODO: ignore trigger & tim
 - give 3 set trigger slots, triggers can't be taken away or moved.

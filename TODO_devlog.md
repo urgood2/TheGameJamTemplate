@@ -88,3 +88,9 @@
   - Tinkered with rendering a bit to clearly show debug info.
   - Need to now link up wand evaluation with gameplay.
   - Did some profiling. Removing imgui and making sure I don't give every lua object an update method that runs every frame seems to help performance a lot.
+  
+10/24/2025
+  - Linked up stat system so enemies deal damage on bump.
+  - Player can now gather orbs to level up.
+  - Added HP and XP bars to UI.
+  - Player can now dash.

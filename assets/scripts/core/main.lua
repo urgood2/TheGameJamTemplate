@@ -388,11 +388,11 @@ function initMainGame()
     initShopPhase()
     
     -- run debug ui every frame.
-    -- timer.run_every_render_frame(
-    --     function()
-    --         debugUI()
-    --     end
-    -- )
+    timer.run_every_render_frame(
+        function()
+            debugUI()
+        end
+    )
     
 end
 
@@ -419,8 +419,8 @@ function main.init()
     }
     
     -- input binding test
-    input.bind("do_something", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
-    input.bind("do_something_else", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Released", context="gameplay" })
+    -- input.bind("do_something", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
+    -- input.bind("do_something_else", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Released", context="gameplay" })
     -- input.set_context("gameplay") -- set the input context to gameplay
     input.bind("mouse_click", { device="mouse", key=MouseButton.BUTTON_LEFT, trigger="Pressed", context="gameplay" })
     

@@ -867,7 +867,7 @@ void PhysicsWorld::UpdateCollisionMasks(
   if (it == collisionTags.end()) return;
 
   auto &ct = it->second;
-  ct.masks.clear();
+  // ct.masks.clear();
 
   for (const auto &t : collidableTags) {
     if (collisionTags.contains(t))

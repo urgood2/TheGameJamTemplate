@@ -40,6 +40,8 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- Add trigger inventory for better testing.
+- exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 - show active wand stats on the screen, indicate this is a wand somehow. Also, popup tooltips for the cards when hovering over them.
 - Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
 
@@ -47,6 +49,7 @@ Converts encumbrance into damage
 - implement card evaluation order using actual cards to see how it behaves.
   - Trigger: every X pixels traveled.
   - Trigger: on enemy hit.
+  - Trigger: on bumping enemy.
   - Trigger: on dash.
   - Action: fire basic bolt.
   - Action: add mana to trigger.
@@ -79,7 +82,6 @@ Converts encumbrance into damage
 
 
 - Add card 3d rotation for when initially dropped?
-- exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
 - make dashed lines be used only when a trigger + action is valid and active.
 - add new stats with 
@@ -117,7 +119,6 @@ player.stats:on_recompute(function(S)
   S:derived_add_mul_pct('attack_speed', lvl * 3)
 end)
 ```
-- link up the combat stat system with the traps and strength bonus action.
 - implement level-ups. just grant +5 to a chosen stat.
 - maybe a few example character classes that focus on different stats or have specific set triggers/actions/mods they start with, in addition to having different starting stats, fixed bonuses that they only have, boons?
 - add basic triggers, actions, and modifiers and hook them up to gameplay.

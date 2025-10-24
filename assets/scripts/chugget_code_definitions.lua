@@ -527,6 +527,15 @@ Equivalent to `active_states:activate(name)` on the singleton instance.
 function activate_state(...) end
 
 ---
+--- Checks whether the specified entity is active using the shared ActiveStates instance.
+---
+---@param entity Entity
+---@return boolean
+Checks whether the given entity is currently active based on its StateTag component and the global active states.
+Returns `true` if the entity's StateTag is active in the global ActiveStates set.
+function is_entity_active(...) end
+
+---
 --- Deactivates the given named state globally, using the shared ActiveStates instance.
 ---
 ---@param name string

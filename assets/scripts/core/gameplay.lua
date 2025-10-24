@@ -11,6 +11,7 @@ local Easing = require("util.easing")
 local CombatSystem = require("combat.combat_system")
 require ("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
+local signal = require("external.hump.signal")
 
 --  let's make some card data
 local action_card_defs = {
@@ -25,6 +26,7 @@ local action_card_defs = {
     }
     
 }
+
 local trigger_card_defs = {
     {
         id = "every_N_seconds"
@@ -34,7 +36,14 @@ local trigger_card_defs = {
     },
     {
         id = "on_distance_moved"
-    }
+    },
+    {
+        id = "on_bump_enemy"
+    },
+    {
+        id = "on_dash"
+    },
+    
 }
 local modifier_card_defs = {
     {
@@ -56,6 +65,11 @@ local cardW, cardH = 80, 112 -- these are reset on init.
 PLANNING_STATE = "PLANNING"
 ACTION_STATE = "SURVIVORS"
 SHOP_STATE = "SHOP"
+
+-- combat context, to be used with the combat system.
+combat_context = nil
+
+-- some entities
 
 survivorEntity = nil
 boards = {}
@@ -418,9 +432,20 @@ function createNewCard(id, x, y, gameStateToApply)
         
         timer.run(function ()
             
+            -- bail if not shop or planning state
+            if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
+                return
+            end
+            
             -- loop through cards.
             for eid, cardScript in pairs(cards) do
                 if eid and registry:valid(eid) then
+                    
+                    -- bail if entity not active 
+                    if not is_entity_active(eid) then
+                        goto continue
+                    end
+                    
                     local t = registry:get(eid, Transform)
                     if t then
                         
@@ -441,6 +466,7 @@ function createNewCard(id, x, y, gameStateToApply)
                         -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
                     end
                 end
+                ::continue::
             end
             
         end,
@@ -1431,7 +1457,58 @@ function startTriggerNSecondsTimer(trigger_board_id, action_board_id, timer_name
         timer_name -- name of the timer (so we can check if it exists later
     )
 end
+
+-- generic weapon def, creatures must have this to deal damage.
+
+local basic_monster_weapon = {
+    id = 'basic_monster_weapon',
+    slot = 'sword1',
+    -- requires = { attribute = 'cunning', value = 12, mode = 'sole' },
+    mods = {
+      { stat = 'weapon_min',      base = 6 },
+      { stat = 'weapon_max',      base = 10 },
+    --   { stat = 'fire_modifier_pct', add_pct = 15 },
+    },
+    -- conversions = { { from = 'physical', to = 'fire', pct = 25 } },
+    -- procs = {
+    --   {
+    --     trigger = 'OnBasicAttack',
+    --     chance = 70,
+    --     effects = Effects.deal_damage {
+    --       components = { { type = 'fire', amount = 40 } }, tags = { ability = true }
+    --     },
+    --   },
+    -- },
+    -- granted_spells = { 'Fireball' },
+  }
 function setUpLogicTimers()
+    
+    -- handler for bumping into enemy. just get the enemy's combat script and let the enemy deal damage to the player.
+    local function on_bump_enemy_handler(enemyEntityID)
+        
+        log_debug("on_bump_enemy_handler called with enemy entity:", enemyEntityID)
+        
+        if not enemyEntityID or enemyEntityID == entt_null or not registry:valid(enemyEntityID) then return end
+        
+        local enemyScript = getScriptTableFromEntityID(enemyEntityID)
+        if not enemyScript then return end
+        
+        -- for now just deal generic damage to the player. 
+        -- TODO: expand with other enemies who deal different types of damage.
+        
+        local playerScript = getScriptTableFromEntityID(survivorEntity)
+        if not playerScript then return end
+        
+        local enemyCombatTable = enemyScript.combatTable
+        if not enemyCombatTable then return end
+        
+        local playerCombatTable = playerScript.combatTable
+        if not playerCombatTable then return end
+        
+        -- 1. Basic attack (vanilla weapon hit)
+        CombatSystem.Game.Effects.deal_damage { weapon = true, scale_pct = 100 } (combat_context, enemyCombatTable, playerCombatTable)
+        
+    end
     
     -- check the trigger board 
     timer.run(
@@ -1452,6 +1529,20 @@ function setUpLogicTimers()
                                 end   
                                     
                             end
+                            
+                            -- bump enemy. if signal not registered, register it.
+                            if triggerCardScript and triggerCardScript.card_id == "on_bump_enemy" then
+                               
+                                
+                                if signal.exists("on_bump_enemy") == false then
+                                    signal.register(
+                                        "on_bump_enemy",
+                                        on_bump_enemy_handler
+                                    )
+                                end
+                                
+                            end
+                            
                         end
                     end
                 end
@@ -1714,7 +1805,8 @@ function initPlanningPhase()
 
     
     -- make a trigger card and add it to the trigger board.
-    local triggerCard = createNewCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE) -- offscreen for now
+    -- local triggerCard = createNewCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE) -- offscreen for now
+    local triggerCard = createNewCard("TEST_TRIGGER_ON_BUMP_ENEMY", 4000, 4000, PLANNING_STATE) -- offscreen for now
 
     addCardToBoard(triggerCard, triggerBoardID)
 -- -------------------------------------------------------------------------- --
@@ -1757,303 +1849,39 @@ function initPlanningPhase()
 
 
     
--- -- -------------------------------------------------------------------------- --
--- --                          now make another 4 pairs                          --
--- -- -------------------------------------------------------------------------- 
-    
---     local secondTriggerBoardID = createNewBoard(leftAlignValueTriggerBoardX, runningYValue, triggerBoardWidth, boardHeight)
---     local secondTriggerBoard = boards[secondTriggerBoardID]
---     secondTriggerBoard.borderColor = palette.snapToColorName("cyan")
---     secondTriggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
---         function() return localization.get("ui.trigger_area") end,  -- initial text
---         20.0,                                 -- font size
---         "color=cyan"                       -- animation spec
---     ).config.object
---     -- make the text world space
---     transform.set_space(secondTriggerBoard.textEntity, "world")
---     -- tex state
---     add_state_tag(secondTriggerBoard.textEntity, PLANNING_STATE)
---     -- let's anchor to top of the trigger board
---     transform.AssignRole(registry, secondTriggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, secondTriggerBoard:handle(),
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         Vec2(0, -10) -- offset it a bit upwards
---     );
---     local roleComp = registry:get(secondTriggerBoard.textEntity, InheritedProperties)
---     roleComp.flags = AlignmentFlag.VERTICAL_TOP
-    
---     local secondActionBoardID = createNewBoard(leftAlignValueActionBoardX, runningYValue, actionBoardWidth, boardHeight)
---     local secondActionBoard = boards[secondActionBoardID]
---     secondActionBoard.cards = {  } -- cards are entity ids.
-    
---     -- map
---     trigger_board_id_to_action_board_id[secondTriggerBoardID] = secondActionBoardID
-    
---     -- give a text label above the board
---     secondActionBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
---         function() return localization.get("ui.action_mod_area") end,  -- initial text
---         20.0,                                 -- font size
---         "color=apricot_cream"                       -- animation spec
---     ).config.object
---     -- make the text world space
---     transform.set_space(secondActionBoard.textEntity, "world")
---     -- give text state
---     add_state_tag(secondActionBoard.textEntity, PLANNING_STATE)
---     -- let's anchor to top of the trigger board
---     transform.AssignRole(registry, secondActionBoard.textEntity, InheritedPropertiesType.PermanentAttachment, secondActionBoard:handle(),
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         Vec2(0, -10) -- offset it a bit upwards
---     );
---     local roleComp = registry:get(secondActionBoard.textEntity, InheritedProperties)
---     roleComp.flags = AlignmentFlag.VERTICAL_TOP
-    
---     -- next row
---     runningYValue = runningYValue + boardHeight + boardPadding
-    
-    
--- -- ---------------------------------- row 3 --------------------------------- 
-    
---     local thirdTriggerBoardID = createNewBoard(leftAlignValueTriggerBoardX, runningYValue, triggerBoardWidth, boardHeight)
---     local thirdTriggerBoard = boards[thirdTriggerBoardID]
---     thirdTriggerBoard.borderColor = palette.snapToColorName("cyan")
---     thirdTriggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
---         function() return localization.get("ui.trigger_area") end,  -- initial text
---         20.0,                                 -- font size
---         "color=cyan"                       -- animation spec
---     ).config.object
---     -- make the text world space
---     transform.set_space(thirdTriggerBoard.textEntity, "world")
---     -- tex state
---     add_state_tag(thirdTriggerBoard.textEntity, PLANNING_STATE)
---     -- let's anchor to top of the trigger board
---     transform.AssignRole(registry, thirdTriggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, thirdTriggerBoard:handle(),
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         Vec2(0, -10) -- offset it a bit upwards
---     );
---     local roleComp = registry:get(thirdTriggerBoard.textEntity, InheritedProperties)
---     roleComp.flags = AlignmentFlag.VERTICAL_TOP
-    
---     local thirdActionBoardID = createNewBoard(leftAlignValueActionBoardX, runningYValue, actionBoardWidth, boardHeight)
---     local thirdActionBoard = boards[thirdActionBoardID]
---     thirdActionBoard.cards = {  } -- cards are entity ids.
-    
---     -- map
---     trigger_board_id_to_action_board_id[thirdTriggerBoardID] = thirdActionBoardID
-    
---     -- give a text label above the board
---     thirdActionBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
---         function() return localization.get("ui.action_mod_area") end,  -- initial text
---         20.0,                                 -- font size
---         "color=apricot_cream"                       -- animation spec
---     ).config.object
---     -- make the text world space
---     transform.set_space(thirdActionBoard.textEntity, "world")
---     -- give text state
---     add_state_tag(thirdActionBoard.textEntity, PLANNING_STATE)
---     -- let's anchor to top of the trigger board
---     transform.AssignRole(registry, thirdActionBoard.textEntity, InheritedPropertiesType.PermanentAttachment, thirdActionBoard:handle(),
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         Vec2(0, -10) -- offset it a bit upwards
---     );
---     local roleComp = registry:get(thirdActionBoard.textEntity, InheritedProperties)
---     roleComp.flags = AlignmentFlag.VERTICAL_TOP
-    
---     -- next row
---     runningYValue = runningYValue + boardHeight + boardPadding
-    
--- -- ---------------------------------- row 4 ---------------------------------
-
---     local fourthTriggerBoardID = createNewBoard(leftAlignValueTriggerBoardX, runningYValue, triggerBoardWidth, boardHeight)
---     local fourthTriggerBoard = boards[fourthTriggerBoardID]
---     fourthTriggerBoard.borderColor = palette.snapToColorName("cyan")
---     fourthTriggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
---         function() return localization.get("ui.trigger_area") end,  -- initial text
---         20.0,                                 -- font size
---         "color=cyan"                       -- animation spec
---     ).config.object
---     -- make the text world space
---     transform.set_space(fourthTriggerBoard.textEntity, "world")
---     -- tex state
---     add_state_tag(fourthTriggerBoard.textEntity, PLANNING_STATE)
---     -- let's anchor to top of the trigger board
---     transform.AssignRole(registry, fourthTriggerBoard.textEntity, InheritedPropertiesType.PermanentAttachment, fourthTriggerBoard:handle(),
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         Vec2(0, -10) -- offset it a bit upwards
---     );
---     local roleComp = registry:get(fourthTriggerBoard.textEntity, InheritedProperties)
---     roleComp.flags = AlignmentFlag.VERTICAL_TOP
-    
---     local fourthActionBoardID = createNewBoard(leftAlignValueActionBoardX, runningYValue, actionBoardWidth, boardHeight)
---     local fourthActionBoard = boards[fourthActionBoardID]
---     fourthActionBoard.cards = {  } -- cards are entity ids.
-    
---     -- map
---     trigger_board_id_to_action_board_id[fourthTriggerBoardID] = fourthActionBoardID
-    
---     -- give a text label above the board
---     fourthActionBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
---         function() return localization.get("ui.action_mod_area") end,  -- initial text
---         20.0,                                 -- font size
---         "color=apricot_cream"                       -- animation spec
---     ).config.object
---     -- make the text world space
---     transform.set_space(fourthActionBoard.textEntity, "world")
---     -- give text state
---     add_state_tag(fourthActionBoard.textEntity, PLANNING_STATE)
---     -- let's anchor to top of the trigger board
---     transform.AssignRole(registry, fourthActionBoard.textEntity, InheritedPropertiesType.RoleInheritor, fourthActionBoard:handle(),
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         InheritedPropertiesSync.Strong,
---         InheritedPropertiesSync.Weak,
---         Vec2(0, -10) -- offset it a bit upwards
---     );
---     local roleComp = registry:get(fourthActionBoard.textEntity, InheritedProperties)
---     roleComp.flags = AlignmentFlag.VERTICAL_TOP 
-    
---     -- next row
---     runningYValue = runningYValue + boardHeight + boardPadding
-
-
--- -------------------------------------------------------------------------- --
---                           make remove card board                           --
--- --------------------------------------------------------------------------
-    
-    -- -- another board for removing cards from boards.
-    -- local removeBoardID = createNewBoard(leftAlignValueRemoveBoardX, boardPadding, triggerBoardWidth, boardHeight)
-    -- local removeBoard = boards[removeBoardID]
-    -- removeBoard.borderColor = palette.snapToColorName("red")
-    -- removeBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
-    --     function() return localization.get("ui.remove_card_area")  end,  -- initial text
-    --     20.0,                                 -- font size
-    --     "color=red"                       -- animation spec
-    -- ).config.object
-    -- -- make the text world space
-    -- transform.set_space(removeBoard.textEntity, "world")
-    -- add_state_tag(removeBoard.textEntity, PLANNING_STATE)
-    -- -- let's anchor to top of the trigger board
-    -- transform.AssignRole(registry, removeBoard.textEntity, InheritedPropertiesType.PermanentAttachment, removeBoard:handle(),
-    --     InheritedPropertiesSync.Strong,
-    --     InheritedPropertiesSync.Weak,
-    --     InheritedPropertiesSync.Strong,
-    --     InheritedPropertiesSync.Weak,
-    --     Vec2(0, -10) -- offset it a bit upwards
-    -- );
-    -- local roleComp = registry:get(removeBoard.textEntity, InheritedProperties)
-    -- roleComp.flags = AlignmentFlag.VERTICAL_TOP
-    
-    -- -- add a different onRelease method
-    -- local removeBoardGameObject = registry:get(removeBoard:handle(), GameObject)
-    -- if removeBoardGameObject then
-    --     removeBoardGameObject.methods.onRelease = function(registry, releasedOn, released)
-    --         log_debug("Entity", released, "released on", releasedOn)  
-            
-    --         -- just remove from all boards and change its location to somewhere else
-    --         -- is the released entity a card?
-    --         local releasedCardScript = getScriptTableFromEntityID(released)
-    --         if not releasedCardScript then return end   
-    --         local isInBoard = false
-    --         -- remove it from any existing board it may be in
-    --         for boardEid, boardScript in pairs(boards) do
-    --             if boardScript and boardScript.cards then
-    --                 for i, eid in ipairs(boardScript.cards) do
-    --                     if eid == released then
-    --                         table.remove(boardScript.cards, i)
-    --                         isInBoard = true
-    --                     end
-    --                 end
-    --             end
-    --         end
-    --         -- move it somewhere elsewhere
-    --         local t = registry:get(released, Transform)
-    --         if t then
-    --             t.actualY = t.visualY + 400
-    --             t.actualX = t.visualX
-    --         end
-    --         -- is the card part of a stack? if it was previously part of a board, just call reset Z order.
-    --         if releasedCardScript.stackRootEntity and isInBoard then
-    --             resetCardStackZOrder(releasedCardScript.stackRootEntity)
-    --         end
-            
-    --         -- play sound
-    --         playSoundEffect("effects", "remove_area_triggered", 0.9 + math.random() * 0.2)
-            
-    --         -- if the card is the root of a stack, and it wasn't part of a board, remove all children from the stack
-    --         if releasedCardScript.stackRootEntity and not isInBoard then
-    --             -- remove the children and add them to a table.
-    --             local rootCardScript = getScriptTableFromEntityID(releasedCardScript.stackRootEntity)
-    --             local removedCards = {}
-    --             if rootCardScript then
-    --                 for _, childEid in ipairs(rootCardScript.cardStack) do
-    --                     local childCardScript = getScriptTableFromEntityID(childEid)
-    --                     removeCardFromStack(rootCardScript, childCardScript)
-    --                     table.insert(removedCards, childCardScript)
-    --                 end
-    --             end
-                
-    --             -- for each child, set a new position, varying slighty at random from the root card
-    --             local delay = 0.3
-    --             local locationOffset = 100
-    --             for i, childCardScript in ipairs(removedCards) do
-    --                 timer.after(delay * (i - 1), function()
-    --                     if childCardScript and childCardScript:handle() and registry:valid(childCardScript:handle()) then
-    --                         local t = registry:get(releasedCardScript:handle(), Transform)
-    --                         local ct = registry:get(childCardScript:handle(), Transform)
-    --                         if t and ct then
-    --                             ct.actualX = t.actualX + lume.random(-locationOffset, locationOffset)
-    --                             ct.actualY = t.actualY + lume.random(-locationOffset, locationOffset)
-    --                         end
-    --                     end
-    --                 end)
-    --             end
-                        
-    --         end
-            
-    --     end
-    -- end
-    
-    -- add another area, call it "Augment Action Card"
-    -- local augmentBoardID = createNewBoard(800, 350, 200, 200)
-    -- local augmentBoard = boards[augmentBoardID]
-    -- augmentBoard.borderColor = palette.snapToColorName("apricot_cream")
-    -- augmentBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
-    --     function() return localization.get("ui.augment_action_area") end,  -- initial text
-    --     20.0,                                 -- font size
-    --     "color=apricot_cream;wiggle"                       -- animation spec
-    -- ).config.object
-    -- -- make the text world space
-    -- transform.set_space(augmentBoard.textEntity, "world")
-    -- -- let's anchor to top of the trigger board
-    -- transform.AssignRole(registry, augmentBoard.textEntity, InheritedPropertiesType.PermanentAttachment, augmentBoard:handle(),
-    --     InheritedPropertiesSync.Strong,
-    --     InheritedPropertiesSync.Weak,
-    --     InheritedPropertiesSync.Strong,
-    --     InheritedPropertiesSync.Weak,
-    --     Vec2(0, -10) -- offset it a bit upwards
-    -- );
-    -- local roleComp = registry:get(augmentBoard.textEntity, InheritedProperties)
-    -- roleComp.flags = AlignmentFlag.VERTICAL_TOP
-    
-    
     -- let's set up an update timer for triggers.
     setUpLogicTimers()
 end
 
 local ctx = nil
+
+function make_actor(name, defs, attach)
+    -- Creates a fresh Stats instance, applies attribute derivations via `attach`,
+    -- and snapshots initial HP/Energy as both current and max. The actor also
+    -- carries helpers for pet creation (so PetsAndSets.spawn_pet can reuse them).
+    local s = CombatSystem.Core.Stats.new(defs)
+    attach(s)
+    s:recompute()
+    local hp = s:get('health')
+    local en = s:get('energy')
+
+    return {
+        name             = name,
+        stats            = s,
+        hp               = hp,
+        max_health       = hp,
+        energy           = en,
+        max_energy       = en,
+        gear_conversions = {},
+        tags             = {},
+        timers           = {},
+
+        -- add these so spawn_pet can reuse them
+        _defs            = defs,
+        _attach          = attach,
+        _make_actor      = make_actor,
+    }
+end
 function initCombatSystem()
 
     -- init combat system.
@@ -2063,41 +1891,19 @@ function initCombatSystem()
     local combatStatDefs, DAMAGE_TYPES = CombatSystem.Core.StatDef.make()
     local combatBundle    = CombatSystem.Game.Combat.new(CombatSystem.Core.RR, DAMAGE_TYPES)  -- carries RR + DAMAGE_TYPES; stored on ctx.combat
 
-    function make_actor(name, defs, attach)
-        -- Creates a fresh Stats instance, applies attribute derivations via `attach`,
-        -- and snapshots initial HP/Energy as both current and max. The actor also
-        -- carries helpers for pet creation (so PetsAndSets.spawn_pet can reuse them).
-        local s = CombatSystem.Core.Stats.new(defs)
-        attach(s)
-        s:recompute()
-        local hp = s:get('health')
-        local en = s:get('energy')
-
-        return {
-            name             = name,
-            stats            = s,
-            hp               = hp,
-            max_health       = hp,
-            energy           = en,
-            max_energy       = en,
-            gear_conversions = {},
-            tags             = {},
-            timers           = {},
-
-            -- add these so spawn_pet can reuse them
-            _defs            = defs,
-            _attach          = attach,
-            _make_actor      = make_actor,
-        }
-    end
+    
         
-    ctx = {
+    combat_context = {
+        stat_defs     = combatStatDefs, -- definitions for stats in this combat
+        DAMAGE_TYPES  = DAMAGE_TYPES,    -- damage types available in this combat
         _make_actor    = make_actor, -- Factory for creating actors
         debug          = true,       -- verbose debug prints across systems
         bus            = combatBus,        -- shared event bus for this arena
         time           = combatTime,       -- shared clock for statuses/DoTs/cooldowns
         combat         = combatBundle      -- optional bundle for RR+damage types, if needed
     }
+    
+    local ctx = combat_context
     
     -- add side-aware accessors to ctx
     -- Used by targeters and AI; these close over 'ctx' (safe here).
@@ -2145,6 +1951,11 @@ function initCombatSystem()
     ctx.side1 = { hero }
     ctx.side2 = { ogre }
     
+    -- store in player entity for easy access later
+    assert(survivorEntity and registry:valid(survivorEntity), "Survivor entity is not valid in combat system init!")
+    local playerScript = getScriptTableFromEntityID(survivorEntity)
+    playerScript.combatTable = hero
+    
     -- attach defs/derivations to ctx for easy access later for pets
     ctx._defs       = combatStatDefs
     ctx._attach     = CombatSystem.Game.Content.attach_attribute_derivations
@@ -2154,9 +1965,83 @@ function initCombatSystem()
     -- update combat system every frame
     timer.run(
         function()
+            
+            -- bail if not in action state
+            if not is_state_active(ACTION_STATE) then return end
+            
             ctx.time:tick(GetFrameTime())
+            
+            
+            -- also, display a health bar indicator above the player entity, and an EXP bar.
+            
+            if not survivorEntity or not registry:valid(survivorEntity) then
+                return
+            end
+            
+            local t = registry:get(survivorEntity, Transform)
+            
+            if t then
+                
+                local playerCombatInfo = ctx.side1[1]
+                
+                local playerHealth = playerCombatInfo.hp
+                local playerMaxHealth = playerCombatInfo.max_health
+                
+                local playerXP = playerCombatInfo.xp or 0
+                local playerXPForNextLevel = CombatSystem.Game.Leveling.xp_to_next(ctx, playerCombatInfo, playerCombatInfo.level or 1)
+                
+                -- rounded rect across the screen (screen space) along the top. One in red for health, one in blue for XP, background is dark gray.
+                local healthBarWidth = globals.screenWidth() * 0.4
+                local healthBarHeight = 20
+                local healthBarX = globals.screenWidth() * 0.5 - healthBarWidth * 0.5
+                local healthBarY = 40
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x = healthBarX + healthBarWidth * 0.5
+                    c.y = healthBarY + healthBarHeight * 0.5
+                    c.w = healthBarWidth
+                    c.h = healthBarHeight
+                    c.rx = 5
+                    c.ry = 5
+                    c.color     = palette.snapToColorName("dark_gray")
+                end, z_orders.background, layer.DrawCommandSpace.Screen)
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x = healthBarX + (playerHealth / playerMaxHealth) * healthBarWidth * 0.5
+                    c.y = healthBarY + healthBarHeight * 0.5
+                    c.w = (playerHealth / playerMaxHealth) * healthBarWidth
+                    c.h = healthBarHeight
+                    c.rx = 5
+                    c.ry = 5
+                    c.color     = palette.snapToColorName("red")
+                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+                
+                -- exp bar fully across top of screen
+                local expBarWidth = globals.screenWidth()
+                local expBarHeight = healthBarHeight
+                local expBarX = globals.screenWidth() * 0.5 - expBarWidth * 0.5
+                local expBarY = healthBarY - expBarHeight
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x = expBarX + expBarWidth * 0.5
+                    c.y = expBarY + expBarHeight * 0.5
+                    c.w = expBarWidth
+                    c.h = expBarHeight
+                    c.rx = 5
+                    c.ry = 5
+                    c.color     = palette.snapToColorName("dark_gray")
+                end, z_orders.background, layer.DrawCommandSpace.Screen)
+                command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                    c.x = expBarX + (math.min(playerXP / playerXPForNextLevel, 1.0)) * expBarWidth * 0.5
+                    c.y = expBarY + expBarHeight * 0.5
+                    c.w = (math.min(playerXP / playerXPForNextLevel, 1.0)) * expBarWidth
+                    c.h = expBarHeight
+                    c.rx = 5
+                    c.ry = 5
+                    c.color     = palette.snapToColorName("pink")
+                end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
+            end
         end
+        
     )
+    
 end
 
 function startActionPhase()
@@ -2212,6 +2097,252 @@ function debugUI()
 end
 
 cardsSoldInShop = {}
+
+
+function initSurvivorEntity() 
+    
+    local world = PhysicsManager.get_world("world")
+    
+   -- 3856-TheRoguelike_1_10_alpha_649.png
+    survivorEntity = animation_system.createAnimatedObjectWithTransform(
+        "3856-TheRoguelike_1_10_alpha_649.png", -- animation ID
+        true             -- use animation, not sprite identifier, if false
+    )
+    
+    -- give survivor a script and hook up
+    local survivorScript = Node{}
+    -- TODO: add update method here if needed
+    survivorScript.update = function(self, dt)
+        local t = registry:get(self:handle(), Transform)
+        if t then
+            -- make sure visual matches actual, so there's no lag and vfx always stays on the player
+            t.visualX = t.actualX
+            t.visualY = t.actualY
+        end
+    end
+    survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
+    
+    -- relocate to the center of the screen
+    local survivorTransform = registry:get(survivorEntity, Transform)
+    survivorTransform.actualX = globals.screenWidth() / 2
+    survivorTransform.actualY = globals.screenHeight() / 2
+    survivorTransform.visualX = survivorTransform.actualX   
+    survivorTransform.visualY = survivorTransform.actualY
+    
+    -- give survivor physics.
+    local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = -5 } -- default tag is "WORLD"
+    physics.create_physics_for_transform(registry,
+        physics_manager_instance, -- global instance
+        survivorEntity, -- entity id
+        "world", -- physics world identifier
+        info
+    )
+    
+    -- make it collide with enemies & walls & pickups
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "WORLD", {"player"})
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"WORLD"})
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "pickup", {"player"})
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"pickup"})
+    
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"WORLD"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", {"player"})
+    
+    
+    
+    
+    
+    -- make walls after defining collision relationships, tesitng because of bug.
+    physics.add_screen_bounds(PhysicsManager.get_world("world"), 
+        SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
+        30, 
+        "WORLD"
+    )
+    
+    -- make a timer that runs every frame when action state is active, to render the walls.
+    timer.run(
+        function()
+            -- bail if not in action state
+            if not is_state_active(ACTION_STATE) then return end
+            
+            -- draw walls
+            command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
+                c.x = SCREEN_BOUND_LEFT + (SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT) / 2
+                c.y = SCREEN_BOUND_TOP + (SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP) / 2
+                c.w = SCREEN_BOUND_RIGHT - SCREEN_BOUND_LEFT
+                c.h = SCREEN_BOUND_BOTTOM - SCREEN_BOUND_TOP
+                c.rx = 5
+                c.ry = 5
+                c.lineWidth = 10
+                c.color     = palette.snapToColorName("white")
+            end, z_orders.background, layer.DrawCommandSpace.World)
+        end
+    )
+    
+    -- give player fixed rotation.
+    physics.use_transform_fixed_rotation(registry, survivorEntity)
+    
+    -- give shader pipeline comp for later use
+    local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+
+    
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"}) -- enemy>player and enemy>enemy
+    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"enemy"}) -- player>enemy
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
+    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
+    
+    -- entity.set_draw_override(survivorEntity, function(w, h)
+    --     -- immediate render version of the same thing.
+    --     command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
+    --         local survivorT = registry:get(survivorEntity, Transform)
+    
+    --         c.cx = 0 -- self centered
+    --         c.cy = 0
+    --         c.width = w
+    --         c.height = h
+    --         c.roundness = 0.5
+    --         c.segments = 8
+    --         c.topLeft = palette.snapToColorName("apricot_cream")
+    --         c.topRight = palette.snapToColorName("green")
+    --         c.bottomRight = palette.snapToColorName("green")
+    --         c.bottomLeft = palette.snapToColorName("apricot_cream")
+                
+    --         end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
+    --     end, true) -- true disables sprite rendering
+    
+    
+    -- player vs pickup collision
+    physics.on_pair_begin(world, "player", "pickup", function(arb) 
+        log_debug("Survivor hit a pickup!")
+        
+        local a, b = arb:entities()
+            
+        local pickupEntity = nil
+        if (a ~= survivorEntity) then
+            pickupEntity = a
+        else
+            pickupEntity = b
+        end
+        
+        -- remove a couple frames later
+        timer.after(0.1, function()
+            
+            -- fire off signal
+            signal.emit("on_pickup", pickupEntity)
+            
+            -- remove pickup entity
+            if pickupEntity and registry:valid(pickupEntity) then
+                
+                -- create a small particle effect at pickup location
+                local pickupTransform = registry:get(pickupEntity, Transform)
+                if pickupTransform then
+                    spawnCircularBurstParticles(
+                        pickupTransform.actualX + pickupTransform.actualW / 2,
+                        pickupTransform.actualY + pickupTransform.actualH / 2,
+                        15, -- num particles
+                        0.4,
+                        palette.snapToColorName("yellow"), 
+                        palette.snapToColorName("apricot_cream"), -- colors
+                        "cubic_in_out", -- ease
+                        "world"
+                    )
+                end
+                
+                registry:destroy(pickupEntity)
+            end
+        end)
+    end)
+    
+    
+    -- give survivor collision callback, namely begin.
+    -- modifying a file.
+    physics.on_pair_begin(world, "player", "enemy", function(arb) 
+        
+        log_debug("Survivor hit an enemy!")
+        
+        -- ascertain the enemy entity, only on first contact
+        if arb:is_first_contact() then
+            local a, b = arb:entities()
+            
+            local enemyEntity = nil
+            if (a ~= survivorEntity) then
+                enemyEntity = a
+            else
+                enemyEntity = b
+            end
+            
+            -- fire off signal
+            signal.emit("on_bump_enemy", enemyEntity)
+        end
+        
+        
+        
+        -- play sound
+        
+        playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
+        slowTime(1.5, 0.1) -- slow time for 2 seconds, to 20% speed
+        
+        timer.after(0.3, function()
+            playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
+        end)
+        
+        -- TODO: make player take damage, play hit effect, etc.
+        
+        local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+        shaderPipelineComp:addPass("flash")
+        
+        -- shake camera
+        local cam = camera.Get("world_camera")
+        if cam then
+            cam:Shake(10.0, 0.35, 30.0)
+        end
+        
+        -- remove after a short delay
+        timer.after(1.0, function()
+            local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+            if shaderPipelineComp then
+                shaderPipelineComp:removePass("flash")
+            end
+        end)
+        
+        return false -- reject collision 
+    end)
+
+    
+    -- allow transform manipuation to alter physics body
+    -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
+    
+    -- give a state tag to the survivor entity
+    add_state_tag(survivorEntity, ACTION_STATE)
+    
+    
+    
+    -- lets move the survivor based on input.
+    -- input binding test
+    input.bind("survivor_left", { device="keyboard", key=KeyboardKey.KEY_A, trigger="Pressed", context="gameplay" })
+    input.bind("survivor_right", { device="keyboard", key=KeyboardKey.KEY_D, trigger="Pressed", context="gameplay" })
+    input.bind("survivor_up", { device="keyboard", key=KeyboardKey.KEY_W, trigger="Pressed", context="gameplay" })
+    input.bind("survivor_down", { device="keyboard", key=KeyboardKey.KEY_S, trigger="Pressed", context="gameplay" }) 
+    input.bind("survivor_dash", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
+    
+    
+    
+    -- let's register signal listeners
+    signal.register("on_pickup", function(pickupEntity)
+        log_debug("Survivor picked up entity", pickupEntity)
+        
+        local playerScript = getScriptTableFromEntityID(survivorEntity)
+        
+        if not playerScript or not playerScript.combatTable then
+            log_debug("No combat table on player, cannot grant exp!")
+            return
+        end
+        
+        CombatSystem.Game.Leveling.grant_exp(combat_context, playerScript.combatTable, 20) -- grant 20 exp per pickup
+        
+        --TODo: this is just a test.
+        
+    end)
+end
 
 function initShopPhase()
     
@@ -2305,12 +2436,7 @@ SCREEN_BOUND_RIGHT = 1280
 SCREEN_BOUND_BOTTOM = 720
 function initActionPhase()
     
-    --TODO: testing
-    testWands()
-    
     log_debug("Action phase started!")
-    
-    initCombatSystem()
     
     
     -- activate action state
@@ -2324,143 +2450,116 @@ function initActionPhase()
     world:AddCollisionTag("trap")
     world:AddCollisionTag("enemy")
     world:AddCollisionTag("card")
+    world:AddCollisionTag("pickup") -- for items on ground
     
-    -- 3856-TheRoguelike_1_10_alpha_649.png
-    survivorEntity = animation_system.createAnimatedObjectWithTransform(
-        "3856-TheRoguelike_1_10_alpha_649.png", -- animation ID
-        true             -- use animation, not sprite identifier, if false
-    )
+    initSurvivorEntity()
     
-    -- give survivor a script and hook up
-    local survivorScript = Node{}
-    -- TODO: add update method here if needed
-    survivorScript.update = function(self, dt)
-        local t = registry:get(self:handle(), Transform)
-        if t then
-            -- make sure visual matches actual, so there's no lag and vfx always stays on the player
-            t.visualX = t.actualX
-            t.visualY = t.actualY
-        end
-    end
-    survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
-    
-    -- relocate to the center of the screen
-    local survivorTransform = registry:get(survivorEntity, Transform)
-    survivorTransform.actualX = globals.screenWidth() / 2
-    survivorTransform.actualY = globals.screenHeight() / 2
-    survivorTransform.visualX = survivorTransform.actualX   
-    survivorTransform.visualY = survivorTransform.actualY
-    
-    -- give survivor physics.
-    local info = { shape = "rectangle", tag = "player", sensor = false, density = 1.0, inflate_px = -5 } -- default tag is "WORLD"
-    physics.create_physics_for_transform(registry,
-        physics_manager_instance, -- global instance
-        survivorEntity, -- entity id
-        "world", -- physics world identifier
-        info
-    )
-    
-    -- make it collide with enemies & walls
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "WORLD", {"player"})
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"WORLD"})
-    
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"WORLD"})
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "WORLD", {"player"})
-    
-    
-    -- make walls after defining collision relationships, tesitng because of bug.
-    physics.add_screen_bounds(PhysicsManager.get_world("world"), 
-        SCREEN_BOUND_LEFT, SCREEN_BOUND_TOP, SCREEN_BOUND_RIGHT, SCREEN_BOUND_BOTTOM,
-        30, 
-        "WORLD"
-    )
-    
-    -- give player fixed rotation.
-    physics.use_transform_fixed_rotation(registry, survivorEntity)
-    
-    -- give shader pipeline comp for later use
-    local shaderPipelineComp = registry:emplace(survivorEntity, shader_pipeline.ShaderPipelineComponent)
-
-    
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"}) -- enemy>player and enemy>enemy
-    physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"enemy"}) -- player>enemy
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"enemy"})
-    physics.update_collision_masks_for(PhysicsManager.get_world("world"), "enemy", {"player", "enemy"})
-    
-    -- entity.set_draw_override(survivorEntity, function(w, h)
-    --     -- immediate render version of the same thing.
-    --     command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
-    --         local survivorT = registry:get(survivorEntity, Transform)
-    
-    --         c.cx = 0 -- self centered
-    --         c.cy = 0
-    --         c.width = w
-    --         c.height = h
-    --         c.roundness = 0.5
-    --         c.segments = 8
-    --         c.topLeft = palette.snapToColorName("apricot_cream")
-    --         c.topRight = palette.snapToColorName("green")
-    --         c.bottomRight = palette.snapToColorName("green")
-    --         c.bottomLeft = palette.snapToColorName("apricot_cream")
-                
-    --         end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
-    --     end, true) -- true disables sprite rendering
-    
-    -- give survivor collision callback, namely begin.
-    -- modifying a file.
-    physics.on_pair_begin(world, "player", "enemy", function(arb) 
-        
-        log_debug("Survivor hit an enemy!")
-        -- play sound
-        
-        playSoundEffect("effects", "time_slow", 0.9 + math.random() * 0.2)
-        slowTime(1.5, 0.1) -- slow time for 2 seconds, to 20% speed
-        
-        timer.after(0.3, function()
-            playSoundEffect("effects", "time_back_to_normal", 0.9 + math.random() * 0.2)
-        end)
-        
-        -- TODO: make player take damage, play hit effect, etc.
-        
-        local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
-        shaderPipelineComp:addPass("flash")
-        
-        -- shake camera
-        local cam = camera.Get("world_camera")
-        if cam then
-            cam:Shake(10.0, 0.35, 30.0)
-        end
-        
-        -- remove after a short delay
-        timer.after(1.0, function()
-            local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
-            if shaderPipelineComp then
-                shaderPipelineComp:removePass("flash")
-            end
-        end)
-        
-        return false -- reject collision 
-    end)
-
-    
-    -- allow transform manipuation to alter physics body
-    -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
-    
-    -- give a state tag to the survivor entity
-    add_state_tag(survivorEntity, ACTION_STATE)
-    
-    -- lets move the survivor based on input.
-    -- input binding test
-    input.bind("survivor_left", { device="keyboard", key=KeyboardKey.KEY_A, trigger="Pressed", context="gameplay" })
-    input.bind("survivor_right", { device="keyboard", key=KeyboardKey.KEY_D, trigger="Pressed", context="gameplay" })
-    input.bind("survivor_up", { device="keyboard", key=KeyboardKey.KEY_W, trigger="Pressed", context="gameplay" })
-    input.bind("survivor_down", { device="keyboard", key=KeyboardKey.KEY_S, trigger="Pressed", context="gameplay" })
+    playerIsDashing = false
     
     -- create input timer. this must run every frame.
     timer.run(
         function()
             if not survivorEntity or survivorEntity == entt_null or not registry:valid(survivorEntity) then
                 return
+            end
+            
+            
+            if not playerIsDashing and input.action_down("survivor_dash") then
+                log_debug("Dash pressed!")
+                
+                -- make transform not authoritative
+                physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
+                physics.SetBodyType(PhysicsManager.get_world("world"), survivorEntity, "dynamic")
+                physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 0.0) -- no damping while dashing
+                -- set velocity to zero
+                physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, 0, 0)
+                
+                -- let's add dashing.
+    
+                -- add impulse in the direction it's going
+                -- timer that resets damping after a short delay. (SetDamping)
+                
+                -- find intended dash direction from inputs
+                local moveDir = { x = 0, y = 0 }
+                if input.action_down("survivor_left") then  moveDir.x = moveDir.x - 1 end
+                if input.action_down("survivor_right") then moveDir.x = moveDir.x + 1 end
+                if input.action_down("survivor_up") then    moveDir.y = moveDir.y - 1 end
+                if input.action_down("survivor_down") then  moveDir.y = moveDir.y + 1 end
+
+                local len = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
+                if len == 0 then
+                    -- fallback: use last known facing or velocity
+                    local vel = physics.GetVelocity(world, survivorEntity)
+                    len = math.sqrt(vel.x * vel.x + vel.y * vel.y)
+                    if len > 0 then
+                        moveDir.x = vel.x / len
+                        moveDir.y = vel.y / len
+                    else
+                        moveDir.x, moveDir.y = 0, -1 -- default forward dash (e.g., up)
+                    end
+                else
+                    moveDir.x, moveDir.y = moveDir.x / len, moveDir.y / len
+                end
+                local DASH_STRENGTH = 700
+                
+                physics.ApplyImpulse(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
+                
+                playerIsDashing = true
+                
+                local DASH_LENGTH_SEC = 0.5
+                
+                -- for 5 times during dash, spawn trail particles
+                timer.every((DASH_LENGTH_SEC * 0.6) / 30, function()
+                    local t = registry:get(survivorEntity, Transform)
+                    if t then
+                        
+                        -- new node
+                        local particleNode = Node{}
+                        particleNode.lifetime = 0.1
+                        particleNode.age = 0.0
+                        particleNode.savedPos = { x = t.actualX, y = t.actualY }
+                        particleNode.update = function(self, dt)
+                            self.age = self.age + dt
+                            
+                            
+                            -- draw a gradient rounded rect at the survivor position
+                            command_buffer.queueDrawGradientRectRoundedCentered(layers.sprites, function(c)
+                                local t = registry:get(survivorEntity, Transform)
+                                c.cx = self.savedPos.x + t.actualW / 2 -- center of survivor
+                                c.cy = self.savedPos.y + t.actualH / 2
+                                c.width = t.actualW * (1.0 - self.age / self.lifetime)
+                                c.height = t.actualH  * (1.0 - self.age / self.lifetime)
+                                c.roundness = 0.5
+                                c.segments = 8
+                                c.topLeft = palette.snapToColorName("yellow")
+                                c.topRight = palette.snapToColorName("blue")
+                                c.bottomRight = palette.snapToColorName("green")
+                                c.bottomLeft = palette.snapToColorName("apricot_cream")
+                            end, z_orders.player_vfx - 20, layer.DrawCommandSpace.World)
+                        end
+                        
+                        particleNode
+                            :attach_ecs{ create_new = true }
+                            :destroy_when(function(self, eid) return self.age >= self.lifetime end)
+                        
+                        
+                    end
+                end, 5) -- 5 times
+                
+                -- make timer to end dash after short delay
+                timer.after(DASH_LENGTH_SEC, function()
+                    -- reset damping
+                    physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 5.0) -- normal damping
+                    
+                    playerIsDashing = false
+                    
+                    -- make transform authoritative again
+                    -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
+                end)
+            end
+            
+            if playerIsDashing then
+                return -- skip movement input while dashing
             end
             
             local speed = 200 -- pixels per second
@@ -2524,6 +2623,9 @@ function initActionPhase()
     input.set_context("gameplay") -- set the input context to gameplay
     
     
+    
+    initCombatSystem()
+    
     -- lets make a timer that, if action state is active, spawn an enemy every few seconds
     timer.every(5.0, function()
         if is_state_active(ACTION_STATE) then
@@ -2563,6 +2665,38 @@ function initActionPhase()
             -- make it steerable
             -- steering
             steering.make_steerable(registry, enemyEntity, 140.0, 2000.0, math.pi*2.0, 2.0)
+            
+            
+            -- give it a combat table.
+                    
+            -- Ogre: tougher target with defense layers and reactive behaviors (reflect/retaliation/block).
+            local ogre = combat_context._make_actor('Ogre', combat_context.stat_defs, CombatSystem.Game.Content.attach_attribute_derivations)
+            ogre.side = 2
+            ogre.stats:add_base('health', 10)
+            ogre.stats:add_base('offensive_ability', 10)
+            ogre.stats:add_base('defensive_ability', 10)
+            ogre.stats:add_base('armor', 10)
+            ogre.stats:add_base('armor_absorption_bonus_pct', 0)
+            ogre.stats:add_base('fire_resist_pct', 0)
+            ogre.stats:add_base('dodge_chance_pct', 0)
+            -- ogre.stats:add_base('deflect_chance_pct', 8) -- (deflection not currently used)
+            -- ogre.stats:add_base('reflect_damage_pct', 0)
+            -- ogre.stats:add_base('retaliation_fire', 8)
+            -- ogre.stats:add_base('retaliation_fire_modifier_pct', 25)
+            -- ogre.stats:add_base('block_chance_pct', 30)
+            -- ogre.stats:add_base('block_amount', 60)
+            -- ogre.stats:add_base('block_recovery_reduction_pct', 25)
+            -- ogre.stats:add_base('damage_taken_reduction_pct',2000) -- stress test: massive DR → negative damage (healing)
+            ogre.stats:recompute()
+            
+            
+            CombatSystem.Game.ItemSystem.equip(combat_context, ogre, basic_monster_weapon)
+            
+            -- give node
+            local enemyScriptNode = Node{}
+            enemyScriptNode.combatTable = ogre
+            enemyScriptNode:attach_ecs{ create_new = false, existing_entity = enemyEntity }
+            
             
             -- make circle marker for enemy appearance, tween it down to 0 scale and then remove it
             local spawnMarkerNode = Node{}
@@ -2642,6 +2776,47 @@ function initActionPhase()
     nil,
     "cameraPanToPlayerTimer")
     
+    
+    -- timer to spawn an exp pickup every few seconds, for testing purposes.
+    timer.every(3.0, function()
+        if is_state_active(ACTION_STATE) then
+            
+            local expPickupEntity = animation_system.createAnimatedObjectWithTransform(
+                "b8090.png", -- animation ID
+                true             -- use animation, not sprite identifier, if false
+            )
+            
+            add_state_tag(expPickupEntity, ACTION_STATE)
+            
+            local expPickupTransform = registry:get(expPickupEntity, Transform)
+            expPickupTransform.actualX = lume.random(SCREEN_BOUND_LEFT + 50, SCREEN_BOUND_RIGHT - 50)
+            expPickupTransform.actualY = lume.random(SCREEN_BOUND_TOP + 50, SCREEN_BOUND_BOTTOM - 50)
+            expPickupTransform.visualX = expPickupTransform.actualX
+            expPickupTransform.visualY = expPickupTransform.actualY
+            
+            -- give it physics
+            local info = { shape = "rectangle", tag = "pickup", sensor = false, density = 1.0, inflate_px = 0 } -- default tag is "WORLD"
+            
+            physics.create_physics_for_transform(registry,
+                physics_manager_instance, -- global instance
+                expPickupEntity, -- entity id
+                "world", -- physics world identifier
+                info
+            )
+            
+            physics.enable_collision_between_many(PhysicsManager.get_world("world"), "pickup", {"player"})
+            physics.enable_collision_between_many(PhysicsManager.get_world("world"), "player", {"pickup"})
+            physics.update_collision_masks_for(PhysicsManager.get_world("world"), "pickup", {"player"})
+            physics.update_collision_masks_for(PhysicsManager.get_world("world"), "player", {"pickup"})
+            
+            -- give it a script 
+            local expPickupScript = Node{}
+
+            expPickupScript:attach_ecs{ create_new = false, existing_entity = expPickupEntity }
+            
+        end
+        
+    end)
     
     -- blanket collision update
     -- physics.reapply_all_filters(PhysicsManager.get_world("world"))

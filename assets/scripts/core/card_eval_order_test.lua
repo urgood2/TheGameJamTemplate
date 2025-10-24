@@ -606,6 +606,12 @@ CardTemplates.META_CONVERT_WEIGHT_TO_DAMAGE = {
     test_label = "META\nconvert\nweight\nto\ndamage",
 }
 
+
+-- -------------------------------------------------------------------------- --
+--             WAND-defining trigger cards that DON't GO IN WANDS             --
+-- -------------------------------------------------------------------------- 
+
+
 -- triggers that go inside wands.
 CardTemplates.TEST_TRIGGER_EVERY_N_SECONDS = {
     id = "every_N_seconds",
@@ -614,6 +620,15 @@ CardTemplates.TEST_TRIGGER_EVERY_N_SECONDS = {
     mana_cost = 0,
     weight = 0,
     test_label = "TRIGGER\nevery\nN\nseconds",
+}
+
+CardTemplates.TEST_TRIGGER_ON_BUMP_ENEMY = {
+    id = "on_bump_enemy",
+    type = "trigger", -- ignored by evaluation algo
+    max_uses = -1,
+    mana_cost = 0,
+    weight = 0,
+    test_label = "TRIGGER\non\nbump\nenemy",
 }
 
 

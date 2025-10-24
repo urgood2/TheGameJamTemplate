@@ -83,6 +83,15 @@ inline void assignDefaultStateTag(entt::entity entity) {
     globals::registry.emplace_or_replace<StateTag>(entity, DEFAULT_STATE_TAG);
 }
 
+inline bool isEntityActive(entt::entity entity) {
+    auto &registry = globals::registry;
+    if (!registry.all_of<StateTag>(entity)) {
+        return false; // No StateTag component means inactive
+    }
+    const auto &tag = registry.get<StateTag>(entity);
+    return active_states_instance().is_active(tag);
+}
+
 inline void activate_state(std::string_view s)   { active_states_instance().activate(std::string{s}); }
 inline void deactivate_state(std::string_view s) { active_states_instance().deactivate(std::string{s}); }
 inline void clear_states()                       { active_states_instance().clear(); }
@@ -148,6 +157,7 @@ inline void exposeToLua(sol::state &lua) {
         &is_state_active,        // StateTag&
         &is_state_active_name    // string name
     ));
+    lua.set_function("is_entity_active", &isEntityActive);
 
     auto &rec = BindingRecorder::instance();
     
@@ -158,6 +168,16 @@ inline void exposeToLua(sol::state &lua) {
         "Activates (enables) the given state name globally.\n"
         "Equivalent to `active_states:activate(name)` on the singleton instance.",
         "Activates the given named state globally, using the shared ActiveStates instance.",
+        true, false
+    });
+    
+    rec.record_free_function({}, {
+        "is_entity_active",
+        "---@param entity Entity\n"
+        "---@return boolean\n"
+        "Checks whether the given entity is currently active based on its StateTag component and the global active states.\n"
+        "Returns `true` if the entity's StateTag is active in the global ActiveStates set.",
+        "Checks whether the specified entity is active using the shared ActiveStates instance.",
         true, false
     });
 

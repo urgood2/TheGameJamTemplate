@@ -1101,6 +1101,53 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         }
     }
     
+    void UpdateTransformMatrices(entt::registry& registry)
+    {
+        registry.view<Transform>().each([](auto e, Transform& t) {
+            // if (!t.matrixDirty) return; 
+            // FIXME: for now, always update the matrix every frame
+
+            const float cx = t.getVisualX() + t.getVisualW() * 0.5f;
+            const float cy = t.getVisualY() + t.getVisualH() * 0.5f;
+            const float s  = t.getVisualScaleWithHoverAndDynamicMotionReflected();
+            const float r  = (t.getVisualR() + t.rotationOffset) * DEG2RAD;
+            const float ox = t.getVisualW() * 0.5f;
+            const float oy = t.getVisualH() * 0.5f;
+
+            const float c  = cosf(r);
+            const float sn = sinf(r);
+
+            // Compose M = T(center) * R * S * T(-origin)
+            Matrix m;
+
+            m.m0  =  s * c;
+            m.m1  =  s * sn;
+            m.m2  =  0.0f;
+            m.m3  =  0.0f;
+
+            m.m4  = -s * sn;
+            m.m5  =  s * c;
+            m.m6  =  0.0f;
+            m.m7  =  0.0f;
+
+            m.m8  =  0.0f;
+            m.m9  =  0.0f;
+            m.m10 =  1.0f;
+            m.m11 =  0.0f;
+
+            // Final translation (same as T(center) * R * S * T(-origin))
+            m.m12 = cx + (-ox * s * c + oy * s * sn);
+            m.m13 = cy + (-ox * s * sn - oy * s * c);
+            m.m14 = 0.0f;
+            m.m15 = 1.0f;
+
+
+            t.cachedMatrix = m;
+            t.matrixDirty = false;
+        });
+    }
+
+    
     // // store in full-owning group for efficiency
     // static auto transformSpringGroup = globals::registry.group<Spring>();
     
@@ -1122,6 +1169,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         group.each([dt](entt::entity e, InheritedProperties &role, Transform &transform, GameObject &node) {
             UpdateTransform(e, dt, transform, role, node);
         });
+        
+        UpdateTransformMatrices(*registry);
         
         
         // auto test = GetActualX(transformSpringGroup, registry->get<Transform>(globals::gameWorldContainerEntity));
@@ -1224,6 +1273,8 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
                     node.debug.calculationsInProgress = true; 
 
                     MoveWithMaster(e, dt, transform, role, node);
+                    
+                    transform.markDirty(); // update matrix
                 }
             }
             

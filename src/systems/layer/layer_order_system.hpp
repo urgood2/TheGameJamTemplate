@@ -23,6 +23,20 @@ namespace layer
             newZIndex++; // Increment the global Z-index counter
         }
         
+        inline int GetZIndex(entt::entity entity)
+        {
+            if (globals::registry.any_of<LayerOrderComponent>(entity))
+            {
+                return globals::registry.get<LayerOrderComponent>(entity).zIndex;
+            }
+            else
+            {
+                // If no LayerOrderComponent exists, assign a new one at the top and return that.
+                SetToTopZIndex(entity);
+                return globals::registry.get<LayerOrderComponent>(entity).zIndex;
+            }
+        }
+        
         inline void PutAOverB(entt::entity a, entt::entity b) {
             if (globals::registry.any_of<LayerOrderComponent>(a) && globals::registry.any_of<LayerOrderComponent>(b)) {
                 auto &aLayer = globals::registry.get<LayerOrderComponent>(a);
@@ -105,6 +119,19 @@ namespace layer
                     "---@param registry registry\n"
                     "---@return nil",
                     "Walks all UIBoxComponents without a LayerOrderComponent and pushes them to the top Z-stack."
+                }
+            );
+            
+            // getZIndex(entity)
+            sys.set_function("getZIndex", &GetZIndex);
+            rec.record_free_function(
+                {"layer_order_system"},
+                {
+                    "getZIndex",
+                    "---@param registry registry\n"
+                    "---@param e Entity\n"
+                    "---@return integer zIndex\n"
+                    "Returns the current zIndex of the given entity, assigning one if missing."
                 }
             );
 

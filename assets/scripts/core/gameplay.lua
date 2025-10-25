@@ -641,8 +641,8 @@ function createNewCard(id, x, y, gameStateToApply)
                         -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
                         
                         -- this will draw in local space of the card, hopefully.
-                        local zToUse = cardScript.selected and (z_orders.top_card + 1) or z_orders.card_text
-                        log_debug("Drawing card label for card", eid, "at z", zToUse)
+                        local zToUse = layer_order_system.getZIndex(eid) 
+                        -- slightly above the card sprite
                         command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()
                             -- draw debug label.
                             command_buffer.queueDrawText(layers.sprites, function(c)
@@ -655,6 +655,10 @@ function createNewCard(id, x, y, gameStateToApply)
                             end, zToUse, layer.DrawCommandSpace.World) -- z order on the inside here doesn't matter much.
                             
                         end, zToUse, layer.DrawCommandSpace.World)
+                        
+                        -- now make the most recent queued command follow the sprite render command immediately in the queue.
+                        -- FIXME: not using this. doesn't seem to work anyway.
+                        -- SetFollowAnchorForEntity(layers.sprites, eid)
                     end
                 end
                 ::continue::

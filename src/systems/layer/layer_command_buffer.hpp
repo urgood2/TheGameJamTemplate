@@ -145,7 +145,8 @@ namespace layer
         struct PoolBlockSize<CmdVertex> {
             static constexpr ::detail::index_t value = 512;
         };
-
+        
+        static uint64_t gNextUniqueID = 1;
 
         template<typename T>
         T* AddExplicit(std::shared_ptr<Layer>& layer, DrawCommandType type, int z, DrawCommandSpace space) {
@@ -154,7 +155,10 @@ namespace layer
             assert(cmd && "Draw command allocation failed");
 
             // 2) Append to vector
-            layer->commands.push_back({ type, cmd, z, space });
+            layer->commands_ptr->push_back({ type, cmd, z, space });
+            auto& added = layer->commands_ptr->back();
+            added.uniqueID = gNextUniqueID++;
+
             if (z != 0) {
                 layer->isSorted = false;
             }

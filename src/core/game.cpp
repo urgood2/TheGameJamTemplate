@@ -707,6 +707,13 @@ namespace game
         rec.record_property("layers", {"sprites", "Layer", "Layer for sprite elements."});
         rec.record_property("layers", {"ui_layer", "Layer", "Layer for UI elements."});
         rec.record_property("layers", {"finalOutput", "Layer", "Layer for final output, used for post-processing effects."});
+        
+        
+        lua["SetFollowAnchorForEntity"] = sol::overload(
+            [](std::shared_ptr<layer::Layer> layer, entt::entity e) {
+                SetFollowAnchorForEntity(layer, e);
+            }
+        );
     }
     
     std::shared_ptr<physics::PhysicsWorld> physicsWorld = nullptr;
@@ -1571,6 +1578,7 @@ void DrawGradientRectRoundedCentered(
     rlPopMatrix();
 }
 
+static std::unordered_map<entt::entity, uint64_t> s_drawAnchorByEntity;
 
 
     auto draw(float dt) -> void
@@ -1659,10 +1667,16 @@ void DrawGradientRectRoundedCentered(
                 
                 if (globals::registry.any_of<shader_pipeline::ShaderPipelineComponent>(e))
                 {
-                    layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
+                    auto cmd = layer::QueueCommand<layer::CmdDrawTransformEntityAnimationPipeline>(sprites, [e](auto* cmd) {
                         cmd->e = e;
                         cmd->registry = &globals::registry;
                     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                    
+                    // store the unique ID of the last draw command for this entity
+                    // s_drawAnchorByEntity[e] = sprites->commands_ptr->back().uniqueID;
+                    
+                    
+                    
                 }
                 else
                 {
@@ -1670,6 +1684,10 @@ void DrawGradientRectRoundedCentered(
                         cmd->e = e;
                         cmd->registry = &globals::registry;
                     }, zIndex, isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World);
+                    
+                    // store the unique ID of the last draw command for this entity
+                    // s_drawAnchorByEntity[e] = sprites->commands_ptr->back().uniqueID;
+
                 }            
             }
         }
@@ -1924,6 +1942,15 @@ void DrawGradientRectRoundedCentered(
         
     }
 
+    void SetFollowAnchorForEntity(std::shared_ptr<layer::Layer> layer, entt::entity e)
+    {
+        auto it = s_drawAnchorByEntity.find(e);
+        if (it == s_drawAnchorByEntity.end()) return;
+
+        auto& cmds = *layer->commands_ptr;
+        if (!cmds.empty())
+            cmds.back().followAnchor = it->second; // make the newest command follow the leader
+    }
 
     void unload() {
         // unload all layers

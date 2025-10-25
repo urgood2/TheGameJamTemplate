@@ -126,6 +126,7 @@ namespace layer
         // Per-layer draw command buffer
         std::vector<std::byte> arena;
         std::vector<DrawCommandV2> commands;
+        std::vector<layer::DrawCommandV2>* commands_ptr = &commands; // testing.
         std::vector<std::function<void()>> destructors;
         bool isSorted = true;
 

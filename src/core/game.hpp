@@ -32,6 +32,7 @@ namespace game {
     }
     
     extern void reInitializeGame();
+    extern void SetFollowAnchorForEntity(std::shared_ptr<layer::Layer> layer, entt::entity e);
 
     extern void unload();
 

@@ -1,6 +1,7 @@
 #include "layer_command_buffer.hpp"
 #include "layer.hpp"
 #include "systems/camera/camera_manager.hpp"
+#include "systems/layer/layer_optimized.hpp"
 
 namespace layer
 {
@@ -10,7 +11,17 @@ namespace layer
         const std::vector<DrawCommandV2>& GetCommandsSorted(const std::shared_ptr<Layer>& layer) {
             if (!layer->isSorted) {
                 std::stable_sort(layer->commands.begin(), layer->commands.end(), [](const DrawCommandV2& a, const DrawCommandV2& b) {
-                    return a.z < b.z;
+                    if (a.z != b.z) return a.z < b.z;
+                    // if (a.followAnchor && a.followAnchor == b.uniqueID) return false;
+                    // if (b.followAnchor && b.followAnchor == a.uniqueID) return true;
+                    if (a.type == DrawCommandType::ScopedTransformCompositeRender ||
+                    b.type == DrawCommandType::ScopedTransformCompositeRender)
+                        return true;
+                    
+                    return false;
+
+            
+                    // return a.uniqueID < b.uniqueID; // preserve queue order
                 });
                 layer->isSorted = true;
             }

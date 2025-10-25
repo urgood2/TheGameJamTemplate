@@ -46,40 +46,33 @@ std::stack<RenderTexture2D> renderStack{};
 }
 } // namespace layer
 
-
-// Helper: scoped render queue (non-returning, C++-side)
+template <typename F>
 static void QueueScopedTransformCompositeRender(
     std::shared_ptr<layer::Layer> layer,
     entt::entity e,
     int z,
     layer::DrawCommandSpace space,
-    std::function<void()> buildChildren)
+    F&& buildChildren)
 {
-    static thread_local std::vector<std::vector<layer::DrawCommandV2>*> s_commandStack;
-    
+    static  std::array<std::vector<layer::DrawCommandV2>*, 8> s_commandStackArr;
+    static  int s_stackTop = 0;
+
     auto* cmd = layer::layer_command_buffer::Add<layer::CmdScopedTransformCompositeRender>(layer, z, space);
     cmd->entity = e;
 
-    // Push current vector target
-    s_commandStack.push_back(&cmd->children);
+    // Pre-reserve a few children slots
+    cmd->children.reserve(8); // tweak this number based on your typical batch size
 
-    // Temporarily redirect to this command’s children vector
-    std::vector<layer::DrawCommandV2>* targetCommands = &cmd->children;
-    std::vector<layer::DrawCommandV2> oldCommands = std::move(layer->commands);
-    layer->commands.clear();
+    auto* prevList = layer->commands_ptr;
+    layer->commands_ptr = &cmd->children;
 
-    // Build the nested children
-    buildChildren();
+    s_commandStackArr[s_stackTop++] = &cmd->children;
+    std::forward<F>(buildChildren)();
+    --s_stackTop;
 
-    // Move any commands created during build into this command’s children
-    *targetCommands = std::move(layer->commands);
-
-    // Restore previous layer command vector
-    layer->commands = std::move(oldCommands);
-
-    // Pop command stack
-    s_commandStack.pop_back();
+    layer->commands_ptr = prevList;
 }
+
 
 // Graphics namespace for rendering functions
 namespace layer {
@@ -5253,37 +5246,15 @@ auto pushEntityTransformsToMatrix(entt::registry &registry,
         zOrder, drawSpace);
 }
 
-auto pushEntityTransformsToMatrixImmediate(entt::registry &registry,
-                                  entt::entity e,
-                                  std::shared_ptr<layer::Layer> layer,
-                                  int zOrder) -> void
+auto pushEntityTransformsToMatrixImmediate(entt::registry& registry,
+                                           entt::entity e,
+                                           std::shared_ptr<layer::Layer> layer,
+                                           int zOrder) -> void
 {
-    // Determine whether the entity renders in world or screen space.
-    bool isScreenSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
-    layer::DrawCommandSpace drawSpace =
-        isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
+    auto& t = registry.get<transform::Transform>(e);
 
-    // Retrieve the transform (and any needed springs)
-    auto &entityTransform = registry.get<transform::Transform>(e);
-
-    // --- Push Matrix ---
     PushMatrix();
-    
-    // --- Apply Translation: move to entity center ---
-    Translate(entityTransform.getVisualX() + entityTransform.getVisualW() * 0.5f,
-              entityTransform.getVisualY() + entityTransform.getVisualH() * 0.5f);  
-              
-    // --- Apply Scaling ---
-    Scale(entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
-          entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected());
-          
-    // --- Apply Rotation ---
-    Rotate(entityTransform.getVisualR() + entityTransform.rotationOffset);
-    
-    // --- Translate back to local origin ---
-    Translate(-entityTransform.getVisualW() * 0.5f,
-              -entityTransform.getVisualH() * 0.5f);
-
+    rlMultMatrixf(MatrixToFloat(t.cachedMatrix));
 }
 
 void Circle(float x, float y, float radius, const Color &color) {

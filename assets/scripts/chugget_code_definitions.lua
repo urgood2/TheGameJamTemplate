@@ -7530,6 +7530,14 @@ function layer_order_system.putAOverB(...) end
 function layer_order_system.updateLayerZIndexesAsNecessary(...) end
 
 ---
+---
+---@param registry registry
+---@param e Entity
+---@return integer zIndex
+Returns the current zIndex of the given entity, assigning one if missing.
+function layer_order_system.getZIndex(...) end
+
+---
 --- Resets the global Z-index counter back to zero.
 ---
 ---@return nil

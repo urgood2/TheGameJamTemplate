@@ -139,6 +139,10 @@ namespace layer
         void* data;
         int z;
         DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
+        
+        uint64_t uniqueID = 0; // For stable sorting
+        uint64_t followAnchor;   // 0 = none
+
     };
 
     // ===========================

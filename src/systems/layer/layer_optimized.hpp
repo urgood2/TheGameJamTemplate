@@ -42,6 +42,8 @@ namespace layer
     
     */
     
+    
+    
     // ===========================
     // Command Types
     // ===========================
@@ -60,6 +62,7 @@ namespace layer
         AddPop,
         PushMatrix,
         PopMatrix,
+        ScopedTransformCompositeRender,
         PushObjectTransformsToMatrix,
         Circle,
         CircleLine,
@@ -120,6 +123,22 @@ namespace layer
         DrawGradientRectRoundedCentered,
         
         Count // <--- always last
+    };
+    
+    // ===========================
+    // Draw Command Buffer
+    // ===========================
+    
+    enum class DrawCommandSpace {
+        World,
+        Screen
+    };
+
+    struct DrawCommandV2 {
+        DrawCommandType type;
+        void* data;
+        int z;
+        DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
     };
 
     // ===========================
@@ -188,6 +207,11 @@ namespace layer
     
     struct CmdPushObjectTransformsToMatrix {
         entt::entity entity;
+    };
+    
+    struct CmdScopedTransformCompositeRender {
+        entt::entity entity;
+        std::vector<DrawCommandV2> children;
     };
 
     struct CmdDrawCircleFilled {
@@ -525,21 +549,7 @@ namespace layer
         Color topLeft, topRight, bottomRight, bottomLeft;
     };
 
-    // ===========================
-    // Draw Command Buffer
-    // ===========================
     
-    enum class DrawCommandSpace {
-        World,
-        Screen
-    };
-
-    struct DrawCommandV2 {
-        DrawCommandType type;
-        void* data;
-        int z;
-        DrawCommandSpace space = DrawCommandSpace::Screen; // Default to screen space
-    };
 
 
     // ===========================
@@ -592,6 +602,7 @@ namespace layer
     extern void ExecuteResetShader(std::shared_ptr<layer::Layer> layer, CmdResetShader* c);
     extern void ExecuteSetBlendMode(std::shared_ptr<layer::Layer> layer, CmdSetBlendMode* c);
     extern void ExecuteUnsetBlendMode(std::shared_ptr<layer::Layer> layer, CmdUnsetBlendMode* c);
+    extern void ExecuteScopedTransformCompositeRender(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRender* c);
     extern void ExecuteSendUniformFloat(std::shared_ptr<layer::Layer> layer, CmdSendUniformFloat* c);
     extern void ExecuteSendUniformInt(std::shared_ptr<layer::Layer> layer, CmdSendUniformInt* c);
     extern void ExecuteSendUniformVec2(std::shared_ptr<layer::Layer> layer, CmdSendUniformVec2* c);

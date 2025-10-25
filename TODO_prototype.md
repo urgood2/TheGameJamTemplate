@@ -44,6 +44,8 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- lua queing https://chatgpt.com/share/68fc7574-d6f4-800a-849e-829d81b0b18f
+- controller nav https://chatgpt.com/share/68fc7589-3a60-800a-afb0-ffa4fba94e0a
 - use the new itch assets to indicate icons for wands & when they are on cooldown.
 - controller input pass so I can seamlessly control ui & cards with only controller. probably make a system for that.
 - Add transition like in snkrx. how does that work? use whoosh.

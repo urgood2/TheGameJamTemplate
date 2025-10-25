@@ -46,6 +46,33 @@ std::stack<RenderTexture2D> renderStack{};
 }
 } // namespace layer
 
+
+// Helper: scoped render queue (non-returning, C++-side)
+static void QueueScopedTransformCompositeRender(
+    std::shared_ptr<layer::Layer> layer,
+    entt::entity e,
+    int z,
+    layer::DrawCommandSpace space,
+    std::function<void()> buildChildren)
+{
+    auto* cmd = layer::layer_command_buffer::Add<layer::CmdScopedTransformCompositeRender>(layer, z, space);
+    cmd->entity = e;
+
+    // Build children directly into cmd->children
+    // Capture the global layer variable so sub-queue calls go there
+    auto originalCommandVector = std::move(layer->commands);
+    layer->commands.clear();
+
+    // Build sub-commands
+    buildChildren();
+
+    // Move any queued commands into children
+    cmd->children = std::move(layer->commands);
+
+    // Restore parent queue
+    layer->commands = std::move(originalCommandVector);
+}
+
 // Graphics namespace for rendering functions
 namespace layer {
 void exposeToLua(sol::state &lua) {
@@ -449,6 +476,8 @@ void exposeToLua(sol::state &lua) {
       layer::DrawCommandType::PopMatrix, 
       "PushObjectTransformsToMatrix",
       layer::DrawCommandType::PushObjectTransformsToMatrix,
+      "ScopedTransformCompositeRender",
+      layer::DrawCommandType::ScopedTransformCompositeRender,
       "DrawCircle",
       layer::DrawCommandType::Circle, "DrawRectangle",
       layer::DrawCommandType::Rectangle, "DrawRectanglePro",
@@ -523,6 +552,10 @@ void exposeToLua(sol::state &lua) {
       "layer.DrawCommandType",
       {"PushObjectTransformsToMatrix", "100",
        "Push object's transform to matrix stack"});
+  rec.record_property(
+      "layer.DrawCommandType",
+      {"ScopedTransformCompositeRender", "101",
+       "Scoped transform for composite rendering"});
   rec.record_property("layer.DrawCommandType",
                       {"PopMatrix", "9", "Explicit pop matrix command"});
   rec.record_property("layer.DrawCommandType",
@@ -635,6 +668,9 @@ void exposeToLua(sol::state &lua) {
   BIND_CMD(PopMatrix, "dummy", &layer::CmdPopMatrix::dummy)
   BIND_CMD(PushObjectTransformsToMatrix,
            "entity", &layer::CmdPushObjectTransformsToMatrix::entity)
+  BIND_CMD(ScopedTransformCompositeRender,
+           "entity", &layer::CmdScopedTransformCompositeRender::entity,
+           "payload", &layer::CmdScopedTransformCompositeRender::children)
   BIND_CMD(DrawCircleFilled, "x", &layer::CmdDrawCircleFilled::x, "y",
            &layer::CmdDrawCircleFilled::y, "radius",
            &layer::CmdDrawCircleFilled::radius, "color",
@@ -1119,6 +1155,12 @@ void exposeToLua(sol::state &lua) {
   rec.record_property("layer.CmdPushObjectTransformsToMatrix",
                       {"entity", "Entity", "Entity to get transforms from"});
                       
+  
+  rec.add_type("layer.CmdScopedTransformCompositeRender", true);
+  rec.record_property("layer.CmdScopedTransformCompositeRender",
+                      {"entity", "Entity", "Entity to get transforms from"});
+  rec.record_property("layer.CmdScopedTransformCompositeRender",
+                      {"payload", "vector", "Additional payload data"});
                       
   rec.add_type("layer.CmdPopMatrix", true);
   rec.record_property("layer.CmdPopMatrix", {"dummy", "false", "Unused field"});
@@ -1507,6 +1549,7 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(PushMatrix)
   QUEUE_CMD(PopMatrix)
   QUEUE_CMD(PushObjectTransformsToMatrix)
+  QUEUE_CMD(ScopedTransformCompositeRender)
   QUEUE_CMD(DrawCircleFilled)
   QUEUE_CMD(DrawRectangle)
   QUEUE_CMD(DrawRectanglePro)
@@ -1562,6 +1605,32 @@ void exposeToLua(sol::state &lua) {
   QUEUE_CMD(DrawGradientRectRoundedCentered)
 
 #undef QUEUE_CMD
+
+
+// special case for scoped render
+cb.set_function("queueScopedTransformCompositeRender",
+    [](std::shared_ptr<layer::Layer> lyr,
+       entt::entity e,
+       sol::function child_builder,
+       int z,
+       DrawCommandSpace space = DrawCommandSpace::World)
+    {
+        QueueScopedTransformCompositeRender(
+            lyr, e, z, space, [&]() {
+                sol::protected_function pf(child_builder);
+                if (pf.valid()) {
+                    sol::protected_function_result r = pf();
+                    if (!r.valid()) {
+                        sol::error err = r;
+                        std::fprintf(stderr, "[queueScopedTransformCompositeRender] child_builder error: %s\n", err.what());
+                    }
+                } else {
+                    std::fprintf(stderr, "[queueScopedTransformCompositeRender] invalid function\n");
+                }
+            });
+    });
+
+
 
   // -----------------------------------------------------------------------------
 // Immediate versions (execute immediately instead of queuing)
@@ -1630,6 +1699,7 @@ void exposeToLua(sol::state &lua) {
   EXEC_CMD(ExecutePushMatrix, PushMatrix)
   EXEC_CMD(ExecutePopMatrix, PopMatrix)
   EXEC_CMD(ExecutePushObjectTransformsToMatrix, PushObjectTransformsToMatrix)
+  EXEC_CMD(ExecuteScopedTransformCompositeRender, ScopedTransformCompositeRender)
   EXEC_CMD(ExecuteClearStencilBuffer, ClearStencilBuffer)
   EXEC_CMD(ExecuteBeginStencilMode, BeginStencilMode)
   EXEC_CMD(ExecuteEndStencilMode, EndStencilMode)
@@ -2069,6 +2139,20 @@ void exposeToLua(sol::state &lua) {
               R"(Queues a CmdPushObjectTransformsToMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix())",
           .is_static = true,
           .is_overload = false}); 
+          
+  rec.record_free_function(
+      {"layer"},
+      MethodDef{
+          .name = "queueScopedTransformCompositeRender",
+          .signature = R"(---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void)",
+          .doc =
+              R"(Queues a CmdScopedTransformCompositeRender into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix())",
+          .is_static = true,
+          .is_overload = false});
 
   rec.record_free_function(
       {"layer"},

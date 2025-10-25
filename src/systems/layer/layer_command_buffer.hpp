@@ -60,6 +60,7 @@ namespace layer
         template<> inline DrawCommandType GetDrawCommandType<CmdAddPop>() { return DrawCommandType::AddPop; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPushMatrix>() { return DrawCommandType::PushMatrix; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPushObjectTransformsToMatrix>() { return DrawCommandType::PushObjectTransformsToMatrix; }
+        template<> inline DrawCommandType GetDrawCommandType<CmdScopedTransformCompositeRender>() { return DrawCommandType::ScopedTransformCompositeRender; }
         template<> inline DrawCommandType GetDrawCommandType<CmdPopMatrix>() { return DrawCommandType::PopMatrix; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleFilled>() { return DrawCommandType::Circle; }
         template<> inline DrawCommandType GetDrawCommandType<CmdDrawCircleLine>() { return DrawCommandType::CircleLine; }
@@ -297,6 +298,7 @@ namespace layer
             CmdPushMatrix,
             CmdPopMatrix,
             CmdPushObjectTransformsToMatrix,
+            CmdScopedTransformCompositeRender,
             CmdDrawCircleFilled,
             CmdDrawCircleLine,
             CmdDrawRectangle,

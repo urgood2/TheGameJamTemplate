@@ -36,54 +36,31 @@ Casts all spells in wand at once
 Converts encumbrance into damage
 
 
+# stat ideas
+- Maybe give wand equip requirements? triggers as well?
+
+
 # Non-stat values:
 - player level.
     
 # programming side
-- put triggers in "trigger inventory" separate from main inventory.
-- make different trigger card making function, also make triggers use different font color.
-- tooltip at the bottom of screen for highlighted card. probably make prettier later.
+- use the new itch assets to indicate icons for wands & when they are on cooldown.
 - controller input pass so I can seamlessly control ui & cards with only controller. probably make a system for that.
 - Add transition like in snkrx. how does that work? use whoosh.
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
-- show active wand stats on the screen, indicate this is a wand somehow. Also, popup tooltips for the cards when hovering over them.
 - Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
+
+
+
+- buttons of some kind to quickly press to send card up to wand or back to inventory, maybe popping out of card?
 
 - need to add cumulative wand state per cycle, as well as per cast block state that adds together stats from the cards in that block. -> probably do this in the execution phase.
 - implement card evaluation order using actual cards to see how it behaves.
-  - Trigger: every X pixels traveled.
-  - Trigger: on enemy hit.
-  - Trigger: on bumping enemy.
-  - Trigger: on dash.
-  - Action: fire basic bolt.
-  - Action: add mana to trigger.
-  - Action: ball that bounces 3 times. 
-  - Action: ball that bounces 3 times. On hit, cast another spell.
-  - Action: leave spike hazard. after X seconds, cast another spell.
-  - Action: flying cross projectile.
-  - Action: bolt that teleports you to target location on hit.
-  - Action: summon minion that wanders around and attacks enemies.
-  
-  - Modifier: double spell.
-  - Modifier: triple spell.
-  - Modifier: myriad spell.
-  - Modifier: make next spell crit.
-  - Modifier: greatly increase size, but at the cost of speed.
-  - Modifier: basic projectile. after a timer, launch another spell.
-  - Modifier: Immunity to projectiles for 2 seconds + add 1 card to current cast block.
-  - Modifier: heal player for X on hit.
-  - Modifier: cast a random modifier spell.
-  - Modifier: auto-aim. aim for nearest enemy.
-  - Modifier: homing projectile.
-  - Modifier: explosive projectile.
-  - Modifier: projectile travel slower, but phases in and out.
-  - Modifier: long-distance cast.
-  - Modifier: teleporting cast (cast from nearest enemy)
-  - Modifier: blood to damage (sacrifice health to increase damage of cast block)
-  - Modifier: wand refresh (recharge wand immediately- no cooldown)
-  -
 - make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.
 
+- puzzle: Way to inject draw calls queue so they happen inside a transform’s shader? Doing it via lua callback is too demanding. 
+
+- controler input: Sets of objects that can be selected, maybe by tag. Method to toggle between them, possibly merging. Dpad and axis movement detection to allow selection. Got to be compatible with existing ui input system, maximally extensible. Toggle to turn the system on and off. 
 
 - Add card 3d rotation for when initially dropped?
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.

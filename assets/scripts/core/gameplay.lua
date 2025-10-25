@@ -366,7 +366,173 @@ function removeCardFromStack(rootCardScript, cardScriptToRemove)
     end
 end
 
--- category can be "action", "trigger", "modifier"
+-- creates a new trigger slot card. these go in trigger boards ONLY.
+function createNewTriggerSlotCard(id, x, y, gameStateToApply) 
+    
+    local card = createNewCard(nil, x, y, gameStateToApply)
+    
+    local cardScript = getScriptTableFromEntityID(card)
+    
+    WandEngine.apply_card_properties(cardScript, WandEngine.trigger_card_defs[id] or {})
+    
+    return card
+end
+
+function setUpCardAndWandStatDisplay()
+    
+    local STAT_FONT_SIZE = 27
+    
+    timer.run(function ()
+        
+        -- bail if not shop or planning state
+        if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
+            return
+        end
+        
+        -- get current board set
+        local boardSet = board_sets[current_board_set_index]
+        if not boardSet then return end
+        
+        --TODO: assign a "wand" to each board set and display stats.
+        
+        
+        -- is the mouse covering over a card?
+        
+        local isHoveredOverCard = false
+        
+        
+        if (globals.inputState.cursor_hovering_target and globals.inputState.cursor_hovering_target ~= entt_null and registry:valid(globals.inputState.cursor_hovering_target)) then
+            for cardEid, cardScript in pairs(cards) do
+                if cardEid == globals.inputState.cursor_hovering_target then
+                    isHoveredOverCard = true
+                    break
+                end
+            end
+        end
+        
+        local hovered = globals.inputState.cursor_hovering_target
+        
+        local startY = globals.screenHeight() - globals.screenHeight() * 0.28
+        local startX = globals.screenWidth() * 0.1
+        local currentY = startY
+        local columnWidth = 400
+        local currentX = startX
+        
+        if isHoveredOverCard then
+            
+            -- if mousing over card, show card stats.
+            local cardScript = getScriptTableFromEntityID(hovered)
+            
+            -- draw:
+            -- id = "TEST_PROJECTILE_TIMER",
+            -- type = "action",
+            -- max_uses = -1,
+            -- mana_cost = 8,
+            -- damage = 15,
+            -- damage_type = "physical",
+            -- radius_of_effect = 0,
+            -- spread_angle = 3,
+            -- projectile_speed = 400,
+            -- lifetime = 3000,
+            -- cast_delay = 150,
+            -- recharge_time = 0,
+            -- spread_modifier = 0,
+            -- speed_modifier = 0,
+            -- lifetime_modifier = 0,
+            -- critical_hit_chance_modifier = 0,
+            -- timer_ms = 1000,
+            -- weight = 2,
+            -- test_label = "TEST\nprojectile\ntimer",
+            
+            local statsToDraw = { "card_id", "type", "max_uses", "mana_cost", "damage", "damage_type", "radius_of_effect", "spread_angle", "projectile_speed", "lifetime", "cast_delay", "recharge_time", "timer_ms" }
+            
+            local lineHeight = 22
+            
+            -- if nil, don't draw. 
+            -- if reached bottom, reset to next column
+            for _, statName in ipairs(statsToDraw) do
+                local statValue = cardScript[statName]
+                if statValue ~= nil then
+                    command_buffer.queueDrawText(layers.sprites, function(c)
+                        c.text = tostring(statName) .. ": " .. tostring(statValue)
+                        c.font = localization.getFont()
+                        c.x = currentX
+                        c.y = currentY
+                        c.color = palette.snapToColorName("YELLOW")
+                        c.fontSize = STAT_FONT_SIZE
+                    end, z_orders.card_text, layer.DrawCommandSpace.World)
+                    
+                    currentY = currentY + lineHeight
+                    if currentY > globals.screenHeight() - 50 then
+                        currentY = startY
+                        currentX = currentX + columnWidth
+                    end
+                end
+            end
+            
+        else
+            -- else, show wand stats.
+            
+            local currentWandDef = board_sets[current_board_set_index].wand_def
+            
+            if currentWandDef then
+                local statsToDraw = {
+                    "id",
+                    "type",
+                    "max_uses",
+                    "mana_max",
+                    "mana_recharge_rate",
+                    "cast_block_size",
+                    "cast_delay",
+                    "recharge_time",
+                    "spread_angle",
+                    "shuffle",
+                    "total_card_slots",
+                    "always_cast_cards"
+                }
+                
+                local lineHeight = 22
+                
+                -- if nil, don't draw.
+                -- if reached bottom, reset to next column
+                for _, statName in ipairs(statsToDraw) do
+                    local statValue = currentWandDef[statName]
+                    
+                    -- if it is a table, convert to string
+                    if type(statValue) == "table" then
+                        statValue = table.concat(statValue, ", ")
+                    end
+                    
+                    if statValue ~= nil then
+                        command_buffer.queueDrawText(layers.sprites, function(c)
+                            c.text = tostring(statName) .. ": " .. tostring(statValue)
+                            c.font = localization.getFont()
+                            c.x = currentX
+                            c.y = currentY
+                            c.color = palette.snapToColorName("CYAN")
+                            c.fontSize = STAT_FONT_SIZE
+                        end, z_orders.card_text, layer.DrawCommandSpace.World)
+                        
+                        currentY = currentY + lineHeight
+                        if currentY > globals.screenHeight() - 50 then
+                            currentY = startY
+                            currentX = currentX + columnWidth
+                        end
+                    end
+                end
+            end
+        end
+        
+        
+        --TODO: make these prettier with dynamic text later.
+        
+        
+    end)
+    
+end
+
+
+-- any card that goes in an action board. NOT TRIGGERS.
 -- retursn the entity ID of the created card
 function createNewCard(id, x, y, gameStateToApply) 
     
@@ -400,7 +566,13 @@ function createNewCard(id, x, y, gameStateToApply)
     cardScript.cardID = id or "unknown"
     
     -- copy over card definition data if it exists
-    WandEngine.apply_card_properties(cardScript, WandEngine.card_defs[id] or {})
+    if not id then
+        log_debug("Warning: createNewCard called without id")
+        
+    else
+        WandEngine.apply_card_properties(cardScript, WandEngine.card_defs[id] or {})
+    end
+    
     
     
     -- give an update table to align the card's stacks if they exist.
@@ -457,6 +629,10 @@ function createNewCard(id, x, y, gameStateToApply)
                     local t = registry:get(eid, Transform)
                     if t then
                         
+                        local colorToUse = palette.snapToColorName("RED")
+                        if cardScript.type == "trigger" then
+                            colorToUse = palette.snapToColorName("PURPLE")
+                        end
                         -- command_buffer.queuePushObjectTransformsToMatrix(layers.sprites, function (c)
                         --     c.entity = eid
                         -- end, z_orders.card_text, layer.DrawCommandSpace.World)
@@ -467,7 +643,7 @@ function createNewCard(id, x, y, gameStateToApply)
                             c.font = localization.getFont()
                             c.x = t.visualX + t.visualW * 0.1
                             c.y = t.visualY + 10
-                            c.color = palette.snapToColorName("RED")
+                            c.color = colorToUse
                             c.fontSize = 20.0
                         end, z_orders.card_text, layer.DrawCommandSpace.World)
                         
@@ -1680,6 +1856,9 @@ function initPlanningPhase()
     -- activate planning state to draw/update planning entities
     activate_state(PLANNING_STATE)
     
+    -- set up timer to render tooltips
+    setUpCardAndWandStatDisplay()
+    
     -- set default card size based on screen size
     cardW = globals.screenWidth() * 0.10
     cardH = cardW * (64 / 48) -- default card aspect ratio is 48:64
@@ -1910,9 +2089,7 @@ function initPlanningPhase()
     
     -- make a trigger card and add it to the trigger board.
     -- local triggerCard = createNewCard("TEST_TRIGGER_EVERY_N_SECONDS", 4000, 4000, PLANNING_STATE) -- offscreen for now
-    local triggerCard = createNewCard("TEST_TRIGGER_ON_BUMP_ENEMY", 4000, 4000, PLANNING_STATE) -- offscreen for now
-
-    addCardToBoard(triggerCard, set.trigger_board_id)
+    
 -- -------------------------------------------------------------------------- --
 --       make a large board at bottom that will serve as the inventory, with a trigger inventory on the left.       --
 -- -------------------------------------------------------------------------- 
@@ -1998,6 +2175,26 @@ function initPlanningPhase()
     local roleComp = registry:get(triggerInventoryBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP 
 
+    
+    
+    
+    -- add every trigger defined so we can test them all
+    for id, def in pairs(WandEngine.trigger_card_defs) do
+        local triggerCard = createNewTriggerSlotCard(id, 4000, 4000, PLANNING_STATE)
+        addCardToBoard(triggerCard, triggerInventoryBoardID)
+    end
+    
+    -- for each board set, we get a corresponding index wand def to save, or if the index is out of range, we loop around.
+    for index, boardSet in ipairs(board_sets) do
+        
+        local indexToUse = index
+        if indexToUse > #WandEngine.wand_defs then
+            indexToUse = ((indexToUse - 1) % #WandEngine.wand_defs) + 1
+        end
+        
+        boardSet.wand_def = WandEngine.wand_defs[indexToUse]
+    end
+    
     
     -- let's set up an update timer for triggers.
     setUpLogicTimers()

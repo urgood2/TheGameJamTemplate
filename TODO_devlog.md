@@ -98,3 +98,6 @@
 10/25/2025
   - Integrated controller input, though there isn't any smart card selection or ui navigation yet. only movement & dashing.
   - Added board set cycling to allow for multiple triggers, and a dedicated trigger inventory.
+  - Tooltips to indicate stats for hovered cards & wand.
+  - Separated trigger cards to be their own thing.
+  - Several more card defs so I can play around with them.

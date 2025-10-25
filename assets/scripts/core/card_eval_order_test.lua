@@ -606,14 +606,321 @@ CardTemplates.META_CONVERT_WEIGHT_TO_DAMAGE = {
     test_label = "META\nconvert\nweight\nto\ndamage",
 }
 
+-- Add max mana to wand
+CardTemplates.ACTION_ADD_MANA = {
+    id = "ACTION_ADD_MANA",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 20,
+    add_mana_amount = 25,
+    cast_delay = 100,
+    recharge_time = 0,
+    weight = 3,
+    test_label = "ACTION\nadd\nmana",
+}
+
+-- Ball that bounces 3 times
+CardTemplates.ACTION_BOUNCE_BALL = {
+    id = "ACTION_BOUNCE_BALL",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 10,
+    damage = 15,
+    damage_type = "physical",
+    ricochet_count = 3,
+    projectile_speed = 450,
+    lifetime = 2500,
+    cast_delay = 120,
+    recharge_time = 0,
+    weight = 2,
+    test_label = "ACTION\nbounce\nball",
+}
+
+-- Ball that bounces 3 times and casts another spell on hit
+CardTemplates.ACTION_BOUNCE_TRIGGER = {
+    id = "ACTION_BOUNCE_TRIGGER",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 15,
+    damage = 15,
+    damage_type = "physical",
+    ricochet_count = 3,
+    trigger_on_collision = true,
+    projectile_speed = 450,
+    lifetime = 2500,
+    cast_delay = 150,
+    recharge_time = 0,
+    weight = 3,
+    test_label = "ACTION\nbounce\ntrigger",
+}
+
+-- Leave spike hazard, cast another spell after X seconds
+CardTemplates.ACTION_SPIKE_HAZARD_TIMER = {
+    id = "ACTION_SPIKE_HAZARD_TIMER",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 18,
+    damage = 25,
+    damage_type = "physical",
+    radius_of_effect = 50,
+    timer_ms = 2000,
+    leave_hazard = true,
+    trigger_on_timer = true,
+    cast_delay = 200,
+    recharge_time = 0,
+    weight = 3,
+    test_label = "ACTION\nspike\nhazard\ntimer",
+}
+
+-- Flying cross projectile
+CardTemplates.ACTION_FLYING_CROSS = {
+    id = "ACTION_FLYING_CROSS",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 20,
+    damage = 30,
+    damage_type = "holy",
+    cross_projectile = true,
+    projectile_speed = 600,
+    lifetime = 2000,
+    cast_delay = 150,
+    recharge_time = 0,
+    weight = 4,
+    test_label = "ACTION\nflying\ncross",
+}
+
+-- Bolt that teleports you to target location on hit
+CardTemplates.ACTION_TELEPORT_BOLT = {
+    id = "ACTION_TELEPORT_BOLT",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 25,
+    damage = 15,
+    damage_type = "arcane",
+    projectile_speed = 700,
+    lifetime = 1800,
+    trigger_on_collision = true,
+    teleport_on_hit = true,
+    cast_delay = 150,
+    recharge_time = 0,
+    weight = 4,
+    test_label = "ACTION\nteleport\nbolt",
+}
+
+-- Basic projectile that launches another spell after timer
+CardTemplates.ACTION_PROJECTILE_TIMER_CAST = {
+    id = "ACTION_PROJECTILE_TIMER_CAST",
+    type = "action",
+    max_uses = -1,
+    mana_cost = 10,
+    damage = 10,
+    damage_type = "physical",
+    projectile_speed = 500,
+    lifetime = 2000,
+    timer_ms = 1500,
+    trigger_on_timer = true,
+    cast_delay = 120,
+    recharge_time = 0,
+    weight = 2,
+    test_label = "ACTION\nprojectile\ntimer\ncast",
+}
+
+-- Summon minion that wanders and attacks
+CardTemplates.ACTION_SUMMON_MINION = {
+    id = "ACTION_SUMMON_MINION",
+    type = "action",
+    max_uses = 3,
+    mana_cost = 25,
+    summon_entity = "minion_basic",
+    summon_ai_behavior = "wander_attack",
+    cast_delay = 200,
+    recharge_time = 0,
+    weight = 4,
+    test_label = "ACTION\nsummon\nminion",
+}
+
+
+-- Double spell
+CardTemplates.MOD_DOUBLE_SPELL = {
+    id = "MOD_DOUBLE_SPELL",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 10,
+    multicast_count = 2,
+    weight = 2,
+    test_label = "MOD\ndouble\nspell",
+}
+
+-- Triple spell
+CardTemplates.MOD_TRIPLE_SPELL = {
+    id = "MOD_TRIPLE_SPELL",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 15,
+    multicast_count = 3,
+    weight = 3,
+    test_label = "MOD\ntriple\nspell",
+}
+
+-- Make next spell crit
+CardTemplates.MOD_FORCE_CRIT = {
+    id = "MOD_FORCE_CRIT",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 6,
+    force_crit_next = true,
+    multicast_count = 1,
+    weight = 2,
+    test_label = "MOD\nforce\ncrit",
+}
+
+-- Greatly increase size but reduce speed
+CardTemplates.MOD_BIG_SLOW = {
+    id = "MOD_BIG_SLOW",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 8,
+    size_multiplier = 2.0,
+    speed_modifier = -3,
+    weight = 2,
+    test_label = "MOD\nbig\nslow",
+}
+
+-- Immunity + add 1 card to cast block
+CardTemplates.MOD_IMMUNE_AND_ADD_CARD = {
+    id = "MOD_IMMUNE_AND_ADD_CARD",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 12,
+    immunity_duration_ms = 2000,
+    add_cards_to_block = 1,
+    weight = 3,
+    test_label = "MOD\nimmune\n+1card",
+}
+
+-- Heal player if projectile hits
+CardTemplates.MOD_HEAL_ON_HIT = {
+    id = "MOD_HEAL_ON_HIT",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 6,
+    heal_on_hit = 10,
+    weight = 2,
+    test_label = "MOD\nheal\non\nhit",
+}
+
+-- Cast random modifier from wand
+CardTemplates.MOD_RANDOM_MODIFIER = {
+    id = "MOD_RANDOM_MODIFIER",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 10,
+    cast_random_modifier = true,
+    weight = 3,
+    test_label = "MOD\nrandom\nmodifier",
+}
+
+-- Auto-aim nearest enemy
+CardTemplates.MOD_AUTO_AIM = {
+    id = "MOD_AUTO_AIM",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 7,
+    auto_aim = true,
+    weight = 2,
+    test_label = "MOD\nauto\naim",
+}
+
+-- Homing projectile
+CardTemplates.MOD_HOMING = {
+    id = "MOD_HOMING",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 6,
+    homing_strength = 10,
+    weight = 2,
+    test_label = "MOD\nhoming",
+}
+
+-- Explosive projectile
+CardTemplates.MOD_EXPLOSIVE = {
+    id = "MOD_EXPLOSIVE",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 10,
+    make_explosive = true,
+    radius_of_effect = 60,
+    weight = 3,
+    test_label = "MOD\nexplosive",
+}
+
+-- Slow phasing projectile
+CardTemplates.MOD_PHASE_SLOW = {
+    id = "MOD_PHASE_SLOW",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 8,
+    phase_in_out = true,
+    speed_modifier = -3,
+    weight = 2,
+    test_label = "MOD\nphase\nslow",
+}
+
+-- Long-distance cast
+CardTemplates.MOD_LONG_CAST = {
+    id = "MOD_LONG_CAST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 9,
+    long_distance_cast = true,
+    weight = 3,
+    test_label = "MOD\nlong\ndistance\ncast",
+}
+
+-- Teleporting cast (from nearest enemy)
+CardTemplates.MOD_TELEPORT_CAST = {
+    id = "MOD_TELEPORT_CAST",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 12,
+    teleport_cast_from_enemy = true,
+    weight = 3,
+    test_label = "MOD\nteleport\ncast",
+}
+
+-- Blood to damage (sacrifice health)
+CardTemplates.MOD_BLOOD_TO_DAMAGE = {
+    id = "MOD_BLOOD_TO_DAMAGE",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 0,
+    health_sacrifice_ratio = 0.1,
+    damage_bonus_ratio = 0.5,
+    weight = 4,
+    test_label = "MOD\nblood\nto\ndamage",
+}
+
+-- Wand refresh
+CardTemplates.MOD_WAND_REFRESH = {
+    id = "MOD_WAND_REFRESH",
+    type = "modifier",
+    max_uses = -1,
+    mana_cost = 15,
+    wand_refresh = true,
+    weight = 3,
+    test_label = "MOD\nwand\nrefresh",
+}
+
+
 
 -- -------------------------------------------------------------------------- --
 --             WAND-defining trigger cards that DON't GO IN WANDS             --
 -- -------------------------------------------------------------------------- 
 
+TriggerCardTemplates = {}
 
 -- triggers that go inside wands.
-CardTemplates.TEST_TRIGGER_EVERY_N_SECONDS = {
+TriggerCardTemplates.TEST_TRIGGER_EVERY_N_SECONDS = {
     id = "every_N_seconds",
     type = "trigger", -- ignored by evaluation algo
     max_uses = -1,
@@ -622,7 +929,7 @@ CardTemplates.TEST_TRIGGER_EVERY_N_SECONDS = {
     test_label = "TRIGGER\nevery\nN\nseconds",
 }
 
-CardTemplates.TEST_TRIGGER_ON_BUMP_ENEMY = {
+TriggerCardTemplates.TEST_TRIGGER_ON_BUMP_ENEMY = {
     id = "on_bump_enemy",
     type = "trigger", -- ignored by evaluation algo
     max_uses = -1,
@@ -631,13 +938,31 @@ CardTemplates.TEST_TRIGGER_ON_BUMP_ENEMY = {
     test_label = "TRIGGER\non\nbump\nenemy",
 }
 
+TriggerCardTemplates.TEST_TRIGGER_ON_DASH = {
+    id = "on_dash",
+    type = "trigger", -- ignored by evaluation algo
+    max_uses = -1,
+    mana_cost = 0,
+    weight = 0,
+    test_label = "TRIGGER\non\ndash",
+}
+
+TriggerCardTemplates.TEST_TRIGGER_ON_DISTANCE_TRAVELED = {
+    id = "on_distance_traveled",
+    type = "trigger", -- ignored by evaluation algo
+    max_uses = -1,
+    mana_cost = 0,
+    weight = 0,
+    test_label = "TRIGGER\non\ndistance\ntraveled",
+}
+
 
 --------------------------------------------------------------------------------
 -- WAND (TRIGGER) DEFINITIONS
 --------------------------------------------------------------------------------
 
 local WandTemplates = {
-    -- Wand with shuffle and always-cast modifier
+    -- Wand with shuffle 
     {
         id = "TEST_WAND_1",
         type = "trigger",
@@ -648,9 +973,9 @@ local WandTemplates = {
         cast_delay = 200,
         recharge_time = 1000,
         spread_angle = 10,
-        shuffle = false,
+        shuffle = true,
         total_card_slots = 5,
-        always_cast_cards = { "TEST_PROJECTILE_TRIGGER" },
+        always_cast_cards = { },
         
     },
 
@@ -668,6 +993,43 @@ local WandTemplates = {
         shuffle = false,
         total_card_slots = 10,
         always_cast_cards = {},
+    },
+    
+    -- Wand with always-cast cards
+    {
+        id = "TEST_WAND_3",
+        type = "trigger",
+        max_uses = -1,
+        mana_max = 60,
+        mana_recharge_rate = 8,
+        cast_block_size = 3,
+        cast_delay = 150,
+        recharge_time = 800,
+        spread_angle = 15,
+        shuffle = true,
+        total_card_slots = 7,
+        always_cast_cards = {
+            "ACTION_BASIC_PROJECTILE"
+        },
+    },
+    
+    -- Wand with low mana and high overload potential
+    {
+        id = "TEST_WAND_4",
+        type = "trigger",
+        max_uses = -1,
+        mana_max = 20,
+        mana_recharge_rate = 4,
+        cast_block_size = 2,
+        cast_delay = 250,
+        recharge_time = 1200,
+        spread_angle = 20,
+        shuffle = true,
+        total_card_slots = 8,
+        always_cast_cards = {
+            "MOD_DAMAGE_UP",
+            "ACTION_FAST_ACCURATE_PROJECTILE"
+        },
     },
 }
 
@@ -1347,6 +1709,7 @@ end
 return {
     wand_defs = WandTemplates,
     card_defs = CardTemplates,
+    trigger_card_defs = TriggerCardTemplates,
     testWands = testWands,
     
     -- functions that might be useful

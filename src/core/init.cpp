@@ -587,7 +587,13 @@ namespace init {
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);
         
+
+        
         InitWindow(globals::screenWidth, globals::screenHeight, "Game");
+        
+        
+        // fixes mac input bug.
+        SetGamepadMappings(LoadFileText(util::getRawAssetPathNoUUID("gamecontrollerdb.txt").c_str()));
         
         
         // these methods cause crash when taskflow is used

@@ -226,9 +226,17 @@ namespace input
             float axisRightY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_Y);
             float axisLT = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_TRIGGER);
             float axisRT = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_TRIGGER);
+            // printf("Gamepad name: %s\n", GetGamepadName(0));
+            // printf("Axis count: %d\n", GetGamepadAxisCount(0));
+            // SPDLOG_DEBUG("Axis movements: Lx={} Ly={} Rx={} Ry={} LT={} RT={}", axisLeftX, axisLeftY, axisRightX, axisRightY, axisLT, axisRT);
             if (abs(axisLeftX) > 0.2f || abs(axisLeftY) > 0.2f || abs(axisRightX) > 0.2f || abs(axisRightY) > 0.2f || abs(axisLT) > 0.2f || abs(axisRT) > 0.2f)
             {
                 SetCurrentGamepad(inputState, GetGamepadName(0), 0);
+                
+                SPDLOG_DEBUG("Axis movement detected! Lx={} Ly={}", axisLeftX, axisLeftY);
+                SPDLOG_INFO("Axes: {}", GetGamepadAxisCount(0));
+
+                
                 ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_AXIS);
                 UpdateGamepadAxisInput(inputState, registry, dt);
             }
@@ -1033,6 +1041,9 @@ namespace input
                 // Update UI elements based on console type (e.g., sprites)
                 UpdateUISprites(state.gamepad.console);
             }
+            
+            state.gamepad.id = gamepadID;
+
         }
     }
 
@@ -2750,7 +2761,9 @@ namespace input
     auto action_pressed (InputState &s, const std::string &a) -> bool  { return s.actions[a].pressed; }
     auto action_released(InputState &s, const std::string &a) -> bool  { return s.actions[a].released; }
     auto action_down    (InputState &s, const std::string &a) -> bool  { return s.actions[a].down; }
-    auto action_value   (InputState &s, const std::string &a) -> float { return s.actions[a].value; }
+    auto action_value   (InputState &s, const std::string &a) -> float { 
+        return s.actions[a].value; 
+    }
 
     auto start_rebind(InputState &s, const std::string &action, std::function<void(bool, ActionBinding)> cb) -> void {
         s.rebind_action = action;
@@ -2781,6 +2794,18 @@ namespace input
 
         // Sol2 binding for input::InputState struct
         auto &L = lua;
+        
+        L.new_usertype<HIDFlags>("HIDFlags",
+                                  sol::constructors<sol::types<>>(),
+                                  "last_type", &HIDFlags::last_type,
+                                  "dpad_enabled", &HIDFlags::dpad_enabled,
+                                  "pointer_enabled", &HIDFlags::pointer_enabled,
+                                  "touch_enabled", &HIDFlags::touch_enabled,
+                                  "controller_enabled", &HIDFlags::controller_enabled,
+                                  "mouse_enabled", &HIDFlags::mouse_enabled,
+                                  "axis_cursor_enabled", &HIDFlags::axis_cursor_enabled);
+        
+        
         auto inputStateType = L.new_usertype<input::InputState>("InputState",
                                           sol::no_constructor,
                                           // Cursor targets and interaction
@@ -2862,7 +2887,9 @@ namespace input
 
                                           // Cursor context & HID flags
                                           "cursor_context", &input::InputState::cursor_context,
-                                          "hid", &input::InputState::hid,
+                                          "hid", sol::property([](input::InputState &s) -> HIDFlags& {
+    return s.hid;
+}),
 
                                           // Gamepad config
                                           "gamepad", &input::InputState::gamepad,
@@ -3102,6 +3129,11 @@ namespace input
 
         auto in = lua.create_named_table("input");
 
+        // make function for testing if gamepad enabled
+        in.set_function("isGamepadEnabled", []() -> bool {
+            return globals::inputState.hid.controller_enabled;
+        });
+        
         // TODO: need to expose the enums too
 
         // Keyboard

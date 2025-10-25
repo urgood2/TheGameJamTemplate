@@ -2317,12 +2317,52 @@ function initSurvivorEntity()
     
     
     -- lets move the survivor based on input.
-    -- input binding test
     input.bind("survivor_left", { device="keyboard", key=KeyboardKey.KEY_A, trigger="Pressed", context="gameplay" })
     input.bind("survivor_right", { device="keyboard", key=KeyboardKey.KEY_D, trigger="Pressed", context="gameplay" })
     input.bind("survivor_up", { device="keyboard", key=KeyboardKey.KEY_W, trigger="Pressed", context="gameplay" })
     input.bind("survivor_down", { device="keyboard", key=KeyboardKey.KEY_S, trigger="Pressed", context="gameplay" }) 
     input.bind("survivor_dash", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
+    
+    --also allow gamepad.
+    -- same dash
+    input.bind("survivor_dash", {
+        device = "gamepad_button",
+        axis = GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN, -- A button
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "gameplay"
+    })
+    
+    -- Horizontal movement (Left stick X)
+    input.bind("gamepad_move_x", {
+        device = "gamepad_axis",
+        axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X,
+        trigger = "AxisPos",     -- or "Threshold" if your system uses analog triggers
+        threshold = 0.2,       -- deadzone threshold
+        context = "gameplay"
+    })
+    input.bind("gamepad_move_x", {
+        device = "gamepad_axis",
+        axis = GamepadAxis.GAMEPAD_AXIS_LEFT_X,
+        trigger = "AxisNeg",     -- or "Threshold" if your system uses analog triggers
+        threshold = 0.2,       -- deadzone threshold
+        context = "gameplay"
+    })
+
+    -- Vertical movement (Left stick Y)
+    input.bind("gamepad_move_y", {
+        device = "gamepad_axis",
+        axis = GamepadAxis.GAMEPAD_AXIS_LEFT_Y,
+        trigger = "AxisPos",
+        threshold = 0.2,
+        context = "gameplay"
+    })
+    input.bind("gamepad_move_y", {
+        device = "gamepad_axis",
+        axis = GamepadAxis.GAMEPAD_AXIS_LEFT_Y,
+        trigger = "AxisNeg",
+        threshold = 0.2,
+        context = "gameplay"
+    })
     
     
     
@@ -2463,6 +2503,45 @@ function initActionPhase()
                 return
             end
             
+            local isGamePadActive = input.isPadConnected(0) -- check if gamepad is connected, assuming player 0
+            
+            local moveDir = { x = 0, y = 0 }
+            
+            if (isGamePadActive) then
+                
+                log_debug("Gamepad active for movement")
+                
+                local move_x = input.action_value("gamepad_move_x")
+                local move_y = input.action_value("gamepad_move_y")
+                
+                log_debug("Gamepad move x:", move_x, "move y:", move_y)
+
+                -- If you want to invert Y (Raylib default is up = -1)
+                -- move_y = -move_y
+
+                -- Normalize deadzone
+                local len = math.sqrt(move_x * move_x + move_y * move_y)
+                if len > 1 then
+                    move_x = move_x / len
+                    move_y = move_y / len
+                end
+                
+                moveDir.x = move_x
+                moveDir.y = move_y
+            else 
+                -- find intended dash direction from inputs
+                if input.action_down("survivor_left") then  moveDir.x = moveDir.x - 1 end
+                if input.action_down("survivor_right") then moveDir.x = moveDir.x + 1 end
+                if input.action_down("survivor_up") then    moveDir.y = moveDir.y - 1 end
+                if input.action_down("survivor_down") then  moveDir.y = moveDir.y + 1 end
+
+                local len = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
+                if len ~= 0 then
+                    moveDir.x, moveDir.y = moveDir.x / len, moveDir.y / len
+                else 
+                    moveDir.x, moveDir.y = 0, 0
+                end
+            end
             
             if not playerIsDashing and input.action_down("survivor_dash") then
                 log_debug("Dash pressed!")
@@ -2475,17 +2554,7 @@ function initActionPhase()
                 physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, 0, 0)
                 
                 -- let's add dashing.
-    
-                -- add impulse in the direction it's going
-                -- timer that resets damping after a short delay. (SetDamping)
                 
-                -- find intended dash direction from inputs
-                local moveDir = { x = 0, y = 0 }
-                if input.action_down("survivor_left") then  moveDir.x = moveDir.x - 1 end
-                if input.action_down("survivor_right") then moveDir.x = moveDir.x + 1 end
-                if input.action_down("survivor_up") then    moveDir.y = moveDir.y - 1 end
-                if input.action_down("survivor_down") then  moveDir.y = moveDir.y + 1 end
-
                 local len = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
                 if len == 0 then
                     -- fallback: use last known facing or velocity
@@ -2497,9 +2566,11 @@ function initActionPhase()
                     else
                         moveDir.x, moveDir.y = 0, -1 -- default forward dash (e.g., up)
                     end
-                else
-                    moveDir.x, moveDir.y = moveDir.x / len, moveDir.y / len
                 end
+    
+                -- add impulse in the direction it's going
+                -- timer that resets damping after a short delay. (SetDamping)
+                
                 local DASH_STRENGTH = 700
                 
                 physics.ApplyImpulse(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
@@ -2563,56 +2634,7 @@ function initActionPhase()
             end
             
             local speed = 200 -- pixels per second
-            -- local dx, dy = 0, 0
-            -- if input.action_down("survivor_left") then
-            --     dx = dx - 1
-            -- end
-            -- if input.action_down("survivor_right") then
-            --     dx = dx + 1
-            -- end
-            -- if input.action_down("survivor_up") then
-            --     dy = dy - 1
-            -- end
-            -- if input.action_down("survivor_down") then
-            --     dy = dy + 1
-            -- end
-            -- -- normalize direction vector
-            -- if dx ~= 0 or dy ~= 0 then
-            --     local len = math.sqrt(dx * dx + dy * dy)
-            --     dx = dx / len
-            --     dy = dy / len
-            -- end
             
-            -- local t = registry:get(survivorEntity, Transform)
-            -- if t then
-            --     t.actualX = t.actualX + dx * speed * GetFrameTime()
-            --     t.actualY = t.actualY + dy * speed * GetFrameTime()
-            -- end
-            
-            local isMoving = false
-            local moveDir = {x=0, y=0}
-            if input.action_down("survivor_left") then
-                moveDir.x = -1
-                isMoving = true
-            end
-            if input.action_down("survivor_right") then
-                moveDir.x = 1
-                isMoving = true
-            end
-            if input.action_down("survivor_up") then
-                moveDir.y = -1
-                isMoving = true
-            end
-            if input.action_down("survivor_down") then
-                moveDir.y = 1
-                isMoving = true
-            end
-            -- normalize
-            local len = math.sqrt(moveDir.x * moveDir.x + moveDir.y * moveDir.y)
-            if len > 0 then
-                moveDir.x = moveDir.x / len
-                moveDir.y = moveDir.y / len
-            end
             physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * speed, moveDir.y * speed)
             
         end,

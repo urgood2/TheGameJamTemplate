@@ -94,3 +94,6 @@
   - Player can now gather orbs to level up.
   - Added HP and XP bars to UI.
   - Player can now dash.
+
+10/25/2025
+  - 

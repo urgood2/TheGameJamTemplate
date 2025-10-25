@@ -1,4 +1,5 @@
 # Documentation
+- [ ] input.isGamepadEnabled()
 - [ ] note that adding update() to nodes in multiple entities will greatly slow down performance. better to use a timer or a system that processes multiple entities at once.
 - [ ] entity render override (replaces sprites but gets the shader functionality too)
 ```cpp

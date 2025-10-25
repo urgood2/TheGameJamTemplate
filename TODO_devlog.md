@@ -96,4 +96,5 @@
   - Player can now dash.
 
 10/25/2025
-  - 
+  - Integrated controller input, though there isn't any smart card selection or ui navigation yet. only movement & dashing.
+  - Added board set cycling to allow for multiple triggers, and a dedicated trigger inventory.

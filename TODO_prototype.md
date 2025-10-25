@@ -40,7 +40,11 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
-- Add trigger inventory for better testing.
+- put triggers in "trigger inventory" separate from main inventory.
+- make different trigger card making function, also make triggers use different font color.
+- tooltip at the bottom of screen for highlighted card. probably make prettier later.
+- controller input pass so I can seamlessly control ui & cards with only controller. probably make a system for that.
+- Add transition like in snkrx. how does that work? use whoosh.
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 - show active wand stats on the screen, indicate this is a wand somehow. Also, popup tooltips for the cards when hovering over them.
 - Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop

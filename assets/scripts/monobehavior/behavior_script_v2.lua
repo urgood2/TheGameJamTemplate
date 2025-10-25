@@ -9,20 +9,21 @@ local node = Object:extend()
 
 function node:init(args) end
 
--- Called every frame by script_system_update()
-function node:update(dt)
-    -- print('node [#' .. self.id() .. '] update()', transform)
-    -- local transform = self.owner:get(self.id(), Transform)
+-- TODO: erasing this function for performance, re-add manually if needed
+-- Called every frame by script_system_update() if it exists.
+-- function node:update(dt)
+--     -- print('node [#' .. self.id() .. '] update()', transform)
+--     -- local transform = self.owner:get(self.id(), Transform)
     
-    -- coroutine task example
-    -- task.run_named_task("blinker", function()
-    --     print("start")
-    --     task.wait(1.0)
-    --     print("end")
-    --   end)
+--     -- coroutine task example
+--     -- task.run_named_task("blinker", function()
+--     --     print("start")
+--     --     task.wait(1.0)
+--     --     print("end")
+--     --   end)
     
-    -- print("tasks active:", task.count_tasks(self))
-end
+--     -- print("tasks active:", task.count_tasks(self))
+-- end
 
 -- Called just before the entity is destroyed
 function node:destroy()

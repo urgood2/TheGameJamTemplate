@@ -49,9 +49,9 @@ namespace scripting
     {
         auto &script = registry.get<ScriptComponent>(entity);
         assert(script.self.valid());
-        script.hooks.update = script.self["update"];
+        script.hooks.update = script.self["update"]; // may not be valid if not defined
         script.hooks.on_collision = script.self["on_collision"];
-        assert(script.hooks.update.valid());
+        // assert(script.hooks.update.valid());
         assert(script.hooks.on_collision.valid());
 
         script.self["id"] = sol::readonly_property([entity]
@@ -92,7 +92,7 @@ namespace scripting
     void script_system_update(entt::registry &registry, float delta_time)
     {
         ZoneScopedN("scripting::script_system_update");
-        auto view = registry.view<ScriptComponent>();
+        static auto view = registry.view<ScriptComponent>();
         for (auto [entity, script] : view.each()) {
             
             ZoneScopedN("scripting::script_system_update - per entity");
@@ -106,13 +106,12 @@ namespace scripting
             }
             
             // 1. Run normal update
-            if (script.hooks.update.valid()) {
-                sol::protected_function_result result = script.hooks.update(script.self, delta_time);
-                if (!result.valid()) {
-                    sol::error err = result;
-                    std::cerr << "[Script Error] update failed for entity " << int(entity) << ": " << err.what() << "\n";
-                }
+            try {
+                script.hooks.update(script.self, delta_time);
+            } catch (const sol::error& e) {
+                spdlog::error("[Script Error] Entity {}: {}", static_cast<uint32_t>(entity), e.what());
             }
+
             
             // FIXME: just removing tasks, we don't need this, and it's a performance hog.
             

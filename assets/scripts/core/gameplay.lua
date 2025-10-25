@@ -132,28 +132,35 @@ function createNewBoard(x, y, w, h)
     board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
     board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
     board.cards = {} -- no starting cards
-    board.update = function(self, dt)
+    -- cache globals / upvalues
+    local math_max, math_floor = math.max, math.floor
+    local registry_get, registry_valid = registry.get, registry.valid
+    local assignZ = layer_order_system.assignZIndexToEntity
+    local getScript = getScriptTableFromEntityID
+    local cardBaseZ = z_orders.card
+    local ENT_NULL = entt_null
+
+    function board:update(dt)
         local eid = self:handle()
-        if not eid or not registry:valid(eid) then return end
-        
-        
-        --TODO: debuggin, is shop board updating?
-        if (self.gameStates and self.gameStates[1] == SHOP_STATE) then
+        if not eid or not registry_valid(registry, eid) then return end
+
+        -- DEBUG
+        if self.gameStates and self.gameStates[1] == SHOP_STATE then
             log_debug("shop board updating")
         end
 
-        local area = registry:get(eid, Transform)
+        local area = registry_get(registry, eid, Transform)
+        if not area then return end
 
-        local cards = self.cards or {}
-        local n = #cards
-        if n == 0 then return end
-        
+        local cards = self.cards
+        if not cards or #cards == 0 then return end
 
         -- probe card size
         local cardW, cardH = 100, 140
-        for _, cardEid in ipairs(cards) do
-            if cardEid and registry:valid(cardEid) and cardEid ~= entt_null then
-                local ct = registry:get(cardEid, Transform)
+        for i = 1, #cards do
+            local cardEid = cards[i]
+            if cardEid and registry_valid(registry, cardEid) and cardEid ~= ENT_NULL then
+                local ct = registry_get(registry, cardEid, Transform)
                 if ct and ct.actualW and ct.actualH and ct.actualW > 0 and ct.actualH > 0 then
                     cardW, cardH = ct.actualW, ct.actualH
                     break
@@ -161,81 +168,74 @@ function createNewBoard(x, y, w, h)
             end
         end
 
-        -- layout
+        -- layout math
         local padding = 20
-        local availW = math.max(0, area.actualW - padding * 2)
+        local availW = math_max(0, area.actualW - padding * 2)
         local minGap = 12
 
+        local n = #cards
         local spacing, groupW
         if n == 1 then
-            spacing = 0
-            groupW  = cardW
+            spacing, groupW = 0, cardW
         else
             local fitSpacing = (availW - cardW) / (n - 1)
-            spacing = math.max(minGap, fitSpacing)
-            groupW  = cardW + spacing * (n - 1)
+            spacing = math_max(minGap, fitSpacing)
+            groupW = cardW + spacing * (n - 1)
             if groupW > availW then
-                spacing = math.max(0, fitSpacing)
-                groupW  = cardW + spacing * (n - 1)
+                spacing = math_max(0, fitSpacing)
+                groupW = cardW + spacing * (n - 1)
             end
         end
 
-        local startX  = area.actualX + padding + (availW - groupW) * 0.5
+        local startX = area.actualX + padding + (availW - groupW) * 0.5
         local centerY = area.actualY + area.actualH * 0.5
 
-        -- z-order cache (per card)
-        self.z_order_cache_per_card = self.z_order_cache_per_card or {}
-        local baseZ = z_orders.card
-        
-        -- sort the cards by actualX
-        table.sort(cards, function(a, b)
-            if not (a and registry:valid(a) and a ~= entt_null) then return false end
-            if not (b and registry:valid(b) and b ~= entt_null) then return true  end
+        -- z-order cache
+        local zcache = self.z_order_cache_per_card
+        if not zcache then
+            zcache = {}
+            self.z_order_cache_per_card = zcache
+        end
 
-            local at = registry:get(a, Transform)
-            local bt = registry:get(b, Transform)
-            if not (at and bt) then return false end
+        -- sort once (if card count > 1)
+        if n > 1 then
+            table.sort(cards, function(a, b)
+                if not (a and registry_valid(registry, a) and a ~= ENT_NULL) then return false end
+                if not (b and registry_valid(registry, b) and b ~= ENT_NULL) then return true end
+                local at, bt = registry_get(registry, a, Transform), registry_get(registry, b, Transform)
+                if not (at and bt) then return false end
+                local ax = at.actualX + at.actualW * 0.5
+                local bx = bt.actualX + bt.actualW * 0.5
+                return (ax == bx) and (a < b) or (ax < bx)
+            end)
+        end
 
-            local aCenterX = at.actualX + at.actualW * 0.5
-            local bCenterX = bt.actualX + bt.actualW * 0.5
-
-            if aCenterX == bCenterX then
-                return a < b   -- compare raw entity ids
-            end
-            return aCenterX < bCenterX
-        end)
-
-
-        for i, cardEid in ipairs(cards) do
-            if cardEid and registry:valid(cardEid) and cardEid ~= entt_null then
-                local ct = registry:get(cardEid, Transform)
+        local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
+        for i = 1, n do
+            local cardEid = cards[i]
+            if cardEid and registry_valid(registry, cardEid) and cardEid ~= ENT_NULL then
+                local ct = registry_get(registry, cardEid, Transform)
                 if ct then
-                    ct.actualX = math.floor(startX + (i - 1) * spacing + 0.5)
-                    ct.actualY = math.floor(centerY - ct.actualH * 0.5 + 0.5)
-                    
-                    -- if card is selected, bump it up a bit, but only in inventory
-                    if eid == inventory_board_id or eid == trigger_inventory_board_id then
-                        local cardScript = getScriptTableFromEntityID(cardEid)
+                    local x = startX + (i - 1) * spacing
+                    local y = centerY - ct.actualH * 0.5
+                    if isInventory then
+                        local cardScript = getScript(cardEid)
                         if cardScript and cardScript.selected then
-                            ct.actualY = ct.actualY - ct.actualH * 0.7
+                            y = y - ct.actualH * 0.7
                         end
                     end
+                    ct.actualX = math_floor(x + 0.5)
+                    ct.actualY = math_floor(y + 0.5)
                 end
-                
-                -- don't overwrite zIndex if the card is being dragged
-                local zi = baseZ + (i - 1)
-                self.z_order_cache_per_card[cardEid] = zi
-                
-                -- assign zIndex via LayerOrder system
-                layer_order_system.assignZIndexToEntity(cardEid, zi)
-                
-                local cardGameObject = registry:get(cardEid, GameObject)
-                if cardGameObject and cardGameObject.state and cardGameObject.state.isBeingDragged then
-                    --overwrite
-                    layer_order_system.assignZIndexToEntity(cardEid, self.z_orders.top)
+
+                local zi = cardBaseZ + (i - 1)
+                zcache[cardEid] = zi
+                assignZ(cardEid, zi)
+
+                local cardObj = registry_get(registry, cardEid, GameObject)
+                if cardObj and cardObj.state and cardObj.state.isBeingDragged then
+                    assignZ(cardEid, self.z_orders.top)
                 end
-                
-        
             end
         end
     end
@@ -933,207 +933,6 @@ function createNewCard(id, x, y, gameStateToApply)
     end
     
     return cardScript:handle()
-end
-
--- deprecated, use createNewCard instead
-function createNewTestCard(boardEntityID, isStackable)
-    
-    local randomPool = {
-        "action_card_placeholder.png",
-        "mod_card_placeholder.png",
-        "trigger_card_placeholder.png",
-    }
-    
-    -- let's create a couple of cards.
-    local card1 = animation_system.createAnimatedObjectWithTransform(
-        lume.randomchoice(randomPool), -- animation ID
-        true             -- use animation, not sprite identifier, if false
-    )
-    
-    -- give card state tag
-    add_state_tag(card1, PLANNING_STATE)
-    
-    -- give a script table
-    local cardScript = Node{}    
-    
-    
-    cardScript.isStackable = isStackable or true -- whether this card can be stacked on other cards, default true
-    
-    -- give an update table to align the card's stacks if they exist.
-    cardScript.update = function(self, dt)
-        local eid = self:handle()
-        
-        -- return unless self's root is self.
-        if self.stackRootEntity and self.stackRootEntity ~= eid then
-            return
-        end
-        
-        -- if there is a stack, align the stack
-        if self.cardStack and #self.cardStack > 0 then
-            local baseTransform = registry:get(eid, Transform)
-            
-            local stackOffsetY = baseTransform.actualH * 0.2 -- offset each card
-            
-            for i, stackedCardEid in ipairs(self.cardStack) do
-                if stackedCardEid and registry:valid(stackedCardEid) then
-                    local stackedTransform = registry:get(stackedCardEid, Transform)
-                    stackedTransform.actualX = baseTransform.actualX
-                    stackedTransform.actualY = baseTransform.actualY + (i * stackOffsetY)
-                end
-            end
-        end
-        
-    end
-    
-    -- attach ecs must be called after defining the callbacks.
-    cardScript:attach_ecs{ create_new = false, existing_entity = card1 }
-    
-    
-    
-    -- make draggable and set some callbacks in the transform system
-    local nodeComp = registry:get(card1, GameObject)
-    local gameObjectState = nodeComp.state
-    gameObjectState.hoverEnabled = true
-    gameObjectState.triggerOnReleaseEnabled = true
-    gameObjectState.collisionEnabled = true
-    gameObjectState.dragEnabled = true -- allow dragging the colonist
-    nodeComp.methods.onHover = function()
-    end
-    
-    nodeComp.methods.onStopHover = function()
-    end
-    
-    animation_system.resizeAnimationObjectsInEntityToFit(
-        card1,
-        48 * 2,   -- width
-        64 * 2    -- height
-    )
-    
-    -- NOTE: onRelease is called for when mouse is released ON TOP OF this node.
-    nodeComp.methods.onRelease = function(registry, releasedOn, released)
-        log_debug("card", released, "released on", releasedOn)
-        
-        -- when released on top of a card, get the root card of the stack if there is one, and add self to that stack 
-        
-        
-        -- get the card script table
-        local releasedCardScript = getScriptTableFromEntityID(released)
-        local releasedOnCardScript = getScriptTableFromEntityID(releasedOn)
-        if not releasedCardScript then return end
-        if not releasedOnCardScript then return end
-        
-        -- check stackRootEntity in the table. Also, check that isStackable is true
-        if not releasedCardScript.isStackable then
-            log_debug("released card is not stackable or has no stackRootEntity")
-            return
-        end
-        
-        -- check that the released entity is not already a stack root
-        if releasedCardScript.stackRootEntity and releasedCardScript.stackRootEntity == released and releasedCardScript.cardStack and #releasedCardScript.cardStack > 0 then
-            log_debug("released card is already a stack root, not stacking on self")
-            return
-        end
-        
-        local rootCardScript = nil
-        
-        -- if the card released on has no root, then make it the root.
-        if not releasedOnCardScript.stackRootEntity then
-            rootCardScript = releasedOnCardScript
-            releasedOnCardScript.stackRootEntity = releasedOnCardScript:handle()
-            releasedOnCardScript.cardStack = releasedOnCardScript.cardStack or {}
-            releasedCardScript.stackRootEntity = releasedOnCardScript:handle()
-        else 
-            -- if it has a root, use that instead.
-            rootCardScript = getScriptTableFromEntityID(releasedOnCardScript.stackRootEntity)
-        end
-        
-        if not rootCardScript then
-            log_debug("could not find root card script")
-            return
-        end
-        
-        -- add self to the root entity's stack, if self is not the root
-        if rootCardScript:handle() == released then
-            log_debug("released card is the root entity, not stacking on self")
-            return
-        end
-        
-        -- make sure neither card is already in a stack and they're being dropped onto each other by accident. It's weird, but sometimes root can be dropped on a member card.
-        if rootCardScript.cardStack then
-            for _, e in ipairs(rootCardScript.cardStack) do
-                if e == released then
-                    log_debug("released card is already in the root entity's stack, not stacking again")
-                    return
-                end
-            end
-        elseif releasedCardScript.isStackChild then
-            log_debug("released card is already a child in another stack, not stacking again")
-            return
-        end
-        addCardToStack(rootCardScript, releasedCardScript)
-        
-        -- after adding to the stack, update the z-orders from bottom up.
-        local baseZ = z_orders.card
-        
-        -- give root entity the base z order
-        layer_order_system.assignZIndexToEntity(rootCardScript:handle(), baseZ)
-        
-        -- now for every card in the stack, give it a z order above the root
-        for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
-            if stackedCardEid and registry:valid(stackedCardEid) then
-                local stackedTransform = registry:get(stackedCardEid, Transform)
-                local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
-                layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
-            end
-        end
-        
-    end
-    
-    nodeComp.methods.onDrag = function()
-        
-        if not boardEntityID then 
-            layer_order_system.assignZIndexToEntity(card1, z_orders.top_card)
-            return 
-        end
-        
-        local board = boards[boardEntityID]
-        -- dunno why, board can be nil
-        if not board then return end
-        -- set z order to top so it can be seen
-        cardScript.isDragging = true
-        
-        log_debug("dragging card, bringing to top z:", board.z_orders.top)
-        layer_order_system.assignZIndexToEntity(card1, board.z_orders.top)
-        
-        -- save the starting position in case we need to snap back
-        if not cardScript.startingPosition then
-            local t = registry:get(card1, Transform)
-            if t then
-                cardScript.startingPosition = { x = t.actualX, y = t.actualY }
-            end
-        end
-    end
-    
-    nodeComp.methods.onStopDrag = function()
-        
-        if not boardEntityID then 
-            layer_order_system.assignZIndexToEntity(card1, z_orders.card)
-            return 
-        end
-        
-        local board = boards[boardEntityID]
-        -- dunno why, board can be nil
-        if not board then return end
-        -- reset z order to cached value
-        cardScript.isDragging = false
-        local cachedZ = board.z_order_cache_per_card and board.z_order_cache_per_card[card1] or board.z_orders.card
-        layer_order_system.assignZIndexToEntity(card1, cachedZ)
-    end
-    
-    
-    
-    return card1
-    
 end
 
 -- return the object lua table from an entt id
@@ -2498,14 +2297,7 @@ function initSurvivorEntity()
     -- give survivor a script and hook up
     local survivorScript = Node{}
     -- TODO: add update method here if needed
-    survivorScript.update = function(self, dt)
-        local t = registry:get(self:handle(), Transform)
-        if t then
-            -- make sure visual matches actual, so there's no lag and vfx always stays on the player
-            t.visualX = t.actualX
-            t.visualY = t.actualY
-        end
-    end
+
     survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
     
     -- relocate to the center of the screen
@@ -2544,11 +2336,19 @@ function initSurvivorEntity()
         "WORLD"
     )
     
-    -- make a timer that runs every frame when action state is active, to render the walls.
+    -- make a timer that runs every frame when action state is active, to render the walls
     timer.run(
         function()
             -- bail if not in action state
             if not is_state_active(ACTION_STATE) then return end
+            
+            -- also make sure player visual matches actual
+            local playerT = registry:get(survivorEntity, Transform)
+            if playerT then
+                -- make sure visual matches actual, so there's no lag and vfx always stays on the player
+                playerT.visualX = playerT.actualX
+                playerT.visualY = playerT.actualY
+            end
             
             -- draw walls
             command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)

@@ -637,17 +637,24 @@ function createNewCard(id, x, y, gameStateToApply)
                         --     c.entity = eid
                         -- end, z_orders.card_text, layer.DrawCommandSpace.World)
                         
-                        -- draw debug label.
-                        command_buffer.queueDrawText(layers.sprites, function(c)
-                            c.text = cardScript.test_label or "unknown"
-                            c.font = localization.getFont()
-                            c.x = t.visualX + t.visualW * 0.1
-                            c.y = t.visualY + 10
-                            c.color = colorToUse
-                            c.fontSize = 20.0
-                        end, z_orders.card_text, layer.DrawCommandSpace.World)
                         
                         -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
+                        
+                        -- this will draw in local space of the card, hopefully.
+                        local zToUse = cardScript.selected and (z_orders.top_card + 1) or z_orders.card_text
+                        log_debug("Drawing card label for card", eid, "at z", zToUse)
+                        command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()
+                            -- draw debug label.
+                            command_buffer.queueDrawText(layers.sprites, function(c)
+                                c.text = cardScript.test_label or "unknown"
+                                c.font = localization.getFont()
+                                c.x = t.visualW * 0.1
+                                c.y = t.visualH * 0.1
+                                c.color = colorToUse
+                                c.fontSize = 20.0
+                            end, zToUse, layer.DrawCommandSpace.World) -- z order on the inside here doesn't matter much.
+                            
+                        end, zToUse, layer.DrawCommandSpace.World)
                     end
                 end
                 ::continue::
@@ -871,8 +878,8 @@ function createNewCard(id, x, y, gameStateToApply)
         cardScript.isDragging = true
         
         
-        log_debug("dragging card, bringing to top z:", board.z_orders.top)
-        layer_order_system.assignZIndexToEntity(card, board.z_orders.top)
+        log_debug("dragging card, bringing to top z:", z_orders.top_card)
+        layer_order_system.assignZIndexToEntity(card, z_orders.top_card)
     end
     
     nodeComp.methods.onStopDrag = function()

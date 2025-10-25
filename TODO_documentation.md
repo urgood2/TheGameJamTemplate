@@ -1,4 +1,33 @@
 # Documentation
+- [ ] blinking sprites
+```lua
+local rainComp = registry:get(globals.rainEntity, AnimationQueueComponent)
+    --                             rainComp.noDraw = not rainComp.noDraw
+```
+- [ ] using scoped transfrom render queing
+```lua
+command_buffer.queueScopedTransformCompositeRender(layers.sprites, entityA, function()
+    -- This text will render in A's local space
+    command_buffer.queueDrawText(layers.sprites, function(c)
+        c.text = "Entity A"
+        c.x = 0
+        c.y = 0
+        c.fontSize = 24
+        c.color = palette.snapToColorName("black")
+    end, z_orders.text, layer.DrawCommandSpace.World)
+
+    -- Nested transform under child entityB
+    command_buffer.queueScopedTransformCompositeRender(layers.sprites, entityB, function()
+        command_buffer.queueDrawRectangle(layers.sprites, function(c)
+            c.x = -10
+            c.y = -10
+            c.width = 20
+            c.height = 20
+            c.color = palette.snapToColorName("red")
+        end, z_orders.overlay, layer.DrawCommandSpace.World)
+    end, z_orders.overlay)
+end, z_orders.text)
+```
 - [ ] input.isGamepadEnabled()
 - [ ] note that adding update() to nodes in multiple entities will greatly slow down performance. better to use a timer or a system that processes multiple entities at once.
 - [ ] entity render override (replaces sprites but gets the shader functionality too)

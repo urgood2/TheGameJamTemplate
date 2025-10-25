@@ -44,6 +44,9 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+
+- make sprites easy to blink.
+- particles that are more random in distance and lifetime. and maybe smaller. randomized colors too.
 - lua queing https://chatgpt.com/share/68fc7574-d6f4-800a-849e-829d81b0b18f
 - controller nav https://chatgpt.com/share/68fc7589-3a60-800a-afb0-ffa4fba94e0a
 - use the new itch assets to indicate icons for wands & when they are on cooldown.
@@ -128,3 +131,9 @@ end)
 # ui/ux questions
 - should remove area only appear when player drags a card?
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
+
+# polish phase
+- sound effects.
+- music.
+- make sprites blink for effect, like dying or damage.
+- shader pass for legibility (change crt maybe)

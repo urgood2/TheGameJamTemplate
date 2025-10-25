@@ -1733,6 +1733,7 @@ layer.DrawCommandType = {
     AddPop = 7,  -- Pop transform matrix
     PushMatrix = 8,  -- Explicit push matrix command
     PushObjectTransformsToMatrix = 100,  -- Push object's transform to matrix stack
+    ScopedTransformCompositeRender = 101,  -- Scoped transform for composite rendering
     PopMatrix = 9,  -- Explicit pop matrix command
     DrawCircle = 10,  -- Draw a filled circle
     DrawRectangle = 11,  -- Draw a filled rectangle
@@ -2246,6 +2247,18 @@ layer.CmdPushMatrix = {
 layer.CmdPushObjectTransformsToMatrix = {
     ---@type Entity
     entity = nil  -- Entity to get transforms from
+}
+
+
+---
+--- 
+---
+---@class layer.CmdScopedTransformCompositeRender
+layer.CmdScopedTransformCompositeRender = {
+    ---@type Entity
+    entity = nil,  -- Entity to get transforms from
+    ---@type vector
+    payload = nil  -- Additional payload data
 }
 
 
@@ -7076,6 +7089,16 @@ function layer.queueAddPop(...) end
         ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
         ---@return void
 function layer.queuePushObjectTransformsToMatrix(...) end
+
+---
+--- Queues a CmdScopedTransformCompositeRender into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order. Use with popMatrix()
+---
+---@param layer Layer # Target layer to queue into
+        ---@param init_fn fun(c: layer.CmdScopedTransformCompositeRender) # Function to initialize the command
+        ---@param z number # Z-order depth to queue at
+        ---@param renderSpace layer.DrawCommandSpace # Draw command space (default: Screen)
+        ---@return void
+function layer.queueScopedTransformCompositeRender(...) end
 
 ---
 --- Queues a CmdPushMatrix into the layer draw list. Executes init_fn with a command instance and inserts it at the specified z-order.

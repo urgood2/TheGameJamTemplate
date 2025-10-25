@@ -52,7 +52,7 @@ namespace layer
     }
     
     void ExecuteScopedTransformCompositeRender(std::shared_ptr<layer::Layer> layer, CmdScopedTransformCompositeRender* c) {
-        layer::pushEntityTransformsToMatrix(globals::registry, c->entity, layer);
+        layer::pushEntityTransformsToMatrixImmediate(globals::registry, c->entity, layer);
         // Execute child commands
         for (auto& cmd : c->children) {
             auto it = dispatcher.find(cmd.type);

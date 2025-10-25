@@ -55,22 +55,30 @@ static void QueueScopedTransformCompositeRender(
     layer::DrawCommandSpace space,
     std::function<void()> buildChildren)
 {
+    static thread_local std::vector<std::vector<layer::DrawCommandV2>*> s_commandStack;
+    
     auto* cmd = layer::layer_command_buffer::Add<layer::CmdScopedTransformCompositeRender>(layer, z, space);
     cmd->entity = e;
 
-    // Build children directly into cmd->children
-    // Capture the global layer variable so sub-queue calls go there
-    auto originalCommandVector = std::move(layer->commands);
+    // Push current vector target
+    s_commandStack.push_back(&cmd->children);
+
+    // Temporarily redirect to this command’s children vector
+    std::vector<layer::DrawCommandV2>* targetCommands = &cmd->children;
+    std::vector<layer::DrawCommandV2> oldCommands = std::move(layer->commands);
     layer->commands.clear();
 
-    // Build sub-commands
+    // Build the nested children
     buildChildren();
 
-    // Move any queued commands into children
-    cmd->children = std::move(layer->commands);
+    // Move any commands created during build into this command’s children
+    *targetCommands = std::move(layer->commands);
 
-    // Restore parent queue
-    layer->commands = std::move(originalCommandVector);
+    // Restore previous layer command vector
+    layer->commands = std::move(oldCommands);
+
+    // Pop command stack
+    s_commandStack.pop_back();
 }
 
 // Graphics namespace for rendering functions
@@ -1607,7 +1615,7 @@ void exposeToLua(sol::state &lua) {
 #undef QUEUE_CMD
 
 
-// special case for scoped render
+// special case for scoped render. this allows queuing commands that draw to the local space of a specific transform without having to use direct execution.
 cb.set_function("queueScopedTransformCompositeRender",
     [](std::shared_ptr<layer::Layer> lyr,
        entt::entity e,
@@ -1622,10 +1630,13 @@ cb.set_function("queueScopedTransformCompositeRender",
                     sol::protected_function_result r = pf();
                     if (!r.valid()) {
                         sol::error err = r;
-                        std::fprintf(stderr, "[queueScopedTransformCompositeRender] child_builder error: %s\n", err.what());
+                        std::fprintf(stderr,
+                            "[queueScopedTransformCompositeRender] child_builder error: %s\n",
+                            err.what());
                     }
                 } else {
-                    std::fprintf(stderr, "[queueScopedTransformCompositeRender] invalid function\n");
+                    std::fprintf(stderr,
+                        "[queueScopedTransformCompositeRender] invalid function\n");
                 }
             });
     });
@@ -5240,6 +5251,39 @@ auto pushEntityTransformsToMatrix(entt::registry &registry,
             cmd->y = y;
         },
         zOrder, drawSpace);
+}
+
+auto pushEntityTransformsToMatrixImmediate(entt::registry &registry,
+                                  entt::entity e,
+                                  std::shared_ptr<layer::Layer> layer,
+                                  int zOrder) -> void
+{
+    // Determine whether the entity renders in world or screen space.
+    bool isScreenSpace = registry.any_of<collision::ScreenSpaceCollisionMarker>(e);
+    layer::DrawCommandSpace drawSpace =
+        isScreenSpace ? layer::DrawCommandSpace::Screen : layer::DrawCommandSpace::World;
+
+    // Retrieve the transform (and any needed springs)
+    auto &entityTransform = registry.get<transform::Transform>(e);
+
+    // --- Push Matrix ---
+    PushMatrix();
+    
+    // --- Apply Translation: move to entity center ---
+    Translate(entityTransform.getVisualX() + entityTransform.getVisualW() * 0.5f,
+              entityTransform.getVisualY() + entityTransform.getVisualH() * 0.5f);  
+              
+    // --- Apply Scaling ---
+    Scale(entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected(),
+          entityTransform.getVisualScaleWithHoverAndDynamicMotionReflected());
+          
+    // --- Apply Rotation ---
+    Rotate(entityTransform.getVisualR() + entityTransform.rotationOffset);
+    
+    // --- Translate back to local origin ---
+    Translate(-entityTransform.getVisualW() * 0.5f,
+              -entityTransform.getVisualH() * 0.5f);
+
 }
 
 void Circle(float x, float y, float radius, const Color &color) {

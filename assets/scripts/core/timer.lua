@@ -2,6 +2,10 @@
 -- Centralized Timer System (Full Parity)
 --------------------------------------------
 
+if _G.__GLOBAL_TIMER__ then
+    return _G.__GLOBAL_TIMER__
+end
+
 local timer = {}
 local empty_function = function() end
 
@@ -12,8 +16,26 @@ timer.global_multiplier = 1.0
 --------------------------------------------------------
 -- Basic Utility
 --------------------------------------------------------
+--------------------------------------------------------
+-- Tag Utility
+--------------------------------------------------------
 local function random_uid()
-  return tostring(math.random()):sub(3)
+  return "timer_" .. tostring(math.random(1, 1e9))
+end
+
+local function ensure_valid_tag(tag)
+  -- If nil/false, auto-generate a unique tag
+  if tag == nil or tag == false then
+    tag = random_uid()
+  end
+
+  -- Coerce non-string/non-number keys safely
+  if type(tag) ~= "string" and type(tag) ~= "number" then
+    tag = tostring(tag)
+  end
+
+  -- Overwrite existing timers silently if tag already exists
+  return tag
 end
 
 function timer.resolve_delay(delay)
@@ -31,7 +53,7 @@ end
 --------------------------------------------------------
 
 function timer.run(action, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "run",
     timer = 0,
@@ -43,7 +65,7 @@ end
 
 
 function timer.run_every_render_frame(action, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "every_render_frame",
     timer = 0,
@@ -54,7 +76,7 @@ function timer.run_every_render_frame(action, after, tag, group)
 end
 
 function timer.after(delay, action, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "after",
     timer = 0,
@@ -66,7 +88,7 @@ function timer.after(delay, action, tag, group)
 end
 
 function timer.cooldown(delay, condition, action, times, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "cooldown",
     timer = 0,
@@ -83,7 +105,7 @@ function timer.cooldown(delay, condition, action, times, after, tag, group)
 end
 
 function timer.every(delay, action, times, immediate, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "every",
     timer = 0,
@@ -102,7 +124,7 @@ end
 
 function timer.every_step(start_delay, end_delay, times, action, immediate, step_method, after, tag, group)
   assert(times >= 2, "timer.every_step requires times >= 2")
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   local step = (end_delay - start_delay) / (times - 1)
   local delays = {}
   for i = 1, times do delays[i] = start_delay + (i - 1) * step end
@@ -129,7 +151,7 @@ function timer.every_step(start_delay, end_delay, times, action, immediate, step
 end
 
 function timer.for_time(delay, action, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "for",
     timer = 0,
@@ -147,7 +169,7 @@ end
 
 -- 1) scalar tween(getter, setter)
 function timer.tween_scalar(delay, getter, setter, target_value, method, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   timer.timers[tag] = {
     type = "tween_scalar",
     timer = 0,
@@ -164,7 +186,7 @@ end
 
 -- 2) tracks tween (array of descriptors {get, set, to, from?})
 function timer.tween_tracks(delay, tracks, method, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   local computed_tracks = {}
   for _, tr in ipairs(tracks) do
     local from = tr.from or tr.get()
@@ -188,7 +210,7 @@ end
 
 -- 3) table fields tween (your existing one)
 function timer.tween_fields(delay, target, source, method, after, tag, group)
-  tag = tag or random_uid()
+  tag = ensure_valid_tag(tag)
   local initial_values = {}
   for k in pairs(source) do
     initial_values[k] = target[k]
@@ -299,6 +321,12 @@ function timer.update(dt, is_render_frame)
   for tag in pairs(timer.timers) do
     keys[#keys + 1] = tag
   end
+  
+  -- print the tag table for debugging
+  for i = 1, #keys do
+    local tag = keys[i]
+    print("Timer Tag:", tag)
+  end
 
   for i = 1, #keys do
     local tag = keys[i]
@@ -306,6 +334,11 @@ function timer.update(dt, is_render_frame)
     if not t then goto continue end  -- might’ve been removed during iteration
 
     if t.paused then goto continue end
+    
+    if tag == "interval" then
+      -- Debug hook: print number of active timers every interval
+      print("[Timer] Active timers:", #keys)
+    end
 
     local effective_dt = dt * timer.global_multiplier * (t.multiplier or 1)
     t.timer = (t.timer or 0) + effective_dt
@@ -392,4 +425,5 @@ function timer.update(dt, is_render_frame)
   end
 end
 
+_G.__GLOBAL_TIMER__ = timer
 return timer

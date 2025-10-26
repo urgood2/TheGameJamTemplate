@@ -2994,15 +2994,15 @@ function initActionPhase()
 
     
     -- timer to pan camera to follow player
-    timer.every(0.2, function()
-        log_debug("Camera pan timer tick")
+    timer.every(0.1, function()
+        -- log_debug("Camera pan timer tick")
         if is_state_active(ACTION_STATE) then
             local targetX, targetY = 0, 0
             local t = registry:get(survivorEntity, Transform)
             if t then
                 targetX = t.actualX + t.actualW/2
                 targetY = t.actualY + t.actualH/2
-                camera_smooth_pan_to("world_camera", targetX, targetY) -- pan to the target smoothly
+                camera_smooth_pan_to("world_camera", targetX, targetY, { tag = "interval"}) -- pan to the target smoothly
             end
             
         else

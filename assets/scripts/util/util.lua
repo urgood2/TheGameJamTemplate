@@ -34,7 +34,10 @@ function camera_smooth_pan_to(camName, tx, ty, opts)
         -- cam:SetActualTarget(tx, ty)
         if type(opts.after) == "function" then opts.after() end
     end
-
+    
+    -- log_debug(("camera_smooth_pan_to: Moving camera '%s' to (%f,%f) over %d steps every %f sec"):format(
+    --     camName, tx, ty, increments, interval
+    -- ))
     timer.every(
         interval,
         function()
@@ -50,6 +53,10 @@ function camera_smooth_pan_to(camName, tx, ty, opts)
     )
     
     log_debug(("Created timer '%s' | delay=%s | type=%s"):format(tag, tostring(interval), "every"))
+    log_debug("Timer table contents after creating '%s':", tag)
+    for k, v in pairs(timer.timers) do
+        log_debug(" - %s (%s)", k, v.type)
+    end
 
     return true
 end

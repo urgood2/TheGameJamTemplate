@@ -2990,8 +2990,12 @@ function initActionPhase()
     nil,
     "spawnEnemyTimer")
     
+    
+
+    
     -- timer to pan camera to follow player
-    timer.every(0.1, function()
+    timer.every(0.2, function()
+        log_debug("Camera pan timer tick")
         if is_state_active(ACTION_STATE) then
             local targetX, targetY = 0, 0
             local t = registry:get(survivorEntity, Transform)

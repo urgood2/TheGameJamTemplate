@@ -15,7 +15,7 @@ local timer = require("core.timer")
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 -- Represents game loop main module
-main = {}
+main = main or {}
 
 -- Game state (used only in lua)
 GAMESTATE = {
@@ -476,6 +476,7 @@ function main.init()
     )
     
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
+    
 end
 
 local prevFrameCounter = 0

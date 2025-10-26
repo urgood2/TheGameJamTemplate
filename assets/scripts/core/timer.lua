@@ -17,6 +17,7 @@ local function random_uid()
 end
 
 function timer.resolve_delay(delay)
+  if not delay then return 0 end
   if type(delay) == "table" then
     return main and main.random_float and main:random_float(delay[1], delay[2])
       or (delay[1] + math.random() * (delay[2] - delay[1]))
@@ -294,15 +295,23 @@ end
 --------------------------------------------------------
 
 function timer.update(dt, is_render_frame)
-  for tag, t in pairs(timer.timers) do
+  local keys = {}
+  for tag in pairs(timer.timers) do
+    keys[#keys + 1] = tag
+  end
+
+  for i = 1, #keys do
+    local tag = keys[i]
+    local t = timer.timers[tag]
+    if not t then goto continue end  -- might’ve been removed during iteration
+
     if t.paused then goto continue end
+
     local effective_dt = dt * timer.global_multiplier * (t.multiplier or 1)
     t.timer = (t.timer or 0) + effective_dt
 
     if t.type == "run" then
       t.action()
-      -- t.after()
-      -- timer.timers[tag] = nil
 
     elseif t.type == "every_render_frame" then
       if is_render_frame then
@@ -321,7 +330,10 @@ function timer.update(dt, is_render_frame)
       end
 
     elseif t.type == "after" then
-      if t.timer > t.delay then t.action(); timer.timers[tag] = nil end
+      if t.timer > t.delay then
+        t.action()
+        timer.timers[tag] = nil
+      end
 
     elseif t.type == "every" then
       if t.timer > t.delay then

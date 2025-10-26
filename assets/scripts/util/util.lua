@@ -39,6 +39,8 @@ function camera_smooth_pan_to(camName, tx, ty, opts)
         interval,
         function()
             local c = cam:GetActualTarget()
+            log_debug(("stepX=%f stepY=%f cur=(%f,%f)"):format(stepX, stepY, c.x, c.y))
+
             cam:SetActualTarget(c.x + stepX, c.y + stepY)
         end,
         increments,         -- repetitions
@@ -46,6 +48,8 @@ function camera_smooth_pan_to(camName, tx, ty, opts)
         on_done,            -- after callback
         tag                 -- unique tag
     )
+    
+    log_debug(("Created timer '%s' | delay=%s | type=%s"):format(tag, tostring(interval), "every"))
 
     return true
 end

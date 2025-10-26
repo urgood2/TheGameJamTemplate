@@ -1,11 +1,16 @@
 local Object = require("external/object")
 local task = require("task/task")
+local timer = require("core/timer")
 
 local node = Object:extend()
 
 -- This script is a MonoBehavior script that will be attached to a node. It should be named accordingly for the component it represents, and linked up c++ side.
 
 -- Called once, right after the component is attached.
+
+
+-- Table of all nodes with update() functions
+local updatables = {}
 
 function node:init(args) end
 
@@ -38,6 +43,9 @@ function node:__call(args)
     for k, v in pairs(args) do obj[k] = v end
   end
   if obj.init then obj:init(args) end
+  if type(self.update) == "function" then
+    table.insert(updatables, obj)
+  end
   return obj
 end
 
@@ -199,6 +207,19 @@ function node:destroy_when(condition, opts)
   end
 
   return self
+end
+
+
+-- Global update dispatcher (called once per frame from Lua main loop)
+function node.update_all(dt)
+  for i = #updatables, 1, -1 do
+    local obj = updatables[i]
+    if obj._eid and (not registry.valid or registry:valid(obj._eid)) then
+      obj:update(dt)
+    else
+      table.remove(updatables, i)
+    end
+  end
 end
 
 

@@ -332,6 +332,8 @@ void RunGameLoop()
 #endif
             EndDrawing();
         }
+        
+        mainLoop.renderFrame++; // ✅ Count this as one rendered frame
 
 #ifdef __EMSCRIPTEN__
         // (No while loop on web)

@@ -13,12 +13,16 @@ namespace main_loop
         float smoothedDeltaTime = 0.0f; // Smoothed delta time for the current frame.
         float realtimeTimer = 0.0f;    // Realtime timer since start of game
         float totaltimeTimer = 0.0f;   // Total time since start of game, excluding pauses
+        
+        
 
         float timescale = 1.0f;    // Time scale for updates
         float rate = 1.0f / 60.0f; // Fixed timestep (e.g., 60 updates per second)
         float lag = 0.0f;          // Accumulated time
         float maxFrameSkip = 5.0f; // Maximum frames to skip
-        int frame = 0;             // Frame counter
+        int frame = 0;             // fixed update frame count
+        int renderFrame = 0;         // total rendered frames since start
+
         float framerate = 240.0f;  // Desired framerate
         float sleepTime = 0.001f;  // Sleep duration to prevent CPU hogging
 
@@ -68,6 +72,7 @@ namespace main_loop
             "lag", &Data::lag,
             "maxFrameSkip", &Data::maxFrameSkip,
             "frame", &Data::frame,
+            "renderFrame", &Data::renderFrame,
             "framerate", &Data::framerate,
             "sleepTime", &Data::sleepTime,
             "updates", &Data::updates,

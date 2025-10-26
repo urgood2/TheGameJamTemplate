@@ -1,4 +1,5 @@
 local task = require("task/task")
+local timer = require("core/timer")
 
 --- Smoothly step the camera toward a target to avoid big-jump jitter.
 -- @param camName string   Name used with camera.Get(...)

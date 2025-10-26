@@ -10,6 +10,7 @@ local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior 
 local palette = require("color.palette")
 local combat_core = require("combat.combat_system")
 local TimerChain = require("core.timer_chain")
+local timer = require("core.timer")
 
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
@@ -314,7 +315,7 @@ function startGameButtonCallback()
     -- 0 is dark, 1 is light
     globalShaderUniforms:set("screen_tone_transition", "position", 1)
     
-    timer.tween(
+    timer.tween_scalar(
         1.0, -- duration in seconds
         function() return globalShaderUniforms:get("screen_tone_transition", "position") end, -- getter
         function(v) globalShaderUniforms:set("screen_tone_transition", "position", v) end, -- setter
@@ -326,7 +327,7 @@ function startGameButtonCallback()
         1.0, -- delay in seconds
         function()
             log_debug("Changing game state to IN_GAME") -- Debug message to indicate the game state change
-            timer.tween(
+            timer.tween_scalar(
                 1.0, -- duration in seconds
                 function() return globalShaderUniforms:get("screen_tone_transition", "position") end, -- getter
                 function(v) globalShaderUniforms:set("screen_tone_transition", "position", v) end, -- setter
@@ -477,7 +478,18 @@ function main.init()
     changeGameState(GAMESTATE.MAIN_MENU) -- Initialize the game in the IN_GAME state
 end
 
+local prevFrameCounter = 0
+
 function main.update(dt)
+    
+    local currentRenderFrameCount = main_loop.data.renderFrame
+    local isRenderFrame = (currentRenderFrameCount ~= prevFrameCounter)
+    prevFrameCounter = currentRenderFrameCount
+    
+    timer.update(dt, isRenderFrame) -- Update the timer system
+    
+    Node.update_all(dt) -- Update all nodes with update() functions
+    
     
     if (globals.gamePaused or currentGameState == GAMESTATE.MAIN_MENU) then
         return -- If the game is paused, do not update anything

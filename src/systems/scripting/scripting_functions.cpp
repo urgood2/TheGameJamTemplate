@@ -205,7 +205,7 @@ namespace scripting {
         // ---------------------------------------------------------
         // methods from timer.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
-        timer::exposeToLua(stateToInit);
+        // timer::exposeToLua(stateToInit);
 
         
 

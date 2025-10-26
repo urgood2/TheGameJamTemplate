@@ -12,6 +12,7 @@ local CombatSystem = require("combat.combat_system")
 require ("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local signal = require("external.hump.signal")
+local timer = require("core.timer")
 
 --  let's make some card data
 local action_card_defs = {
@@ -127,11 +128,9 @@ function resetCardStackZOrder(rootCardEntityID)
 end
 
 function createNewBoard(x, y, w, h) 
-   
-    local board = Node{}
-    board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
-    board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
-    board.cards = {} -- no starting cards
+    
+    
+
     -- cache globals / upvalues
     local math_max, math_floor = math.max, math.floor
     local registry_get, registry_valid = registry.get, registry.valid
@@ -140,16 +139,18 @@ function createNewBoard(x, y, w, h)
     local cardBaseZ = z_orders.card
     local ENT_NULL = entt_null
 
-    function board:update(dt)
+   
+    local BoardType = Node:extend()
+    function BoardType:update(dt)
         local eid = self:handle()
-        if not eid or not registry_valid(registry, eid) then return end
+        if not eid or not registry:valid(eid) then return end
 
         -- DEBUG
-        if self.gameStates and self.gameStates[1] == SHOP_STATE then
-            log_debug("shop board updating")
-        end
+        -- if self.gameStates and self.gameStates[1] == SHOP_STATE then
+        --     log_debug("shop board updating")
+        -- end
 
-        local area = registry_get(registry, eid, Transform)
+        local area = registry:get(eid, Transform)
         if not area then return end
 
         local cards = self.cards
@@ -159,8 +160,8 @@ function createNewBoard(x, y, w, h)
         local cardW, cardH = 100, 140
         for i = 1, #cards do
             local cardEid = cards[i]
-            if cardEid and registry_valid(registry, cardEid) and cardEid ~= ENT_NULL then
-                local ct = registry_get(registry, cardEid, Transform)
+            if cardEid and registry:valid(cardEid) and cardEid ~= ENT_NULL then
+                local ct = registry:get(cardEid, Transform)
                 if ct and ct.actualW and ct.actualH and ct.actualW > 0 and ct.actualH > 0 then
                     cardW, cardH = ct.actualW, ct.actualH
                     break
@@ -200,9 +201,9 @@ function createNewBoard(x, y, w, h)
         -- sort once (if card count > 1)
         if n > 1 then
             table.sort(cards, function(a, b)
-                if not (a and registry_valid(registry, a) and a ~= ENT_NULL) then return false end
-                if not (b and registry_valid(registry, b) and b ~= ENT_NULL) then return true end
-                local at, bt = registry_get(registry, a, Transform), registry_get(registry, b, Transform)
+                if not (a and registry:valid(a) and a ~= ENT_NULL) then return false end
+                if not (b and registry:valid(b) and b ~= ENT_NULL) then return true end
+                local at, bt = registry:get(a, Transform), registry:get(b, Transform)
                 if not (at and bt) then return false end
                 local ax = at.actualX + at.actualW * 0.5
                 local bx = bt.actualX + bt.actualW * 0.5
@@ -213,8 +214,8 @@ function createNewBoard(x, y, w, h)
         local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
         for i = 1, n do
             local cardEid = cards[i]
-            if cardEid and registry_valid(registry, cardEid) and cardEid ~= ENT_NULL then
-                local ct = registry_get(registry, cardEid, Transform)
+            if cardEid and registry:valid(cardEid) and cardEid ~= ENT_NULL then
+                local ct = registry:get(cardEid, Transform)
                 if ct then
                     local x = startX + (i - 1) * spacing
                     local y = centerY - ct.actualH * 0.5
@@ -232,13 +233,20 @@ function createNewBoard(x, y, w, h)
                 zcache[cardEid] = zi
                 assignZ(cardEid, zi)
 
-                local cardObj = registry_get(registry, cardEid, GameObject)
+                local cardObj = registry:get(cardEid, GameObject)
                 if cardObj and cardObj.state and cardObj.state.isBeingDragged then
                     assignZ(cardEid, self.z_orders.top)
                 end
             end
         end
     end
+    
+    local board = BoardType{}
+    
+    board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
+    board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
+    board.cards = {} -- no starting cards
+    
     board:attach_ecs{ create_new = true }
     transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), x, y, w, h, board:handle())
     boards[board:handle()] = board
@@ -557,7 +565,8 @@ function createNewCard(id, x, y, gameStateToApply)
     add_state_tag(card, gameStateToApply or PLANNING_STATE)
     
     -- give a script table
-    local cardScript = Node{}    
+    local CardType = Node:extend()
+    local cardScript = CardType{}
     
     -- cardScript.isStackable = isStackable or false -- whether this card can be stacked on other cards, default true
     
@@ -954,9 +963,7 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
     if not cardTransform then return end
     
     -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
-    local pulseObject = Node{}
-    pulseObject.lifetime = 0.3
-    pulseObject.age = 0.0
+    local PulseObjectType = Node:extend()
     pulseObject.update = function(self, dt)
         local addedScaleAmount = 0.3
         
@@ -994,6 +1001,10 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
             
         end, z_orders.card - 1, layer.DrawCommandSpace.World)
     end
+    local pulseObject = PulseObjectType{}
+    pulseObject.lifetime = 0.3
+    pulseObject.age = 0.0
+    
     pulseObject
         :attach_ecs{ create_new = true }
         :destroy_when(function(self, eid) return self.age >= self.lifetime end)
@@ -1001,7 +1012,7 @@ end
 
 function slowTime(duration, targetTimeScale)
     main_loop.data.timescale = targetTimeScale or 0.2 -- slow to 20%, then over X seconds, tween back to 1.0
-    timer.tween(
+    timer.tween_scalar(
         duration or 1.0, -- duration in seconds
         function() return main_loop.data.timescale end, -- getter
         function(v) main_loop.data.timescale = v end, -- setter
@@ -1027,14 +1038,15 @@ function killPlayer()
         local transform = registry:get(survivorEntity, Transform)
         
         -- create a note that draws a red circle where the player was and removes itself after 0.1 second
-        local deathCircle = Node{}
-        deathCircle.lifetime = 0.1
-        deathCircle.age = 0.0
+        local DeathCircleType = Node:extend()local playerX = transform.actualX + transform.actualW * 0.5
+        local playerY = transform.actualY + transform.actualH * 0.5
+        local playerW = transform.actualW
+        local playerH = transform.actualH
         local playerX = transform.actualX + transform.actualW * 0.5
         local playerY = transform.actualY + transform.actualH * 0.5
         local playerW = transform.actualW
         local playerH = transform.actualH
-        deathCircle.update = function(self, dt)
+        DeathCircleType.update = function(self, dt)
             self.age = self.age + dt
             command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
                 local t = registry:get(survivorEntity, Transform)
@@ -1045,6 +1057,11 @@ function killPlayer()
                 c.color = palette.snapToColorName("red")
             end, z_orders.player_vfx, layer.DrawCommandSpace.World)
         end
+        local deathCircle = DeathCircleType{}
+        deathCircle.lifetime = 0.1
+        deathCircle.age = 0.0
+        
+        
         deathCircle:attach_ecs{ create_new = true }
         deathCircle:destroy_when(function(self, eid) return self.age >= self.lifetime end)
         
@@ -1071,10 +1088,8 @@ function spawnRandomBullet()
     
     local playerTransform = registry:get(survivorEntity, Transform)
     
-    local node = Node{}
-    node.lifetime = 2.0
-    node.age = 0.0
-    node.update = function(self, dt)
+    local BulletType = Node:extend() -- define the type before instantiating
+    BulletType.update = function(self, dt)
         self.age = self.age + dt
         
         -- draw a circle
@@ -1087,6 +1102,11 @@ function spawnRandomBullet()
             c.color = palette.snapToColorName("red")
         end, z_orders.projectiles, layer.DrawCommandSpace.World)
     end
+    
+    local node = BulletType{}
+    node.lifetime = 2.0
+    node.age = 0.0
+    
     node:attach_ecs{ create_new = true }
     node:destroy_when(function(self, eid) return self.age >= self.lifetime end) 
     
@@ -1141,10 +1161,8 @@ function spawnRandomBullet()
     physics.SetVelocity(world, node:handle(), vx, vy)
     
     -- make a new node that discards after 0.1 seconds to mark bullet firing
-    local fireMarkNode = Node{}
-    fireMarkNode.lifetime = 0.1
-    fireMarkNode.age = 0.0
-    fireMarkNode.update = function(self, dt)
+    local FireMarkType = Node:extend()
+    FireMarkType.update = function(self, dt)
         self.age = self.age + dt
         -- draw a small flash at the bullet position
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
@@ -1156,6 +1174,10 @@ function spawnRandomBullet()
             c.color = palette.snapToColorName("yellow")
         end, z_orders.projectiles, layer.DrawCommandSpace.World)
     end
+    local fireMarkNode = FireMarkType{}
+    fireMarkNode.lifetime = 0.1
+    fireMarkNode.age = 0.0
+    
     fireMarkNode:attach_ecs{ create_new = true }
     fireMarkNode:destroy_when(function(self, eid) return self.age >= self.lifetime end)
 end
@@ -1783,6 +1805,8 @@ function initPlanningPhase()
     -- board draw function, for all baords
     timer.run(function()
         
+        -- log_debug("Drawing board borders")
+        
         -- draw which board set is selected (text), below the trigger board.
         local text = tostring(current_board_set_index) .. " of " .. tostring(#board_sets)
         command_buffer.queueDrawText(layers.sprites, function(c)
@@ -2295,7 +2319,8 @@ function initSurvivorEntity()
     )
     
     -- give survivor a script and hook up
-    local survivorScript = Node{}
+    local SurvivorType = Node:extend()
+    local survivorScript = SurvivorType{}
     -- TODO: add update method here if needed
 
     survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
@@ -2771,11 +2796,8 @@ function initActionPhase()
                     if t then
                         
                         -- new node
-                        local particleNode = Node{}
-                        particleNode.lifetime = 0.1
-                        particleNode.age = 0.0
-                        particleNode.savedPos = { x = t.actualX, y = t.actualY }
-                        particleNode.update = function(self, dt)
+                        local ParticleType = Node:extend()
+                        ParticleType.update = function(self, dt)
                             self.age = self.age + dt
                             
                             
@@ -2794,6 +2816,11 @@ function initActionPhase()
                                 c.bottomLeft = palette.snapToColorName("apricot_cream")
                             end, z_orders.player_vfx - 20, layer.DrawCommandSpace.World)
                         end
+                        local particleNode = ParticleType{}
+                        particleNode.lifetime = 0.1
+                        particleNode.age = 0.0
+                        particleNode.savedPos = { x = t.actualX, y = t.actualY }
+                        
                         
                         particleNode
                             :attach_ecs{ create_new = true }
@@ -2907,11 +2934,10 @@ function initActionPhase()
             
             
             -- make circle marker for enemy appearance, tween it down to 0 scale and then remove it
-            local spawnMarkerNode = Node{}
-            spawnMarkerNode.scale = 1.0
+            local SpawnMarkerType = Node:extend()
             local enemyX = enemyTransform.actualX + enemyTransform.actualW/2
             local enemyY = enemyTransform.actualY + enemyTransform.actualH/2
-            spawnMarkerNode.update = function(self, dt)
+            SpawnMarkerType.update = function(self, dt)
                 
                 
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
@@ -2925,10 +2951,14 @@ function initActionPhase()
                     
                 end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
             end
+            
+            local spawnMarkerNode = Node{}
+            spawnMarkerNode.scale = 1.0
+            
             spawnMarkerNode:attach_ecs{}
             -- tween down
             -- local h5 = timer.tween(1.2, camera, { x = 320, y = 180, zoom = 1.25 }, nil, nil, "cam_move", "camera")
-            timer.tween(0.2, spawnMarkerNode, { scale = 0.0 }, nil, function()
+            timer.tween_fields(0.2, spawnMarkerNode, { scale = 0.0 }, nil, function()
                 registry:destroy(spawnMarkerNode:handle())
             end)
             
@@ -2981,6 +3011,8 @@ function initActionPhase()
             end
         end
     end,
+    nil,
+    false,
     nil,
     "cameraPanToPlayerTimer")
     

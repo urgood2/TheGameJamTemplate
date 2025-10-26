@@ -132,8 +132,12 @@ end)
 - should remove area only appear when player drags a card?
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
 
+# performance considerations
+- maybe move timer to lua entirely. too much lag.       
+
 # polish phase
 - sound effects.
+- steering should turn toward direction it is going.
 - music.
 - make sprites blink for effect, like dying or damage.
 - shader pass for legibility (change crt maybe)

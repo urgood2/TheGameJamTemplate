@@ -523,19 +523,19 @@ namespace game
             //     fA.mask, fA.category, fB.mask, fB.category);
 
 
-            if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
-                continue;
+            // if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+            //     continue;
 
             // A → B
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, b);
-            }
-            // B → A
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, a);
-            }
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, b);
+            // }
+            // // B → A
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, a);
+            // }
         }
         
         // -------------------------------------------------
@@ -616,19 +616,19 @@ namespace game
 
 
                 
-            if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
-                continue;
+            // if (collision::CheckCollisionBetweenTransforms(&globals::registry, a, b) == false) 
+            //     continue;
 
-            // A → B
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, b);
-            }
-            // B → A
-            if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
-                if (sc->hooks.on_collision.valid())
-                    sc->hooks.on_collision(sc->self, a);
-            }
+            // // A → B
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(a)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, b);
+            // }
+            // // B → A
+            // if (auto *sc = globals::registry.try_get<scripting::ScriptComponent>(b)) {
+            //     if (sc->hooks.on_collision.valid())
+            //         sc->hooks.on_collision(sc->self, a);
+            // }
         }
 
         // all entities intersecting a region

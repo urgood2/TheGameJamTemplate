@@ -1,5 +1,6 @@
 
 local Easing = require("util.easing")  -- the file above
+local timer = require("core.timer")
 
 -- meant to be called within a coroutine.
 -- returns false if entity should stop.

@@ -18,7 +18,7 @@ lume = require("external.lume")
 -- Represents game loop main module
 main = main or {}
 
-PROFILE_ENABLED = false -- set to true to enable profiling
+PROFILE_ENABLED = true -- set to true to enable profiling
 
 -- Game state (used only in lua)
 GAMESTATE = {
@@ -502,7 +502,7 @@ function main.update(dt)
         profileFrameCounter = profileFrameCounter + 1
         if profileFrameCounter >= printProfileEveryNFrames then
             profileFrameCounter = 0
-            local rep = profile.report(20) -- print top 20 functions
+            local rep = profile.report(30) -- print top X functions
             log_debug("Profile Report:\n" .. rep)
             profile.reset()
         end

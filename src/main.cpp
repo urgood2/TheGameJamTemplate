@@ -234,92 +234,72 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 // The main game loop callback / blocking loop
 void RunGameLoop()
 {
+    using namespace main_loop;
+
     // ---------- Initialization ----------
     float lastFrameTime = GetTime();
 
-    // Optional frame smoothing (helps even out jitter in GetFrameTime)
+    // Optional frame smoothing
     const int frameSmoothingCount = 10;
     std::deque<float> frameTimes;
-
-    // Safety: limit how many fixed updates can run per frame
-    const int maxUpdatesPerFrame = 5;
 
     // FPS tracking
     int frameCounter = 0;
     double fpsLastTime = GetTime();
 
+    // Fixed time step (LÖVE uses display refresh or 1/60)
+    const float fixedDelta = mainLoop.rate; // e.g., 1/60.0f
+    float accumulator = fixedDelta;
+
 #ifndef __EMSCRIPTEN__
     while (!WindowShouldClose())
     {
-        ZoneScopedN("RunGameLoop"); // custom label
+        ZoneScopedN("RunGameLoop");
 #endif
+        // ---------- Step 1: Begin Drawing ----------
         {
             ZoneScopedN("BeginDrawing/rlImGuiBegin call");
             BeginDrawing();
-        
-
 #ifndef __EMSCRIPTEN__
-
-        if (globals::useImGUI)
-            rlImGuiBegin(); // Begin ImGui each frame (desktop only)
+            if (globals::useImGUI)
+                rlImGuiBegin();
 #endif
         }
 
-        using namespace main_loop;
-
-        // ---------- Step 1: Measure REAL frame time ----------
-        float rawDeltaTime = std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
-        mainLoop.rawDeltaTime = rawDeltaTime;
-
-        // Optional smoothing
+        // ---------- Step 2: Measure real delta ----------
+        float rawDeltaTime = std::max(GetFrameTime(), 0.001f);
         frameTimes.push_back(rawDeltaTime);
         if (frameTimes.size() > frameSmoothingCount)
             frameTimes.pop_front();
-
         float deltaTime = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
 
-        // ---------- Step 2: Accumulate time ----------
+        // ---------- Step 3: Update timers ----------
         mainLoop.realtimeTimer += deltaTime;
         if (!globals::isGamePaused)
             mainLoop.totaltimeTimer += deltaTime;
 
-        // Accumulate lag for fixed-step updates (real time, not scaled)
-        mainLoop.lag = std::min(mainLoop.lag + deltaTime, mainLoop.rate * mainLoop.maxFrameSkip);
+        // ---------- Step 4: Fixed-step accumulator ----------
+        accumulator += deltaTime;
 
-        // ---------- Step 3: Fixed updates ----------
-        int updatesPerformed = 0;
-        while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
+        // Run updates while we have enough accumulated time
+        while (accumulator >= fixedDelta)
         {
-            // Pass scaled time into your update logic
-            float scaledStep = mainLoop.rate * mainLoop.timescale;
-            MainLoopFixedUpdateAbstraction(scaledStep);
+            ZoneScopedN("FixedUpdate");
+            MainLoopFixedUpdateAbstraction(fixedDelta * mainLoop.timescale);
 
-            mainLoop.lag -= mainLoop.rate;
+            accumulator -= fixedDelta;
             mainLoop.updates++;
-            updatesPerformed++;
             mainLoop.frame++;
         }
 
-        // ---------- Step 4: Update UPS counter ----------
-        mainLoop.updateTimer += deltaTime;
-        if (mainLoop.updateTimer >= 1.0f)
-        {
-            mainLoop.renderedUPS = mainLoop.updates;
-            mainLoop.updates = 0;
-            mainLoop.updateTimer = 0.0f;
-        }
+        // ---------- Step 5: Render (no interpolation, just latest state) ----------
+        // ZoneScopedN("Render");
+        MainLoopRenderAbstraction(deltaTime * mainLoop.timescale); // LÖVE doesn't interpolate, so alpha=1
 
-        // ---------- Step 5: Rendering ----------
-        // Optional interpolation factor (use for smooth rendering)
-        float alpha = mainLoop.lag / mainLoop.rate;
-
-        // Pass alpha or deltaTime as appropriate to your renderer
-        MainLoopRenderAbstraction(alpha);
-
-        // Render-time timers (if you use time-scaled effects here, apply timescale manually)
+        // ---------- Step 6: Update render timers ----------
         timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
 
-        // ---------- Step 6: FPS counter ----------
+        // ---------- Step 7: FPS counter ----------
         frameCounter++;
         double now = GetTime();
         if (now - fpsLastTime >= 1.0)
@@ -328,25 +308,29 @@ void RunGameLoop()
             frameCounter = 0;
             fpsLastTime = now;
         }
-        
+
+        // ---------- Step 8: End Drawing ----------
         {
             ZoneScopedN("EndDrawing/rlImGuiEnd call");
-
 #ifndef __EMSCRIPTEN__
-        if (globals::useImGUI)
-            rlImGuiEnd();
+            if (globals::useImGUI)
+                rlImGuiEnd();
 #endif
             EndDrawing();
         }
-        
-        mainLoop.renderFrame++; // ✅ Count this as one rendered frame
+
+        mainLoop.renderFrame++; // one frame rendered
+
+        // ---------- Step 9: Sleep / yield (like love.timer.sleep) ----------
+        WaitTime(0.001f); // optional: avoids pegging 100% CPU on fast frames
 
 #ifdef __EMSCRIPTEN__
-        // (No while loop on web)
+        // no loop for web
 #else
     } // while (!WindowShouldClose())
 #endif
 }
+
 
 
 

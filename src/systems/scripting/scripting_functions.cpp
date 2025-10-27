@@ -153,8 +153,8 @@ namespace scripting {
         
         
         // allow tracy support
-        tracy::LuaRegister( stateToInit.lua_state() );
-        lua_sethook(stateToInit, tracy::LuaHook, LUA_MASKCALL | LUA_MASKRET, 0);
+        // tracy::LuaRegister( stateToInit.lua_state() );
+        // lua_sethook(stateToInit, tracy::LuaHook, LUA_MASKCALL | LUA_MASKRET, 0);
         
         // dummy tracy table
         // sol::table tracyTable = stateToInit.create_table();

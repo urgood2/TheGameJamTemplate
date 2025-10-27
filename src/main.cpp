@@ -104,7 +104,6 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 // update methods
 auto updateSystems(float dt) -> void;
-auto updatePhysics(float dt) -> void;
 
 auto updateTimers(float dt) -> void
 {
@@ -136,7 +135,7 @@ void mainMenuStateGameLoop(float dt)
     // show main menu here
 }
 
-void MainLoopUpdateAbstraction(float dt)
+void MainLoopFixedUpdateAbstraction(float dt)
 {
     ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
     
@@ -231,6 +230,25 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 
 
 }
+
+auto updatePhysics(float dt) -> void
+{
+    {
+        ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
+        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    }
+    
+    {
+        ZoneScopedN("Physics Step All Worlds");
+        globals::physicsManager->stepAll(dt); // step all physics worlds
+    }
+    
+    {
+        ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
+        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    }
+}
+
 // The main game loop function that runs until the application or window is closed.
 // The main game loop callback / blocking loop
 void RunGameLoop()
@@ -238,33 +256,38 @@ void RunGameLoop()
     // ---------- Initialization ----------
     float lastFrameTime = GetTime();
 
+    // Optional frame smoothing (helps even out jitter in GetFrameTime)
     const int frameSmoothingCount = 10;
     std::deque<float> frameTimes;
 
+    // Safety: limit how many fixed updates can run per frame
     const int maxUpdatesPerFrame = 5;
 
+    // FPS tracking
     int frameCounter = 0;
     double fpsLastTime = GetTime();
 
 #ifndef __EMSCRIPTEN__
     while (!WindowShouldClose())
     {
-        ZoneScopedN("RunGameLoop");
+        ZoneScopedN("RunGameLoop"); // custom label
 #endif
         {
             ZoneScopedN("BeginDrawing/rlImGuiBegin call");
             BeginDrawing();
+        
 
 #ifndef __EMSCRIPTEN__
-            if (globals::useImGUI)
-                rlImGuiBegin();
+
+        if (globals::useImGUI)
+            rlImGuiBegin(); // Begin ImGui each frame (desktop only)
 #endif
         }
 
         using namespace main_loop;
 
         // ---------- Step 1: Measure REAL frame time ----------
-        float rawDeltaTime = std::max(GetFrameTime(), 0.001f);
+        float rawDeltaTime = std::max(GetFrameTime(), 0.001f); // real delta, unaffected by timescale
         mainLoop.rawDeltaTime = rawDeltaTime;
 
         // Optional smoothing
@@ -272,25 +295,23 @@ void RunGameLoop()
         if (frameTimes.size() > frameSmoothingCount)
             frameTimes.pop_front();
 
-        float smoothedDelta = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
+        float deltaTime = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
 
         // ---------- Step 2: Accumulate time ----------
-        mainLoop.realtimeTimer += smoothedDelta;
-
-        // Apply timescale to everything that is *scaled* (non-paused game time)
-        float scaledDelta = smoothedDelta * mainLoop.timescale;
+        mainLoop.realtimeTimer += deltaTime;
         if (!globals::isGamePaused)
-            mainLoop.totaltimeTimer += scaledDelta;
+            mainLoop.totaltimeTimer += deltaTime;
 
-        // ---------- Step 3: Fixed timestep accumulator ----------
-        mainLoop.lag = std::min(mainLoop.lag + smoothedDelta, mainLoop.rate * mainLoop.maxFrameSkip);
+        // Accumulate lag for fixed-step updates (real time, not scaled)
+        mainLoop.lag = std::min(mainLoop.lag + deltaTime, mainLoop.rate * mainLoop.maxFrameSkip);
 
-        // ---------- Step 4: Fixed-step PHYSICS updates ----------
+        // ---------- Step 3: Fixed updates ----------
         int updatesPerformed = 0;
         while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
         {
-            float fixedStep = mainLoop.rate * mainLoop.timescale; // physics respects timescale
-            updatePhysics(fixedStep); // update physics with fixed timestep
+            // Pass scaled time into your update logic
+            float scaledStep = mainLoop.rate * mainLoop.timescale;
+            updatePhysics(scaledStep);
 
             mainLoop.lag -= mainLoop.rate;
             mainLoop.updates++;
@@ -298,20 +319,33 @@ void RunGameLoop()
             mainLoop.frame++;
         }
 
-        // ---------- Step 5: Frame-based updates ----------
-        // Everything else runs once per rendered frame
-        // (input, AI, animation, scripting, non-physics timers)
-        float frameDelta = scaledDelta; // already scaled
-        MainLoopUpdateAbstraction(frameDelta);
-        
-        // ---------- Step 6: Rendering ----------
+        // ---------- Step 4: Update UPS counter ----------
+        mainLoop.updateTimer += deltaTime;
+        if (mainLoop.updateTimer >= 1.0f)
+        {
+            mainLoop.renderedUPS = mainLoop.updates;
+            mainLoop.updates = 0;
+            mainLoop.updateTimer = 0.0f;
+        }
+
+        // ---------- Step 5: Rendering ----------
+        // Optional interpolation factor (use for smooth rendering)
         float alpha = mainLoop.lag / mainLoop.rate;
-        MainLoopRenderAbstraction(alpha); // use alpha for interpolation (like Unity)
+        
+        // ---------- Step 4.5: Fixed update (moved) ----------
+        {
+            float scaledStep = mainLoop.rate * mainLoop.timescale;
+            MainLoopFixedUpdateAbstraction(scaledStep);
+        }
 
-        // Render-time timers, also scaled by timescale
-        timer::TimerSystem::update_render_timers(frameDelta);
 
-        // ---------- Step 7: FPS counter ----------
+        // Pass alpha or deltaTime as appropriate to your renderer
+        MainLoopRenderAbstraction(alpha);
+
+        // Render-time timers (if you use time-scaled effects here, apply timescale manually)
+        timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
+
+        // ---------- Step 6: FPS counter ----------
         frameCounter++;
         double now = GetTime();
         if (now - fpsLastTime >= 1.0)
@@ -320,20 +354,23 @@ void RunGameLoop()
             frameCounter = 0;
             fpsLastTime = now;
         }
-
+        
         {
             ZoneScopedN("EndDrawing/rlImGuiEnd call");
 
 #ifndef __EMSCRIPTEN__
-            if (globals::useImGUI)
-                rlImGuiEnd();
+        if (globals::useImGUI)
+            rlImGuiEnd();
 #endif
             EndDrawing();
         }
+        
+        mainLoop.renderFrame++; // ✅ Count this as one rendered frame
 
-        mainLoop.renderFrame++;
-#ifndef __EMSCRIPTEN__
-    }
+#ifdef __EMSCRIPTEN__
+        // (No while loop on web)
+#else
+    } // while (!WindowShouldClose())
 #endif
 }
 
@@ -412,24 +449,6 @@ int main(void)
     return 0;
 }
 
-auto updatePhysics(float dt) -> void
-{
-    {
-        ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
-        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
-    }
-    
-    {
-        ZoneScopedN("Physics Step All Worlds");
-        globals::physicsManager->stepAll(dt); // step all physics worlds
-    }
-    
-    {
-        ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
-        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
-    }
-}
-
 /// @brief Update the systems that operate on ECS components. Note: dt is in seconds
 /// @return
 auto updateSystems(float dt) -> void
@@ -459,7 +478,20 @@ auto updateSystems(float dt) -> void
         sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
     }
     
+    // {
+    //     ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
+    //     physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    // }
     
+    // {
+    //     ZoneScopedN("Physics Step All Worlds");
+    //     globals::physicsManager->stepAll(dt); // step all physics worlds
+    // }
+    
+    // {
+    //     ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
+    //     physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    // }
     
     // systems
     

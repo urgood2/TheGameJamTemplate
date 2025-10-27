@@ -212,7 +212,7 @@ end
 
 -- Global update dispatcher (called once per frame from Lua main loop)
 function node.update_all(dt)
-  tracy.ZoneBegin("lua node.update_all")
+  -- tracy.zoneBeginN("lua node.update_all") -- just some default depth to avoid bugs
   for i = #updatables, 1, -1 do
     local obj = updatables[i]
     if obj._eid and (not registry.valid or registry:valid(obj._eid)) then
@@ -221,7 +221,7 @@ function node.update_all(dt)
       table.remove(updatables, i)
     end
   end
-  tracy.ZoneEnd("lua node.update_all")
+  -- tracy.zoneEnd()
 end
 
 

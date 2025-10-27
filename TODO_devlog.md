@@ -110,4 +110,4 @@
   - Added tracy to lua, allowing profiling of lua code.
   - Robust controller navigation system added, allowing seamless navigation of UI with controller.
   - Controller navigation system exposed to lua for easy integration with lua-based UIs.
-  - Started profiling lua with tracy.
+  - Lua profiling doesn't work with tracy, so I added a different one.

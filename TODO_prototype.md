@@ -44,6 +44,10 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- test new controller nav.
+- lua timer state guard (entity state management, optional)
+- caching of scripts per entity to avoid repeated loads, also delete from cache on entity deletion. also cache transform calls.
+- make card area shift cards to left and right of new card.
 
 - apply the new assets, including some music and ui.
 - explore performance optimizations to existing code for a bit, with tracy.
@@ -133,9 +137,37 @@ end)
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
 
 # performance considerations
-- maybe move timer to lua entirely. too much lag.       
+- Continue profiling with:
+```
+ +-----+-------------------------------+-------------+--------------------------+----------------------------------+
+ | #   | Function                      | Calls       | Time                     | Code                             |
+ +-----+-------------------------------+-------------+--------------------------+----------------------------------+
+ | 1   | ?                             | 40          | 2.079337                 | assets/scripts/core/main.lua:491 |
+ | 2   | update_all                    | 40          | 0.78330900000002         | avior/behavior_script_v2.lua:214 |
+ | 3   | update                        | 40          | 0.667776                 | ts/scripts/core/gameplay.lua:144 |
+ | 4   | update                        | 40          | 0.64059800000001         | ssets/scripts/core/timer.lua:319 |
+ | 5   | action                        | 40          | 0.42036500000001         | ts/scripts/core/gameplay.lua:624 |
+ | 6   | action                        | 40          | 0.090578000000022        | s/scripts/core/gameplay.lua:1809 |
+ | 7   | action                        | 40          | 0.088126000000031        | ts/scripts/core/gameplay.lua:395 |
+ | 8   | getScript                     | 1420        | 0.079456999999906        | ts/scripts/core/gameplay.lua:951 |
+ | 9   | ?                             | 141         | 0.061414999999968        | ts/scripts/core/gameplay.lua:204 |
+ | 10  | update                        | 40          | 0.055021999999973        | ts/scripts/core/gameplay.lua:144 |
+ | 11  | update                        | 40          | 0.034893999999959        | ts/scripts/core/gameplay.lua:144 |
+ | 12  | ?                             | 155         | 0.011791999999957        | ts/scripts/core/gameplay.lua:204 |
+ | 13  | ?                             | 148         | 0.010945000000007        | ts/scripts/core/gameplay.lua:204 |
+ | 14  | ?                             | 155         | 0.010788000000019        | ts/scripts/core/gameplay.lua:204 |
+ | 15  | ?                             | 148         | 0.010620999999972        | ts/scripts/core/gameplay.lua:204 |
+ | 16  | ?                             | 148         | 0.010421000000022        | ts/scripts/core/gameplay.lua:204 |
+ | 17  | ?                             | 148         | 0.010419999999996        | ts/scripts/core/gameplay.lua:204 |
+ | 18  | ?                             | 134         | 0.010415999999992        | ts/scripts/core/gameplay.lua:204 |
+ | 19  | ?                             | 148         | 0.010355999999966        | ts/scripts/core/gameplay.lua:204 |
+ | 20  | ?                             | 141         | 0.010246999999978        | ts/scripts/core/gameplay.lua:204 |
+ +-----+-------------------------------+-------------+--------------------------+----------------------------------+
+
+```  
 
 # polish phase
+- experiment with glowing background behind a card to show selection/effect (colorful, glowing, random)
 - some nice ui https://www.youtube.com/watch?v=Rkd5SYT10UQ as reference
 - add glow to crt as well, and add proper scanlines.
 - integrate proper hit fx, with blinking.

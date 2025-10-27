@@ -142,7 +142,7 @@ function createNewBoard(x, y, w, h)
    
     local BoardType = Node:extend()
     function BoardType:update(dt)
-        tracy.ZoneBegin("BoardType:update")
+        -- tracy.zoneBeginN("BoardType:update") -- just some default depth to avoid bugs
         local eid = self:handle()
         if not eid or not registry:valid(eid) then return end
 
@@ -240,7 +240,7 @@ function createNewBoard(x, y, w, h)
                 end
             end
         end
-        tracy.ZoneEnd("BoardType:update")
+        -- tracy.zoneEnd()
     end
     
     local board = BoardType{}
@@ -468,7 +468,7 @@ function setUpCardAndWandStatDisplay()
                         c.font = localization.getFont()
                         c.x = currentX
                         c.y = currentY
-                        c.color = palette.snapToColorName("YELLOW")
+                        c.color = util.getColor("YELLOW")
                         c.fontSize = STAT_FONT_SIZE
                     end, z_orders.card_text, layer.DrawCommandSpace.World)
                     
@@ -519,7 +519,7 @@ function setUpCardAndWandStatDisplay()
                             c.font = localization.getFont()
                             c.x = currentX
                             c.y = currentY
-                            c.color = palette.snapToColorName("CYAN")
+                            c.color = util.getColor("CYAN")
                             c.fontSize = STAT_FONT_SIZE
                         end, z_orders.card_text, layer.DrawCommandSpace.World)
                         
@@ -604,7 +604,7 @@ function createNewCard(id, x, y, gameStateToApply)
     --         c.font = localization.getFont()
     --         c.x = t.visualX
     --         c.y = t.visualY
-    --         c.color = palette.snapToColorName("BLACK")
+    --         c.color = util.getColor("BLACK")
     --         c.fontSize = 25.0
     --     end, z_orders.card_text, layer.DrawCommandSpace.World)
         
@@ -622,7 +622,7 @@ function createNewCard(id, x, y, gameStateToApply)
     if not timer.get_timer_and_delay("card_render_timer") then
         
         timer.run(function ()
-            tracy.ZoneBegin("Card Render Timer Tick")
+            -- tracy.zoneBeginN("Card Render Timer Tick") -- just some default depth to avoid bugs
             -- bail if not shop or planning state
             if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
                 return
@@ -640,9 +640,9 @@ function createNewCard(id, x, y, gameStateToApply)
                     local t = registry:get(eid, Transform)
                     if t then
                         
-                        local colorToUse = palette.snapToColorName("RED")
+                        local colorToUse = util.getColor("RED")
                         if cardScript.type == "trigger" then
-                            colorToUse = palette.snapToColorName("PURPLE")
+                            colorToUse = util.getColor("PURPLE")
                         end
                         -- command_buffer.queuePushObjectTransformsToMatrix(layers.sprites, function (c)
                         --     c.entity = eid
@@ -674,7 +674,7 @@ function createNewCard(id, x, y, gameStateToApply)
                 end
                 ::continue::
             end
-            tracy.ZoneEnd("Card Render Timer Tick")
+            -- tracy.zoneEnd()
             
         end,
         nil, -- no onComplete
@@ -737,10 +737,10 @@ function createNewCard(id, x, y, gameStateToApply)
     --         c.height = h
     --         c.roundness = 0.5
     --         c.segments = 8
-    --         c.topLeft = palette.snapToColorName("white")
-    --         c.topRight = palette.snapToColorName("gray")
-    --         -- c.bottomRight = palette.snapToColorName("green")
-    --         -- c.bottomLeft = palette.snapToColorName("apricot_cream")
+    --         c.topLeft = util.getColor("white")
+    --         c.topRight = util.getColor("gray")
+    --         -- c.bottomRight = util.getColor("green")
+    --         -- c.bottomLeft = util.getColor("apricot_cream")
                 
     --         end, z_orders.card, layer.DrawCommandSpace.World)
         
@@ -754,7 +754,7 @@ function createNewCard(id, x, y, gameStateToApply)
     --     --     t.font = localization.getFont()
     --     --     t.x = 0
     --     --     t.y = 0
-    --     --     t.color = palette.snapToColorName("red")
+    --     --     t.color = util.getColor("red")
     --     --     t.fontSize = 25.0
     --     -- end)
         
@@ -977,8 +977,8 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
         local scale = 1.0 + addedScaleAmount * Easing.outQuart.f(math.min(1.0, self.age / self.lifetime))
         local e = math.min(1.0, self.age / self.lifetime)
         
-        local fromColor = startColor or palette.snapToColorName("yellow")
-        local toColor   = endColor or palette.snapToColorName("black")
+        local fromColor = startColor or util.getColor("yellow")
+        local toColor   = endColor or util.getColor("black")
         
         -- interpolate per channel
         local r = lerp(fromColor.r, toColor.r, e)
@@ -1057,7 +1057,7 @@ function killPlayer()
                 c.y = playerY
                 c.rx = playerW * 0.5 * (1.0 + self.age * 5.0)
                 c.ry = playerH * 0.5 * (1.0 + self.age * 5.0)
-                c.color = palette.snapToColorName("red")
+                c.color = util.getColor("red")
             end, z_orders.player_vfx, layer.DrawCommandSpace.World)
         end
         local deathCircle = DeathCircleType{}
@@ -1073,8 +1073,8 @@ function killPlayer()
             transform.visualY + transform.actualH * 0.5,
             8, -- count
             0.9, -- seconds
-            palette.snapToColorName("blue"), -- start color
-            palette.snapToColorName("red"), -- end color
+            util.getColor("blue"), -- start color
+            util.getColor("red"), -- end color
             "outCubic", -- from util.easing
             "world" -- screen space
         )
@@ -1102,7 +1102,7 @@ function spawnRandomBullet()
             c.y = t.actualY + t.actualH * 0.5
             c.rx = t.actualW * 0.5
             c.ry = t.actualH * 0.5
-            c.color = palette.snapToColorName("red")
+            c.color = util.getColor("red")
         end, z_orders.projectiles, layer.DrawCommandSpace.World)
     end
     
@@ -1174,7 +1174,7 @@ function spawnRandomBullet()
             c.y = t.actualY + t.actualH * 0.5
             c.rx = t.actualW * 1.5
             c.ry = t.actualH * 1.5
-            c.color = palette.snapToColorName("yellow")
+            c.color = util.getColor("yellow")
         end, z_orders.projectiles, layer.DrawCommandSpace.World)
     end
     local fireMarkNode = FireMarkType{}
@@ -1267,8 +1267,8 @@ function applyPlayerStrengthBonus()
         local baseHeight = playerTransform.actualH * 0.3
         local addedHeight = playerTransform.actualH * 0.7
         
-        local startColor = palette.snapToColorName("white")
-        local endColor = palette.snapToColorName("red")
+        local startColor = util.getColor("white")
+        local endColor = util.getColor("red")
         
         local t = registry:get(survivorEntity, Transform)
         local centerX = t.actualX + t.actualW * 0.5
@@ -1413,7 +1413,7 @@ function fireActionCardsInBoard(boardEntityID)
                         local cardTransform = registry:get(cardEid, Transform)
                         if cardTransform then
                             cardTransform.visualS = 2.0
-                            addPulseEffectBehindCard(cardEid, pulseColorRampTable[index], palette.snapToColorName("black"))    
+                            addPulseEffectBehindCard(cardEid, pulseColorRampTable[index], util.getColor("black"))    
                         end
                         
                         -- actually execute the logic of the card
@@ -1464,7 +1464,7 @@ function startTriggerNSecondsTimer(trigger_board_id, action_board_id, timer_name
             -- play sound
             playSoundEffect("effects", "trigger_activate", 1.0)
             
-            addPulseEffectBehindCard(triggerCardEid, palette.snapToColorName("yellow"), palette.snapToColorName("black"))
+            addPulseEffectBehindCard(triggerCardEid, util.getColor("yellow"), util.getColor("black"))
             
             -- start chain of action cards in the action board
             if not action_board_id or action_board_id == entt_null or not registry:valid(action_board_id) then return end
@@ -1579,7 +1579,7 @@ function createTriggerActionBoardSet(x, y, triggerWidth, actionWidth, height, pa
     local triggerBoardID = createNewBoard(x, y, triggerWidth, height)
     local triggerBoard   = boards[triggerBoardID]
     triggerBoard.noDashedBorder = true
-    triggerBoard.borderColor = palette.snapToColorName("cyan")
+    triggerBoard.borderColor = util.getColor("cyan")
 
     triggerBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.trigger_area") end,
@@ -1603,7 +1603,7 @@ function createTriggerActionBoardSet(x, y, triggerWidth, actionWidth, height, pa
     local actionBoardID = createNewBoard(actionBoardX, y, actionWidth, height)
     local actionBoard   = boards[actionBoardID]
     actionBoard.noDashedBorder = true
-    actionBoard.borderColor = palette.snapToColorName("apricot_cream")
+    actionBoard.borderColor = util.getColor("apricot_cream")
 
     actionBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.action_mod_area") end,
@@ -1807,7 +1807,7 @@ function initPlanningPhase()
     
     -- board draw function, for all baords
     timer.run(function()
-        tracy.ZoneBegin("Planning Phase Board Draw")
+        -- tracy.zoneBeginN("Planning Phase Board Draw") -- just some default depth to avoid bugs
         
         -- log_debug("Drawing board borders")
         
@@ -1819,7 +1819,7 @@ function initPlanningPhase()
             c.y = boardPadding + boardHeight + 30
             c.fontSize = 30
             c.font = localization.getFont()
-            c.color = palette.snapToColorName("purple")
+            c.color = util.getColor("purple")
         end, z_orders.card_text, layer.DrawCommandSpace.World)
         
         for key, boardScript in pairs(boards) do
@@ -1859,7 +1859,7 @@ function initPlanningPhase()
                         c.h = math.max(0, area.actualH)
                         c.rx = 10
                         c.ry = 10
-                        c.color     = self.borderColor or palette.snapToColorName("yellow")
+                        c.color     = self.borderColor or util.getColor("yellow")
                         c.lineWidth = 5
                     end, z_orders.board, layer.DrawCommandSpace.World)
                     goto continue
@@ -1877,13 +1877,13 @@ function initPlanningPhase()
                     c.phase     = shapeAnimationPhase
                     c.arcSteps  = 14
                     c.thickness = 5
-                    c.color     = self.borderColor or palette.snapToColorName("yellow")
+                    c.color     = self.borderColor or util.getColor("yellow")
                 end, z_orders.board, layer.DrawCommandSpace.World)
             end
 
             ::continue::
         end
-        Tracy.ZoneEnd()
+        -- tracy.zoneEnd()
     end)
     
 -- -------------------------------------------------------------------------- --
@@ -1955,7 +1955,7 @@ function initPlanningPhase()
     -- Create
     local inventoryBoardID = createNewBoard(inventoryBoardX, inventoryBoardY, inventoryBoardWidth, inventoryBoardHeight)
     local inventoryBoard = boards[inventoryBoardID]
-    inventoryBoard.borderColor = palette.snapToColorName("white")
+    inventoryBoard.borderColor = util.getColor("white")
     inventory_board_id = inventoryBoardID
 
     
@@ -1990,7 +1990,7 @@ function initPlanningPhase()
     
     local triggerInventoryBoardID = createNewBoard(triggerInventoryX, triggerInventoryY, triggerInventoryWidth, triggerInventoryHeight)
     local triggerInventoryBoard = boards[triggerInventoryBoardID]
-    triggerInventoryBoard.borderColor = palette.snapToColorName("cyan")
+    triggerInventoryBoard.borderColor = util.getColor("cyan")
     trigger_inventory_board_id = triggerInventoryBoardID -- save in global
     
     -- give a text label above the board
@@ -2188,7 +2188,7 @@ function initCombatSystem()
                     c.h = healthBarHeight
                     c.rx = 5
                     c.ry = 5
-                    c.color     = palette.snapToColorName("dark_gray")
+                    c.color     = util.getColor("dark_gray")
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x = healthBarX + (playerHealth / playerMaxHealth) * healthBarWidth * 0.5
@@ -2197,7 +2197,7 @@ function initCombatSystem()
                     c.h = healthBarHeight
                     c.rx = 5
                     c.ry = 5
-                    c.color     = palette.snapToColorName("red")
+                    c.color     = util.getColor("red")
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
                 
                 -- exp bar fully across top of screen
@@ -2212,7 +2212,7 @@ function initCombatSystem()
                     c.h = expBarHeight
                     c.rx = 5
                     c.ry = 5
-                    c.color     = palette.snapToColorName("dark_gray")
+                    c.color     = util.getColor("dark_gray")
                 end, z_orders.background, layer.DrawCommandSpace.Screen)
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x = expBarX + (math.min(playerXP / playerXPForNextLevel, 1.0)) * expBarWidth * 0.5
@@ -2221,7 +2221,7 @@ function initCombatSystem()
                     c.h = expBarHeight
                     c.rx = 5
                     c.ry = 5
-                    c.color     = palette.snapToColorName("pink")
+                    c.color     = util.getColor("pink")
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
             end
         end
@@ -2389,7 +2389,7 @@ function initSurvivorEntity()
                 c.rx = 5
                 c.ry = 5
                 c.lineWidth = 10
-                c.color     = palette.snapToColorName("white")
+                c.color     = util.getColor("white")
             end, z_orders.background, layer.DrawCommandSpace.World)
         end
     )
@@ -2417,10 +2417,10 @@ function initSurvivorEntity()
     --         c.height = h
     --         c.roundness = 0.5
     --         c.segments = 8
-    --         c.topLeft = palette.snapToColorName("apricot_cream")
-    --         c.topRight = palette.snapToColorName("green")
-    --         c.bottomRight = palette.snapToColorName("green")
-    --         c.bottomLeft = palette.snapToColorName("apricot_cream")
+    --         c.topLeft = util.getColor("apricot_cream")
+    --         c.topRight = util.getColor("green")
+    --         c.bottomRight = util.getColor("green")
+    --         c.bottomLeft = util.getColor("apricot_cream")
                 
     --         end, z_orders.projectiles + 1, layer.DrawCommandSpace.World)
     --     end, true) -- true disables sprite rendering
@@ -2456,8 +2456,8 @@ function initSurvivorEntity()
                         pickupTransform.actualY + pickupTransform.actualH / 2,
                         15, -- num particles
                         0.4,
-                        palette.snapToColorName("yellow"), 
-                        palette.snapToColorName("apricot_cream"), -- colors
+                        util.getColor("yellow"), 
+                        util.getColor("apricot_cream"), -- colors
                         "cubic_in_out", -- ease
                         "world"
                     )
@@ -2605,7 +2605,7 @@ function initShopPhase()
     -- let's make a large board for shopping
     local shopBoardID = createNewBoard(100, 100, 800, 400)
     local shopBoard = boards[shopBoardID]
-    shopBoard.borderColor = palette.snapToColorName("apricot_cream")
+    shopBoard.borderColor = util.getColor("apricot_cream")
     
     -- give a text label above the board    
     shopBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
@@ -2645,7 +2645,7 @@ function initShopPhase()
     -- let's add a (buy) board below.
     local buyBoardID = createNewBoard(100, 550, 800, 150)
     local buyBoard = boards[buyBoardID]
-    buyBoard.borderColor = palette.snapToColorName("green")
+    buyBoard.borderColor = util.getColor("green")
     buyBoard.textEntity = ui.definitions.getNewDynamicTextEntry(
         function() return localization.get("ui.buy_area") end,  -- initial text
         20.0,                                 -- font size
@@ -2715,7 +2715,7 @@ function initActionPhase()
     -- create input timer. this must run every frame.
     timer.run(
         function()
-            tracy.ZoneBegin("Survivor Input Handling")
+            -- tracy.zoneBeginN("Survivor Input Handling") -- just some default depth to avoid bugs
             if not survivorEntity or survivorEntity == entt_null or not registry:valid(survivorEntity) then
                 return
             end
@@ -2816,10 +2816,10 @@ function initActionPhase()
                                 c.height = t.actualH  * (1.0 - self.age / self.lifetime)
                                 c.roundness = 0.5
                                 c.segments = 8
-                                c.topLeft = palette.snapToColorName("yellow")
-                                c.topRight = palette.snapToColorName("blue")
-                                c.bottomRight = palette.snapToColorName("green")
-                                c.bottomLeft = palette.snapToColorName("apricot_cream")
+                                c.topLeft = util.getColor("yellow")
+                                c.topRight = util.getColor("blue")
+                                c.bottomRight = util.getColor("green")
+                                c.bottomLeft = util.getColor("apricot_cream")
                             end, z_orders.player_vfx - 20, layer.DrawCommandSpace.World)
                         end
                         local particleNode = ParticleType{}
@@ -2856,7 +2856,7 @@ function initActionPhase()
             
             physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * speed, moveDir.y * speed)
             
-            tracy.ZoneEnd("lua survivor input handling")
+            -- tracy.zoneEnd()
             
         end,
         nil, -- no after
@@ -3003,7 +3003,7 @@ function initActionPhase()
     
     -- timer to pan camera to follow player
     timer.every(0.1, function()
-        tracy.ZoneBegin("Camera Pan Timer Tick")
+        -- tracy.zoneBeginN("Camera Pan Timer Tick") -- just some default depth to avoid bugs
         -- log_debug("Camera pan timer tick")
         if is_state_active(ACTION_STATE) then
             local targetX, targetY = 0, 0
@@ -3023,7 +3023,7 @@ function initActionPhase()
                 camera_smooth_pan_to("world_camera", globals.screenWidth()/2, globals.screenHeight()/2) -- pan to the target smoothly
             end
         end
-        tracy.ZoneEnd("Camera Pan Timer Tick")
+        -- tracy.zoneEnd()
     end,
     nil,
     false,
@@ -3093,7 +3093,7 @@ function initPlanningUI()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("gray"))
+                :addColor(util.getColor("gray"))
                 :addEmboss(2.0)
                 :addHover(true) -- needed for button effect
                 :addButtonCallback(function ()
@@ -3112,7 +3112,7 @@ function initPlanningUI()
     :addType(UITypeEnum.SCROLL_PANE)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(palette.snapToColorName("yellow"))
+            :addColor(util.getColor("yellow"))
             :addPadding(0)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
             :addInitFunc(function(registry, entity)

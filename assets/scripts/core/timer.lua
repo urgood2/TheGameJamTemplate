@@ -317,17 +317,17 @@ end
 --------------------------------------------------------
 
 function timer.update(dt, is_render_frame)
-  tracy.ZoneBegin("lua timer.update")
+  -- tracy.zoneBeginN("lua timer.update") -- just some default depth to avoid bugs
   local keys = {}
   for tag in pairs(timer.timers) do
     keys[#keys + 1] = tag
   end
   
-  -- print the tag table for debugging
-  for i = 1, #keys do
-    local tag = keys[i]
-    print("Timer Tag:", tag)
-  end
+  -- -- print the tag table for debugging
+  -- for i = 1, #keys do
+  --   local tag = keys[i]
+  --   print("Timer Tag:", tag)
+  -- end
 
   for i = 1, #keys do
     local tag = keys[i]
@@ -424,7 +424,7 @@ function timer.update(dt, is_render_frame)
 
     ::continue::
   end
-  tracy.ZoneEnd("lua timer.update")
+  -- tracy.zoneEnd()
 end
 
 _G.__GLOBAL_TIMER__ = timer

@@ -5,6 +5,8 @@
 #include "../common/TracyForceInline.hpp"
 #include "TracyCallstack.h"
 
+
+
 #ifndef TRACY_HAS_CALLSTACK
 
 namespace tracy
@@ -131,7 +133,7 @@ static tracy_force_inline void* Callstack( int32_t depth )
 
 static tracy_force_inline void* Callstack( int32_t depth )
 {
-    assert( depth >= 1 );
+    // assert( depth >= 1 );
 
     auto trace = (uintptr_t*)tracy_malloc( ( 1 + (size_t)depth ) * sizeof( uintptr_t ) );
 

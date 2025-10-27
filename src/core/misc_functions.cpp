@@ -228,19 +228,32 @@ namespace game
         });
         globalShaderUniforms.set("crt", "roll_speed", 1.49f);
         globalShaderUniforms.set("crt", "resolution", Vector2{1280, 700});
-        globalShaderUniforms.set("crt", "noise_amount", 0.12f);
+        globalShaderUniforms.set("crt", "noise_amount", 0.0f);
         globalShaderUniforms.set("crt", "scan_line_amount", -0.17f);
         globalShaderUniforms.set("crt", "grille_amount", 0.37f);
         globalShaderUniforms.set("crt", "scan_line_strength", -3.78f);
         globalShaderUniforms.set("crt", "pixel_strength", 0.1f);
         globalShaderUniforms.set("crt", "vignette_amount", 1.41f);
         globalShaderUniforms.set("crt", "warp_amount", 0.06f);
-        globalShaderUniforms.set("crt", "interference_amount", 1.32f);
+        globalShaderUniforms.set("crt", "interference_amount", 0.f);
         globalShaderUniforms.set("crt", "roll_line_amount", 0.12f);
         globalShaderUniforms.set("crt", "grille_size", 0.51f);
         globalShaderUniforms.set("crt", "vignette_intensity", 0.10f);
         globalShaderUniforms.set("crt", "iTime", 113.47279f);
         globalShaderUniforms.set("crt", "aberation_amount", 0.93f);
+        globalShaderUniforms.set("crt", "enable_rgb_scanlines", 1.0f);
+        globalShaderUniforms.set("crt", "enable_dark_scanlines", 1.0f);
+        globalShaderUniforms.set("crt", "scanline_density", 200.f);
+        globalShaderUniforms.set("crt", "scanline_intensity", 0.10f);
+        globalShaderUniforms.set("crt", "enable_bloom", 1.0f);
+        globalShaderUniforms.set("crt", "bloom_strength", 0.19f);
+        globalShaderUniforms.set("crt", "bloom_radius", 4.0f);
+        globalShaderUniforms.set("crt", "glitch_strength", 0.02f);
+        globalShaderUniforms.set("crt", "glitch_speed", 3.0f);
+        globalShaderUniforms.set("crt", "glitch_density", 180.0f);
+
+        
+        
 
         // shockwave
         globalShaderUniforms.set("shockwave", "resolution", Vector2{(float)GetScreenWidth(), (float)GetScreenHeight()});

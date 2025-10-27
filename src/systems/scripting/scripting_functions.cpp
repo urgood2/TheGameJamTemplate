@@ -48,6 +48,8 @@
 #include "../../core/game.hpp"
 #include <functional>
 
+// #define TRACY_NO_CALLSTACK 1
+// #define TRACY_CALLSTACK 8 // fixed depth for callstack, fix lua errors.
 #include "third_party/tracy-master/public/tracy/TracyLua.hpp"
 
 
@@ -152,6 +154,17 @@ namespace scripting {
         
         // allow tracy support
         tracy::LuaRegister( stateToInit.lua_state() );
+        lua_sethook(stateToInit, tracy::LuaHook, LUA_MASKCALL | LUA_MASKRET, 0);
+        
+        // dummy tracy table
+        // sol::table tracyTable = stateToInit.create_table();
+        // stateToInit["tracy"] = tracyTable;
+        // stateToInit["tracy"]["ZoneBeginNS"] = []() {
+        //     // dummy
+        // };
+        // stateToInit["tracy"]["ZoneEnd"] = []() {
+        //     // dummy
+        // };
 
         //---------------------------------------------------------
         // methods from event_system.cpp. These can be called from lua✅ 

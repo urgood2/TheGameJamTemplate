@@ -13,7 +13,11 @@
 #include "entt/entt.hpp" // ECS
 // #include "tweeny.h"      // tweening library
 
+// #define TRACY_NO_CALLSTACK  // disable callstack capturing in tracy for lua code to work.
+// #undef TRACY_HAS_CALLSTACK
 #include "third_party/tracy-master/public/tracy/Tracy.hpp"
+
+
 
 #if defined(_WIN32)
 #define NOGDI  // All GDI defines and routines
@@ -90,6 +94,8 @@ using json = nlohmann::json;
 #include "systems/scripting/scripting_system.hpp"
 #include "systems/fade/fade_system.hpp"
 #include "systems/palette/palette_quantizer.hpp"
+
+
 
 using std::string, std::unique_ptr, std::vector;
 using namespace std::literals;

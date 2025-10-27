@@ -5,6 +5,7 @@ require("util.util")
 require("ui.ui_defs")
 require("core.entity_factory")
 require("core.gameplay")
+local profile = require("external.profile")  -- https://github.com/2dengine/profile.lua
 local z_orders = require("core.z_orders")
 local Node = require("monobehavior.behavior_script_v2") -- the new monobehavior script
 local palette = require("color.palette")
@@ -16,6 +17,8 @@ local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 -- Represents game loop main module
 main = main or {}
+
+PROFILE_ENABLED = false -- set to true to enable profiling
 
 -- Game state (used only in lua)
 GAMESTATE = {
@@ -98,7 +101,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("gray"))
+                :addColor(util.getColor("gray"))
                 :addEmboss(2.0)
                 :addMinWidth(500) -- minimum width of the button
                 :addShadow(true)
@@ -138,7 +141,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("gray"))
+                :addColor(util.getColor("gray"))
                 :addEmboss(2.0)
                 :addMinWidth(500) -- minimum width of the button
                 :addButtonCallback(function ()
@@ -178,7 +181,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("gray"))
+                :addColor(util.getColor("gray"))
                 :addEmboss(2.0)
                 :addButtonCallback(function ()
                     playSoundEffect("effects", "button-click") -- play button click sound
@@ -198,7 +201,7 @@ function initMainMenu()
         :addType(UITypeEnum.INPUT_TEXT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("gray"))
+                :addColor(util.getColor("gray"))
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addMinHeight(50) -- minimum height of the input text
@@ -212,7 +215,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("gray"))
+                :addColor(util.getColor("gray"))
                 :addEmboss(2.0)
                 :build()
         )
@@ -225,7 +228,7 @@ function initMainMenu()
     :addType(UITypeEnum.SCROLL_PANE)
     :addConfig(
         UIConfigBuilder.create()
-            :addColor(palette.snapToColorName("yellow"))
+            :addColor(util.getColor("yellow"))
             :addShadow(true)
             :addHeight(200)
             :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
@@ -259,7 +262,7 @@ function initMainMenu()
         :addType(UITypeEnum.HORIZONTAL_CONTAINER)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("gray"))
+                :addColor(util.getColor("gray"))
                 :addEmboss(2.0)
                 :addShadow(true)
                 :addHover(true) -- needed for button effect
@@ -283,7 +286,7 @@ function initMainMenu()
         :addType(UITypeEnum.ROOT)
         :addConfig(
             UIConfigBuilder.create()
-                :addColor(palette.snapToColorName("green"))
+                :addColor(util.getColor("green"))
                 :addShadow(true)
                 :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
                 :addInitFunc(function(registry, entity)
@@ -413,6 +416,10 @@ end
 function main.init()
     log_debug("Game initializing...") -- Debug message to indicate the game is initializing
     math.randomseed(12345)
+    if PROFILE_ENABLED then
+        profile.start()
+    end
+
     
     -- register color palette "RESURRECT-64"
     palette.register{
@@ -448,8 +455,8 @@ function main.init()
     --             mouseT.visualY, 
     --             5, -- count
     --             0.5, -- seconds
-    --             palette.snapToColorName("blue"), -- start color
-    --             palette.snapToColorName("purple"), -- end color
+    --             util.getColor("blue"), -- start color
+    --             util.getColor("purple"), -- end color
     --             "outCubic", -- from util.easing
     --             "screen" -- screen space
     --         )
@@ -465,11 +472,11 @@ function main.init()
     end
     
     timer.every(0.2, function()
-        tracy.ZoneBegin("Tooltip Hide Timer Tick")
+        -- tracy.zoneBeginN("Tooltip Hide Timer Tick") -- just some default depth to avoid bugs
         if registry:valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
             hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
         end
-        tracy.ZoneEnd("Tooltip Hide Timer Tick")
+        -- tracy.zoneEnd()
     end,
     0, -- start immediately)
     true,
@@ -483,11 +490,24 @@ end
 
 local prevFrameCounter = 0
 
+local profileFrameCounter = 0
+local printProfileEveryNFrames = 40 -- print profile every N frames
 function main.update(dt)
-    tracy.ZoneBegin("lua main.update")
+    -- tracy.zoneBeginN("lua main.update") -- just some default depth to avoid bugs
     local currentRenderFrameCount = main_loop.data.renderFrame
     local isRenderFrame = (currentRenderFrameCount ~= prevFrameCounter)
     prevFrameCounter = currentRenderFrameCount
+    
+    if PROFILE_ENABLED then
+        profileFrameCounter = profileFrameCounter + 1
+        if profileFrameCounter >= printProfileEveryNFrames then
+            profileFrameCounter = 0
+            local rep = profile.report(20) -- print top 20 functions
+            log_debug("Profile Report:\n" .. rep)
+            profile.reset()
+        end
+    end
+    
     
     timer.update(dt, isRenderFrame) -- Update the timer system
     
@@ -502,10 +522,10 @@ function main.update(dt)
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
     
-    tracy.ZoneEnd("lua main.update")
+    -- tracy.zoneEnd()
 end
 
 function main.draw(dt)
-   tracy.ZoneBegin("lua main.draw")
-   tracy.ZoneEnd("lua main.draw")
+   -- tracy.zoneBeginN("lua main.draw") -- just some default depth to avoid bugs
+   -- tracy.zoneEnd()
 end

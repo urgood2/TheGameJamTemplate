@@ -1001,6 +1001,55 @@ Entity = {
 
 
 ---
+--- Userdata type for the controller navigation manager.
+Use the global `controller_nav` table for live access.
+---
+---@class NavManagerUD
+NavManagerUD = {
+    update = ,  -- ---@param dt number
+    validate = ,
+    debug_print_state = ,
+    create_group = ,  -- ---@param name string
+    add_entity = ,  -- ---@param group string
+---@param e entt.entity
+    remove_entity = ,  -- ---@param group string
+---@param e entt.entity
+    clear_group = ,  -- ---@param group string
+    set_active = ,  -- ---@param group string
+---@param active boolean
+    set_selected = ,  -- ---@param group string
+---@param index integer
+    get_selected = ,  -- ---@param group string
+---@return entt.entity|nil
+    set_entity_enabled = ,  -- ---@param e entt.entity
+---@param enabled boolean
+    is_entity_enabled = ,  -- ---@param e entt.entity
+---@return boolean
+    navigate = ,  -- ---@param group string
+---@param dir 'L'|'R'|'U'|'D'
+    select_current = ,  -- ---@param group string
+    create_layer = ,  -- ---@param name string
+    add_group_to_layer = ,  -- ---@param layer string
+---@param group string
+    set_active_layer = ,  -- ---@param name string
+    push_layer = ,  -- ---@param name string
+    pop_layer = ,
+    push_focus_group = ,  -- ---@param name string
+    pop_focus_group = ,
+    current_focus_group =   -- ---@return string
+}
+
+
+---
+--- Controller navigation system entry point.
+Manages layers, groups, and spatial/linear focus movement for UI and in-game entities.
+---
+---@class controller_nav
+controller_nav = {
+}
+
+
+---
 --- Container for all text‐system types
 ---
 ---@class TextSystem
@@ -6167,6 +6216,95 @@ function collision.resetCollisionCategory(...) end
 ---
 function(registry: Registry, e: Entity, layer: Layer, zOrder: number): void
 function command_buffer.pushEntityTransformsToMatrix(...) end
+
+---
+--- Create a navigation group.
+---
+---@param name string
+function controller_nav.create_group(...) end
+
+---
+--- Create a navigation layer.
+---
+---@param name string
+function controller_nav.create_layer(...) end
+
+---
+--- Attach an existing group to a layer.
+---
+---@param layer string
+---@param group string
+function controller_nav.add_group_to_layer(...) end
+
+---
+--- Navigate within or across groups.
+---
+---@param group string
+---@param dir 'L'|'R'|'U'|'D'
+function controller_nav.navigate(...) end
+
+---
+--- Trigger the select callback for the currently focused entity.
+---
+---@param group string
+function controller_nav.select_current(...) end
+
+---
+--- Enable or disable a specific entity for navigation.
+---
+---@param e entt.entity
+---@param enabled boolean
+function controller_nav.set_entity_enabled(...) end
+
+---
+--- Print debug info on groups/layers.
+---
+function controller_nav.debug_print_state(...) end
+
+---
+--- Validate layer/group configuration.
+---
+function controller_nav.validate(...) end
+
+---
+--- Return the currently focused group.
+---
+---@return string
+function controller_nav.current_focus_group(...) end
+
+---
+--- Set Lua callbacks for a specific navigation group.
+---
+---@param group string
+---@param tbl table {on_focus:function|nil, on_unfocus:function|nil, on_select:function|nil}
+function controller_nav.set_group_callbacks(...) end
+
+---
+--- Link a group's navigation directions to other groups.
+---
+---@param from string
+---@param dirs table {up:string|nil, down:string|nil, left:string|nil, right:string|nil}
+function controller_nav.link_groups(...) end
+
+---
+--- Toggle navigation mode for the group.
+---
+---@param group string
+---@param mode 'spatial'|'linear'
+function controller_nav.set_group_mode(...) end
+
+---
+--- Enable or disable wrap-around navigation.
+---
+---@param group string
+---@param wrap boolean
+function controller_nav.set_wrap(...) end
+
+---
+--- Force cursor focus to a specific entity. Note that this does not affect the navigation state, and may be overridden on next navigation action.
+---
+---@param e entt.entity
+function controller_nav.focus_entity(...) end
 
 ---
 --- Bind an action to a device code with a trigger.

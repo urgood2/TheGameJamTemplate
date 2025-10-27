@@ -1109,6 +1109,11 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
             // spring::pull(worldCamera->GetSpringRotation(), 100);
         }
         
+        if (IsKeyDown(KEY_PERIOD)) {
+            // show/hide imgui
+            globals::useImGUI = !globals::useImGUI;
+        }
+        
         // if (IsKeyDown(KEY_S)) {
         //     // shake camera
         //     worldCamera->Shake(10, 2.0f);
@@ -1186,10 +1191,13 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         //     SPDLOG_DEBUG("UIBox {}: {}", (int)e, result);
         // }
             
-        layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
+        {
+            ZoneScopedN("z layers, particles, shaders update");
+            layer::layer_order_system::UpdateLayerZIndexesAsNecessary();
 
-        particle::UpdateParticles(globals::registry, delta);
-        shaders::updateAllShaderUniforms();
+            particle::UpdateParticles(globals::registry, delta);
+            shaders::updateAllShaderUniforms();
+        }
         
         {
             ZoneScopedN("TextSystem::Update");
@@ -1246,15 +1254,20 @@ world.SetGlobalDamping(0.2f);         // world‑wide damping
         
 
         // SPDLOG_DEBUG("{}", ui::box::DebugPrint(globals::registry, uiBox, 0));
+        {
+            ZoneScopedN("lua gc step");
+            // lua garbage collection
+            ai_system::masterStateLua.step_gc(4); 
+        }
         
-        // lua garbage collection
-        ai_system::masterStateLua.step_gc(4); 
-        
-        // update lua main script
-        sol::protected_function_result result = luaMainUpdateFunc(delta);
-        if (!result.valid()) {
-            sol::error err = result;
-            spdlog::error("Lua update failed: {}", err.what());
+        {
+            ZoneScopedN("lua main update");
+            // update lua main script
+            sol::protected_function_result result = luaMainUpdateFunc(delta);
+            if (!result.valid()) {
+                sol::error err = result;
+                spdlog::error("Lua update failed: {}", err.what());
+            }
         }
         
         

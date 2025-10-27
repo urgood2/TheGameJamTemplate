@@ -1,6 +1,7 @@
 local Object = require("external/object")
 local task = require("task/task")
 local timer = require("core/timer")
+local entity_cache = require("core.entity_cache")
 
 local node = Object:extend()
 
@@ -142,8 +143,8 @@ function node:destroy_when(condition, opts)
   local timeout_handle = nil
 
   local function do_destroy()
-    if self._eid and (registry.valid and registry:valid(self._eid) or true) then
-      -- If your binding lacks registry:valid, the 'or true' makes this unconditional.
+    if self._eid and (registry.valid and entity_cache.valid(self._eid) or true) then
+      -- If your binding lacks entity_cache.valid, the 'or true' makes this unconditional.
       -- Remove that 'or true' if you have a working :valid.
       registry:destroy(self._eid)
       self._eid = nil
@@ -163,7 +164,7 @@ function node:destroy_when(condition, opts)
     -- Poll condition
     watcher_handle = timer.every(interval, function()
       -- If entity already gone, stop polling
-      if not self._eid or (registry.valid and not registry:valid(self._eid)) then
+      if not self._eid or (registry.valid and not entity_cache.valid(self._eid)) then
         if watcher_handle then timer.cancel(watcher_handle) watcher_handle = nil end
         if timeout_handle then timer.cancel(timeout_handle) timeout_handle = nil end
         return
@@ -178,7 +179,7 @@ function node:destroy_when(condition, opts)
         if grace > 0 then
           timer.after(grace, function()
             -- double-check still valid before final destroy
-            if self._eid and (not registry.valid or registry:valid(self._eid)) then
+            if self._eid and (not registry.valid or entity_cache.valid(self._eid)) then
               do_destroy()
             end
           end, tag, group)
@@ -215,7 +216,7 @@ function node.update_all(dt)
   -- tracy.zoneBeginN("lua node.update_all") -- just some default depth to avoid bugs
   for i = #updatables, 1, -1 do
     local obj = updatables[i]
-    if obj._eid and (not registry.valid or registry:valid(obj._eid)) then
+    if obj._eid and (not registry.valid or entity_cache.valid(obj._eid)) then
       obj:update(dt)
     else
       table.remove(updatables, i)

@@ -316,115 +316,150 @@ end
 -- Update Loop
 --------------------------------------------------------
 
+-- Cache locals for performance
+local min = math.min
+local resolve_delay = timer.resolve_delay
+local timers = timer.timers
+
 function timer.update(dt, is_render_frame)
-  -- tracy.zoneBeginN("lua timer.update") -- just some default depth to avoid bugs
-  local keys = {}
-  for tag in pairs(timer.timers) do
-    keys[#keys + 1] = tag
-  end
-  
-  -- -- print the tag table for debugging
-  -- for i = 1, #keys do
-  --   local tag = keys[i]
-  --   print("Timer Tag:", tag)
-  -- end
+    -- tracy.zoneBeginN("lua timer.update")
 
-  for i = 1, #keys do
-    local tag = keys[i]
-    local t = timer.timers[tag]
-    if not t then goto continue end  -- might’ve been removed during iteration
+    local global_mult = timer.global_multiplier
+    local to_remove = nil
 
-    if t.paused then goto continue end
-    
-    if tag == "interval" then
-      -- Debug hook: print number of active timers every interval
-      print("[Timer] Active timers:", #keys)
+    -- Single pass: no key array copy, no table mutation during iteration
+    for tag, t in pairs(timers) do
+        if not t or t.paused then
+            goto continue
+        end
+
+        local effective_dt = dt * global_mult * (t.multiplier or 1)
+        t.timer = (t.timer or 0) + effective_dt
+
+        local remove = false
+
+        local ttype = t.type
+        if ttype == "run" then
+            t.action()
+            remove = true
+
+        elseif ttype == "every_render_frame" then
+            if is_render_frame then t.action() end
+
+        elseif ttype == "cooldown" then
+            if t.timer > t.delay and t.condition() then
+                t.action()
+                t.timer = 0
+                if not t.fixed_delay then
+                    t.delay = resolve_delay(t.unresolved_delay)
+                end
+                if t.times > 0 then
+                    t.times = t.times - 1
+                    if t.times <= 0 then
+                        t.after()
+                        remove = true
+                    end
+                end
+            end
+
+        elseif ttype == "after" then
+            if t.timer > t.delay then
+                t.action()
+                remove = true
+            end
+
+        elseif ttype == "every" then
+            if t.timer > t.delay then
+                t.action()
+                t.timer = t.timer - t.delay
+                t.index = t.index + 1
+                if not t.fixed_delay then
+                    t.delay = resolve_delay(t.unresolved_delay)
+                end
+                if t.times > 0 then
+                    t.times = t.times - 1
+                    if t.times <= 0 then
+                        t.after()
+                        remove = true
+                    end
+                end
+            end
+
+        elseif ttype == "every_step" then
+            local delays = t.delays
+            if t.timer > delays[t.index] then
+                t.action()
+                t.timer = t.timer - delays[t.index]
+                t.index = t.index + 1
+                if t.times > 0 then
+                    t.times = t.times - 1
+                    if t.times <= 0 then
+                        t.after()
+                        remove = true
+                    end
+                end
+            end
+
+        elseif ttype == "for" then
+            t.action(dt)
+            if t.timer > t.delay then
+                t.after()
+                remove = true
+            end
+
+        elseif ttype == "tween_scalar" then
+            local ratio = min(1, t.timer / t.delay)
+            local eased = t.method(ratio)
+            local start = t.getter()
+            t.setter(start + (t.target - start) * eased)
+            if t.timer > t.delay then
+                t.after()
+                remove = true
+            end
+
+        elseif ttype == "tween_tracks" then
+            local ratio = min(1, t.timer / t.delay)
+            local eased = t.method(ratio)
+            local tracks = t.tracks
+            for i = 1, #tracks do
+                local tr = tracks[i]
+                tr.set(tr.start + tr.delta * eased)
+            end
+            if t.timer > t.delay then
+                t.after()
+                remove = true
+            end
+
+        elseif ttype == "tween_fields" or ttype == "tween" then
+            local ratio = min(1, t.timer / t.delay)
+            local eased = t.method(ratio)
+            local source = t.source
+            local target = t.target
+            local initial = t.initial_values
+            for k, v in pairs(source) do
+                target[k] = initial[k] + (v - initial[k]) * eased
+            end
+            if t.timer > t.delay then
+                t.after()
+                remove = true
+            end
+        end
+
+        if remove then
+            to_remove = to_remove or {}
+            to_remove[#to_remove + 1] = tag
+        end
+
+        ::continue::
     end
 
-    local effective_dt = dt * timer.global_multiplier * (t.multiplier or 1)
-    t.timer = (t.timer or 0) + effective_dt
-
-    if t.type == "run" then
-      t.action()
-
-    elseif t.type == "every_render_frame" then
-      if is_render_frame then
-        t.action()
-      end
-
-    elseif t.type == "cooldown" then
-      if t.timer > t.delay and t.condition() then
-        t.action()
-        t.timer = 0
-        t.delay = timer.resolve_delay(t.unresolved_delay)
-        if t.times > 0 then
-          t.times = t.times - 1
-          if t.times <= 0 then t.after(); timer.timers[tag] = nil end
+    if to_remove then
+        for i = 1, #to_remove do
+            timers[to_remove[i]] = nil
         end
-      end
-
-    elseif t.type == "after" then
-      if t.timer > t.delay then
-        t.action()
-        timer.timers[tag] = nil
-      end
-
-    elseif t.type == "every" then
-      if t.timer > t.delay then
-        t.action()
-        t.timer = t.timer - t.delay
-        t.index = t.index + 1
-        t.delay = timer.resolve_delay(t.unresolved_delay)
-        if t.times > 0 then
-          t.times = t.times - 1
-          if t.times <= 0 then t.after(); timer.timers[tag] = nil end
-        end
-      end
-
-    elseif t.type == "every_step" then
-      if t.timer > t.delays[t.index] then
-        t.action()
-        t.timer = t.timer - t.delays[t.index]
-        t.index = t.index + 1
-        if t.times > 0 then
-          t.times = t.times - 1
-          if t.times <= 0 then t.after(); timer.timers[tag] = nil end
-        end
-      end
-
-    elseif t.type == "for" then
-      t.action(dt)
-      if t.timer > t.delay then t.after(); timer.timers[tag] = nil end
-
-    elseif t.type == "tween_scalar" then
-      local ratio = math.min(1, t.timer / t.delay)
-      local eased = t.method(ratio)
-      local start = t.getter()
-      local value = start + (t.target - start) * eased
-      t.setter(value)
-      if t.timer > t.delay then t.after(); timer.timers[tag] = nil end
-
-    elseif t.type == "tween_tracks" then
-      local ratio = math.min(1, t.timer / t.delay)
-      local eased = t.method(ratio)
-      for _, tr in ipairs(t.tracks) do
-        tr.set(tr.start + tr.delta * eased)
-      end
-      if t.timer > t.delay then t.after(); timer.timers[tag] = nil end
-
-    elseif t.type == "tween_fields" or t.type == "tween" then
-      local ratio = math.min(1, t.timer / t.delay)
-      local eased = t.method(ratio)
-      for k, v in pairs(t.source) do
-        local start = t.initial_values[k]
-        t.target[k] = start + (v - start) * eased
-      end
-      if t.timer > t.delay then t.after(); timer.timers[tag] = nil end
     end
 
-    ::continue::
-  end
-  -- tracy.zoneEnd()
+    -- tracy.zoneEnd()
 end
 
 _G.__GLOBAL_TIMER__ = timer

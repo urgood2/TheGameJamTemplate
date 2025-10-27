@@ -13,6 +13,8 @@ require ("core.card_eval_order_test")
 local WandEngine = require("core.card_eval_order_test")
 local signal = require("external.hump.signal")
 local timer = require("core.timer")
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
 
 --  let's make some card data
 local action_card_defs = {
@@ -86,8 +88,8 @@ current_board_set_index = 1
 
 
 function addCardToBoard(cardEntityID, boardEntityID)
-    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
-    if not boardEntityID or boardEntityID == entt_null or not registry:valid(boardEntityID) then return end
+    if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
+    if not boardEntityID or boardEntityID == entt_null or not entity_cache.valid(boardEntityID) then return end
     local board = boards[boardEntityID]
     if not board then return end
     board.cards = board.cards or {}
@@ -96,8 +98,8 @@ function addCardToBoard(cardEntityID, boardEntityID)
 end
 
 function removeCardFromBoard(cardEntityID, boardEntityID)
-    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
-    if not boardEntityID or boardEntityID == entt_null or not registry:valid(boardEntityID) then return end
+    if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
+    if not boardEntityID or boardEntityID == entt_null or not entity_cache.valid(boardEntityID) then return end
     local board = boards[boardEntityID]
     if not board then return end
     board.cards = board.cards or {}
@@ -119,8 +121,8 @@ function resetCardStackZOrder(rootCardEntityID)
     
     -- now for every card in the stack, give it a z order above the root
     for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
-        if stackedCardEid and registry:valid(stackedCardEid) then
-            local stackedTransform = registry:get(stackedCardEid, Transform)
+        if stackedCardEid and entity_cache.valid(stackedCardEid) then
+            local stackedTransform = component_cache.get(stackedCardEid, Transform)
             local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
             layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
         end
@@ -144,14 +146,15 @@ function createNewBoard(x, y, w, h)
     function BoardType:update(dt)
         -- tracy.zoneBeginN("BoardType:update") -- just some default depth to avoid bugs
         local eid = self:handle()
-        if not eid or not registry:valid(eid) then return end
+        -- if not eid or not entity_cache.valid(eid) then return end
 
         -- DEBUG
         -- if self.gameStates and self.gameStates[1] == SHOP_STATE then
         --     log_debug("shop board updating")
         -- end
 
-        local area = registry:get(eid, Transform)
+        -- local area = component_cache.get(eid, Transform)
+        local area = component_cache.get(eid, Transform)
         if not area then return end
 
         local cards = self.cards
@@ -161,8 +164,8 @@ function createNewBoard(x, y, w, h)
         local cardW, cardH = 100, 140
         for i = 1, #cards do
             local cardEid = cards[i]
-            if cardEid and registry:valid(cardEid) and cardEid ~= ENT_NULL then
-                local ct = registry:get(cardEid, Transform)
+            if cardEid and entity_cache.valid(cardEid) and cardEid ~= ENT_NULL then
+                local ct = component_cache.get(cardEid, Transform)
                 if ct and ct.actualW and ct.actualH and ct.actualW > 0 and ct.actualH > 0 then
                     cardW, cardH = ct.actualW, ct.actualH
                     break
@@ -202,9 +205,9 @@ function createNewBoard(x, y, w, h)
         -- sort once (if card count > 1)
         if n > 1 then
             table.sort(cards, function(a, b)
-                if not (a and registry:valid(a) and a ~= ENT_NULL) then return false end
-                if not (b and registry:valid(b) and b ~= ENT_NULL) then return true end
-                local at, bt = registry:get(a, Transform), registry:get(b, Transform)
+                -- if not (a and entity_cache.valid(a) and a ~= ENT_NULL) then return false end
+                -- if not (b and entity_cache.valid(b) and b ~= ENT_NULL) then return true end
+                local at, bt = component_cache.get(a, Transform), component_cache.get(b, Transform)
                 if not (at and bt) then return false end
                 local ax = at.actualX + at.actualW * 0.5
                 local bx = bt.actualX + bt.actualW * 0.5
@@ -215,8 +218,8 @@ function createNewBoard(x, y, w, h)
         local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
         for i = 1, n do
             local cardEid = cards[i]
-            if cardEid and registry:valid(cardEid) and cardEid ~= ENT_NULL then
-                local ct = registry:get(cardEid, Transform)
+            -- if cardEid and entity_cache.valid(cardEid) and cardEid ~= ENT_NULL then
+                local ct = component_cache.get(cardEid, Transform)
                 if ct then
                     local x = startX + (i - 1) * spacing
                     local y = centerY - ct.actualH * 0.5
@@ -234,10 +237,10 @@ function createNewBoard(x, y, w, h)
                 zcache[cardEid] = zi
                 assignZ(cardEid, zi)
 
-                local cardObj = registry:get(cardEid, GameObject)
+                local cardObj = component_cache.get(cardEid, GameObject)
                 if cardObj and cardObj.state and cardObj.state.isBeingDragged then
                     assignZ(cardEid, self.z_orders.top)
-                end
+                -- end
             end
         end
         -- tracy.zoneEnd()
@@ -255,7 +258,7 @@ function createNewBoard(x, y, w, h)
     add_state_tag(board:handle(), PLANNING_STATE)
     
     -- get the game object for board and make it onReleaseEnabled
-    local boardGameObject = registry:get(board:handle(), GameObject)
+    local boardGameObject = component_cache.get(board:handle(), GameObject)
     if boardGameObject then
         boardGameObject.state.hoverEnabled = true
         boardGameObject.state.triggerOnReleaseEnabled = true
@@ -411,7 +414,7 @@ function setUpCardAndWandStatDisplay()
         local isHoveredOverCard = false
         
         
-        if (globals.inputState.cursor_hovering_target and globals.inputState.cursor_hovering_target ~= entt_null and registry:valid(globals.inputState.cursor_hovering_target)) then
+        if (globals.inputState.cursor_hovering_target and globals.inputState.cursor_hovering_target ~= entt_null and entity_cache.valid(globals.inputState.cursor_hovering_target)) then
             for cardEid, cardScript in pairs(cards) do
                 if cardEid == globals.inputState.cursor_hovering_target then
                     isHoveredOverCard = true
@@ -599,7 +602,7 @@ function createNewCard(id, x, y, gameStateToApply)
     --     -- draw debug label.
     --     command_buffer.queueDrawText(layers.sprites, function(c)
     --         local cardScript = getScriptTableFromEntityID(eid)
-    --         local t = registry:get(eid, Transform)
+    --         local t = component_cache.get(eid, Transform)
     --         c.text = cardScript.test_label or "unknown"
     --         c.font = localization.getFont()
     --         c.x = t.visualX
@@ -610,7 +613,7 @@ function createNewCard(id, x, y, gameStateToApply)
         
     --     -- command_buffer.queuePopMatrix(layers.sprites, function () end, z_orders.card_text, layer.DrawCommandSpace.World)
         
-    -- end
+-- end
     
     -- attach ecs must be called after defining the callbacks.
     cardScript:attach_ecs{ create_new = false, existing_entity = card }
@@ -630,14 +633,14 @@ function createNewCard(id, x, y, gameStateToApply)
             
             -- loop through cards.
             for eid, cardScript in pairs(cards) do
-                if eid and registry:valid(eid) then
+                if eid and entity_cache.valid(eid) then
                     
                     -- bail if entity not active 
-                    if not is_entity_active(eid) then
+                    if not entity_cache.active(eid) then
                         goto continue
                     end
                     
-                    local t = registry:get(eid, Transform)
+                    local t = component_cache.get(eid, Transform)
                     if t then
                         
                         local colorToUse = util.getColor("RED")
@@ -706,11 +709,11 @@ function createNewCard(id, x, y, gameStateToApply)
     --     InheritedPropertiesSync.Weak
     --     -- Vec2(0, -10) -- offset it a bit upwards
     -- );
-    -- local roleComp = registry:get(cardScript.labelEntity, InheritedProperties)
+    -- local roleComp = component_cache.get(cardScript.labelEntity, InheritedProperties)
     -- roleComp.flags = AlignmentFlag.VERTICAL_CENTER | AlignmentFlag.HORIZONTAL_CENTER 
     
     -- make draggable and set some callbacks in the transform system
-    local nodeComp = registry:get(card, GameObject)
+    local nodeComp = component_cache.get(card, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     -- gameObjectState.triggerOnReleaseEnabled = true
@@ -729,7 +732,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- entity.set_draw_override(card, function(w, h)
     -- -- immediate render version of the same thing.
     --     command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
-    --         local survivorT = registry:get(card, Transform)
+    --         local survivorT = component_cache.get(card, Transform)
 
     --         c.cx = 0 -- self centered
     --         c.cy = 0
@@ -837,7 +840,7 @@ function createNewCard(id, x, y, gameStateToApply)
     --     if not result then
     --         log_debug("failed to add card to stack due to validation")
     --         -- return to previous position
-    --         local t = registry:get(released, Transform)
+    --         local t = component_cache.get(released, Transform)
     --         if t and cardScript.startingPosition then
     --             t.actualX = cardScript.startingPosition.x
     --             t.actualY = cardScript.startingPosition.y
@@ -859,8 +862,8 @@ function createNewCard(id, x, y, gameStateToApply)
         
     --     -- now for every card in the stack, give it a z order above the root
     --     for i, stackedCardEid in ipairs(rootCardScript.cardStack) do
-    --         if stackedCardEid and registry:valid(stackedCardEid) then
-    --             local stackedTransform = registry:get(stackedCardEid, Transform)
+    --         if stackedCardEid and entity_cache.valid(stackedCardEid) then
+    --             local stackedTransform = component_cache.get(stackedCardEid, Transform)
     --             local zi = baseZ + (i) -- root is baseZ, first stacked card is baseZ + 1, etc
     --             layer_order_system.assignZIndexToEntity(stackedCardEid, zi)
     --         end
@@ -937,7 +940,7 @@ function createNewCard(id, x, y, gameStateToApply)
     
     -- if x and y are given, set position
     if x and y then
-        local t = registry:get(card, Transform)
+        local t = component_cache.get(card, Transform)
         if t then
             t.actualX = x
             t.actualY = y
@@ -949,9 +952,9 @@ end
 
 -- return the object lua table from an entt id
 function getScriptTableFromEntityID(eid)
-    if not eid or eid == entt_null or not registry:valid(eid) then return nil end
+    if not eid or eid == entt_null or not entity_cache.valid(eid) then return nil end
     if not registry:has(eid, ScriptComponent) then return nil end
-    local scriptComp = registry:get(eid, ScriptComponent)
+    local scriptComp = component_cache.get(eid, ScriptComponent)
     return scriptComp.self
 end
 
@@ -961,8 +964,8 @@ local function lerp(a, b, t)
 end
 
 function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
-    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
-    local cardTransform = registry:get(cardEntityID, Transform)
+    if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
+    local cardTransform = component_cache.get(cardEntityID, Transform)
     if not cardTransform then return end
     
     -- create a new object for a pulsing rectangle that fades out in color over time, then destroys itself.
@@ -993,7 +996,7 @@ function addPulseEffectBehindCard(cardEntityID, startColor, endColor)
         a = math.floor(a + 0.5)
         
         command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
-            local t = registry:get(cardEntityID, Transform)
+            local t = component_cache.get(cardEntityID, Transform)
             c.x = t.actualX + t.actualW * 0.5
             c.y = t.actualY + t.actualH * 0.5
             c.w = t.actualW * scale
@@ -1038,7 +1041,7 @@ function killPlayer()
     -- destroy the entity, get particles flying.
     
     timer.after(0.01, function()
-        local transform = registry:get(survivorEntity, Transform)
+        local transform = component_cache.get(survivorEntity, Transform)
         
         -- create a note that draws a red circle where the player was and removes itself after 0.1 second
         local DeathCircleType = Node:extend()local playerX = transform.actualX + transform.actualW * 0.5
@@ -1052,7 +1055,7 @@ function killPlayer()
         DeathCircleType.update = function(self, dt)
             self.age = self.age + dt
             command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-                local t = registry:get(survivorEntity, Transform)
+                local t = component_cache.get(survivorEntity, Transform)
                 c.x = playerX
                 c.y = playerY
                 c.rx = playerW * 0.5 * (1.0 + self.age * 5.0)
@@ -1089,7 +1092,7 @@ function spawnRandomBullet()
     
     local bulletSize = 10
     
-    local playerTransform = registry:get(survivorEntity, Transform)
+    local playerTransform = component_cache.get(survivorEntity, Transform)
     
     local BulletType = Node:extend() -- define the type before instantiating
     BulletType.update = function(self, dt)
@@ -1097,7 +1100,7 @@ function spawnRandomBullet()
         
         -- draw a circle
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-            local t = registry:get(self:handle(), Transform)
+            local t = component_cache.get(self:handle(), Transform)
             c.x = t.actualX + t.actualW * 0.5
             c.y = t.actualY + t.actualH * 0.5
             c.rx = t.actualW * 0.5
@@ -1169,7 +1172,7 @@ function spawnRandomBullet()
         self.age = self.age + dt
         -- draw a small flash at the bullet position
         command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
-            local t = registry:get(node:handle(), Transform)
+            local t = component_cache.get(node:handle(), Transform)
             c.x = t.actualX + t.actualW * 0.5
             c.y = t.actualY + t.actualH * 0.5
             c.rx = t.actualW * 1.5
@@ -1187,7 +1190,7 @@ end
 
 function spawnRandomTrapHazard()
     
-    local playerTransform = registry:get(survivorEntity, Transform)
+    local playerTransform = component_cache.get(survivorEntity, Transform)
     
     -- make animated object
     local hazard = animation_system.createAnimatedObjectWithTransform(
@@ -1216,7 +1219,7 @@ function spawnRandomTrapHazard()
     local hazardY = playerCenterY + offsetY - 32
     
     -- snap visual to actual
-    local hazardTransform = registry:get(hazard, Transform)
+    local hazardTransform = component_cache.get(hazard, Transform)
     hazardTransform.actualX = hazardX
     hazardTransform.actualY = hazardY
     hazardTransform.visualX = hazardX
@@ -1250,7 +1253,7 @@ function applyPlayerStrengthBonus()
     
     playSoundEffect("effects", "strength_bonus", 0.9 + math.random() * 0.2)
     
-    local playerTransform = registry:get(survivorEntity, Transform)
+    local playerTransform = component_cache.get(survivorEntity, Transform)
     
     -- make a node
     local node = Node{}
@@ -1270,7 +1273,7 @@ function applyPlayerStrengthBonus()
         local startColor = util.getColor("white")
         local endColor = util.getColor("red")
         
-        local t = registry:get(survivorEntity, Transform)
+        local t = component_cache.get(survivorEntity, Transform)
         local centerX = t.actualX + t.actualW * 0.5
         local baseY = t.actualY + t.actualH
         
@@ -1307,12 +1310,12 @@ function applyPlayerStrengthBonus()
 end
 
 function fireActionCardWithModifiers(cardEntityID, executionIndex)
-    if not cardEntityID or cardEntityID == entt_null or not registry:valid(cardEntityID) then return end
+    if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
     local cardScript = getScriptTableFromEntityID(cardEntityID)
     if not cardScript then return end
     
     local playerScript = getScriptTableFromEntityID(survivorEntity)
-    local playerTransform = registry:get(survivorEntity, Transform)
+    local playerTransform = component_cache.get(survivorEntity, Transform)
     
     log_debug("Firing action card:", cardScript.cardID)
     
@@ -1390,7 +1393,7 @@ end
 
 -- TODO: handle things like cooldown, modifiers that change the effect, etc
 function fireActionCardsInBoard(boardEntityID)
-    if not boardEntityID or boardEntityID == entt_null or not registry:valid(boardEntityID) then return end
+    if not boardEntityID or boardEntityID == entt_null or not entity_cache.valid(boardEntityID) then return end
     local board = boards[boardEntityID]
     if not board or not board.cards or #board.cards == 0 then return end
     
@@ -1400,7 +1403,7 @@ function fireActionCardsInBoard(boardEntityID)
     local pulseColorRampTable = palette.ramp_quantized("blue", "white", #board.cards)
     local index = 1
     for _, cardEid in ipairs(board.cards) do
-        if cardEid and cardEid ~= entt_null and registry:valid(cardEid) then
+        if cardEid and cardEid ~= entt_null and entity_cache.valid(cardEid) then
             local cardScript = getScriptTableFromEntityID(cardEid)
             if cardScript then
                 
@@ -1410,7 +1413,7 @@ function fireActionCardsInBoard(boardEntityID)
                         -- log_debug("Firing action card:", cardScript.cardID)
                         
                         -- pulse and jiggle
-                        local cardTransform = registry:get(cardEid, Transform)
+                        local cardTransform = component_cache.get(cardEid, Transform)
                         if cardTransform then
                             cardTransform.visualS = 2.0
                             addPulseEffectBehindCard(cardEid, pulseColorRampTable[index], util.getColor("black"))    
@@ -1448,17 +1451,17 @@ function startTriggerNSecondsTimer(trigger_board_id, action_board_id, timer_name
             
             -- log_debug("every N seconds trigger fired")
             -- pulse and jiggle the card
-            if not trigger_board_id or trigger_board_id == entt_null or not registry:valid(trigger_board_id) then return end
+            if not trigger_board_id or trigger_board_id == entt_null or not entity_cache.valid(trigger_board_id) then return end
             local triggerBoard = boards[trigger_board_id]
             if not triggerBoard or not triggerBoard.cards or #triggerBoard.cards == 0 then return end
             
             local triggerCardEid = triggerBoard.cards[1]
-            if not triggerCardEid or triggerCardEid == entt_null or not registry:valid(triggerCardEid) then return end
+            if not triggerCardEid or triggerCardEid == entt_null or not entity_cache.valid(triggerCardEid) then return end
             local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
             if not triggerCardScript then return end
             
             -- pulse animation
-            local cardTransform = registry:get(triggerCardEid, Transform)
+            local cardTransform = component_cache.get(triggerCardEid, Transform)
             cardTransform.visualS = 1.5
             
             -- play sound
@@ -1467,7 +1470,7 @@ function startTriggerNSecondsTimer(trigger_board_id, action_board_id, timer_name
             addPulseEffectBehindCard(triggerCardEid, util.getColor("yellow"), util.getColor("black"))
             
             -- start chain of action cards in the action board
-            if not action_board_id or action_board_id == entt_null or not registry:valid(action_board_id) then return end
+            if not action_board_id or action_board_id == entt_null or not entity_cache.valid(action_board_id) then return end
             fireActionCardsInBoard(action_board_id) 
         end,
         0, -- infinite repetitions
@@ -1507,7 +1510,7 @@ function setUpLogicTimers()
         
         log_debug("on_bump_enemy_handler called with enemy entity:", enemyEntityID)
         
-        if not enemyEntityID or enemyEntityID == entt_null or not registry:valid(enemyEntityID) then return end
+        if not enemyEntityID or enemyEntityID == entt_null or not entity_cache.valid(enemyEntityID) then return end
         
         local enemyScript = getScriptTableFromEntityID(enemyEntityID)
         if not enemyScript then return end
@@ -1534,12 +1537,12 @@ function setUpLogicTimers()
         function()
             
             for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
-                if triggerBoardID and triggerBoardID ~= entt_null and registry:valid(triggerBoardID) then
+                if triggerBoardID and triggerBoardID ~= entt_null and entity_cache.valid(triggerBoardID) then
                     local triggerBoard = boards[triggerBoardID]
                     -- log_debug("checking trigger board:", triggerBoardID, "contains", triggerBoard and triggerBoard.cards and #triggerBoard.cards or 0, "cards")
                     if triggerBoard and triggerBoard.cards and #triggerBoard.cards > 0 then
                         local triggerCardEid = triggerBoard.cards[1]
-                        if triggerCardEid and triggerCardEid ~= entt_null and registry:valid(triggerCardEid) then
+                        if triggerCardEid and triggerCardEid ~= entt_null and entity_cache.valid(triggerCardEid) then
                             local triggerCardScript = getScriptTableFromEntityID(triggerCardEid)
                             if triggerCardScript and triggerCardScript.cardID == "every_N_seconds" then
                                 local timerName = "every_N_seconds_trigger_" .. tostring(triggerBoardID)
@@ -1596,7 +1599,7 @@ function createTriggerActionBoardSet(x, y, triggerWidth, actionWidth, height, pa
         InheritedPropertiesSync.Weak,
         Vec2(0, -10)
     )
-    registry:get(triggerBoard.textEntity, InheritedProperties).flags = AlignmentFlag.VERTICAL_TOP
+    component_cache.get(triggerBoard.textEntity, InheritedProperties).flags = AlignmentFlag.VERTICAL_TOP
 
     -- Action board
     local actionBoardX = x + triggerWidth + padding
@@ -1620,7 +1623,7 @@ function createTriggerActionBoardSet(x, y, triggerWidth, actionWidth, height, pa
         InheritedPropertiesSync.Weak,
         Vec2(0, -10)
     )
-    registry:get(actionBoard.textEntity, InheritedProperties).flags = AlignmentFlag.VERTICAL_TOP
+    component_cache.get(actionBoard.textEntity, InheritedProperties).flags = AlignmentFlag.VERTICAL_TOP
 
     trigger_board_id_to_action_board_id[triggerBoardID] = actionBoardID
 
@@ -1712,9 +1715,9 @@ function initPlanningPhase()
     
     -- deal the cards out with dely & sound.
     for _, card in ipairs(cardsToChange) do
-        if card and card ~= entt_null and registry:valid(card) then
+        if card and card ~= entt_null and entity_cache.valid(card) then
             -- set the location of each card to an offscreen pos
-            local t = registry:get(card, Transform)
+            local t = component_cache.get(card, Transform)
             if t then
                 t.actualX = -500
                 t.actualY = -500
@@ -1726,11 +1729,11 @@ function initPlanningPhase()
     
     local cardDelay = 4.0 -- start X seconds after game init
     for _, card in ipairs(cardsToChange) do
-        if card and card ~= entt_null and registry:valid(card) then
+        if card and card ~= entt_null and entity_cache.valid(card) then
             timer.after(cardDelay, function()
-                local t = registry:get(card, Transform)
+                local t = component_cache.get(card, Transform)
                 
-                local inventoryBoardTransform = registry:get(inventory_board_id, Transform)
+                local inventoryBoardTransform = component_cache.get(inventory_board_id, Transform)
                 
                 -- slide it into place at x, y (offset random)
                 local targetX = globals.screenWidth() * 0.8
@@ -1767,10 +1770,10 @@ function initPlanningPhase()
     end
     
     -- for _, card in ipairs(cardsToChange) do
-    --     if card and card ~= entt_null and registry:valid(card) then
+    --     if card and card ~= entt_null and entity_cache.valid(card) then
     --         -- remove physics after a few seconds
     --         timer.after(7.0, function()
-    --             if card and card ~= entt_null and registry:valid(card) then
+    --             if card and card ~= entt_null and entity_cache.valid(card) then
     --                 -- physics.clear_all_shapes(PhysicsManager.get_world("world"), card)
                     
                         
@@ -1778,7 +1781,7 @@ function initPlanningPhase()
     --                 physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
                     
     --                 -- get card transform, set rotation to 0
-    --                 local t = registry:get(card, Transform)
+    --                 local t = component_cache.get(card, Transform)
     --                 if t then
     --                     t.actualR = 0
     --                 end
@@ -1825,7 +1828,7 @@ function initPlanningPhase()
         for key, boardScript in pairs(boards) do
             local self = boardScript
             local eid = self:handle()
-            if not (eid and registry:valid(eid)) then
+            if not (eid and entity_cache.valid(eid)) then
                 goto continue
             end
 
@@ -1847,7 +1850,7 @@ function initPlanningPhase()
 
             if draw then
                 
-                local area = registry:get(eid, Transform)
+                local area = component_cache.get(eid, Transform)
                 
                 
                 
@@ -1977,7 +1980,7 @@ function initPlanningPhase()
         InheritedPropertiesSync.Weak,
         Vec2(0, -10) -- offset it a bit upwards
     );
-    local roleComp = registry:get(inventoryBoard.textEntity, InheritedProperties)
+    local roleComp = component_cache.get(inventoryBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP 
     
     -- map
@@ -2011,7 +2014,7 @@ function initPlanningPhase()
         InheritedPropertiesSync.Weak,
         Vec2(0, -10) -- offset it a bit upwards
     );
-    local roleComp = registry:get(triggerInventoryBoard.textEntity, InheritedProperties)
+    local roleComp = component_cache.get(triggerInventoryBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP 
 
     
@@ -2138,7 +2141,7 @@ function initCombatSystem()
     ctx.side2 = { ogre }
     
     -- store in player entity for easy access later
-    assert(survivorEntity and registry:valid(survivorEntity), "Survivor entity is not valid in combat system init!")
+    assert(survivorEntity and entity_cache.valid(survivorEntity), "Survivor entity is not valid in combat system init!")
     local playerScript = getScriptTableFromEntityID(survivorEntity)
     playerScript.combatTable = hero
     
@@ -2160,11 +2163,11 @@ function initCombatSystem()
             
             -- also, display a health bar indicator above the player entity, and an EXP bar.
             
-            if not survivorEntity or not registry:valid(survivorEntity) then
+            if not survivorEntity or not entity_cache.valid(survivorEntity) then
                 return
             end
             
-            local t = registry:get(survivorEntity, Transform)
+            local t = component_cache.get(survivorEntity, Transform)
             
             if t then
                 
@@ -2331,7 +2334,7 @@ function initSurvivorEntity()
     survivorScript:attach_ecs{ create_new = false, existing_entity = survivorEntity }
     
     -- relocate to the center of the screen
-    local survivorTransform = registry:get(survivorEntity, Transform)
+    local survivorTransform = component_cache.get(survivorEntity, Transform)
     survivorTransform.actualX = globals.screenWidth() / 2
     survivorTransform.actualY = globals.screenHeight() / 2
     survivorTransform.visualX = survivorTransform.actualX   
@@ -2373,7 +2376,7 @@ function initSurvivorEntity()
             if not is_state_active(ACTION_STATE) then return end
             
             -- also make sure player visual matches actual
-            local playerT = registry:get(survivorEntity, Transform)
+            local playerT = component_cache.get(survivorEntity, Transform)
             if playerT then
                 -- make sure visual matches actual, so there's no lag and vfx always stays on the player
                 playerT.visualX = playerT.actualX
@@ -2409,7 +2412,7 @@ function initSurvivorEntity()
     -- entity.set_draw_override(survivorEntity, function(w, h)
     --     -- immediate render version of the same thing.
     --     command_buffer.executeDrawGradientRectRoundedCentered(layers.sprites, function(c)
-    --         local survivorT = registry:get(survivorEntity, Transform)
+    --         local survivorT = component_cache.get(survivorEntity, Transform)
     
     --         c.cx = 0 -- self centered
     --         c.cy = 0
@@ -2446,10 +2449,10 @@ function initSurvivorEntity()
             signal.emit("on_pickup", pickupEntity)
             
             -- remove pickup entity
-            if pickupEntity and registry:valid(pickupEntity) then
+            if pickupEntity and entity_cache.valid(pickupEntity) then
                 
                 -- create a small particle effect at pickup location
-                local pickupTransform = registry:get(pickupEntity, Transform)
+                local pickupTransform = component_cache.get(pickupEntity, Transform)
                 if pickupTransform then
                     spawnCircularBurstParticles(
                         pickupTransform.actualX + pickupTransform.actualW / 2,
@@ -2503,7 +2506,7 @@ function initSurvivorEntity()
         
         -- TODO: make player take damage, play hit effect, etc.
         
-        local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+        local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
         shaderPipelineComp:addPass("flash")
         
         -- shake camera
@@ -2514,7 +2517,7 @@ function initSurvivorEntity()
         
         -- remove after a short delay
         timer.after(1.0, function()
-            local shaderPipelineComp = registry:get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
+            local shaderPipelineComp = component_cache.get(survivorEntity, shader_pipeline.ShaderPipelineComponent)
             if shaderPipelineComp then
                 shaderPipelineComp:removePass("flash")
             end
@@ -2624,7 +2627,7 @@ function initShopPhase()
         InheritedPropertiesSync.Weak,
         Vec2(0, -10) -- offset it a bit upwards
     );
-    local roleComp = registry:get(shopBoard.textEntity, InheritedProperties)
+    local roleComp = component_cache.get(shopBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP
     
     -- give the text & board state
@@ -2661,7 +2664,7 @@ function initShopPhase()
         InheritedPropertiesSync.Weak,   
         Vec2(0, -10) -- offset it a bit upwards
     );
-    local roleComp = registry:get(buyBoard.textEntity, InheritedProperties)
+    local roleComp = component_cache.get(buyBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP 
     -- give the text & board state
     add_state_tag(buyBoard.textEntity, SHOP_STATE)
@@ -2671,7 +2674,7 @@ function initShopPhase()
     buyBoard.cards = {} -- cards are entity ids.
     
     -- add a different onRelease method
-    local buyBoardGameObject = registry:get(buyBoard:handle(), GameObject)
+    local buyBoardGameObject = component_cache.get(buyBoard:handle(), GameObject)
     if buyBoardGameObject then
         buyBoardGameObject.methods.onRelease = function(registry, releasedOn, released)
             log_debug("Entity", released, "released on", releasedOn)
@@ -2716,7 +2719,7 @@ function initActionPhase()
     timer.run(
         function()
             -- tracy.zoneBeginN("Survivor Input Handling") -- just some default depth to avoid bugs
-            if not survivorEntity or survivorEntity == entt_null or not registry:valid(survivorEntity) then
+            if not survivorEntity or survivorEntity == entt_null or not entity_cache.valid(survivorEntity) then
                 return
             end
             
@@ -2798,7 +2801,7 @@ function initActionPhase()
                 
                 -- for 5 times during dash, spawn trail particles
                 timer.every((DASH_LENGTH_SEC * 0.6) / 30, function()
-                    local t = registry:get(survivorEntity, Transform)
+                    local t = component_cache.get(survivorEntity, Transform)
                     if t then
                         
                         -- new node
@@ -2809,7 +2812,7 @@ function initActionPhase()
                             
                             -- draw a gradient rounded rect at the survivor position
                             command_buffer.queueDrawGradientRectRoundedCentered(layers.sprites, function(c)
-                                local t = registry:get(survivorEntity, Transform)
+                                local t = component_cache.get(survivorEntity, Transform)
                                 c.cx = self.savedPos.x + t.actualW / 2 -- center of survivor
                                 c.cy = self.savedPos.y + t.actualH / 2
                                 c.width = t.actualW * (1.0 - self.age / self.lifetime)
@@ -2883,7 +2886,7 @@ function initActionPhase()
             add_state_tag(enemyEntity, ACTION_STATE)
             
             -- set it to a random position, within the screen bounds.
-            local enemyTransform = registry:get(enemyEntity, Transform)
+            local enemyTransform = component_cache.get(enemyEntity, Transform)
             enemyTransform.actualX =   lume.random(SCREEN_BOUND_LEFT + 50, SCREEN_BOUND_RIGHT - 50)
             enemyTransform.actualY =   lume.random(SCREEN_BOUND_TOP + 50, SCREEN_BOUND_BOTTOM - 50)
             
@@ -2971,10 +2974,10 @@ function initActionPhase()
             end)
             
             timer.run(function()
-                local t = registry:get(enemyEntity, Transform)
+                local t = component_cache.get(enemyEntity, Transform)
                 
                 local playerLocation = {x=0,y=0}
-                local playerT = registry:get(survivorEntity, Transform)
+                local playerT = component_cache.get(survivorEntity, Transform)
                 if playerT then
                     playerLocation.x = playerT.actualX + playerT.actualW/2
                     playerLocation.y = playerT.actualY + playerT.actualH/2
@@ -3007,7 +3010,7 @@ function initActionPhase()
         -- log_debug("Camera pan timer tick")
         if is_state_active(ACTION_STATE) then
             local targetX, targetY = 0, 0
-            local t = registry:get(survivorEntity, Transform)
+            local t = component_cache.get(survivorEntity, Transform)
             if t then
                 targetX = t.actualX + t.actualW/2
                 targetY = t.actualY + t.actualH/2
@@ -3042,7 +3045,7 @@ function initActionPhase()
             
             add_state_tag(expPickupEntity, ACTION_STATE)
             
-            local expPickupTransform = registry:get(expPickupEntity, Transform)
+            local expPickupTransform = component_cache.get(expPickupEntity, Transform)
             expPickupTransform.actualX = lume.random(SCREEN_BOUND_LEFT + 50, SCREEN_BOUND_RIGHT - 50)
             expPickupTransform.actualY = lume.random(SCREEN_BOUND_TOP + 50, SCREEN_BOUND_BOTTOM - 50)
             expPickupTransform.visualX = expPickupTransform.actualX
@@ -3127,7 +3130,7 @@ function initPlanningUI()
     planningUIEntities.start_action_button_box =  ui.box.Initialize({x = 350, y = globals.screenHeight()}, startMenuRoot)
     
     -- center the ui box X-axi
-    local buttonTransform = registry:get(planningUIEntities.start_action_button_box, Transform)
+    local buttonTransform = component_cache.get(planningUIEntities.start_action_button_box, Transform)
     buttonTransform.actualX = globals.screenWidth() / 2 - buttonTransform.actualW / 2
     buttonTransform.actualY = globals.screenHeight() - buttonTransform.actualH - 10
     

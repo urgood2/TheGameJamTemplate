@@ -104,6 +104,7 @@ using Random = effolkronium::random_static; // get base random alias which is au
 
 // update methods
 auto updateSystems(float dt) -> void;
+auto updatePhysics(float dt) -> void;
 
 auto updateTimers(float dt) -> void
 {
@@ -135,7 +136,7 @@ void mainMenuStateGameLoop(float dt)
     // show main menu here
 }
 
-void MainLoopFixedUpdateAbstraction(float dt)
+void MainLoopUpdateAbstraction(float dt)
 {
     ZoneScopedN("MainLoopFixedUpdateAbstraction"); // custom label
     
@@ -234,70 +235,81 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 // The main game loop callback / blocking loop
 void RunGameLoop()
 {
-    using namespace main_loop;
-
     // ---------- Initialization ----------
     float lastFrameTime = GetTime();
 
-    // Optional frame smoothing
     const int frameSmoothingCount = 10;
     std::deque<float> frameTimes;
 
-    // FPS tracking
+    const int maxUpdatesPerFrame = 5;
+
     int frameCounter = 0;
     double fpsLastTime = GetTime();
-
-    // Fixed time step (LÖVE uses display refresh or 1/60)
-    const float fixedDelta = mainLoop.rate; // e.g., 1/60.0f
-    float accumulator = fixedDelta;
 
 #ifndef __EMSCRIPTEN__
     while (!WindowShouldClose())
     {
         ZoneScopedN("RunGameLoop");
 #endif
-        // ---------- Step 1: Begin Drawing ----------
         {
             ZoneScopedN("BeginDrawing/rlImGuiBegin call");
             BeginDrawing();
+
 #ifndef __EMSCRIPTEN__
             if (globals::useImGUI)
                 rlImGuiBegin();
 #endif
         }
 
-        // ---------- Step 2: Measure real delta ----------
+        using namespace main_loop;
+
+        // ---------- Step 1: Measure REAL frame time ----------
         float rawDeltaTime = std::max(GetFrameTime(), 0.001f);
+        mainLoop.rawDeltaTime = rawDeltaTime;
+
+        // Optional smoothing
         frameTimes.push_back(rawDeltaTime);
         if (frameTimes.size() > frameSmoothingCount)
             frameTimes.pop_front();
-        float deltaTime = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
 
-        // ---------- Step 3: Update timers ----------
-        mainLoop.realtimeTimer += deltaTime;
+        float smoothedDelta = std::accumulate(frameTimes.begin(), frameTimes.end(), 0.0f) / frameTimes.size();
+
+        // ---------- Step 2: Accumulate time ----------
+        mainLoop.realtimeTimer += smoothedDelta;
+
+        // Apply timescale to everything that is *scaled* (non-paused game time)
+        float scaledDelta = smoothedDelta * mainLoop.timescale;
         if (!globals::isGamePaused)
-            mainLoop.totaltimeTimer += deltaTime;
+            mainLoop.totaltimeTimer += scaledDelta;
 
-        // ---------- Step 4: Fixed-step accumulator ----------
-        accumulator += deltaTime;
+        // ---------- Step 3: Fixed timestep accumulator ----------
+        mainLoop.lag = std::min(mainLoop.lag + smoothedDelta, mainLoop.rate * mainLoop.maxFrameSkip);
 
-        // Run updates while we have enough accumulated time
-        while (accumulator >= fixedDelta)
+        // ---------- Step 4: Fixed-step PHYSICS updates ----------
+        int updatesPerformed = 0;
+        while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
         {
-            ZoneScopedN("FixedUpdate");
-            MainLoopFixedUpdateAbstraction(fixedDelta * mainLoop.timescale);
+            float fixedStep = mainLoop.rate * mainLoop.timescale; // physics respects timescale
+            updatePhysics(fixedStep); // update physics with fixed timestep
 
-            accumulator -= fixedDelta;
+            mainLoop.lag -= mainLoop.rate;
             mainLoop.updates++;
+            updatesPerformed++;
             mainLoop.frame++;
         }
 
-        // ---------- Step 5: Render (no interpolation, just latest state) ----------
-        // ZoneScopedN("Render");
-        MainLoopRenderAbstraction(deltaTime * mainLoop.timescale); // LÖVE doesn't interpolate, so alpha=1
+        // ---------- Step 5: Frame-based updates ----------
+        // Everything else runs once per rendered frame
+        // (input, AI, animation, scripting, non-physics timers)
+        float frameDelta = scaledDelta; // already scaled
+        MainLoopUpdateAbstraction(frameDelta);
+        
+        // ---------- Step 6: Rendering ----------
+        float alpha = mainLoop.lag / mainLoop.rate;
+        MainLoopRenderAbstraction(alpha); // use alpha for interpolation (like Unity)
 
-        // ---------- Step 6: Update render timers ----------
-        timer::TimerSystem::update_render_timers(deltaTime * mainLoop.timescale);
+        // Render-time timers, also scaled by timescale
+        timer::TimerSystem::update_render_timers(frameDelta);
 
         // ---------- Step 7: FPS counter ----------
         frameCounter++;
@@ -309,9 +321,9 @@ void RunGameLoop()
             fpsLastTime = now;
         }
 
-        // ---------- Step 8: End Drawing ----------
         {
             ZoneScopedN("EndDrawing/rlImGuiEnd call");
+
 #ifndef __EMSCRIPTEN__
             if (globals::useImGUI)
                 rlImGuiEnd();
@@ -319,18 +331,11 @@ void RunGameLoop()
             EndDrawing();
         }
 
-        mainLoop.renderFrame++; // one frame rendered
-
-        // ---------- Step 9: Sleep / yield (like love.timer.sleep) ----------
-        WaitTime(0.001f); // optional: avoids pegging 100% CPU on fast frames
-
-#ifdef __EMSCRIPTEN__
-        // no loop for web
-#else
-    } // while (!WindowShouldClose())
+        mainLoop.renderFrame++;
+#ifndef __EMSCRIPTEN__
+    }
 #endif
 }
-
 
 
 
@@ -407,6 +412,24 @@ int main(void)
     return 0;
 }
 
+auto updatePhysics(float dt) -> void
+{
+    {
+        ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
+        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+    }
+    
+    {
+        ZoneScopedN("Physics Step All Worlds");
+        globals::physicsManager->stepAll(dt); // step all physics worlds
+    }
+    
+    {
+        ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
+        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    }
+}
+
 /// @brief Update the systems that operate on ECS components. Note: dt is in seconds
 /// @return
 auto updateSystems(float dt) -> void
@@ -436,20 +459,7 @@ auto updateSystems(float dt) -> void
         sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
     }
     
-    {
-        ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
-        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
-    }
     
-    {
-        ZoneScopedN("Physics Step All Worlds");
-        globals::physicsManager->stepAll(dt); // step all physics worlds
-    }
-    
-    {
-        ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
-        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
-    }
     
     // systems
     

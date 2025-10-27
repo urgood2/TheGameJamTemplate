@@ -12,13 +12,15 @@ local palette = require("color.palette")
 local combat_core = require("combat.combat_system")
 local TimerChain = require("core.timer_chain")
 local timer = require("core.timer")
+local component_cache = require("core.component_cache")
+local entity_cache = require("core.entity_cache")
 
 local shader_prepass = require("shaders.prepass_example")
 lume = require("external.lume")
 -- Represents game loop main module
 main = main or {}
 
-PROFILE_ENABLED = true -- set to true to enable profiling
+PROFILE_ENABLED = false -- set to true to enable profiling
 
 -- Game state (used only in lua)
 GAMESTATE = {
@@ -70,7 +72,7 @@ function initMainMenu()
         64 * 3    -- height
     )
     -- center
-    local logoTransform = registry:get(globals.ui.logo, Transform)
+    local logoTransform = component_cache.get(globals.ui.logo, Transform)
     logoTransform.actualX = globals.screenWidth() / 2 - logoTransform.actualW / 2
     logoTransform.actualY = globals.screenHeight() / 2 - logoTransform.actualH / 2 - 400 -- move it up a bit
     
@@ -78,7 +80,7 @@ function initMainMenu()
         0.1, -- every 0.5 seconds
         function()
             -- make the text move up and down (bob)
-            local transformComp = registry:get(globals.ui.logo, Transform)
+            local transformComp = component_cache.get(globals.ui.logo, Transform)
             local bobHeight = 10 -- height of the bob
             local time = os.clock() -- get the current time
             local bobOffset = math.sin(time * 2) * bobHeight -- calculate the offset
@@ -248,7 +250,7 @@ function initMainMenu()
     mainMenuEntities.main_menu_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, startMenuRoot)
     
     -- center the ui box X-axi
-    local mainMenuTransform = registry:get(mainMenuEntities.main_menu_uibox, Transform)
+    local mainMenuTransform = component_cache.get(mainMenuEntities.main_menu_uibox, Transform)
     mainMenuTransform.actualX = globals.screenWidth() / 2 - mainMenuTransform.actualW / 2
     mainMenuTransform.actualY = globals.screenHeight() / 2 
     
@@ -300,7 +302,7 @@ function initMainMenu()
     mainMenuEntities.language_button_uibox = ui.box.Initialize({x = 350, y = globals.screenHeight()}, languageButtonRoot)
     
     -- put in the bottom right corner
-    local languageButtonTransform = registry:get(mainMenuEntities.language_button_uibox, Transform)
+    local languageButtonTransform = component_cache.get(mainMenuEntities.language_button_uibox, Transform)
     languageButtonTransform.actualX = globals.screenWidth() - languageButtonTransform.actualW - 20
     languageButtonTransform.actualY = globals.screenHeight() - languageButtonTransform.actualH - 20
     
@@ -361,13 +363,13 @@ function clearMainMenu()
     -- for each entity in mainMenuEntities, push it down out of view
     for _, entity in pairs(mainMenuEntities) do
         if registry:has(entity, Transform) then
-            local transform = registry:get(entity, Transform)
+            local transform = component_cache.get(entity, Transform)
             transform.actualY = globals.screenHeight() + 500 -- push it down out of view
         end
     end
     
     -- move global.ui.logo out of view
-    local logoTransform = registry:get(globals.ui.logo, Transform)
+    local logoTransform = component_cache.get(globals.ui.logo, Transform)
     logoTransform.actualY = globals.screenHeight() + 500 -- push it down out of view
     
     
@@ -446,7 +448,7 @@ function main.init()
     --     if input.action_down("do_something") then
     --         log_debug("Space key down!") -- Debug message to indicate the space key is being held down
             
-    --         local mouseT           = registry:get(globals.cursor(), Transform)
+    --         local mouseT           = component_cache.get(globals.cursor(), Transform)
             
     --         -- spawnGrowingCircleParticle(mouseT.visualX, mouseT.visualY, 100, 100, 0.2)
             
@@ -473,7 +475,7 @@ function main.init()
     
     timer.every(0.2, function()
         -- tracy.zoneBeginN("Tooltip Hide Timer Tick") -- just some default depth to avoid bugs
-        if registry:valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
+        if entity_cache.valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
             hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
         end
         -- tracy.zoneEnd()
@@ -491,7 +493,7 @@ end
 local prevFrameCounter = 0
 
 local profileFrameCounter = 0
-local printProfileEveryNFrames = 40 -- print profile every N frames
+local printProfileEveryNFrames = 1 -- print profile every N frames
 function main.update(dt)
     -- tracy.zoneBeginN("lua main.update") -- just some default depth to avoid bugs
     local currentRenderFrameCount = main_loop.data.renderFrame
@@ -508,6 +510,9 @@ function main.update(dt)
         end
     end
     
+    entity_cache.update_frame() -- Update the entity cache for the current frame
+
+    component_cache.update_frame() -- Update the component cache for the current frame
     
     timer.update(dt, isRenderFrame) -- Update the timer system
     

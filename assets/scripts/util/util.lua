@@ -1,5 +1,7 @@
 local task = require("task/task")
 local timer = require("core/timer")
+local component_cache = require("core/component_cache")
+local entity_cache = require("core.entity_cache")
 
 --- Smoothly step the camera toward a target to avoid big-jump jitter.
 -- @param camName string   Name used with camera.Get(...)
@@ -71,7 +73,7 @@ end
 -- simulates a hit for an entity with a shader flash effect + size wobble by 'magnitude' for 'duration' seconds
 function hitFX(entity, magnitude, duration) 
   
-  if not registry:valid(entity) then
+  if not entity_cache.valid(entity) then
     log_debug("hitFX: entity is not valid, returning")
     return
   end
@@ -83,7 +85,7 @@ function hitFX(entity, magnitude, duration)
   
   -- apply a size wobble by magnitude
   if registry.has(entity, Transform) then
-    local transformComp = registry:get(entity, Transform)
+    local transformComp = component_cache.get(entity, Transform)
     local originalW = transformComp.actualW
     local originalH = transformComp.actualH
     
@@ -96,7 +98,7 @@ function hitFX(entity, magnitude, duration)
     return
   end
   
-  shaderPipelineComp = registry:get(entity, shader_pipeline.ShaderPipelineComponent)
+  shaderPipelineComp = component_cache.get(entity, shader_pipeline.ShaderPipelineComponent)
   
   shaderPipelineComp:addPass("flash")
   
@@ -104,8 +106,8 @@ function hitFX(entity, magnitude, duration)
   timer.after(
     duration or 0.1,
     function()
-      if registry:valid(entity) then
-        local shaderPipelineComp = registry:get(entity, shader_pipeline.ShaderPipelineComponent)
+      if entity_cache.valid(entity) then
+        local shaderPipelineComp = component_cache.get(entity, shader_pipeline.ShaderPipelineComponent)
         shaderPipelineComp:removePass("flash")
       end
     end
@@ -219,7 +221,7 @@ function buyRelicFromSlot(slot)
   -- )
   
   -- add hover tooltip
-  local gameObject = registry:get(relicAnimationEntity, GameObject)
+  local gameObject = component_cache.get(relicAnimationEntity, GameObject)
   gameObject.methods.onHover = function()
     log_debug("Relic hovered: ", relicDef.id)
     showTooltip(
@@ -259,7 +261,7 @@ function buyRelicFromSlot(slot)
   log_debug("buyRelicFromSlot: Wrapped entity inside UI element row: ", globals.ui.relicsUIElementRow)
   
   --TODO: add to top bar and renew alignment
-  -- local gameobjectCompTopBar = registry:get(globals.ui.relicsUIElementRow, GameObject)
+  -- local gameobjectCompTopBar = component_cache.get(globals.ui.relicsUIElementRow, GameObject)
   -- gameobjectCompTopBar.orderedChildren:add(uie) -- add the wrapped entity to the top bar UI element row
   
   --TODO: document that AddTemplateToUIBox must take a row
@@ -341,7 +343,7 @@ function handleNewDay()
   local uiElement1 = ui.box.GetUIEByID(registry, globals.ui.weatherShopUIBox, "relic1UIElement")
   
   -- add hover 
-  local gameObject1 = registry:get(uiElement1, GameObject)
+  local gameObject1 = component_cache.get(uiElement1, GameObject)
   local relicDef1 = relicDef
   gameObject1.methods.onHover = function()
     log_debug("Relic 1 hovered!")
@@ -352,14 +354,14 @@ function handleNewDay()
   end
   
   -- add button callback
-  local uieUIConfig1 = registry:get(uiElement1, UIConfig)
+  local uieUIConfig1 = component_cache.get(uiElement1, UIConfig)
   -- enable button
   uieUIConfig1.disable_button = false -- enable the button
   uieUIConfig1.buttonCallback = function()
     log_debug("Relic 1 button clicked!")
     buyRelicFromSlot(1) -- buy the relic from slot 1
     -- disable the button
-    local uiConfig = registry:get(uiElement1, UIConfig)
+    local uiConfig = component_cache.get(uiElement1, UIConfig)
     uiConfig.disable_button = true -- disable the button
   end
   -- relic2ButtonAnimationEntity
@@ -387,7 +389,7 @@ function handleNewDay()
   
   local uiElement2 = ui.box.GetUIEByID(registry, globals.ui.weatherShopUIBox, "relic2UIElement")
   -- add hover
-  local gameObject2 = registry:get(uiElement2, GameObject)
+  local gameObject2 = component_cache.get(uiElement2, GameObject)
   local relicDef2 = relicDef
   gameObject2.methods.onHover = function()
     log_debug("Relic 2 hovered!")
@@ -399,13 +401,13 @@ function handleNewDay()
   
   -- enable button
   -- add button callback
-  local uieUIConfig2 = registry:get(uiElement2, UIConfig)
+  local uieUIConfig2 = component_cache.get(uiElement2, UIConfig)
   uieUIConfig2.disable_button = false -- enable the button
   uieUIConfig2.buttonCallback = function()
     log_debug("Relic 2 button clicked!")
     buyRelicFromSlot(2) -- buy the relic from slot 2
     -- disable the button
-    local uiConfig = registry:get(uiElement2, UIConfig)
+    local uiConfig = component_cache.get(uiElement2, UIConfig)
     uiConfig.disable_button = true -- disable the button
   end
   -- relic3ButtonAnimationEntity
@@ -432,7 +434,7 @@ function handleNewDay()
   -- fetch ui element
   local uiElement3 = ui.box.GetUIEByID(registry, globals.ui.weatherShopUIBox, "relic3UIElement")
   -- add hover
-  local gameObject3 = registry:get(uiElement3, GameObject)
+  local gameObject3 = component_cache.get(uiElement3, GameObject)
   local relicDef3 = relicDef
   gameObject3.methods.onHover = function()
     log_debug("Relic 3 hovered!")
@@ -442,19 +444,19 @@ function handleNewDay()
     )
   end
   -- add button callback
-  local uieUIConfig3 = registry:get(uiElement3, UIConfig)
+  local uieUIConfig3 = component_cache.get(uiElement3, UIConfig)
   uieUIConfig3.disable_button = false -- enable the button
   uieUIConfig3.buttonCallback = function()
     log_debug("Relic 3 button clicked!")
     buyRelicFromSlot(3) -- buy the relic from slot 3
     -- disable the button
-    local uiConfig = registry:get(uiElement3, UIConfig)
+    local uiConfig = component_cache.get(uiElement3, UIConfig)
     uiConfig.disable_button = true -- disable the button
   end
   ui.box.RenewAlignment(registry, globals.ui.weatherShopUIBox) -- re-align the shop UI box
   
   -- update shop uiboxTransform to centered
-  local shopUIBoxTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
+  local shopUIBoxTransform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
   shopUIBoxTransform.actualX = globals.screenWidth() / 2 - shopUIBoxTransform.actualW / 2
   shopUIBoxTransform.visualX = shopUIBoxTransform.actualX -- snap X
   shopUIBoxTransform.actualY = globals.screenHeight() / 2 - shopUIBoxTransform.actualH / 2
@@ -494,10 +496,10 @@ function handleNewDay()
       ai.pause_ai_system()   -- pause the AI system
       togglePausedState(true)
       -- show the new day message
-      if registry:valid(globals.ui.newDayUIBox) then
-        local shopTransform = registry:get(globals.ui.weatherShopUIBox, Transform)
+      if entity_cache.valid(globals.ui.newDayUIBox) then
+        local shopTransform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
         
-        local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
+        local transformComp = component_cache.get(globals.ui.newDayUIBox, Transform)
         transformComp.actualY = globals.screenHeight() / 2 - shopTransform.actualH / 2 - transformComp.actualH  + 10 -- show above the shop UI box
         -- cneter x
         transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
@@ -507,7 +509,7 @@ function handleNewDay()
       -- for each healer & damage cushion, detract currency and show text popup
       for _, healerEntry in ipairs(globals.healers) do
         
-        local transformComp = registry:get(healerEntry, Transform)
+        local transformComp = component_cache.get(healerEntry, Transform)
         local healerDef = findInTable(globals.creature_defs, "id", "healer")
         local maintenance_cost = healerDef.maintenance_cost
         
@@ -526,7 +528,7 @@ function handleNewDay()
       
       for _, damageCushionEntry in ipairs(globals.damage_cushions) do
         
-        local transformComp = registry:get(damageCushionEntry, Transform)
+        local transformComp = component_cache.get(damageCushionEntry, Transform)
         local damageCushionDef = findInTable(globals.creature_defs, "id", "damage_cushion")
         local maintenance_cost = damageCushionDef.maintenance_cost
         
@@ -559,7 +561,7 @@ function handleNewDay()
         
         playSoundEffect("effects", "gold-gain") -- play coin sound effect
         
-        local coinTansformComp = registry:get(coinImage, Transform)
+        local coinTansformComp = component_cache.get(coinImage, Transform)
         
         -- text popup at the location of the colonist home
         newTextPopup(
@@ -574,8 +576,8 @@ function handleNewDay()
           "color=marigold" -- effect string
         )
         
-        local transformComp = registry:get(coinImage, Transform)
-        local t = registry:get(colonistHomeEntry.entity, Transform)
+        local transformComp = component_cache.get(coinImage, Transform)
+        local t = component_cache.get(colonistHomeEntry.entity, Transform)
         -- align above the home
         transformComp.actualX = t.actualX + t.actualW / 2 - transformComp.actualW / 2
         transformComp.actualY = t.actualY - transformComp.actualH / 2 - 5
@@ -594,15 +596,15 @@ function handleNewDay()
           1.1,
           function()
             playSoundEffect("effects", "money-to-cash-pile") -- play coin sound effect
-            if not registry:valid(coinImage) then
+            if not entity_cache.valid(coinImage) then
               log_debug("Coin image entity is not valid, skipping tweening")
               return
             end
             
             
             -- tween the coin image to the currency UI box
-            local uiBoxTransform = registry:get(globals.ui.currencyUIBox, Transform)
-            local transformComp = registry:get(coinImage, Transform)
+            local uiBoxTransform = component_cache.get(globals.ui.currencyUIBox, Transform)
+            local transformComp = component_cache.get(coinImage, Transform)
             transformComp.actualX = uiBoxTransform.actualX + uiBoxTransform.actualW / 2 - transformComp.actualW / 2
             transformComp.actualY = uiBoxTransform.actualY + uiBoxTransform.actualH / 2 - transformComp.actualH / 2
             
@@ -615,7 +617,7 @@ function handleNewDay()
         timer.after(
           2.2, -- delay in seconds
           function()
-            if registry:valid(coinImage) then
+            if entity_cache.valid(coinImage) then
               registry:destroy(coinImage) -- remove the coin image entity
             end
             -- add the currency to the player's resources
@@ -632,8 +634,8 @@ function handleNewDay()
       timer.after(
         3.6,     -- delay in seconds
         function()
-          if registry:valid(globals.ui.newDayUIBox) then
-            local transformComp = registry:get(globals.ui.newDayUIBox, Transform)
+          if entity_cache.valid(globals.ui.newDayUIBox) then
+            local transformComp = component_cache.get(globals.ui.newDayUIBox, Transform)
             transformComp.actualY = globals.screenHeight()
             -- center x
             transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
@@ -670,8 +672,8 @@ function showTooltip(titleText, bodyText)
   ui.box.RenewAlignment(registry, boxEnt)
 
   -- 3) grab transforms & dims
-  local mouseT           = registry:get(globals.cursor(), Transform)
-  local boxT             = registry:get(boxEnt, Transform)
+  local mouseT           = component_cache.get(globals.cursor(), Transform)
+  local boxT             = component_cache.get(boxEnt, Transform)
 
   local screenW, screenH = globals.screenWidth(), globals.screenHeight()
 
@@ -697,14 +699,14 @@ end
 function toggleShopWindow()
   if (globals.isShopOpen) then
     globals.isShopOpen = false
-    local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+    local transform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
     transform.actualY = globals.screenHeight() -- hide the shop UI box
   else
     globals.isShopOpen = true
-    local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+    local transform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
     transform.actualY = globals.screenHeight() / 2 - transform.actualH / 2 -- show the shop UI box
   end
-  local transform = registry:get(globals.ui.weatherShopUIBox, Transform)
+  local transform = component_cache.get(globals.ui.weatherShopUIBox, Transform)
   -- center x
   transform.actualX = globals.screenWidth() / 2 - transform.actualW / 2
   transform.visualX = transform.actualX -- snap X
@@ -734,7 +736,7 @@ function showNewAchievementPopup(achievementID)
   )
 
   -- set tooltip
-  local gameObject = registry:get(globals.ui.achievementIconEntity, GameObject)
+  local gameObject = component_cache.get(globals.ui.achievementIconEntity, GameObject)
   gameObject.methods.onHover = function()
     achievementDef.tooltipFunc()
   end
@@ -751,7 +753,7 @@ function showNewAchievementPopup(achievementID)
   playSoundEffect("effects", "new_achievement")
 
   -- if not already at bottom of the screen, move it to the center
-  local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
+  local transformComp = component_cache.get(globals.ui.newAchievementUIBox, Transform)
   transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
   transformComp.visualX = transformComp.actualX -- snap X
   transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
@@ -771,7 +773,7 @@ function showNewAchievementPopup(achievementID)
     function()
       log_debug("Dismissing achievement popup: ", achievementID)
       -- move the box out of the screen
-      local transformComp = registry:get(globals.ui.newAchievementUIBox, Transform)
+      local transformComp = component_cache.get(globals.ui.newAchievementUIBox, Transform)
       transformComp.actualY = globals.screenHeight() + 500
     end,
     "dismiss_achievement_popup" -- timer name
@@ -780,7 +782,7 @@ end
 
 function centerTransformOnScreen(entity)
   -- center the transform of the entity on the screen
-  local transformComp = registry:get(entity, Transform)
+  local transformComp = component_cache.get(entity, Transform)
   transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2
   transformComp.visualX = transformComp.actualX -- snap X
   transformComp.actualY = globals.screenHeight() / 2 - transformComp.actualH / 2
@@ -797,7 +799,7 @@ function newTextPopup(textString, x, y, duration, effectString)
   local entity = entry.config.object
 
   -- 2) fetch its transform and its size (set by the text system)
-  local tc = registry:get(entity, Transform)
+  local tc = component_cache.get(entity, Transform)
   local w, h = tc.actualW or 0, tc.actualH or 0
 
   -- 3) default to center-screen if no x/y passed
@@ -817,10 +819,10 @@ function newTextPopup(textString, x, y, duration, effectString)
     duration and duration - .2 or 1.8, -- duration in seconds
     function()
       -- move text slowly upward
-      local tc2 = registry:get(entity, Transform)
+      local tc2 = component_cache.get(entity, Transform)
       tc2.actualY = tc2.actualY - 30 * GetFrameTime()
       
-      local textComp = registry:get(entity, TextSystem.Text)
+      local textComp = component_cache.get(entity, TextSystem.Text)
       textComp.globalAlpha = textComp.globalAlpha - 0.1 * GetFrameTime() -- fade out the text
     end,
     nil
@@ -828,13 +830,13 @@ function newTextPopup(textString, x, y, duration, effectString)
 
   -- 6) after duration, burst and destroy
   timer.after(duration or 2.0, function()
-    local tc2 = registry:get(entity, Transform)
+    local tc2 = component_cache.get(entity, Transform)
     spawnCircularBurstParticles(
       tc2.actualX + tc2.actualW * 0.5,
       tc2.actualY + tc2.actualH * 0.5,
       5, 0.2
     )
-    if registry:valid(entity) then
+    if entity_cache.valid(entity) then
       registry:destroy(entity)
     end
   end)
@@ -846,7 +848,7 @@ function hideTooltip()
     -- log_debug("hideTooltip: tooltipUIBox is not set up, skipping")
     return
   end
-  local tooltipTransform = registry:get(globals.ui.tooltipUIBox, Transform)
+  local tooltipTransform = component_cache.get(globals.ui.tooltipUIBox, Transform)
   tooltipTransform.actualY = globals.screenHeight()   -- move it out of the screen
   tooltipTransform.visualY = tooltipTransform.actualY -- snap Y
 end
@@ -882,7 +884,7 @@ function cycleConverter(inc)
   log_debug("hookup hover callbacks for converter entity: ", globals.converter_ui_animation_entity)
   -- 3) hook up hover callbacks
   local converterEntity                   = globals.converter_ui_animation_entity
-  local converterGameObject               = registry:get(converterEntity, GameObject)
+  local converterGameObject               = component_cache.get(converterEntity, GameObject)
   converterGameObject.methods.onHover     = function()
     log_debug("Converter entity hovered!")
     showTooltip(title, body)
@@ -942,7 +944,7 @@ function cycleBuilding(inc)
 
   -- 3) hook up hover callbacks
   local converterEntity                   = globals.building_ui_animation_entity
-  local converterGameObject               = registry:get(converterEntity, GameObject)
+  local converterGameObject               = component_cache.get(converterEntity, GameObject)
   converterGameObject.methods.onHover     = function()
     showTooltip(title, body)
   end
@@ -971,7 +973,7 @@ function buyConverterButtonCallback()
   -- id of currently selected converter
   local selectedConverter = globals.converter_defs[globals.selectedConverterIndex]
 
-  local uiTransformComp = registry:get(globals.converter_ui_animation_entity, Transform)
+  local uiTransformComp = component_cache.get(globals.converter_ui_animation_entity, Transform)
 
   if not selectedConverter.unlocked then
     log_debug("Converter is not unlocked yet!")
@@ -1030,7 +1032,7 @@ function buyConverterButtonCallback()
   )
 
   -- make the object draggable
-  local gameObjectState = registry:get(exampleConverter, GameObject).state
+  local gameObjectState = component_cache.get(exampleConverter, GameObject).state
   gameObjectState.dragEnabled = true
   gameObjectState.clickEnabled = true
   gameObjectState.hoverEnabled = true
@@ -1044,7 +1046,7 @@ function buyConverterButtonCallback()
   ).config.object
 
   -- make the text entity follow the converter entity
-  local transformComp = registry:get(exampleConverter, Transform)
+  local transformComp = component_cache.get(exampleConverter, Transform)
   transform.AssignRole(registry, infoText, InheritedPropertiesType.RoleInheritor, exampleConverter,
     InheritedPropertiesSync.Strong,
     InheritedPropertiesSync.Strong,
@@ -1053,7 +1055,7 @@ function buyConverterButtonCallback()
     Vec2(0, -20) -- offset the text above the converter
   );
 
-  -- local textRole = registry:get(infoText, InheritedProperties)
+  -- local textRole = component_cache.get(infoText, InheritedProperties)
   -- textRole.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
 
   playSoundEffect("effects", "buy-building")
@@ -1065,14 +1067,14 @@ function buyConverterButtonCallback()
 
 
   -- add onstopdrag method to the converter entity
-  local gameObjectComp = registry:get(exampleConverter, GameObject)
+  local gameObjectComp = component_cache.get(exampleConverter, GameObject)
   gameObjectComp.methods.onHover = function()
     log_debug("Converter entity hovered! WHy not drag?")
   end
   gameObjectComp.methods.onStopDrag = function()
     log_debug("Converter entity stopped dragging!")
-    local gameObjectComp = registry:get(exampleConverter, GameObject)
-    local transformComp = registry:get(exampleConverter, Transform)
+    local gameObjectComp = component_cache.get(exampleConverter, GameObject)
+    local transformComp = component_cache.get(exampleConverter, Transform)
     local gameObjectState = gameObjectComp.state
     -- get the grid that it's in, grid is 64 pixels wide
     local gridX = math.floor(transformComp.actualX / 64)
@@ -1237,7 +1239,7 @@ end
 function startEntityWalkMotion(e)
   timer.every(0.5,
     function()
-      if (not registry:valid(e) or e == entt_null) then
+      if (not entity_cache.valid(e) or e == entt_null) then
         log_debug("Entity is not valid, stopping walk motion")
         
         -- use schduler to remove the timer
@@ -1251,17 +1253,17 @@ function startEntityWalkMotion(e)
         scheduler:attach(task1) -- attach the task to the scheduler
         return
       end
-      local t = registry:get(e, Transform)
+      local t = component_cache.get(e, Transform)
       t.actualR = 10 * math.sin(GetTime() * 4)   -- Multiply GetTime() by a factor to increase oscillation speed
     end,
     0,
     true,
     function()
-      if (not registry:valid(e)) then
+      if (not entity_cache.valid(e)) then
         log_debug("Entity is not valid, stopping walk motion")
         return -- stop the timer if the entity is not valid
       end
-      local t = registry:get(e, Transform)
+      local t = component_cache.get(e, Transform)
       t.actualR = 0
     end,
     e .. "_walk_timer" -- unique timer name for this entity
@@ -1331,7 +1333,7 @@ function buyNewColonistHomeCallback()
   )
   
   -- make the object draggable
-  local gameObjectState = registry:get(colonistHomeEntity, GameObject).state
+  local gameObjectState = component_cache.get(colonistHomeEntity, GameObject).state
   gameObjectState.dragEnabled = true
   gameObjectState.clickEnabled = true
   gameObjectState.hoverEnabled = true
@@ -1354,19 +1356,19 @@ function buyNewColonistHomeCallback()
   );
   
   -- now locate the colonist home entity in the game world
-  local transformComp = registry:get(colonistHomeEntity, Transform)
+  local transformComp = component_cache.get(colonistHomeEntity, Transform)
   transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
   transformComp.actualY = globals.screenHeight() - 300  
   
   -- add onstopdrag method to the colonist home entity
-  local gameObjectComp = registry:get(colonistHomeEntity, GameObject)
+  local gameObjectComp = component_cache.get(colonistHomeEntity, GameObject)
   gameObjectComp.methods.onStopDrag = function()
     log_debug("Colonist home entity stopped dragging!") 
     -- add to the table in the buildings table with the id of the building
     table.insert(globals.structures.colonist_homes, { entity = colonistHomeEntity })
     log_debug("Added colonist home entity to globals.structures: ", colonistHomeEntity, " for id: ", structureDef.id) 
-    local gameObjectComp = registry:get(colonistHomeEntity, GameObject)
-    local transformComp = registry:get(colonistHomeEntity, Transform)
+    local gameObjectComp = component_cache.get(colonistHomeEntity, GameObject)
+    local transformComp = component_cache.get(colonistHomeEntity, Transform)
     local gameObjectState = gameObjectComp.state
     -- get the grid that it's in, grid is 64 pixels wide
     local gridX = math.floor(transformComp.actualX / 64)
@@ -1453,7 +1455,7 @@ function buyNewDuplicatorCallback()
   )
 
   -- make the object draggable
-  local gameObjectState = registry:get(duplicatorEntity, GameObject).state
+  local gameObjectState = component_cache.get(duplicatorEntity, GameObject).state
   gameObjectState.dragEnabled = true
   gameObjectState.clickEnabled = true
   gameObjectState.hoverEnabled = true
@@ -1475,12 +1477,12 @@ function buyNewDuplicatorCallback()
   );
 
   -- now locate the duplicator entity in the game world
-  local transformComp = registry:get(duplicatorEntity, Transform)
+  local transformComp = component_cache.get(duplicatorEntity, Transform)
   transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
   transformComp.actualY = globals.screenHeight() - 300
 
   -- add onstopdrag method to the duplicator entity
-  local gameObjectComp = registry:get(duplicatorEntity, GameObject)
+  local gameObjectComp = component_cache.get(duplicatorEntity, GameObject)
   gameObjectComp.methods.onStopDrag = function()
     log_debug("Duplicator entity stopped dragging!")
 
@@ -1489,8 +1491,8 @@ function buyNewDuplicatorCallback()
     table.insert(globals.structures.duplicators, { entity = duplicatorEntity })
     log_debug("Added duplicator entity to globals.structures: ", duplicatorEntity, " for id: ", structureDef.id)
 
-    local gameObjectComp = registry:get(duplicatorEntity, GameObject)
-    local transformComp = registry:get(duplicatorEntity, Transform)
+    local gameObjectComp = component_cache.get(duplicatorEntity, GameObject)
+    local transformComp = component_cache.get(duplicatorEntity, Transform)
     local gameObjectState = gameObjectComp.state
     -- get the grid that it's in, grid is 64 pixels wide
     local gridX = math.floor(transformComp.actualX / 64)
@@ -1538,7 +1540,7 @@ function buyBuildingButtonCallback()
   -- id of currently selected converter
   local selectedBuilding = globals.building_upgrade_defs[globals.selectedBuildingIndex]
 
-  local uiTransformComp = registry:get(globals.building_ui_animation_entity, Transform)
+  local uiTransformComp = component_cache.get(globals.building_ui_animation_entity, Transform)
 
   if not selectedBuilding.unlocked then
     log_debug("Building is not unlocked yet!")
@@ -1600,7 +1602,7 @@ function buyBuildingButtonCallback()
   )
 
   -- make the object draggable
-  local gameObjectState = registry:get(exampleBuilding, GameObject).state
+  local gameObjectState = component_cache.get(exampleBuilding, GameObject).state
   gameObjectState.dragEnabled = true
   gameObjectState.clickEnabled = true
   gameObjectState.hoverEnabled = true
@@ -1622,26 +1624,26 @@ function buyBuildingButtonCallback()
     Vec2(0, -20) -- offset the text above the converter
   );
 
-  -- local textRole = registry:get(infoText, InheritedProperties)
+  -- local textRole = component_cache.get(infoText, InheritedProperties)
   -- textRole.flags = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_TOP
 
 
   -- now locate the converter entity in the game world
 
-  local transformComp = registry:get(exampleBuilding, Transform)
+  local transformComp = component_cache.get(exampleBuilding, Transform)
   transformComp.actualX = globals.screenWidth() / 2 - transformComp.actualW / 2 -- center it horizontally
   transformComp.actualY = globals.screenHeight() - 300
 
 
   -- add onstopdrag method to the converter entity
-  local gameObjectComp = registry:get(exampleBuilding, GameObject)
+  local gameObjectComp = component_cache.get(exampleBuilding, GameObject)
   gameObjectComp.methods.onHover = function()
     log_debug("Converter entity hovered! WHy not drag?")
   end
   gameObjectComp.methods.onStopDrag = function()
     log_debug("Converter entity stopped dragging!")
-    local gameObjectComp = registry:get(exampleBuilding, GameObject)
-    local transformComp = registry:get(exampleBuilding, Transform)
+    local gameObjectComp = component_cache.get(exampleBuilding, GameObject)
+    local transformComp = component_cache.get(exampleBuilding, Transform)
     local gameObjectState = gameObjectComp.state
     -- get the grid that it's in, grid is 64 pixels wide
     local gridX = math.floor(transformComp.actualX / 64)
@@ -1757,13 +1759,13 @@ function updateBuildings()
       local buildingEntity = buildingTable[i]
 
       -- ensure building has been placed
-      local gameObject = registry:get(buildingEntity, GameObject)
+      local gameObject = component_cache.get(buildingEntity, GameObject)
       if gameObject.state.dragEnabled then
         log_debug("Building", buildingID, "is not placed yet, skipping")
         goto continue
       end
 
-      local buildingTransform = registry:get(buildingEntity, Transform)
+      local buildingTransform = component_cache.get(buildingEntity, Transform)
       local buildingDefTable = findInTable(globals.building_upgrade_defs, "id", buildingID)
 
 
@@ -1785,7 +1787,7 @@ function updateBuildings()
               log_debug("Building", buildingID, "gathered", resource, "from entity", currencyEntity)
 
               --TODO: move the currency entity to the building's position
-              local currencyTransform = registry:get(currencyEntity, Transform)
+              local currencyTransform = component_cache.get(currencyEntity, Transform)
               currencyTransform.actualX = buildingTransform.actualX + buildingTransform.actualW / 2
               currencyTransform.actualY = buildingTransform.actualY + buildingTransform.actualH / 2
 
@@ -1805,7 +1807,7 @@ function updateBuildings()
                     0.5 -- seconds
                   )
                   -- remove the currency entity from the registry
-                  if (registry:valid(currencyEntity) == true) then
+                  if (entity_cache.valid(currencyEntity) == true) then
                     registry:destroy(currencyEntity)
                   end
                 end
@@ -1830,13 +1832,13 @@ function updateConverters()
       local converterEntity = converterTable[i]
 
       -- ensure converter has been placed
-      local gameObject = registry:get(converterEntity, GameObject)
+      local gameObject = component_cache.get(converterEntity, GameObject)
       if gameObject.state.dragEnabled then
         log_debug("Converter", converterID, "is not placed yet, skipping")
         goto continue
       end
 
-      local converterTransform = registry:get(converterEntity, Transform)
+      local converterTransform = component_cache.get(converterEntity, Transform)
       local converterDefTable = findInTable(globals.converter_defs, "id", converterID)
 
 

@@ -317,6 +317,7 @@ end
 --------------------------------------------------------
 
 function timer.update(dt, is_render_frame)
+  tracy.ZoneBegin("lua timer.update")
   local keys = {}
   for tag in pairs(timer.timers) do
     keys[#keys + 1] = tag
@@ -423,6 +424,7 @@ function timer.update(dt, is_render_frame)
 
     ::continue::
   end
+  tracy.ZoneEnd("lua timer.update")
 end
 
 _G.__GLOBAL_TIMER__ = timer

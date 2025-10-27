@@ -150,3 +150,9 @@ end)
 - music.
 - make sprites blink for effect, like dying or damage.
 - shader pass for legibility (change crt maybe)
+
+# release & testing
+- Enable github actions + auto loading to itch.io on new release.
+- Explore ways to cleanly remove tracy instrumentation from lua scripts & c++ for release builds.
+- Clean up build files so that no docs or unnecessary source files are included.
+- Playtest and get feedback from friends.

@@ -142,6 +142,7 @@ function createNewBoard(x, y, w, h)
    
     local BoardType = Node:extend()
     function BoardType:update(dt)
+        tracy.ZoneBegin("BoardType:update")
         local eid = self:handle()
         if not eid or not registry:valid(eid) then return end
 
@@ -239,6 +240,7 @@ function createNewBoard(x, y, w, h)
                 end
             end
         end
+        tracy.ZoneEnd("BoardType:update")
     end
     
     local board = BoardType{}
@@ -620,7 +622,7 @@ function createNewCard(id, x, y, gameStateToApply)
     if not timer.get_timer_and_delay("card_render_timer") then
         
         timer.run(function ()
-            
+            tracy.ZoneBegin("Card Render Timer Tick")
             -- bail if not shop or planning state
             if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
                 return
@@ -672,6 +674,7 @@ function createNewCard(id, x, y, gameStateToApply)
                 end
                 ::continue::
             end
+            tracy.ZoneEnd("Card Render Timer Tick")
             
         end,
         nil, -- no onComplete
@@ -1804,6 +1807,7 @@ function initPlanningPhase()
     
     -- board draw function, for all baords
     timer.run(function()
+        tracy.ZoneBegin("Planning Phase Board Draw")
         
         -- log_debug("Drawing board borders")
         
@@ -1879,6 +1883,7 @@ function initPlanningPhase()
 
             ::continue::
         end
+        Tracy.ZoneEnd()
     end)
     
 -- -------------------------------------------------------------------------- --
@@ -2710,6 +2715,7 @@ function initActionPhase()
     -- create input timer. this must run every frame.
     timer.run(
         function()
+            tracy.ZoneBegin("Survivor Input Handling")
             if not survivorEntity or survivorEntity == entt_null or not registry:valid(survivorEntity) then
                 return
             end
@@ -2849,6 +2855,8 @@ function initActionPhase()
             local speed = 200 -- pixels per second
             
             physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * speed, moveDir.y * speed)
+            
+            tracy.ZoneEnd("lua survivor input handling")
             
         end,
         nil, -- no after
@@ -2995,6 +3003,7 @@ function initActionPhase()
     
     -- timer to pan camera to follow player
     timer.every(0.1, function()
+        tracy.ZoneBegin("Camera Pan Timer Tick")
         -- log_debug("Camera pan timer tick")
         if is_state_active(ACTION_STATE) then
             local targetX, targetY = 0, 0
@@ -3014,6 +3023,7 @@ function initActionPhase()
                 camera_smooth_pan_to("world_camera", globals.screenWidth()/2, globals.screenHeight()/2) -- pan to the target smoothly
             end
         end
+        tracy.ZoneEnd("Camera Pan Timer Tick")
     end,
     nil,
     false,

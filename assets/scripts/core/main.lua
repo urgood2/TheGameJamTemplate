@@ -428,36 +428,36 @@ function main.init()
     
 
     
-    timer.every(0.16, function()
+    -- timer.every(0.16, function()
         
-        if input.action_pressed("do_something") then
-            log_debug("Space key pressed!") -- Debug message to indicate the space key was pressed
-        end
-        if input.action_released("do_something") then
-            log_debug("Space key released!") -- Debug message to indicate the space key was released
-        end
-        if input.action_down("do_something") then
-            log_debug("Space key down!") -- Debug message to indicate the space key is being held down
+    --     if input.action_pressed("do_something") then
+    --         log_debug("Space key pressed!") -- Debug message to indicate the space key was pressed
+    --     end
+    --     if input.action_released("do_something") then
+    --         log_debug("Space key released!") -- Debug message to indicate the space key was released
+    --     end
+    --     if input.action_down("do_something") then
+    --         log_debug("Space key down!") -- Debug message to indicate the space key is being held down
             
-            local mouseT           = registry:get(globals.cursor(), Transform)
+    --         local mouseT           = registry:get(globals.cursor(), Transform)
             
-            -- spawnGrowingCircleParticle(mouseT.visualX, mouseT.visualY, 100, 100, 0.2)
+    --         -- spawnGrowingCircleParticle(mouseT.visualX, mouseT.visualY, 100, 100, 0.2)
             
-            spawnCircularBurstParticles(
-                mouseT.visualX, 
-                mouseT.visualY, 
-                5, -- count
-                0.5, -- seconds
-                palette.snapToColorName("blue"), -- start color
-                palette.snapToColorName("purple"), -- end color
-                "outCubic", -- from util.easing
-                "screen" -- screen space
-            )
+    --         spawnCircularBurstParticles(
+    --             mouseT.visualX, 
+    --             mouseT.visualY, 
+    --             5, -- count
+    --             0.5, -- seconds
+    --             palette.snapToColorName("blue"), -- start color
+    --             palette.snapToColorName("purple"), -- end color
+    --             "outCubic", -- from util.easing
+    --             "screen" -- screen space
+    --         )
             
-            slowTime(5, 0.2) -- slow time to 50% for 0.2 seconds
-        end
+    --         slowTime(5, 0.2) -- slow time to 50% for 0.2 seconds
+    --     end
         
-    end)
+    -- end)
     
     -- enable debug mode if the environment variable is set
     if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
@@ -465,9 +465,11 @@ function main.init()
     end
     
     timer.every(0.2, function()
+        tracy.ZoneBegin("Tooltip Hide Timer Tick")
         if registry:valid(globals.inputState.cursor_hovering_target) == false or globals.inputState.cursor_hovering_target == globals.gameWorldContainerEntity()  then
             hideTooltip() -- Hide the tooltip if the cursor is not hovering over any target
         end
+        tracy.ZoneEnd("Tooltip Hide Timer Tick")
     end,
     0, -- start immediately)
     true,
@@ -482,7 +484,7 @@ end
 local prevFrameCounter = 0
 
 function main.update(dt)
-    
+    tracy.ZoneBegin("lua main.update")
     local currentRenderFrameCount = main_loop.data.renderFrame
     local isRenderFrame = (currentRenderFrameCount ~= prevFrameCounter)
     prevFrameCounter = currentRenderFrameCount
@@ -500,8 +502,10 @@ function main.update(dt)
         globals.main_menu_elapsed_time = globals.main_menu_elapsed_time + dt
     end
     
+    tracy.ZoneEnd("lua main.update")
 end
 
 function main.draw(dt)
-   
+   tracy.ZoneBegin("lua main.draw")
+   tracy.ZoneEnd("lua main.draw")
 end

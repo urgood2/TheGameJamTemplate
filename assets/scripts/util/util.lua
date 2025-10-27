@@ -52,11 +52,11 @@ function camera_smooth_pan_to(camName, tx, ty, opts)
         tag                 -- unique tag
     )
     
-    log_debug(("Created timer '%s' | delay=%s | type=%s"):format(tag, tostring(interval), "every"))
-    log_debug("Timer table contents after creating '%s':", tag)
-    for k, v in pairs(timer.timers) do
-        log_debug(" - %s (%s)", k, v.type)
-    end
+    -- log_debug(("Created timer '%s' | delay=%s | type=%s"):format(tag, tostring(interval), "every"))
+    -- log_debug("Timer table contents after creating '%s':", tag)
+    -- for k, v in pairs(timer.timers) do
+    --     log_debug(" - %s (%s)", k, v.type)
+    -- end
 
     return true
 end

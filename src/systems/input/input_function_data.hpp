@@ -160,11 +160,18 @@ namespace input
         entt::entity cursor_hovering_target = entt::null;      // Entity currently hovered over by cursor
         entt::entity cursor_prev_hovering_target = entt::null; // Previously hovered entity by cursor
         bool cursor_hovering_handled = false;                  // Whether hover event has been handled
+        
+        // --------------------------------
+        // Controller nav override handling
+        // --------------------------------
+        bool controllerNavOverride = false; // Whether controller navigation is overriding cursor focus. This will override default navigation behavior, which only focuses on ui elements, and let the controller nav system handle it instead.
+        
 
         // -------------------------------
         // Input Handling
         // -------------------------------
         // These track user inputs, including keypresses and cursor movements.
+        
         
         entt::entity activeScrollPane = entt::null; // Currently active scroll pane, if any
         

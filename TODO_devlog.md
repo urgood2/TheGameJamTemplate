@@ -102,3 +102,9 @@
   - Separated trigger cards to be their own thing.
   - Several more card defs so I can play around with them.
   - ran into some serious performance issues. tried moving timer and object updates to lua instead of c++. Not sure yet if it helped.
+  
+10/26/2025
+  - Explored some performance optimizations. Also, full day of work, so not much progress.
+  
+10/27/2025
+  - Added tracy to lua, allowing profiling of lua code.

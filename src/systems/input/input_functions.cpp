@@ -2167,6 +2167,19 @@ namespace input
     // focus only works for controller input, when focus interrupt is not enabled, and when the game is not paused, and the input isn't locked.
     void UpdateFocusForRelevantNodes(entt::registry &registry, InputState &state, std::optional<std::string> dir)
     {
+        
+        // -----------------------------------------------------------------------------
+        // Controller override integration
+        // -----------------------------------------------------------------------------
+        if (state.controllerNavOverride)
+        {
+            state.controllerNavOverride = false; // consume flag
+            if (registry.valid(state.cursor_focused_target)) {
+                auto &focused_node = registry.get<transform::GameObject>(state.cursor_focused_target);
+                focused_node.state.isBeingFocused = true;
+            }
+            return;
+        }
 
         state.cursor_prev_focused_target = state.cursor_focused_target;
 

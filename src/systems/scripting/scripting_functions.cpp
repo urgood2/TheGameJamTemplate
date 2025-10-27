@@ -31,6 +31,7 @@
 
 #include "systems/camera/camera_bindings.hpp"
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
+#include "systems/input/controller_nav.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
 #include "systems/physics/physics_lua_bindings.hpp"
 #include "systems/spring/spring_lua_bindings.hpp"
@@ -46,6 +47,8 @@
 
 #include "../../core/game.hpp"
 #include <functional>
+
+#include "third_party/tracy-master/public/tracy/TracyLua.hpp"
 
 
 
@@ -145,12 +148,20 @@ namespace scripting {
         // add entt::null
         
         stateToInit["entt_null"] = static_cast<entt::entity>(entt::null);
-
+        
+        
+        // allow tracy support
+        tracy::LuaRegister( stateToInit.lua_state() );
 
         //---------------------------------------------------------
         // methods from event_system.cpp. These can be called from lua✅ 
         //---------------------------------------------------------
         event_system::exposeEventSystemToLua(stateToInit);
+        
+        //---------------------------------------------------------
+        // methods from controller_nav.cpp. These can be called from lua✅
+        //---------------------------------------------------------
+        controller_nav::exposeToLua(stateToInit);
 
         //---------------------------------------------------------
         // methods from textVer2.cpp. These can be called from lua✅ 

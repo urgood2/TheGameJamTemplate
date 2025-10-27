@@ -45,9 +45,9 @@ Converts encumbrance into damage
     
 # programming side
 
-- make sprites easy to blink.
+- apply the new assets, including some music and ui.
+- explore performance optimizations to existing code for a bit, with tracy.
 - particles that are more random in distance and lifetime. and maybe smaller. randomized colors too.
-- lua queing https://chatgpt.com/share/68fc7574-d6f4-800a-849e-829d81b0b18f
 - controller nav https://chatgpt.com/share/68fc7589-3a60-800a-afb0-ffa4fba94e0a
 - use the new itch assets to indicate icons for wands & when they are on cooldown.
 - controller input pass so I can seamlessly control ui & cards with only controller. probably make a system for that.
@@ -136,6 +136,15 @@ end)
 - maybe move timer to lua entirely. too much lag.       
 
 # polish phase
+- some nice ui https://www.youtube.com/watch?v=Rkd5SYT10UQ as reference
+- add glow to crt as well, and add proper scanlines.
+- integrate proper hit fx, with blinking.
+- make steering face direction of movement.
+- mmake sprites blink upon hit fx. 
+- [ ] buttons with a scrolling background.
+- [ ] Need to apply the crossed lines for crt.
+- [ ] glow for selected sprites. Also, do a background, noise based and squiggly, and make it glow with rainbow coolors.
+- [ ] just images - cards. Attach numbwers to them. Then show color-coded text to the side, with Icons.
 - sound effects.
 - steering should turn toward direction it is going.
 - music.

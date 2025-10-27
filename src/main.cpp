@@ -164,8 +164,6 @@ void MainLoopFixedUpdateAbstraction(float dt)
     // finalize input state at end of frame
     input::finalizeUpdateAtEndOfFrame(globals::inputState, dt);
     
-    // physics post-update
-    globals::physicsManager->stepAllPostUpdate(dt);
 }
 
 
@@ -246,6 +244,10 @@ auto updatePhysics(float dt) -> void
     {
         ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
         physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+    
+    
+        // physics post-update
+        globals::physicsManager->stepAllPostUpdate(dt);
     }
 }
 

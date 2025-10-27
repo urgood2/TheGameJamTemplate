@@ -159,6 +159,10 @@ function createNewBoard(x, y, w, h)
 
         local cards = self.cards
         if not cards or #cards == 0 then return end
+        
+        if #cards > 0 then
+            log_debug("Laying out", #cards, "cards for board", eid)
+        end
 
         -- probe card size
         local cardW, cardH = 100, 140
@@ -239,7 +243,7 @@ function createNewBoard(x, y, w, h)
 
                 local cardObj = component_cache.get(cardEid, GameObject)
                 if cardObj and cardObj.state and cardObj.state.isBeingDragged then
-                    assignZ(cardEid, self.z_orders.top)
+                    assignZ(cardEid, z_orders.top_card + 1)
                 -- end
             end
         end
@@ -625,6 +629,8 @@ function createNewCard(id, x, y, gameStateToApply)
     if not timer.get_timer_and_delay("card_render_timer") then
         
         timer.run(function ()
+            
+            log_debug("Card Render Timer Tick")
             -- tracy.zoneBeginN("Card Render Timer Tick") -- just some default depth to avoid bugs
             -- bail if not shop or planning state
             if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
@@ -656,6 +662,10 @@ function createNewCard(id, x, y, gameStateToApply)
                         
                         -- this will draw in local space of the card, hopefully.
                         local zToUse = layer_order_system.getZIndex(eid) 
+                        if cardScript.isBeingDragged then
+                            zToUse = z_orders.top_card + 2 -- force on top if being dragged
+                            log_debug("Card", eid, "is being dragged, forcing z to", zToUse, "from", layer_order_system.getZIndex(eid))
+                        end
                         -- slightly above the card sprite
                         command_buffer.queueScopedTransformCompositeRender(layers.sprites, eid, function()
                             -- draw debug label.
@@ -713,7 +723,7 @@ function createNewCard(id, x, y, gameStateToApply)
     -- roleComp.flags = AlignmentFlag.VERTICAL_CENTER | AlignmentFlag.HORIZONTAL_CENTER 
     
     -- make draggable and set some callbacks in the transform system
-    local nodeComp = component_cache.get(card, GameObject)
+    local nodeComp = registry:get(card, GameObject)
     local gameObjectState = nodeComp.state
     gameObjectState.hoverEnabled = true
     -- gameObjectState.triggerOnReleaseEnabled = true
@@ -885,6 +895,8 @@ function createNewCard(id, x, y, gameStateToApply)
         -- sound
         -- playSoundEffect("effects", "card_pick_up", 1.0)
         
+        cardScript.isBeingDragged = true
+        
         if not boardEntityID then 
             layer_order_system.assignZIndexToEntity(card, z_orders.top_card)
             return 
@@ -894,11 +906,12 @@ function createNewCard(id, x, y, gameStateToApply)
         -- dunno why, board can be nil
         if not board then return end
         -- set z order to top so it can be seen
-        cardScript.isDragging = true
+        
         
         
         log_debug("dragging card, bringing to top z:", z_orders.top_card)
         layer_order_system.assignZIndexToEntity(card, z_orders.top_card)
+        
     end
     
     nodeComp.methods.onStopDrag = function()
@@ -912,6 +925,9 @@ function createNewCard(id, x, y, gameStateToApply)
             "card_put_down_4"
         }
         playSoundEffect("effects", lume.randomchoice(putDownSounds), 0.9 + math.random() * 0.2)
+        
+        
+        cardScript.isBeingDragged = false
         
         if not boardEntityID then 
             layer_order_system.assignZIndexToEntity(card, z_orders.card)
@@ -932,8 +948,9 @@ function createNewCard(id, x, y, gameStateToApply)
             resetCardStackZOrder(cardScript:handle())
         end
         
-        -- make it transform authoritative again
-        physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+        -- -- make it transform authoritative again
+        -- physics.set_sync_mode(registry, card, physics.PhysicsSyncMode.AuthoritativeTransform)
+        
         
     end
     
@@ -1812,7 +1829,7 @@ function initPlanningPhase()
     timer.run(function()
         -- tracy.zoneBeginN("Planning Phase Board Draw") -- just some default depth to avoid bugs
         
-        -- log_debug("Drawing board borders")
+        log_debug("Drawing board borders")
         
         -- draw which board set is selected (text), below the trigger board.
         local text = tostring(current_board_set_index) .. " of " .. tostring(#board_sets)
@@ -2528,7 +2545,9 @@ function initSurvivorEntity()
 
     
     -- allow transform manipuation to alter physics body
-    -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
+    physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
+    
+    physics.SetBodyType(PhysicsManager.get_world("world"), survivorEntity, "dynamic")
     
     -- give a state tag to the survivor entity
     add_state_tag(survivorEntity, ACTION_STATE)
@@ -2767,11 +2786,11 @@ function initActionPhase()
                 log_debug("Dash pressed!")
                 
                 -- make transform not authoritative
-                physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
+                -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
                 physics.SetBodyType(PhysicsManager.get_world("world"), survivorEntity, "dynamic")
                 physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 0.0) -- no damping while dashing
                 -- set velocity to zero
-                physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, 0, 0)
+                -- physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, 0, 0)
                 
                 -- let's add dashing.
                 
@@ -3003,9 +3022,9 @@ function initActionPhase()
     
     
 
-    
+    local cam = camera.Get("world_camera")
     -- timer to pan camera to follow player
-    timer.every(0.1, function()
+    timer.run( function()
         -- tracy.zoneBeginN("Camera Pan Timer Tick") -- just some default depth to avoid bugs
         -- log_debug("Camera pan timer tick")
         if is_state_active(ACTION_STATE) then
@@ -3014,11 +3033,13 @@ function initActionPhase()
             if t then
                 targetX = t.actualX + t.actualW/2
                 targetY = t.actualY + t.actualH/2
-                camera_smooth_pan_to("world_camera", targetX, targetY, { tag = "interval"}) -- pan to the target smoothly
+                -- camera_smooth_pan_to("world_camera", targetX, targetY, { tag = "interval"}) -- pan to the target smoothly
+                
+                cam:SetActualTarget(targetX, targetY)
             end
             
         else
-            local cam = camera.Get("world_camera")
+            -- local cam = camera.Get("world_camera")
             local c = cam:GetActualTarget()
             
             -- if not already at halfway point in screen, then move it there

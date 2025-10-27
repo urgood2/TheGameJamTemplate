@@ -1198,6 +1198,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
         
         auto registry = &globals::registry;
 
+        //FIXME: commenting out for testing.
         if (transform.frameCalculation.lastUpdatedFrame >= main_loop::mainLoop.frame && transform.frameCalculation.alignmentChanged == false)
         {
             // SPDLOG_DEBUG("Transform already updated this frame");

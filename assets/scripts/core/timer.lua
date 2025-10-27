@@ -341,7 +341,7 @@ function timer.update(dt, is_render_frame)
         local ttype = t.type
         if ttype == "run" then
             t.action()
-            remove = true
+            -- remove = true
 
         elseif ttype == "every_render_frame" then
             if is_render_frame then t.action() end

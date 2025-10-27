@@ -334,10 +334,12 @@ void RunGameLoop()
         // Optional interpolation factor (use for smooth rendering)
         float alpha = mainLoop.lag / mainLoop.rate;
         
+        float scaledStep = rawDeltaTime * mainLoop.timescale;
         // ---------- Step 4.5: Fixed update (moved) ----------
         {
-            float scaledStep = mainLoop.rate * mainLoop.timescale;
+            
             MainLoopFixedUpdateAbstraction(scaledStep);
+            // SPDLOG_DEBUG("scaled update step: {}", scaledStep);
         }
 
 

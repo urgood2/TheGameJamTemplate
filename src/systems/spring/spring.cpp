@@ -10,13 +10,29 @@ namespace spring
     auto updateAllSprings(entt::registry &registry, float deltaTime) -> void
     {
         ZoneScopedN("Update springs");
+
+        // Choose a maximum stable substep duration
+        constexpr float maxStep = 0.008f; // 8 ms for stability
+
+        // Compute how many substeps to run this frame
+        int steps = static_cast<int>(std::ceil(deltaTime / maxStep));
+        if (steps < 1) steps = 1;
+
+        // Divide the total frame time evenly
+        float stepDt = deltaTime / static_cast<float>(steps);
+
         auto view = registry.view<Spring>();
-        for (auto entity : view)
+
+        for (int i = 0; i < steps; ++i)
         {
-            auto &spring = view.get<Spring>(entity);
-            update(spring, deltaTime);
+            for (auto entity : view)
+            {
+                auto &spring = view.get<Spring>(entity);
+                spring::update(spring, stepDt);
+            }
         }
     }
+
 
     auto update(Spring &spring, float deltaTime) -> void
     {

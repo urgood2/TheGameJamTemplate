@@ -111,3 +111,4 @@
   - Robust controller navigation system added, allowing seamless navigation of UI with controller.
   - Controller navigation system exposed to lua for easy integration with lua-based UIs.
   - Lua profiling doesn't work with tracy, so I added a different one.
+  - Figureing out some main loop structure issuse that might be causing performance issues.

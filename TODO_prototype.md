@@ -118,6 +118,8 @@ end)
 - also need currency.
 
 # errors
+- probably make a physics timer that runs every physics step, instead of relying on main loop timer. how to do this with lua, though? callbacks are slow. physics is jerking from place to place. why is that? jumping back and forth.
+- transforms sometimes get jerky. why? -> take a look at sync between physics and transform.
 - z orders are not correct when cards overlap for the first time?
 - card areas don't shift cards reliably when there are lots of cards in an area, and cards are dragged around inside -> probably a bug in the card area shifting logic.
 - stacking cards misbehave in terms of z-order. Sometimes they move when clicked when they shouldn't.
@@ -137,34 +139,8 @@ end)
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
 
 # performance considerations
-- Continue profiling with:
-```
- +-----+-------------------------------+-------------+--------------------------+----------------------------------+
- | #   | Function                      | Calls       | Time                     | Code                             |
- +-----+-------------------------------+-------------+--------------------------+----------------------------------+
- | 1   | ?                             | 40          | 2.079337                 | assets/scripts/core/main.lua:491 |
- | 2   | update_all                    | 40          | 0.78330900000002         | avior/behavior_script_v2.lua:214 |
- | 3   | update                        | 40          | 0.667776                 | ts/scripts/core/gameplay.lua:144 |
- | 4   | update                        | 40          | 0.64059800000001         | ssets/scripts/core/timer.lua:319 |
- | 5   | action                        | 40          | 0.42036500000001         | ts/scripts/core/gameplay.lua:624 |
- | 6   | action                        | 40          | 0.090578000000022        | s/scripts/core/gameplay.lua:1809 |
- | 7   | action                        | 40          | 0.088126000000031        | ts/scripts/core/gameplay.lua:395 |
- | 8   | getScript                     | 1420        | 0.079456999999906        | ts/scripts/core/gameplay.lua:951 |
- | 9   | ?                             | 141         | 0.061414999999968        | ts/scripts/core/gameplay.lua:204 |
- | 10  | update                        | 40          | 0.055021999999973        | ts/scripts/core/gameplay.lua:144 |
- | 11  | update                        | 40          | 0.034893999999959        | ts/scripts/core/gameplay.lua:144 |
- | 12  | ?                             | 155         | 0.011791999999957        | ts/scripts/core/gameplay.lua:204 |
- | 13  | ?                             | 148         | 0.010945000000007        | ts/scripts/core/gameplay.lua:204 |
- | 14  | ?                             | 155         | 0.010788000000019        | ts/scripts/core/gameplay.lua:204 |
- | 15  | ?                             | 148         | 0.010620999999972        | ts/scripts/core/gameplay.lua:204 |
- | 16  | ?                             | 148         | 0.010421000000022        | ts/scripts/core/gameplay.lua:204 |
- | 17  | ?                             | 148         | 0.010419999999996        | ts/scripts/core/gameplay.lua:204 |
- | 18  | ?                             | 134         | 0.010415999999992        | ts/scripts/core/gameplay.lua:204 |
- | 19  | ?                             | 148         | 0.010355999999966        | ts/scripts/core/gameplay.lua:204 |
- | 20  | ?                             | 141         | 0.010246999999978        | ts/scripts/core/gameplay.lua:204 |
- +-----+-------------------------------+-------------+--------------------------+----------------------------------+
-
-```  
+- Continue profiling.
+- Consider using luajit for release.
 
 # polish phase
 - experiment with glowing background behind a card to show selection/effect (colorful, glowing, random)

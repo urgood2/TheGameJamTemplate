@@ -685,6 +685,12 @@ namespace input
                 cursorDownTargetNode.state.isBeingDragged = true;
                 transform::SetClickOffset(&registry, inputState.cursor_down_target, inputState.cursor_down_position.value(), true);
                 inputState.cursor_dragging_target = inputState.cursor_down_target;
+                
+                // call onDrag if exists
+                if (cursorDownTargetNode.methods.onDrag)
+                {
+                    cursorDownTargetNode.methods.onDrag(registry, inputState.cursor_down_target);
+                }
             }
             // mark cursor down as handled
             inputState.cursor_down_handled = true;

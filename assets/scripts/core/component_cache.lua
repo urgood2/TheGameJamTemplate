@@ -54,6 +54,21 @@ local function check_frame_advance()
 end
 
 ------------------------------------------------------------
+-- Optional Frame-Batched Mode
+-- When active, GetFrameCount() is only called once per frame.
+------------------------------------------------------------
+function component_cache.begin_frame()
+    local cache = component_cache
+    cache._frame = GetFrameCount()
+    cache._data = {}
+    cache._frame_batched = true
+end
+
+function component_cache.end_frame()
+    component_cache._frame_batched = false
+end
+
+------------------------------------------------------------
 -- Public API
 ------------------------------------------------------------
 
@@ -67,30 +82,52 @@ end
 ---@param comp any
 ---@return table|nil
 function component_cache.get(eid, comp)
-    if not eid or not (valid and valid(registry, eid)) then
+    if not eid then return nil end
+
+    local cache = component_cache
+
+    -- Only call GetFrameCount once per frame unless in batch mode
+    if not cache._frame_batched then
+        local frame = GetFrameCount()
+        if frame ~= cache._frame then
+            cache._frame = frame
+            cache._data = {}
+        end
+    end
+
+    local data = cache._data
+    local tbl = data[comp]
+    if not tbl then
+        tbl = {}
+        data[comp] = tbl
+    end
+
+    -- direct access
+    local c = tbl[eid]
+    if c then return c end
+
+    -- lazy validate only if needed
+    local vfn = valid
+    if vfn and not vfn(registry, eid) then
         return nil
     end
 
-    check_frame_advance()
-
-    local tbl = ensure_component_table(comp)
-    local cached = tbl[eid]
-    if cached then
-        return cached
-    end
-
-    local c = get_component and get_component(registry, eid, comp)
+    local gfn = get_component
+    if not gfn then return nil end
+    c = gfn(registry, eid, comp)
     if not c then return nil end
 
     tbl[eid] = c
 
-    local hook = component_cache._hooks[comp]
-    if hook and hook.on_get then
-        hook.on_get(eid, c)
+    local hook = cache._hooks[comp]
+    if hook then
+        local f = hook.on_get
+        if f then f(eid, c) end
     end
 
     return c
 end
+
 
 --- Invalidate cached value(s).
 ---@param eid entt.entity

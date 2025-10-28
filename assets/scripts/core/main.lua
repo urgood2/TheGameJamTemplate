@@ -20,7 +20,7 @@ lume = require("external.lume")
 -- Represents game loop main module
 main = main or {}
 
-PROFILE_ENABLED = false -- set to true to enable profiling
+PROFILE_ENABLED = true -- set to true to enable profiling
 
 -- Game state (used only in lua)
 GAMESTATE = {
@@ -512,6 +512,9 @@ function main.update(dt)
             profile.reset()
         end
     end
+    -- begin frame for cache.
+    component_cache.begin_frame()
+
     
     -- timer updates.
     physicsTickCounter = main_loop.data.physicsTicks
@@ -538,6 +541,9 @@ function main.update(dt)
     end
     
     -- tracy.zoneEnd()
+    
+    -- end frame for cache.
+    component_cache.end_frame()
 end
 
 function main.draw(dt)

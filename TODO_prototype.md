@@ -44,6 +44,7 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
 - test new controller nav.
 - lua timer state guard (entity state management, optional)
 - caching of scripts per entity to avoid repeated loads, also delete from cache on entity deletion. also cache transform calls.

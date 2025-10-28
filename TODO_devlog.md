@@ -109,6 +109,10 @@
 10/27/2025
   - Added tracy to lua, allowing profiling of lua code.
   - Robust controller navigation system added, allowing seamless navigation of UI with controller.
-  - Controller navigation system exposed to lua for easy integration with lua-based UIs.
+- Controller navigation system exposed to lua for easy integration with lua-based UIs.
   - Lua profiling doesn't work with tracy, so I added a different one.
   - Figureing out some main loop structure issuse that might be causing performance issues.
+  
+10/28/2025
+  - Fixed main loop structure issues causing performance problems.
+  - Also, strange rubber banding with physics and dashing. I fixed it by changing only the velocity of the player during dash, not resetting it to 0 manually, and also not altering damping during it.

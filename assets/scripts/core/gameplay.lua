@@ -93,6 +93,7 @@ function addCardToBoard(cardEntityID, boardEntityID)
     local board = boards[boardEntityID]
     if not board then return end
     board.cards = board.cards or {}
+    board.needsResort = true
     table.insert(board.cards, cardEntityID)
     log_debug("Added card", cardEntityID, "to board", boardEntityID)
 end
@@ -103,6 +104,7 @@ function removeCardFromBoard(cardEntityID, boardEntityID)
     local board = boards[boardEntityID]
     if not board then return end
     board.cards = board.cards or {}
+    board.needsResort = true
     for i, eid in ipairs(board.cards) do
         if eid == cardEntityID then
             table.remove(board.cards, i)
@@ -221,19 +223,31 @@ function createNewBoard(x, y, w, h)
             zcache = {}
             self.z_order_cache_per_card = zcache
         end
-
         -- sort once (if card count > 1)
         if n > 1 then
-            table.sort(cards, function(a, b)
-                -- if not (a and entity_cache.valid(a) and a ~= ENT_NULL) then return false end
-                -- if not (b and entity_cache.valid(b) and b ~= ENT_NULL) then return true end
-                local at, bt = component_cache.get(a, Transform), component_cache.get(b, Transform)
-                if not (at and bt) then return false end
-                local ax = at.actualX + at.actualW * 0.5
-                local bx = bt.actualX + bt.actualW * 0.5
-                return (ax == bx) and (a < b) or (ax < bx)
+        -- if n > 1 and self.needsResort then
+            -- self.needsResort = false
+            -- build a cheap table of {eid, centerX}
+            local cardPositions = {}
+            for i = 1, n do
+                local eid = cards[i]
+                local t = component_cache.get(eid, Transform)
+                if t then
+                    cardPositions[i] = {eid = eid, cx = t.actualX + t.actualW * 0.5}
+                end
+            end
+
+            table.sort(cardPositions, function(a, b)
+                if a.cx == b.cx then return a.eid < b.eid end
+                return a.cx < b.cx
             end)
+
+            -- write back sorted entity order
+            for i = 1, n do
+                cards[i] = cardPositions[i].eid
+            end
         end
+
 
         local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
         for i = 1, n do
@@ -923,7 +937,7 @@ function createNewCard(id, x, y, gameStateToApply)
         if not board then return end
         -- set z order to top so it can be seen
         
-        
+    
         
         log_debug("dragging card, bringing to top z:", z_orders.top_card)
         layer_order_system.assignZIndexToEntity(card, z_orders.top_card)
@@ -2769,7 +2783,7 @@ function initActionPhase()
             -- local debugPos = physics.GetPosition(world, survivorEntity)
             -- log_debug("Survivor pos:", debugPos.x, debugPos.y)
             
-            log_debug("Survivor sleeping state:", physics.IsSleeping(world, survivorEntity))
+            -- log_debug("Survivor sleeping state:", physics.IsSleeping(world, survivorEntity))
             
             -- tracy.zoneBeginN("Survivor Input Handling") -- just some default depth to avoid bugs
             if not survivorEntity or survivorEntity == entt_null or not entity_cache.valid(survivorEntity) then

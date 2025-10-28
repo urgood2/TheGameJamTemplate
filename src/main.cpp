@@ -234,7 +234,7 @@ auto updatePhysics(float dt) -> void
     main_loop::mainLoop.physicsTicks++;
     {
         ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
-        // physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
     }
     
     {
@@ -244,7 +244,7 @@ auto updatePhysics(float dt) -> void
     
     {
         ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
-        // physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
     
     
         // physics post-update
@@ -324,8 +324,8 @@ void RunGameLoop()
                 updatePhysics(subDelta);
             }
 
-            SPDLOG_DEBUG("physics step ({} substeps) of {} ms each at time {}",
-                        substeps, subDelta * 1000.0f, mainLoop.totaltimeTimer);
+            // SPDLOG_DEBUG("physics step ({} substeps) of {} ms each at time {}",
+            //             substeps, subDelta * 1000.0f, mainLoop.totaltimeTimer);
 
             mainLoop.lag -= mainLoop.rate;
             mainLoop.updates++;
@@ -492,7 +492,7 @@ auto updateSystems(float dt) -> void
     {
         ZoneScopedN("Global Variables Update & sound");
         globals::updateGlobalVariables();
-        SPDLOG_DEBUG("Updating sound with dt of {}", main_loop::mainLoop.rawDeltaTime);
+        // SPDLOG_DEBUG("Updating sound with dt of {}", main_loop::mainLoop.rawDeltaTime);
         sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
     }
     

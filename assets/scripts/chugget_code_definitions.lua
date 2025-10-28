@@ -7699,6 +7699,28 @@ function physics.get_shape_bb(...) end
 function physics.SetVelocity(...) end
 
 ---
+--- Returns true if the entity's body is sleeping.
+---
+---@param world physics.PhysicsWorld
+---@param e entt.entity
+---@return boolean
+function physics.IsSleeping(...) end
+
+---
+--- Sets the cpSpace sleep time threshold.
+---
+---@param world physics.PhysicsWorld
+---@param t number
+function physics.SetSleepTimeThreshold(...) end
+
+---
+--- Gets the cpSpace sleep time threshold.
+---
+---@param world physics.PhysicsWorld
+---@return number
+function physics.GetSleepTimeThreshold(...) end
+
+---
 --- Returns the body's linear velocity.
 ---
 ---@param world physics.PhysicsWorld

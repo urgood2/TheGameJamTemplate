@@ -190,7 +190,7 @@ public:
             if (active.find(h) == active.end()) {
                 continue; // world missing or inactive -> skip steering this frame
             }
-            Steering::Update(R, e, dt);
+            // Steering::Update(R, e, dt);
         }
 
         // 2) Step only active worlds

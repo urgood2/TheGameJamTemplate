@@ -12,7 +12,7 @@ namespace spring
         ZoneScopedN("Update springs");
 
         // Choose a maximum stable substep duration
-        constexpr float maxStep = 0.008f; // 8 ms for stability
+        constexpr float maxStep = 0.004f; // X ms for stability
 
         // Compute how many substeps to run this frame
         int steps = static_cast<int>(std::ceil(deltaTime / maxStep));

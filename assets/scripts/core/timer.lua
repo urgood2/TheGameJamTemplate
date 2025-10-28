@@ -13,6 +13,11 @@ local empty_function = function() end
 timer.timers = {}
 timer.global_multiplier = 1.0
 
+-- Safe self-cancellation support
+local _is_updating = false
+local _pending_cancels = {}
+
+
 --------------------------------------------------------
 -- Basic Utility
 --------------------------------------------------------
@@ -234,7 +239,11 @@ end
 --------------------------------------------------------
 
 function timer.cancel(tag)
-  timer.timers[tag] = nil
+  if _is_updating then
+    _pending_cancels[#_pending_cancels + 1] = tag
+  else
+    timer.timers[tag] = nil
+  end
 end
 
 function timer.clear_all()
@@ -321,13 +330,16 @@ local min = math.min
 local resolve_delay = timer.resolve_delay
 local timers = timer.timers
 
+
 function timer.update(dt, is_render_frame)
     -- tracy.zoneBeginN("lua timer.update")
 
+    _is_updating = true  -- Prevent in-loop cancellation
     local global_mult = timer.global_multiplier
     local to_remove = nil
+    local resolve_delay = timer.resolve_delay
+    local timers = timer.timers
 
-    -- Single pass: no key array copy, no table mutation during iteration
     for tag, t in pairs(timers) do
         if not t or t.paused then
             goto continue
@@ -337,11 +349,11 @@ function timer.update(dt, is_render_frame)
         t.timer = (t.timer or 0) + effective_dt
 
         local remove = false
-
         local ttype = t.type
+
         if ttype == "run" then
             t.action()
-            -- remove = true
+            -- remove = true (intentionally left commented, mirrors your design)
 
         elseif ttype == "every_render_frame" then
             if is_render_frame then t.action() end
@@ -408,7 +420,7 @@ function timer.update(dt, is_render_frame)
             end
 
         elseif ttype == "tween_scalar" then
-            local ratio = min(1, t.timer / t.delay)
+            local ratio = math.min(1, t.timer / t.delay)
             local eased = t.method(ratio)
             local start = t.getter()
             t.setter(start + (t.target - start) * eased)
@@ -418,7 +430,7 @@ function timer.update(dt, is_render_frame)
             end
 
         elseif ttype == "tween_tracks" then
-            local ratio = min(1, t.timer / t.delay)
+            local ratio = math.min(1, t.timer / t.delay)
             local eased = t.method(ratio)
             local tracks = t.tracks
             for i = 1, #tracks do
@@ -431,7 +443,7 @@ function timer.update(dt, is_render_frame)
             end
 
         elseif ttype == "tween_fields" or ttype == "tween" then
-            local ratio = min(1, t.timer / t.delay)
+            local ratio = math.min(1, t.timer / t.delay)
             local eased = t.method(ratio)
             local source = t.source
             local target = t.target
@@ -453,14 +465,120 @@ function timer.update(dt, is_render_frame)
         ::continue::
     end
 
+    _is_updating = false  -- done iterating
+
+    -- Remove completed timers
     if to_remove then
         for i = 1, #to_remove do
             timers[to_remove[i]] = nil
         end
     end
 
+    -- Apply deferred cancels requested mid-loop
+    if #_pending_cancels > 0 then
+        for i = 1, #_pending_cancels do
+            local tag = _pending_cancels[i]
+            timers[tag] = nil
+        end
+        _pending_cancels = {}
+    end
+
     -- tracy.zoneEnd()
 end
+
+
+--------------------------------------------------------
+-- Physics Step Timers
+--------------------------------------------------------
+
+-- Internal bookkeeping
+timer._lastPhysicsTick = timer._lastPhysicsTick or 0
+timer._physics_once = {}       -- one-shot timers
+timer._physics_every = {}      -- persistent timers
+
+--- Run once on the *next* physics step.
+---@param fn function
+---@param tag? string
+---@param group? string
+function timer.on_new_physics_step(fn, tag, group)
+    tag = ensure_valid_tag(tag)
+    timer._physics_once[tag] = {
+        fn = fn,
+        group = group,
+        targetTick = (physicsTickCounter or 0) + 1
+    }
+end
+
+--- Run every physics step until cancelled.
+---@param fn function
+---@param tag? string
+---@param group? string
+function timer.every_physics_step(fn, tag, group)
+    tag = ensure_valid_tag(tag)
+    timer._physics_every[tag] = {
+        fn = fn,
+        group = group
+    }
+end
+
+--- Cancel a physics-step timer (works for both one-shot and every types).
+---@param tag string
+function timer.cancel_physics_step(tag)
+    timer._physics_once[tag] = nil
+    timer._physics_every[tag] = nil
+end
+
+--- Clear all physics-step timers.
+function timer.clear_physics_step()
+    timer._physics_once = {}
+    timer._physics_every = {}
+end
+
+--- Called each frame (or right after physics integration).
+--- Detects tick changes and executes relevant timers.
+function timer.update_physics_step()
+    local tick = physicsTickCounter or 0
+    if tick <= timer._lastPhysicsTick then return end
+
+    -- Run all persistent timers
+    for tag, t in pairs(timer._physics_every) do
+        if t and t.fn then
+            -- log_debug("[timer.every_physics_step] Running timer:", tag)
+            local ok, err = pcall(t.fn)
+            if not ok then
+                log_error("[timer.every_physics_step] Error:", err)
+            end
+        end
+    end
+
+    -- Run any queued one-shot timers for this tick
+    for tag, t in pairs(timer._physics_once) do
+        if t and t.fn and t.targetTick <= tick then
+            local ok, err = pcall(t.fn)
+            if not ok then
+                log_error("[timer.on_new_physics_step] Error:", err)
+            end
+            timer._physics_once[tag] = nil
+        end
+    end
+
+    timer._lastPhysicsTick = tick
+end
+
+--------------------------------------------------------
+-- Example usage (for clarity)
+--------------------------------------------------------
+--[[
+timer.on_new_physics_step(function()
+    physics.ApplyImpulse(world, eid, 100, 0)
+end)
+
+timer.every_physics_step(function()
+    print("Physics tick happened:", physicsTickCounter)
+end)
+]]
+--------------------------------------------------------
+
 
 _G.__GLOBAL_TIMER__ = timer
 return timer

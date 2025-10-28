@@ -7,6 +7,8 @@
 #include <sol.hpp>
 
 #include "steering.hpp"
+#include "third_party/chipmunk/include/chipmunk/chipmunk.h"
+#include "third_party/chipmunk/include/chipmunk/cpBody.h"
 
 namespace physics {
 
@@ -514,7 +516,44 @@ inline void expose_physics_to_lua(sol::state& lua) {
         "Sets linear velocity on the entity's body.",
         true, false
     });
+    
+    lua["physics"]["IsSleeping"] = [](PhysicsWorld& W, entt::entity e) {
+        auto &collider = globals::registry.get<ColliderComponent>(e);
+        
+        return cpBodyIsSleeping(collider.body.get());
+         
+    };
+    
+    rec.record_free_function(path, {
+        "IsSleeping",
+        "---@param world physics.PhysicsWorld\n---@param e entt.entity\n"
+        "---@return boolean",
+        "Returns true if the entity's body is sleeping.",
+        true, false
+    });
+    
+    
     lua["physics"]["SetVelocity"] = &PhysicsWorld::SetVelocity;
+    
+    lua["physics"]["SetSleepTimeThreshold"] = [](PhysicsWorld& W, float t) {
+        cpSpaceSetSleepTimeThreshold(W.space, t);
+    };
+    rec.record_free_function(path, {
+        "SetSleepTimeThreshold",
+        "---@param world physics.PhysicsWorld\n---@param t number",
+        "Sets the cpSpace sleep time threshold.",
+        true, false
+    });
+    
+    lua["physics"]["GetSleepTimeThreshold"] = [](PhysicsWorld& W) {
+        return cpSpaceGetSleepTimeThreshold(W.space);
+    };
+    rec.record_free_function(path, {
+        "GetSleepTimeThreshold",
+        "---@param world physics.PhysicsWorld\n---@return number",
+        "Gets the cpSpace sleep time threshold.",
+        true, false
+    });
     
     //cpVect PhysicsWorld::GetVelocity(entt::entity entity)
     rec.record_free_function(path, {

@@ -17,7 +17,7 @@ namespace main_loop
         
 
         float timescale = 1.0f;    // Time scale for updates
-        float rate = 1.0f / 60.0f; // Fixed timestep (e.g., 60 updates per second)
+        float rate = 1.0f / 120.0f; // Fixed timestep (e.g., 60 updates per second)
         float lag = 0.0f;          // Accumulated time
         float maxFrameSkip = 5.0f; // Maximum frames to skip
         int frame = 0;             // fixed update frame count
@@ -30,6 +30,8 @@ namespace main_loop
         int renderedUPS = 0;       // Displayed updates per second (running average)
         int renderedFPS = 0;       // Displayed frames per second (running average)
         float updateTimer = 0.0f;  // Timer to calculate UPS every second
+        
+        int physicsTicks = 0;    // Number of physics ticks
     };
 
     extern Data mainLoop;
@@ -78,7 +80,8 @@ namespace main_loop
             "updates", &Data::updates,
             "renderedUPS", &Data::renderedUPS,
             "renderedFPS", &Data::renderedFPS,
-            "updateTimer", &Data::updateTimer
+            "updateTimer", &Data::updateTimer,
+            "physicsTicks", &Data::physicsTicks
         );
 
         rec.add_type("MainLoopData").doc =

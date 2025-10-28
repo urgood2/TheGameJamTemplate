@@ -427,26 +427,40 @@ namespace sound_system {
 
     // Main update: advance streams, handle fades and completion
     void Update(float dt) {
+        static float musicUpdateAccum = 0.0f;
+        const float musicUpdateRate = 1.0f / 120.0f; // update 120 Hz no matter what
+
+        musicUpdateAccum += dt;
+
+        // Run UpdateMusicStream() as many times as needed to stay in sync
+        while (musicUpdateAccum >= musicUpdateRate) {
+            for (auto &me : activeMusic) {
+                UpdateMusicStream(me.stream);
+            }
+            musicUpdateAccum -= musicUpdateRate;
+        }
+
+        // ---- Existing fade + logic follows ----
         for (auto it = activeMusic.begin(); it != activeMusic.end();) {
             auto &me = *it;
-            UpdateMusicStream(me.stream);
 
-            // fading
+            // Fading
             if (me.fadeState != None) {
                 me.fadeTime += dt;
                 float t = std::clamp(me.fadeTime / me.fadeDur, 0.f, 1.f);
                 float target = me.volume * musicVolume * globalVolume;
-                float vol = (me.fadeState == FadeIn ? t : (1.f - t)) * target;
+                float vol = std::max(0.f, (me.fadeState == FadeIn ? t : (1.f - t)) * target);
                 SetMusicVolume(me.stream, vol);
                 if (t >= 1.f) {
                     if (me.fadeState == FadeOut) {
+                        SetMusicVolume(me.stream, 0.0f);
                         StopMusicStream(me.stream);
                     }
                     me.fadeState = None;
                 }
             }
 
-            // completion / looping
+            // Completion / looping logic ...
             bool playing = IsMusicStreamPlaying(me.stream);
             if (!playing && me.loop && me.fadeState == None) {
                 PlayMusicStream(me.stream);
@@ -459,12 +473,13 @@ namespace sound_system {
             ++it;
         }
 
-        // if no active streams, pop from legacy queue
+        // Legacy queue logic unchanged
         if (activeMusic.empty() && !musicQueue.empty()) {
             auto [nextName, nextLoop] = musicQueue.front();
             musicQueue.pop();
             PlayMusic(nextName, nextLoop);
         }
+
     }
     
     // for resetting game state, rather than unloading completely

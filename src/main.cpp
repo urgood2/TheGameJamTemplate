@@ -231,9 +231,10 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 
 auto updatePhysics(float dt) -> void
 {
+    main_loop::mainLoop.physicsTicks++;
     {
         ZoneScopedN("Physics Transform Hook ApplyAuthoritativeTransform");
-        physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
+        // physics::ApplyAuthoritativeTransform(globals::registry, *globals::physicsManager);
     }
     
     {
@@ -243,7 +244,7 @@ auto updatePhysics(float dt) -> void
     
     {
         ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
-        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+        // physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
     
     
         // physics post-update
@@ -311,15 +312,27 @@ void RunGameLoop()
         int updatesPerformed = 0;
         while (mainLoop.lag >= mainLoop.rate && updatesPerformed < maxUpdatesPerFrame)
         {
-            // Pass scaled time into your update logic
+            ZoneScopedN("Physics Update Step"); // custom label
             float scaledStep = mainLoop.rate * mainLoop.timescale;
-            updatePhysics(scaledStep);
+
+            // Split into two substeps for improved stability
+            const int substeps = 2;
+            float subDelta = scaledStep / substeps;
+
+            for (int i = 0; i < substeps; ++i)
+            {
+                updatePhysics(subDelta);
+            }
+
+            SPDLOG_DEBUG("physics step ({} substeps) of {} ms each at time {}",
+                        substeps, subDelta * 1000.0f, mainLoop.totaltimeTimer);
 
             mainLoop.lag -= mainLoop.rate;
             mainLoop.updates++;
             updatesPerformed++;
             mainLoop.frame++;
         }
+
 
         // ---------- Step 4: Update UPS counter ----------
         mainLoop.updateTimer += deltaTime;
@@ -479,6 +492,7 @@ auto updateSystems(float dt) -> void
     {
         ZoneScopedN("Global Variables Update & sound");
         globals::updateGlobalVariables();
+        SPDLOG_DEBUG("Updating sound with dt of {}", main_loop::mainLoop.rawDeltaTime);
         sound_system::Update(main_loop::mainLoop.rawDeltaTime); // update sound system, ignore slowed DT here.
     }
     

@@ -146,6 +146,22 @@ function createNewBoard(x, y, w, h)
     function BoardType:update(dt)
         -- tracy.zoneBeginN("BoardType:update") -- just some default depth to avoid bugs
         local eid = self:handle()
+        
+        -- bail if current state isn't in self.gameStates
+        if self.gameStates then
+            local stateActive = false
+            for _, state in ipairs(self.gameStates) do
+                if is_state_active(state) then
+                    stateActive = true
+                    break
+                end
+            end
+            if not stateActive then
+                return
+            end
+        end
+        
+        
         -- if not eid or not entity_cache.valid(eid) then return end
 
         -- DEBUG
@@ -160,9 +176,9 @@ function createNewBoard(x, y, w, h)
         local cards = self.cards
         if not cards or #cards == 0 then return end
         
-        if #cards > 0 then
-            log_debug("Laying out", #cards, "cards for board", eid)
-        end
+        -- if #cards > 0 then
+        --     log_debug("Laying out", #cards, "cards for board", eid)
+        -- end
 
         -- probe card size
         local cardW, cardH = 100, 140
@@ -630,7 +646,7 @@ function createNewCard(id, x, y, gameStateToApply)
         
         timer.run(function ()
             
-            log_debug("Card Render Timer Tick")
+            -- log_debug("Card Render Timer Tick")
             -- tracy.zoneBeginN("Card Render Timer Tick") -- just some default depth to avoid bugs
             -- bail if not shop or planning state
             if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
@@ -1553,6 +1569,9 @@ function setUpLogicTimers()
     timer.run(
         function()
             
+            -- bail if not in action state
+            if not is_state_active(ACTION_STATE) then return end
+            
             for triggerBoardID, actionBoardID in pairs(trigger_board_id_to_action_board_id) do
                 if triggerBoardID and triggerBoardID ~= entt_null and entity_cache.valid(triggerBoardID) then
                     local triggerBoard = boards[triggerBoardID]
@@ -1829,7 +1848,14 @@ function initPlanningPhase()
     timer.run(function()
         -- tracy.zoneBeginN("Planning Phase Board Draw") -- just some default depth to avoid bugs
         
-        log_debug("Drawing board borders")
+        -- log_debug("Drawing board borders")
+        
+        -- bail if not in planning state or shop
+        if not is_state_active(PLANNING_STATE) then
+            return
+        end
+        
+        
         
         -- draw which board set is selected (text), below the trigger board.
         local text = tostring(current_board_set_index) .. " of " .. tostring(#board_sets)
@@ -2200,7 +2226,7 @@ function initCombatSystem()
                 local healthBarWidth = globals.screenWidth() * 0.4
                 local healthBarHeight = 20
                 local healthBarX = globals.screenWidth() * 0.5 - healthBarWidth * 0.5
-                local healthBarY = 40
+                local healthBarY = healthBarHeight
                 command_buffer.queueDrawCenteredFilledRoundedRect(layers.sprites, function(c)
                     c.x = healthBarX + healthBarWidth * 0.5
                     c.y = healthBarY + healthBarHeight * 0.5
@@ -2732,11 +2758,19 @@ function initActionPhase()
     
     initSurvivorEntity()
     
+    physics.SetSleepTimeThreshold(world, 100000) -- time in seconds before body goes to sleep
+    
     playerIsDashing = false
     
     -- create input timer. this must run every frame.
-    timer.run(
+    timer.every_physics_step(
         function()
+            -- TODO: debug by logging pos
+            -- local debugPos = physics.GetPosition(world, survivorEntity)
+            -- log_debug("Survivor pos:", debugPos.x, debugPos.y)
+            
+            log_debug("Survivor sleeping state:", physics.IsSleeping(world, survivorEntity))
+            
             -- tracy.zoneBeginN("Survivor Input Handling") -- just some default depth to avoid bugs
             if not survivorEntity or survivorEntity == entt_null or not entity_cache.valid(survivorEntity) then
                 return
@@ -2787,8 +2821,8 @@ function initActionPhase()
                 
                 -- make transform not authoritative
                 -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativePhysics)
-                physics.SetBodyType(PhysicsManager.get_world("world"), survivorEntity, "dynamic")
-                physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 0.0) -- no damping while dashing
+                -- physics.SetBodyType(PhysicsManager.get_world("world"), survivorEntity, "dynamic")
+                -- physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 0.0) -- no damping while dashing
                 -- set velocity to zero
                 -- physics.SetVelocity(PhysicsManager.get_world("world"), survivorEntity, 0, 0)
                 
@@ -2810,9 +2844,13 @@ function initActionPhase()
                 -- add impulse in the direction it's going
                 -- timer that resets damping after a short delay. (SetDamping)
                 
-                local DASH_STRENGTH = 700
+                local DASH_STRENGTH = 400
                 
-                physics.ApplyImpulse(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
+                -- physics.ApplyImpulse(PhysicsManager.get_world("world"), survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
+                
+                -- timer.on_new_physics_step(function()
+                    physics.ApplyImpulse(world, survivorEntity, moveDir.x * DASH_STRENGTH, moveDir.y * DASH_STRENGTH)
+                -- end, "dash_impulse_timer")
                 
                 playerIsDashing = true
                 
@@ -2858,16 +2896,24 @@ function initActionPhase()
                     end
                 end, 5) -- 5 times
                 
-                -- make timer to end dash after short delay
+                
+
                 timer.after(DASH_LENGTH_SEC, function()
-                    -- reset damping
-                    physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 5.0) -- normal damping
+                    timer.on_new_physics_step(function()
+                        -- physics.SetDamping(world, survivorEntity, 5.0)
+                        playerIsDashing = false
+                    end)
+                end, "dash_end_timer")
+                -- make timer to end dash after short delay
+                -- timer.after(DASH_LENGTH_SEC, function()
+                --     -- reset damping
+                --     physics.SetDamping(PhysicsManager.get_world("world"), survivorEntity, 5.0) -- normal damping
                     
-                    playerIsDashing = false
+                --     playerIsDashing = false
                     
-                    -- make transform authoritative again
-                    -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
-                end)
+                --     -- make transform authoritative again
+                --     -- physics.set_sync_mode(registry, survivorEntity, physics.PhysicsSyncMode.AuthoritativeTransform)
+                -- end)
             end
             
             if playerIsDashing then
@@ -2992,7 +3038,7 @@ function initActionPhase()
                 registry:destroy(spawnMarkerNode:handle())
             end)
             
-            timer.run(function()
+            timer.every_physics_step(function()
                 local t = component_cache.get(enemyEntity, Transform)
                 
                 local playerLocation = {x=0,y=0}

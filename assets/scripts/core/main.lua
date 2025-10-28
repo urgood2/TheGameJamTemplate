@@ -494,6 +494,9 @@ local prevFrameCounter = 0
 
 local profileFrameCounter = 0
 local printProfileEveryNFrames = 1 -- print profile every N frames
+
+
+physicsTickCounter = 0
 function main.update(dt)
     -- tracy.zoneBeginN("lua main.update") -- just some default depth to avoid bugs
     local currentRenderFrameCount = main_loop.data.renderFrame
@@ -510,12 +513,19 @@ function main.update(dt)
         end
     end
     
+    -- timer updates.
+    physicsTickCounter = main_loop.data.physicsTicks
+    
+    timer.update(dt, isRenderFrame) -- Update the timer system
+    timer.update_physics_step() -- Update the timer system for physics steps
+    
+    
+    -- caching systems.
     entity_cache.update_frame() -- Update the entity cache for the current frame
 
     component_cache.update_frame() -- Update the component cache for the current frame
     
-    timer.update(dt, isRenderFrame) -- Update the timer system
-    
+    -- Node system (lua side)
     Node.update_all(dt) -- Update all nodes with update() functions
     
     

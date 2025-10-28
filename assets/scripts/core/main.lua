@@ -20,7 +20,7 @@ lume = require("external.lume")
 -- Represents game loop main module
 main = main or {}
 
-PROFILE_ENABLED = true -- set to true to enable profiling
+PROFILE_ENABLED = false -- set to true to enable profiling
 
 -- Game state (used only in lua)
 GAMESTATE = {

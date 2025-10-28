@@ -213,17 +213,40 @@ end
 
 -- Global update dispatcher (called once per frame from Lua main loop)
 function node.update_all(dt)
-  -- tracy.zoneBeginN("lua node.update_all") -- just some default depth to avoid bugs
-  for i = #updatables, 1, -1 do
-    local obj = updatables[i]
-    if obj._eid and (not registry.valid or entity_cache.valid(obj._eid)) then
-      obj:update(dt)
-    else
-      table.remove(updatables, i)
+    -- tracy.zoneBeginN("lua node.update_all")
+
+    -- 🔹 Step 1: localize lookups
+    local vfn = registry.valid            -- may be nil if not bound
+    local e_valid = entity_cache.valid    -- local upvalue avoids global lookup
+
+    -- 🔹 Step 2: in-place compaction instead of table.remove
+    local write = 1
+    local count = #updatables
+
+    for read = 1, count do
+        local obj = updatables[read]
+        local eid = obj._eid
+
+        -- 🔹 Validity check
+        -- comment the next line and uncomment the "no-validity" line below for optional Fix 4
+        if eid and (not vfn or e_valid(eid)) then
+        -- if eid then  -- ← optional Fix 4: skip validity if C++ side guarantees cleanup
+            updatables[write] = obj
+            write = write + 1
+
+            -- direct Lua call is still the hot cost, but unavoidable
+            obj:update(dt)
+        end
     end
-  end
-  -- tracy.zoneEnd()
+
+    -- trim any stale entries at the end
+    for i = write, count do
+        updatables[i] = nil
+    end
+
+    -- tracy.zoneEnd()
 end
+
 
 
 

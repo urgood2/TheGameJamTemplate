@@ -29,9 +29,9 @@ struct NavSelectable {
 // Lua callback set
 // -----------------------------------------------------------------------------
 struct NavCallbacks {
-    sol::protected_function on_focus;
-    sol::protected_function on_unfocus;
-    sol::protected_function on_select;
+    sol::protected_function on_focus{};
+    sol::protected_function on_unfocus{};
+    sol::protected_function on_select{};
 };
 
 // -----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ struct NavManager {
     std::unordered_map<std::string, std::string> groupToLayer;
     NavCallbacks callbacks;
     std::unordered_map<std::string, float> groupCooldowns;
-    float globalCooldown = 0.15f;
+    float globalCooldown = 0.08f;
 
     static NavManager& instance();
 

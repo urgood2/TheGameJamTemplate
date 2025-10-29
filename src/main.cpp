@@ -94,6 +94,7 @@ using json = nlohmann::json;
 #include "systems/scripting/scripting_system.hpp"
 #include "systems/fade/fade_system.hpp"
 #include "systems/palette/palette_quantizer.hpp"
+#include "systems/input/controller_nav.hpp"
 
 
 
@@ -518,7 +519,7 @@ auto updateSystems(float dt) -> void
     spring::updateAllSprings(globals::registry, dt);
     animation_system::update(dt);
     transform::ExecuteCallsForTransformMethod<void>(globals::registry, entt::null, transform::TransformMethod::UpdateAllTransforms, &globals::registry, dt);
-    
+    controller_nav::NavManager::instance().update(dt);
     {
         ZoneScopedN("EventQueueSystem::EventManager::update");
         // update event queue

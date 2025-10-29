@@ -229,7 +229,7 @@ function node.update_all(dt)
 
         -- 🔹 Validity check
         -- comment the next line and uncomment the "no-validity" line below for optional Fix 4
-        if eid and (not vfn or e_valid(eid)) then
+        if eid and (not vfn or e_valid(eid)) and entity_cache.active(eid) then
         -- if eid then  -- ← optional Fix 4: skip validity if C++ side guarantees cleanup
             updatables[write] = obj
             write = write + 1

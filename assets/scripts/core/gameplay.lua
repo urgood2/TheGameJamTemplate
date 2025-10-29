@@ -136,7 +136,7 @@ function createNewBoard(x, y, w, h)
     
 
     -- cache globals / upvalues
-    local math_max, math_floor = math.max, math.floor
+    local math_max, math_floor, math_abs = math.max, math.floor, math.abs
     local registry_get, registry_valid = registry.get, registry.valid
     local assignZ = layer_order_system.assignZIndexToEntity
     local getScript = getScriptTableFromEntityID
@@ -145,11 +145,14 @@ function createNewBoard(x, y, w, h)
 
    
     local BoardType = Node:extend()
+    
     function BoardType:update(dt)
-        -- tracy.zoneBeginN("BoardType:update") -- just some default depth to avoid bugs
+        -- tracy.zoneBeginN("BoardType:update")
         local eid = self:handle()
-        
-        -- bail if current state isn't in self.gameStates
+
+        ------------------------------------------------------------
+        -- Bail if current state isn't active
+        ------------------------------------------------------------
         if self.gameStates then
             local stateActive = false
             for _, state in ipairs(self.gameStates) do
@@ -162,27 +165,19 @@ function createNewBoard(x, y, w, h)
                 return
             end
         end
-        
-        
-        -- if not eid or not entity_cache.valid(eid) then return end
 
-        -- DEBUG
-        -- if self.gameStates and self.gameStates[1] == SHOP_STATE then
-        --     log_debug("shop board updating")
-        -- end
-
-        -- local area = component_cache.get(eid, Transform)
+        ------------------------------------------------------------
+        -- Resolve board area and cards
+        ------------------------------------------------------------
         local area = component_cache.get(eid, Transform)
         if not area then return end
 
         local cards = self.cards
         if not cards or #cards == 0 then return end
-        
-        -- if #cards > 0 then
-        --     log_debug("Laying out", #cards, "cards for board", eid)
-        -- end
 
-        -- probe card size
+        ------------------------------------------------------------
+        -- Probe card size from first valid card
+        ------------------------------------------------------------
         local cardW, cardH = 100, 140
         for i = 1, #cards do
             local cardEid = cards[i]
@@ -195,7 +190,9 @@ function createNewBoard(x, y, w, h)
             end
         end
 
-        -- layout math
+        ------------------------------------------------------------
+        -- Layout math
+        ------------------------------------------------------------
         local padding = 20
         local availW = math_max(0, area.actualW - padding * 2)
         local minGap = 12
@@ -217,23 +214,22 @@ function createNewBoard(x, y, w, h)
         local startX = area.actualX + padding + (availW - groupW) * 0.5
         local centerY = area.actualY + area.actualH * 0.5
 
-        -- z-order cache
+        ------------------------------------------------------------
+        -- Z-order cache and sorting
+        ------------------------------------------------------------
         local zcache = self.z_order_cache_per_card
         if not zcache then
             zcache = {}
             self.z_order_cache_per_card = zcache
         end
-        -- sort once (if card count > 1)
+
         if n > 1 then
-        -- if n > 1 and self.needsResort then
-            -- self.needsResort = false
-            -- build a cheap table of {eid, centerX}
             local cardPositions = {}
             for i = 1, n do
                 local eid = cards[i]
                 local t = component_cache.get(eid, Transform)
                 if t then
-                    cardPositions[i] = {eid = eid, cx = t.actualX + t.actualW * 0.5}
+                    cardPositions[i] = { eid = eid, cx = t.actualX + t.actualW * 0.5 }
                 end
             end
 
@@ -242,43 +238,91 @@ function createNewBoard(x, y, w, h)
                 return a.cx < b.cx
             end)
 
-            -- write back sorted entity order
             for i = 1, n do
                 cards[i] = cardPositions[i].eid
             end
         end
 
-
-        local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
+        ------------------------------------------------------------
+        -- Detect selected card (only one)
+        ------------------------------------------------------------
+        local selectedIndex = nil
         for i = 1, n do
             local cardEid = cards[i]
-            -- if cardEid and entity_cache.valid(cardEid) and cardEid ~= ENT_NULL then
-                local ct = component_cache.get(cardEid, Transform)
-                if ct then
-                    local x = startX + (i - 1) * spacing
-                    local y = centerY - ct.actualH * 0.5
-                    if isInventory then
-                        local cardScript = getScript(cardEid)
-                        if cardScript and cardScript.selected then
-                            y = y - ct.actualH * 0.7
-                        end
-                    end
-                    ct.actualX = math_floor(x + 0.5)
-                    ct.actualY = math_floor(y + 0.5)
-                end
-
-                local zi = cardBaseZ + (i - 1)
-                zcache[cardEid] = zi
-                assignZ(cardEid, zi)
-
-                local cardObj = component_cache.get(cardEid, GameObject)
-                if cardObj and cardObj.state and cardObj.state.isBeingDragged then
-                    assignZ(cardEid, z_orders.top_card + 1)
-                -- end
+            local cardScript = getScript(cardEid)
+            if cardScript and cardScript.selected then
+                selectedIndex = i
+                break
             end
         end
+
+        ------------------------------------------------------------
+        -- Spread parameters
+        ------------------------------------------------------------
+        local spreadAmount = 80   -- total distance to expand layout outward
+        local spreadEnabled = selectedIndex ~= nil
+        local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
+
+        ------------------------------------------------------------
+        -- Layout cards
+        ------------------------------------------------------------
+        for i = 1, n do
+            local cardEid = cards[i]
+            local ct = component_cache.get(cardEid, Transform)
+            if ct then
+                local x = startX + (i - 1) * spacing
+                local y = centerY - ct.actualH * 0.5
+
+                --------------------------------------------------------
+                -- Vertical lift for selected card (inventory only)
+                --------------------------------------------------------
+                if isInventory then
+                    local cardScript = getScript(cardEid)
+                    if cardScript and cardScript.selected then
+                        y = y - ct.actualH * 0.7
+                    end
+                end
+
+                --------------------------------------------------------
+                -- Apply full-layout spread if a card is selected
+                --------------------------------------------------------
+                if spreadEnabled then
+                    -- Determine total shift: cards to left go left, right go right
+                    local relativeIndex = i - selectedIndex
+                    if relativeIndex < 0 then
+                        -- Move left side cards farther left
+                        local leftCount = selectedIndex - 1
+                        local leftStep = spreadAmount / math_max(1, leftCount)
+                        x = x - leftStep * (leftCount - math_abs(relativeIndex) + 1)
+                    elseif relativeIndex > 0 then
+                        -- Move right side cards farther right
+                        local rightCount = n - selectedIndex
+                        local rightStep = spreadAmount / math_max(1, rightCount)
+                        x = x + rightStep * (rightCount - math_abs(relativeIndex) + 1)
+                    end
+                end
+
+                ct.actualX = math_floor(x + 0.5)
+                ct.actualY = math_floor(y + 0.5)
+            end
+
+            --------------------------------------------------------
+            -- Assign Z order
+            --------------------------------------------------------
+            local zi = cardBaseZ + (i - 1)
+            zcache[cardEid] = zi
+            assignZ(cardEid, zi)
+
+            local cardObj = component_cache.get(cardEid, GameObject)
+            if cardObj and cardObj.state and cardObj.state.isBeingDragged then
+                assignZ(cardEid, z_orders.top_card + 1)
+            end
+        end
+
         -- tracy.zoneEnd()
     end
+
+
     
     local board = BoardType{}
     
@@ -1747,6 +1791,100 @@ function initPlanningPhase()
     -- set up timer to render tooltips
     setUpCardAndWandStatDisplay()
     
+    -- let's bind d-pad input to switch between cards, and A to select.
+    input.bind("controller-navigation-planning-select", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_RIGHT_FACE_DOWN, -- A button
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    input.bind("controller-navigation-planning-up", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_UP, -- D-pad up
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    input.bind("controller-navigation-planning-down", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_DOWN, -- D-pad down
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    input.bind("controller-navigation-planning-left", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_LEFT, -- D-pad left
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    
+    input.bind("controller-navigation-planning-right", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_RIGHT, -- D-pad right
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    
+    -- let's set up the nav group so the controller can navigate the cards.
+    controller_nav.create_layer("planning-input-layer")
+    controller_nav.create_group("planning-phase")
+    controller_nav.add_group_to_layer("planning-input-layer", "planning-phase")
+
+    controller_nav.set_group_callbacks("planning-phase", {
+        on_focus = function(e) 
+            -- jiggle
+            transform.InjectDynamicMotionDefault(e)
+            
+            -- get card script, set selected
+            local cardScript = getScriptTableFromEntityID(e)
+            if cardScript then
+                cardScript.selected = true
+            end
+        end,
+        on_unfocus = function(e) 
+            -- unselect card
+            local cardScript = getScriptTableFromEntityID(e)
+            if cardScript then
+                cardScript.selected = false
+            end
+        end,
+        on_select = function(e) 
+            transform.InjectDynamicMotionDefault(e)
+        end,
+    })
+    controller_nav.set_group_mode("planning-phase", "spatial")
+    controller_nav.set_wrap("planning-phase", true)
+    controller_nav.ud:set_active_layer("planning-input-layer")
+
+    -- let's set input context to planning phase when in planning state
+    
+    
+    -- make an input timer that runs onlyi in planning phase to handle controller navigation
+    timer.run(
+        function()
+            -- only in planning state
+            if not entity_cache.state_active(PLANNING_STATE) then return end
+            
+            if input.action_down("controller-navigation-planning-up") then
+                log_debug("Planning phase nav: up")
+                controller_nav.navigate("planning-phase", "U")
+            elseif input.action_down("controller-navigation-planning-down") then
+                log_debug("Planning phase nav: down")
+                controller_nav.navigate("planning-phase", "D")
+            elseif input.action_down("controller-navigation-planning-left") then
+                log_debug("Planning phase nav: left")
+                controller_nav.navigate("planning-phase", "L")
+            elseif input.action_down("controller-navigation-planning-right") then
+                log_debug("Planning phase nav: right")
+                controller_nav.navigate("planning-phase", "R")
+            elseif input.action_down("controller-navigation-planning-select") then
+                log_debug("Planning phase nav: select")
+                controller_nav.select_current("planning-phase")
+            end
+        end
+    )
+    
+    
+    
     -- set default card size based on screen size
     cardW = globals.screenWidth() * 0.10
     cardH = cardW * (64 / 48) -- default card aspect ratio is 48:64
@@ -1760,6 +1898,14 @@ function initPlanningPhase()
         local card = createNewCard(cardID, 4000, 4000, PLANNING_STATE) -- offscreen for now
         
         table.insert(cardsToChange, card)
+        
+        -- add to navigation group as well.
+        controller_nav.ud:add_entity("planning-phase", card)
+        
+        controller_nav.validate() -- validate the nav system after setting up bindings and layers.
+        controller_nav.debug_print_state() -- print state for debugging.
+        controller_nav.focus_entity(card) -- focus the newly created card.
+        
     end
     
     
@@ -2208,7 +2354,7 @@ function initCombatSystem()
     ctx._make_actor = make_actor
     
     
-    -- update combat system every frame
+    -- update combat system every frame / render health bars
     timer.run(
         function()
             
@@ -2281,7 +2427,7 @@ function initCombatSystem()
                     c.h = expBarHeight
                     c.rx = 5
                     c.ry = 5
-                    c.color     = util.getColor("pink")
+                    c.color     = util.getColor("yellow")
                 end, z_orders.background + 1, layer.DrawCommandSpace.Screen)
             end
         end
@@ -2317,6 +2463,8 @@ function startActionPhase()
     activate_state(ACTION_STATE)
     activate_state("default_state") -- just for defaults, keep them open
     
+    input.set_context("gameplay") -- set input context to action phase.
+    
     PhysicsManager.enable_step("world", true)
 end
 
@@ -2326,6 +2474,8 @@ function startPlanningPhase()
     
     activate_state(PLANNING_STATE)
     activate_state("default_state") -- just for defaults, keep them open
+    
+    input.set_context("planning-phase") -- set input context to planning phase.
     
     PhysicsManager.enable_step("world", false)
 end
@@ -2796,12 +2946,12 @@ function initActionPhase()
             
             if (isGamePadActive) then
                 
-                log_debug("Gamepad active for movement")
+                -- log_debug("Gamepad active for movement")
                 
                 local move_x = input.action_value("gamepad_move_x")
                 local move_y = input.action_value("gamepad_move_y")
                 
-                log_debug("Gamepad move x:", move_x, "move y:", move_y)
+                -- log_debug("Gamepad move x:", move_x, "move y:", move_y)
 
                 -- If you want to invert Y (Raylib default is up = -1)
                 -- move_y = -move_y

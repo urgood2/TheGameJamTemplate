@@ -233,8 +233,8 @@ namespace input
             {
                 SetCurrentGamepad(inputState, GetGamepadName(0), 0);
                 
-                SPDLOG_DEBUG("Axis movement detected! Lx={} Ly={}", axisLeftX, axisLeftY);
-                SPDLOG_INFO("Axes: {}", GetGamepadAxisCount(0));
+                // SPDLOG_DEBUG("Axis movement detected! Lx={} Ly={}", axisLeftX, axisLeftY);
+                // SPDLOG_INFO("Axes: {}", GetGamepadAxisCount(0));
 
                 
                 ReconfigureInputDeviceInfo(inputState, InputDeviceInputCategory::GAMEPAD_AXIS);
@@ -2479,6 +2479,7 @@ namespace input
 
     bool CaptureFocusedInput(entt::registry &registry, InputState &state, const std::string inputType, GamepadButton button, float dt)
     {
+        return false; // temporarily disable
         bool ret = false;
         entt::entity focused = state.cursor_focused_target;
         bool externButton = false; // not d-pad

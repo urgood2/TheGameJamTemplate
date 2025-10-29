@@ -2459,7 +2459,7 @@ double taperedOscillation(double t, double T, double A, double freq, double D) {
             "actualR",  sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
             "visualH",  sol::property(&Transform::getVisualH, &Transform::setVisualH),
             "rotation", sol::property(&Transform::getActualRotation, &Transform::setActualRotation),
-            "visualR",  &Transform::getVisualR,
+            "visualR",  sol::property(&Transform::getVisualR, &Transform::setVisualRotation),
             "visualRWithMotion", &Transform::getVisualRWithDynamicMotionAndXLeaning,
             "scale",    sol::property(&Transform::getActualScale, &Transform::setActualScale),
             "visualS",  sol::property(&Transform::getVisualScale, &Transform::setVisualScale),

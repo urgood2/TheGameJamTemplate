@@ -111,5 +111,35 @@ function cache.update_frame()
     end
 end
 
+------------------------------------------------------------
+-- Check if a particular state is active (non-entity-based)
+------------------------------------------------------------
+
+--- Check if a particular game state is active.
+--- Cached per frame for efficiency.
+---@param state_name string
+---@return boolean
+function cache.state_active(state_name)
+    if not state_name then return false end
+    check_frame_advance()
+
+    -- Initialize a subcache for states
+    cache._state_active = cache._state_active or {}
+
+    local val = cache._state_active[state_name]
+    if val ~= nil then
+        return val
+    end
+
+    local fn = _G.is_state_active
+    local ok = false
+    if fn then
+        ok = fn(state_name)
+    end
+
+    cache._state_active[state_name] = ok or false
+    return ok
+end
+
 
 return cache

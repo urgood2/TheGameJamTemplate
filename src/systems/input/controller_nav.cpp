@@ -28,12 +28,13 @@ void NavManager::add_group_to_layer(const std::string& layer, const std::string&
 }
 
 void NavManager::set_active_layer(const std::string& name) {
-    if (!layers.contains(name)) return;
+    if (!layers.contains(name)) {
+        SPDLOG_ERROR("[Nav] Attempted to set active layer to non-existent layer '{}'", name);
+        return;
+    }
     if (!activeLayer.empty()) layers[activeLayer].active = false;
     activeLayer = name;
     layers[name].active = true;
-    if (std::find(layerStack.begin(), layerStack.end(), name) == layerStack.end())
-    layerStack.push_back(name);
 }
 
 void NavManager::push_layer(const std::string& name) {
@@ -89,7 +90,8 @@ entt::entity NavManager::get_selected(const std::string& group) {
     if (!groups.contains(group)) return entt::null;
     auto& g = groups[group];
     if (g.selectedIndex < 0 || g.selectedIndex >= (int)g.entries.size())
-        return entt::null;
+        return g.entries[0]; // default to first entry
+    
     return g.entries[g.selectedIndex];
 }
 
@@ -120,13 +122,19 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
     assert(!dir.empty() && "controller_nav::navigate called with empty direction");
 
     float& timer = groupCooldowns[group];
-    if (timer > 0.0f) return;
+    if (timer > 0.0f)
+        return; // still cooling down
+
+    // Reset to ensure cooldown activates even if delta > cooldown
+    groupCooldowns[group] = globalCooldown;
+
 
     if (!groups.contains(group)) return;
     auto& g = groups[group];
     if (!g.active || g.entries.empty()) return;
 
     entt::entity prev = get_selected(group);
+    state.cursor_focused_target = prev;
     entt::entity nextEntity = entt::null;
     
     if (!activeLayer.empty()) {
@@ -157,47 +165,128 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
     }
 
     //---------------------------------------------------------------------
-    // SPATIAL MODE
+    // SPATIAL MODE (reference-based directional focus)
     //---------------------------------------------------------------------
-    if (g.spatial && reg.valid(state.cursor_focused_target))
+    if (g.spatial)
     {
-        auto& curT = reg.get<transform::Transform>(state.cursor_focused_target);
+        // If nothing focused yet, use currently selectedIndex as base
+        entt::entity referenceEntity = state.cursor_focused_target;
+        if (!reg.valid(referenceEntity))
+            referenceEntity = get_selected(group);
+
+        if (!reg.valid(referenceEntity))
+        {
+            // fallback to first valid entry
+            for (auto e : g.entries)
+            {
+                if (reg.valid(e) && entity_gamestate_management::isEntityActive(e) && is_entity_enabled(e))
+                {
+                    referenceEntity = e;
+                    break;
+                }
+            }
+        }
+
+        if (!reg.valid(referenceEntity))
+            return; // nothing to base navigation on
+
+        auto& curT = reg.get<transform::Transform>(referenceEntity);
         Vector2 curCenter{
             curT.getActualX() + curT.getActualW() * 0.5f,
             curT.getActualY() + curT.getActualH() * 0.5f
         };
 
-        float bestDist = std::numeric_limits<float>::max();
+        // Collect eligible candidates
+        struct Candidate { entt::entity e; float dist; };
+        std::vector<Candidate> candidates;
 
         for (auto e : g.entries)
         {
-            // Skip invalid or inactive entities
+            if (e == referenceEntity) continue;
+            if (!reg.valid(e)) continue;
             if (!entity_gamestate_management::isEntityActive(e)) continue;
             if (!is_entity_enabled(e)) continue;
-            if (e == state.cursor_focused_target || !reg.valid(e)) continue;
+
             auto& t = reg.get<transform::Transform>(e);
-            Vector2 c{t.getActualX() + t.getActualW() * 0.5f, t.getActualY() + t.getActualH() * 0.5f};
+            Vector2 c{
+                t.getActualX() + t.getActualW() * 0.5f,
+                t.getActualY() + t.getActualH() * 0.5f
+            };
+
             Vector2 diff{ c.x - curCenter.x, c.y - curCenter.y };
+            float dist = fabs(diff.x) + fabs(diff.y);
 
             bool eligible = false;
-            if (dir == "L" && diff.x < 0 && fabs(diff.x) > fabs(diff.y)) eligible = true;
-            else if (dir == "R" && diff.x > 0 && fabs(diff.x) > fabs(diff.y)) eligible = true;
-            else if (dir == "U" && diff.y < 0 && fabs(diff.y) > fabs(diff.x)) eligible = true;
-            else if (dir == "D" && diff.y > 0 && fabs(diff.y) > fabs(diff.x)) eligible = true;
+
+            // Dominant-axis logic (matches your reference)
+            if (fabs(diff.x) > fabs(diff.y))
+            {
+                if (diff.x > 0 && dir == "R") eligible = true;
+                else if (diff.x < 0 && dir == "L") eligible = true;
+            }
+            else
+            {
+                if (diff.y > 0 && dir == "D") eligible = true;
+                else if (diff.y < 0 && dir == "U") eligible = true;
+            }
+
+            // Optionally widen the acceptance cone
+            if (!eligible)
+            {
+                float len = sqrtf(diff.x * diff.x + diff.y * diff.y);
+                if (len > 1e-3f)
+                {
+                    Vector2 n{ diff.x / len, diff.y / len };
+                    if (dir == "L" && n.x < -0.3f) eligible = true;
+                    else if (dir == "R" && n.x > 0.3f) eligible = true;
+                    else if (dir == "U" && n.y < -0.3f) eligible = true;
+                    else if (dir == "D" && n.y > 0.3f) eligible = true;
+                }
+            }
 
             if (eligible)
-            {
-                float dist = fabs(diff.x) + fabs(diff.y);
-                if (dist < bestDist) { bestDist = dist; nextEntity = e; }
-            }
+                candidates.push_back({e, dist});
         }
 
-        if (nextEntity != entt::null)
+        if (!candidates.empty())
         {
+            std::sort(candidates.begin(), candidates.end(),
+                [](const Candidate& a, const Candidate& b){ return a.dist < b.dist; });
+
+            nextEntity = candidates.front().e;
             auto it = std::find(g.entries.begin(), g.entries.end(), nextEntity);
             g.selectedIndex = (it != g.entries.end()) ? std::distance(g.entries.begin(), it) : 0;
         }
+        else
+        {
+            // Fallback: choose nearest valid entity even if diagonal
+            float bestDist = std::numeric_limits<float>::max();
+            for (auto e : g.entries)
+            {
+                if (!reg.valid(e)) continue;
+                if (!entity_gamestate_management::isEntityActive(e)) continue;
+                if (!is_entity_enabled(e)) continue;
+                if (!reg.all_of<transform::Transform>(e)) continue;
+
+                auto& t = reg.get<transform::Transform>(e);
+                Vector2 c{t.getActualX() + t.getActualW() * 0.5f,
+                        t.getActualY() + t.getActualH() * 0.5f};
+                float dx = c.x - curCenter.x;
+                float dy = c.y - curCenter.y;
+                float d = std::sqrt(dx*dx + dy*dy);
+                if (d < bestDist && e != referenceEntity)
+                {
+                    bestDist = d;
+                    nextEntity = e;
+                }
+            }
+
+            // If still none, stay put
+            if (nextEntity == entt::null)
+                nextEntity = referenceEntity;
+        }
     }
+
 
     //---------------------------------------------------------------------
     // LINEAR MODE (default or spatial fallback)
@@ -216,12 +305,14 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
             return;
         }
 
-        int prevIndex = g.selectedIndex < 0 ? 0 : g.selectedIndex;
-        int nextIndex = prevIndex;
+        int prevIndex = g.selectedIndex;
+        if (prevIndex < 0 || prevIndex >= (int)activeEntries.size())
+            prevIndex = 0; // clamp to valid index if stale
 
+        int nextIndex = prevIndex;
         if (dir == "L" || dir == "U") nextIndex--;
         else if (dir == "R" || dir == "D") nextIndex++;
-
+        
         if (g.wrap) {
             if (nextIndex < 0) nextIndex = (int)activeEntries.size() - 1;
             if (nextIndex >= (int)activeEntries.size()) nextIndex = 0;
@@ -319,8 +410,6 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
 
     notify_focus(prev, nextEntity, reg);
     input::UpdateCursor(state, reg);
-
-    groupCooldowns[group] = globalCooldown;
 }
 
 void NavManager::select_current(entt::registry& reg, const std::string& group) {

@@ -44,6 +44,10 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- add some basic music to battle scene & planning scene.
+- Make main menu navigatble with controller.
+- Some edge behavior when controller navigates to either edge of card area.
+- implement switching between areas. bumper + direction for switching between areas. dpad or analog stick for navigating inside area.. when gamepad connected, draw gamepad nav hints on screen. with sprites. Y for send to trigger, b for send to action area. show a border around the selected card. make cursor move to the selected card (not working atm for some reason.)
 - implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
 - test new controller nav.
 - lua timer state guard (entity state management, optional)
@@ -119,6 +123,8 @@ end)
 - also need currency.
 
 # errors
+- enemies move too slowly?
+- cards to immeidate left & right jitter when pushed aside for selection.
 - probably make a physics timer that runs every physics step, instead of relying on main loop timer. how to do this with lua, though? callbacks are slow. physics is jerking from place to place. why is that? jumping back and forth.
 - transforms sometimes get jerky. why? -> take a look at sync between physics and transform.
 - z orders are not correct when cards overlap for the first time?
@@ -140,10 +146,13 @@ end)
 - should we show an overlay over an area if it isn't a valid drop target? How would we detect when to show it?
 
 # performance considerations
+- make timers state-sensitive by using cached games state, with optional parameter when creating timer to indicate this.
 - Continue profiling.
 - Consider using luajit for release.
 
 # polish phase
+- graphics need to coalesce. snkrx looks nice. how to replicate?
+- particles with a specific arc (like splashing in a certain direction)
 - experiment with glowing background behind a card to show selection/effect (colorful, glowing, random)
 - some nice ui https://www.youtube.com/watch?v=Rkd5SYT10UQ as reference
 - add glow to crt as well, and add proper scanlines.

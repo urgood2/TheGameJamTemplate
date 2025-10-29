@@ -116,3 +116,8 @@
 10/28/2025
   - Fixed main loop structure issues causing performance problems.
   - Also, strange rubber banding with physics and dashing. I fixed it by changing only the velocity of the player during dash, not resetting it to 0 manually, and also not altering damping during it.
+  
+10/29/2025
+  - Started putting controller navigation into use. Cards can now be selected.
+  - Added visual indicators for selected cards.
+  - Some debugging and polish.

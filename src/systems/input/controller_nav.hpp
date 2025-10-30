@@ -83,6 +83,7 @@ struct NavManager {
     // Core
     void update(float dt);
     void validate() const;
+    void reset();
 
     // Groups
     void create_group(const std::string& name);

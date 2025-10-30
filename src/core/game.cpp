@@ -6,6 +6,7 @@
 #include "graphics.hpp"
 #include "globals.hpp"
 
+#include "systems/input/controller_nav.hpp"
 #include "third_party/tracy-master/public/tracy/Tracy.hpp"
 
 #include "../components/components.hpp"
@@ -434,6 +435,8 @@ namespace game
         globals::physicsManager->clearAllWorlds();
         layer::UnloadAllLayers();
         
+        controller_nav::NavManager::instance().reset();
+        
         // clear lua state and re-load
         resetLuaRefs();
         ai_system::masterStateLua = sol::state(); // reset lua state
@@ -446,6 +449,7 @@ namespace game
     
         input::Init(globals::inputState);
         game::init();
+        
     }
     
 /* ---------------- helpers for culling scroll pane elements ---------------- */

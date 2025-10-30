@@ -3,6 +3,7 @@
 #include "systems/entity_gamestate_management/entity_gamestate_management.hpp"
 #include "systems/input/input_functions.hpp"
 #include "systems/main_loop_enhancement/main_loop.hpp"
+#include "types.hpp"
 
 namespace controller_nav {
 
@@ -259,6 +260,11 @@ void NavManager::navigate(entt::registry& reg, input::InputState& state, const s
         }
         else
         {
+            if (nextEntity == entt::null && !candidates.empty())
+                nextEntity = candidates.front().e;
+            else if (nextEntity == entt::null)
+                return; // stop at edge instead of bouncing
+            
             // Fallback: choose nearest valid entity even if diagonal
             float bestDist = std::numeric_limits<float>::max();
             for (auto e : g.entries)
@@ -511,6 +517,21 @@ void NavManager::debug_print_state() const {
     for (auto& [name, g] : groups)
         SPDLOG_DEBUG("  Group: {} ({} entries, active: {}, selected: {})",
                      name, g.entries.size(), g.active, g.selectedIndex);
+}
+
+void NavManager::reset() {
+    for (auto& [name, g] : groups) {
+        g.callbacks.on_focus = sol::lua_nil_t{};
+        g.callbacks.on_unfocus = sol::lua_nil_t{};
+        g.callbacks.on_select = sol::lua_nil_t{};
+    }
+    groups.clear();
+    layers.clear();
+    layerStack.clear();
+    activeLayer.clear();
+    disabledEntities.clear();
+    groupToLayer.clear();
+    groupCooldowns.clear();
 }
 
 void exposeToLua(sol::state& lua) {

@@ -86,6 +86,9 @@ action_board_id = nil
 board_sets = {}
 current_board_set_index = 1
 
+-- keep track of controller focus
+controller_focused_entity = nil
+
 
 function addCardToBoard(cardEntityID, boardEntityID)
     if not cardEntityID or cardEntityID == entt_null or not entity_cache.valid(cardEntityID) then return end
@@ -96,6 +99,12 @@ function addCardToBoard(cardEntityID, boardEntityID)
     board.needsResort = true
     table.insert(board.cards, cardEntityID)
     log_debug("Added card", cardEntityID, "to board", boardEntityID)
+    
+    local cardScript = getScriptTableFromEntityID(cardEntityID)
+    if cardScript then
+        log_debug("Card", cardEntityID, "now on board", boardEntityID)
+        cardScript.currentBoardEntity = boardEntityID
+    end
 end
 
 function removeCardFromBoard(cardEntityID, boardEntityID)
@@ -751,6 +760,28 @@ function createNewCard(id, x, y, gameStateToApply)
                                 c.color = colorToUse
                                 c.fontSize = 20.0
                             end, zToUse, layer.DrawCommandSpace.World) -- z order on the inside here doesn't matter much.
+                            
+                            -- if it's controller_focused_entity, draw moving dashed outline
+                            if eid == controller_focused_entity then
+                                local thickness = 10
+                                command_buffer.queueDrawDashedRoundedRect(layers.sprites, function(c)
+                                    
+                                    c.rec = Rectangle.new(
+                                        -thickness / 2,
+                                        -thickness / 2,
+                                        t.actualW + thickness,
+                                        t.actualH + thickness
+                                    )
+                                    c.radius    = 10
+                                    c.dashLen   = 12
+                                    c.gapLen    = 8
+                                    c.phase     = shapeAnimationPhase
+                                    c.arcSteps  = 14
+                                    c.thickness = thickness
+                                    c.color     = util.getColor("green")
+                                    
+                                end, zToUse + 1, layer.DrawCommandSpace.World)
+                            end
                             
                         end, zToUse, layer.DrawCommandSpace.World)
                         
@@ -1831,8 +1862,14 @@ function initPlanningPhase()
 
     controller_nav.set_group_callbacks("planning-phase", {
         on_focus = function(e) 
+            
+            -- sound
+            playSoundEffect("effects", "card_focus", 0.9 + math.random() * 0.2)
+            
             -- jiggle
             transform.InjectDynamicMotionDefault(e)
+            
+            controller_focused_entity = e
             
             -- get card script, set selected
             local cardScript = getScriptTableFromEntityID(e)
@@ -1848,7 +1885,84 @@ function initPlanningPhase()
             end
         end,
         on_select = function(e) 
+            
+            playSoundEffect("effects", "card_click", 0.9 + math.random() * 0.2)
+            
             transform.InjectDynamicMotionDefault(e)
+            
+            local script = getScriptTableFromEntityID(e)
+            
+            -- first check if the card belongs to one of the boards in the current board set.
+            if not board_sets or #board_sets == 0 then return end
+            
+            if not current_board_set_index then return end
+            local currentSet = board_sets[current_board_set_index]
+            if not currentSet then return end
+            
+            local belongsToCurrentSet = false
+            -- check trigger board
+            if script.currentBoardEntity == currentSet.trigger_board_id then
+                belongsToCurrentSet = true
+            end
+            -- check action board
+            if script.currentBoardEntity == currentSet.action_board_id then
+                belongsToCurrentSet = true
+            end
+            
+            
+            -- is it a trigger card?
+            
+            if script and script.type == "trigger" then
+                
+                -- add to current trigger board, if not already on it. otherwise send it back to trigger inventory.
+                if board_sets and #board_sets > 0 then
+                    
+                    
+                    local currentSet = board_sets[current_board_set_index]
+                    
+                    
+                    if currentSet and currentSet.trigger_board_id then
+                        
+                        -- if already on trigger board, send back to inventory
+                        if belongsToCurrentSet and script.currentBoardEntity == currentSet.trigger_board_id then
+                            -- already on trigger board, send back to inventory
+                            removeCardFromBoard(e, script.currentBoardEntity)
+                            addCardToBoard(e, trigger_inventory_board_id)
+                            playSoundEffect("effects", "card_pick_up", 0.9 + math.random() * 0.2)
+                            script.selected = false
+                            return
+                        end
+                        
+                        -- otherwise add to trigger board
+                        removeCardFromBoard(e, script.currentBoardEntity) -- remove from any board it's currently on
+                        addCardToBoard(e, currentSet.trigger_board_id)
+                        playSoundEffect("effects", "card_put_down_3", 0.9 + math.random() * 0.2)
+                    end
+                end
+            else 
+                -- add to current action board
+                if board_sets and #board_sets > 0 then
+                    local currentSet = board_sets[current_board_set_index]
+                    if currentSet and currentSet.action_board_id then
+                        
+                        -- if already on action board, send back to inventory
+                        if belongsToCurrentSet and script.currentBoardEntity == currentSet.action_board_id then
+                            -- already on action board, send back to inventory
+                            removeCardFromBoard(e, script.currentBoardEntity)
+                            addCardToBoard(e, inventory_board_id)
+                            playSoundEffect("effects", "card_pick_up", 0.9 + math.random() * 0.2)
+                            -- set selected to false
+                            script.selected = false
+                            return
+                        end
+                        
+                        -- otherwise add to action board up top 
+                        removeCardFromBoard(e, script.currentBoardEntity) -- remove from any board it's currently on
+                        addCardToBoard(e, currentSet.action_board_id)
+                        playSoundEffect("effects", "card_put_down_3", 0.9 + math.random() * 0.2)
+                    end 
+                end
+            end
         end,
     })
     controller_nav.set_group_mode("planning-phase", "spatial")
@@ -2227,6 +2341,8 @@ function initPlanningPhase()
     for id, def in pairs(WandEngine.trigger_card_defs) do
         local triggerCard = createNewTriggerSlotCard(id, 4000, 4000, PLANNING_STATE)
         addCardToBoard(triggerCard, triggerInventoryBoardID)
+        -- add to navigation group as well.
+        controller_nav.ud:add_entity("planning-phase", triggerCard)
     end
     
     -- for each board set, we get a corresponding index wand def to save, or if the index is out of range, we loop around.

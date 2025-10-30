@@ -21,6 +21,9 @@
                 "card_put_down_3": "CARDS_Deal_01_RR3_mono.wav",
                 "card_put_down_4": "CARDS_Deal_01_RR4_mono.wav",
                 
+                "card_focus": "UIClick_Bright positive click 3.wav",
+                "card_click": "UIClick_Cartoon button 2.wav",
+                
                 "time_slow": "TIME_WARP_Stop_08_mono.wav",
                 "time_back_to_normal": "TIME_WARP_Start_08_mono.wav",
                 

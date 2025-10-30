@@ -44,9 +44,9 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
-- add some basic music to battle scene & planning scene.
+- 
 - Make main menu navigatble with controller.
-- Some edge behavior when controller navigates to either edge of card area.
+- add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
 - implement switching between areas. bumper + direction for switching between areas. dpad or analog stick for navigating inside area.. when gamepad connected, draw gamepad nav hints on screen. with sprites. Y for send to trigger, b for send to action area. show a border around the selected card. make cursor move to the selected card (not working atm for some reason.)
 - implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
 - test new controller nav.

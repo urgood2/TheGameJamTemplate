@@ -2582,6 +2582,11 @@ function startActionPhase()
     input.set_context("gameplay") -- set input context to action phase.
     
     PhysicsManager.enable_step("world", true)
+    
+    fadeOutMusic("space-ambiance", 0.3)
+    fadeOutMusic("shop-music", 0.3)
+    fadeOutMusic("planning-music", 0.3)
+    fadeInMusic("action-music", 0.6)
 end
 
 function startPlanningPhase()
@@ -2594,6 +2599,11 @@ function startPlanningPhase()
     input.set_context("planning-phase") -- set input context to planning phase.
     
     PhysicsManager.enable_step("world", false)
+    
+    fadeOutMusic("space-ambiance", 0.3)
+    fadeOutMusic("action-music", 0.3)
+    fadeOutMusic("shop-music", 0.3)
+    fadeInMusic("planning-music", 0.6)
 end
 
 function startShopPhase()
@@ -2604,6 +2614,11 @@ function startShopPhase()
     activate_state("default_state") -- just for defaults, keep them open
     
     PhysicsManager.enable_step("world", false)
+    
+    fadeOutMusic("space-ambiance", 0.3)
+    fadeOutMusic("action-music", 0.3)
+    fadeOutMusic("planning-music", 0.3)
+    fadeInMusic("shop-music", 0.6)
 end
 
 local lastFrame = -1

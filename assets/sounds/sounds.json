@@ -3,7 +3,10 @@
 
     "music": 
     {
-        "space-ambiance": "AMBIENCE_SciFi_Space_Hangar_05_loop_stereo.wav"
+        "space-ambiance": "AMBIENCE_SciFi_Space_Hangar_05_loop_stereo.wav",
+        "planning-music": "18 - Phantom's Requiem (Loop).ogg",
+        "action-music": "3 - Whispers of the Abyss (Loop).mp3",
+        "shop-music": "20 - Bard's Ballad (Loop).mp3"
     },
     "music_volume": 0.5,
     "categories": {

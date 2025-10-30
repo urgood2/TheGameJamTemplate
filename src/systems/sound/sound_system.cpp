@@ -377,6 +377,7 @@ namespace sound_system {
         PlayMusicStream(m);
         // Track this stream in our active list
         activeMusic.push_back({
+            .name       = musicName,
             .stream     = m,
             .loop       = false,
             .fadeTime   = 0.0f,

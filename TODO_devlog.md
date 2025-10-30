@@ -121,3 +121,6 @@
   - Started putting controller navigation into use. Cards can now be selected.
   - Added visual indicators for selected cards.
   - Some debugging and polish.
+  
+10/30/2025
+  - Added some basic music to battle scene & planning scene.

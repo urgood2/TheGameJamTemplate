@@ -518,6 +518,14 @@ function pauseGame(...) end
 function unpauseGame(...) end
 
 ---
+--- Removes the default state tag from the specified entity, if it exists.
+---
+---@param entity Entity             # The entity whose 'default_state' tag should be removed
+---@return nil
+Removes the `'default_state'` tag from the entity’s StateTag list, if present.
+function remove_default_state_tag(...) end
+
+---
 --- Checks whether any of the given tags or state names are active in the global ActiveStates instance.
 ---
 ---@overload fun(tag: StateTag): boolean

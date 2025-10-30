@@ -124,3 +124,5 @@
   
 10/30/2025
   - Added some basic music to battle scene & planning scene.
+  - Some sound effects, ironing out controller navigation bugs.
+  - Added a transition effect I can reuse.

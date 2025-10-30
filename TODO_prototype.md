@@ -44,22 +44,14 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
-- 
+- test that transform lerping to body is working.
 - Make main menu navigatble with controller.
 - add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
-- implement switching between areas. bumper + direction for switching between areas. dpad or analog stick for navigating inside area.. when gamepad connected, draw gamepad nav hints on screen. with sprites. Y for send to trigger, b for send to action area. show a border around the selected card. make cursor move to the selected card (not working atm for some reason.)
 - implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
-- test new controller nav.
-- lua timer state guard (entity state management, optional)
-- caching of scripts per entity to avoid repeated loads, also delete from cache on entity deletion. also cache transform calls.
 - make card area shift cards to left and right of new card.
-
 - apply the new assets, including some music and ui.
-- explore performance optimizations to existing code for a bit, with tracy.
 - particles that are more random in distance and lifetime. and maybe smaller. randomized colors too.
-- controller nav https://chatgpt.com/share/68fc7589-3a60-800a-afb0-ffa4fba94e0a
 - use the new itch assets to indicate icons for wands & when they are on cooldown.
-- controller input pass so I can seamlessly control ui & cards with only controller. probably make a system for that.
 - Add transition like in snkrx. how does that work? use whoosh.
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 - Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
@@ -72,9 +64,6 @@ Converts encumbrance into damage
 - implement card evaluation order using actual cards to see how it behaves.
 - make a couple of artifacts that add additional trigger + effects, which can be equipped & upgraded.
 
-- puzzle: Way to inject draw calls queue so they happen inside a transform’s shader? Doing it via lua callback is too demanding. 
-
-- controler input: Sets of objects that can be selected, maybe by tag. Method to toggle between them, possibly merging. Dpad and axis movement detection to allow selection. Got to be compatible with existing ui input system, maximally extensible. Toggle to turn the system on and off. 
 
 - Add card 3d rotation for when initially dropped?
 - behaviors I can visualize for objects: homing, orbiting. Just alter collider position and speed.
@@ -123,6 +112,7 @@ end)
 - also need currency.
 
 # errors
+- boards stop updating when I change state. why?
 - enemies move too slowly?
 - cards to immeidate left & right jitter when pushed aside for selection.
 - probably make a physics timer that runs every physics step, instead of relying on main loop timer. how to do this with lua, though? callbacks are slow. physics is jerking from place to place. why is that? jumping back and forth.

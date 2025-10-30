@@ -335,6 +335,53 @@ function createNewBoard(x, y, w, h)
     
     local board = BoardType{}
     
+    ------------------------------------------------------------
+    -- Swap positions between a selected card and its neighbor
+    ------------------------------------------------------------
+    function BoardType:swapCardWithNeighbor(selectedEid, direction)
+        -- direction: -1 = left, +1 = right
+        if not selectedEid or (direction ~= -1 and direction ~= 1) then return end
+        if not self.cards or #self.cards == 0 then return end
+
+        -- find index of selected card
+        local idx = nil
+        for i, eid in ipairs(self.cards) do
+            if eid == selectedEid then
+                idx = i
+                break
+            end
+        end
+        if not idx then return end
+
+        local neighborIndex = idx + direction
+        if neighborIndex < 1 or neighborIndex > #self.cards then return end
+
+        local leftEid  = self.cards[idx]
+        local rightEid = self.cards[neighborIndex]
+
+        -- swap in table order
+        self.cards[idx], self.cards[neighborIndex] = self.cards[neighborIndex], self.cards[idx]
+
+        -- optional: immediately swap their transforms' X so it looks instant before re-layout
+        local t1 = component_cache.get(leftEid, Transform)
+        local t2 = component_cache.get(rightEid, Transform)
+        if t1 and t2 then
+            local tempX = t1.actualX
+            t1.actualX = t2.actualX
+            t2.actualX = tempX
+        end
+
+        -- optional: maintain z-order cache consistency
+        local zcache = self.z_order_cache_per_card
+        if zcache then
+            local z1, z2 = zcache[leftEid], zcache[rightEid]
+            zcache[leftEid], zcache[rightEid] = z2, z1
+        end
+
+        -- optional: immediately re-run layout (or wait until next frame)
+        -- self:update(0)
+    end
+    
     board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
     board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
     board.cards = {} -- no starting cards
@@ -478,9 +525,105 @@ function createNewTriggerSlotCard(id, x, y, gameStateToApply)
     return card
 end
 
+
+function transitionInOutCircle(duration, message, color, startPosition)
+    
+    local TransitionType = Node:extend()
+    
+    TransitionType.age = 0
+    TransitionType.duration = duration or 1.0
+    TransitionType.message = message or ""
+    TransitionType.color = color or palette.getColor("gray")
+    TransitionType.radius = 0
+    TransitionType.x = startPosition.x or globals.getScreenWidth() * 0.5
+    TransitionType.y = startPosition.y or globals.getScreenHeight() * 0.5
+    TransitionType.textScale = 0
+    TransitionType.fontSize = 48
+    
+    
+    
+    
+    function TransitionType:init()
+        -- a circle that will expand to fill the screen in duration * 0.3 (tween cubic) from startPosition
+
+        timer.tween_fields(duration * 0.3, self, { radius = math.sqrt(globals.screenWidth()^2 + globals.screenHeight()^2) }, Easing.inOutCubic.f, nil, "transition_circle_expand", "ui")
+        
+        -- spawn text in center after duration * 0.1, scaling up from 0 to 1 in duration * 0.2 (tween cubic).
+        timer.after(duration * 0.1, function ()
+            timer.tween_fields(duration * 0.2, self, { textScale = 1.0 }, Easing.inOutCubic.f, nil, "transition_text_scale_up", "ui")
+        end, "transition_text_delay", "ui")
+        
+        -- at duration * 0.7, start shrinking circle back to center. 
+        timer.after(duration * 0.7, function ()
+            timer.tween_fields(duration * 0.3, self, { radius = 0 }, Easing.inOutCubic.f, nil, "transition_circle_shrink", "ui")
+        end, "transition_circle_shrink_delay", "ui")
+        
+        -- at duration 0.9, scale text back down to 0.
+        timer.after(duration * 0.9, function ()
+            timer.tween_fields(duration * 0.1, self, { textScale = 0.0 }, Easing.inOutCubic.f, nil, "transition_text_scale_down", "ui")
+        end, "transition_text_scale_down_delay", "ui")
+        
+        playSoundEffect("effects", "transition_whoosh", 1.0)
+    end
+    
+    function TransitionType:update(dt)
+        self.age = self.age + dt
+        -- float x, y, rx, ry;
+        -- Color color = WHITE;
+        -- std::optional<float> lineWidth = std::nullopt; // If set, draw outline with this width; else filled
+        -- draw a filled circle with radius.
+        command_buffer.queueDrawCenteredEllipse(layers.sprites, function(c)
+            c.x = self.x
+            c.y = self.y
+            c.rx = self.radius
+            c.ry = self.radius
+            c.color = self.color
+        end, z_orders.ui_transition, layer.DrawCommandSpace.Screen)
+        
+        local textW = localization.getTextWidthWithCurrentFont(self.message, self.fontSize, 1)
+        -- scale text 
+        command_buffer.queueDrawText(layers.sprites, function(c)
+            c.text = self.message
+            c.font = localization.getFont()
+            c.x = globals.screenWidth() * 0.5 - textW * 0.5 * self.textScale
+            c.y = globals.screenHeight() * 0.5 - (self.fontSize * self.textScale) * 0.5
+            c.color = util.getColor("white")
+            c.fontSize = self.fontSize * self.textScale
+        end, z_orders.ui_transition + 1, layer.DrawCommandSpace.Screen)
+        
+    end
+    
+    function TransitionType:destroy()
+        playSoundEffect("effects", "transition_whoosh_out", 1.0)
+    end
+    
+    local transition = TransitionType{}
+        :attach_ecs{ create_new = true }
+        :addStateTag(PLANNING_STATE)
+        :addStateTag(ACTION_STATE)
+        :addStateTag(SHOP_STATE) -- make them function in all states
+        :destroy_when(function(self, eid) return self.age >= self.duration end)
+    
+end
+
 function setUpCardAndWandStatDisplay()
     
     local STAT_FONT_SIZE = 27
+    
+    local bumper_l = "xbox_lb.png"
+    local bumper_r = "xbox_rb.png"
+    local trigger_l = "xbox_lt.png"
+    local trigger_r = "xbox_rt.png"
+    local button_a = "xbox_button_color_a.png"
+    local button_b = "xbox_button_color_b.png"
+    local button_x = "xbox_button_color_x.png"
+    local button_y = "xbox_button_color_y.png"
+    local left_stick = "xbox_stick_top_l.png"
+    local right_stick = "xbox_stick_top_r.png"
+    local d_pad = "xbox_dpad.png"
+    local plus = "flair_plus.png"
+    
+    
     
     timer.run(function ()
         
@@ -488,6 +631,8 @@ function setUpCardAndWandStatDisplay()
         if not is_state_active(PLANNING_STATE) and not is_state_active(SHOP_STATE) then
             return
         end
+        
+        -- TODO: controller prompts
         
         -- get current board set
         local boardSet = board_sets[current_board_set_index]
@@ -1855,6 +2000,31 @@ function initPlanningPhase()
         context = "planning-phase" -- we'll use this context for planning phase only
     })
     
+    input.bind("controller-navigation-planning-right-bumper", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_RIGHT_TRIGGER_1, -- D-pad right
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    input.bind("controller-navigation-planning-left-bumper", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_LEFT_TRIGGER_1, -- D-pad right
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    input.bind("controller-navigation-planning-left-trigger", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_LEFT_TRIGGER_2, -- D-pad right
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    input.bind("controller-navigation-planning-right-trigger", {
+        device = "gamepad_button",
+        button = GamepadButton.GAMEPAD_BUTTON_RIGHT_TRIGGER_2, -- D-pad right
+        trigger = "Pressed",     -- or "Threshold" if your system uses analog triggers
+        context = "planning-phase" -- we'll use this context for planning phase only
+    })
+    
     -- let's set up the nav group so the controller can navigate the cards.
     controller_nav.create_layer("planning-input-layer")
     controller_nav.create_group("planning-phase")
@@ -1978,6 +2148,9 @@ function initPlanningPhase()
             -- only in planning state
             if not entity_cache.state_active(PLANNING_STATE) then return end
             
+            local leftTriggerDown = input.action_down("controller-navigation-planning-left-trigger")
+            local rightTriggerDown = input.action_down("controller-navigation-planning-right-trigger")
+            
             if input.action_down("controller-navigation-planning-up") then
                 log_debug("Planning phase nav: up")
                 controller_nav.navigate("planning-phase", "U")
@@ -1985,14 +2158,41 @@ function initPlanningPhase()
                 log_debug("Planning phase nav: down")
                 controller_nav.navigate("planning-phase", "D")
             elseif input.action_down("controller-navigation-planning-left") then
-                log_debug("Planning phase nav: left")
-                controller_nav.navigate("planning-phase", "L")
+                if (leftTriggerDown) then
+                    log_debug("Planning phase nav: trigger L is down, swapping left")
+                    -- get the board of the current focused entity
+                    local selectedCardScript = getScriptTableFromEntityID(controller_focused_entity)
+                    local boardScript = getScriptTableFromEntityID(selectedCardScript.currentBoardEntity)
+                    boardScript:swapCardWithNeighbor(controller_focused_entity, -1)
+                else
+                    log_debug("Planning phase nav: left")
+                    controller_nav.navigate("planning-phase", "L")
+                end
+                
             elseif input.action_down("controller-navigation-planning-right") then
-                log_debug("Planning phase nav: right")
-                controller_nav.navigate("planning-phase", "R")
+                
+                if (leftTriggerDown) then
+                    log_debug("Planning phase nav: trigger L is down, swapping right")
+                    
+                    -- get the board of the current focused entity
+                    local selectedCardScript = getScriptTableFromEntityID(controller_focused_entity)
+                    local boardScript = getScriptTableFromEntityID(selectedCardScript.currentBoardEntity)
+                    boardScript:swapCardWithNeighbor(controller_focused_entity, 1)
+                else
+                    log_debug("Planning phase nav: right")
+                    controller_nav.navigate("planning-phase", "R")
+                end
             elseif input.action_down("controller-navigation-planning-select") then
                 log_debug("Planning phase nav: select")
                 controller_nav.select_current("planning-phase")
+            elseif input.action_down("controller-navigation-planning-right-bumper") then
+                log_debug("Planning phase nav: next board set")
+                -- next board set
+                cycleBoardSets(1)
+            elseif input.action_down("controller-navigation-planning-left-bumper") then
+                log_debug("Planning phase nav: previous board set")
+                -- previous board set
+                cycleBoardSets(-1)
             end
         end
     )
@@ -2604,6 +2804,8 @@ function startPlanningPhase()
     fadeOutMusic("action-music", 0.3)
     fadeOutMusic("shop-music", 0.3)
     fadeInMusic("planning-music", 0.6)
+    
+    transitionInOutCircle(2, "LOADING", util.getColor("black"), { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
 end
 
 function startShopPhase()

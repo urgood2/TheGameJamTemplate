@@ -89,29 +89,69 @@ namespace physics {
     
     void SetBodyRotationLocked(entt::registry& R, entt::entity e, bool lock);
 
-    inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W) {
-        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e)) return;
+    inline void BodyToTransform(entt::registry& R, entt::entity e, physics::PhysicsWorld& W, float alpha = 1.0f)
+    {
+        if (!R.valid(e) || !R.any_of<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig>(e))
+            return;
 
         auto& T   = R.get<transform::Transform>(e);
         auto& CC  = R.get<physics::ColliderComponent>(e);
         auto& cfg = R.get<PhysicsSyncConfig>(e);
 
-        const cpVect p = cpBodyGetPosition(CC.body.get());
-        const float a  = (float)cpBodyGetAngle(CC.body.get());
+        if (!CC.body) return;
+        cpBody* body = CC.body.get();
 
-        const Vector2 rl = { (float)p.x - T.getActualW() * 0.5f, (float)p.y - T.getActualH() * 0.5f };
+        // -------------------------------------------------------------------------
+        // CACHED PREVIOUS PHYSICS STATE (required for lerp)
+        // -------------------------------------------------------------------------
+        // Note: these fields can be added to ColliderComponent if not already present.
+        // Example:
+        //   Vector2 prevPos;
+        //   float   prevRot = 0.f;
+        //   Vector2 currPos;
+        //   float   currRot = 0.f;
+        //
+        // Update these in your physics step before and after cpSpaceStep().
+        // This function will then use them for interpolation.
+
+        const cpVect p = cpBodyGetPosition(body);
+        const float a  = (float)cpBodyGetAngle(body);
+
+        // Compute physics-space center (Chipmunk’s position is body center)
+        Vector2 currCenter = { (float)p.x, (float)p.y };
+        float currRot = a * RAD2DEG;
+
+        // Lerp if we have previous data (optional guard)
+        Vector2 displayCenter = currCenter;
+        float displayRot = currRot;
+
+        if (CC.prevPos.x != 0.0f || CC.prevPos.y != 0.0f || CC.prevRot != 0.0f) {
+            displayCenter.x = std::lerp(CC.prevPos.x, currCenter.x, alpha);
+            displayCenter.y = std::lerp(CC.prevPos.y, currCenter.y, alpha);
+            displayRot      = std::lerp(CC.prevRot, currRot, alpha);
+        }
+
+        // Store current positions for next frame
+        CC.prevPos = currCenter;
+        CC.prevRot = currRot;
+
+        // Offset to top-left (your engine uses actualX/Y as top-left)
+        const Vector2 rl = { displayCenter.x - T.getActualW() * 0.5f,
+                            displayCenter.y - T.getActualH() * 0.5f };
+
+        // Apply interpolated transform
         T.setActualX(rl.x);
         T.setActualY(rl.y);
 
         // ---- ROTATION HANDOFF ----
         if (cfg.rotMode == RotationSyncMode::PhysicsFree_TransformFollows) {
-            T.setActualRotation(a * RAD2DEG);
-        } else {
-            // Transform is authoritative → do NOT pull angle from physics
-            // Ensure body stays aligned next pre-step push.
+            T.setActualRotation(displayRot);
+        }
+        else {
+            // Transform is authoritative → do NOT pull angle from physics.
         }
     }
-    
+
     inline void EnforceRotationPolicy(entt::registry& R, entt::entity e) {
         auto& cfg = R.get<PhysicsSyncConfig>(e);
         auto& CC  = R.get<physics::ColliderComponent>(e);
@@ -656,7 +696,7 @@ namespace physics {
 
     
 /* ------------------------ physics-dominant phase ------------------------- */
-    inline void ApplyAuthoritativePhysics(entt::registry& R, PhysicsManager& PM) {
+    inline void ApplyAuthoritativePhysics(entt::registry& R, PhysicsManager& PM, float alpha = 1.0f) {
         auto view = R.view<transform::Transform, physics::ColliderComponent, PhysicsSyncConfig, PhysicsWorldRef>();
         for (auto e : view) {
             auto& cfg = view.get<PhysicsSyncConfig>(e);
@@ -664,7 +704,7 @@ namespace physics {
 
             auto& ref = view.get<PhysicsWorldRef>(e);
             if (auto* rec = PM.get(ref.name); rec && PhysicsManager::world_active(*rec)) {
-                BodyToTransform(R, e, *rec->w);
+                BodyToTransform(R, e, *rec->w, alpha);
             }
             EnforceRotationPolicy(R, e); // cheap, idempotent
         }

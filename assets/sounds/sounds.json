@@ -30,6 +30,9 @@
                 "time_slow": "TIME_WARP_Stop_08_mono.wav",
                 "time_back_to_normal": "TIME_WARP_Start_08_mono.wav",
                 
+                "transition_whoosh": "Ni Sound Dark Game Trailer Transitions Whoosh 01.wav",
+                "transition_whoosh_out": "Ni Sound Dark Game Trailer Transitions Whoosh 02.wav",
+                
                 "card_deal": "CARDS_Deal_01_RR4_mono.wav",
                 
                 "remove_area_triggered": "GORE_Deep_Short_Splat_02_mono.wav",

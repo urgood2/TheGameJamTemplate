@@ -307,6 +307,22 @@ namespace localization
             "---@return FontData # The font for the current language.\n",
             "Gets the font data for the current language."
         );
+        
+        rec.bind_function(lua, path, "getTextWidthWithCurrentFont",
+            [](const std::string& text, float fontSize, float spacing) -> float {
+                Font font = localization::getFontData().font;
+                if (font.baseSize <= 0) return 0.0f;
+
+                Vector2 size = MeasureTextEx(font, text.c_str(), fontSize, spacing);
+                return size.x;
+            },
+            "---@param text string # The text to measure.\n"
+            "---@param fontSize number # The font size to use when measuring.\n"
+            "---@param spacing number # The spacing between characters.\n"
+            "---@return number # The width of the text when rendered with the current language's font.\n",
+            "Gets the rendered width of a text string using the current language's font."
+        );
+
 
         // loadFontData
         rec.bind_function(lua, path, "loadFontData", &localization::loadFontData,

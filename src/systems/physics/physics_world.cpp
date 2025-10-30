@@ -169,7 +169,27 @@ PhysicsWorld::~PhysicsWorld() {
 
 }
 
+void CapturePostPhysicsPositions(entt::registry& R) {
+    R.view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
+        if (auto* body = CC.body.get()) {
+            CC.bodyPos = {static_cast<float>(cpBodyGetPosition(body).x),
+                          static_cast<float>(cpBodyGetPosition(body).y)};
+            CC.bodyRot = static_cast<float>(cpBodyGetAngle(body));
+        }
+    });
+}
+
+
 void PhysicsWorld::Update(float deltaTime) {
+  // Update interpolation cache before stepping
+  globals::registry.view<physics::ColliderComponent>().each([&](auto e, auto& CC) {
+      if (auto* body = CC.body.get()) {
+          CC.prevPos = {static_cast<float>(cpBodyGetPosition(body).x),
+                        static_cast<float>(cpBodyGetPosition(body).y)};
+          CC.prevRot = static_cast<float>(cpBodyGetAngle(body));
+      }
+  });
+  
   cpSpaceStep(space, deltaTime);
 #ifndef NDEBUG
   cpSpaceEachShape(
@@ -180,6 +200,9 @@ void PhysicsWorld::Update(float deltaTime) {
       },
       nullptr);
 #endif
+  
+  // now update
+  CapturePostPhysicsPositions(*registry);
 }
 
 void PhysicsWorld::PostUpdate() {

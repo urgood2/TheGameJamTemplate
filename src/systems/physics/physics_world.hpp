@@ -671,6 +671,10 @@ struct ColliderComponent {
     bool isSensor = false;
   };
   std::vector<SubShape> extraShapes;
+  
+  // Interpolation cache
+    Vector2 prevPos{}, bodyPos{};
+    float prevRot = 0.0f, bodyRot = 0.0f;
 };
 
 struct CollisionTag {

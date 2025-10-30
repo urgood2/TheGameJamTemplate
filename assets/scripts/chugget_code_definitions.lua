@@ -518,6 +518,38 @@ function pauseGame(...) end
 function unpauseGame(...) end
 
 ---
+--- Checks whether any of the given tags or state names are active in the global ActiveStates instance.
+---
+---@overload fun(tag: StateTag): boolean
+---@overload fun(names: string[]): boolean
+---@return boolean
+Returns `true` if **any** of the given state tags or names are currently active.
+You can pass either a `StateTag` component or an array of strings.
+Example:
+```lua
+if hasAnyTag({ 'SHOP_STATE', 'PLANNING_STATE' }) then
+  print('At least one of these states is active.')
+end
+```
+function hasAnyTag(...) end
+
+---
+--- Checks whether all of the given tags or state names are active in the global ActiveStates instance.
+---
+---@overload fun(tag: StateTag): boolean
+---@overload fun(names: string[]): boolean
+---@return boolean
+Returns `true` if **all** of the given state tags or names are currently active.
+You can pass either a `StateTag` component or an array of strings.
+Example:
+```lua
+if hasAllTags({ 'ACTION_STATE', 'PLANNING_STATE' }) then
+  print('Both states are active at once.')
+end
+```
+function hasAllTags(...) end
+
+---
 --- Activates the given named state globally, using the shared ActiveStates instance.
 ---
 ---@param name string
@@ -7381,6 +7413,16 @@ function localization.getFontData(...) end
 ---@return FontData # The font for the current language.
 
 function localization.getFont(...) end
+
+---
+--- Gets the rendered width of a text string using the current language's font.
+---
+---@param text string # The text to measure.
+---@param fontSize number # The font size to use when measuring.
+---@param spacing number # The spacing between characters.
+---@return number # The width of the text when rendered with the current language's font.
+
+function localization.getTextWidthWithCurrentFont(...) end
 
 ---
 --- Loads font data from the specified path.

@@ -9882,6 +9882,7 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">pre-packing-files_globbed/Flairs/Default/flair_plus.png</key>
             <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_command.png</key>
             <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_command_outline.png</key>
             <key type="filename">pre-packing-files_globbed/Keyboard &amp; Mouse/Default/key_tab.png</key>
@@ -12287,6 +12288,7 @@
                     <filename>../../../../../Downloads/action_card_placeholder.png</filename>
                     <filename>../../../../../Downloads/mod_card_placeholder.png</filename>
                     <filename>../../../../../Downloads/trigger_card_placeholder.png</filename>
+                    <filename>pre-packing-files_globbed/Flairs/Default/flair_plus.png</filename>
                 </array>
             </struct>
         </map>

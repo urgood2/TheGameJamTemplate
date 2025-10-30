@@ -12,6 +12,9 @@ local z_orders = {
   projectiles = 10,
   player_vfx = 20,
   enemies    = 30,
+  
+  -- general
+  ui_transition = 1000,
 }
 
 return z_orders

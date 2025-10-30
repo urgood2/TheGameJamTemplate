@@ -115,6 +115,8 @@ function node:attach_ecs(opts)
   return self
 end
 
+
+
 -- Queue deletion when a condition is met.
 -- Usage:
 --   obj:destroy_when(function(self, eid) return ... end, {
@@ -247,6 +249,22 @@ function node.update_all(dt)
     -- tracy.zoneEnd()
 end
 
+-- Adds a state tag to the node's entity (safe before/after attach)
+function node:addStateTag(tag)
+  assert(type(tag) == "string", "addStateTag(tag): tag must be a string")
+
+  -- If already attached, call immediately
+  if self._eid then
+    add_state_tag(self._eid, tag)
+  else
+    -- Otherwise queue it to run when attach_ecs() is called
+    self:run_custom_func(function(eid, self)
+      add_state_tag(eid, tag)
+    end)
+  end
+
+  return self
+end
 
 
 

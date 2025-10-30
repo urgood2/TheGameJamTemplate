@@ -20,15 +20,29 @@ static const std::string DEFAULT_STATE_TAG = "default_state";
 // Component: Attach to any entity you want to gate by state
 //-----------------------------------------------------------------------------
 struct StateTag {
-    std::string name;
-    std::size_t hash;
+    std::vector<std::string> names;
+    std::vector<std::size_t> hashes;
 
     StateTag() = default;
-    explicit StateTag(const std::string &s)
-        : name(s)
-        , hash(std::hash<std::string>{}(s))
-    {}
+    explicit StateTag(const std::string &s) {
+        add_tag(s);
+    }
+
+    void add_tag(const std::string &s) {
+        std::size_t h = std::hash<std::string>{}(s);
+        // avoid duplicates
+        if (std::find(hashes.begin(), hashes.end(), h) == hashes.end()) {
+            names.push_back(s);
+            hashes.push_back(h);
+        }
+    }
+
+    void clear() {
+        names.clear();
+        hashes.clear();
+    }
 };
+
 
 //-----------------------------------------------------------------------------
 // Resource: Holds all currently active state hashes
@@ -53,7 +67,12 @@ struct ActiveStates {
 
     // Query if a tag is active
     bool is_active(const StateTag &tag) const {
-        return active_hashes.find(tag.hash) != active_hashes.end();
+        for (auto h : tag.hashes) {
+            if (active_hashes.contains(h))
+                return true;
+        }
+        return false;
+
     }
 };
 
@@ -75,6 +94,54 @@ inline bool isActiveState(StateTag &tag) {
     return active_states_instance().is_active(tag);
 }
 
+inline bool is_active(const StateTag &tag) {
+    for (auto h : tag.hashes) {
+        if (active_states_instance().active_hashes.contains(h))
+            return true;
+    }
+    return false;
+}
+
+enum class TagMode { Any, All };
+
+
+
+// Returns true if any of the entity's tags are active.
+inline bool hasAnyTag(const StateTag& tag) {
+    const auto& active = active_states_instance().active_hashes;
+    for (auto h : tag.hashes) {
+        if (active.contains(h)) return true;
+    }
+    return false;
+}
+
+// Returns true if all of the entity's tags are active.
+inline bool hasAllTags(const StateTag& tag) {
+    const auto& active = active_states_instance().active_hashes;
+    for (auto h : tag.hashes) {
+        if (!active.contains(h)) return false;
+    }
+    return !tag.hashes.empty();
+}
+
+// Lua overloads for string name arrays (for convenience)
+inline bool hasAnyTagNames(const std::vector<std::string>& tags) {
+    for (const auto& s : tags) {
+        std::size_t h = std::hash<std::string>{}(s);
+        if (active_states_instance().active_hashes.contains(h)) return true;
+    }
+    return false;
+}
+
+inline bool hasAllTagNames(const std::vector<std::string>& tags) {
+    for (const auto& s : tags) {
+        std::size_t h = std::hash<std::string>{}(s);
+        if (!active_states_instance().active_hashes.contains(h)) return false;
+    }
+    return !tags.empty();
+}
+
+
 inline void emplaceOrReplaceStateTag(entt::entity entity, const std::string &name) {
     globals::registry.emplace_or_replace<StateTag>(entity, name);
 }
@@ -85,11 +152,9 @@ inline void assignDefaultStateTag(entt::entity entity) {
 
 inline bool isEntityActive(entt::entity entity) {
     auto &registry = globals::registry;
-    if (!registry.all_of<StateTag>(entity)) {
-        return false; // No StateTag component means inactive
-    }
+    if (!registry.all_of<StateTag>(entity)) return false;
     const auto &tag = registry.get<StateTag>(entity);
-    return active_states_instance().is_active(tag);
+    return is_active(tag);
 }
 
 inline void activate_state(std::string_view s)   { active_states_instance().activate(std::string{s}); }
@@ -126,8 +191,14 @@ inline void exposeToLua(sol::state &lua) {
     auto active_states = active_states_instance();
     // Expose add_state_tag(entity, "name")
     lua.set_function("add_state_tag", [&registry](entt::entity e, const std::string &name) {
-        registry.emplace_or_replace<StateTag>(e, name);
+        if (registry.all_of<StateTag>(e)) {
+            registry.get<StateTag>(e).add_tag(name);
+        } else {
+            registry.emplace<StateTag>(e, name);
+        }
     });
+
+
 
     // Expose remove_state_tag(entity)
     lua.set_function("remove_state_tag", [&registry](entt::entity e) {
@@ -158,8 +229,79 @@ inline void exposeToLua(sol::state &lua) {
         &is_state_active_name    // string name
     ));
     lua.set_function("is_entity_active", &isEntityActive);
+    
+    lua.set_function("hasAnyTag", sol::overload(
+        &hasAnyTag,       // StateTag&
+        &hasAnyTagNames   // vector<string>
+    ));
+
+    lua.set_function("hasAllTags", sol::overload(
+        &hasAllTags,      // StateTag&
+        &hasAllTagNames   // vector<string>
+    ));
+    
+    
+    // Expose remove_default_state_tag(entity)
+    lua.set_function("remove_default_state_tag", [&registry](entt::entity e) {
+        if (!registry.all_of<StateTag>(e)) return;
+        auto &tag = registry.get<StateTag>(e);
+        auto it = std::find(tag.names.begin(), tag.names.end(), DEFAULT_STATE_TAG);
+        if (it != tag.names.end()) {
+            std::size_t h = std::hash<std::string>{}(*it);
+            tag.names.erase(it);
+            auto hashIt = std::find(tag.hashes.begin(), tag.hashes.end(), h);
+            if (hashIt != tag.hashes.end())
+                tag.hashes.erase(hashIt);
+        }
+    });
+
+    
 
     auto &rec = BindingRecorder::instance();
+    
+    rec.record_free_function({}, {
+        "remove_default_state_tag",
+        "---@param entity Entity             # The entity whose 'default_state' tag should be removed\n"
+        "---@return nil\n"
+        "Removes the `'default_state'` tag from the entity’s StateTag list, if present.",
+        "Removes the default state tag from the specified entity, if it exists.",
+        true, false
+    });
+    
+    rec.record_free_function({}, {
+        "hasAnyTag",
+        "---@overload fun(tag: StateTag): boolean\n"
+        "---@overload fun(names: string[]): boolean\n"
+        "---@return boolean\n"
+        "Returns `true` if **any** of the given state tags or names are currently active.\n"
+        "You can pass either a `StateTag` component or an array of strings.\n"
+        "Example:\n"
+        "```lua\n"
+        "if hasAnyTag({ 'SHOP_STATE', 'PLANNING_STATE' }) then\n"
+        "  print('At least one of these states is active.')\n"
+        "end\n"
+        "```",
+        "Checks whether any of the given tags or state names are active in the global ActiveStates instance.",
+        true, false
+    });
+
+    rec.record_free_function({}, {
+        "hasAllTags",
+        "---@overload fun(tag: StateTag): boolean\n"
+        "---@overload fun(names: string[]): boolean\n"
+        "---@return boolean\n"
+        "Returns `true` if **all** of the given state tags or names are currently active.\n"
+        "You can pass either a `StateTag` component or an array of strings.\n"
+        "Example:\n"
+        "```lua\n"
+        "if hasAllTags({ 'ACTION_STATE', 'PLANNING_STATE' }) then\n"
+        "  print('Both states are active at once.')\n"
+        "end\n"
+        "```",
+        "Checks whether all of the given tags or state names are active in the global ActiveStates instance.",
+        true, false
+    });
+
     
     rec.record_free_function({}, {
         "activate_state",

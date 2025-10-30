@@ -230,7 +230,7 @@ auto MainLoopRenderAbstraction(float dt) -> void {
 
 }
 
-auto updatePhysics(float dt) -> void
+auto updatePhysics(float dt, float alpha) -> void
 {
     main_loop::mainLoop.physicsTicks++;
     {
@@ -245,7 +245,7 @@ auto updatePhysics(float dt) -> void
     
     {
         ZoneScopedN("Physics Transform Hook ApplyAuthoritativePhysics");
-        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager);
+        physics::ApplyAuthoritativePhysics(globals::registry, *globals::physicsManager, alpha);
     
     
         // physics post-update
@@ -319,10 +319,12 @@ void RunGameLoop()
             // Split into two substeps for improved stability
             const int substeps = 2;
             float subDelta = scaledStep / substeps;
+            float alpha = mainLoop.lag / mainLoop.rate; // interpolation factor for lerping physics to transform
+
 
             for (int i = 0; i < substeps; ++i)
             {
-                updatePhysics(subDelta);
+                updatePhysics(subDelta, alpha);
             }
 
             // SPDLOG_DEBUG("physics step ({} substeps) of {} ms each at time {}",

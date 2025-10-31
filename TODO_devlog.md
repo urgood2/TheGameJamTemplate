@@ -126,3 +126,9 @@
   - Added some basic music to battle scene & planning scene.
   - Some sound effects, ironing out controller navigation bugs.
   - Added a transition effect I can reuse.
+  
+10/31/2025
+  - UI syntax sugar to make defining UIs in lua easier.
+  - Added font offset and spacing support from json.
+  - State management broken.
+  - Updated particles to be easier to use from lua.

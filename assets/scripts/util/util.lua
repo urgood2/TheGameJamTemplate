@@ -2,6 +2,7 @@ local task = require("task/task")
 local timer = require("core/timer")
 local component_cache = require("core/component_cache")
 local entity_cache = require("core.entity_cache")
+local Easing = require("util.easing")
 
 --- Smoothly step the camera toward a target to avoid big-jump jitter.
 -- @param camName string   Name used with camera.Get(...)
@@ -62,6 +63,460 @@ function camera_smooth_pan_to(camName, tx, ty, opts)
 
     return true
 end
+
+
+local function applyDurationVariance(seconds, variance)
+    if not variance or variance <= 0 then return seconds end
+    local factor = 1.0 + (math.random() * 2.0 - 1.0) * variance  -- random in [1 - v, 1 + v]
+    return seconds * factor
+end
+
+---@param x number
+---@param y number
+---@param count integer
+---@param seconds number
+---@param opts table?
+function particle.spawnRadialParticles(x, y, count, seconds, opts)
+    opts = opts or {}
+
+    local easing      = Easing[opts.easing or "cubic"]
+    local startAngle  = math.rad(opts.startAngle or 0)
+    local endAngle    = math.rad(opts.endAngle or 360)
+    local minRadius   = opts.minRadius or 0
+    local maxRadius   = opts.maxRadius or 0
+    local minSpeed    = opts.minSpeed or 100
+    local maxSpeed    = opts.maxSpeed or 300
+    local minScale    = opts.minScale or 5
+    local maxScale    = opts.maxScale or 15
+    local renderType  = opts.renderType or particle.ParticleRenderType.CIRCLE_FILLED
+    local space       = opts.space or "screen"
+    local z           = opts.z or 0
+    local colorSet    = opts.colors or { util.getColor("WHITE") }
+    seconds = applyDurationVariance(seconds, opts.durationVariance or 0.2)
+
+
+    for i = 1, count do
+        local angle = startAngle + math.random() * (endAngle - startAngle)
+        local dir   = Vec2(math.cos(angle), math.sin(angle))
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+        local radius = math.random() * (maxRadius - minRadius) + minRadius
+        local startColor = colorSet[math.random(1, #colorSet)]
+        local endColor   = opts.endColor or startColor
+
+        particle.CreateParticle(
+            Vec2(x + dir.x * radius, y + dir.y * radius),
+            Vec2(minScale, minScale),
+            {
+                renderType    = renderType,
+                velocity      = Vec2(0, 0),
+                acceleration  = 0,
+                lifespan      = seconds,
+                startColor    = startColor,
+                endColor      = endColor,
+                rotationSpeed = opts.rotationSpeed or 0,
+                space         = space,
+                z             = z,
+
+                onUpdateCallback = function(comp, dt)
+                    local age      = comp.age or 0.0
+                    local life     = comp.lifespan or seconds or 0.000001
+                    local progress = math.min(math.max(age / life, 0), 1)
+
+                    -- easing-based outward velocity
+                    local speedNow = (minSpeed + (maxSpeed - minSpeed) * easing.d(progress))
+                    comp.velocity = Vec2(dir.x * speedNow, dir.y * speedNow)
+
+                    -- optional easing-based scale growth
+                    if opts.scaleEasing then
+                        local sEasing = Easing[opts.scaleEasing] or Easing.linear
+                        local eased = sEasing.f(progress)
+                        comp.scale = minScale + (maxScale - minScale) * eased
+                    end
+                end,
+            },
+            nil
+        )
+    end
+end
+
+
+---@param x number
+---@param y number
+---@param count integer
+---@param seconds number
+---@param imageName string
+---@param opts table?
+function particle.spawnImageBurst(x, y, count, seconds, imageName, opts)
+    opts = opts or {}
+    local easing = Easing[opts.easing or "quad"]
+    local startAngle = math.rad(opts.startAngle or 0)
+    local endAngle   = math.rad(opts.endAngle or 360)
+    local minSpeed   = opts.minSpeed or 100
+    local maxSpeed   = opts.maxSpeed or 250
+    local z          = opts.z or 0
+    local space      = opts.space or "screen"
+    seconds = applyDurationVariance(seconds, opts.durationVariance or 0.2)
+    
+    -- detect sprite vs animation
+    local animOpts = {}
+    if animOpts.useSpriteNotAnimation then
+        animOpts.fg = opts.fg or nil
+        animOpts.bg = opts.bg or nil
+    end
+
+    if opts.useSpriteNotAnimation or opts.spriteUUID then
+        animOpts.animationName = opts.spriteUUID or imageName
+        animOpts.useSpriteNotAnimation = true
+        animOpts.loop = false
+    else
+        animOpts.animationName = imageName
+        animOpts.useSpriteNotAnimation = false
+        animOpts.loop = opts.loop or false
+    end
+
+
+    for i = 1, count do
+        local angle = startAngle + math.random() * (endAngle - startAngle)
+        local dir   = Vec2(math.cos(angle), math.sin(angle))
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+
+        particle.CreateParticle(
+            Vec2(x, y),
+            Vec2(opts.size or 16, opts.size or 16),
+            {
+                renderType   = particle.ParticleRenderType.TEXTURE,
+                velocity     = Vec2(0, 0),
+                lifespan     = seconds,
+                startColor   = opts.startColor or util.getColor("WHITE"),
+                endColor     = opts.endColor   or util.getColor("WHITE"),
+                space        = space,
+                z            = z,
+                onUpdateCallback = function(comp, dt)
+                    local age = comp.age or 0.0
+                    local life = comp.lifespan or seconds
+                    local progress = math.min(math.max(age / life, 0), 1)
+                    local s = easing.d(progress)
+                    comp.velocity = Vec2(dir.x * s * speed, dir.y * s * speed)
+                end,
+            },
+            animOpts
+        )
+    end
+end
+
+---@param x number
+---@param y number
+---@param count integer
+---@param seconds number
+---@param radius number
+---@param opts table?
+function particle.spawnRing(x, y, count, seconds, radius, opts)
+    opts = opts or {}
+    local easing = Easing[opts.easing or "cubic"]
+    local colorSet = opts.colors or { util.getColor("WHITE") }
+    local space = opts.space or "screen"
+    seconds = applyDurationVariance(seconds, opts.durationVariance or 0.2)
+
+
+    for i = 1, count do
+        local angle = (i / count) * (2 * math.pi)
+        local dir   = Vec2(math.cos(angle), math.sin(angle))
+        local startColor = colorSet[math.random(1, #colorSet)]
+        local endColor = opts.endColor or startColor
+
+        particle.CreateParticle(
+            Vec2(x + dir.x * radius, y + dir.y * radius),
+            Vec2(opts.size or 8, opts.size or 8),
+            {
+                renderType = opts.renderType or particle.ParticleRenderType.CIRCLE_FILLED,
+                lifespan = seconds,
+                startColor = startColor,
+                endColor = endColor,
+                space = space,
+                z = opts.z or 0,
+                onUpdateCallback = function(comp, dt)
+                    local age = comp.age or 0
+                    local life = comp.lifespan or seconds
+                    local progress = math.min(math.max(age / life, 0), 1)
+                    local eased = easing.f(progress)
+                    local currentRadius = radius * (1 + (opts.expandFactor or 0.5) * eased)
+                    comp.velocity = Vec2(dir.x * currentRadius / life, dir.y * currentRadius / life)
+                end
+            }
+        )
+    end
+end
+
+
+---@param x number
+---@param y number
+---@param w number
+---@param h number
+---@param count integer
+---@param seconds number
+---@param opts table?
+function particle.spawnRectAreaParticles(x, y, w, h, count, seconds, opts)
+    opts = opts or {}
+    local easing = Easing[opts.easing or "linear"]
+    local colorSet = opts.colors or { util.getColor("WHITE") }
+
+    local minSpeed = opts.minSpeed or 50
+    local maxSpeed = opts.maxSpeed or 200
+    local minScale = opts.minScale or 4
+    local maxScale = opts.maxScale or 10
+    local angleSpread = math.rad(opts.angleSpread or 360)
+    local baseAngle = math.rad(opts.baseAngle or 0)
+    local renderType = opts.renderType or particle.ParticleRenderType.CIRCLE_FILLED
+    local space = opts.space or "screen"
+    local z = opts.z or 0
+    seconds = applyDurationVariance(seconds, opts.durationVariance or 0.2)
+
+
+    for i = 1, count do
+        -- random point inside the rectangle
+        local px = x + (math.random() - 0.5) * w
+        local py = y + (math.random() - 0.5) * h
+
+        -- random velocity direction
+        local angle = baseAngle + (math.random() - 0.5) * angleSpread
+        local dir   = Vec2(math.cos(angle), math.sin(angle))
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+
+        local startColor = colorSet[math.random(1, #colorSet)]
+        local endColor   = opts.endColor or startColor
+
+        particle.CreateParticle(
+            Vec2(px, py),
+            Vec2(minScale, minScale),
+            {
+                renderType = renderType,
+                lifespan = seconds,
+                startColor = startColor,
+                endColor = endColor,
+                space = space,
+                z = z,
+                onUpdateCallback = function(comp, dt)
+                    local age = comp.age or 0
+                    local life = comp.lifespan or seconds
+                    local progress = math.min(math.max(age / life, 0), 1)
+                    local eased = easing.d(progress)
+                    comp.velocity = Vec2(dir.x * speed * eased, dir.y * speed * eased)
+                end
+            }
+        )
+    end
+end
+
+
+---@param origin Vector2
+---@param count integer
+---@param seconds number
+---@param opts table?
+function particle.spawnDirectionalCone(origin, count, seconds, opts)
+    opts = opts or {}
+    local easing = Easing[opts.easing or "quad"]
+    local direction = opts.direction or Vec2(0, -1)  -- default: upward
+    local spread = math.rad(opts.spread or 30)
+    local colorSet = opts.colors or { util.getColor("WHITE") }
+    local minSpeed = opts.minSpeed or 100
+    local maxSpeed = opts.maxSpeed or 300
+    local minScale = opts.minScale or 3
+    local maxScale = opts.maxScale or 8
+    local gravity = opts.gravity or 0
+    local renderType = opts.renderType or particle.ParticleRenderType.RECTANGLE_FILLED
+    local space = opts.space or "screen"
+    local z = opts.z or 0
+
+    -- normalize base direction
+    local dirLen = math.sqrt(direction.x^2 + direction.y^2)
+    local baseDir = Vec2(direction.x / dirLen, direction.y / dirLen)
+
+    for i = 1, count do
+        local angleOffset = (math.random() - 0.5) * spread
+        local cosA, sinA = math.cos(angleOffset), math.sin(angleOffset)
+        local dir = Vec2(baseDir.x * cosA - baseDir.y * sinA, baseDir.x * sinA + baseDir.y * cosA)
+        local speed = math.random() * (maxSpeed - minSpeed) + minSpeed
+        local startColor = colorSet[math.random(1, #colorSet)]
+        local endColor = opts.endColor or startColor
+
+        particle.CreateParticle(
+            Vec2(origin.x, origin.y),
+            Vec2(minScale, minScale),
+            {
+                renderType = renderType,
+                lifespan = seconds,
+                startColor = startColor,
+                endColor = endColor,
+                space = space,
+                z = z,
+                gravity = gravity,
+                onUpdateCallback = function(comp, dt)
+                    local age = comp.age or 0
+                    local life = comp.lifespan or seconds
+                    local progress = math.min(math.max(age / life, 0), 1)
+                    local eased = easing.d(progress)
+                    comp.velocity = Vec2(dir.x * speed * eased, dir.y * speed * eased)
+                    if gravity ~= 0 then
+                        comp.velocity.y = comp.velocity.y + gravity * dt
+                    end
+                end
+            }
+        )
+    end
+end
+
+
+---@param x number
+---@param y number
+---@param count integer
+---@param seconds number
+---@param opts table?
+function particle.spawnFountain(x, y, count, seconds, opts)
+    opts = opts or {}
+    opts.direction = opts.direction or Vec2(0, -1)
+    opts.spread = opts.spread or 45
+    opts.gravity = opts.gravity or 120
+    opts.minSpeed = opts.minSpeed or 80
+    opts.maxSpeed = opts.maxSpeed or 160
+    opts.easing = opts.easing or "cubic"
+    opts.colors = opts.colors or {
+        util.getColor("WHITE"),
+        util.getColor("GRAY"),
+        util.getColor("LIGHTGRAY")
+    }
+    particle.spawnDirectionalCone(Vec2(x, y), count, seconds, opts)
+end
+
+
+---@param x number
+---@param y number
+---@param count integer
+---@param seconds number
+---@param opts table?
+function particle.spawnExplosion(x, y, count, seconds, opts)
+    opts = opts or {}
+    local half = math.floor(count * 0.5)
+    seconds = applyDurationVariance(seconds, opts.durationVariance or 0.2)
+
+
+    particle.spawnRadialParticles(x, y, half, seconds * 0.8, {
+        easing = opts.easing or "cubic",
+        colors = opts.colors or { util.getColor("YELLOW"), util.getColor("ORANGE"), util.getColor("RED") },
+        minSpeed = 200, maxSpeed = 500, renderType = particle.ParticleRenderType.CIRCLE_FILLED,
+        minScale = 6, maxScale = 12, space = opts.space or "screen"
+    })
+
+    particle.spawnDirectionalCone(Vec2(x, y), count - half, seconds, {
+        easing = "quad",
+        direction = Vec2(0, -1),
+        spread = 90,
+        minSpeed = 100, maxSpeed = 250,
+        gravity = 100,
+        colors = opts.colors or { util.getColor("ORANGE"), util.getColor("YELLOW") },
+        renderType = particle.ParticleRenderType.RECTANGLE_FILLED
+    })
+end
+
+
+-- shorthand
+local Col = util.getColor
+local Vec2 = Vec2
+
+-- Reusable palette
+local rainbow = {
+    Col("RED"), Col("ORANGE"), Col("YELLOW"), Col("GREEN"),
+    Col("CYAN"), Col("BLUE"), Col("PURPLE"), Col("WHITE")
+}
+
+-- Example 1: Simple 360° circular burst
+function TestCircularBurst()
+    particle.spawnRadialParticles(400, 400, 40, 2.0, {
+        easing = "cubic",
+        minSpeed = 120, maxSpeed = 400,
+        minScale = 6, maxScale = 12,
+        colors = rainbow,
+        rotationSpeed = 180,
+        space = "world"
+    })
+end
+
+-- Example 2: Directional fan (0–90°)
+function TestFan()
+    particle.spawnRadialParticles(400, 400, 30, 2.5, {
+        easing = "cubic",
+        startAngle = 0,
+        endAngle = 90,
+        minSpeed = 200,
+        maxSpeed = 400,
+        minScale = 4, maxScale = 8,
+        colors = { Col("WHITE"), Col("LIGHTGRAY") },
+        space = "screen"
+    })
+end
+
+-- Example 3: Image burst with animated sprites
+function TestImageBurst()
+    particle.spawnImageBurst(400, 400, 12, 1.5, "idle_animation", {
+        easing = "cubic",
+        minSpeed = 200, maxSpeed = 300,
+        size = 20,
+        loop = false,
+        startColor = Col("YELLOW"),
+        endColor = Col("RED")
+    })
+end
+
+-- Example 4: Expanding ring
+function TestRing()
+    particle.spawnRing(400, 400, 60, 3.0, 40, {
+        easing = "cubic",
+        colors = rainbow,
+        renderType = particle.ParticleRenderType.CIRCLE_LINE,
+        expandFactor = 1.0
+    })
+end
+
+-- Example 5: Rectangle area rain effect
+function TestRectArea()
+    particle.spawnRectAreaParticles(400, 300, 600, 400, 80, 2.0, {
+        easing = "linear",
+        minSpeed = 150,
+        maxSpeed = 300,
+        baseAngle = 270, -- downward
+        angleSpread = 15,
+        renderType = particle.ParticleRenderType.RECTANGLE_FILLED,
+        colors = { Col("BLUE"), Col("SKYBLUE") }
+    })
+end
+
+-- Example 6: Cone spray (smoke or steam)
+function TestCone()
+    particle.spawnDirectionalCone(Vec2(400, 500), 30, 3.0, {
+        direction = Vec2(0, -1),
+        spread = 40,
+        gravity = 60,
+        minSpeed = 120,
+        maxSpeed = 250,
+        colors = { Col("LIGHTGRAY"), Col("GRAY"), Col("WHITE") },
+        easing = "cubic"
+    })
+end
+
+-- Example 7: Fountain (continuous look)
+function TestFountain()
+    particle.spawnFountain(400, 500, 40, 3.0, {
+        colors = { Col("WHITE"), Col("LIGHTGRAY"), Col("DARKGRAY") }
+    })
+end
+
+-- Example 8: Explosion (mixed types)
+function TestExplosion()
+    particle.spawnExplosion(400, 400, 50, 2.0, {
+        colors = { Col("YELLOW"), Col("ORANGE"), Col("RED") },
+        space = "screen"
+    })
+end
+
 
 -- Wraps v into the interval [−size, limit]
 function wrap(v, size, limit)

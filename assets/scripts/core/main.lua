@@ -413,6 +413,11 @@ function changeGameState(newState)
     end
     globals.currentGameState = newState -- Update the current game state
 end
+
+
+
+
+
   
 -- Main function to initialize the game. Called at the start of the game.
 function main.init()
@@ -429,7 +434,7 @@ function main.init()
     }
     
     -- input binding test
-    -- input.bind("do_something", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
+    input.bind("do_something", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Pressed", context="gameplay" })
     -- input.bind("do_something_else", { device="keyboard", key=KeyboardKey.KEY_SPACE, trigger="Released", context="gameplay" })
     -- input.set_context("gameplay") -- set the input context to gameplay
     input.bind("mouse_click", { device="mouse", key=MouseButton.BUTTON_LEFT, trigger="Pressed", context="gameplay" })
@@ -439,31 +444,42 @@ function main.init()
     
     -- timer.every(0.16, function()
         
-    --     if input.action_pressed("do_something") then
-    --         log_debug("Space key pressed!") -- Debug message to indicate the space key was pressed
-    --     end
-    --     if input.action_released("do_something") then
-    --         log_debug("Space key released!") -- Debug message to indicate the space key was released
-    --     end
+        -- if input.action_pressed("do_something") then
+        --     log_debug("Space key pressed!") -- Debug message to indicate the space key was pressed
+        -- end
+        -- if input.action_released("do_something") then
+        --     log_debug("Space key released!") -- Debug message to indicate the space key was released
+        -- end
     --     if input.action_down("do_something") then
     --         log_debug("Space key down!") -- Debug message to indicate the space key is being held down
             
     --         local mouseT           = component_cache.get(globals.cursor(), Transform)
             
+            
+    --         -- Try one at a time to see effects clearly
+    --         -- TestCircularBurst()
+    --         -- TestFan()
+    --         -- TestImageBurst()
+    --         -- TestRing()
+    --         -- TestRectArea()
+    --         -- TestCone()
+    --         -- TestFountain()
+    --         TestExplosion()
+            
     --         -- spawnGrowingCircleParticle(mouseT.visualX, mouseT.visualY, 100, 100, 0.2)
             
-    --         spawnCircularBurstParticles(
-    --             mouseT.visualX, 
-    --             mouseT.visualY, 
-    --             5, -- count
-    --             0.5, -- seconds
-    --             util.getColor("blue"), -- start color
-    --             util.getColor("purple"), -- end color
-    --             "outCubic", -- from util.easing
-    --             "screen" -- screen space
-    --         )
+    --         -- spawnCircularBurstParticles(
+    --         --     mouseT.visualX, 
+    --         --     mouseT.visualY, 
+    --         --     5, -- count
+    --         --     0.5, -- seconds
+    --         --     util.getColor("blue"), -- start color
+    --         --     util.getColor("purple"), -- end color
+    --         --     "outCubic", -- from util.easing
+    --         --     "screen" -- screen space
+    --         -- )
             
-    --         slowTime(5, 0.2) -- slow time to 50% for 0.2 seconds
+    --         -- slowTime(5, 0.2) -- slow time to 50% for 0.2 seconds
     --     end
         
     -- end)

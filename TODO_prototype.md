@@ -44,6 +44,8 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- creation of tooltips for every type of card, caching away, then showing on hover.
+- particle variant to allow random range of duration. 10% deviation as default. also. please make it so i can use a still iamge, not just animation.
 - ui def https://chatgpt.com/share/690364f4-fccc-800a-ac2b-b0b54fc6a212
 - particle ease of use update: https://chatgpt.com/share/690364cc-e5e8-800a-8677-36d2f1f6f53f
 - test that transform lerping to body is working.

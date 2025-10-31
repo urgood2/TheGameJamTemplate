@@ -1,255 +1,521 @@
-# UI Binding Syntax Sugar Reference
+# UI DSL + Binding Dual Reference
 
-This document provides an easy-to-read reference guide for using the **UI binding layer** and its **syntax sugar** wrappers in Lua. It covers how to use the builder-style APIs (`UIConfigBuilder`, `UIElementTemplateNodeBuilder`) and higher-level sugar like the DSL (`dsl.*`) to define and construct UI layouts, components, and behaviors.
-
----
-
-## 🧱 1. Basic Concepts
-
-Each UI element in this system is made of **three main parts**:
-
-| Part    | C++ Type             | Description                                              |
-| ------- | -------------------- | -------------------------------------------------------- |
-| Element | `UIElementComponent` | The base type that identifies a UI entity.               |
-| Config  | `UIConfig`           | The settings controlling visuals, layout, and callbacks. |
-| State   | `UIState`            | Runtime state like text width, focus, click timers.      |
-
-### Common Namespaces
-
-| Namespace                      | Description                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `ui.element`                   | Functions that operate on a single UI element (draw, update, hover, click). |
-| `ui.box`                       | Functions that handle groups or trees of UI elements.                       |
-| `UIConfigBuilder`              | Fluent syntax for creating `UIConfig` tables programmatically.              |
-| `UIElementTemplateNodeBuilder` | Fluent syntax for building UI tree definitions (hierarchical layouts).      |
-| `dsl`                          | Declarative Lua syntax sugar for rapid UI composition.                      |
+Comprehensive overview of all Lua bindings relevant to UI construction, and their equivalent usage in the new declarative DSL (`dsl.*`).
 
 ---
 
-## ⚙️ 2. UIConfigBuilder Syntax
+## 1️⃣ UIConfigBuilder
 
-### 📄 Purpose
+The `UIConfigBuilder` constructs `UIConfig` components that define a UI element’s behavior, appearance, and logic.
 
-`UIConfigBuilder` constructs complex `UIConfig` objects using a chainable API, returning a completed config via `.build()`.
-
-### 🧩 Syntax Example
+### Binding
 
 ```lua
 local cfg = UIConfigBuilder.create()
     :addId("shop_button")
-    :addUiType(UITypeEnum.HORIZONTAL_CONTAINER)
-    :addColor("keppel")
+    :addColor("green")
     :addAlign(AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER)
-    :addMinWidth(200)
-    :addMinHeight(60)
-    :addButtonCallback(function()
-        playSoundEffect("effects", "button-click")
-    end)
-    :addTooltip("Open the shop")
+    :addButtonCallback(function() log_debug("Clicked!") end)
     :build()
 ```
 
-### 🔍 Key Builder Methods
+### DSL Equivalent
 
-| Method                                            | Description                                                     |                            |
-| ------------------------------------------------- | --------------------------------------------------------------- | -------------------------- |
-| `:addId(string)`                                  | Sets the UI element ID.                                         |                            |
-| `:addUiType(UITypeEnum)`                          | Sets the element type (e.g., TEXT, ROOT, HORIZONTAL_CONTAINER). |                            |
-| `:addColor(string                                 | Color)`                                                         | Sets the background color. |
-| `:addOutlineColor(string)`                        | Sets outline color.                                             |                            |
-| `:addAlign(flags)`                                | Sets alignment bitmask.                                         |                            |
-| `:addWidth(number)` / `:addHeight(number)`        | Sets dimensions.                                                |                            |
-| `:addTooltip(string)`                             | Simple hover text tooltip.                                      |                            |
-| `:addButtonCallback(fn)`                          | Called when button is clicked.                                  |                            |
-| `:addInitFunc(fn)` / `:addUpdateFunc(fn)`         | Lifecycle hooks for initialization or updates.                  |                            |
-| `:addProgressBar(true)`                           | Converts element to a progress bar.                             |                            |
-| `:addDynamicMotion(true)`                         | Enables motion interpolation / springy feel.                    |                            |
-| `:addShadow(Vector2)` / `:addShadowColor(string)` | Adds shadow offset and color.                                   |                            |
-| `:addNoFill(true)`                                | Removes fill (outline-only drawing).                            |                            |
-| `:addStylingType(UIStylingType)`                  | Switches between RoundedRect or NinePatch border.               |                            |
-| `:build()`                                        | Finalizes and returns a `UIConfig` instance.                    |                            |
+```lua
+dsl.hbox{
+    config = {
+        id = "shop_button",
+        color = "green",
+        align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+        buttonCallback = function()
+            log_debug("Clicked!")
+        end,
+    },
+    children = {
+        dsl.text("Shop", { color = "white" })
+    }
+}
+```
+
+**Notes:**
+
+* DSL table keys map directly to `UIConfigBuilder:addX()` functions via `ui.definitions.def`.
+* `dsl.anim`, `dsl.text`, etc. automatically create nodes with corresponding `UITypeEnum` and `UIConfig`.
 
 ---
 
-## 🧩 3. UIElementTemplateNodeBuilder
+## 2️⃣ UIElementTemplateNodeBuilder
 
-### 📄 Purpose
+Creates nested element definitions used by the DSL.
 
-Used to build UI **hierarchies** (templates). Each node has a `type`, a `config`, and optional `children`.
-
-### 🧩 Example
+### Binding
 
 ```lua
 local node = UIElementTemplateNodeBuilder.create()
-    :addType(UITypeEnum.VERTICAL_CONTAINER)
+    :addType(UITypeEnum.HORIZONTAL_CONTAINER)
     :addConfig(cfg)
-    :addChildren({
-        UIElementTemplateNodeBuilder.create()
-            :addType(UITypeEnum.TEXT)
-            :addConfig(UIConfigBuilder.create()
-                :addText("Hello World!")
-                :addColor("white")
-                :build())
-            :build(),
-    })
+    :addChild(childNode)
     :build()
 ```
 
-### 🔍 Methods
-
-| Method                             | Description                        |
-| ---------------------------------- | ---------------------------------- |
-| `:create()`                        | Starts a new node.                 |
-| `:addType(UITypeEnum)`             | Sets node type.                    |
-| `:addConfig(UIConfig)`             | Assigns configuration.             |
-| `:addChild(UIElementTemplateNode)` | Adds one child node.               |
-| `:addChildren({nodes})`            | Adds multiple children.            |
-| `:build()`                         | Finalizes the node and returns it. |
-
----
-
-## 🧰 4. ui.element Namespace
-
-| Function                                                                              | Description                            |
-| ------------------------------------------------------------------------------------- | -------------------------------------- |
-| `ui.element.Initialize(registry, parent, uiBox, type, config)`                        | Creates a new UI element.              |
-| `ui.element.Update(registry, entity, dt, config, transform, element, node)`           | Updates element per frame.             |
-| `ui.element.DrawSelf(layer, entity, element, config, state, node, transform, zIndex)` | Draws element.                         |
-| `ui.element.Click(registry, entity)`                                                  | Simulates a click event.               |
-| `ui.element.Release(registry, entity, draggedEntity)`                                 | Handles mouse release.                 |
-| `ui.element.ApplyHover(registry, entity)` / `StopHover()`                             | Triggers hover state.                  |
-| `ui.element.JuiceUp(registry, entity, amount, rotation)`                              | Applies dynamic motion.                |
-| `ui.element.Remove(registry, entity)`                                                 | Deletes element and children.          |
-| `ui.element.DebugPrintTree(registry, root)`                                           | Prints the UI hierarchy for debugging. |
-
----
-
-## 🧩 5. ui.box Namespace
-
-Handles *whole UI trees* — alignment, placement, resizing, and drawing.
-
-### 🔍 Common Operations
-
-| Function                                                         | Purpose                                 |
-| ---------------------------------------------------------------- | --------------------------------------- |
-| `ui.box.Initialize({x=0,y=0}, templateNode)`                     | Creates a full UI tree from a template. |
-| `ui.box.Recalculate(registry, uiBoxEntity)`                      | Forces a layout recalculation.          |
-| `ui.box.Move(registry, uiBoxEntity, dt)`                         | Updates movement/springs.               |
-| `ui.box.AddChild(registry, uiBox, templateNode, parent)`         | Adds new child to UI box.               |
-| `ui.box.Remove(registry, uiBox)`                                 | Removes entire UI box tree.             |
-| `ui.box.RenewAlignment(registry, entity)`                        | Refreshes alignment.                    |
-| `ui.box.CalcTreeSizes(registry, root, rect, forceRecalc, scale)` | Recalculates element sizes.             |
-| `ui.box.GetUIEByID(registry, node, id)`                          | Finds UI element by ID.                 |
-| `ui.box.DebugPrint(registry, root)`                              | Prints structure for debugging.         |
-
----
-
-## 🧩 6. Syntax Sugar DSL Layer (Recommended)
-
-The DSL (`dsl.lua`) provides clean shorthand for creating layouts and templates.
-
-### ✨ Example
+### DSL Equivalent
 
 ```lua
-local dsl = require("ui.ui_dsl")
-
-local root = dsl.root{
-    config = {
-        color = "keppel",
-        align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
-    },
+dsl.hbox{
+    config = { color = "dusty_rose" },
     children = {
-        dsl.text("Welcome!", { color = "white", fontSize = 32 }),
-        dsl.hbox{
-            config = { color = "taupe_warm", padding = 4 },
-            children = {
-                dsl.text("Play", { color = "blackberry" }),
-                dsl.text("Quit", { color = "blackberry" }),
-            }
-        }
+        dsl.text("Hello"),
+        dsl.text("World")
     }
 }
+```
 
-local box = dsl.spawn({x=100,y=100}, root, "HUD", 0, {
-    onBoxResize = function(registry, eid, w, h)
-        log_debug("Resized to:", w, h)
-    end
+**Notes:**
+
+* `ui.definitions.def()` converts DSL tables into these builder calls.
+* `children` tables recursively produce `addChild` calls.
+
+---
+
+## 3️⃣ ui.element — Element-level Operations
+
+### Initialize
+
+```lua
+ui.element.Initialize(registry, parent, uiBox, type, config)
+```
+
+**DSL Equivalent:**
+Handled automatically by `dsl.root` / `dsl.hbox` / `dsl.vbox` when calling `ui.definitions.def`.
+
+---
+
+### ApplyAlignment
+
+```lua
+ui.element.ApplyAlignment(registry, entity, x, y)
+```
+
+**DSL Equivalent:**
+
+```lua
+ui.box.RenewAlignment(registry, myEntity)
+```
+
+(Automatically called when resizing or via `dsl.dynamicText(..., {autoAlign = true})`.)
+
+---
+
+### Click / Release / Hover
+
+```lua
+ui.element.Click(registry, entity)
+ui.element.Release(registry, entity)
+ui.element.ApplyHover(registry, entity)
+ui.element.StopHover(registry, entity)
+```
+
+**DSL Equivalent:**
+
+```lua
+dsl.text("Buy", {
+    onClick = function()
+        playSoundEffect("effects", "button-click")
+    end,
+    hover = { title = "Shop", body = "Opens the store" }
 })
 ```
 
-### DSL Constructors
-
-| DSL Function                                                      | Purpose                                         |
-| ----------------------------------------------------------------- | ----------------------------------------------- |
-| `dsl.root{config, children}`                                      | Creates the root UI container.                  |
-| `dsl.hbox{config, children}`                                      | Creates a horizontal layout container.          |
-| `dsl.vbox{config, children}`                                      | Creates a vertical layout container.            |
-| `dsl.text(text, opts)`                                            | Creates a text node.                            |
-| `dsl.dynamicText(fn, fontSize, effect, opts)`                     | Dynamic updating text.                          |
-| `dsl.anim(id, { sprite = true, w = 40, h = 40, shadow = false })` | Animation or sprite with size + shadow toggle.  |
-| `dsl.grid(rows, cols, fn)`                                        | Automatically creates a grid of child elements. |
-| `dsl.applyHoverRecursive(entity)`                                 | Recursively applies hover definitions.          |
-| `dsl.spawn(pos, def, layer, z, opts)`                             | Instantiates and places a full UI tree.         |
+**Notes:** Hover is automatically applied by `dsl.applyHoverRecursive`.
 
 ---
 
-## 💡 7. Common Patterns
-
-### 🧭 Declarative Layout Example
+### DrawSelf / Update
 
 ```lua
-local button = dsl.hbox{
-    config = {
-        color = "green",
-        id = "shop_button",
-        align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
-        hover = { title = "Shop", body = "Open store" },
-        onClick = function() playSoundEffect("effects", "button-click") end,
-    },
-    children = {
-        dsl.anim("icon_coin.png", { sprite = true, w = 40, h = 40, shadow = false }),
-        dsl.text("Shop", { color = "blackberry" }),
-    }
-}
+ui.element.DrawSelf(layerPtr, entity, uie, cfg, state, node, transform)
+ui.element.Update(registry, entity, dt, cfg, transform, uie, node)
 ```
 
-### 🧩 Root + Grid Example
+**DSL Equivalent:** Internal — handled when rendering and layout updates occur.
+
+---
+
+### JuiceUp
 
 ```lua
-local grid = dsl.grid(3, 3, function(r, c)
-    return dsl.anim("icon_" .. tostring(r * c) .. ".png", { sprite = true, shadow = false })
+ui.element.JuiceUp(registry, entity, amount, rot_amt)
+```
+
+**DSL Equivalent:**
+
+```lua
+ui.element.JuiceUp(registry, entity, 1.0, 0.5)
+```
+
+Can be triggered from callbacks (e.g., after button press).
+
+---
+
+## 4️⃣ ui.box — Container / Layout Operations
+
+### Initialize
+
+```lua
+ui.box.Initialize({x=0, y=0}, defNode)
+```
+
+**DSL Equivalent:**
+
+```lua
+dsl.spawn({x=0, y=0}, dsl.root{
+    config = { color = "blackberry" },
+    children = { dsl.vbox{ children = { dsl.text("Title") } } }
+})
+```
+
+---
+
+### BuildUIElementTree
+
+```lua
+ui.box.BuildUIElementTree(registry, boxEntity, defNode, parentEntity)
+```
+
+**DSL Equivalent:**
+Automatically used when calling `ui.box.Initialize()` inside `dsl.spawn`.
+
+---
+
+### AssignLayerOrderComponents
+
+```lua
+ui.box.AssignLayerOrderComponents(registry, box)
+```
+
+**DSL Equivalent:**
+Handled internally by `dsl.spawn(pos, defNode, layer, z)`.
+
+---
+
+### Recalculate
+
+```lua
+ui.box.Recalculate(registry, boxEntity)
+```
+
+**DSL Equivalent:**
+
+```lua
+ui.box.Recalculate(registry, myUIBox)
+```
+
+(You might call this manually if layout changes dynamically.)
+
+---
+
+### RenewAlignment
+
+```lua
+ui.box.RenewAlignment(registry, entity)
+```
+
+**DSL Equivalent:**
+Automatically used by `dsl.dynamicText(..., {autoAlign = true})`.
+
+---
+
+### AddChild / Remove / RemoveGroup
+
+```lua
+ui.box.AddChild(registry, uiBox, node, parent)
+ui.box.Remove(registry, entity)
+ui.box.RemoveGroup(registry, entity, group)
+```
+
+**DSL Equivalent:**
+Automatically managed via nested `children` arrays.
+
+Manual example:
+
+```lua
+ui.box.RemoveGroup(registry, myUIRoot, "inventory")
+```
+
+---
+
+### DebugPrint
+
+```lua
+ui.box.DebugPrint(registry, boxEntity)
+```
+
+**DSL Equivalent:**
+
+```lua
+print(ui.box.DebugPrint(registry, myUIBox))
+```
+
+Use to inspect generated trees from DSL definitions.
+
+---
+
+### GetUIEByID
+
+```lua
+ui.box.GetUIEByID(registry, boxEntity, id)
+```
+
+**DSL Equivalent:**
+
+```lua
+local button = ui.box.GetUIEByID(registry, myUIBox, "shop_button")
+```
+
+Retrieves entities by ID assigned in `config.id`.
+
+---
+
+### AssignTreeOrderComponents / AssignLayerOrderComponents
+
+```lua
+ui.box.AssignTreeOrderComponents(registry, rootUIElement)
+ui.box.AssignLayerOrderComponents(registry, boxEntity)
+```
+
+**DSL Equivalent:**
+Handled internally by `dsl.spawn()` for new boxes.
+
+---
+
+### Move / Drag
+
+```lua
+ui.box.Move(registry, boxEntity, dt)
+ui.box.Drag(registry, boxEntity, offset, dt)
+```
+
+**DSL Equivalent:**
+Can be manually triggered for animated repositioning.
+
+---
+
+## 5️⃣ Extended DSL Convenience Wrappers
+
+### dsl.hbox / dsl.vbox / dsl.root
+
+Simplified constructors for `UITypeEnum.HORIZONTAL_CONTAINER`, `VERTICAL_CONTAINER`, and `ROOT`.
+
+### dsl.text
+
+Creates text elements (`UITypeEnum.TEXT`) with optional click, hover, or tooltip behavior.
+
+### dsl.anim
+
+Wraps `animation_system.createAnimatedObjectWithTransform` with width, height, and shadow toggles.
+
+### dsl.spawn
+
+Creates a new UIBox root and populates it from a definition.
+Supports:
+
+```lua
+dsl.spawn({x=0,y=0}, defNode, "MainLayer", 2, { onBoxResize = function() ... end })
+```
+
+### dsl.grid
+
+Generates uniform grid layouts:
+
+```lua
+local icons = dsl.grid(3,4,function(r,c)
+    return dsl.anim("icon_"..(r*c), {w=48,h=48})
 end)
-
-dsl.root{
-    config = { color = "blue", minWidth = 300, minHeight = 400 },
-    children = grid
-}
 ```
 
----
+### dsl.applyHoverRecursive
 
-## 🔍 8. Quick Lookup Table
-
-| Category      | Key Types / Common Options                                                             |
-| ------------- | -------------------------------------------------------------------------------------- |
-| **Visuals**   | `color`, `outlineColor`, `shadowColor`, `emboss`, `stylingType`, `nPatchSourceTexture` |
-| **Layout**    | `align`, `padding`, `width`, `minWidth`, `maxHeight`, `extend_up`                      |
-| **Behavior**  | `buttonCallback`, `hover`, `tooltip`, `focusArgs`, `dynamicMotion`                     |
-| **Hierarchy** | `parent`, `master`, `group`, `groupParent`                                             |
-| **Text**      | `text`, `language`, `verticalText`, `textGetter`                                       |
-| **Popups**    | `hPopup`, `dPopup`, `hPopupConfig`, `dPopupConfig`                                     |
+Traverses entities and applies hover handlers based on config.
 
 ---
 
-## 🧠 9. Best Practices
+## ✅ Summary
 
-* Prefer **DSL syntax** (`dsl.*`) for in-game UIs — it’s concise and readable.
-* Use **UIConfigBuilder** only when you need procedural or conditional UI creation.
-* Always use `util.getColor("colorName")` or pass strings for auto-conversion.
-* Define layout widths and heights to prevent invisible backgrounds.
-* Disable shadows for performance-heavy animation nodes: `shadow = false`.
-* Use `dsl.applyHoverRecursive()` to ensure tooltips and hover are propagated.
+| Layer                        | Purpose                            | Accessed Via DSL           |
+| ---------------------------- | ---------------------------------- | -------------------------- |
+| UIConfigBuilder              | Element config properties          | `config = { ... }`         |
+| UIElementTemplateNodeBuilder | Node structure & children          | `type` / `children` tables |
+| ui.element                   | Element logic (hover, click, draw) | automatic / callbacks      |
+| ui.box                       | Layout management & spawning       | `dsl.spawn`, auto-called   |
+
+This document provides 1:1 correspondence between your DSL syntax and C++ binding calls for rapid, data-driven UI construction.
 
 ---
 
-**End of Reference**
+## 🧩 UIConfigBuilder addX() to DSL Mapping (Full Coverage)
+
+Comprehensive mapping between all `UIConfigBuilder:addX()` bindings and their equivalent DSL `config = { ... }` usage.
+
+### 🔹 General / Identity
+
+| Binding                         | DSL Equivalent                  | Notes                           |
+| ------------------------------- | ------------------------------- | ------------------------------- |
+| `addId(id: string)`             | `id = "my_button"`              | Unique element ID.              |
+| `addUiType(type: UITypeEnum)`   | `type = "HORIZONTAL_CONTAINER"` | Usually set by `dsl.hbox`, etc. |
+| `addDrawLayer(layer: string)`   | `drawLayer = "MainLayer"`       | Render layer name.              |
+| `addGroup(group: string)`       | `group = "inventory"`           | Focus or grouping label.        |
+| `addInstanceType(type: string)` | `instanceType = "ButtonType"`   | Categorization for reuse.       |
+| `addTag(tag: string)`           | `tag = "menu"`                  | Arbitrary tagging.              |
+
+---
+
+### 🔹 Transform / Alignment / Dimensions
+
+| Binding                                          | DSL Equivalent                           | Notes                          |                          |
+| ------------------------------------------------ | ---------------------------------------- | ------------------------------ | ------------------------ |
+| `addAlign(flags: integer)`                       | `align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER` | Element alignment flags. |
+| `addOffset(offset: Vector2)`                     | `offset = {x=5,y=10}`                    | Pixel offset from parent.      |                          |
+| `addScale(scale: number)`                        | `scale = 1.25`                           | Scaling multiplier.            |                          |
+| `addPadding(padding: number)`                    | `padding = 6`                            | Inner padding (px).            |                          |
+| `addWidth(w: number)`                            | `width = 300`                            | Fixed width.                   |                          |
+| `addHeight(h: number)`                           | `height = 120`                           | Fixed height.                  |                          |
+| `addMinWidth(w: number)`                         | `minWidth = 200`                         | Minimum width constraint.      |                          |
+| `addMinHeight(h: number)`                        | `minHeight = 120`                        | Minimum height constraint.     |                          |
+| `addMaxWidth(w: number)`                         | `maxWidth = 400`                         | Maximum width constraint.      |                          |
+| `addMaxHeight(h: number)`                        | `maxHeight = 300`                        | Maximum height constraint.     |                          |
+| `addTextSpacing(spacing: number)`                | `textSpacing = 2`                        | Text character spacing.        |                          |
+| `addRotation(angle: number)`                     | `rotation = 45`                          | Rotation in degrees.           |                          |
+| `addResolution(vec: Vector2)`                    | `resolution = {x=1920,y=1080}`           | Rendering resolution scaling.  |                          |
+| `addExtendUp(bool)`                              | `extendUp = true`                        | Extend vertically upward.      |                          |
+| `addMid(bool)`                                   | `mid = true`                             | Midpoint alignment flag.       |                          |
+| `addScaleBond(bond: InheritedPropertiesSync)`    | `scaleBond = someBond`                   | Sync scale between elements.   |                          |
+| `addLocationBond(bond: InheritedPropertiesSync)` | `locationBond = someBond`                | Sync location.                 |                          |
+| `addRotationBond(bond: InheritedPropertiesSync)` | `rotationBond = someBond`                | Sync rotation.                 |                          |
+| `addSizeBond(bond: InheritedPropertiesSync)`     | `sizeBond = someBond`                    | Sync width/height.             |                          |
+
+---
+
+### 🔹 Appearance / Visual Styling
+
+| Binding                                | DSL Equivalent                            | Notes                       |                               |
+| -------------------------------------- | ----------------------------------------- | --------------------------- | ----------------------------- |
+| `addColor(color: Color                 | string)`                                  | `color = "keppel"`          | Fill color (string or Color). |
+| `addOutlineColor(color: Color          | string)`                                  | `outlineColor = "black"`    | Outline color.                |
+| `addOutlineThickness(value: number)`   | `outlineThickness = 2.0`                  | Outline width (px).         |                               |
+| `addShadow(offset: Vector2)`           | `shadow = {x=2,y=2}`                      | Drop shadow offset.         |                               |
+| `addShadowColor(color: Color           | string)`                                  | `shadowColor = "gray"`      | Shadow tint.                  |
+| `addStylingType(type: UIStylingType)`  | `stylingType = UIStylingType.FILLED_RECT` | Draw style.                 |                               |
+| `addNPatchInfo(info: NPatchInfo)`      | `npatchInfo = myInfo`                     | N-Patch slicing data.       |                               |
+| `addNPatchSourceTexture(path: string)` | `npatchSourceTexture = "ui/button.png"`   | Texture path.               |                               |
+| `addPixelatedRectangle(bool)`          | `pixelatedRectangle = true`               | Nearest-neighbor rectangle. |                               |
+| `addEmboss(bool)`                      | `emboss = true`                           | Beveled border visual.      |                               |
+| `addLineEmboss(bool)`                  | `lineEmboss = true`                       | Outline-only emboss.        |                               |
+| `addNoFill(bool)`                      | `noFill = true`                           | Disable rectangle fill.     |                               |
+| `addMakeMovementDynamic(bool)`         | `makeMovementDynamic = true`              | Adds fluid motion.          |                               |
+| `addStylingClass(class: string)`       | `stylingClass = "hud_button"`             | CSS-like style category.    |                               |
+
+---
+
+### 🔹 Interactivity / Collision / Input
+
+| Binding                          | DSL Equivalent                        | Notes                        |
+| -------------------------------- | ------------------------------------- | ---------------------------- |
+| `addButtonUIE(bool)`             | `buttonUIE = true`                    | Makes element clickable.     |
+| `addButtonCallback(func)`        | `buttonCallback = function() ... end` | Called on click.             |
+| `addDisableButton(bool)`         | `disableButton = true`                | Disables clicking.           |
+| `addButtonClicked(bool)`         | `buttonClicked = true`                | Initial clicked state.       |
+| `addOnePress(bool)`              | `onePress = true`                     | Single activation only.      |
+| `addButtonDelayStart(bool)`      | `buttonDelayStart = true`             | Delay before press.          |
+| `addButtonDelay(number)`         | `buttonDelay = 0.3`                   | Delay duration.              |
+| `addButtonDelayEnd(bool)`        | `buttonDelayEnd = true`               | Delay on release.            |
+| `addButtonDelayProgress(number)` | `buttonDelayProgress = 0.5`           | Current progress value.      |
+| `addButtonDistance(number)`      | `buttonDistance = 50`                 | Spacing between button sets. |
+| `addCanCollide(bool)`            | `canCollide = true`                   | Enables collision area.      |
+| `addDrag(bool)`                  | `drag = true`                         | Enables dragging.            |
+| `addDraggable(bool)`             | `draggable = true`                    | Explicit drag flag.          |
+| `addMouseWheel(bool)`            | `mouseWheel = true`                   | Enables mouse wheel input.   |
+
+---
+
+### 🔹 Behavior / Animation / State
+
+| Binding                              | DSL Equivalent               | Notes                         |
+| ------------------------------------ | ---------------------------- | ----------------------------- |
+| `addDynamicMotion(bool)`             | `dynamicMotion = true`       | Allows smooth transitions.    |
+| `addChoice(bool)`                    | `choice = true`              | Toggle behavior.              |
+| `addChosen(bool)`                    | `chosen = true`              | Currently selected.           |
+| `addChosenVert(bool)`                | `chosenVert = true`          | Vertically chosen state.      |
+| `addFocusWithObject(bool)`           | `focusWithObject = true`     | Focus follows object.         |
+| `addForceFocus(bool)`                | `forceFocus = true`          | Force focus even if disabled. |
+| `addRole(role: InheritedProperties)` | `role = roleProp`            | Assigns role reference.       |
+| `addNoRole(bool)`                    | `noRole = true`              | Removes inherited role.       |
+| `addMid(bool)`                       | `mid = true`                 | Used for centering.           |
+| `addMakeMovementDynamic(bool)`       | `makeMovementDynamic = true` | Animated repositioning.       |
+
+---
+
+### 🔹 Progress Bar Configuration
+
+| Binding                                    | DSL Equivalent                                     | Notes                         |
+| ------------------------------------------ | -------------------------------------------------- | ----------------------------- |
+| `addProgressBar(bool)`                     | `progressBar = true`                               | Enables progress bar.         |
+| `addProgressBarFetchValueLamnda(func)`     | `progressBarFetchValueLambda = function() ... end` | Getter for bar value.         |
+| `addProgressBarEmptyColor(string)`         | `progressBarEmptyColor = "gray"`                   | Empty bar color.              |
+| `addProgressBarFullColor(string)`          | `progressBarFullColor = "green"`                   | Full bar color.               |
+| `addProgressBarMaxValue(number)`           | `progressBarMaxValue = 100`                        | Max bar range.                |
+| `addProgressBarValueComponentName(string)` | `progressBarValueComponentName = "Stats"`          | Component to read value from. |
+| `addProgressBarValueFieldName(string)`     | `progressBarValueFieldName = "hp"`                 | Field name for value lookup.  |
+
+---
+
+### 🔹 Tooltip / Hover Support
+
+| Binding                       | DSL Equivalent                                         | Notes                    |
+| ----------------------------- | ------------------------------------------------------ | ------------------------ |
+| `addTooltip(string)`          | `tooltip = "Opens shop window"`                        | Simple tooltip text.     |
+| `addDetailedTooltip(Tooltip)` | `tooltip = { title = "Shop", text = "Buy items" }`     | Rich tooltip object.     |
+| `addOnDemandTooltip(func)`    | `onDemandTooltip = function() return Tooltip(...) end` | Dynamic tooltip builder. |
+| `addHover(bool)`              | `hover = true`                                         | Enables hover detection. |
+
+---
+
+### 🔹 Callbacks / Script Integration
+
+| Binding                          | DSL Equivalent                                  | Notes                          |
+| -------------------------------- | ----------------------------------------------- | ------------------------------ |
+| `addUpdateFunc(func)`            | `updateFunc = function() ... end`               | Called per-frame.              |
+| `addInitFunc(func)`              | `initFunc = function(registry, entity) ... end` | Runs on initialization.        |
+| `addInstaFunc(func)`             | `instaFunc = function() ... end`                | Executes immediately on build. |
+| `addOnUIResizeFunc(func)`        | `onUIResize = function() ... end`               | Runs on UI resize.             |
+| `addOnUIScalingResetToOne(func)` | `onUIScalingResetToOne = function() ... end`    | Resets scaling.                |
+
+---
+
+### 🔹 Popup / Focus Handling
+
+| Binding                    | DSL Equivalent                    | Notes                        |
+| -------------------------- | --------------------------------- | ---------------------------- |
+| `addHPopup(bool)`          | `hPopup = true`                   | Horizontal popup.            |
+| `addDPopup(bool)`          | `dPopup = true`                   | Downward popup.              |
+| `addHPopupConfig(config)`  | `hPopupConfig = someConfig`       | Config for horizontal popup. |
+| `addDPopupConfig(config)`  | `dPopupConfig = someConfig`       | Config for downward popup.   |
+| `addFocusArgs(FocusArgs)`  | `focusArgs = {speed=2, margin=3}` | Focus behavior data.         |
+| `addFocusWithObject(bool)` | `focusWithObject = true`          | Attach focus to object.      |
+| `addForceFocus(bool)`      | `forceFocus = true`               | Forces focus active.         |
+
+---
+
+### 🔹 Advanced / Miscellaneous
+
+| Binding                  | DSL Equivalent                | Notes                                           |
+| ------------------------ | ----------------------------- | ----------------------------------------------- |
+| `addResolution(Vector2)` | `resolution = {x=1280,y=720}` | Custom resolution override.                     |
+| `addEmboss(bool)`        | `emboss = true`               | Adds depth highlight.                           |
+| `addLineEmboss(bool)`    | `lineEmboss = true`           | Draws embossed edge.                            |
+| `addExtendUp(bool)`      | `extendUp = true`             | Extends layout upward.                          |
+| `addMid(bool)`           | `mid = true`                  | Centers vertically.                             |
+| `build()`                | *(implicit in DSL)*           | Automatically called in `ui.definitions.def()`. |
+
+---
+
+✅ **Summary:** Every `addX()` builder method can be expressed directly as a field inside a DSL `config = { ... }` table. The conversion occurs automatically through dynamic reflection logic in `makeConfigFromTable()`.  Each key is transformed to the corresponding `addX()` call, making the DSL declarative, compact, and future-proof.

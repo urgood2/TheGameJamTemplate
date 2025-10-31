@@ -320,7 +320,7 @@ namespace globals
         float fontLoadedSize = 32.f;       // the size of the font when loaded
         float fontScale = 1.0f;            // the scale of the font when rendered
         float spacing = 1.0f;              // the horizontal spacing for the font
-        Vector2 fontRenderOffset = {2, 0}; // the offset of the font when rendered, applied to ensure text is centered correctly in ui, it is multiplied by scale when applied
+        Vector2 fontRenderOffset = {2, 5}; // the offset of the font when rendered, applied to ensure text is centered correctly in ui, it is multiplied by scale when applied
         // <— store your codepoint list if you ever need it later
         std::vector<int> codepoints;
     };

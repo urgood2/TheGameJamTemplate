@@ -1961,6 +1961,49 @@ end
 -- initialize the game area for planning phase, where you combine cards and stuff.
 function initPlanningPhase()
     
+    
+    
+    -- testing ui
+    require("ui.ui_definition_helper")
+    local dsl = require("ui.ui_syntax_sugar")
+
+    -- Example: simple button
+    local shopButton = dsl.hbox{
+        config = {
+            id    = "shop_button",
+            color = "red",
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+            hover = { title = "Shop", body = "Open the item store" },
+            onClick = function()
+                playSoundEffect("effects", "button-click")
+                log_debug("Shop button clicked!")
+            end,
+        },
+        children = {
+            dsl.anim("4130-TheRoguelike_1_10_alpha_923.png", { w = 20, h = 20, isAnimation = false, shadow = false }),
+            dsl.text("Shop", { color = "blackberry" }),
+        }
+    }
+
+    local root = dsl.root{ 
+        config = {
+            color = "blank",
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+        },
+        children = { shopButton } }
+
+    -- Create box and attach resize callback
+    local box = dsl.spawn({x = 50, y = 100}, root, "HUD", 5, {
+        onBoxResize = function(registry, eid, w, h)
+            log_debug(string.format("Box resized: %d x %d", w, h))
+        end
+    })
+
+    -- Attach hovers recursively (uses orderedChildren)
+    dsl.applyHoverRecursive(box)
+
+    
+    
     -- activate planning state to draw/update planning entities
     activate_state(PLANNING_STATE)
     

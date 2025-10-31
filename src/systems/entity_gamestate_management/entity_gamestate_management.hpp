@@ -188,7 +188,7 @@ registry.view<Transform, StateTag>()
 // Registers the ActiveStates and StateTag component in Lua
 inline void exposeToLua(sol::state &lua) {
     auto &registry = globals::registry;
-    auto active_states = active_states_instance();
+    auto &active_states = active_states_instance();
     // Expose add_state_tag(entity, "name")
     lua.set_function("add_state_tag", [&registry](entt::entity e, const std::string &name) {
         if (registry.all_of<StateTag>(e)) {

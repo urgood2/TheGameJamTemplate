@@ -17,11 +17,18 @@ _G.entity_cache = cache
 local registry = _G.registry
 local is_entity_active_fn = _G.is_entity_active or function() return true end
 
--- Engine frame counter
+local frame_counter = 0
+local last_real_time = os.clock()
+
 local GetFrameCount = _G.GetFrameCount or function()
-    cache.__frame = (cache.__frame or 0) + 1
-    return cache.__frame
+    local now = os.clock()
+    if now - last_real_time > 1/120 then  -- assume max 120 fps
+        frame_counter = frame_counter + 1
+        last_real_time = now
+    end
+    return frame_counter
 end
+
 
 ------------------------------------------------------------
 -- Internal state
@@ -39,6 +46,7 @@ local function check_frame_advance()
         cache._frame = frame
         cache._valid = {}
         cache._active = {}
+        cache._state_active = {}
     end
 end
 
@@ -76,6 +84,8 @@ function cache.active(eid)
     end
 
     local ok = is_entity_active_fn(eid)
+    
+    -- log_debug("entity_cache.active - eid #" .. tostring(eid) .. " active=" .. tostring(ok))
     cache._active[eid] = ok or false
     return ok
 end
@@ -91,6 +101,7 @@ function cache.clear()
     cache._valid = {}
     cache._active = {}
     cache._frame = -1
+    cache._state_active = {}
 end
 
 --- Optional: bulk invalidate if multiple entities changed
@@ -136,6 +147,8 @@ function cache.state_active(state_name)
     if fn then
         ok = fn(state_name)
     end
+    
+    -- log_debug("entity_cache.state_active - state '" .. state_name .. "' active=" .. tostring(ok))
 
     cache._state_active[state_name] = ok or false
     return ok

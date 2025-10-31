@@ -16,6 +16,9 @@ local timer = require("core.timer")
 local component_cache = require("core.component_cache")
 local entity_cache = require("core.entity_cache")
 
+
+require("core.type_defs") -- for Node customizations
+
 --  let's make some card data
 local action_card_defs = {
     {
@@ -144,244 +147,13 @@ function createNewBoard(x, y, w, h)
     
     
 
-    -- cache globals / upvalues
-    local math_max, math_floor, math_abs = math.max, math.floor, math.abs
-    local registry_get, registry_valid = registry.get, registry.valid
-    local assignZ = layer_order_system.assignZIndexToEntity
-    local getScript = getScriptTableFromEntityID
-    local cardBaseZ = z_orders.card
-    local ENT_NULL = entt_null
-
-   
-    local BoardType = Node:extend()
-    
-    function BoardType:update(dt)
-        -- tracy.zoneBeginN("BoardType:update")
-        local eid = self:handle()
-
-        ------------------------------------------------------------
-        -- Bail if current state isn't active
-        ------------------------------------------------------------
-        if self.gameStates then
-            local stateActive = false
-            for _, state in ipairs(self.gameStates) do
-                if is_state_active(state) then
-                    stateActive = true
-                    break
-                end
-            end
-            if not stateActive then
-                return
-            end
-        end
-
-        ------------------------------------------------------------
-        -- Resolve board area and cards
-        ------------------------------------------------------------
-        local area = component_cache.get(eid, Transform)
-        if not area then return end
-
-        local cards = self.cards
-        if not cards or #cards == 0 then return end
-
-        ------------------------------------------------------------
-        -- Probe card size from first valid card
-        ------------------------------------------------------------
-        local cardW, cardH = 100, 140
-        for i = 1, #cards do
-            local cardEid = cards[i]
-            if cardEid and entity_cache.valid(cardEid) and cardEid ~= ENT_NULL then
-                local ct = component_cache.get(cardEid, Transform)
-                if ct and ct.actualW and ct.actualH and ct.actualW > 0 and ct.actualH > 0 then
-                    cardW, cardH = ct.actualW, ct.actualH
-                    break
-                end
-            end
-        end
-
-        ------------------------------------------------------------
-        -- Layout math
-        ------------------------------------------------------------
-        local padding = 20
-        local availW = math_max(0, area.actualW - padding * 2)
-        local minGap = 12
-
-        local n = #cards
-        local spacing, groupW
-        if n == 1 then
-            spacing, groupW = 0, cardW
-        else
-            local fitSpacing = (availW - cardW) / (n - 1)
-            spacing = math_max(minGap, fitSpacing)
-            groupW = cardW + spacing * (n - 1)
-            if groupW > availW then
-                spacing = math_max(0, fitSpacing)
-                groupW = cardW + spacing * (n - 1)
-            end
-        end
-
-        local startX = area.actualX + padding + (availW - groupW) * 0.5
-        local centerY = area.actualY + area.actualH * 0.5
-
-        ------------------------------------------------------------
-        -- Z-order cache and sorting
-        ------------------------------------------------------------
-        local zcache = self.z_order_cache_per_card
-        if not zcache then
-            zcache = {}
-            self.z_order_cache_per_card = zcache
-        end
-
-        if n > 1 then
-            local cardPositions = {}
-            for i = 1, n do
-                local eid = cards[i]
-                local t = component_cache.get(eid, Transform)
-                if t then
-                    cardPositions[i] = { eid = eid, cx = t.actualX + t.actualW * 0.5 }
-                end
-            end
-
-            table.sort(cardPositions, function(a, b)
-                if a.cx == b.cx then return a.eid < b.eid end
-                return a.cx < b.cx
-            end)
-
-            for i = 1, n do
-                cards[i] = cardPositions[i].eid
-            end
-        end
-
-        ------------------------------------------------------------
-        -- Detect selected card (only one)
-        ------------------------------------------------------------
-        local selectedIndex = nil
-        for i = 1, n do
-            local cardEid = cards[i]
-            local cardScript = getScript(cardEid)
-            if cardScript and cardScript.selected then
-                selectedIndex = i
-                break
-            end
-        end
-
-        ------------------------------------------------------------
-        -- Spread parameters
-        ------------------------------------------------------------
-        local spreadAmount = 80   -- total distance to expand layout outward
-        local spreadEnabled = selectedIndex ~= nil
-        local isInventory = (eid == inventory_board_id or eid == trigger_inventory_board_id)
-
-        ------------------------------------------------------------
-        -- Layout cards
-        ------------------------------------------------------------
-        for i = 1, n do
-            local cardEid = cards[i]
-            local ct = component_cache.get(cardEid, Transform)
-            if ct then
-                local x = startX + (i - 1) * spacing
-                local y = centerY - ct.actualH * 0.5
-
-                --------------------------------------------------------
-                -- Vertical lift for selected card (inventory only)
-                --------------------------------------------------------
-                if isInventory then
-                    local cardScript = getScript(cardEid)
-                    if cardScript and cardScript.selected then
-                        y = y - ct.actualH * 0.7
-                    end
-                end
-
-                --------------------------------------------------------
-                -- Apply full-layout spread if a card is selected
-                --------------------------------------------------------
-                if spreadEnabled then
-                    -- Determine total shift: cards to left go left, right go right
-                    local relativeIndex = i - selectedIndex
-                    if relativeIndex < 0 then
-                        -- Move left side cards farther left
-                        local leftCount = selectedIndex - 1
-                        local leftStep = spreadAmount / math_max(1, leftCount)
-                        x = x - leftStep * (leftCount - math_abs(relativeIndex) + 1)
-                    elseif relativeIndex > 0 then
-                        -- Move right side cards farther right
-                        local rightCount = n - selectedIndex
-                        local rightStep = spreadAmount / math_max(1, rightCount)
-                        x = x + rightStep * (rightCount - math_abs(relativeIndex) + 1)
-                    end
-                end
-
-                ct.actualX = math_floor(x + 0.5)
-                ct.actualY = math_floor(y + 0.5)
-            end
-
-            --------------------------------------------------------
-            -- Assign Z order
-            --------------------------------------------------------
-            local zi = cardBaseZ + (i - 1)
-            zcache[cardEid] = zi
-            assignZ(cardEid, zi)
-
-            local cardObj = component_cache.get(cardEid, GameObject)
-            if cardObj and cardObj.state and cardObj.state.isBeingDragged then
-                assignZ(cardEid, z_orders.top_card + 1)
-            end
-        end
-
-        -- tracy.zoneEnd()
-    end
-
-
     
     local board = BoardType{}
     
     ------------------------------------------------------------
     -- Swap positions between a selected card and its neighbor
     ------------------------------------------------------------
-    function BoardType:swapCardWithNeighbor(selectedEid, direction)
-        -- direction: -1 = left, +1 = right
-        if not selectedEid or (direction ~= -1 and direction ~= 1) then return end
-        if not self.cards or #self.cards == 0 then return end
 
-        -- find index of selected card
-        local idx = nil
-        for i, eid in ipairs(self.cards) do
-            if eid == selectedEid then
-                idx = i
-                break
-            end
-        end
-        if not idx then return end
-
-        local neighborIndex = idx + direction
-        if neighborIndex < 1 or neighborIndex > #self.cards then return end
-
-        local leftEid  = self.cards[idx]
-        local rightEid = self.cards[neighborIndex]
-
-        -- swap in table order
-        self.cards[idx], self.cards[neighborIndex] = self.cards[neighborIndex], self.cards[idx]
-
-        -- optional: immediately swap their transforms' X so it looks instant before re-layout
-        local t1 = component_cache.get(leftEid, Transform)
-        local t2 = component_cache.get(rightEid, Transform)
-        if t1 and t2 then
-            local tempX = t1.actualX
-            t1.actualX = t2.actualX
-            t2.actualX = tempX
-        end
-
-        -- optional: maintain z-order cache consistency
-        local zcache = self.z_order_cache_per_card
-        if zcache then
-            local z1, z2 = zcache[leftEid], zcache[rightEid]
-            zcache[leftEid], zcache[rightEid] = z2, z1
-        end
-
-        -- optional: immediately re-run layout (or wait until next frame)
-        -- self:update(0)
-    end
-    
     board.z_orders = { bottom = z_orders.card, top = z_orders.card + 1000 } -- save specific z orders for the card in the board.
     board.z_order_cache_per_card = {} -- cache for z orders per card entity id.
     board.cards = {} -- no starting cards
@@ -389,7 +161,7 @@ function createNewBoard(x, y, w, h)
     board:attach_ecs{ create_new = true }
     transform.CreateOrEmplace(registry, globals.gameWorldContainerEntity(), x, y, w, h, board:handle())
     boards[board:handle()] = board
-    add_state_tag(board:handle(), PLANNING_STATE)
+    -- add_state_tag(board:handle(), PLANNING_STATE)
     
     -- get the game object for board and make it onReleaseEnabled
     local boardGameObject = component_cache.get(board:handle(), GameObject)
@@ -800,6 +572,7 @@ function createNewCard(id, x, y, gameStateToApply)
     
     -- give card state tag
     add_state_tag(card, gameStateToApply or PLANNING_STATE)
+    remove_default_state_tag(card)
     
     -- give a script table
     local CardType = Node:extend()
@@ -1217,13 +990,6 @@ function createNewCard(id, x, y, gameStateToApply)
     return cardScript:handle()
 end
 
--- return the object lua table from an entt id
-function getScriptTableFromEntityID(eid)
-    if not eid or eid == entt_null or not entity_cache.valid(eid) then return nil end
-    if not registry:has(eid, ScriptComponent) then return nil end
-    local scriptComp = component_cache.get(eid, ScriptComponent)
-    return scriptComp.self
-end
 
 -- utility: linear interpolation
 local function lerp(a, b, t)
@@ -1860,7 +1626,13 @@ function createTriggerActionBoardSet(x, y, triggerWidth, actionWidth, height, pa
     ).config.object
 
     transform.set_space(triggerBoard.textEntity, "world")
+    
+    -- give state tags to boards, remove default state tags
+    add_state_tag(triggerBoardID, PLANNING_STATE)
+    remove_default_state_tag(triggerBoardID)
     add_state_tag(triggerBoard.textEntity, PLANNING_STATE)
+    remove_default_state_tag(triggerBoard.textEntity)
+    
     transform.AssignRole(registry, triggerBoard.textEntity,
         InheritedPropertiesType.PermanentAttachment, triggerBoard:handle(),
         InheritedPropertiesSync.Strong,
@@ -1884,7 +1656,13 @@ function createTriggerActionBoardSet(x, y, triggerWidth, actionWidth, height, pa
     ).config.object
 
     transform.set_space(actionBoard.textEntity, "world")
+    
+    -- give state tags to boards, remove default state tags
+    add_state_tag(actionBoardID, PLANNING_STATE)
+    remove_default_state_tag(actionBoardID)
     add_state_tag(actionBoard.textEntity, PLANNING_STATE)
+    remove_default_state_tag(actionBoard.textEntity)
+    
     transform.AssignRole(registry, actionBoard.textEntity,
         InheritedPropertiesType.PermanentAttachment, actionBoard:handle(),
         InheritedPropertiesSync.Strong,
@@ -1963,44 +1741,6 @@ function initPlanningPhase()
     
     
     
-    -- testing ui
-    require("ui.ui_definition_helper")
-    local dsl = require("ui.ui_syntax_sugar")
-
-    -- Example: simple button
-    local shopButton = dsl.hbox{
-        config = {
-            id    = "shop_button",
-            color = "red",
-            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
-            hover = { title = "Shop", body = "Open the item store" },
-            onClick = function()
-                playSoundEffect("effects", "button-click")
-                log_debug("Shop button clicked!")
-            end,
-        },
-        children = {
-            dsl.anim("4130-TheRoguelike_1_10_alpha_923.png", { w = 20, h = 20, isAnimation = false, shadow = false }),
-            dsl.text("Shop", { color = "blackberry" }),
-        }
-    }
-
-    local root = dsl.root{ 
-        config = {
-            color = "blank",
-            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
-        },
-        children = { shopButton } }
-
-    -- Create box and attach resize callback
-    local box = dsl.spawn({x = 50, y = 100}, root, "HUD", 5, {
-        onBoxResize = function(registry, eid, w, h)
-            log_debug(string.format("Box resized: %d x %d", w, h))
-        end
-    })
-
-    -- Attach hovers recursively (uses orderedChildren)
-    dsl.applyHoverRecursive(box)
 
     
     
@@ -2367,48 +2107,47 @@ function initPlanningPhase()
         
         -- log_debug("Drawing board borders")
         
-        -- bail if not in planning state or shop
-        if not is_state_active(PLANNING_STATE) then
-            return
+        if is_state_active(PLANNING_STATE) then
+            
+            -- draw which board set is selected (text), below the trigger board.
+            local text = tostring(current_board_set_index) .. " of " .. tostring(#board_sets)
+            command_buffer.queueDrawText(layers.sprites, function(c)
+                c.text = text
+                c.x = leftAlignValueTriggerBoardX
+                c.y = boardPadding + boardHeight + 30
+                c.fontSize = 30
+                c.font = localization.getFont()
+                c.color = util.getColor("purple")
+            end, z_orders.card_text, layer.DrawCommandSpace.World)
+            
         end
         
         
         
-        -- draw which board set is selected (text), below the trigger board.
-        local text = tostring(current_board_set_index) .. " of " .. tostring(#board_sets)
-        command_buffer.queueDrawText(layers.sprites, function(c)
-            c.text = text
-            c.x = leftAlignValueTriggerBoardX
-            c.y = boardPadding + boardHeight + 30
-            c.fontSize = 30
-            c.font = localization.getFont()
-            c.color = util.getColor("purple")
-        end, z_orders.card_text, layer.DrawCommandSpace.World)
-        
         for key, boardScript in pairs(boards) do
             local self = boardScript
             local eid = self:handle()
-            if not (eid and entity_cache.valid(eid)) then
+            if not (eid and entity_cache.valid(eid) and entity_cache.active(eid)) then
                 goto continue
             end
 
-            local draw = true
-            if type(self.gameStates) == "table" and next(self.gameStates) ~= nil then
-                draw = false
-                for _, state in pairs(self.gameStates) do
-                    if is_state_active(state) then
-                        draw = true
-                        break
-                    end
-                end
-            else
-                -- draw only in planning state by default
-                if not is_state_active(PLANNING_STATE) then
-                    draw = false
-                end
-            end
+            -- local draw = true
+            -- if type(self.gameStates) == "table" and next(self.gameStates) ~= nil then
+            --     draw = false
+            --     for _, state in pairs(self.gameStates) do
+            --         if is_state_active(state) then
+            --             draw = true
+            --             break
+            --         end
+            --     end
+            -- else
+            --     -- draw only in planning state by default
+            --     if not is_state_active(PLANNING_STATE) then
+            --         draw = false
+            --     end
+            -- end
 
-            if draw then
+            -- if draw then
                 
                 local area = component_cache.get(eid, Transform)
                 
@@ -2442,7 +2181,7 @@ function initPlanningPhase()
                     c.thickness = 5
                     c.color     = self.borderColor or util.getColor("yellow")
                 end, z_orders.board, layer.DrawCommandSpace.World)
-            end
+            -- end
 
             ::continue::
         end
@@ -2530,8 +2269,13 @@ function initPlanningPhase()
     ).config.object
     -- make the text world space
     transform.set_space(inventoryBoard.textEntity, "world")
-    -- give text state
+    -- state tags 
     add_state_tag(inventoryBoard.textEntity, PLANNING_STATE)
+    add_state_tag(inventoryBoardID, PLANNING_STATE)
+    -- remove default state tags
+    remove_default_state_tag(inventoryBoard.textEntity)
+    remove_default_state_tag(inventoryBoardID)
+    
     -- let's anchor to top of the trigger board
     transform.AssignRole(registry, inventoryBoard.textEntity, InheritedPropertiesType.PermanentAttachment, inventoryBoard:handle(),
         InheritedPropertiesSync.Strong,
@@ -2564,8 +2308,12 @@ function initPlanningPhase()
     ).config.object
     -- make the text world space
     transform.set_space(triggerInventoryBoard.textEntity, "world")
-    -- give text state
+    -- give state tags
     add_state_tag(triggerInventoryBoard.textEntity, PLANNING_STATE)
+    add_state_tag(triggerInventoryBoardID, PLANNING_STATE)
+    -- remove default state tags
+    remove_default_state_tag(triggerInventoryBoard.textEntity)
+    remove_default_state_tag(triggerInventoryBoardID)
     -- let's anchor to top of the trigger board
     transform.AssignRole(registry, triggerInventoryBoard.textEntity, InheritedPropertiesType.PermanentAttachment, triggerInventoryBoard:handle(),
         InheritedPropertiesSync.Strong,
@@ -2830,11 +2578,17 @@ function startActionPhase()
     fadeOutMusic("shop-music", 0.3)
     fadeOutMusic("planning-music", 0.3)
     fadeInMusic("action-music", 0.6)
+    
+    
+    -- debug
+    
+    print("States active:", is_state_active(PLANNING_STATE), is_state_active(ACTION_STATE), is_state_active(SHOP_STATE))
 end
 
 function startPlanningPhase()
     
     clear_states() -- disable all states.
+    entity_cache.clear()
     
     activate_state(PLANNING_STATE)
     activate_state("default_state") -- just for defaults, keep them open
@@ -2849,6 +2603,12 @@ function startPlanningPhase()
     fadeInMusic("planning-music", 0.6)
     
     transitionInOutCircle(2, "LOADING", util.getColor("black"), { x = globals.screenWidth() / 2, y = globals.screenHeight() / 2 })
+    
+    
+    -- debug
+    
+    print("States active:", is_state_active(PLANNING_STATE), is_state_active(ACTION_STATE), is_state_active(SHOP_STATE))
+
 end
 
 function startShopPhase()
@@ -2864,6 +2624,11 @@ function startShopPhase()
     fadeOutMusic("action-music", 0.3)
     fadeOutMusic("planning-music", 0.3)
     fadeInMusic("shop-music", 0.6)
+    
+    
+    -- debug
+    
+    print("States active:", is_state_active(PLANNING_STATE), is_state_active(ACTION_STATE), is_state_active(SHOP_STATE))
 end
 
 local lastFrame = -1
@@ -3216,9 +2981,10 @@ function initShopPhase()
     roleComp.flags = AlignmentFlag.VERTICAL_TOP
     
     -- give the text & board state
+    clear_state_tags(shopBoard.textEntity)
+    clear_state_tags(shopBoard:handle())
     add_state_tag(shopBoard.textEntity, SHOP_STATE)
     add_state_tag(shopBoard:handle(), SHOP_STATE)
-    shopBoard.gameStates = { SHOP_STATE } -- store in board as well
     
     -- let's populate the shop with some cards
     local testCard1 = createNewCard(WandEngine.card_defs.ACTION_BASIC_PROJECTILE, 0, 0, SHOP_STATE)
@@ -3252,9 +3018,10 @@ function initShopPhase()
     local roleComp = component_cache.get(buyBoard.textEntity, InheritedProperties)
     roleComp.flags = AlignmentFlag.VERTICAL_TOP 
     -- give the text & board state
+    clear_state_tags(buyBoard.textEntity)
+    clear_state_tags(buyBoard:handle())
     add_state_tag(buyBoard.textEntity, SHOP_STATE)
     add_state_tag(buyBoard:handle(), SHOP_STATE)
-    buyBoard.gameStates = { SHOP_STATE } -- store in board as well
     
     buyBoard.cards = {} -- cards are entity ids.
     
@@ -3744,6 +3511,54 @@ function initPlanningUI()
     -- ggive entire box the planning state
     ui.box.AssignStateTagsToUIBox(planningUIEntities.start_action_button_box, PLANNING_STATE)
     
+    
+    
+    -- testing ui
+    require("ui.ui_definition_helper")
+    local dsl = require("ui.ui_syntax_sugar")
+
+    -- Example: simple button
+    local shopButton = dsl.hbox{
+        config = {
+            id    = "shop_button",
+            color = "red",
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+            hover = { title = "Shop", body = "Open the item store" },
+            onClick = function()
+                playSoundEffect("effects", "button-click")
+                log_debug("Shop button clicked!")
+            end,
+        },
+        children = {
+            dsl.anim("4130-TheRoguelike_1_10_alpha_923.png", { w = 20, h = 20, isAnimation = false, shadow = false }),
+            dsl.text("Shop", { color = "blackberry" }),
+        }
+    }
+
+    local root = dsl.root{ 
+        config = {
+            color = "blank",
+            align = AlignmentFlag.HORIZONTAL_CENTER | AlignmentFlag.VERTICAL_CENTER,
+        },
+        children = { shopButton } }
+
+    -- Create box and attach resize callback
+    local box = dsl.spawn({x = 50, y = 100}, root, "HUD", 5, {
+        onBoxResize = function(registry, eid, w, h)
+            log_debug("Resized box", eid, "to", w, h)
+        end
+    })
+
+    -- Attach hovers recursively (uses orderedChildren)
+    dsl.applyHoverRecursive(box)
+    
+    -- ggive entire box the planning state
+    ui.box.AssignStateTagsToUIBox(box, PLANNING_STATE)
+    
+    -- test resize
+    timer.after(2.0, function()
+        ui.box.RenewAlignment(registry, box)
+    end)
     
     
 end

@@ -3,6 +3,21 @@ local timer = require("core/timer")
 local component_cache = require("core/component_cache")
 local entity_cache = require("core.entity_cache")
 local Easing = require("util.easing")
+-- local entity_cache = require("core.entity_cache")
+-- local component_cache = require("core.component_cache")
+
+
+
+
+
+-- return the object lua table from an entt id
+function getScriptTableFromEntityID(eid)
+    if not eid or eid == entt_null or not entity_cache.valid(eid) then return nil end
+    if not registry:has(eid, ScriptComponent) then return nil end
+    local scriptComp = component_cache.get(eid, ScriptComponent)
+    return scriptComp.self
+end
+
 
 --- Smoothly step the camera toward a target to avoid big-jump jitter.
 -- @param camName string   Name used with camera.Get(...)

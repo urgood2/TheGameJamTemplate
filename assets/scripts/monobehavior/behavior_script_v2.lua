@@ -231,13 +231,14 @@ function node.update_all(dt)
 
         -- 🔹 Validity check
         -- comment the next line and uncomment the "no-validity" line below for optional Fix 4
-        if eid and (not vfn or e_valid(eid)) and entity_cache.active(eid) then
-        -- if eid then  -- ← optional Fix 4: skip validity if C++ side guarantees cleanup
+        if eid and (not vfn or e_valid(eid)) then
+    -- Keep the object even if inactive
             updatables[write] = obj
             write = write + 1
 
-            -- direct Lua call is still the hot cost, but unavoidable
-            obj:update(dt)
+            if entity_cache.active(eid) then
+                obj:update(dt)
+            end
         end
     end
 

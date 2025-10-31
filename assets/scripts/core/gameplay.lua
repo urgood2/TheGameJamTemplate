@@ -3380,7 +3380,7 @@ function initActionPhase()
     timer.run( function()
         -- tracy.zoneBeginN("Camera Pan Timer Tick") -- just some default depth to avoid bugs
         -- log_debug("Camera pan timer tick")
-        if is_state_active(ACTION_STATE) then
+        if entity_cache.state_active(ACTION_STATE) then
             local targetX, targetY = 0, 0
             local t = component_cache.get(survivorEntity, Transform)
             if t then
@@ -3393,6 +3393,7 @@ function initActionPhase()
             
         else
             -- local cam = camera.Get("world_camera")
+            log_debug("Camera pan timer tick - no action state, centering camera")
             local c = cam:GetActualTarget()
             
             -- if not already at halfway point in screen, then move it there

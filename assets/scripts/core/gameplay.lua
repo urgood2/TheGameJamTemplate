@@ -2597,6 +2597,7 @@ function startPlanningPhase()
     
     PhysicsManager.enable_step("world", false)
     
+    fadeOutMusic("planning-music", 0.3)
     fadeOutMusic("space-ambiance", 0.3)
     fadeOutMusic("action-music", 0.3)
     fadeOutMusic("shop-music", 0.3)

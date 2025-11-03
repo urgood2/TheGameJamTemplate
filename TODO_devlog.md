@@ -132,3 +132,7 @@
   - Added font offset and spacing support from json.
   - State management broken.
   - Updated particles to be easier to use from lua.
+  
+11/1/2025
+  - Full day of work.
+  - Got some more assets, sound and art. Maybe I'll use some of them.

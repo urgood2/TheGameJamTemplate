@@ -44,19 +44,16 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
 - creation of tooltips for every type of card, caching away, then showing on hover.
-- particle variant to allow random range of duration. 10% deviation as default. also. please make it so i can use a still iamge, not just animation.
-- ui def https://chatgpt.com/share/690364f4-fccc-800a-ac2b-b0b54fc6a212
-- particle ease of use update: https://chatgpt.com/share/690364cc-e5e8-800a-8677-36d2f1f6f53f
 - test that transform lerping to body is working.
-- Make main menu navigatble with controller.
+- Make main menu navigatble with controller. check that cursor teleports to selected button when using controller.
 - add prompts, left trigger + direction to drag card left or right. left and right bumpers to switch areas. also teleport mouse to selected card when controller nav used. disable mouse clicking with controller.
 - implmement needsResort flag for card dragging (card needs to konw which board it belongs to)
 - make card area shift cards to left and right of new card.
 - apply the new assets, including some music and ui.
 
 - use the new itch assets to indicate icons for wands & when they are on cooldown.
-- Add transition like in snkrx. how does that work? use whoosh.
 - exp drops, leveling, stat integration. start with hp and basic enemy attacks. also currency (gold? what will monsters drop?) + complete autobattle loop with interest.
 - Make a vertical alice with several chosen cards, 1 trigger, some enemy waves, and shop
 

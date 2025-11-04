@@ -44,6 +44,8 @@ Converts encumbrance into damage
 - player level.
     
 # programming side
+- cursor centring not working. 
+- entities not getting filtured porperly 
 - make ui really toggle between states, right now it doesn't. add simple prompts & tooltips.
 - creation of tooltips for every type of card, caching away, then showing on hover.
 - test that transform lerping to body is working.

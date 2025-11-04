@@ -1819,6 +1819,9 @@ function initPlanningPhase()
             -- sound
             playSoundEffect("effects", "card_focus", 0.9 + math.random() * 0.2)
             
+            -- update to move cursor to entity
+            input.updateCursorFocus()
+            
             -- jiggle
             transform.InjectDynamicMotionDefault(e)
             

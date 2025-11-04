@@ -6347,6 +6347,12 @@ function controller_nav.set_wrap(...) end
 function controller_nav.focus_entity(...) end
 
 ---
+--- Update cursor focus based on current input state.
+---
+---@return nil
+function input.updateCursorFocus(...) end
+
+---
 --- Bind an action to a device code with a trigger.
 ---
 ---@param action string

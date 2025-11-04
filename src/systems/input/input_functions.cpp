@@ -3235,6 +3235,8 @@ namespace input
         in.set_function("isKeyPressed", &IsKeyPressed);
         in.set_function("isKeyReleased", &IsKeyReleased);
         in.set_function("isKeyUp", &IsKeyUp);
+        
+    
 
         // Mouse
         in.set_function("isMouseDown", &IsMouseButtonDown);
@@ -3242,6 +3244,10 @@ namespace input
         in.set_function("isMouseReleased", &IsMouseButtonReleased);
         in.set_function("getMousePos", &GetMousePosition);
         in.set_function("getMouseWheel", &GetMouseWheelMove);
+        
+        in.set_function("updateCursorFocus", []() {
+            UpdateCursor(globals::inputState, globals::registry);
+        });
 
         // Gamepad
         in.set_function("isPadConnected", &IsGamepadAvailable);
@@ -3660,7 +3666,14 @@ namespace input
                 cb(ok, out);
             });
         });
-
+        
+        rec.record_free_function(inputPath, MethodDef{
+            "updateCursorFocus",
+            "---@return nil",
+            "Update cursor focus based on current input state.",
+            /*is_static=*/true,
+            /*is_overload=*/false
+        });
 
         // Optional BindingRecorder docs
         
